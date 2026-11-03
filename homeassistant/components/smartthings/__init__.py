@@ -55,7 +55,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 
 from .const import (
     BINARY_SENSOR_ATTRIBUTES_TO_CAPABILITIES,
@@ -568,7 +568,7 @@ def create_devices(
             connections = {(dr.CONNECTION_ZIGBEE, format_zigbee_address(zigbee.eui))}
             if (
                 device.device.device_manufacturer_code
-                and device_info.manufacturer is UNDEFINED
+                and device_info.manufacturer is Undefined
             ):
                 device_info.manufacturer = device.device.device_manufacturer_code
         if (matter := device.device.matter) is not None:
@@ -584,7 +584,7 @@ def create_devices(
                 device_info.serial_number = cast(
                     str | None, device_identification[Attribute.SERIAL_NUMBER].value
                 )
-                if device_info.model_id is UNDEFINED:
+                if device_info.model_id is Undefined:
                     device_info.model_id = cast(
                         str | None, device_identification[Attribute.MODEL_NAME].value
                     )

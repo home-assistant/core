@@ -59,6 +59,18 @@ async def test_device_info_recovers_after_initial_general_failure(
     assert device is not None
     assert device.model is None
     assert device.sw_version is None
+    outside_temperature = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
+    assert outside_temperature is not None
+    assert outside_temperature.state == "0.123"
+
+    mock_modbus_unit_ventilation.holding[202] = [0, 456]
+    freezer.tick(READINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    outside_temperature = hass.states.get("sensor.aerosmart_outdoor_air_temperature")
+    assert outside_temperature is not None
+    assert outside_temperature.state == "0.456"
 
     mock_modbus_unit_ventilation.fail_read(5000, None)
     mock_modbus_unit_ventilation.holding[5000] = [0, 3]

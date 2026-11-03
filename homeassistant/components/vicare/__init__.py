@@ -9,6 +9,7 @@ from aiohttp import ClientError
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareOAuthManager import obtain_token_via_basic_auth_pkce
+from PyViCare.PyViCareRoomControl import RoomControl
 from PyViCare.PyViCareUtils import (
     PyViCareDeviceCommunicationError,
     PyViCareInternalServerError,
@@ -57,7 +58,7 @@ from .const import (
 from .coordinator import ViCareCoordinator
 from .services import async_setup_services
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
-from .utils import get_device_serial
+from .utils import get_device_identifier, get_device_serial, get_rooms
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -221,6 +222,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> No
         await coordinator.async_config_entry_first_refresh()
 
     await _async_register_zigbee_gateway_devices(hass, entry)
+    await _async_register_room_control_devices(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -252,6 +254,27 @@ async def _async_register_zigbee_gateway_devices(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, identifier)},
+        )
+
+
+async def _async_register_room_control_devices(
+    hass: HomeAssistant, entry: ViCareConfigEntry
+) -> None:
+    """Register room controls, which may have no entity, before their rooms."""
+    device_registry = dr.async_get(hass)
+    for device in entry.runtime_data.devices:
+        if not isinstance(device.api, RoomControl):
+            continue
+        if not await hass.async_add_executor_job(get_rooms, device.api):
+            continue
+        model = device.config.getModel().replace("_", " ")
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, get_device_identifier(device.config, device.serial))},
+            name=model,
+            manufacturer="Viessmann",
+            model=model,
+            configuration_url=VIESSMANN_DEVELOPER_PORTAL,
         )
 
 

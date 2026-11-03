@@ -14,6 +14,7 @@ import respx
 from homeassistant.components import camera
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
+    CONF_COMPANION,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
@@ -44,7 +45,17 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import API_DISCOVERY_BASIC_DEVICE_INFO, DEFAULT_HOST, MAC, MODEL, NAME
+from .const import (
+    API_DISCOVERY_BASIC_DEVICE_INFO,
+    BASIC_DEVICE_INFO_COMPANION_RESPONSE,
+    BASIC_DEVICE_INFO_RESPONSE,
+    BRAND_COMPANION_RESPONSE,
+    BRAND_RESPONSE,
+    DEFAULT_HOST,
+    MAC,
+    MODEL,
+    NAME,
+)
 
 DHCP_FORMATTED_MAC = dr.format_mac(MAC).replace(":", "")
 
@@ -179,8 +190,47 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
         CONF_NAME: f"M1065-LW - {dr.format_mac(MAC)}",
+        CONF_COMPANION: False,
     }
     assert result["result"].unique_id == dr.format_mac(MAC)
+
+
+@pytest.mark.parametrize(
+    ("api_discovery_items", "basic_device_info_payload", "param_brand_payload"),
+    [
+        pytest.param(
+            API_DISCOVERY_BASIC_DEVICE_INFO,
+            BASIC_DEVICE_INFO_COMPANION_RESPONSE,
+            BRAND_RESPONSE,
+            id="basic_device_info",
+        ),
+        pytest.param(
+            {}, BASIC_DEVICE_INFO_RESPONSE, BRAND_COMPANION_RESPONSE, id="param_cgi"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_default_requests")
+async def test_flow_companion_device(hass: HomeAssistant) -> None:
+    """Test that config flow stores that the device is a Companion device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PROTOCOL: "http",
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_PORT: 80,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_COMPANION] is True
+    assert result["result"].unique_id == dr.format_mac(MAC)
+    assert result["result"].runtime_data.api.config.is_companion
 
 
 async def test_manual_configuration_duplicate_fails(
@@ -367,6 +417,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
         CONF_NAME: f"M1065-LW - {dr.format_mac(MAC)}",
+        CONF_COMPANION: False,
     }
     assert result["result"].unique_id == dr.format_mac(MAC)
 
@@ -553,6 +604,7 @@ async def test_discovery_flow(
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
         CONF_NAME: expected_title,
+        CONF_COMPANION: False,
     }
     assert result["result"].unique_id == dr.format_mac(MAC)
 
@@ -670,6 +722,7 @@ async def test_discovery_flow_updated_configuration(
         CONF_PASSWORD: "pass",
         CONF_MODEL: MODEL,
         CONF_NAME: NAME,
+        CONF_COMPANION: False,
     }
 
     mock_requests("2.3.4.5")
@@ -687,6 +740,7 @@ async def test_discovery_flow_updated_configuration(
         CONF_PASSWORD: "pass",
         CONF_MODEL: MODEL,
         CONF_NAME: NAME,
+        CONF_COMPANION: False,
     }
 
 
