@@ -3,9 +3,10 @@
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
+from contextlib import AbstractAsyncContextManager, nullcontext
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Final, cast, override
+from typing import TYPE_CHECKING, Any, Final, cast, override
 
 from awesomeversion import AwesomeVersion
 from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedZWaveCommand
@@ -41,6 +42,7 @@ PARALLEL_UPDATES = 0
 
 UPDATE_DELAY_STRING = "delay"
 UPDATE_DELAY_INTERVAL = 15  # In seconds
+PARALLEL_INSTALLS_MIN_DRIVER_VERSION = AwesomeVersion("15.32.1")
 ATTR_LATEST_VERSION_FIRMWARE = "latest_version_firmware"
 
 OTA_MESSAGE_SLEEPING_DEVICE = (
@@ -130,6 +132,15 @@ async def async_setup_entry(
     """Set up Z-Wave update entity from config entry."""
     client = config_entry.runtime_data.client
     cnt: Counter = Counter()
+    if TYPE_CHECKING:
+        assert client.version
+    # Older drivers reject an OTA update while another node has one queued
+    install_lock: AbstractAsyncContextManager[Any] = (
+        asyncio.Lock()
+        if AwesomeVersion(client.version.driver_version)
+        < PARALLEL_INSTALLS_MIN_DRIVER_VERSION
+        else nullcontext()
+    )
 
     @callback
     def async_add_firmware_update_entity(node: ZwaveNode) -> None:
@@ -147,6 +158,7 @@ async def async_setup_entry(
                 driver,
                 node,
                 delay=delay,
+                install_lock=install_lock,
                 entity_description=CONTROLLER_UPDATE_ENTITY_DESCRIPTION,
             )
         else:
@@ -155,6 +167,7 @@ async def async_setup_entry(
                 driver,
                 node,
                 delay=delay,
+                install_lock=install_lock,
                 entity_description=NODE_UPDATE_ENTITY_DESCRIPTION,
             )
         async_add_entities([entity])
@@ -186,6 +199,7 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
         driver: Driver,
         node: ZwaveNode,
         delay: timedelta,
+        install_lock: AbstractAsyncContextManager[Any],
         entity_description: ZWaveUpdateEntityDescription,
     ) -> None:
         """Initialize a Z-Wave device firmware update entity."""
@@ -198,6 +212,7 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
         self._finished_event = asyncio.Event()
         self._result: FirmwareUpdateResult | None = None
         self._delay: Final[timedelta] = delay
+        self._install_lock = install_lock
 
         # Entity class attributes
         self._attr_name = "Firmware"
@@ -326,6 +341,11 @@ class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
+        async with self._install_lock:
+            await self._async_install()
+
+    async def _async_install(self) -> None:
+        """Install the latest firmware and wait until the update finishes."""
         firmware = self._latest_version_firmware
         assert firmware
         self._unsub_firmware_events_and_reset_progress(False)
