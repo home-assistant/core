@@ -361,6 +361,27 @@ async def test_select_source_not_found(
     mock_braviatv_client.set_play_content.assert_not_called()
 
 
+async def test_source_list_skips_incomplete_items(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_braviatv_client: AsyncMock,
+) -> None:
+    """Test sources without a title or URI are not listed."""
+    mock_braviatv_client.get_external_status.return_value = [
+        {"uri": "extInput:hdmi?port=1", "title": "HDMI 1"},
+        {"uri": "extInput:hdmi?port=2", "title": ""},
+        {"title": "AV/Component"},
+    ]
+    mock_braviatv_client.get_app_list.return_value = []
+    mock_braviatv_client.get_content_list_all.return_value = []
+
+    await init_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["HDMI 1"]
+
+
 @pytest.mark.parametrize(
     ("media_type", "media_id", "method", "uri"),
     [
