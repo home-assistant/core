@@ -1445,3 +1445,80 @@ async def test_save_home_source_invalid(
     assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "invalid_format"
+
+
+async def test_save_battery_directions(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a battery measured per direction next to one measured in total."""
+    client = await hass_ws_client(hass)
+    total_battery = {
+        "type": "battery",
+        "stat_energy_from": "sensor.battery_energy_from",
+        "stat_energy_to": "sensor.battery_energy_to",
+    }
+    directions_battery = {
+        "type": "battery",
+        "stat_energy_from_grid": "sensor.battery_from_grid",
+        "stat_energy_from_solar": "sensor.battery_from_solar",
+        "stat_energy_to_home": "sensor.battery_to_home",
+        "power_config": {
+            "stat_rate_from_solar": "sensor.battery_from_solar_power",
+            "stat_rate_to_home": "sensor.battery_to_home_power",
+        },
+    }
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "energy/save_prefs",
+            "energy_sources": [total_battery, directions_battery],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    saved = [
+        total_battery,
+        {
+            **directions_battery,
+            "stat_rate": "sensor.energy_battery_battery_from_solar_power"
+            "_battery_to_home_power_net_power",
+        },
+    ]
+    assert msg["result"]["energy_sources"] == saved
+
+    # Saving the stored preferences again keeps them
+    await client.send_json(
+        {"id": 6, "type": "energy/save_prefs", "energy_sources": saved}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["energy_sources"] == saved
+
+
+async def test_save_battery_directions_invalid(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a battery mixing total and direction energy is rejected."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "energy/save_prefs",
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                }
+            ],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"

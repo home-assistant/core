@@ -11,7 +11,12 @@ from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import entity_registry as er, singleton, storage
 
-from .const import DOMAIN
+from .const import (
+    BATTERY_CHARGE_DIRECTIONS,
+    BATTERY_DIRECTIONS,
+    BATTERY_DISCHARGE_DIRECTIONS,
+    DOMAIN,
+)
 
 STORAGE_VERSION = 1
 STORAGE_MINOR_VERSION = 3
@@ -61,10 +66,11 @@ class FlowToGridSourceType(TypedDict):
 class PowerConfig(TypedDict, total=False):
     """Dictionary holding power sensor configuration options.
 
-    Users can configure power sensors in three ways:
+    Users can configure power sensors in four ways:
     1. Standard: single sensor (positive=discharge/from_grid, negative=charge/to_grid)
     2. Inverted: single sensor with opposite polarity (needs to be multiplied by -1)
     3. Two sensors: separate positive sensors for each direction
+    4. Battery directions: a positive sensor for any of the four battery flows
     """
 
     # Standard: single sensor (positive=discharge/from_grid, negative=charge/to_grid)
@@ -77,6 +83,12 @@ class PowerConfig(TypedDict, total=False):
     # Result = stat_rate_from - stat_rate_to (positive when net outflow)
     stat_rate_from: str  # Battery: discharge, Grid: consumption
     stat_rate_to: str  # Battery: charge, Grid: return
+
+    # Battery directions, from the battery's point of view; a missing one is 0
+    stat_rate_from_grid: str
+    stat_rate_from_solar: str
+    stat_rate_to_home: str
+    stat_rate_to_grid: str
 
 
 class GridPowerSourceType(TypedDict, total=False):
@@ -170,12 +182,24 @@ class HomeSourceType(TypedDict):
 
 
 class BatterySourceType(TypedDict):
-    """Dictionary holding the source of battery storage."""
+    """Dictionary holding the source of battery storage.
+
+    A battery is measured either in total (stat_energy_from and stat_energy_to)
+    or per direction (at least one charge and one discharge direction).
+    """
 
     type: Literal["battery"]
 
-    stat_energy_from: str
-    stat_energy_to: str
+    # Total energy out of and into the battery
+    stat_energy_from: NotRequired[str]
+    stat_energy_to: NotRequired[str]
+
+    # Energy per direction, from the battery's point of view; a missing one is 0
+    stat_energy_from_grid: NotRequired[str]
+    stat_energy_from_solar: NotRequired[str]
+    stat_energy_to_home: NotRequired[str]
+    stat_energy_to_grid: NotRequired[str]
+
     # positive when discharging, negative when charging
     # This is either the original sensor or a generated template sensor
     stat_rate: NotRequired[str]
@@ -371,27 +395,41 @@ def _validate_power_config(val: dict[str, Any]) -> dict[str, Any]:
     has_single = "stat_rate" in val
     has_inverted = "stat_rate_inverted" in val
     has_combined = "stat_rate_from" in val
+    has_directions = any(power_key in val for _, power_key in BATTERY_DIRECTIONS)
 
-    methods_count = sum([has_single, has_inverted, has_combined])
+    methods_count = sum([has_single, has_inverted, has_combined, has_directions])
     if methods_count > 1:
         raise probatio.Invalid(
             "power_config must use only one configuration method: "
-            "stat_rate, stat_rate_inverted, or stat_rate_from/stat_rate_to"
+            "stat_rate, stat_rate_inverted, stat_rate_from/stat_rate_to, "
+            "or battery direction sensors"
         )
 
     return val
 
 
+_POWER_CONFIG_METHODS: dict[probatio.Marker, type[str]] = {
+    probatio.Exclusive("stat_rate", "power_source"): str,
+    probatio.Exclusive("stat_rate_inverted", "power_source"): str,
+    # stat_rate_from/stat_rate_to: two sensors for bidirectional power
+    # Battery: from=discharge (out), to=charge (in)
+    # Grid: from=consumption, to=return
+    probatio.Inclusive("stat_rate_from", "two_sensors"): str,
+    probatio.Inclusive("stat_rate_to", "two_sensors"): str,
+}
+
 POWER_CONFIG_SCHEMA = probatio.All(
+    probatio.Schema(_POWER_CONFIG_METHODS),
+    _validate_power_config,
+)
+
+BATTERY_POWER_CONFIG_SCHEMA = probatio.All(
     probatio.Schema(
         {
-            probatio.Exclusive("stat_rate", "power_source"): str,
-            probatio.Exclusive("stat_rate_inverted", "power_source"): str,
-            # stat_rate_from/stat_rate_to: two sensors for bidirectional power
-            # Battery: from=discharge (out), to=charge (in)
-            # Grid: from=consumption, to=return
-            probatio.Inclusive("stat_rate_from", "two_sensors"): str,
-            probatio.Inclusive("stat_rate_to", "two_sensors"): str,
+            **_POWER_CONFIG_METHODS,
+            **{
+                probatio.Optional(power_key): str for _, power_key in BATTERY_DIRECTIONS
+            },
         }
     ),
     _validate_power_config,
@@ -538,21 +576,76 @@ HOME_SOURCE_SCHEMA = probatio.Schema(
         probatio.Optional("name"): str,
     }
 )
-BATTERY_SOURCE_SCHEMA = probatio.Schema(
-    {
-        probatio.Required("type"): "battery",
-        probatio.Required("stat_energy_from"): str,
-        probatio.Required("stat_energy_to"): str,
-        # Both stat_rate and power_config are optional
-        # If power_config is provided, it takes precedence and stat_rate is overwritten
-        probatio.Optional("stat_rate"): str,
-        probatio.Optional("power_config"): POWER_CONFIG_SCHEMA,
-        probatio.Optional("stat_soc"): str,
-        probatio.Optional("capacity"): probatio.All(
-            probatio.Coerce(float), probatio.Range(min=0, min_included=False)
-        ),
-        probatio.Optional("name"): str,
-    }
+
+
+def _validate_battery_measurement(val: dict[str, Any]) -> dict[str, Any]:
+    """Validate a battery is measured either in total or per direction."""
+    power_config: dict[str, str] = val.get("power_config", {})
+    power_directions = [
+        power_key for _, power_key in BATTERY_DIRECTIONS if power_key in power_config
+    ]
+
+    if "stat_energy_from" in val:
+        if any(energy_key in val for energy_key, _ in BATTERY_DIRECTIONS):
+            raise probatio.Invalid(
+                "Battery must be measured either in total or per direction"
+            )
+        if power_directions:
+            raise probatio.Invalid(
+                "Battery direction power sensors need energy per direction"
+            )
+        return val
+
+    if not any(energy_key in val for energy_key, _ in BATTERY_CHARGE_DIRECTIONS) or (
+        not any(energy_key in val for energy_key, _ in BATTERY_DISCHARGE_DIRECTIONS)
+    ):
+        raise probatio.Invalid(
+            "Battery needs stat_energy_from and stat_energy_to, or at least one"
+            " charge and one discharge direction"
+        )
+    if power_config and not power_directions:
+        raise probatio.Invalid("Battery measured per direction needs direction power")
+    # stat_rate is generated from the direction power sensors
+    if "stat_rate" in val and not power_config:
+        raise probatio.Invalid(
+            "Battery measured per direction needs its power sensors in power_config"
+        )
+    for energy_key, power_key in BATTERY_DIRECTIONS:
+        if power_key in power_config and energy_key not in val:
+            raise probatio.Invalid(f"{power_key} needs {energy_key}")
+
+    stats = [
+        *(val[energy_key] for energy_key, _ in BATTERY_DIRECTIONS if energy_key in val),
+        *(power_config[power_key] for power_key in power_directions),
+    ]
+    if len(stats) != len(set(stats)):
+        raise probatio.Invalid("A statistic can only be used once in a battery")
+    return val
+
+
+BATTERY_SOURCE_SCHEMA = probatio.All(
+    probatio.Schema(
+        {
+            probatio.Required("type"): "battery",
+            probatio.Inclusive("stat_energy_from", "total_energy"): str,
+            probatio.Inclusive("stat_energy_to", "total_energy"): str,
+            **{
+                probatio.Optional(energy_key): str
+                for energy_key, _ in BATTERY_DIRECTIONS
+            },
+            # Both stat_rate and power_config are optional
+            # If power_config is provided, it takes precedence and stat_rate is
+            # overwritten
+            probatio.Optional("stat_rate"): str,
+            probatio.Optional("power_config"): BATTERY_POWER_CONFIG_SCHEMA,
+            probatio.Optional("stat_soc"): str,
+            probatio.Optional("capacity"): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=0, min_included=False)
+            ),
+            probatio.Optional("name"): str,
+        }
+    ),
+    _validate_battery_measurement,
 )
 
 
@@ -639,6 +732,53 @@ def _validate_grid_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
     return value
 
 
+def _battery_direction_stats(source: BatterySourceType) -> set[str]:
+    """Return the statistics a battery measured per direction uses."""
+    power_config: PowerConfig = source.get("power_config") or {}
+    return {
+        stat
+        for energy_key, power_key in BATTERY_DIRECTIONS
+        for stat in (source.get(energy_key), power_config.get(power_key))
+        if stat is not None
+    }
+
+
+def _battery_stats(source: BatterySourceType) -> set[str]:
+    """Return all statistics a battery uses."""
+    power_config: PowerConfig = source.get("power_config") or {}
+    stats = {
+        stat
+        for stat in (
+            source.get("stat_energy_from"),
+            source.get("stat_energy_to"),
+            source.get("stat_rate"),
+            power_config.get("stat_rate"),
+            power_config.get("stat_rate_inverted"),
+            power_config.get("stat_rate_from"),
+            power_config.get("stat_rate_to"),
+        )
+        if stat is not None
+    }
+    return stats | _battery_direction_stats(source)
+
+
+def _validate_battery_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
+    """Validate that battery direction statistics are not used by other batteries.
+
+    Only direction statistics are checked, so existing configurations still save.
+    """
+    batteries = [source for source in value if source["type"] == "battery"]
+    for index, battery in enumerate(batteries):
+        if not (direction_stats := _battery_direction_stats(battery)):
+            continue
+        for other in batteries[:index] + batteries[index + 1 :]:
+            if duplicates := direction_stats & _battery_stats(other):
+                raise probatio.Invalid(
+                    f"Battery statistic {min(duplicates)} is used in multiple batteries"
+                )
+    return value
+
+
 ENERGY_SOURCE_SCHEMA = probatio.All(
     probatio.Schema(
         [
@@ -657,6 +797,7 @@ ENERGY_SOURCE_SCHEMA = probatio.All(
     ),
     check_type_limits,
     _validate_grid_stat_uniqueness,
+    _validate_battery_stat_uniqueness,
 )
 
 DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(

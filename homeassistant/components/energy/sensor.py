@@ -38,7 +38,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, unit_conversion
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DOMAIN
+from .const import BATTERY_CHARGE_DIRECTIONS, BATTERY_DIRECTIONS, DOMAIN
 from .data import EnergyManager, PowerConfig, async_get_manager
 from .helpers import generate_power_sensor_entity_id, generate_power_sensor_unique_id
 
@@ -324,10 +324,12 @@ class SensorManager:
     @staticmethod
     def _needs_power_sensor(power_config: PowerConfig) -> bool:
         """Check if power_config needs a transform sensor."""
-        # Only create sensors for inverted or two-sensor configs
-        # Standard stat_rate configs don't need a transform sensor
-        return "stat_rate_inverted" in power_config or (
-            "stat_rate_from" in power_config and "stat_rate_to" in power_config
+        # Standard stat_rate configs don't need a transform sensor; battery
+        # directions do even with one sensor, because charging is negative
+        return (
+            "stat_rate_inverted" in power_config
+            or ("stat_rate_from" in power_config and "stat_rate_to" in power_config)
+            or any(power_key in power_config for _, power_key in BATTERY_DIRECTIONS)
         )
 
     def _create_or_keep_power_sensor(
@@ -787,10 +789,10 @@ class EnergyCostSensor(RestoreSensor):
 
 
 class EnergyPowerSensor(SensorEntity):
-    """Transform power sensor values (invert or combine two sensors).
+    """Transform power sensor values (invert or combine sensors).
 
     This sensor handles non-standard power sensor configurations for the energy
-    dashboard by either inverting polarity or combining two positive sensors.
+    dashboard by either inverting polarity or combining positive sensors.
     """
 
     _attr_should_poll = False
@@ -814,7 +816,17 @@ class EnergyPowerSensor(SensorEntity):
         self.entity_id = entity_id
         self._source_sensors: list[str] = []
         self._is_inverted = "stat_rate_inverted" in config
-        self._is_combined = "stat_rate_from" in config and "stat_rate_to" in config
+        # Combined: source sensors with the sign they add to the net power
+        self._terms: list[tuple[str, int]] = []
+        if "stat_rate_from" in config and "stat_rate_to" in config:
+            self._terms = [(config["stat_rate_from"], 1), (config["stat_rate_to"], -1)]
+        else:
+            self._terms = [
+                (config[power_key], -1 if direction in BATTERY_CHARGE_DIRECTIONS else 1)
+                for direction in BATTERY_DIRECTIONS
+                if (power_key := direction[1]) in config
+            ]
+        self._is_combined = bool(self._terms)
 
         # Combined mode always emits Watts because _update_state converts
         # heterogeneous source units to W internally. Inverted mode copies
@@ -828,10 +840,7 @@ class EnergyPowerSensor(SensorEntity):
             self._source_sensors = [config["stat_rate_inverted"]]
             self._attr_translation_key = "power_inverted"
         elif self._is_combined:
-            self._source_sensors = [
-                config["stat_rate_from"],
-                config["stat_rate_to"],
-            ]
+            self._source_sensors = [sensor for sensor, _ in self._terms]
 
         # SensorManager awaits add_finished; async_on_remove resolves it on the
         # abort path too, since add_to_platform_abort fires on-remove callbacks.
@@ -865,13 +874,10 @@ class EnergyPowerSensor(SensorEntity):
                 "unavailable",
             )
         if self._is_combined:
-            discharge = self.hass.states.get(self._source_sensors[0])
-            charge = self.hass.states.get(self._source_sensors[1])
-            return (
-                discharge is not None
-                and charge is not None
-                and discharge.state not in ("unknown", "unavailable")
-                and charge.state not in ("unknown", "unavailable")
+            return all(
+                (source := self.hass.states.get(sensor)) is not None
+                and source.state not in ("unknown", "unavailable")
+                for sensor in self._source_sensors
             )
         return True
 
@@ -895,77 +901,71 @@ class EnergyPowerSensor(SensorEntity):
             self._attr_native_value = value * -1
 
         elif self._is_combined:
-            discharge_state = self.hass.states.get(self._source_sensors[0])
-            charge_state = self.hass.states.get(self._source_sensors[1])
-
-            if (
-                discharge_state is None
-                or charge_state is None
-                or discharge_state.state in ("unknown", "unavailable")
-                or charge_state.state in ("unknown", "unavailable")
-            ):
-                self._attr_native_value = None
-                return
+            source_states: list[State] = []
+            for sensor in self._source_sensors:
+                source_state = self.hass.states.get(sensor)
+                if source_state is None or source_state.state in (
+                    "unknown",
+                    "unavailable",
+                ):
+                    self._attr_native_value = None
+                    return
+                source_states.append(source_state)
 
             try:
-                discharge = float(discharge_state.state)
-                charge = float(charge_state.state)
+                values = [float(source_state.state) for source_state in source_states]
             except ValueError:
                 self._attr_native_value = None
                 return
 
-            # Get units from state attributes
-            discharge_unit = discharge_state.attributes.get(
-                EntityStateAttribute.UNIT_OF_MEASUREMENT
-            )
-            charge_unit = charge_state.attributes.get(
-                EntityStateAttribute.UNIT_OF_MEASUREMENT
-            )
-
             # Convert to Watts if units are present
+            net_power = 0.0
             try:
-                if discharge_unit:
-                    discharge = unit_conversion.PowerConverter.convert(
-                        discharge, discharge_unit, UnitOfPower.WATT
-                    )
-                if charge_unit:
-                    charge = unit_conversion.PowerConverter.convert(
-                        charge, charge_unit, UnitOfPower.WATT
-                    )
+                for source_state, value, (_, sign) in zip(
+                    source_states, values, self._terms, strict=True
+                ):
+                    if unit := source_state.attributes.get(
+                        EntityStateAttribute.UNIT_OF_MEASUREMENT
+                    ):
+                        value = unit_conversion.PowerConverter.convert(
+                            value, unit, UnitOfPower.WATT
+                        )
+                    net_power += sign * value
             except HomeAssistantError as err:
                 if not self._wrong_unit_reported:
                     self._wrong_unit_reported = True
                     _LOGGER.warning(
-                        "Unable to combine %s and %s: %s",
-                        discharge_state.entity_id,
-                        charge_state.entity_id,
+                        "Unable to combine %s: %s",
+                        " and ".join(self._source_sensors),
                         err,
                     )
                 self._attr_native_value = None
                 return
 
-            self._attr_native_value = discharge - charge
+            self._attr_native_value = net_power
 
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._source_sensors:
             entity_reg = er.async_get(self.hass)
-            device_id = None
-            # Check first sensor
-            if source_entry := entity_reg.async_get(self._source_sensors[0]):
-                device_id = source_entry.device_id
-            # Assign power sensor to same device as source sensor(s)
+            # Assign power sensor to the device of the first source sensor
+            # that has one
             # Note: We use manual entity registry update instead of _attr_device_info
             # because device assignment depends on runtime information from the entity
             # registry (which source sensor has a device). This information isn't
             # available during __init__, and the entity is already registered before
             # async_added_to_hass runs, making the standard _attr_device_info pattern
             # incompatible with this use case.
-            # If first sensor has no device and we have a second sensor, check it
-            if not device_id and len(self._source_sensors) > 1:
-                if source_entry := entity_reg.async_get(self._source_sensors[1]):
-                    device_id = source_entry.device_id
+            device_id = next(
+                (
+                    source_entry.device_id
+                    for sensor in self._source_sensors
+                    if (source_entry := entity_reg.async_get(sensor))
+                    and source_entry.device_id
+                ),
+                None,
+            )
             # Update entity registry entry with device_id
             if device_id and (power_entry := entity_reg.async_get(self.entity_id)):
                 entity_reg.async_update_entity(
