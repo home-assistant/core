@@ -6,7 +6,7 @@ import logging
 import os
 from pathlib import Path, PurePath
 from typing import Any
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, call, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorBadRequestError, SupervisorError
@@ -66,6 +66,7 @@ from homeassistant.components.hassio.const import (
     HASSIO_MAIN_UPDATE_INTERVAL,
     OPTION_ADD_ON_BACKUP_BEFORE_UPDATE,
     OPTION_ADD_ON_BACKUP_RETAIN_COPIES,
+    OPTION_CORE_AUTO_UPDATE,
     OPTION_CORE_BACKUP_BEFORE_UPDATE,
     REQUEST_REFRESH_DELAY,
 )
@@ -358,6 +359,11 @@ async def test_setup_onboarding_supervisor_no_update(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch("homeassistant.components.hassio.async_is_onboarded", return_value=False),
+        patch(
+            "homeassistant.components.hassio.AutoUpdateManager.unavailable_reason",
+            new_callable=PropertyMock,
+            return_value=None,
+        ),
     ):
         result = await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
@@ -366,6 +372,7 @@ async def test_setup_onboarding_supervisor_no_update(
     assert is_hassio(hass)
     entry = hass.config_entries.async_entries("hassio")[0]
     assert entry.state is ConfigEntryState.LOADED
+    assert entry.options[OPTION_CORE_AUTO_UPDATE] is True
     supervisor_client.supervisor.update.assert_called_once()
 
 
