@@ -59,7 +59,7 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_RECONFIGURE_SCHEMA,
-            description_placeholders={CONF_USERNAME: self.username},
+            description_placeholders={"username": self.username},
             errors=errors,
         )
 

@@ -6,7 +6,7 @@ from typing import Any, override
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN, CONF_NAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -101,5 +101,5 @@ class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=STEP_RECONFIGURE_DATA_SCHEMA,
             errors=errors,
-            description_placeholders={CONF_NAME: entry.title},
+            description_placeholders={"name": entry.title},
         )

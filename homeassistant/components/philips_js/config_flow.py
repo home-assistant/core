@@ -214,7 +214,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         ]
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            description_placeholders={CONF_NAME: name},
+            description_placeholders={"name": name},
         )
 
     @override
