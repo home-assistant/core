@@ -134,11 +134,15 @@ async def test_art_mode_added_when_device_info_recovers(
 async def test_art_mode_off_when_tv_off_without_mac(
     hass: HomeAssistant,
     remote_websocket: Mock,
+    rest_api: Mock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the art mode sensor stays available when the TV can not be turned on."""
+    # Without wifiMac, no MAC can be found, so the TV can not be turned on
+    del rest_api.rest_device_info.return_value["device"]["wifiMac"]
     entry_data = {k: v for k, v in ENTRYDATA_WEBSOCKET.items() if k != CONF_MAC}
-    await setup_samsungtv_entry(hass, entry_data)
+    entry = await setup_samsungtv_entry(hass, entry_data)
+    assert CONF_MAC not in entry.data
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     remote_websocket.is_alive.return_value = False
