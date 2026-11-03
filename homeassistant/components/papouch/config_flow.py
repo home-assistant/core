@@ -9,7 +9,7 @@ from aiopapouch.exceptions import (
     DeviceConnectionError,
     DeviceParseError,
 )
-import probatio as prob
+from probatio import All, IPAddress, Optional, Range, Required, Schema, Secret
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
@@ -147,13 +147,13 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input and CONF_PORT in user_input:
             default_web_port = user_input[CONF_PORT]
 
-        schema = prob.Schema(
+        schema = Schema(
             {
-                prob.Required(CONF_IP_ADDRESS, default=default_ip): str,
-                prob.Optional(CONF_PORT, default=default_web_port): prob.All(
-                    int, prob.Range(min=1, max=65536)
+                Required(CONF_IP_ADDRESS, default=default_ip): IPAddress(),
+                Optional(CONF_PORT, default=default_web_port): All(
+                    int, Range(min=0, max=65535)
                 ),
-                prob.Optional(CONF_PASSWORD): str,
+                Secret(Optional(CONF_PASSWORD)): str,
             }
         )
 
