@@ -70,9 +70,10 @@ def _power(
 
 SENSORS: tuple[E3dcSensorDescription, ...] = (
     _power("pv_power", lambda device: device.power.pv_power),
-    # E3/DC counts charging as positive, Home Assistant counts discharging
     _power(
         "battery_power",
+        # E3/DC reports charging as positive power
+        # Negate it because Home Assistant expects discharging as positive
         lambda device: (
             None if (power := device.power.battery_power) is None else -power
         ),
