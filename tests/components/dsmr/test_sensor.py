@@ -14,6 +14,7 @@ from unittest.mock import DEFAULT, MagicMock
 from dsmr_parser import obis_references
 from dsmr_parser.obis_references import (
     BELGIUM_CURRENT_AVERAGE_DEMAND,
+    BELGIUM_MAXIMUM_DEMAND_13_MONTHS,
     BELGIUM_MAXIMUM_DEMAND_MONTH,
     CURRENT_ELECTRICITY_USAGE,
     ELECTRICITY_ACTIVE_TARIFF,
@@ -33,6 +34,7 @@ from homeassistant.components.dsmr.sensor import (
     SENSORS,
     SENSORS_MBUS_DEVICE_TYPE,
     DSMRBelgiumDemandHistory,
+    DSMREntity,
 )
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
@@ -1993,8 +1995,6 @@ def test_belgian_diagnostic_descriptions() -> None:
 
 def test_belgian_monthly_demand_history() -> None:
     """Expose completed months, ignoring malformed placeholder peak records."""
-    from dsmr_parser.obis_references import BELGIUM_MAXIMUM_DEMAND_13_MONTHS
-
     description = next(
         item for item in SENSORS if item.key == "belgium_maximum_demand_history"
     )
@@ -2005,7 +2005,7 @@ def test_belgian_monthly_demand_history() -> None:
             [
                 {"value": None},
                 {"value": None},
-                {"value": Decimal("0"), "unit": "kW"},
+                {"value": Decimal(0), "unit": "kW"},
             ],
         ),
         MBusObjectPeak(
@@ -2041,8 +2041,6 @@ def test_belgian_monthly_demand_history() -> None:
 
 def test_belgian_diagnostics_preserve_text_and_gas_unique_ids() -> None:
     """Diagnostics must not overwrite consumption IDs or convert text."""
-    from homeassistant.components.dsmr.sensor import DSMREntity
-
     entry = MockConfigEntry(
         domain="dsmr",
         data={"serial_id": "1234", "serial_id_gas": "5678", "dsmr_version": "5B"},
@@ -2077,3 +2075,63 @@ def test_belgian_diagnostics_preserve_text_and_gas_unique_ids() -> None:
             assert entity.unique_id == "5678"
         if description.key == "belgium_gas_equipment_identifier":
             assert entity.native_value == "0000000088"
+
+
+def test_belgian_monthly_history_newest_first_and_empty() -> None:
+    """Use the newest completed month and clear state when history is empty."""
+    description = next(
+        item for item in SENSORS if item.key == "belgium_maximum_demand_history"
+    )
+    telegram = Telegram()
+    telegram.add(
+        BELGIUM_MAXIMUM_DEMAND_13_MONTHS,
+        [
+            MBusObjectPeak(
+                (0, 0),
+                [
+                    {"value": month},
+                    {"value": month - dt.timedelta(days=5)},
+                    {"value": value, "unit": "kW"},
+                ],
+            )
+            for month, value in [
+                (dt.datetime(2026, 11, 1, tzinfo=dt.UTC), Decimal("3.277")),
+                (dt.datetime(2026, 10, 1, tzinfo=dt.UTC), Decimal("3.175")),
+            ]
+        ],
+        "BELGIUM_MAXIMUM_DEMAND_13_MONTHS",
+    )
+    entry = MockConfigEntry(
+        domain="dsmr", data={"serial_id": "test-meter", "dsmr_version": "5B"}
+    )
+    entity = DSMRBelgiumDemandHistory(description, entry, telegram)
+    assert entity.native_value == 3.277
+    assert len(entity.extra_state_attributes["monthly_peaks"]) == 2
+    empty_telegram = Telegram()
+    empty_telegram.add(
+        BELGIUM_MAXIMUM_DEMAND_13_MONTHS, [], "BELGIUM_MAXIMUM_DEMAND_13_MONTHS"
+    )
+    entity.hass = MagicMock()
+    with patch.object(entity, "async_write_ha_state") as write_state:
+        entity.update_data(empty_telegram)
+        write_state.assert_called_once()
+    assert entity.native_value is None
+    assert entity.extra_state_attributes == {"monthly_peaks": []}
+
+
+def test_belgian_long_text_message_state() -> None:
+    """Truncate message states but retain complete messages in attributes."""
+    description = next(item for item in SENSORS if item.key == "belgium_text_message")
+    entry = MockConfigEntry(
+        domain="dsmr", data={"serial_id": "test-meter", "dsmr_version": "5B"}
+    )
+    telegram = Telegram()
+    message = "Important message. " * 20
+    telegram.add(
+        obis_references.TEXT_MESSAGE,
+        CosemObject((0, 0), [{"value": message, "unit": None}]),
+        "TEXT_MESSAGE",
+    )
+    entity = DSMREntity(description, entry, telegram, None, None)
+    assert entity.native_value == message[:255]
+    assert entity.extra_state_attributes == {"full_message": message}

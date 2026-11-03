@@ -1108,6 +1108,7 @@ class DSMREntity(SensorEntity):
             or get_dsmr_object(
                 telegram, self._mbus_id, self.entity_description.obis_reference
             )
+            is not None
         ):
             self.async_write_ha_state()
 
@@ -1145,9 +1146,11 @@ class DSMREntity(SensorEntity):
             "belgium_version_information",
             "belgium_equipment_identifier",
             "belgium_gas_equipment_identifier",
-            "belgium_text_message",
         }:
             return str(value)
+
+        if self.entity_description.key == "belgium_text_message":
+            return str(value)[:255]
 
         with suppress(TypeError, ValueError):
             value = round(float(value), DEFAULT_PRECISION)
@@ -1157,6 +1160,17 @@ class DSMREntity(SensorEntity):
             return None
 
         return value
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Keep long Belgian utility messages without oversized states."""
+        if self.entity_description.key != "belgium_text_message":
+            return None
+        message = self.get_dsmr_object_attr("value")
+        if message is not None and len(str(message)) > 255:
+            return {"full_message": str(message)}
+        return None
 
     @staticmethod
     def translate_tariff(value: str, dsmr_version: str) -> str | None:
@@ -1203,7 +1217,7 @@ class DSMRBelgiumDemandHistory(DSMREntity):
         if not isinstance(peaks, list):
             return None
         valid = [peak for peak in peaks if self._valid_peak(peak)]
-        return float(valid[-1].value) if valid else None
+        return float(max(valid, key=lambda peak: peak.datetime).value) if valid else None
 
     @staticmethod
     def _valid_peak(peak: object) -> bool:
@@ -1220,7 +1234,9 @@ class DSMRBelgiumDemandHistory(DSMREntity):
     @override
     def extra_state_attributes(self) -> dict[str, list[dict[str, str | float | None]]]:
         """Expose all valid demand peaks and their occurrence times."""
-        peaks = get_dsmr_object(self.telegram, 0, self.entity_description.obis_reference)
+        peaks = get_dsmr_object(
+            self.telegram, 0, self.entity_description.obis_reference
+        )
         if not isinstance(peaks, list):
             return {"monthly_peaks": []}
         return {
