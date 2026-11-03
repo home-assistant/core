@@ -1366,12 +1366,11 @@ async def test_validation_device_consumption_water_valid_units(
     """Test validating water device with valid water units."""
     await mock_energy_manager.async_update(
         {
-            "device_consumption_gas": [],
             "device_consumption_water": [
                 {"stat_consumption": "sensor.water_m3"},
                 {"stat_consumption": "sensor.water_l"},
                 {"stat_consumption": "sensor.water_gal"},
-            ],
+            ]
         }
     )
     hass.states.async_set(
