@@ -45,8 +45,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def _light_state_initialized(light: XknxLight) -> bool:
     """Check that the switch or all configured color channels have a known state."""
-    if light.switch.value is not None:
-        return True
+    if light.switch.initialized:
+        return light.switch.value is not None
     # XKNX can report off after only one individual channel has responded.
     return light.state is not None and all(
         channel.is_on is not None

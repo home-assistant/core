@@ -827,3 +827,42 @@ async def test_delayed_rgb_initial_responses(
     await hass.async_block_till_done()
     assert hass.states.get(LIGHT_ENTITY_ID).state == "off"
     assert len(events) == 1
+
+
+async def test_rgb_initial_responses_before_main_switch(
+    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
+) -> None:
+    """Color responses must not initialize a configured main switch."""
+    await knx.setup_integration(
+        {
+            "light": {
+                "name": "test",
+                "address": "1/1/1",
+                "individual_colors": {
+                    "red": {"brightness_address": "1/1/3"},
+                    "green": {"brightness_address": "1/1/5"},
+                    "blue": {"brightness_address": "1/1/7"},
+                },
+            }
+        },
+        state_updater=False,
+    )
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
+    for address, value in (("1/1/3", 128), ("1/1/5", 0), ("1/1/7", 0)):
+        await knx.receive_response(address, (value,))
+        freezer.tick(timedelta(seconds=0.3))
+        async_fire_time_changed(hass)
+        await knx.xknx.task_registry.block_till_done()
+        await hass.async_block_till_done()
+    assert hass.states.get(LIGHT_ENTITY_ID).state == "on"
+    assert not events
+
+    await knx.receive_response("1/1/1", False)
+    assert hass.states.get(LIGHT_ENTITY_ID).state == "off"
+    assert not events
+
+    await knx.receive_write("1/1/1", True, source="1.1.23")
+    assert hass.states.get(LIGHT_ENTITY_ID).state == "on"
+    assert len(events) == 1
+    assert events[0].data["source"] == "1.1.23"
+    assert hass.states.get(LIGHT_ENTITY_ID).context is events[0].context
