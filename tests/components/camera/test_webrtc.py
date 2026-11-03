@@ -755,3 +755,54 @@ async def test_camera_unregisters_from_webrtc_provider_on_removal(
         await camera.async_remove()
         mock_unregister.assert_called_once_with(camera)
         assert camera.webrtc_provider is None
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_stream_source")
+async def test_shared_stream_updates_existing_worker_on_provider_changes(
+    hass: HomeAssistant,
+) -> None:
+    """Keep the stream object and its outputs when a provider comes and goes."""
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+    stream = Mock(source=STREAM_SOURCE)
+    stream.update_source.side_effect = lambda source: setattr(stream, "source", source)
+    with patch(
+        "homeassistant.components.camera.entity.create_stream", return_value=stream
+    ):
+        assert await camera.async_create_stream() is stream
+    provider = SomeTestProvider()
+    shared_source = "rtsp://127.0.0.1:18554/camera.demo_camera"
+    with patch.object(
+        provider, "async_get_stream_source", AsyncMock(return_value=shared_source)
+    ):
+        unregister = async_register_webrtc_provider(hass, provider)
+        await hass.async_block_till_done()
+        assert camera.stream is stream
+        assert stream.source == shared_source
+        unregister()
+        await hass.async_block_till_done()
+    assert camera.stream is stream
+    assert stream.source == STREAM_SOURCE
+    assert stream.update_source.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_stream_source")
+async def test_shared_stream_preserves_externally_changed_source(
+    hass: HomeAssistant,
+) -> None:
+    """A source changed by another integration is not overwritten."""
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+    stream = Mock(source=STREAM_SOURCE)
+    with patch(
+        "homeassistant.components.camera.entity.create_stream", return_value=stream
+    ):
+        await camera.async_create_stream()
+    stream.source = "rtsp://custom/source"
+    provider = SomeTestProvider()
+    with patch.object(
+        provider, "async_get_stream_source", AsyncMock(return_value="rtsp://shared")
+    ):
+        unregister = async_register_webrtc_provider(hass, provider)
+        await hass.async_block_till_done()
+        stream.update_source.assert_not_called()
+        unregister()
+        await hass.async_block_till_done()

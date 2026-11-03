@@ -147,6 +147,10 @@ class CameraWebRTCProvider(ABC):
         """Close the session."""
         return  # This is an optional method so we need a default here.
 
+    async def async_get_stream_source(self, camera: Camera) -> str | None:
+        """Return an optional shared source for the camera stream."""
+        return None
+
     async def async_get_image(
         self,
         camera: Camera,

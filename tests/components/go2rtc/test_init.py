@@ -1641,3 +1641,47 @@ async def test_preload_no_change_when_already_disabled(
     # Verify preload enable/disable were not called
     rest_client.preload.enable.assert_not_called()
     rest_client.preload.disable.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("managed", "orientation", "expected"),
+    [
+        pytest.param(
+            True,
+            Orientation.NO_TRANSFORM,
+            "rtsp://127.0.0.1:18554/camera.test",
+            id="managed",
+        ),
+        pytest.param(False, Orientation.NO_TRANSFORM, None, id="external"),
+        pytest.param(True, Orientation.ROTATE_180, None, id="orientation"),
+    ],
+)
+async def test_shared_stream_source(
+    hass: HomeAssistant, managed: bool, orientation: Orientation, expected: str | None
+) -> None:
+    """Only a managed server with untransformed video offers a shared source."""
+    camera = MockCamera(None)
+    camera.entity_id = "camera.test"
+    camera.platform = Mock(platform_name="test")
+    provider = WebRTCProvider(
+        hass, "http://localhost/", Mock(), Mock(), managed=managed
+    )
+    await _setup_camera_prefs(
+        hass, camera.entity_id, DynamicStreamSettings(orientation=orientation)
+    )
+    with patch.object(provider, "_update_stream_source", AsyncMock()) as update:
+        assert await provider.async_get_stream_source(camera) == expected
+        assert update.call_count == int(expected is not None)
+
+
+async def test_shared_stream_source_escapes_identifier(hass: HomeAssistant) -> None:
+    """Preserve encoded stream identifiers through RTSP URL path parsing."""
+    camera = MockCamera("a:b/c%")
+    camera.entity_id = "camera.test"
+    camera.platform = Mock(platform_name="test")
+    provider = WebRTCProvider(hass, "http://localhost/", Mock(), Mock(), managed=True)
+    await _setup_camera_prefs(hass, camera.entity_id, DynamicStreamSettings())
+    with patch.object(provider, "_update_stream_source", AsyncMock()):
+        assert await provider.async_get_stream_source(camera) == (
+            "rtsp://127.0.0.1:18554/test_a%253Ab%252Fc%2525"
+        )

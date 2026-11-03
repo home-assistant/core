@@ -84,6 +84,11 @@ from .const import (
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
+    CONF_SECURE_VIDEO,
+    CONF_SECURE_VIDEO_NATIVE,
+    CONF_SECURE_VIDEO_PREBUFFER,
+    CONF_SECURE_VIDEO_QUALITY,
+    CONF_SECURE_VIDEO_RECEIVE_TIMESTAMPS,
     CONF_STREAM_ADDRESS,
     CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
@@ -115,6 +120,8 @@ from .const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     MAX_NAME_LENGTH,
+    SECURE_VIDEO_PREBUFFER_OPTIONS,
+    SECURE_VIDEO_QUALITY_OPTIONS,
     TYPE_AIR_PURIFIER,
     TYPE_FAN,
     TYPE_FAUCET,
@@ -184,6 +191,15 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
         probatio.Optional(
             CONF_SUPPORT_AUDIO, default=DEFAULT_SUPPORT_AUDIO
         ): cv.boolean,
+        probatio.Optional(CONF_SECURE_VIDEO): cv.boolean,
+        probatio.Optional(CONF_SECURE_VIDEO_NATIVE): cv.boolean,
+        probatio.Optional(CONF_SECURE_VIDEO_RECEIVE_TIMESTAMPS): cv.boolean,
+        probatio.Optional(CONF_SECURE_VIDEO_QUALITY): probatio.In(
+            SECURE_VIDEO_QUALITY_OPTIONS
+        ),
+        probatio.Optional(CONF_SECURE_VIDEO_PREBUFFER): probatio.In(
+            SECURE_VIDEO_PREBUFFER_OPTIONS
+        ),
         probatio.Optional(CONF_MAX_WIDTH, default=DEFAULT_MAX_WIDTH): cv.positive_int,
         probatio.Optional(CONF_MAX_HEIGHT, default=DEFAULT_MAX_HEIGHT): cv.positive_int,
         probatio.Optional(CONF_MAX_FPS, default=DEFAULT_MAX_FPS): cv.positive_int,

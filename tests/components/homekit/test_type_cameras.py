@@ -1,6 +1,5 @@
 """Test different accessory types: Camera."""
 
-import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID
@@ -130,11 +129,11 @@ async def _async_stop_stream(
 def _mock_reader():
     """Mock ffmpeg reader."""
 
-    async def _readline(*args, **kwargs):
-        await asyncio.sleep(0.1)
+    async def _read(*args, **kwargs):
+        return b""
 
     async def _get_reader(*args, **kwargs):
-        return AsyncMock(readline=_readline)
+        return AsyncMock(read=_read)
 
     return _get_reader
 
@@ -144,6 +143,7 @@ def _get_exits_after_startup_mock_ffmpeg():
     ffmpeg = MagicMock()
     type(ffmpeg.process).pid = PropertyMock(return_value=PID_THAT_WILL_NEVER_BE_ALIVE)
     ffmpeg.open = AsyncMock(return_value=True)
+    ffmpeg.process.stdin.drain = AsyncMock()
     ffmpeg.close = AsyncMock(return_value=True)
     ffmpeg.kill = AsyncMock(return_value=True)
     ffmpeg.get_reader = _mock_reader()
@@ -153,7 +153,9 @@ def _get_exits_after_startup_mock_ffmpeg():
 def _get_working_mock_ffmpeg():
     """Return a working ffmpeg."""
     ffmpeg = MagicMock()
+    ffmpeg.process.wait = AsyncMock()
     ffmpeg.open = AsyncMock(return_value=True)
+    ffmpeg.process.stdin.drain = AsyncMock()
     ffmpeg.close = AsyncMock(return_value=True)
     ffmpeg.kill = AsyncMock(return_value=True)
     ffmpeg.get_reader = _mock_reader()
@@ -1036,6 +1038,7 @@ async def test_camera_with_linked_motion_event(hass: HomeAssistant, run_driver) 
     )
     await hass.async_block_till_done()
     assert broker.mock_calls
+    acc.async_stop()
 
 
 async def test_camera_with_a_missing_linked_motion_sensor(
@@ -1363,3 +1366,35 @@ async def test_camera_with_a_missing_linked_doorbell_sensor(
 
     assert not acc.get_service(SERV_DOORBELL)
     assert not acc.get_service(SERV_STATELESS_PROGRAMMABLE_SWITCH)
+
+
+async def test_explicit_camera_source_rejected_for_shared_ingest(
+    hass: HomeAssistant, run_driver
+) -> None:
+    """Explicit source cannot bypass the shared-camera ingestion path."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    hass.states.async_set("camera.test", "idle")
+    acc = Camera(
+        hass, run_driver, "Camera", "camera.test", 2, {CONF_STREAM_SOURCE: "/dev/null"}
+    )
+    with pytest.raises(ValueError, match="Explicit stream_source"):
+        await acc._async_get_hksv_source()
+
+
+async def test_non_hksv_still_camera_snapshot(hass: HomeAssistant, run_driver) -> None:
+    """A still-only camera does not need a shared stream for snapshots."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    hass.states.async_set("camera.still", "idle")
+    accessory = Camera(hass, run_driver, "Camera", "camera.still", 2, {})
+    with patch(
+        "homeassistant.components.homekit.type_cameras.camera.async_get_image",
+        new_callable=AsyncMock,
+    ) as get_image:
+        get_image.return_value.content = b"jpeg"
+        assert (
+            await accessory.async_get_snapshot(
+                {"image-width": 640, "image-height": 360}
+            )
+            == b"jpeg"
+        )
+    get_image.assert_awaited_once_with(hass, "camera.still", width=640, height=360)

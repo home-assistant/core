@@ -524,4 +524,5 @@ async def websocket_update_prefs(
                 "notifying WebRTC provider of preferences update for",
                 entity_id,
             )
+            await camera.async_refresh_stream_source()
         connection.send_result(msg["id"], entity_prefs)

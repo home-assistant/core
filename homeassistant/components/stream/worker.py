@@ -5,6 +5,7 @@ from collections.abc import Callable, Generator, Iterator, Mapping
 import contextlib
 from dataclasses import fields
 import datetime as dt
+from fractions import Fraction
 from io import SEEK_END, BytesIO
 import logging
 import math
@@ -118,6 +119,35 @@ class StreamState:
         return self._diagnostics
 
 
+class AudioTimestampNormalizer:
+    """Keep decoded audio frames on a monotonic source-sample clock."""
+
+    def __init__(self) -> None:
+        """Initialize the clock for one source generation."""
+        self._sample_rate: int | None = None
+        self._next_pts: int | None = None
+
+    def normalize(self, frame: av.AudioFrame) -> None:
+        """Preserve forward gaps but clamp timestamps that overlap prior samples."""
+        sample_rate = frame.sample_rate
+        if not sample_rate or (
+            self._sample_rate is not None and sample_rate != self._sample_rate
+        ):
+            raise StreamWorkerError("Audio sample rate changed or is unavailable")
+        self._sample_rate = sample_rate
+        if frame.pts is not None and frame.time_base is not None:
+            pts = round(frame.pts * frame.time_base * sample_rate)
+        elif self._next_pts is not None:
+            pts = self._next_pts
+        else:
+            raise StreamWorkerError("Audio timestamp unavailable")
+        if self._next_pts is not None:
+            pts = max(pts, self._next_pts)
+        frame.pts = pts
+        frame.time_base = Fraction(1, sample_rate)
+        self._next_pts = pts + frame.samples
+
+
 class StreamMuxer:
     """StreamMuxer re-packages video/audio packets for output."""
 
@@ -139,12 +169,20 @@ class StreamMuxer:
         audio_bsf: str | None,
         stream_state: StreamState,
         stream_settings: StreamSettings,
+        transcode_audio: bool = False,
     ) -> None:
         """Initialize StreamMuxer."""
         self._hass = hass
         self._input_video_stream = video_stream
         self._input_audio_stream = audio_stream
         self._audio_bsf = audio_bsf
+        self._transcode_audio = transcode_audio
+        self._audio_timestamps = AudioTimestampNormalizer() if transcode_audio else None
+        self._audio_resampler = (
+            av.audio.resampler.AudioResampler(format="fltp", layout="mono", rate=24000)  # pylint: disable=c-extension-no-member
+            if transcode_audio
+            else None
+        )
         self._audio_bsf_context: av.BitStreamFilterContext | None = None
         self._part_has_keyframe = False
         self._stream_settings = stream_settings
@@ -255,14 +293,19 @@ class StreamMuxer:
         # Check if audio is requested
         output_astream = None
         if input_astream:
-            if self._audio_bsf:
+            if self._transcode_audio:
+                output_astream = container.add_stream("aac", rate=24000)
+                output_astream.layout = "mono"
+                output_astream.bit_rate = 32000
+            elif self._audio_bsf:
                 self._audio_bsf_context = av.BitStreamFilterContext(
                     self._audio_bsf, input_astream
                 )
-            output_astream = cast(
-                av.audio.AudioStream,
-                self._add_stream_from_template(container, input_astream),
-            )
+            if not self._transcode_audio:
+                output_astream = cast(
+                    av.audio.AudioStream,
+                    self._add_stream_from_template(container, input_astream),
+                )
         return container, output_vstream, output_astream
 
     def reset(self, video_dts: int) -> None:
@@ -306,6 +349,16 @@ class StreamMuxer:
 
         elif packet.stream == self._input_audio_stream:
             assert self._output_audio_stream
+            if self._transcode_audio:
+                assert self._audio_resampler
+                assert self._audio_timestamps
+                for frame in packet.decode():
+                    audio_frame = cast(av.AudioFrame, frame)
+                    self._audio_timestamps.normalize(audio_frame)
+                    for converted in self._audio_resampler.resample(audio_frame):
+                        for audio_packet in self._output_audio_stream.encode(converted):
+                            self._av_output.mux(audio_packet)
+                return
             if self._audio_bsf_context:
                 for audio_packet in self._audio_bsf_context.filter(packet):
                     audio_packet.stream = self._output_audio_stream
@@ -372,6 +425,9 @@ class StreamMuxer:
         if last_part:
             # Closing the av_output will write the remaining buffered data to the
             # memory_file as a new moof/mdat.
+            if self._transcode_audio and self._output_audio_stream:
+                for audio_packet in self._output_audio_stream.encode(None):
+                    self._av_output.mux(audio_packet)
             self._av_output.close()
             # With delay_moov, this may be the first time the file pointer has
             # moved, so the segment may not yet have been created
@@ -518,10 +574,11 @@ class TimestampValidator:
 
     def __init__(self, inv_video_time_base: int, inv_audio_time_base: int) -> None:
         """Initialize the TimestampValidator."""
-        # Decompression timestamp of last packet in each stream
+        # Source decompression timestamp of last accepted packet in each stream
         self._last_dts: dict[av.stream.Stream, int | float] = defaultdict(
             lambda: NEGATIVE_INF
         )
+        self._last_output_dts: dict[av.stream.Stream, int] = {}
         # Number of consecutive missing decompression timestamps
         self._missing_dts = 0
         # For the bounds, just use the larger of the two values. If the error
@@ -550,9 +607,23 @@ class TimestampValidator:
                 f"Timestamp discontinuity detected: last dts = {prev_dts}, dts ="
                 f" {packet.dts}"
             )
-        if packet.dts <= prev_dts:
+        if packet.dts < prev_dts or (
+            packet.dts == prev_dts and packet.stream.type != "video"
+        ):
             return False
-        self._last_dts[packet.stream] = packet.dts
+        source_dts = packet.dts
+        if packet.stream.type == "video":
+            # Equal source timestamps may carry distinct reference pictures.
+            last_output_dts = self._last_output_dts.get(packet.stream)
+            if last_output_dts is not None and packet.dts <= last_output_dts:
+                adjusted_dts = last_output_dts + 1
+                if adjusted_dts - packet.dts > self._max_dts_gap:
+                    raise StreamWorkerError("Video timestamp adjustment exceeded limit")
+                if packet.pts is not None:
+                    packet.pts += adjusted_dts - packet.dts
+                packet.dts = adjusted_dts
+            self._last_output_dts[packet.stream] = packet.dts
+        self._last_dts[packet.stream] = source_dts
         return True
 
 
@@ -636,6 +707,14 @@ def stream_worker(
 ) -> None:
     """Handle consuming streams."""
 
+    # Each worker owns its options; a provider must not change the camera defaults.
+    pyav_options = pyav_options.copy()
+    if any(
+        getattr(output, "requires_wallclock_timestamps", False) is True
+        for output in stream_state.outputs
+    ):
+        pyav_options["use_wallclock_as_timestamps"] = "1"
+
     if av.library_versions["libavformat"][0] >= 59 and "stimeout" in pyav_options:
         # the stimeout option was renamed to timeout as of ffmpeg 5.0
         pyav_options["timeout"] = pyav_options["stimeout"]
@@ -650,10 +729,18 @@ def stream_worker(
         audio_stream = container.streams.audio[0]
     except KeyError, IndexError:
         audio_stream = None
-    if audio_stream and audio_stream.name not in AUDIO_CODECS:
+    transcode_audio = bool(
+        audio_stream
+        and audio_stream.name == "pcm_alaw"
+        and any(
+            getattr(output, "requires_aac_audio", False)
+            for output in stream_state.outputs
+        )
+    )
+    if audio_stream and audio_stream.name not in AUDIO_CODECS and not transcode_audio:
         audio_stream = None
     # Some audio streams do not have a profile and throw errors when remuxing
-    if audio_stream and audio_stream.profile is None:
+    if audio_stream and audio_stream.profile is None and not transcode_audio:
         audio_stream = None
     # Disable ll-hls for hls inputs
     if container.format.name == "hls":
@@ -728,6 +815,7 @@ def stream_worker(
         audio_bsf,
         stream_state,
         stream_settings,
+        transcode_audio=transcode_audio,
     )
     muxer.reset(start_dts)
 

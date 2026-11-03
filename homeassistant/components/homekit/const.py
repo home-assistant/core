@@ -55,6 +55,20 @@ CONF_LINKED_DOORBELL_SENSOR = "linked_doorbell_sensor"
 CONF_LINKED_FILTER_CHANGE_INDICATION = "linked_filter_change_indication_binary_sensor"
 CONF_LINKED_FILTER_LIFE_LEVEL = "linked_filter_life_level_sensor"
 CONF_LINKED_MOTION_SENSOR = "linked_motion_sensor"
+CONF_SECURE_VIDEO = "secure_video"
+CONF_SECURE_VIDEO_PREBUFFER = "secure_video_prebuffer"
+CONF_SECURE_VIDEO_QUALITY = "secure_video_quality"
+CONF_SECURE_VIDEO_NATIVE = "secure_video_native"
+CONF_SECURE_VIDEO_RECEIVE_TIMESTAMPS = "secure_video_receive_timestamps"
+SECURE_VIDEO_QUALITY_COMPATIBLE = "compatible"
+SECURE_VIDEO_QUALITY_HIGH = "high"
+SECURE_VIDEO_QUALITY_OPTIONS = (
+    SECURE_VIDEO_QUALITY_COMPATIBLE,
+    SECURE_VIDEO_QUALITY_HIGH,
+)
+DEFAULT_SECURE_VIDEO_PREBUFFER = 4
+DEFAULT_SECURE_VIDEO_RECEIVE_TIMESTAMPS = True
+SECURE_VIDEO_PREBUFFER_OPTIONS = (4, 8)
 CONF_LINKED_HUMIDITY_SENSOR = "linked_humidity_sensor"
 CONF_LINKED_OBSTRUCTION_SENSOR = "linked_obstruction_sensor"
 CONF_LINKED_PM25_SENSOR = "linked_pm25_sensor"

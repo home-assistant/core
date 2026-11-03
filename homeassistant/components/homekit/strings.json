@@ -5,7 +5,7 @@
     },
     "step": {
       "pairing": {
-        "description": "To complete pairing follow the instructions in “Notifications” under “HomeKit Pairing”.",
+        "description": "To complete pairing follow the instructions in \u201cNotifications\u201d under \u201cHomeKit Pairing\u201d.",
         "title": "Pair HomeKit"
       },
       "user": {
@@ -26,6 +26,9 @@
     }
   },
   "options": {
+    "error": {
+      "secure_video_custom_source": "HomeKit Secure Video cannot use a custom HomeKit stream source. Remove the custom source before enabling it."
+    },
     "step": {
       "accessory": {
         "data": {
@@ -43,7 +46,8 @@
       "cameras": {
         "data": {
           "camera_audio": "Cameras that support audio",
-          "camera_copy": "Cameras that support native H.264 streams"
+          "camera_copy": "Cameras that support native H.264 streams",
+          "camera_secure_video": "Activate HomeKit Secure Video"
         },
         "description": "Check all cameras that support native H.264 streams. If the camera does not output a H.264 stream, the system will transcode the video to H.264 for HomeKit. Transcoding requires a performant CPU and is unlikely to work on single-board computers.",
         "title": "Camera configuration"
@@ -56,14 +60,14 @@
         "data": {
           "entities": "[%key:component::homekit::options::step::include::data::entities%]"
         },
-        "description": "All “{domains}” entities will be included except for the excluded entities and categorized entities.",
+        "description": "All \u201c{domains}\u201d entities will be included except for the excluded entities and categorized entities.",
         "title": "Select the entities to be excluded"
       },
       "include": {
         "data": {
           "entities": "Entities"
         },
-        "description": "Select entities from each domain in “{domains}”. The include will cover the entire domain if you do not select any entities for a given domain.",
+        "description": "Select entities from each domain in \u201c{domains}\u201d. The include will cover the entire domain if you do not select any entities for a given domain.",
         "title": "Select the entities to be included"
       },
       "init": {
@@ -72,8 +76,18 @@
           "include_exclude_mode": "Inclusion mode",
           "mode": "HomeKit mode"
         },
-        "description": "HomeKit can be configured to expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV or RECEIVER device class to function properly. Entities in the “Domains to include” will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
+        "description": "HomeKit can be configured to expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV or RECEIVER device class to function properly. Entities in the \u201cDomains to include\u201d will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
         "title": "Select mode and domains."
+      },
+      "secure_video": {
+        "data": {
+          "linked_motion_sensor": "Motion sensor",
+          "secure_video_native": "Prefer source video",
+          "secure_video_prebuffer": "Prebuffer (seconds)",
+          "secure_video_quality": "Recording quality",
+          "secure_video_receive_timestamps": "Use receive time for source timestamps"
+        },
+        "description": "Choose settings for {camera}. Compatible supports the widest range of controllers; High favors video quality when supported. Source resolution, profile, frame rate, bitrate and keyframe interval may differ from HomeKit’s selection and may not work with all controllers or iCloud recordings."
       },
       "yaml": {
         "description": "This entry is controlled via YAML",
@@ -87,6 +101,12 @@
         "automatic": "Automatic",
         "heater_cooler": "Heater Cooler",
         "thermostat": "Thermostat"
+      }
+    },
+    "secure_video_quality": {
+      "options": {
+        "compatible": "Compatible",
+        "high": "High quality"
       }
     }
   },
