@@ -14,7 +14,11 @@ from homeassistant.components.rest.const import (
     CONF_JSON_ATTRS_PATH,
     DOMAIN,
 )
-from homeassistant.components.sensor import CONF_STATE_CLASS, SensorDeviceClass
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_PARAMS,
@@ -312,7 +316,10 @@ async def test_sensor_subentry_flow_invalid_unit_state_class(
         get_subentry_data[SENSOR_DATA]["data"] | {CONF_UNIT_OF_MEASUREMENT: "$"},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"][CONF_UNIT_OF_MEASUREMENT] == "unit_validation_error"
+    assert (
+        result["errors"][CONF_UNIT_OF_MEASUREMENT]
+        == "unit_device_class_validation_error"
+    )
     assert result["description_placeholders"]["unit"] == "$"
 
     result = await hass.config_entries.subentries.async_configure(
@@ -323,7 +330,23 @@ async def test_sensor_subentry_flow_invalid_unit_state_class(
         },
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"][CONF_UNIT_OF_MEASUREMENT] == "unit_validation_error"
+    assert (
+        result["errors"][CONF_UNIT_OF_MEASUREMENT]
+        == "unit_device_class_validation_error"
+    )
+    subentry_data = get_subentry_data[SENSOR_DATA]["data"] | {
+        CONF_STATE_CLASS: SensorStateClass.MEASUREMENT_ANGLE
+    }
+    del subentry_data[CONF_DEVICE_CLASS]
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        subentry_data,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert (
+        result["errors"][CONF_UNIT_OF_MEASUREMENT]
+        == "unit_state_class_validation_error"
+    )
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         get_subentry_data[SENSOR_DATA]["data"]

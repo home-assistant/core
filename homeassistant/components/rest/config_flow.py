@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
+    STATE_CLASS_UNITS,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -156,10 +157,15 @@ class RestConfigFlow(ConfigFlow, domain=DOMAIN):
 def _validate_unit(data: dict[str, Any]) -> dict[str, Any]:
     """Validate unit of measurement, from template config_flow.py."""
     if (
-        (device_class := data.get(CONF_DEVICE_CLASS))
-        and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
-        and (unit := data.get(CONF_UNIT_OF_MEASUREMENT)) not in units
-    ):
+        (
+            (device_class := data.get(CONF_DEVICE_CLASS))
+            and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
+        )
+        or (
+            (state_class := data.get(CONF_STATE_CLASS))
+            and (units := STATE_CLASS_UNITS.get(state_class)) is not None
+        )
+    ) and (unit := data.get(CONF_UNIT_OF_MEASUREMENT)) not in units:
         # Sort twice to make sure strings with same case-insensitive order of
         # letters are sorted consistently still.
         sorted_units = sorted(
@@ -175,11 +181,18 @@ def _validate_unit(data: dict[str, Any]) -> dict[str, Any]:
 
         raise probatio.Invalid(
             translation_key=(
-                "unit_validation_error" if unit is not None else "unit_required_error"
+                "unit_required_error"
+                if unit is None
+                else (
+                    "unit_device_class_validation_error"
+                    if device_class is not None
+                    else "unit_state_class_validation_error"
+                )
             ),
             placeholders={
                 "unit": unit,
                 "device_class": device_class,
+                "state_class": state_class if "state_class" in locals() else None,
                 "units_string": units_string,
             },
             path=[CONF_UNIT_OF_MEASUREMENT],

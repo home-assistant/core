@@ -153,8 +153,9 @@
         "no_json": "[%key:component::rest::common::no_json%]",
         "parse_error": "[%key:component::rest::common::parse_error%]",
         "state_class_validation_error": "\"{state_class}\" is not a valid state class for device class \"{device_class}\"; expected \"{state_classes_string}\"",
+        "unit_device_class_validation_error": "\"{unit}\" is not a valid unit for device class \"{device_class}\"; expected \"{units_string}\"",
         "unit_required_error": "Device class \"{device_class}\" requires \"{units_string}\"",
-        "unit_validation_error": "\"{unit}\" is not a valid unit for device class \"{device_class}\"; expected \"{units_string}\""
+        "unit_state_class_validation_error": "\"{unit}\" is not a valid unit for state class \"{state_class}\"; expected \"{units_string}\""
       },
       "initiate_flow": {
         "user": "Add sensor"
