@@ -2062,16 +2062,12 @@ def test_belgian_diagnostics_preserve_text_and_gas_unique_ids() -> None:
         entity = DSMREntity(description, entry, telegram, None, None)
         assert entity.native_value == value
 
-    from dsmr_parser.objects import MbusDevice
-
-    device = MbusDevice(channel_id=1)
-    device.add(
+    telegram = Telegram()
+    telegram.add(
         (0, 1),
         CosemObject((0, 1), [{"value": "0000000088", "unit": None}]),
         "MBUS_EQUIPMENT_IDENTIFIER",
     )
-    telegram = Telegram()
-    telegram.MBUS_DEVICES = [device]
     ids = set()
     for description in SENSORS_MBUS_DEVICE_TYPE[3]:
         entity = DSMREntity(description, entry, telegram, None, None, "5678", 1)
