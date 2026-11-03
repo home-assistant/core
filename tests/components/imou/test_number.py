@@ -38,19 +38,41 @@ DEFAULT_PLUG_SWITCHES = {
     PARAM_PLUG_SWITCH: {PARAM_STATE: True},
 }
 
-PLUG_MOCK_DEVICES = [
-    create_online_device(
-        "plug1",
-        "Smart plug",
-        button_keys=(),
-        switches=DEFAULT_PLUG_SWITCHES,
-        texts=DEFAULT_PLUG_TEXTS,
-    ),
-]
+
+def plug_mock_devices() -> list[ImouHaDevice]:
+    """Return a fresh smart-plug device list for each test."""
+    return [
+        create_online_device(
+            "plug1",
+            "Smart plug",
+            button_keys=(),
+            switches=DEFAULT_PLUG_SWITCHES,
+            texts=DEFAULT_PLUG_TEXTS,
+        )
+    ]
+
+
+def high_plug_mock_devices() -> list[ImouHaDevice]:
+    """Return a fresh high-power plug for each test."""
+    return [
+        create_online_device(
+            "plug2",
+            "High plug",
+            button_keys=(),
+            switches={PARAM_PLUG_SWITCH: {PARAM_STATE: True}},
+            texts={
+                PARAM_COUNT_DOWN_SWITCH: {PARAM_STATE: "0"},
+                PARAM_OVERCHARGE_SWITCH: {
+                    PARAM_STATE: "2000",
+                    PARAM_REF: OVERCHARGE_HIGH_REF,
+                },
+            },
+        )
+    ]
 
 
 @pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
-@pytest.mark.parametrize("imou_mock_devices", [PLUG_MOCK_DEVICES], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_number_entities_snapshot(
     hass: HomeAssistant,
@@ -63,7 +85,7 @@ async def test_number_entities_snapshot(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
-@pytest.mark.parametrize("imou_mock_devices", [PLUG_MOCK_DEVICES], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_set_countdown_minutes(
     hass: HomeAssistant,
@@ -85,11 +107,12 @@ async def test_set_countdown_minutes(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
-@pytest.mark.parametrize("imou_mock_devices", [PLUG_MOCK_DEVICES], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_set_overcharge_watts(
     hass: HomeAssistant,
     mock_imou_ha_device_manager: MagicMock,
+    imou_mock_devices: list[ImouHaDevice],
 ) -> None:
     """Setting max power writes watts to the cloud API."""
     entity_id = "number.smart_plug_max_power_w"
@@ -103,34 +126,14 @@ async def test_set_overcharge_watts(
     await hass.async_block_till_done()
 
     mock_imou_ha_device_manager.async_set_text_value.assert_called_once_with(
-        PLUG_MOCK_DEVICES[0],
+        imou_mock_devices[0],
         PARAM_OVERCHARGE_SWITCH,
         "500",
     )
 
 
 @pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
-@pytest.mark.parametrize(
-    "imou_mock_devices",
-    [
-        [
-            create_online_device(
-                "plug2",
-                "High plug",
-                button_keys=(),
-                switches={PARAM_PLUG_SWITCH: {PARAM_STATE: True}},
-                texts={
-                    PARAM_COUNT_DOWN_SWITCH: {PARAM_STATE: "0"},
-                    PARAM_OVERCHARGE_SWITCH: {
-                        PARAM_STATE: "2000",
-                        PARAM_REF: OVERCHARGE_HIGH_REF,
-                    },
-                },
-            )
-        ]
-    ],
-    indirect=True,
-)
+@pytest.mark.parametrize("imou_mock_devices", [high_plug_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_overcharge_high_ref_allows_higher_max(hass: HomeAssistant) -> None:
     """Plugs with the high-power ref expose a larger watt ceiling."""
@@ -141,7 +144,7 @@ async def test_overcharge_high_ref_allows_higher_max(hass: HomeAssistant) -> Non
 
 
 @pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
-@pytest.mark.parametrize("imou_mock_devices", [PLUG_MOCK_DEVICES], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_set_countdown_imou_exception(
     hass: HomeAssistant,
@@ -165,16 +168,17 @@ async def test_set_countdown_imou_exception(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
-@pytest.mark.parametrize("imou_mock_devices", [PLUG_MOCK_DEVICES], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_countdown_expires_to_zero(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_imou_ha_device_manager: MagicMock,
+    imou_mock_devices: list[ImouHaDevice],
 ) -> None:
     """The local clock drives the countdown down to zero without another poll."""
     entity_id = "number.smart_plug_countdown_timer_min"
-    device = PLUG_MOCK_DEVICES[0]
+    device = imou_mock_devices[0]
 
     async def _set_countdown(dev, text_type, value):
         device.texts[PARAM_COUNT_DOWN_SWITCH][PARAM_STATE] = value
@@ -198,17 +202,18 @@ async def test_countdown_expires_to_zero(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
-@pytest.mark.parametrize("imou_mock_devices", [PLUG_MOCK_DEVICES], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_countdown_cancelled_when_device_leaves_account(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
+    imou_mock_devices: list[ImouHaDevice],
 ) -> None:
     """Removing the last device cancels its local countdown before sync_all."""
     entity_id = "number.smart_plug_countdown_timer_min"
-    device = PLUG_MOCK_DEVICES[0]
+    device = imou_mock_devices[0]
     device_key = device.device_id
     coordinator = mock_config_entry.runtime_data
 
@@ -235,17 +240,18 @@ async def test_countdown_cancelled_when_device_leaves_account(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.NUMBER]], indirect=True)
-@pytest.mark.parametrize("imou_mock_devices", [PLUG_MOCK_DEVICES], indirect=True)
+@pytest.mark.parametrize("imou_mock_devices", [plug_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
 async def test_countdown_preserves_deadline_while_offline(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
+    imou_mock_devices: list[ImouHaDevice],
 ) -> None:
     """Offline status polls must not reset the local countdown from stale text."""
     entity_id = "number.smart_plug_countdown_timer_min"
-    device = PLUG_MOCK_DEVICES[0]
+    device = imou_mock_devices[0]
     device_key = device.device_id
     coordinator = mock_config_entry.runtime_data
 
