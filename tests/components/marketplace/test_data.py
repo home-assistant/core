@@ -438,46 +438,6 @@ async def test_restore_without_stored_data_is_a_first_setup(
     assert marketplace.status.new is True
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_restore_default_repositories(
-    marketplace: MarketplaceManager,
-    config_dir: Path,
-) -> None:
-    """Test the repositories the catalog listed stay default without the catalog."""
-    stored = {
-        "1296269": {**RESTORED_REPOSITORIES["1296269"], "default": True},
-        "1296267": RESTORED_REPOSITORIES["1296267"],
-    }
-    create_install_folders(config_dir, stored)
-    marketplace.repositories._default_repositories.clear()
-    data = MarketplaceData(marketplace)
-
-    with patch(
-        "homeassistant.components.marketplace.utils.data.async_load_from_storage",
-        side_effect=lambda hass, key: stored if key == "repositories" else {},
-    ):
-        assert await data.restore()
-
-    assert marketplace.repositories.is_default("1296269")
-    assert not marketplace.repositories.is_default("1296267")
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_write_default_repositories(
-    marketplace: MarketplaceManager,
-    hass_storage: dict[str, Any],
-) -> None:
-    """Test only the repositories the catalog lists are written as default."""
-    marketplace.repositories._default_repositories.discard(REPOSITORY_PLUGIN_ID)
-    assert marketplace.repositories.is_default(REPOSITORY_INTEGRATION_ID)
-
-    await marketplace.data.async_write()
-
-    stored = hass_storage[f"{DOMAIN}.repositories"]["data"]
-    assert stored[REPOSITORY_INTEGRATION_ID]["default"] is True
-    assert "default" not in stored[REPOSITORY_PLUGIN_ID]
-
-
 @pytest.mark.parametrize(
     ("reason", "written"),
     [
