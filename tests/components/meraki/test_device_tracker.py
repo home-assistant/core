@@ -202,18 +202,22 @@ async def test_trackers_disabled_by_default(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test only clients known to another integration are tracked by default."""
+    """Test trackers start disabled, with their own device, even for known MACs."""
     other_entry = MockConfigEntry(domain="other")
     other_entry.add_to_hass(hass)
-    device_registry.async_get_or_create(
+    other_device = device_registry.async_get_or_create(
         config_entry_id=other_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:00:01")},
     )
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(PHONE).state == STATE_HOME
-    entry = entity_registry.async_get("device_tracker.nas")
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    phone = entity_registry.async_get(PHONE)
+    assert phone.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert phone.device_id != other_device.id
+    device = device_registry.async_get(phone.device_id)
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:00:01")}
+    assert device.name == "Pixel 9"
 
 
 @pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
@@ -263,6 +267,8 @@ async def test_restore_unlisted_clients(
     hass: HomeAssistant,
     mock_meraki_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test trackers of clients the API no longer lists are away after a restart."""
     await setup_integration(hass, mock_config_entry)
@@ -272,6 +278,9 @@ async def test_restore_unlisted_clients(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get(PHONE).state == STATE_NOT_HOME
+    # Without the API's name, the device keeps the one it had.
+    device = device_registry.async_get(entity_registry.async_get(PHONE).device_id)
+    assert device.name == "Pixel 9"
 
 
 @pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")

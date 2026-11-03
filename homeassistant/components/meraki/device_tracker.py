@@ -20,6 +20,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -178,7 +179,7 @@ async def async_setup_entry(
         MerakiClientTracker(
             coordinator,
             registry_entry.unique_id.removeprefix(f"{org_id}_"),
-            registry_entry.original_name,
+            None,
         )
         for registry_entry in registry_entries
     )
@@ -189,7 +190,9 @@ async def async_setup_entry(
         for mac, client in coordinator.data.clients.items():
             if (unique_id := _unique_id(org_id, mac)) not in tracked:
                 tracked.add(unique_id)
-                new.append(MerakiClientTracker(coordinator, mac, client.description))
+                new.append(
+                    MerakiClientTracker(coordinator, mac, client.description or mac)
+                )
         async_add_entities(new)
 
     _async_add_new_clients()
@@ -204,14 +207,20 @@ def _unique_id(org_id: str, mac: str) -> str:
 class MerakiClientTracker(MerakiEntity, ScannerEntity):
     """A Wi-Fi or wired client, home while it is connected to the network."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(
         self, coordinator: MerakiDataUpdateCoordinator, mac: str, name: str | None
     ) -> None:
-        """Initialize the tracker."""
+        """Initialize the tracker, naming its device if the name is known."""
         super().__init__(coordinator)
         self.mac = mac
         self._attr_mac_address = mac
-        self._attr_name = name or mac
+        self._attr_device_info = DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+        # Restored trackers keep the name their device already has.
+        if name is not None:
+            self._attr_device_info["name"] = name
         self._async_update_attrs()
 
     @property
