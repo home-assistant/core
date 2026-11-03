@@ -146,7 +146,6 @@ class DaliConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._title = self.context["title_placeholders"][CONF_NAME]
             return await self.async_step_bus_power()
-        self._set_confirm_only()
         return self.async_show_form(step_id="usb_confirm")
 
     async def async_step_bus_power(
