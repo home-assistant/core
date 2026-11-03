@@ -196,7 +196,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={CONF_USERNAME: entry_data[CONF_USERNAME]},
+            description_placeholders={"username": entry_data[CONF_USERNAME]},
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )

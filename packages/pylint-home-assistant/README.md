@@ -107,6 +107,7 @@ Every check has a code following the
 | `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
 | `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
 | `C7458` | [`home-assistant-logger-const-name`](#c7458-home-assistant-logger-const-name) | Logger in an integration's `const.py` should use `__package__` |
+| `C7459` | [`home-assistant-placeholder-key`](#c7459-home-assistant-placeholder-key) | Placeholder keys should be string literals, not constants such as `CONF_*` |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
 | `E7402` | [`home-assistant-argument-type`](#e7402-home-assistant-argument-type) | Function argument should have the specified type hint |
 | `E7403` | [`home-assistant-return-type`](#e7403-home-assistant-return-type) | Function should have the specified return type hint |
@@ -1099,6 +1100,26 @@ one of the two was provided.
 The placeholders passed in code (e.g. `translation_placeholders={...}`)
 don't match the `{placeholder}` slots in the `strings.json` message.
 
+
+## `home_assistant_placeholder_keys` checker
+
+Checks the keys of the dicts passed as `description_placeholders` or
+`translation_placeholders`. A placeholder key refers to a `{placeholder}`
+slot in `strings.json`, not to a configuration key or attribute.
+
+### `C7459`: `home-assistant-placeholder-key`
+
+Use a string literal for the placeholder key instead of an unrelated constant
+such as `CONF_USERNAME`. Integrations that need a constant can use a dedicated
+`PLACEHOLDER_*` constant or a `*Placeholder` enum.
+
+```python
+# Bad
+description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]}
+
+# Good
+description_placeholders={"username": entry.data[CONF_USERNAME]}
+```
 
 ## `home_assistant_mdi_icons` checker
 
