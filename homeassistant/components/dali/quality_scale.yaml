@@ -60,11 +60,7 @@ rules:
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow:
-    status: exempt
-    comment: >-
-      The only configurable setting is the USB device path, which USB discovery
-      keeps up to date automatically.
+  reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo
 
