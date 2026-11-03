@@ -374,6 +374,7 @@ async def test_setup_onboarding_supervisor_no_update(
 
 async def test_setup_onboarding_does_not_enable_auto_update_on_beta_channel(
     hass: HomeAssistant,
+    supervisor_client: AsyncMock,
     supervisor_info: AsyncMock,
 ) -> None:
     """Test onboarding does not enable automatic updates on a beta channel."""
@@ -382,6 +383,7 @@ async def test_setup_onboarding_does_not_enable_auto_update_on_beta_channel(
     )
     entry = MockConfigEntry(domain=DOMAIN, data={}, options={}, unique_id=DOMAIN)
     entry.add_to_hass(hass)
+    supervisor_client.supervisor.update.side_effect = SupervisorBadRequestError
 
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
@@ -391,11 +393,13 @@ async def test_setup_onboarding_does_not_enable_auto_update_on_beta_channel(
         await hass.async_block_till_done()
 
     assert result
+    assert entry.state is ConfigEntryState.LOADED
     assert OPTION_CORE_AUTO_UPDATE not in entry.options
 
 
 async def test_setup_onboarding_preserves_explicit_auto_update_disabled(
     hass: HomeAssistant,
+    supervisor_client: AsyncMock,
 ) -> None:
     """Test onboarding does not override an explicit automatic update opt-out."""
     entry = MockConfigEntry(
@@ -405,6 +409,7 @@ async def test_setup_onboarding_preserves_explicit_auto_update_disabled(
         unique_id=DOMAIN,
     )
     entry.add_to_hass(hass)
+    supervisor_client.supervisor.update.side_effect = SupervisorBadRequestError
 
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
@@ -414,6 +419,7 @@ async def test_setup_onboarding_preserves_explicit_auto_update_disabled(
         await hass.async_block_till_done()
 
     assert result
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.options[OPTION_CORE_AUTO_UPDATE] is False
 
 
