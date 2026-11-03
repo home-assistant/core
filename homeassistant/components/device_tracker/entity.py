@@ -293,12 +293,15 @@ class TrackerEntity(
     @callback
     def async_internal_zone_presence_detection_changed(self) -> None:
         """Recalculate active zones from the current location alone."""
-        in_zones = self.__in_zones
         self.__previous_in_zones = ()
-        self._async_update_zones()
+        calculated = self._async_calculate_state()
         # Avoid rewriting the state if it didn't change to avoid person
         # entities recalculating their source tracker
-        if self.__in_zones != in_zones:
+        if (
+            (current := self.hass.states.get(self.entity_id)) is None
+            or current.state != calculated.state
+            or current.attributes != calculated.attributes
+        ):
             self.async_write_ha_state()
 
     @callback
