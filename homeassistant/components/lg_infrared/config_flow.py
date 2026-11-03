@@ -197,6 +197,20 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="ac", data_schema=_ac_schema(self.hass))
 
+    async def async_step_home_theater(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle Home Theater entity selection."""
+        if user_input is not None:
+            return await self._async_create_device_entry(
+                LGDeviceType.HOME_THEATER, user_input
+            )
+
+        return self.async_show_form(
+            step_id="home_theater",
+            data_schema=_home_theater_schema(self.hass),
+        )
+
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -236,18 +250,4 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(data_schema, entry.data),
             errors=errors,
-        )
-
-    async def async_step_home_theater(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle Home Theater entity selection."""
-        if user_input is not None:
-            return await self._async_create_device_entry(
-                LGDeviceType.HOME_THEATER, user_input
-            )
-
-        return self.async_show_form(
-            step_id="home_theater",
-            data_schema=_home_theater_schema(self.hass),
         )

@@ -185,7 +185,7 @@
         "name": "[%key:common::entity::button::ok::name%]"
       },
       "open_close": {
-        "name": "Open/Close"
+        "name": "Open/close"
       },
       "optical_tv_sound": {
         "name": "Optical/TV sound"
@@ -230,7 +230,7 @@
         "name": "Toggle vertical swing"
       },
       "title_popup": {
-        "name": "Title/Popup"
+        "name": "Title/popup"
       },
       "up": {
         "name": "[%key:common::entity::button::up::name%]"

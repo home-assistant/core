@@ -1671,12 +1671,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Open/Close',
+    'object_id_base': 'Open/close',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Open/Close',
+    'original_name': 'Open/close',
     'platform': 'lg_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1689,7 +1689,7 @@
 # name: test_entities[home_theater][button.lg_home_theater_open_close-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Open/Close',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Open/close',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_home_theater_open_close',
@@ -2271,12 +2271,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Title/Popup',
+    'object_id_base': 'Title/popup',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Title/Popup',
+    'original_name': 'Title/popup',
     'platform': 'lg_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2289,7 +2289,7 @@
 # name: test_entities[home_theater][button.lg_home_theater_title_popup-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Title/Popup',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Title/popup',
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_home_theater_title_popup',
