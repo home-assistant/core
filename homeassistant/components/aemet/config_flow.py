@@ -18,7 +18,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
-    SchemaOptionsFlowHandler,
+    SchemaOptionsFlowHandlerWithReload,
 )
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
@@ -143,6 +143,6 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> SchemaOptionsFlowHandler:
+    ) -> SchemaOptionsFlowHandlerWithReload:
         """Get the options flow for this handler."""
-        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
+        return SchemaOptionsFlowHandlerWithReload(config_entry, OPTIONS_FLOW)
