@@ -5,6 +5,10 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 from samsungtvws.exceptions import ConnectionFailure, ResponseError
 
 from homeassistant.components.samsungtv.const import DOMAIN
@@ -14,8 +18,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_samsungtv_entry
 from .const import ENTRYDATA_LEGACY, ENTRYDATA_WEBSOCKET
-
-from tests.common import async_fire_time_changed, async_load_json_object_fixture
 
 ENTITY_ID = "binary_sensor.mock_title_art_mode"
 
