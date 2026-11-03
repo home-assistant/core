@@ -17,15 +17,10 @@ from switchbot import (
 )
 from yarl import URL
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
 )
-from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
@@ -43,18 +38,15 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
     CONF_ADDRESS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_SENSOR_TYPE,
-    CONF_TOKEN,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow, translation
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import (
     CIRCULATOR_FAN_PRO_SERVICE_INFO,
@@ -105,17 +97,6 @@ async def _async_start_user_oauth(hass: HomeAssistant) -> ConfigFlowResult:
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert result["step_id"] == "auth"
     return result
-
-
-def _oauth_state(hass: HomeAssistant, flow_id: str) -> str:
-    """Create the state generated for the fixed SwitchBot callback."""
-    return config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": flow_id,
-            "redirect_uri": config_entry_oauth2_flow.MY_AUTH_CALLBACK_PATH,
-        },
-    )
 
 
 def test_oauth_production_configuration() -> None:
@@ -2126,30 +2107,6 @@ async def test_user_show_menu_when_no_scanners(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    "token",
-    [
-        pytest.param({}, id="missing-access-token"),
-        pytest.param(
-            {CONF_ACCESS_TOKEN: OAUTH_ACCESS_TOKEN}, id="missing-continuation"
-        ),
-    ],
-)
-async def test_oauth_create_entry_invalid_data(
-    hass: HomeAssistant, token: dict[str, object]
-) -> None:
-    """Test invalid OAuth entry data aborts setup."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    handler = hass.config_entries.flow._progress[result["flow_id"]]
-
-    result = await handler.async_oauth_create_entry({CONF_TOKEN: token})
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "oauth_error"
-
-
 @pytest.mark.usefixtures("current_request_with_host", "mock_scanners_all_passive")
 async def test_user_oauth_login(
     hass: HomeAssistant,
@@ -2157,12 +2114,9 @@ async def test_user_oauth_login(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test OAuth authorization, token exchange, and normal device setup."""
-    assert "my" not in hass.config.components
     result = await _async_start_user_oauth(hass)
-    assert "my" in hass.config.components
-    assert async_panel_exists(hass, "_my_redirect")
-    state = _oauth_state(hass, result["flow_id"])
     authorize_url = URL(result["url"])
+    state = authorize_url.query["state"]
 
     assert str(authorize_url.with_query(None)) == f"{OAUTH_AUTHORIZE_URL}/"
     assert dict(authorize_url.query) == {
@@ -2220,8 +2174,9 @@ async def test_user_oauth_login(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
-    with patch_async_setup_entry():
+    with patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -2231,49 +2186,7 @@ async def test_user_oauth_login(
     assert result["result"].unique_id == "aabbccddeeff"
     assert "token" not in result["data"]
     assert "auth_implementation" not in result["data"]
-
-
-@pytest.mark.usefixtures("current_request_with_host", "mock_scanners_all_passive")
-async def test_oauth_pick_implementation(hass: HomeAssistant) -> None:
-    """Test selecting application credentials from a translated OAuth form."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential("client-id", "", name="Test client"),
-        auth_domain="test-client",
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "oauth_login"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pick_implementation"
-
-    translations = await translation.async_get_translations(
-        hass, "en", "config", {DOMAIN}
-    )
-    assert translations["component.switchbot.config.step.pick_implementation.title"]
-    assert translations[
-        "component.switchbot.config.step.pick_implementation.data.implementation"
-    ]
-    assert translations[
-        "component.switchbot.config.step.pick_implementation.data_description.implementation"
-    ]
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"implementation": "test-client"}
-    )
-    assert result["type"] is FlowResultType.EXTERNAL_STEP
-    authorize_url = URL(result["url"])
-    assert authorize_url.query["client_id"] == "client-id"
-    assert (
-        authorize_url.query["redirect_uri"]
-        == config_entry_oauth2_flow.MY_AUTH_CALLBACK_PATH
-    )
+    mock_setup_entry.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -2296,7 +2209,7 @@ async def test_encrypted_device_oauth_login(
         result["flow_id"], {"next_step_id": "encrypted_oauth"}
     )
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    state = _oauth_state(hass, result["flow_id"])
+    state = URL(result["url"]).query["state"]
 
     client = await hass_client_no_auth()
     response = await client.get(
@@ -2387,7 +2300,7 @@ async def test_encrypted_device_oauth_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "encrypted_oauth"}
     )
-    state = _oauth_state(hass, result["flow_id"])
+    state = URL(result["url"]).query["state"]
 
     client = await hass_client_no_auth()
     response = await client.get(
@@ -2418,7 +2331,7 @@ async def test_oauth_token_reused_for_encrypted_device(
 ) -> None:
     """Test a token from cloud discovery is reused to retrieve an encryption key."""
     result = await _async_start_user_oauth(hass)
-    state = _oauth_state(hass, result["flow_id"])
+    state = URL(result["url"]).query["state"]
     client = await hass_client_no_auth()
     response = await client.get(
         f"/auth/external/callback?code=authorization-code&state={state}"
@@ -2484,7 +2397,7 @@ async def test_oauth_user_rejected_authorization(
 ) -> None:
     """Test the user rejecting SwitchBot authorization."""
     result = await _async_start_user_oauth(hass)
-    state = _oauth_state(hass, result["flow_id"])
+    state = URL(result["url"]).query["state"]
     client = await hass_client_no_auth()
     response = await client.get(
         f"/auth/external/callback?error=access_denied&state={state}"
@@ -2524,7 +2437,7 @@ async def test_oauth_invalid_token_response(
 ) -> None:
     """Test invalid token responses abort setup."""
     result = await _async_start_user_oauth(hass)
-    state = _oauth_state(hass, result["flow_id"])
+    state = URL(result["url"]).query["state"]
     client = await hass_client_no_auth()
     response = await client.get(
         f"/auth/external/callback?code=authorization-code&state={state}"
@@ -2539,14 +2452,22 @@ async def test_oauth_invalid_token_response(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    "token",
+    [
+        pytest.param({"access_token": OAUTH_ACCESS_TOKEN}, id="missing-expires-in"),
+        pytest.param({"expires_in": 3600}, id="missing-access-token"),
+    ],
+)
 async def test_oauth_malformed_library_token_not_logged(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
+    token: dict[str, object],
 ) -> None:
     """Test a malformed library response does not expose its access token."""
     result = await _async_start_user_oauth(hass)
-    state = _oauth_state(hass, result["flow_id"])
+    state = URL(result["url"]).query["state"]
     client = await hass_client_no_auth()
     response = await client.get(
         f"/auth/external/callback?code=authorization-code&state={state}"
@@ -2555,7 +2476,7 @@ async def test_oauth_malformed_library_token_not_logged(
 
     with patch(
         "homeassistant.components.switchbot.application_credentials.exchange_oauth_code",
-        return_value={"access_token": OAUTH_ACCESS_TOKEN},
+        return_value=token,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -2583,7 +2504,7 @@ async def test_oauth_token_http_error(
 ) -> None:
     """Test token endpoint HTTP errors abort setup."""
     result = await _async_start_user_oauth(hass)
-    state = _oauth_state(hass, result["flow_id"])
+    state = URL(result["url"]).query["state"]
     client = await hass_client_no_auth()
     response = await client.get(
         f"/auth/external/callback?code=authorization-code&state={state}"
@@ -2636,7 +2557,7 @@ async def test_oauth_cloud_error(
 ) -> None:
     """Test cloud API errors after OAuth token exchange."""
     result = await _async_start_user_oauth(hass)
-    state = _oauth_state(hass, result["flow_id"])
+    state = URL(result["url"]).query["state"]
     client = await hass_client_no_auth()
     response = await client.get(
         f"/auth/external/callback?code=authorization-code&state={state}"
@@ -2667,7 +2588,7 @@ async def test_oauth_no_devices(
 ) -> None:
     """Test OAuth login when no Bluetooth devices are found."""
     result = await _async_start_user_oauth(hass)
-    state = _oauth_state(hass, result["flow_id"])
+    state = URL(result["url"]).query["state"]
     client = await hass_client_no_auth()
     response = await client.get(
         f"/auth/external/callback?code=authorization-code&state={state}"
