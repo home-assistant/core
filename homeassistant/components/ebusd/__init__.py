@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, EBUSD_DATA, SENSOR_TYPES
+from .const import DOMAIN, EBUSD_DATA, SENSOR_TYPES, EbusdServiceArgument
 from .services import setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -112,8 +112,8 @@ class EbusdData:
 
     def write(self, call: ServiceCall) -> None:
         """Call write method on ebusd."""
-        name = call.data.get("name")
-        value = call.data.get("value")
+        name = call.data.get(EbusdServiceArgument.NAME)
+        value = call.data.get(EbusdServiceArgument.VALUE)
 
         try:
             _LOGGER.debug("Opening socket to ebusd %s", name)

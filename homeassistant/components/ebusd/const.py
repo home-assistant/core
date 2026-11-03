@@ -1,5 +1,6 @@
 """Constants for ebus component."""
 
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import SensorDeviceClass
@@ -311,3 +312,16 @@ SENSOR_TYPES: dict[str, dict[str, SensorSpecs]] = {
         ),
     },
 }
+
+
+class EbusdService(StrEnum):
+    """Store keys for ebusd services."""
+
+    WRITE = "ebusd_write"
+
+
+class EbusdServiceArgument(StrEnum):
+    """Store keys for ebusd service arguments."""
+
+    NAME = "name"
+    VALUE = "value"
