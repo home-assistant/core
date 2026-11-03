@@ -2094,10 +2094,10 @@ def test_belgian_monthly_history_newest_first_and_empty() -> None:
                     {"value": value, "unit": "kW"},
                 ],
             )
-            for month, value in [
+            for month, value in (
                 (dt.datetime(2026, 11, 1, tzinfo=dt.UTC), Decimal("3.277")),
                 (dt.datetime(2026, 10, 1, tzinfo=dt.UTC), Decimal("3.175")),
-            ]
+            )
         ],
         "BELGIUM_MAXIMUM_DEMAND_13_MONTHS",
     )

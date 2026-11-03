@@ -1163,7 +1163,9 @@ class DSMREntity(SensorEntity):
 
     @property
     @override
-    def extra_state_attributes(self) -> dict[str, str] | None:
+    def extra_state_attributes(
+        self,
+    ) -> dict[str, str | list[dict[str, str | float | None]]] | None:
         """Keep long Belgian utility messages without oversized states."""
         if self.entity_description.key != "belgium_text_message":
             return None
@@ -1217,7 +1219,9 @@ class DSMRBelgiumDemandHistory(DSMREntity):
         if not isinstance(peaks, list):
             return None
         valid = [peak for peak in peaks if self._valid_peak(peak)]
-        return float(max(valid, key=lambda peak: peak.datetime).value) if valid else None
+        return (
+            float(max(valid, key=lambda peak: peak.datetime).value) if valid else None
+        )
 
     @staticmethod
     def _valid_peak(peak: object) -> bool:
@@ -1232,7 +1236,9 @@ class DSMRBelgiumDemandHistory(DSMREntity):
 
     @property
     @override
-    def extra_state_attributes(self) -> dict[str, list[dict[str, str | float | None]]]:
+    def extra_state_attributes(
+        self,
+    ) -> dict[str, str | list[dict[str, str | float | None]]] | None:
         """Expose all valid demand peaks and their occurrence times."""
         peaks = get_dsmr_object(
             self.telegram, 0, self.entity_description.obis_reference
