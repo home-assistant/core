@@ -50,6 +50,11 @@ async def async_get_config_entry_diagnostics(
             "electricity_prices": (
                 data.electricity_prices.to_dict() if data.electricity_prices else None
             ),
+            "electricity_quarter_prices": (
+                data.electricity_quarter_prices.to_dict()
+                if data.electricity_quarter_prices
+                else None
+            ),
             "gas_prices": data.gas_prices.to_dict() if data.gas_prices else None,
             "electricity_usage": (
                 data.electricity_usage.to_dict() if data.electricity_usage else None

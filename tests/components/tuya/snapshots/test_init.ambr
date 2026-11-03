@@ -7369,6 +7369,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[q2ydbrygsph]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'q2ydbrygsph',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': '60G Human Fall Detection Zigbee',
+    'model_id': 'gyrbdy2q',
+    'name': '60G人体跌倒zigbee',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[q304vac40br8nlkajsywc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

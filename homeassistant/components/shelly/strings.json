@@ -389,6 +389,14 @@
           "pastel": "Pastel",
           "rainbow": "Rainbow"
         }
+      },
+      "led_mode": {
+        "name": "LED mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "power": "Power consumption",
+          "switch": "Switch state"
+        }
       }
     },
     "sensor": {

@@ -425,7 +425,7 @@ async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
         mock_exists.return_value = True
-        async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=30))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done(wait_background_tasks=True)
 
         # Now it's ready
@@ -507,7 +507,7 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
 
         with patch_scanned_serial_ports(return_value=[]):
             # Wait for a bit for the USB scan debouncer to cool off
-            async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=5))
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
             await async_request_scan(hass)
 
         # The integration has reloaded and is now in a failed state

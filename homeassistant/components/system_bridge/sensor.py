@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfRatio,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -334,6 +335,20 @@ def memory_used_percentage(data: SystemBridgeData) -> float | None:
     return None
 
 
+def swap_used(data: SystemBridgeData) -> int | None:
+    """Return the used swap."""
+    if data.memory is not None and (swap := data.memory.swap) is not None:
+        return swap.used
+    return None
+
+
+def swap_used_percentage(data: SystemBridgeData) -> float | None:
+    """Return the used swap percentage."""
+    if data.memory is not None and (swap := data.memory.swap) is not None:
+        return swap.percent
+    return None
+
+
 def partition_usage(
     data: SystemBridgeData,
     device_index: int,
@@ -605,6 +620,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="cpu_power_package",
         translation_key="cpu_power_package",
+        device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
@@ -660,6 +676,14 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         value=disk_write_rate,
     ),
     SystemBridgeSensorEntityDescription(
+        key="idle_time",
+        translation_key="idle_time",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        value=lambda data: data.system.idle_time,
+    ),
+    SystemBridgeSensorEntityDescription(
         key="kernel",
         translation_key="kernel",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -691,6 +715,25 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         suggested_display_precision=2,
         value=memory_used,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="swap_used_percentage",
+        translation_key="swap_used_percentage",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        suggested_display_precision=2,
+        value=swap_used_percentage,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="swap_used",
+        translation_key="swap_used",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        suggested_display_precision=2,
+        value=swap_used,
     ),
     SystemBridgeSensorEntityDescription(
         key="network_download_rate",
@@ -1091,6 +1134,7 @@ async def async_setup_entry(
                         translation_key="gpu_power_usage",
                         translation_placeholders={"gpu_name": gpu.name},
                         entity_registry_enabled_default=False,
+                        device_class=SensorDeviceClass.POWER,
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=UnitOfPower.WATT,
                         value=lambda data, k=index: gpu_power_usage(data, k),
@@ -1185,6 +1229,7 @@ async def async_setup_entry(
                             translation_key="cpu_power_core",
                             translation_placeholders={"cpu_id": str(cpu.id)},
                             entity_registry_enabled_default=False,
+                            device_class=SensorDeviceClass.POWER,
                             native_unit_of_measurement=UnitOfPower.WATT,
                             state_class=SensorStateClass.MEASUREMENT,
                             suggested_display_precision=2,
