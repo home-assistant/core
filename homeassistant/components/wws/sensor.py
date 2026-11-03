@@ -14,13 +14,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CURRENCY_EURO, EntityCategory, UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from . import WwsConfigEntry
 from .const import DOMAIN, NAME
-from .coordinator import WwsCoordinator
+from .coordinator import WwsConfigEntry, WwsCoordinator
 
 PRICE_UNIT = f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}"
 
@@ -88,11 +88,11 @@ class WwsSensor(CoordinatorEntity[WwsCoordinator], SensorEntity):
         self.entity_id = f"{SENSOR_DOMAIN}.{DOMAIN}_{description.key}"
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_has_entity_name = True
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": NAME,
-            "manufacturer": NAME,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=NAME,
+            manufacturer=NAME,
+        )
 
     @property
     @override
@@ -210,7 +210,10 @@ class WwsSensor(CoordinatorEntity[WwsCoordinator], SensorEntity):
             second=0,
             microsecond=0,
         )
-        previous_day_target = dt_util.as_utc(current_slot_start - timedelta(days=1))
+        previous_day_local = current_slot_start - timedelta(days=1)
+        previous_day_target = dt_util.as_utc(previous_day_local)
+        if dt_util.as_local(previous_day_target) != previous_day_local:
+            return None
         previous_day_target_end = previous_day_target + timedelta(minutes=15)
 
         measurements = [

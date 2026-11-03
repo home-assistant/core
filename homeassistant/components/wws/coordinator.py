@@ -68,7 +68,7 @@ class WwsCoordinator(
             measurements = await self._api.async_get_latest_measurements()
         except EdAuthError as err:
             raise ConfigEntryAuthFailed from err
-        except EdError:
+        except EdError, TimeoutError:
             LOGGER.debug("Could not fetch WWS measurements", exc_info=True)
             measurements = []
 
