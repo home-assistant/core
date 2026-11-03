@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import IntEnum
 from functools import partial
+from zoneinfo import ZoneInfo
 from typing import override
 from urllib.parse import urlparse
 
@@ -1211,7 +1212,7 @@ class DSMRBelgiumDemandHistory(DSMREntity):
         return {
             "monthly_peaks": [
                 {
-                    "month": peak.occurred.strftime("%Y-%m") if isinstance(peak.occurred, datetime) else peak.datetime.strftime("%Y-%m"),
+                    "month": (peak.datetime.astimezone(ZoneInfo("Europe/Brussels")).date() - timedelta(days=1)).strftime("%Y-%m"),
                     "peak": float(peak.value),
                     "occurred": (
                         peak.occurred.isoformat()
