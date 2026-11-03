@@ -9,11 +9,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.deconz.const import (
-    CONF_BRIDGE_ID,
-    CONF_MASTER_GATEWAY,
-    DOMAIN,
-)
+from homeassistant.components.deconz.const import CONF_MASTER_GATEWAY, DOMAIN
 from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
 from homeassistant.components.deconz.services import (
     DeconzService,
@@ -35,7 +31,7 @@ async def test_configure_service_with_field(
     """Test that service invokes pydeconz with the correct path and data."""
     data = {
         DeconzServiceArgument.FIELD: "/lights/2",
-        CONF_BRIDGE_ID: BRIDGE_ID,
+        DeconzServiceArgument.BRIDGEID: BRIDGE_ID,
         DeconzServiceArgument.DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
@@ -115,7 +111,7 @@ async def test_configure_service_with_faulty_bridgeid(
     aioclient_mock.clear_requests()
 
     data = {
-        CONF_BRIDGE_ID: "Bad bridge id",
+        DeconzServiceArgument.BRIDGEID: "Bad bridge id",
         DeconzServiceArgument.FIELD: "/lights/1",
         DeconzServiceArgument.DATA: {"on": True},
     }
@@ -219,7 +215,7 @@ async def test_configure_service_with_renamed_entity(
     await hass.services.async_call(
         DOMAIN,
         DeconzService.REMOVE_ORPHANED_ENTRIES,
-        service_data={CONF_BRIDGE_ID: BRIDGE_ID},
+        service_data={DeconzServiceArgument.BRIDGEID: BRIDGE_ID},
         blocking=True,
     )
     assert entity_registry.async_get("light.renamed") is not None
@@ -298,7 +294,9 @@ async def test_service_refresh_devices(
     mock_requests()
 
     await hass.services.async_call(
-        DOMAIN, DeconzService.DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGE_ID}
+        DOMAIN,
+        DeconzService.DEVICE_REFRESH,
+        service_data={DeconzServiceArgument.BRIDGEID: BRIDGE_ID},
     )
     await hass.async_block_till_done()
 
@@ -364,7 +362,9 @@ async def test_service_refresh_devices_trigger_no_state_update(
     mock_requests()
 
     await hass.services.async_call(
-        DOMAIN, DeconzService.DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGE_ID}
+        DOMAIN,
+        DeconzService.DEVICE_REFRESH,
+        service_data={DeconzServiceArgument.BRIDGEID: BRIDGE_ID},
     )
     await hass.async_block_till_done()
 
@@ -444,7 +444,7 @@ async def test_remove_orphaned_entries_service(
     await hass.services.async_call(
         DOMAIN,
         DeconzService.REMOVE_ORPHANED_ENTRIES,
-        service_data={CONF_BRIDGE_ID: BRIDGE_ID},
+        service_data={DeconzServiceArgument.BRIDGEID: BRIDGE_ID},
     )
     await hass.async_block_till_done()
 
@@ -478,7 +478,7 @@ async def test_configure_service_request_error(
 
     data = {
         DeconzServiceArgument.FIELD: "/lights/2",
-        CONF_BRIDGE_ID: BRIDGE_ID,
+        DeconzServiceArgument.BRIDGEID: BRIDGE_ID,
         DeconzServiceArgument.DATA: {"on": True},
     }
 
@@ -515,7 +515,7 @@ async def test_service_refresh_devices_failure(
         await hass.services.async_call(
             DOMAIN,
             DeconzService.DEVICE_REFRESH,
-            service_data={CONF_BRIDGE_ID: BRIDGE_ID},
+            service_data={DeconzServiceArgument.BRIDGEID: BRIDGE_ID},
             blocking=True,
         )
 
