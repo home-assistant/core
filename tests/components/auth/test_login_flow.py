@@ -1,17 +1,22 @@
 """Tests for the login flow."""
 
 import asyncio
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
 from aiohttp import ClientResponse, web
 from aiohttp.test_utils import TestClient
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import CLIENT_ID, CLIENT_REDIRECT_URI
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.auth import AuthManagerFlowManager
+from homeassistant.auth.const import LOGIN_FLOW_EVICTION_INTERVAL, LOGIN_FLOW_EXPIRATION
+from homeassistant.auth.models import AuthFlowResult
+from homeassistant.auth.providers.insecure_example import ExampleLoginFlow
 from homeassistant.components.auth import indieauth
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
@@ -989,3 +994,185 @@ async def test_login_client_id_does_not_match_request_origin(
     )
     assert resp.status == HTTPStatus.BAD_REQUEST
     assert (await resp.json())["message"] == "Invalid client id"
+
+
+@patch("homeassistant.auth.MAX_LOGIN_FLOWS", 3)
+async def test_login_flow_limit(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the oldest login flow is aborted when the limit is reached."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    payload = {
+        "client_id": CLIENT_ID,
+        "handler": ["insecure_example", None],
+        "redirect_uri": CLIENT_REDIRECT_URI,
+    }
+
+    flow_ids = []
+    for _ in range(4):
+        resp = await client.post("/auth/login_flow", json=payload)
+        assert resp.status == HTTPStatus.OK
+        flow_ids.append((await resp.json())["flow_id"])
+
+    assert [
+        flow["flow_id"] for flow in hass.auth.login_flow.async_progress()
+    ] == flow_ids[1:]
+
+    # Only one flow is evicted per interval.
+    with patch(
+        "homeassistant.components.http.ban.process_wrong_login"
+    ) as mock_process_wrong_login:
+        resp = await client.post("/auth/login_flow", json=payload)
+    assert resp.status == HTTPStatus.TOO_MANY_REQUESTS
+    assert await resp.json() == {"message": "Too many login flows in progress"}
+    # A full limit is no failed login, so retrying clients aren't banned for it.
+    mock_process_wrong_login.assert_not_called()
+    assert [
+        flow["flow_id"] for flow in hass.auth.login_flow.async_progress()
+    ] == flow_ids[1:]
+
+    freezer.tick(LOGIN_FLOW_EVICTION_INTERVAL)
+    resp = await client.post("/auth/login_flow", json=payload)
+    assert resp.status == HTTPStatus.OK
+    flow_ids.append((await resp.json())["flow_id"])
+    assert [
+        flow["flow_id"] for flow in hass.auth.login_flow.async_progress()
+    ] == flow_ids[2:]
+
+    # Expired flows are aborted when the next flow is created.
+    freezer.tick(LOGIN_FLOW_EXPIRATION + timedelta(seconds=1))
+    resp = await client.post("/auth/login_flow", json=payload)
+    assert resp.status == HTTPStatus.OK
+    assert len(hass.auth.login_flow.async_progress()) == 1
+
+
+async def test_login_flow_removed_after_expiry(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test continuing an expired flow that a newer flow removed is no failed login."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    payload = {
+        "client_id": CLIENT_ID,
+        "handler": ["insecure_example", None],
+        "redirect_uri": CLIENT_REDIRECT_URI,
+    }
+    resp = await client.post("/auth/login_flow", json=payload)
+    expired_flow_id = (await resp.json())["flow_id"]
+
+    freezer.tick(LOGIN_FLOW_EXPIRATION + timedelta(seconds=1))
+    resp = await client.post("/auth/login_flow", json=payload)
+    assert resp.status == HTTPStatus.OK
+    with patch(
+        "homeassistant.components.http.ban.process_wrong_login"
+    ) as mock_process_wrong_login:
+        resp = await client.post(
+            f"/auth/login_flow/{expired_flow_id}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "test-user",
+                "password": "test-pass",
+            },
+        )
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert await resp.json() == {"message": "Invalid flow specified"}
+    mock_process_wrong_login.assert_not_called()
+
+
+async def test_login_flow_removed_during_a_step_counts(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test deleting a flow while a password is checked still counts the attempt."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    flow_id = (await resp.json())["flow_id"]
+    checking = asyncio.Event()
+    release = asyncio.Event()
+    step_init = ExampleLoginFlow.async_step_init
+
+    async def slow_step_init(
+        flow: ExampleLoginFlow, user_input: dict[str, str] | None = None
+    ) -> AuthFlowResult:
+        # Real providers check the password in the executor.
+        checking.set()
+        await release.wait()
+        return await step_init(flow, user_input)
+
+    with (
+        patch.object(ExampleLoginFlow, "async_step_init", slow_step_init),
+        patch(
+            "homeassistant.components.http.ban.process_wrong_login"
+        ) as mock_process_wrong_login,
+    ):
+        submit = asyncio.create_task(
+            client.post(
+                f"/auth/login_flow/{flow_id}",
+                json={
+                    "client_id": CLIENT_ID,
+                    "username": "test-user",
+                    "password": "wrong-pass",
+                },
+            )
+        )
+        await checking.wait()
+        resp = await client.delete(f"/auth/login_flow/{flow_id}")
+        assert resp.status == HTTPStatus.OK
+        release.set()
+        resp = await submit
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+    mock_process_wrong_login.assert_called_once()
+
+
+async def test_login_flow_expired(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an expired login flow can't be continued."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    freezer.tick(LOGIN_FLOW_EXPIRATION + timedelta(seconds=1))
+    with patch(
+        "homeassistant.components.http.ban.process_wrong_login"
+    ) as mock_process_wrong_login:
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "test-user",
+                "password": "test-pass",
+            },
+        )
+    assert resp.status == HTTPStatus.OK
+    assert await resp.json() == {
+        "description_placeholders": None,
+        "flow_id": step["flow_id"],
+        "handler": ["insecure_example", None],
+        "reason": "login_expired",
+        "type": "abort",
+    }
+    # Correct credentials from a tab left open are no failed login.
+    mock_process_wrong_login.assert_not_called()
+    assert hass.auth.login_flow.async_progress() == []
