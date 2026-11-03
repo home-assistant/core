@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "step": {
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
@@ -59,6 +56,14 @@
           }
         }
       }
+    }
+  },
+  "exceptions": {
+    "server_not_found": {
+      "message": "Selected server is not found"
+    },
+    "update_failed": {
+      "message": "An error occurred while running the speed test"
     }
   },
   "options": {

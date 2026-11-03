@@ -4,10 +4,10 @@ import logging
 from typing import Any, override
 
 from notifications_android_tv.notifications import ConnectError, Notifications
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -35,7 +35,7 @@ class NFAndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )
 
@@ -57,10 +57,10 @@ class NFAndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+                data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
                 suggested_values=user_input or entry.data,
             ),
-            description_placeholders={CONF_NAME: entry.title},
+            description_placeholders={"name": entry.title},
             errors=errors,
         )
 

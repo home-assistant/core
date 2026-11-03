@@ -10,9 +10,16 @@ PLATFORMS: Final = [Platform.CLIMATE]
 
 # Config entry data key holding the per-device LAN address cache, keyed by the
 # device's formatted MAC. The cloud API only returns each device's MAC, never
-# its LAN IP, so addresses are resolved from DHCP discovery and persisted here
-# to survive restarts without re-discovery.
+# its LAN IP, so addresses come from DHCP discovery (live and cached sightings)
+# and from manual entry in the repair flow, then persisted here to survive
+# restarts.
 CONF_ADDRESSES: Final = "addresses"
+
+# Config entry data key holding per-device discovery fields (the Socket.IO-fetched
+# password, plus the cryptoSerial and MAC read from the device status endpoint),
+# keyed by serial and replayed via discover_devices(cached_credentials=...) so
+# later setup attempts can reuse every field already recovered.
+CONF_CREDENTIALS: Final = "credentials"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_CONNECT_TIMEOUT: Final = 1.2

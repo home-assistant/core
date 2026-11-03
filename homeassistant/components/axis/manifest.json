@@ -2,8 +2,13 @@
   "domain": "axis",
   "name": "Axis",
   "after_dependencies": ["mqtt"],
+  "categories": [
+    "security_safety.cameras",
+    "security_safety.doorbells_intercoms"
+  ],
   "codeowners": ["@Kane610"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "registered_devices": true

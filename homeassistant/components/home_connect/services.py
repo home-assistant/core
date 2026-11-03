@@ -15,7 +15,7 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
 from aiohomeconnect.model.program import Program, ProgramDefinition
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -31,6 +31,7 @@ from .const import (
     ATTR_PROGRAM,
     ATTR_VALUE,
     DOMAIN,
+    FAVORITE_PROGRAMS,
     PROGRAM_ENUM_OPTIONS,
     SERVICE_SET_PROGRAM_AND_OPTIONS,
     SERVICE_SETTING,
@@ -51,11 +52,15 @@ PROGRAM_OPTIONS = {
         value,
     )
     for key, value in {
-        OptionKey.BSH_COMMON_DURATION: vol.All(int, vol.Range(min=0)),
-        OptionKey.BSH_COMMON_START_IN_RELATIVE: vol.All(int, vol.Range(min=0)),
-        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: vol.All(int, vol.Range(min=0)),
-        OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY: vol.All(
-            int, vol.Range(min=0)
+        OptionKey.BSH_COMMON_DURATION: probatio.All(int, probatio.Range(min=0)),
+        OptionKey.BSH_COMMON_START_IN_RELATIVE: probatio.All(
+            int, probatio.Range(min=0)
+        ),
+        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: probatio.All(
+            int, probatio.Range(min=0)
+        ),
+        OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY: probatio.All(
+            int, probatio.Range(min=0)
         ),
         OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_MULTIPLE_BEVERAGES: bool,
         OptionKey.DISHCARE_DISHWASHER_INTENSIV_ZONE: bool,
@@ -69,11 +74,13 @@ PROGRAM_OPTIONS = {
         OptionKey.DISHCARE_DISHWASHER_ZEOLITE_DRY: bool,
         (
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
-        ): vol.All(int, vol.Range(min=1, max=100)),
-        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE: vol.Coerce(
+        ): probatio.All(int, probatio.Range(min=1, max=100)),
+        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE: probatio.Coerce(
             float
         ),
-        OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE: vol.All(int, vol.Range(min=0)),
+        OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE: probatio.All(
+            int, probatio.Range(min=0)
+        ),
         OptionKey.COOKING_OVEN_FAST_PRE_HEAT: bool,
         OptionKey.LAUNDRY_CARE_COMMON_SILENT_MODE: bool,
         OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE: bool,
@@ -89,14 +96,14 @@ PROGRAM_OPTIONS = {
 }
 
 
-SERVICE_SETTING_SCHEMA = vol.Schema(
+SERVICE_SETTING_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_KEY): vol.All(
-            vol.Coerce(SettingKey),
-            vol.NotIn([SettingKey.UNKNOWN]),
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_KEY): probatio.All(
+            probatio.Coerce(SettingKey),
+            probatio.NotIn([SettingKey.UNKNOWN]),
         ),
-        vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
+        probatio.Required(ATTR_VALUE): probatio.Any(str, int, bool),
     }
 )
 
@@ -117,19 +124,21 @@ def _require_program_or_at_least_one_option(data: dict) -> dict:
     return data
 
 
-SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = vol.All(
-    vol.Schema(
+SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(ATTR_DEVICE_ID): str,
-            vol.Required(ATTR_AFFECTS_TO): vol.In(
+            probatio.Required(ATTR_DEVICE_ID): str,
+            probatio.Required(ATTR_AFFECTS_TO): probatio.In(
                 [AFFECTS_TO_ACTIVE_PROGRAM, AFFECTS_TO_SELECTED_PROGRAM]
             ),
-            vol.Optional(ATTR_PROGRAM): vol.In(TRANSLATION_KEYS_PROGRAMS_MAP.keys()),
+            probatio.Optional(ATTR_PROGRAM): probatio.In(
+                TRANSLATION_KEYS_PROGRAMS_MAP.keys()
+            ),
         }
     )
     .extend(
         {
-            vol.Optional(translation_key): vol.In(allowed_values.keys())
+            probatio.Optional(translation_key): probatio.In(allowed_values.keys())
             for translation_key, (
                 key,
                 allowed_values,
@@ -138,21 +147,21 @@ SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = vol.All(
     )
     .extend(
         {
-            vol.Optional(translation_key): schema
+            probatio.Optional(translation_key): schema
             for translation_key, (key, schema) in PROGRAM_OPTIONS.items()
         }
     ),
     _require_program_or_at_least_one_option,
 )
 
-SERVICE_START_SELECTED_PROGRAM_SCHEMA = vol.All(
-    vol.Schema(
+SERVICE_START_SELECTED_PROGRAM_SCHEMA = probatio.All(
+    probatio.Schema(
         {
-            vol.Required(ATTR_DEVICE_ID): str,
+            probatio.Required(ATTR_DEVICE_ID): str,
         }
     ).extend(
         {
-            vol.Optional(translation_key): schema
+            probatio.Optional(translation_key): schema
             for translation_key, (key, schema) in PROGRAM_OPTIONS.items()
             if key
             in (
@@ -340,6 +349,21 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
             translation_key="no_program_to_start",
         )
     program = program_obj.key
+    if program in FAVORITE_PROGRAMS:
+        base_program = next(
+            (
+                option
+                for option in program_obj.options or []
+                if option.key == OptionKey.BSH_COMMON_BASE_PROGRAM
+            ),
+            None,
+        )
+        if not base_program:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="favorite_program_missing_base_program",
+            )
+        program = ProgramKey(base_program.value)
 
     # Fetch the writable option schema for this program on this appliance.
     # Only options present in this response are accepted by PUT /programs/active.

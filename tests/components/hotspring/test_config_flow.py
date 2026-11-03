@@ -4,8 +4,14 @@ import dataclasses
 from ipaddress import ip_address
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError, HotSpringError, Spa
+from hotspring import (
+    HotSpringConnectionError,
+    HotSpringError,
+    HotSpringSNADetectedError,
+    Spa,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.hotspring.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -13,8 +19,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.1.100"),
@@ -69,14 +73,21 @@ async def test_user_device_exists_abort(
 
 
 @pytest.mark.parametrize(
-    "exception",
-    [HotSpringConnectionError, HotSpringError],
+    ("exception", "error_key"),
+    [
+        (HotSpringConnectionError, "cannot_connect"),
+        (HotSpringError, "cannot_connect"),
+        (HotSpringSNADetectedError, "sna_device"),
+    ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_hotspring: MagicMock, exception: type[Exception]
+async def test_form_errors(
+    hass: HomeAssistant,
+    mock_hotspring: MagicMock,
+    exception: type[Exception],
+    error_key: str,
 ) -> None:
-    """Test we show user form on Hot Spring connection error and recover."""
+    """Test we show user form on error and recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -92,7 +103,7 @@ async def test_form_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_key}
 
     mock_hotspring.update.side_effect = None
     result = await hass.config_entries.flow.async_configure(
@@ -158,13 +169,20 @@ async def test_full_zeroconf_flow_implementation(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "exception",
-    [HotSpringConnectionError, HotSpringError],
+    ("exception", "reason"),
+    [
+        (HotSpringConnectionError, "cannot_connect"),
+        (HotSpringError, "cannot_connect"),
+        (HotSpringSNADetectedError, "sna_device"),
+    ],
 )
-async def test_zeroconf_connection_error(
-    hass: HomeAssistant, mock_hotspring: MagicMock, exception: type[Exception]
+async def test_zeroconf_error(
+    hass: HomeAssistant,
+    mock_hotspring: MagicMock,
+    exception: type[Exception],
+    reason: str,
 ) -> None:
-    """Test we abort zeroconf flow on Hot Spring connection error."""
+    """Test we abort zeroconf flow on Hot Spring error."""
     mock_hotspring.update.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
@@ -174,7 +192,7 @@ async def test_zeroconf_connection_error(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == reason
 
 
 @pytest.mark.usefixtures("mock_hotspring")

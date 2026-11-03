@@ -12,6 +12,11 @@ from google_health_api.model import (
     _ListPairedDevicesModel,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_health.const import DOMAIN
@@ -26,8 +31,6 @@ from homeassistant.util.unit_system import (
 )
 
 from .conftest import _list_fixture, paired_devices_fixture
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_google_health_client")
@@ -119,15 +122,15 @@ async def test_sensor_in_progress_sleep(
 
     time_asleep_state = hass.states.get("sensor.google_health_time_asleep")
     assert time_asleep_state is not None
-    assert time_asleep_state.state == "420"
+    assert time_asleep_state.state == "7.0"
 
     time_awake_state = hass.states.get("sensor.google_health_time_awake")
     assert time_awake_state is not None
-    assert time_awake_state.state == "60"
+    assert time_awake_state.state == "1.0"
 
     time_in_bed_state = hass.states.get("sensor.google_health_time_in_bed")
     assert time_in_bed_state is not None
-    assert time_in_bed_state.state == "480"
+    assert time_in_bed_state.state == "8.0"
 
     time_to_fall_asleep_state = hass.states.get(
         "sensor.google_health_time_to_fall_asleep"

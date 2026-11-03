@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 import jinja2
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -14,9 +14,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.components.sensor.helpers import (  # pylint: disable=home-assistant-component-root-import
-    async_parse_date_datetime,
-)
+from homeassistant.components.sensor.helpers import async_parse_date_datetime  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
@@ -51,24 +49,24 @@ CONF_TO_ATTRIBUTE = {
     CONF_PICTURE: EntityStateAttribute.ENTITY_PICTURE,
 }
 
-TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
+TEMPLATE_ENTITY_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_ICON): cv.template,
-        vol.Optional(CONF_NAME): cv.template,
-        vol.Optional(CONF_PICTURE): cv.template,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_ICON): cv.template,
+        probatio.Optional(CONF_NAME): cv.template,
+        probatio.Optional(CONF_PICTURE): cv.template,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
 
-def make_template_entity_base_schema(default_name: str) -> vol.Schema:
+def make_template_entity_base_schema(default_name: str) -> probatio.Schema:
     """Return a schema with default name."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_ICON): cv.template,
-            vol.Optional(CONF_NAME, default=default_name): cv.template,
-            vol.Optional(CONF_PICTURE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            probatio.Optional(CONF_ICON): cv.template,
+            probatio.Optional(CONF_NAME, default=default_name): cv.template,
+            probatio.Optional(CONF_PICTURE): cv.template,
+            probatio.Optional(CONF_UNIQUE_ID): cv.string,
         }
     )
 
@@ -94,11 +92,11 @@ def log_triggered_template_error(
     )
 
 
-TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
+TEMPLATE_SENSOR_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 ).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
 
@@ -401,7 +399,10 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         If self.device_class is `date`, `timestamp`, or `uptime`,
         it will try to parse the value to a date/datetime object.
         """
-        if self.device_class not in (
+        # Value templates render to strings, so a template rendering none gives "None"
+        if value == "None":
+            self._attr_native_value = None
+        elif self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
             SensorDeviceClass.UPTIME,

@@ -15,6 +15,9 @@ from .entities import TRANSLATION_TABLE
 from .state_report import async_enable_proactive_mode
 
 STORE_AUTHORIZED = "authorized"
+STORE_ENTITY_SETTINGS_VERSION = "entity_settings_version"
+
+ENTITY_SETTINGS_VERSION = 2
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -165,6 +168,19 @@ class AlexaConfigStore:
         if self._data is not None and authorized != self._data[STORE_AUTHORIZED]:
             self._data[STORE_AUTHORIZED] = authorized
             self._store.async_delay_save(lambda: self._data, 1.0)
+
+    @property
+    def entity_settings_version(self) -> int:
+        """Return the entity settings version."""
+        assert self._data is not None
+        version: int = self._data.get(STORE_ENTITY_SETTINGS_VERSION, 1)
+        return version
+
+    async def async_set_entity_settings_version(self, version: int) -> None:
+        """Set the entity settings version."""
+        assert self._data is not None
+        self._data[STORE_ENTITY_SETTINGS_VERSION] = version
+        await self._store.async_save(self._data)
 
     async def async_load(self) -> None:
         """Load saved configuration from disk."""

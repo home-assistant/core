@@ -3,11 +3,13 @@
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
-from urllib.parse import parse_qsl, urlsplit
 
 from aiohomeconnect.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from aiohomeconnect.model import HomeAppliance
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries, setup
 from homeassistant.components.home_connect.const import DOMAIN
@@ -19,29 +21,8 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import FAKE_ACCESS_TOKEN, FAKE_REFRESH_TOKEN
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
-
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
-
-
-def assert_authorize_url(url: str, state: str, images_scope: bool | None) -> None:
-    """Assert the generated OAuth authorize URL."""
-    split_url = urlsplit(url)
-
-    assert (
-        f"{split_url.scheme}://{split_url.netloc}{split_url.path}" == OAUTH2_AUTHORIZE
-    )
-    assert dict(parse_qsl(split_url.query)) == {
-        "response_type": "code",
-        "client_id": CLIENT_ID,
-        "redirect_uri": "https://example.com/auth/external/callback",
-        "state": state,
-        "scope": f"Control Monitor Settings IdentifyAppliance{' Images' if images_scope else ''}",
-    }
-
 
 DHCP_DISCOVERY = (
     DhcpServiceInfo(
@@ -113,27 +94,16 @@ DHCP_DISCOVERY = (
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-@pytest.mark.parametrize(
-    "images_scope", [True, False], ids=["images_scope", "no_images_scope"]
-)
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    images_scope: bool,
 ) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(hass, "home_connect", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context=ConfigFlowContext(source=config_entries.SOURCE_USER)
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "scopes"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"images_scope": images_scope}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -144,7 +114,11 @@ async def test_full_flow(
     )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert_authorize_url(result["url"], state, images_scope)
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+    )
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -162,7 +136,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -186,13 +160,6 @@ async def test_prevent_reconfiguring_same_account(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context=ConfigFlowContext(source=config_entries.SOURCE_USER)
     )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "scopes"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"images_scope": True}
-    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -202,7 +169,11 @@ async def test_prevent_reconfiguring_same_account(
     )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert_authorize_url(result["url"], state, True)
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+    )
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -242,13 +213,6 @@ async def test_reauth_flow(
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "scopes"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"images_scope": False}
-    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -273,7 +237,7 @@ async def test_reauth_flow(
     )
 
     with patch(
-        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -303,13 +267,6 @@ async def test_reauth_flow_with_different_account(
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "scopes"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"images_scope": True}
-    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -345,6 +302,80 @@ async def test_reauth_flow_with_different_account(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("access_token", "reason", "refresh_token", "entry_state"),
+    [
+        pytest.param(
+            FAKE_ACCESS_TOKEN,
+            "reconfigure_successful",
+            "new-refresh-token",
+            ConfigEntryState.LOADED,
+            id="success",
+        ),
+        pytest.param(
+            (
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                ".eyJzdWIiOiJBQkNERSIsIm5hbWUiOiJKb2huIERvZSIsImFkbWluIjp0cnVlLCJpYXQiOjE1MTYyMzkwMjJ9"
+                ".Q9z9JT4qgNg9Y9ki61jzvd69j043GFWJk9HNYosAPzs"
+            ),
+            "wrong_account",
+            FAKE_REFRESH_TOKEN,
+            ConfigEntryState.NOT_LOADED,
+            id="different_account",
+        ),
+    ],
+)
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
+    access_token: str,
+    reason: str,
+    refresh_token: str,
+    entry_state: ConfigEntryState,
+) -> None:
+    """Test reconfigure flow re-runs OAuth for the same account."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    _client = await hass_client_no_auth()
+    resp = await _client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": access_token,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert config_entry.data["token"]["refresh_token"] == refresh_token
+    assert config_entry.state is entry_state
+
+
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_zeroconf_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -365,13 +396,6 @@ async def test_zeroconf_flow(
         result["flow_id"],
         {},
     )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "scopes"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"images_scope": True}
-    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -381,7 +405,11 @@ async def test_zeroconf_flow(
     )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert_authorize_url(result["url"], state, True)
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+    )
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -399,7 +427,7 @@ async def test_zeroconf_flow(
     )
 
     with patch(
-        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -451,13 +479,6 @@ async def test_dhcp_flow(
         result["flow_id"],
         {},
     )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "scopes"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"images_scope": True}
-    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -466,7 +487,11 @@ async def test_dhcp_flow(
         },
     )
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert_authorize_url(result["url"], state, True)
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+    )
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -484,7 +509,7 @@ async def test_dhcp_flow(
     )
 
     with patch(
-        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()

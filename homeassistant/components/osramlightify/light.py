@@ -5,7 +5,7 @@ import random
 from typing import Any, override
 
 from lightify import Lightify
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -45,23 +45,23 @@ DEFAULT_INTERVAL_LIGHTIFY_CONF = 3600
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(
             CONF_ALLOW_LIGHTIFY_NODES, default=DEFAULT_ALLOW_LIGHTIFY_NODES
         ): cv.boolean,
-        vol.Optional(
+        probatio.Optional(
             CONF_ALLOW_LIGHTIFY_GROUPS, default=DEFAULT_ALLOW_LIGHTIFY_GROUPS
         ): cv.boolean,
-        vol.Optional(
+        probatio.Optional(
             CONF_ALLOW_LIGHTIFY_SENSORS, default=DEFAULT_ALLOW_LIGHTIFY_SENSORS
         ): cv.boolean,
-        vol.Optional(
+        probatio.Optional(
             CONF_ALLOW_LIGHTIFY_SWITCHES, default=DEFAULT_ALLOW_LIGHTIFY_SWITCHES
         ): cv.boolean,
-        vol.Optional(
+        probatio.Optional(
             CONF_INTERVAL_LIGHTIFY_STATUS, default=DEFAULT_INTERVAL_LIGHTIFY_STATUS
         ): cv.positive_int,
-        vol.Optional(
+        probatio.Optional(
             CONF_INTERVAL_LIGHTIFY_CONF, default=DEFAULT_INTERVAL_LIGHTIFY_CONF
         ): cv.positive_int,
     }

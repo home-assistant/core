@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -21,8 +22,6 @@ from .const import (
     WALLBOX_STATUS_RESPONSE_FULL_SOLAR,
     WALLBOX_STATUS_RESPONSE_NO_POWER_BOOST,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_OPTIONS = [
     (EcoSmartMode.OFF, WALLBOX_STATUS_RESPONSE),

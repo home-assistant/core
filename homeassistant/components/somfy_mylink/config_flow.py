@@ -4,8 +4,8 @@ from copy import deepcopy
 import logging
 from typing import Any, override
 
+import probatio
 from pysomfymylink import SomfyMyLink, SomfyMyLinkApiError, SomfyMyLinkConnectionError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntryState,
@@ -25,7 +25,6 @@ from .const import (
     CONF_REVERSED_TARGET_IDS,
     CONF_SYSTEM_ID,
     CONF_TARGET_ID,
-    CONF_TARGET_NAME,
     DEFAULT_PORT,
     DOMAIN,
 )
@@ -103,11 +102,11 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=self.ip_address): str,
-                    vol.Required(CONF_SYSTEM_ID): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                    probatio.Required(CONF_HOST, default=self.ip_address): str,
+                    probatio.Required(CONF_SYSTEM_ID): str,
+                    probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                 }
             ),
             errors=errors,
@@ -161,7 +160,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         for shade in self.config_entry.runtime_data.shades:
             cover_dict[shade.target_id] = shade.name
 
-        data_schema = vol.Schema({vol.Optional(CONF_TARGET_ID): vol.In(cover_dict)})
+        data_schema = probatio.Schema(
+            {probatio.Optional(CONF_TARGET_ID): probatio.In(cover_dict)}
+        )
 
         return self.async_show_form(step_id="init", data_schema=data_schema, errors={})
 
@@ -183,16 +184,16 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="target_config",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_REVERSE,
                         default=reversed_target_ids.get(target_id, False),
                     ): bool
                 }
             ),
             description_placeholders={
-                CONF_TARGET_NAME: self._async_get_target_name(target_id),
+                "target_name": self._async_get_target_name(target_id),
             },
             errors={},
         )

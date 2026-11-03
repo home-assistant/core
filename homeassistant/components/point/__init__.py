@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -27,19 +26,13 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> None:
     """Set up Minut Point from a config entry."""
 
     if "auth_implementation" not in entry.data:
         raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
 
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
     auth = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass), session
@@ -66,8 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_setups(
         entry, [*PLATFORMS, Platform.ALARM_CONTROL_PANEL]
     )
-
-    return True
 
 
 async def async_setup_webhook(
@@ -98,16 +89,15 @@ async def async_setup_webhook(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PointConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PointConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, [*PLATFORMS, Platform.ALARM_CONTROL_PANEL]
-    ):
-        session = entry.runtime_data.point
-        if CONF_WEBHOOK_ID in entry.data:
-            webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-            await session.remove_webhook()
-    return unload_ok
+    )
+    session = entry.runtime_data.point
+    if CONF_WEBHOOK_ID in entry.data:
+        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+        await session.remove_webhook()
 
 
 async def handle_webhook(

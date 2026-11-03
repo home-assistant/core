@@ -7,11 +7,13 @@ from aiohttp import ClientConnectionError, RequestInfo
 from aiohttp.client_exceptions import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.aladdin_connect import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
@@ -21,8 +23,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_oauth_implementation_not_available(
@@ -106,7 +106,7 @@ async def test_setup_entry_token_connection_error(
     """Test setup entry retries when token validation has a connection error."""
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientConnectionError(),
+        side_effect=OAuth2TokenRequestConnectionError(domain=DOMAIN),
     ):
         await init_integration(hass, mock_config_entry)
 

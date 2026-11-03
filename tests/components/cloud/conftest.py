@@ -6,14 +6,14 @@ from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, PropertyMock, patch
 
 from hass_nabucasa import (
+    AutoLoginController,
     Cloud,
-    CloudEvent,
     CloudEventBus,
-    CloudEventType,
     LoginEvent,
+    LogoutEvent,
     payments_api,
 )
-from hass_nabucasa.auth import CognitoAuth
+from hass_nabucasa.auth import AlreadyLoggedIn, CognitoAuth
 from hass_nabucasa.cloudhooks import Cloudhooks
 from hass_nabucasa.const import DEFAULT_SERVERS, DEFAULT_VALUES, STATE_CONNECTED
 from hass_nabucasa.files import Files
@@ -102,12 +102,30 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             ),
         )
         mock_cloud.llm = MagicMock(async_ensure_token=AsyncMock())
-        mock_cloud.register_and_auto_login.return_value = MagicMock(
-            spec_set=["cancel", "attempt_now", "resend"],
-            cancel=MagicMock(),
-            attempt_now=MagicMock(),
-            resend=AsyncMock(),
-        )
+
+        def mock_register_and_auto_login(
+            email: str,
+            password: str,
+            *,
+            client_metadata: dict[str, str] | None = None,
+        ) -> AutoLoginController:
+            """Mock registering, handing back a freshly started controller.
+
+            A distinct controller per call, like the real Cloud, so a test can tell a
+            replaced registration from one that was left in place.
+            """
+            if mock_cloud.is_logged_in:
+                raise AlreadyLoggedIn(
+                    "Cannot register and auto-login while already logged in."
+                )
+            return AutoLoginController(
+                email=email.lower(),
+                cancel=MagicMock(),
+                attempt_now=MagicMock(),
+                resend=AsyncMock(),
+            )
+
+        mock_cloud.register_and_auto_login.side_effect = mock_register_and_auto_login
 
         def set_up_mock_cloud(
             cloud_client: CloudClient, mode: str, **kwargs: Any
@@ -218,7 +236,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
         async def mock_logout() -> None:
             """Mock logout."""
             # The real Cloud publishes LOGOUT before clearing state.
-            await mock_cloud.events.publish(CloudEvent(type=CloudEventType.LOGOUT))
+            await mock_cloud.events.publish(LogoutEvent())
             mock_cloud.id_token = None
             mock_cloud.access_token = None
             mock_cloud.refresh_token = None

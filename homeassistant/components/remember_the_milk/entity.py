@@ -7,8 +7,9 @@ from aiortm import AioRTMClient, AioRTMError, AuthError
 from homeassistant.const import CONF_ID, CONF_NAME, STATE_OK
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .storage import RememberTheMilkConfiguration
 
 
@@ -31,6 +32,25 @@ class RememberTheMilkEntity(Entity):
         self._config_entry_id = config_entry_id
         self._token_valid = token_valid
 
+    @callback
+    def _async_create_deprecated_action_issue(
+        self, call: ServiceCall, replacement: str
+    ) -> None:
+        """Create a repair issue for a deprecated account action."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_action_{call.service}",
+            breaks_in_ha_version="2027.5.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_action",
+            translation_placeholders={
+                "action": f"{DOMAIN}.{call.service}",
+                "replacement": replacement,
+            },
+        )
+
     async def create_task(self, call: ServiceCall) -> None:
         """Create a new task on Remember The Milk.
 
@@ -38,6 +58,7 @@ class RememberTheMilkEntity(Entity):
         e.g. "my task #some_tag ^today" will add tag "some_tag" and set the
         due date to today.
         """
+        self._async_create_deprecated_action_issue(call, "todo.add_item")
         try:
             task_name: str = call.data[CONF_NAME]
             hass_id: str | None = call.data.get(CONF_ID)
@@ -98,6 +119,7 @@ class RememberTheMilkEntity(Entity):
 
     async def complete_task(self, call: ServiceCall) -> None:
         """Complete a task that was previously created by this component."""
+        self._async_create_deprecated_action_issue(call, "todo.update_item")
         hass_id = call.data[CONF_ID]
         rtm_id = await self.hass.async_add_executor_job(
             self._rtm_config.get_rtm_id, self._name, hass_id

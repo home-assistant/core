@@ -14,7 +14,7 @@ from .coordinator import RovaConfigEntry, RovaCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RovaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RovaConfigEntry) -> None:
     """Set up ROVA from a config entry."""
 
     api = Rova(
@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RovaConfigEntry) -> bool
             severity=IssueSeverity.ERROR,
             translation_key="no_rova_area",
             translation_placeholders={
-                CONF_ZIP_CODE: entry.data[CONF_ZIP_CODE],
+                "zip_code": entry.data[CONF_ZIP_CODE],
             },
         )
         raise ConfigEntryError("Rova does not collect garbage in this area")
@@ -49,9 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RovaConfigEntry) -> bool
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RovaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RovaConfigEntry) -> None:
     """Unload ROVA config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

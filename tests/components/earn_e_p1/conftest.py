@@ -4,19 +4,20 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from earn_e_p1 import EarnEP1Device
+from earn_e_p1 import EarnEP1Device, PacketType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.earn_e_p1.const import CONF_SERIAL, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from tests.common import MockConfigEntry
-
 MOCK_HOST = "192.168.1.100"
+MOCK_HOST_2 = "192.168.1.101"
 MOCK_NEW_HOST = "192.168.1.200"
 MOCK_SERIAL = "E0012345678901234"
+MOCK_SERIAL_2 = "E0012345678905678"
 MOCK_MAC = "aabbcc112233"
 # Devices announce themselves as "Energiemonitor-<4 hex>"; DHCP lowercases it.
 MOCK_HOSTNAME = "energiemonitor-d674"
@@ -25,7 +26,11 @@ MOCK_DEVICE_DATA: dict[str, Any] = {
     "power_delivered": 2.5,
     "power_returned": 0.0,
     "voltage_l1": 230.1,
+    "voltage_l2": 229.8,
+    "voltage_l3": 231.5,
     "current_l1": 10.87,
+    "current_l2": 8.2,
+    "current_l3": 4.35,
     "energy_delivered_tariff1": 12345.678,
     "energy_delivered_tariff2": 6789.012,
     "energy_returned_tariff1": 100.0,
@@ -44,17 +49,21 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 def trigger_callback(
     mock_listener: MagicMock,
     device_data: dict[str, Any] | None = None,
+    seen_packet_types: set[PacketType] | None = None,
     model: str | None = "P1 Meter",
     sw_version: str | None = "1.0.0",
 ) -> None:
     """Trigger the registered listener callback with device data."""
     if device_data is None:
         device_data = MOCK_DEVICE_DATA
+    if seen_packet_types is None:
+        seen_packet_types = set(PacketType)
     callback = mock_listener.register.call_args[0][1]
     device = EarnEP1Device(host=MOCK_HOST, serial=MOCK_SERIAL)
     device.model = model
     device.sw_version = sw_version
     device.data = device_data
+    device.seen_packet_types = seen_packet_types
     callback(device, device_data)
 
 
@@ -91,9 +100,22 @@ def mock_config_entry(
 
 
 @pytest.fixture
+def mock_config_entry_2(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a mock config entry for a second meter."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"EARN-E P1 ({MOCK_HOST_2})",
+        data={CONF_HOST: MOCK_HOST_2, CONF_SERIAL: MOCK_SERIAL_2},
+        unique_id=MOCK_SERIAL_2,
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async_setup_entry to avoid real setup in config flow tests."""
     with patch(
-        "homeassistant.components.earn_e_p1.async_setup_entry", return_value=True
+        "homeassistant.components.earn_e_p1.async_setup_entry", return_value=None
     ) as mock:
         yield mock

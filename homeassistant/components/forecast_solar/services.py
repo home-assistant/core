@@ -1,9 +1,8 @@
 """Services for the Forecast.Solar integration."""
 
 from datetime import datetime
-from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     HomeAssistant,
@@ -19,9 +18,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN
-
-if TYPE_CHECKING:
-    from .coordinator import ForecastSolarConfigEntry
+from .coordinator import ForecastSolarConfigEntry, energy_by_period_start
 
 ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_START = "start"
@@ -33,12 +30,14 @@ RESOLUTION_HOURLY = "hourly"
 
 SERVICE_GET_FORECAST = "get_forecast"
 
-GET_FORECAST_SCHEMA = vol.Schema(
+GET_FORECAST_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(ATTR_START): cv.datetime,
-        vol.Optional(ATTR_END): cv.datetime,
-        vol.Optional(ATTR_RESOLUTION, default=RESOLUTION_RAW): vol.In(
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Optional(ATTR_START): cv.datetime,
+        probatio.Optional(ATTR_END): cv.datetime,
+        probatio.Optional(ATTR_RESOLUTION, default=RESOLUTION_RAW): probatio.In(
             (RESOLUTION_RAW, RESOLUTION_HOURLY)
         ),
     }
@@ -92,7 +91,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         estimate = entry.runtime_data.data
 
-        wh_period: dict[datetime, int] = dict(estimate.wh_period)
+        wh_period = energy_by_period_start(estimate.wh_period)
         watts: dict[datetime, float]
 
         if call.data[ATTR_RESOLUTION] == RESOLUTION_HOURLY:

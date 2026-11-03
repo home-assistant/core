@@ -15,7 +15,7 @@ from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model.categories import Categories
 from aiohomekit.model.status_flags import StatusFlags
 from aiohomekit.utils import domain_supported, domain_to_name, serialize_broadcast_key
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
@@ -158,9 +158,9 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("device"): vol.In(
+                    probatio.Required("device"): probatio.In(
                         {
                             key: (
                                 f"{key} ("
@@ -356,9 +356,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Late imports in case BLE is not available
         from aiohomekit.controller.ble.discovery import BleDiscovery  # noqa: PLC0415
-        from aiohomekit.controller.ble.manufacturer_data import (  # noqa: PLC0415
-            HomeKitAdvertisement,
-        )
+        from aiohomekit.controller.ble.manufacturer_data import HomeKitAdvertisement  # noqa: PLC0415
 
         mfr_data = discovery_info.manufacturer_data
 
@@ -553,15 +551,17 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             "category": formatted_category(self.category),
         }
 
-        schema: VolDictType = {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
+        schema: VolDictType = {
+            probatio.Required("pairing_code"): probatio.All(str, probatio.Strip)
+        }
         if errors and errors.get("pairing_code") == "insecure_setup_code":
-            schema[vol.Optional("allow_insecure_setup_codes")] = bool
+            schema[probatio.Optional("allow_insecure_setup_codes")] = bool
 
         return self.async_show_form(
             step_id="pair",
             errors=errors or {},
             description_placeholders=placeholders | (description_placeholders or {}),
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
         )
 
     async def _entry_from_accessory(self, pairing: AbstractPairing) -> ConfigFlowResult:

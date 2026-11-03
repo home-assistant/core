@@ -7,6 +7,7 @@ from pysmarlaapi.connection.exceptions import (
     ConnectionException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smarla.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -19,8 +20,6 @@ from .const import (
     MOCK_USER_INPUT_MISMATCH,
     MOCK_USER_INPUT_RECONFIGURE,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_connection")
@@ -52,9 +51,15 @@ async def test_malformed_token(hass: HomeAssistant) -> None:
         "homeassistant.components.smarla.config_flow.Connection", side_effect=ValueError
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=MOCK_USER_INPUT,
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_USER_INPUT,
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -87,9 +92,15 @@ async def test_validation_exception(
     mock_connection.refresh_token.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=MOCK_USER_INPUT,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_INPUT,
     )
 
     mock_connection.refresh_token.side_effect = None
@@ -114,9 +125,15 @@ async def test_device_exists_abort(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=MOCK_USER_INPUT,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.ABORT

@@ -1,8 +1,10 @@
 {
   "domain": "rehlko",
   "name": "Rehlko",
+  "categories": ["energy.backup_power"],
   "codeowners": ["@bdraco", "@peterager"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "hostname": "kohlergen*",

@@ -13,6 +13,11 @@ from pyimouapi.const import (
 )
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
@@ -27,8 +32,6 @@ from .const import (
     create_online_device,
     sensor_mock_devices,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]], indirect=True)
@@ -96,14 +99,15 @@ async def test_sensor_availability_when_device_offline(
 ) -> None:
     """Status stays available offline; other sensors become unavailable."""
 
-    async def set_device_offline(device: ImouHaDevice) -> None:
-        device._sensors[PARAM_STATUS] = {
-            PARAM_STATE: DeviceStatus.OFFLINE.value,
-            PARAM_STATE_VARIANT: STATE_VARIANT_ENUM,
-        }
+    async def set_devices_offline(devices: list[ImouHaDevice]) -> None:
+        for device in devices:
+            device._sensors[PARAM_STATUS] = {
+                PARAM_STATE: DeviceStatus.OFFLINE.value,
+                PARAM_STATE_VARIANT: STATE_VARIANT_ENUM,
+            }
 
-    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
-        set_device_offline
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = (
+        set_devices_offline
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

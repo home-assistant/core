@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TelegramBotConfigEntry
+from .bot import TelegramBotConfigEntry
 from .const import (
     ATTR_MESSAGE_THREAD_ID,
     ATTR_TITLE,
@@ -60,9 +60,9 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
         # Subentries may share a chat ID when they target distinct message threads.
         device_info = self._attr_device_info
         assert device_info is not None
-        device_info["identifiers"] = {(DOMAIN, f"{self.bot_id}_{subentry.subentry_id}")}
-        device_info["name"] = subentry.title
-        device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+        device_info.identifiers = {(DOMAIN, f"{self.bot_id}_{subentry.subentry_id}")}
+        device_info.name = subentry.title
+        device_info.via_device_id = dr.async_get_device_id_by_identifier(
             config_entry.runtime_data.hass,
             (DOMAIN, f"{self.bot_id}"),
             config_entry_id=config_entry.entry_id,

@@ -58,7 +58,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> None:
     """Migrate old config entries."""
     if entry.version == 1 and entry.minor_version == 1:
         # Settings imported from YAML were stored in data; they belong in options
@@ -79,7 +79,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> b
         hass.config_entries.async_update_entry(
             entry, data=data, options=options, minor_version=2
         )
-    return True
 
 
 async def _async_resolve_device_type(
@@ -118,7 +117,7 @@ async def _async_resolve_device_type(
     return device_type
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> None:
     """Load the saved entities."""
     host = entry.data[CONF_HOST]
     token = entry.data.get(CONF_ACCESS_TOKEN)
@@ -171,20 +170,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     # Clean up apps coordinator if no TV entries remain
-    if unload_ok and not any(
+    if not any(
         e.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
         for e in hass.config_entries.async_loaded_entries(DOMAIN)
         if e.entry_id != entry.entry_id
     ):
         if apps_coordinator := hass.data.pop(DATA_APPS, None):
             await apps_coordinator.async_shutdown()
-
-    return unload_ok

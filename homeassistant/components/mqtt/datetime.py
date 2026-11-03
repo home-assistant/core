@@ -1,14 +1,14 @@
 """Support for MQTT datetime platform."""
 
 from collections.abc import Callable
-import datetime as datetime_library
+import datetime as dt
 import logging
 from typing import Any, override
 from zoneinfo import ZoneInfo
 
 from dateutil.parser import ParserError, parse
 from dateutil.tz import UTC
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import datetime
 from homeassistant.components.datetime import DateTimeEntity
@@ -50,15 +50,15 @@ MQTT_DATETIME_ATTRIBUTES_BLOCKED: frozenset[str] = frozenset()
 
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_TIMEZONE): str,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_TIMEZONE): str,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=probatio.REMOVE_EXTRA)
 
 
 async def async_setup_entry(
@@ -81,12 +81,12 @@ async def async_setup_entry(
 class MqttDateTime(MqttEntity, DateTimeEntity):
     """Representation of the MQTT datetime entity."""
 
-    _attr_native_value: datetime_library.datetime | None = None
+    _attr_native_value: dt.datetime | None = None
     _attributes_extra_blocked = MQTT_DATETIME_ATTRIBUTES_BLOCKED
     _default_name = DEFAULT_NAME
     _entity_id_format = datetime.ENTITY_ID_FORMAT
     _zone_info: ZoneInfo | None = None
-    _time_zone_delta: datetime_library.timedelta | None
+    _time_zone_delta: dt.timedelta | None
 
     _optimistic: bool
     _command_template: Callable[
@@ -196,7 +196,7 @@ class MqttDateTime(MqttEntity, DateTimeEntity):
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @override
-    async def async_set_value(self, value: datetime_library.datetime) -> None:
+    async def async_set_value(self, value: dt.datetime) -> None:
         """Change the date and time."""
         payload = self._command_template(value.isoformat(), {"value": value})
         await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)

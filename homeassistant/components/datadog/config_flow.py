@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from datadog import DogStatsd
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -60,12 +60,12 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Required(CONF_PREFIX, default=DEFAULT_PREFIX): str,
-                    vol.Required(CONF_RATE, default=DEFAULT_RATE): int,
+                    probatio.Required(CONF_HOST, default=DEFAULT_HOST): str,
+                    probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    probatio.Required(CONF_PREFIX, default=DEFAULT_PREFIX): str,
+                    probatio.Required(CONF_RATE, default=DEFAULT_RATE): int,
                 }
             ),
             errors=errors,
@@ -93,15 +93,15 @@ class DatadogOptionsFlowHandler(OptionsFlow):
         if user_input is None:
             return self.async_show_form(
                 step_id="init",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_PREFIX,
                             default=options.get(
                                 CONF_PREFIX, data.get(CONF_PREFIX, DEFAULT_PREFIX)
                             ),
                         ): str,
-                        vol.Required(
+                        probatio.Required(
                             CONF_RATE,
                             default=options.get(
                                 CONF_RATE, data.get(CONF_RATE, DEFAULT_RATE)
@@ -127,10 +127,10 @@ class DatadogOptionsFlowHandler(OptionsFlow):
         errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PREFIX, default=options[CONF_PREFIX]): str,
-                    vol.Required(CONF_RATE, default=options[CONF_RATE]): int,
+                    probatio.Required(CONF_PREFIX, default=options[CONF_PREFIX]): str,
+                    probatio.Required(CONF_RATE, default=options[CONF_RATE]): int,
                 }
             ),
             errors=errors,

@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "device_mismatch": "Please ensure you reauthenticate the same controller.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "device_mismatch": "Please ensure you reauthenticate the same controller."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -112,6 +111,21 @@
     "cannot_connect": {
       "message": "Omada controller could not be reached."
     },
+    "client_device_no_mac": {
+      "message": "The selected device has no network MAC address associated with it."
+    },
+    "client_device_not_found": {
+      "message": "The selected device was not found."
+    },
+    "client_device_not_tracked": {
+      "message": "The selected device is not a network client of the Omada controller."
+    },
+    "client_mac_ambiguous": {
+      "message": "The selected device has multiple network addresses on the Omada controller. Select a different device."
+    },
+    "client_query_failed": {
+      "message": "Failed to query client with MAC {mac} from the Omada controller."
+    },
     "controller_not_found": {
       "message": "Specified TP-Link Omada controller not found"
     },
@@ -129,6 +143,9 @@
     },
     "reconnect_failed": {
       "message": "Failed to reconnect client with MAC {mac}"
+    },
+    "set_client_name_failed": {
+      "message": "Failed to set client name for device with MAC {mac}"
     },
     "switch_action_failed": {
       "message": "Failed to update the switch."
@@ -154,6 +171,24 @@
         }
       },
       "name": "Reconnect wireless client"
+    },
+    "set_client_name": {
+      "description": "Sets the name of a client on the Omada network.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The instance of the Omada integration to which the client is connected.",
+          "name": "Omada controller"
+        },
+        "device_id": {
+          "description": "The device whose client name will be set.",
+          "name": "Device"
+        },
+        "name": {
+          "description": "New name for the client.",
+          "name": "Name"
+        }
+      },
+      "name": "Set client name"
     }
   }
 }

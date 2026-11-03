@@ -1,7 +1,8 @@
 """The tests for Humidifier device conditions."""
 
-from probatio import to_field_list
+from probatio import Invalid, to_field_list
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -16,8 +17,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.mark.parametrize(
@@ -707,3 +706,17 @@ async def test_capabilities_missing_entity(
         )
         == expected_capabilities
     )
+
+
+def test_is_mode_without_mode_is_invalid() -> None:
+    """Test the condition type selects the schema that reports the error."""
+    with pytest.raises(Invalid, match="required key not provided at 'mode'"):
+        device_condition.CONDITION_SCHEMA(
+            {
+                "condition": "device",
+                "domain": DOMAIN,
+                "device_id": "abcdefgh",
+                "entity_id": "humidifier.test",
+                "type": "is_mode",
+            }
+        )

@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import Final, cast
 
 from google_air_quality_api.exceptions import GoogleAirQualityApiError
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import (
@@ -26,11 +26,13 @@ FORECAST_HOURS_MAX: Final = 96
 
 SERVICE_GET_FORECAST: Final = "get_forecast"
 
-SERVICE_GET_FORECAST_SCHEMA: Final = vol.Schema(
+SERVICE_GET_FORECAST_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): selector.DeviceSelector({"integration": DOMAIN}),
-        vol.Required(ATTR_HOURS): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=FORECAST_HOURS_MAX)
+        probatio.Required(ATTR_DEVICE_ID): selector.DeviceSelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Required(ATTR_HOURS): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=FORECAST_HOURS_MAX)
         ),
     }
 )

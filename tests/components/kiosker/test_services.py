@@ -12,9 +12,10 @@ from kiosker import (
     ScreensaverState,
     TLSVerificationError,
 )
+import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.kiosker.const import (
     ATTR_BACKGROUND,
@@ -36,8 +37,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 KIOSKER_DEVICE_ID = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
 
@@ -197,7 +196,7 @@ async def test_schema_rejects_invalid_input(
     )
     assert device is not None
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             service,

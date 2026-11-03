@@ -3,12 +3,31 @@
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate
 
-from peblar import PeblarAuthenticationError, PeblarConnectionError, PeblarError
+from peblar import (
+    PeblarAuthenticationError,
+    PeblarConnectionError,
+    PeblarError,
+    PeblarUserConfiguration,
+)
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 from .entity import PeblarEntity
+
+
+def supports_custom_solar(configuration: PeblarUserConfiguration) -> bool:
+    """Return whether the charger knows the custom solar strategy.
+
+    It arrived with firmware 1.10. Rather than check the version, take the
+    charger at its word: it reports the settings that go with the strategy,
+    and leaves them out when it has never heard of it. Solar charging has
+    to be on offer at all for any of it to mean anything.
+    """
+    return (
+        configuration.solar_charging_allowed
+        and configuration.solar_charging_custom_power_target is not None
+    )
 
 
 def peblar_exception_handler[_PeblarEntityT: PeblarEntity, **_P](

@@ -336,6 +336,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "electrasmart",
+        "hostname": "elrssid*",
+    },
+    {
         "domain": "elgato",
         "registered_devices": True,
     },
@@ -505,6 +509,26 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "iaqualink-*",
     },
     {
+        "domain": "imou",
+        "macaddress": "1C4D89*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "302450*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "906A94*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "A83162*",
+    },
+    {
+        "domain": "imou",
+        "macaddress": "AC3DFA*",
+    },
+    {
         "domain": "incomfort",
         "hostname": "rfgateway",
         "macaddress": "0004A3*",
@@ -608,6 +632,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "00D02D*",
     },
     {
+        "domain": "midea",
+        "registered_devices": True,
+    },
+    {
         "domain": "mitsubishi_comfort",
         "registered_devices": True,
     },
@@ -626,6 +654,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "motion_blinds",
         "hostname": "connector_*",
+    },
+    {
+        "domain": "my_pv",
+        "registered_devices": True,
+    },
+    {
+        "domain": "my_pv",
+        "macaddress": "986D35C*",
     },
     {
         "domain": "mystrom",
@@ -1487,6 +1523,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "F0A731*",
     },
     {
+        "domain": "trmnl",
+        "hostname": "trmnl-*",
+    },
+    {
         "domain": "tuya",
         "macaddress": "105A17*",
     },
@@ -1598,6 +1638,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "vistapool",
         "hostname": "sugarwifi",
+    },
+    {
+        "domain": "whirlpool",
+        "macaddress": "88E712*",
     },
     {
         "domain": "withings",

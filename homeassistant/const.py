@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 10
+MINOR_VERSION: Final = 12
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -461,6 +461,14 @@ ATTR_TEMPERATURE: Final = "temperature"
 ATTR_PERSONS: Final = "persons"
 
 
+class CommonServiceArgument(StrEnum):
+    """Action fields shared by the actions of many integrations."""
+
+    CONFIG_ENTRY_ID = "config_entry_id"
+    DEVICE_ID = "device_id"
+    ENTITY_ID = "entity_id"
+
+
 class EntityCapabilityAttribute(StrEnum):
     """Capability attributes shared by all entities."""
 
@@ -533,6 +541,7 @@ class UnitOfEnergy(StrEnum):
     KILO_CALORIE = "kcal"
     MEGA_CALORIE = "Mcal"
     GIGA_CALORIE = "Gcal"
+    THERM = "thm"
 
 
 # Reactive energy units
@@ -647,6 +656,7 @@ class UnitOfPressure(StrEnum):
     INHG = "inHg"
     INH2O = "inH₂O"
     PSI = "psi"
+    ATM = "atm"
 
 
 # Sound pressure units

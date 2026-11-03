@@ -1,12 +1,8 @@
 """Support for Rflink switches."""
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.components.switch import (
-    DOMAIN as PLATFORM_DOMAIN,
-    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
-    SwitchEntity,
-)
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -24,39 +20,33 @@ from .const import (
     DEVICE_DEFAULTS_SCHEMA,
 )
 from .entity import SwitchableRflinkDevice
-from .utils import create_issue_yaml_migration
 
 PARALLEL_UPDATES = 0
 
 RFLINK_PLATFORM = {
-    vol.Optional(
+    probatio.Optional(
         CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
     ): DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_DEVICES, default={}): {
-        cv.string: vol.Schema(
+    probatio.Optional(CONF_DEVICES, default={}): {
+        cv.string: probatio.Schema(
             {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_GROUP_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_NOGROUP_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_FIRE_EVENT): cv.boolean,
-                vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-                vol.Optional(CONF_GROUP, default=True): cv.boolean,
+                probatio.Optional(CONF_FIRE_EVENT): cv.boolean,
+                probatio.Optional(CONF_SIGNAL_REPETITIONS): probatio.Coerce(int),
+                probatio.Optional(CONF_GROUP, default=True): cv.boolean,
             }
         )
     },
 }
-
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 def devices_from_config(domain_config):
@@ -78,10 +68,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Rflink platform."""
     if discovery_info is None:
-        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
-        async_add_entities(devices_from_config(config))
-    else:
-        async_add_entities(devices_from_config(discovery_info))
+        return
+    async_add_entities(devices_from_config(discovery_info))
 
 
 class RflinkSwitch(SwitchableRflinkDevice, SwitchEntity):

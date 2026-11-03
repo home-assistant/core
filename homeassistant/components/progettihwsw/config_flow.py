@@ -3,8 +3,8 @@
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from ProgettiHWSW.ProgettiHWSWAPI import ProgettiHWSWAPI
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
@@ -14,8 +14,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required("host"): str, vol.Required("port", default=80): int}
+DATA_SCHEMA = probatio.Schema(
+    {probatio.Required("host"): str, probatio.Required("port", default=80): int}
 )
 
 
@@ -30,8 +30,8 @@ async def validate_input(hass: HomeAssistant, data):
 
     return {
         "title": is_valid["title"],
-        "relay_count": is_valid["relays"],
-        "input_count": is_valid["inputs"],
+        "relay_count": len(is_valid["relays"]),
+        "input_count": len(is_valid["inputs"]),
         "is_old": is_valid["temps"],
     }
 
@@ -60,18 +60,18 @@ class ProgettiHWSWConfigFlow(ConfigFlow, domain=DOMAIN):
 
         relay_modes_schema = {}
         for i in range(1, int(self.s1_in["relay_count"]) + 1):
-            relay_modes_schema[vol.Required(f"relay_{i!s}", default="bistable")] = (
-                vol.In(
-                    {
-                        "bistable": "Bistable (ON/OFF Mode)",
-                        "monostable": "Monostable (Timer Mode)",
-                    }
-                )
+            relay_modes_schema[
+                probatio.Required(f"relay_{i!s}", default="bistable")
+            ] = probatio.In(
+                {
+                    "bistable": "Bistable (ON/OFF Mode)",
+                    "monostable": "Monostable (Timer Mode)",
+                }
             )
 
         return self.async_show_form(
             step_id="relay_modes",
-            data_schema=vol.Schema(relay_modes_schema),
+            data_schema=probatio.Schema(relay_modes_schema),
             errors=errors,
         )
 
