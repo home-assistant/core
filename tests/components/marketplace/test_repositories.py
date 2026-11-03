@@ -63,6 +63,7 @@ from homeassistant.components.marketplace.repositories.integration import (
 )
 from homeassistant.components.marketplace.repositories.plugin import PluginRepository
 from homeassistant.components.marketplace.repositories.theme import ThemeRepository
+from homeassistant.components.marketplace.utils.url import github_raw_file
 from homeassistant.components.marketplace.utils.validate import Validate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir, translation
@@ -79,6 +80,7 @@ from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
 RATE_LIMITED = {"message": "API rate limit exceeded for 127.0.0.1."}
+BIG_FILE = github_raw_file(repository="owner/repository", ref="main", path="big")
 
 
 @pytest.fixture
@@ -1562,7 +1564,12 @@ async def test_download_zip_release_failure(
     assert [
         (error.translation_key, error.translation_placeholders)
         for error in validate.errors
-    ] == [("file_not_downloaded", {"file": url})]
+    ] == [
+        (
+            "file_not_downloaded",
+            {"file": f"{REPOSITORY_INTEGRATION}/releases/download/1.0.0/release.zip"},
+        )
+    ]
 
 
 async def test_download_repository_zip_without_ref(
@@ -1672,7 +1679,13 @@ async def test_download_content_outside_the_repository(
     response_mocker.add(url, mocked_response(url, content=b""))
 
     await repository.download_repository_file(
-        FileInformation(url, "escaped.py", "../../escaped.py")
+        FileInformation(
+            github_raw_file(
+                repository=REPOSITORY_INTEGRATION, ref="1.0.0", path="escaped.py"
+            ),
+            "escaped.py",
+            "../../escaped.py",
+        )
     )
 
     assert repository.validate.errors[0].translation_key == "path_outside_directory"
@@ -1779,14 +1792,21 @@ async def test_download_keeps_tags_in_the_url(
     url = "https://raw.githubusercontent.com/owner/hashtags/1.0.0/tags/card.js"
     response_mocker.add(url, mocked_response(url, content=b"card"))
 
-    assert await marketplace.async_download_file(url) == b"card"
+    assert (
+        await marketplace.async_download_file(
+            github_raw_file(
+                repository="owner/hashtags", ref="1.0.0", path="tags/card.js"
+            )
+        )
+        == b"card"
+    )
 
 
 async def test_download_declines_a_declared_size_over_the_limit(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test that a response declaring more than the limit is not read."""
-    url = "https://example.com/big"
+    url = f"https://raw.githubusercontent.com/{BIG_FILE.path}"
     response_mocker.add(
         url,
         mocked_response(
@@ -1794,20 +1814,20 @@ async def test_download_declines_a_declared_size_over_the_limit(
         ),
     )
 
-    assert await marketplace.async_download_file(url) is None
+    assert await marketplace.async_download_file(BIG_FILE) is None
 
 
 async def test_download_discards_content_over_the_limit(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test that a response larger than the limit is thrown away."""
-    url = "https://example.com/big"
+    url = f"https://raw.githubusercontent.com/{BIG_FILE.path}"
     response_mocker.add(url, mocked_response(url, content=b"0123456789"))
 
     with patch(
         "homeassistant.components.marketplace.utils.response.MAX_DOWNLOAD_SIZE", 5
     ):
-        assert await marketplace.async_download_file(url) is None
+        assert await marketplace.async_download_file(BIG_FILE) is None
 
 
 class _EndlessStream:
@@ -1842,7 +1862,7 @@ async def test_download_stops_reading_at_the_limit(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test a body without a Content-Length is not read past the limit."""
-    url = "https://example.com/endless"
+    url = f"https://raw.githubusercontent.com/{BIG_FILE.path}"
     stream = _EndlessStream()
     response_mocker.add(url, _EndlessResponse(url, stream))
 
@@ -1856,7 +1876,7 @@ async def test_download_stops_reading_at_the_limit(
             100,
         ),
     ):
-        assert await marketplace.async_download_file(url) is None
+        assert await marketplace.async_download_file(BIG_FILE) is None
 
     # The chunk that passes the limit is the last one read
     assert stream.chunks_read == 11
