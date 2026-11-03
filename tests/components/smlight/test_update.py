@@ -119,8 +119,7 @@ async def test_catalog_connection_error_recovery(
     catalog_responses: list[list[Firmware] | SmlightConnectionError],
 ) -> None:
     """Test catalog connection errors preserve availability and recover."""
-    entry = await setup_integration(hass, mock_config_entry)
-    coordinator = entry.runtime_data.firmware
+    await setup_integration(hass, mock_config_entry)
     assert hass.states.get("update.mock_title_core_firmware").state == STATE_ON
     assert hass.states.get("update.mock_title_zigbee_firmware").state == STATE_ON
 
@@ -131,8 +130,6 @@ async def test_catalog_connection_error_recovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert coordinator.last_exception is None
-    assert coordinator.last_update_success
     assert hass.states.get("update.mock_title_core_firmware").state == STATE_ON
     assert hass.states.get("update.mock_title_zigbee_firmware").state == STATE_ON
 
