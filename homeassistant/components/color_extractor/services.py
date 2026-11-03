@@ -13,11 +13,11 @@ from PIL import UnidentifiedImageError
 import probatio
 
 from homeassistant.components.light import (
-    ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -189,10 +189,10 @@ async def async_handle_service(service_call: ServiceCall) -> None:
             },
         ) from ex
 
-    service_data[ATTR_RGB_COLOR] = color
+    service_data[LightServiceArgument.RGB_COLOR] = color
 
     await service_call.hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+        LIGHT_DOMAIN, LightService.TURN_ON, service_data, blocking=True
     )
 
 
