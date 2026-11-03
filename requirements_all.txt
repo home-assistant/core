@@ -752,7 +752,7 @@ bluetooth-data-tools==1.29.24
 bluetti-modbus==0.57.0
 
 # homeassistant.components.bmx_monitor
-bmx-ble==0.3.3
+bmx-ble==0.3.4
 
 # homeassistant.components.bond
 bond-async==0.2.1
