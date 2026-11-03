@@ -10,14 +10,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
-from homeassistant.util.hass_dict import HassDict, HassKey
 
-from .const import DOMAIN
+from .const import DOMAIN, REPAIRS, RepairsData
 from .models import RepairsFlow, RepairsFlowContext, RepairsFlowResult, RepairsProtocol
-
-REPAIRS: HassKey[HassDict] = HassKey(DOMAIN)
-FLOW_MANAGER: HassKey[RepairsFlowManager] = HassKey("flow_manager")
-PLATFORMS: HassKey[LazyIntegrationPlatforms[RepairsProtocol]] = HassKey("platforms")
 
 
 class ConfirmRepairFlow(RepairsFlow):
@@ -98,7 +93,7 @@ class RepairsFlowManager(
                 f"issue id {issue_id} is {'not found' if issue is None else 'not fixable'}"
             )
 
-        platforms = self.hass.data[REPAIRS][PLATFORMS]
+        platforms = self.hass.data[REPAIRS].platforms
         if (platform := await platforms.async_get_platform(handler_key)) is None:
             flow: RepairsFlow = ConfirmRepairFlow()
         else:
@@ -126,9 +121,9 @@ class RepairsFlowManager(
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Initialize repairs."""
-    hass.data[REPAIRS][FLOW_MANAGER] = RepairsFlowManager(hass)
-    hass.data[REPAIRS][PLATFORMS] = LazyIntegrationPlatforms(
-        hass, DOMAIN, _process_repairs_platform
+    hass.data[REPAIRS] = RepairsData(
+        RepairsFlowManager(hass),
+        LazyIntegrationPlatforms(hass, DOMAIN, _process_repairs_platform),
     )
 
 
