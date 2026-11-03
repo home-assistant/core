@@ -194,8 +194,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
         else:
             until = dt_util.utcnow() + duration
 
-        until = dt_util.as_utc(until) if until else None
-
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
@@ -263,7 +261,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
                 await self.coordinator.async_ensure_schedule(self._evo_device)
                 until = self.setpoints.get(NEXT_SP_FROM)
 
-        until = dt_util.as_utc(until) if until else None
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
@@ -311,7 +308,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
         temperature = self._evo_device.target_heat_temperature
         assert temperature is not None  # mypy check
 
-        until = dt_util.as_utc(until) if until else None
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
