@@ -632,6 +632,101 @@ async def test_update_entity_progress(
     await install_task
 
 
+async def test_update_entity_install_multiple_nodes_in_parallel(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_radio_thermostat_ct100_plus_different_endpoints: Node,
+    zooz_zse43: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test installs on different nodes run at the same time."""
+    client.async_send_command.return_value = FIRMWARE_UPDATES
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
+    await hass.async_block_till_done()
+
+    entity_ids = (NODE_UPDATE_ENTITY, SLEEPING_NODE_UPDATE_ENTITY)
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_ON
+
+    installing_node_ids: set[int] = set()
+    both_installs_started = asyncio.Event()
+
+    async def send_command(message: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        installing_node_ids.add(message["nodeId"])
+        if len(installing_node_ids) == 2:
+            both_installs_started.set()
+        return {"result": {"status": 254, "success": True, "reInterview": False}}
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.side_effect = send_command
+
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: list(entity_ids)},
+            blocking=True,
+        )
+    )
+
+    # Both install commands must be sent before either node reports the update as
+    # finished
+    async with asyncio.timeout(5):
+        await both_installs_started.wait()
+
+    assert installing_node_ids == {
+        climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
+        zooz_zse43.node_id,
+    }
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.attributes[ATTR_IN_PROGRESS] is True
+
+    def finished_event(node: Node) -> Event:
+        return Event(
+            type="firmware update finished",
+            data={
+                "source": "node",
+                "event": "firmware update finished",
+                "nodeId": node.node_id,
+                "result": {
+                    "status": NodeFirmwareUpdateStatus.OK_NO_RESTART,
+                    "success": True,
+                    "reInterview": False,
+                },
+            },
+        )
+
+    client.driver.receive_event(
+        finished_event(climate_radio_thermostat_ct100_plus_different_endpoints)
+    )
+    # Let the thermostat's install task finish
+    await asyncio.sleep(0)
+
+    state = hass.states.get(NODE_UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "11.2.4"
+
+    state = hass.states.get(SLEEPING_NODE_UPDATE_ENTITY)
+    assert state
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+
+    client.driver.receive_event(finished_event(zooz_zse43))
+    await install_task
+
+    state = hass.states.get(SLEEPING_NODE_UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "11.2.4"
+
+
 @pytest.mark.parametrize(
     (
         "entity_id",
