@@ -1,5 +1,6 @@
 """Tests for the Tankerkoenig services."""
 
+import asyncio
 from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock
@@ -85,6 +86,33 @@ async def test_get_opening_times_refreshes_station_details(
     response = await get_opening_times(hass)
     assert response[ENTITY_ID]["overrides"] == [OVERRIDE]
     tankerkoenig.station_details.assert_called_once()
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_get_opening_times_fetches_once_for_concurrent_calls(
+    hass: HomeAssistant,
+    tankerkoenig: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test concurrent calls for a stale station share one fetch."""
+    release = asyncio.Event()
+
+    async def slow_station_details(station_id: str) -> Station:
+        await release.wait()
+        return replace(STATION, overrides=[OVERRIDE])
+
+    tankerkoenig.station_details.reset_mock()
+    tankerkoenig.station_details.side_effect = slow_station_details
+    freezer.tick(timedelta(hours=1))
+
+    calls = asyncio.gather(get_opening_times(hass), get_opening_times(hass))
+    await asyncio.sleep(0)
+    release.set()
+    first, second = await calls
+
+    assert first == second
+    assert first[ENTITY_ID]["overrides"] == [OVERRIDE]
+    tankerkoenig.station_details.assert_called_once_with(STATION.id)
 
 
 @pytest.mark.parametrize(

@@ -1,5 +1,7 @@
 """The Tankerkoenig update coordinator."""
 
+import asyncio
+from collections import defaultdict
 from datetime import datetime, timedelta
 import logging
 from math import ceil
@@ -63,6 +65,9 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
         self._selected_stations: list[str] = self.config_entry.data[CONF_STATIONS]
         self.stations: dict[str, Station] = {}
         self._station_details_fetched: dict[str, datetime] = {}
+        self._station_details_locks: defaultdict[str, asyncio.Lock] = defaultdict(
+            asyncio.Lock
+        )
         self.show_on_map: bool = self.config_entry.options[CONF_SHOW_ON_MAP]
 
         self._tankerkoenig = Tankerkoenig(
@@ -130,39 +135,42 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
 
     async def async_get_station_details(self, station_id: str) -> Station:
         """Return the details of a station, fetched again once they are an hour old."""
-        if (
-            dt_util.utcnow() - self._station_details_fetched[station_id]
-            < STATION_DETAILS_MAX_AGE
-        ):
-            return self.stations[station_id]
+        # Concurrent calls for the same station wait for one fetch instead of each
+        # making their own.
+        async with self._station_details_locks[station_id]:
+            if (
+                dt_util.utcnow() - self._station_details_fetched[station_id]
+                < STATION_DETAILS_MAX_AGE
+            ):
+                return self.stations[station_id]
 
-        try:
-            station = await self._tankerkoenig.station_details(station_id)
-        except TankerkoenigInvalidKeyError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_api_key",
-            ) from err
-        except TankerkoenigRateLimitError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="rate_limit_reached",
-            ) from err
-        except TankerkoenigConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="connection_error",
-            ) from err
-        except TankerkoenigError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="station_update_failed",
-                translation_placeholders={"station_ids": station_id},
-            ) from err
+            try:
+                station = await self._tankerkoenig.station_details(station_id)
+            except TankerkoenigInvalidKeyError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_api_key",
+                ) from err
+            except TankerkoenigRateLimitError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="rate_limit_reached",
+                ) from err
+            except TankerkoenigConnectionError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="connection_error",
+                ) from err
+            except TankerkoenigError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="station_update_failed",
+                    translation_placeholders={"station_ids": station_id},
+                ) from err
 
-        self.stations[station_id] = station
-        self._station_details_fetched[station_id] = dt_util.utcnow()
-        return station
+            self.stations[station_id] = station
+            self._station_details_fetched[station_id] = dt_util.utcnow()
+            return station
 
     @override
     async def _async_update_data(self) -> dict[str, PriceInfo]:
