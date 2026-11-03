@@ -1,0 +1,1311 @@
+# serializer version: 1
+# name: test_all_entities[binary_sensor][binary_sensor.kitchen_water_purifier_filter_choked-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.kitchen_water_purifier_filter_choked',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Filter choked',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Filter choked',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_choked',
+    'unique_id': 'a4cf12aa0001_filter_choked',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor][binary_sensor.kitchen_water_purifier_filter_choked-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier Filter choked',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kitchen_water_purifier_filter_choked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor][binary_sensor.kitchen_water_purifier_no_water-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.kitchen_water_purifier_no_water',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'No water',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'No water',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'no_water',
+    'unique_id': 'a4cf12aa0001_no_water',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor][binary_sensor.kitchen_water_purifier_no_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier No water',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kitchen_water_purifier_no_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor][binary_sensor.kitchen_water_purifier_system_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.kitchen_water_purifier_system_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'System fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'System fault',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'system_fault',
+    'unique_id': 'a4cf12aa0001_system_fault',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor][binary_sensor.kitchen_water_purifier_system_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier System fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kitchen_water_purifier_system_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor][binary_sensor.kitchen_water_purifier_tank_full-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.kitchen_water_purifier_tank_full',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tank full',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tank full',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tank_full',
+    'unique_id': 'a4cf12aa0001_tank_full',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor][binary_sensor.kitchen_water_purifier_tank_full-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier Tank full',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kitchen_water_purifier_tank_full',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor][binary_sensor.kitchen_water_purifier_valve_fault-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.kitchen_water_purifier_valve_fault',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Valve fault',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Valve fault',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'valve_fault',
+    'unique_id': 'a4cf12aa0001_valve_fault',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor][binary_sensor.kitchen_water_purifier_valve_fault-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier Valve fault',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kitchen_water_purifier_valve_fault',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[button][button.front_door_generate_guest_pin-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12999999')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.front_door_generate_guest_pin',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Generate guest PIN',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Generate guest PIN',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'guest_pin',
+    'unique_id': 'a4cf12999999_guest_pin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button][button.front_door_generate_guest_pin-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Generate guest PIN',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.front_door_generate_guest_pin',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[fan][fan.bedroom-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12123456')]>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.bedroom',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 49>,
+    'translation_key': None,
+    'unique_id': 'a4cf12123456_fan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[fan][fan.bedroom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 16.666666666666668,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.bedroom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[fan][fan.living_room-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12abcdef')]>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.living_room',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 49>,
+    'translation_key': None,
+    'unique_id': 'a4cf12abcdef_fan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[fan][fan.living_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 50,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 16.666666666666668,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.living_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[light][light.living_room_led-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
+        'daylight',
+        'cool',
+        'warm',
+      ]),
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12abcdef')]>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.living_room_led',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'LED',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 4>,
+    'translation_key': 'led',
+    'unique_id': 'a4cf12abcdef_led',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[light][light.living_room_led-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 143,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'warm',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
+        'daylight',
+        'cool',
+        'warm',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room LED',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.living_room_led',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[number][number.kitchen_water_purifier_tds_threshold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 100,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.kitchen_water_purifier_tds_threshold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TDS threshold',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TDS threshold',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tds_threshold',
+    'unique_id': 'a4cf12aa0001_tds_threshold',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
+  })
+# ---
+# name: test_all_entities[number][number.kitchen_water_purifier_tds_threshold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier TDS threshold',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 100,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.kitchen_water_purifier_tds_threshold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '150',
+  })
+# ---
+# name: test_all_entities[select][select.kitchen_water_purifier_fallback_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ro_only',
+        'tastetune_50_100',
+        'tastetune_75_125',
+        'tastetune_100_150',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.kitchen_water_purifier_fallback_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Fallback mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fallback mode',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fallback_mode',
+    'unique_id': 'a4cf12aa0001_fallback_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select][select.kitchen_water_purifier_fallback_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier Fallback mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ro_only',
+        'tastetune_50_100',
+        'tastetune_75_125',
+        'tastetune_100_150',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.kitchen_water_purifier_fallback_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ro_only',
+  })
+# ---
+# name: test_all_entities[select][select.kitchen_water_purifier_purification_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ro_only',
+        'adaptive',
+        'tastetune_50_100',
+        'tastetune_75_125',
+        'tastetune_100_150',
+        'vacation',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.kitchen_water_purifier_purification_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Purification mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Purification mode',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'purification_mode',
+    'unique_id': 'a4cf12aa0001_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select][select.kitchen_water_purifier_purification_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier Purification mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'ro_only',
+        'adaptive',
+        'tastetune_50_100',
+        'tastetune_75_125',
+        'tastetune_100_150',
+        'vacation',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.kitchen_water_purifier_purification_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'adaptive',
+  })
+# ---
+# name: test_all_entities[select][select.living_room_timer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        '1_hour',
+        '2_hours',
+        '3_hours',
+        '6_hours',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12abcdef')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.living_room_timer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Timer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Timer',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timer',
+    'unique_id': 'a4cf12abcdef_timer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select][select.living_room_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Timer',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        '1_hour',
+        '2_hours',
+        '3_hours',
+        '6_hours',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.living_room_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2_hours',
+  })
+# ---
+# name: test_all_entities[sensor][sensor.front_door_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12999999')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.front_door_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'a4cf12999999_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor][sensor.front_door_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Battery',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.front_door_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_all_entities[sensor][sensor.front_door_firmware_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12999999')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.front_door_firmware_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Firmware version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Firmware version',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firmware_version',
+    'unique_id': 'a4cf12999999_esp_fw_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor][sensor.front_door_firmware_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Firmware version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.front_door_firmware_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.2.3',
+  })
+# ---
+# name: test_all_entities[sensor][sensor.front_door_unlock_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12999999')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.front_door_unlock_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Unlock count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Unlock count',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'unlock_count',
+    'unique_id': 'a4cf12999999_n_unlocks',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor][sensor.front_door_unlock_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Unlock count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.front_door_unlock_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42',
+  })
+# ---
+# name: test_all_entities[sensor][sensor.kitchen_water_purifier_input_tds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kitchen_water_purifier_input_tds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Input TDS',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Input TDS',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'input_tds',
+    'unique_id': 'a4cf12aa0001_input_tds',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
+  })
+# ---
+# name: test_all_entities[sensor][sensor.kitchen_water_purifier_input_tds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier Input TDS',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kitchen_water_purifier_input_tds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '240',
+  })
+# ---
+# name: test_all_entities[sensor][sensor.kitchen_water_purifier_last_reported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.kitchen_water_purifier_last_reported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last reported',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last reported',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_reported',
+    'unique_id': 'a4cf12aa0001_ts_epoch_seconds',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor][sensor.kitchen_water_purifier_last_reported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier Last reported',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kitchen_water_purifier_last_reported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-11-03T10:00:00+00:00',
+  })
+# ---
+# name: test_all_entities[sensor][sensor.kitchen_water_purifier_tank_tds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kitchen_water_purifier_tank_tds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tank TDS',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tank TDS',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tank_tds',
+    'unique_id': 'a4cf12aa0001_tank_tds',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
+  })
+# ---
+# name: test_all_entities[sensor][sensor.kitchen_water_purifier_tank_tds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier Tank TDS',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kitchen_water_purifier_tank_tds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35',
+  })
+# ---
+# name: test_all_entities[switch][switch.kitchen_water_purifier_idle_display_sleep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.kitchen_water_purifier_idle_display_sleep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Idle display sleep',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Idle display sleep',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'idle_sleep',
+    'unique_id': 'a4cf12aa0001_idle_sleep',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch][switch.kitchen_water_purifier_idle_display_sleep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier Idle display sleep',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.kitchen_water_purifier_idle_display_sleep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[switch][switch.kitchen_water_purifier_sleep_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.kitchen_water_purifier_sleep_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep window',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep window',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_window',
+    'unique_id': 'a4cf12aa0001_sleep_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch][switch.kitchen_water_purifier_sleep_window-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier Sleep window',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.kitchen_water_purifier_sleep_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[switch][switch.living_room_sleep_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12abcdef')]>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.living_room_sleep_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep mode',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_mode',
+    'unique_id': 'a4cf12abcdef_sleep',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch][switch.living_room_sleep_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Sleep mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.living_room_sleep_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[time][time.kitchen_water_purifier_sleep_window_end-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': None,
+    'entity_id': 'time.kitchen_water_purifier_sleep_window_end',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep window end',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep window end',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_window_end',
+    'unique_id': 'a4cf12aa0001_stop_utc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[time][time.kitchen_water_purifier_sleep_window_end-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier Sleep window end',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.kitchen_water_purifier_sleep_window_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[time][time.kitchen_water_purifier_sleep_window_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('atomberg', 'a4cf12aa0001')]>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': None,
+    'entity_id': 'time.kitchen_water_purifier_sleep_window_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sleep window start',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep window start',
+    'platform': 'atomberg',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sleep_window_start',
+    'unique_id': 'a4cf12aa0001_start_utc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[time][time.kitchen_water_purifier_sleep_window_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Water Purifier Sleep window start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.kitchen_water_purifier_sleep_window_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
