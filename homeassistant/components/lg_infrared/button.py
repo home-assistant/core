@@ -180,13 +180,13 @@ HOME_THEATER_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
         key="home", translation_key="home", command_code=LGHomeTheaterCode.HOME
     ),
     LgIrButtonEntityDescription(
-        key="function",
-        translation_key="function",
+        key="input",
+        translation_key="input",
         command_code=LGHomeTheaterCode.FUNCTION,
     ),
     LgIrButtonEntityDescription(
-        key="info_menu",
-        translation_key="info_menu",
+        key="info",
+        translation_key="info",
         command_code=LGHomeTheaterCode.INFO_MENU,
     ),
     LgIrButtonEntityDescription(
@@ -295,13 +295,13 @@ HOME_THEATER_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
         key="repeat", translation_key="repeat", command_code=LGHomeTheaterCode.REPEAT
     ),
     LgIrButtonEntityDescription(
-        key="scan_backward",
-        translation_key="scan_backward",
+        key="rewind",
+        translation_key="rewind",
         command_code=LGHomeTheaterCode.SCAN_BACKWARD,
     ),
     LgIrButtonEntityDescription(
-        key="scan_forward",
-        translation_key="scan_forward",
+        key="fast_forward",
+        translation_key="fast_forward",
         command_code=LGHomeTheaterCode.SCAN_FORWARD,
     ),
     LgIrButtonEntityDescription(

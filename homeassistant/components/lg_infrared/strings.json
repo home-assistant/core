@@ -83,7 +83,7 @@
         "name": "Toggle beep"
       },
       "audio_track": {
-        "name": "Audio"
+        "name": "Audio track"
       },
       "back": {
         "name": "[%key:common::entity::button::back::name%]"
@@ -109,8 +109,8 @@
       "exit": {
         "name": "[%key:common::entity::button::exit::name%]"
       },
-      "function": {
-        "name": "Function"
+      "fast_forward": {
+        "name": "Fast forward"
       },
       "green": {
         "name": "Green"
@@ -135,9 +135,6 @@
       },
       "info": {
         "name": "[%key:common::entity::button::info::name%]"
-      },
-      "info_menu": {
-        "name": "Info/Menu"
       },
       "input": {
         "name": "[%key:common::entity::button::input::name%]"
@@ -211,14 +208,11 @@
       "repeat": {
         "name": "Repeat"
       },
+      "rewind": {
+        "name": "Rewind"
+      },
       "right": {
         "name": "[%key:common::entity::button::right::name%]"
-      },
-      "scan_backward": {
-        "name": "Scan backward"
-      },
-      "scan_forward": {
-        "name": "Scan forward"
       },
       "sleep": {
         "name": "Sleep"

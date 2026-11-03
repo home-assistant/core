@@ -499,7 +499,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[home_theater][button.lg_home_theater_audio-entry]
+# name: test_entities[home_theater][button.lg_home_theater_audio_track-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -513,7 +513,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.lg_home_theater_audio',
+    'entity_id': 'button.lg_home_theater_audio_track',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -521,12 +521,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Audio',
+    'object_id_base': 'Audio track',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Audio',
+    'original_name': 'Audio track',
     'platform': 'lg_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -536,13 +536,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[home_theater][button.lg_home_theater_audio-state]
+# name: test_entities[home_theater][button.lg_home_theater_audio_track-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Audio',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Audio track',
     }),
     'context': <ANY>,
-    'entity_id': 'button.lg_home_theater_audio',
+    'entity_id': 'button.lg_home_theater_audio_track',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -799,7 +799,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[home_theater][button.lg_home_theater_function-entry]
+# name: test_entities[home_theater][button.lg_home_theater_fast_forward-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -813,7 +813,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.lg_home_theater_function',
+    'entity_id': 'button.lg_home_theater_fast_forward',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -821,28 +821,28 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Function',
+    'object_id_base': 'Fast forward',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Function',
+    'original_name': 'Fast forward',
     'platform': 'lg_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'function',
-    'unique_id': '01JTEST0000000000000000000_function',
+    'translation_key': 'fast_forward',
+    'unique_id': '01JTEST0000000000000000000_fast_forward',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[home_theater][button.lg_home_theater_function-state]
+# name: test_entities[home_theater][button.lg_home_theater_fast_forward-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Function',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Fast forward',
     }),
     'context': <ANY>,
-    'entity_id': 'button.lg_home_theater_function',
+    'entity_id': 'button.lg_home_theater_fast_forward',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -949,7 +949,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[home_theater][button.lg_home_theater_info_menu-entry]
+# name: test_entities[home_theater][button.lg_home_theater_info-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -963,7 +963,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.lg_home_theater_info_menu',
+    'entity_id': 'button.lg_home_theater_info',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -971,28 +971,78 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Info/Menu',
+    'object_id_base': 'Info',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Info/Menu',
+    'original_name': 'Info',
     'platform': 'lg_infrared',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'info_menu',
-    'unique_id': '01JTEST0000000000000000000_info_menu',
+    'translation_key': 'info',
+    'unique_id': '01JTEST0000000000000000000_info',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[home_theater][button.lg_home_theater_info_menu-state]
+# name: test_entities[home_theater][button.lg_home_theater_info-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Info/Menu',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Info',
     }),
     'context': <ANY>,
-    'entity_id': 'button.lg_home_theater_info_menu',
+    'entity_id': 'button.lg_home_theater_info',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[home_theater][button.lg_home_theater_input-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lg_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_home_theater_input',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Input',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Input',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'input',
+    'unique_id': '01JTEST0000000000000000000_input',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[home_theater][button.lg_home_theater_input-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Input',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_home_theater_input',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1899,6 +1949,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_entities[home_theater][button.lg_home_theater_rewind-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lg_infrared', '01JTEST0000000000000000000')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_home_theater_rewind',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rewind',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rewind',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rewind',
+    'unique_id': '01JTEST0000000000000000000_rewind',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[home_theater][button.lg_home_theater_rewind-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Rewind',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_home_theater_rewind',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_entities[home_theater][button.lg_home_theater_right-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1943,106 +2043,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.lg_home_theater_right',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[home_theater][button.lg_home_theater_scan_backward-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('lg_infrared', '01JTEST0000000000000000000')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_home_theater_scan_backward',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Scan backward',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Scan backward',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'scan_backward',
-    'unique_id': '01JTEST0000000000000000000_scan_backward',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[home_theater][button.lg_home_theater_scan_backward-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Scan backward',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_home_theater_scan_backward',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_entities[home_theater][button.lg_home_theater_scan_forward-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('lg_infrared', '01JTEST0000000000000000000')]>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': None,
-    'entity_id': 'button.lg_home_theater_scan_forward',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Scan forward',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Scan forward',
-    'platform': 'lg_infrared',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'scan_forward',
-    'unique_id': '01JTEST0000000000000000000_scan_forward',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[home_theater][button.lg_home_theater_scan_forward-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG Home Theater Scan forward',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.lg_home_theater_scan_forward',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

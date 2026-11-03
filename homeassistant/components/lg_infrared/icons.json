@@ -11,7 +11,7 @@
         "default": "mdi:volume-high"
       },
       "audio_track": {
-        "default": "mdi:volume-high"
+        "default": "mdi:volume-source"
       },
       "back": {
         "default": "mdi:keyboard-backspace"
@@ -20,7 +20,7 @@
         "default": "mdi:circle"
       },
       "clear": {
-        "default": "mdi:backspace-reverse-outline"
+        "default": "mdi:close-circle-outline"
       },
       "diagnose": {
         "default": "mdi:stethoscope"
@@ -37,8 +37,8 @@
       "exit": {
         "default": "mdi:exit-to-app"
       },
-      "function": {
-        "default": "mdi:import"
+      "fast_forward": {
+        "default": "mdi:fast-forward"
       },
       "green": {
         "default": "mdi:circle"
@@ -62,9 +62,6 @@
         "default": "mdi:home"
       },
       "info": {
-        "default": "mdi:information-outline"
-      },
-      "info_menu": {
         "default": "mdi:information-outline"
       },
       "input": {
@@ -139,14 +136,11 @@
       "repeat": {
         "default": "mdi:repeat"
       },
-      "right": {
-        "default": "mdi:arrow-right"
-      },
-      "scan_backward": {
+      "rewind": {
         "default": "mdi:rewind"
       },
-      "scan_forward": {
-        "default": "mdi:fast-forward"
+      "right": {
+        "default": "mdi:arrow-right"
       },
       "sleep": {
         "default": "mdi:sleep"
@@ -155,7 +149,7 @@
         "default": "mdi:equalizer"
       },
       "speaker_level": {
-        "default": "mdi:speaker"
+        "default": "mdi:surround-sound"
       },
       "subtitle": {
         "default": "mdi:subtitles"
