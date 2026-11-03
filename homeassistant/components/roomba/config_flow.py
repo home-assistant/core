@@ -228,7 +228,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="manual",
-                description_placeholders={AUTH_HELP_URL_KEY: AUTH_HELP_URL_VALUE},
+                description_placeholders={"auth_help_url": AUTH_HELP_URL_VALUE},
                 data_schema=probatio.Schema(
                     {probatio.Required(CONF_HOST, default=self.host): str}
                 ),
@@ -305,7 +305,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="link_manual",
-            description_placeholders={AUTH_HELP_URL_KEY: AUTH_HELP_URL_VALUE},
+            description_placeholders={"auth_help_url": AUTH_HELP_URL_VALUE},
             data_schema=probatio.Schema(
                 {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
             ),
