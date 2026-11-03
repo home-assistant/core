@@ -37,7 +37,6 @@ from . import (
     group,
     label_registry as lr,
 )
-from .deprecation import deprecated_class
 from .event import async_track_state_change_event
 from .typing import ConfigType
 
@@ -124,16 +123,6 @@ class TargetSelection:
             or self.floor_ids
             or self.label_ids
         )
-
-
-@deprecated_class("TargetSelection", breaks_in_ha_version="2026.12.0")
-class TargetSelectorData(TargetSelection):
-    """Class to represent target selector data."""
-
-    @property
-    def has_any_selector(self) -> bool:
-        """Determine if any selectors are present."""
-        return super().has_any_target
 
 
 @dataclasses.dataclass(slots=True)
