@@ -54,3 +54,15 @@ async def save_uploaded_knxkeys_file(
     ir.async_delete_issue(hass, DOMAIN, REPAIR_ISSUE_DATA_SECURE_GROUP_KEY)
 
     return keyring
+
+
+async def load_stored_knxkeys_file(
+    hass: HomeAssistant, filename: str, password: str
+) -> Keyring:
+    """Load a keyring file from the storage directory.
+
+    Raises InvalidSecureConfiguration if the file or password is invalid
+    and FileNotFoundError if the file is missing.
+    """
+    path = Path(hass.config.path(STORAGE_DIR, filename))
+    return await hass.async_add_executor_job(sync_load_keyring, path, password)

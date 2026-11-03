@@ -45,13 +45,14 @@
           "host": "IP address or hostname of the KNX/IP tunneling device.",
           "local_ip": "Local IP or interface name used for the connection from Home Assistant. Leave blank to use auto-discovery.",
           "port": "Port used by the KNX/IP tunneling device.",
-          "route_back": "Enable if your KNXnet/IP tunneling server is behind NAT. Only applies for UDP connections.",
+          "route_back": "Enable if your KNXnet/IP tunneling server is behind NAT.",
           "tunneling_type": "Select the tunneling type of your KNX/IP tunneling device. Older interfaces may only support `UDP`."
         },
         "description": "Please enter the connection information of your tunneling device.",
         "title": "Tunnel settings"
       },
       "reconfigure": {
+        "description": "Current connection: `{current_connection}`\n\nImported keyring: {keyring_project}",
         "menu_options": {
           "connection_type": "Reconfigure KNX connection",
           "secure_knxkeys": "Import KNX keyring file"
@@ -76,22 +77,6 @@
         "description": "Please configure the routing options.",
         "title": "Routing"
       },
-      "secure_key_source_menu_routing": {
-        "description": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::description%]",
-        "menu_options": {
-          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_knxkeys%]",
-          "secure_routing_manual": "Configure IP Secure backbone key manually"
-        },
-        "title": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::title%]"
-      },
-      "secure_key_source_menu_tunnel": {
-        "description": "How do you want to configure KNX/IP Secure?",
-        "menu_options": {
-          "secure_knxkeys": "Use a `.knxkeys` file providing IP Secure keys",
-          "secure_tunnel_manual": "Configure IP Secure credentials manually"
-        },
-        "title": "KNX IP Secure"
-      },
       "secure_knxkeys": {
         "data": {
           "knxkeys_file": "Keyring file",
@@ -104,26 +89,38 @@
         "description": "The keyring is used to encrypt and decrypt KNX IP Secure communication. You can import a new keyring file or re-import to update existing keys if your configuration has changed.",
         "title": "Import KNX Keyring"
       },
-      "secure_routing_manual": {
+      "secure_routing": {
         "data": {
           "backbone_key": "Backbone key",
+          "key_source": "[%key:component::knx::config::step::secure_tunnel::data::key_source%]",
+          "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_file%]",
+          "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_password%]",
           "sync_latency_tolerance": "Network latency tolerance"
         },
         "data_description": {
           "backbone_key": "Can be seen in the 'Security' report of your ETS project. Eg. `00112233445566778899AABBCCDDEEFF`",
+          "key_source": "[%key:component::knx::config::step::secure_tunnel::data_description::key_source%]",
+          "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_file%]",
+          "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_password%]",
           "sync_latency_tolerance": "Should be equal to the backbone configuration of your ETS project. Default is `1000`"
         },
-        "description": "[%key:component::knx::config::step::secure_tunnel_manual::description%]",
+        "description": "[%key:component::knx::config::step::secure_tunnel::description%]",
         "title": "Secure routing"
       },
-      "secure_tunnel_manual": {
+      "secure_tunnel": {
         "data": {
           "device_authentication": "Device authentication password",
+          "key_source": "Key source",
+          "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_file%]",
+          "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_password%]",
           "user_id": "User ID",
           "user_password": "User password"
         },
         "data_description": {
           "device_authentication": "This is set in the 'IP' panel of the interface in ETS.",
+          "key_source": "Select where the KNX IP Secure keys should be taken from.",
+          "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_file%]",
+          "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_password%]",
           "user_id": "This usually is tunnel number +1. So first tunnel in the list presented in ETS would have User-ID `2`.",
           "user_password": "Password for the specific tunnel connection set in the 'Properties' panel of the tunnel in ETS."
         },
@@ -1756,10 +1753,31 @@
     }
   },
   "selector": {
+    "connection_type": {
+      "options": {
+        "automatic": "Automatic",
+        "routing": "Routing",
+        "tunneling": "Tunneling"
+      }
+    },
+    "secure_key_source": {
+      "options": {
+        "knxkeys_existing": "Use the currently imported `.knxkeys` file",
+        "knxkeys_upload": "Import a `.knxkeys` file providing IP Secure keys",
+        "manual": "Configure IP Secure credentials manually"
+      }
+    },
     "telegram_backend": {
       "options": {
         "postgres": "PostgreSQL (External)",
         "sqlite": "Internal storage (Default)"
+      }
+    },
+    "tunneling_type": {
+      "options": {
+        "tunneling": "UDP (Tunneling v1)",
+        "tunneling_tcp": "TCP (Tunneling v2)",
+        "tunneling_tcp_secure": "Secure Tunneling (TCP)"
       }
     }
   },

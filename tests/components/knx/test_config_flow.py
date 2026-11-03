@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from knx_telegram_store.connection import ConnectionCheckResult, ConnectionErrorKind
@@ -13,17 +14,21 @@ from xknx.exceptions.exception import CommunicationError, InvalidSecureConfigura
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip.dib import TunnelingSlotStatus
-from xknx.secure.keyring import sync_load_keyring
+from xknx.secure.keyring import Keyring, sync_load_keyring
 from xknx.telegram import IndividualAddress
 
 from homeassistant import config_entries
 from homeassistant.components.knx.config_flow import (
     CONF_KEYRING_FILE,
     CONF_KNX_GATEWAY,
+    CONF_KNX_SECURE_KEY_SOURCE,
     CONF_KNX_TELEGRAM_STORE_SECTION,
     CONF_KNX_TUNNELING_TYPE,
     DEFAULT_ENTRY_DATA,
     DEFAULT_ENTRY_OPTIONS,
+    KEY_SOURCE_KNXKEYS_EXISTING,
+    KEY_SOURCE_KNXKEYS_UPLOAD,
+    KEY_SOURCE_MANUAL,
     OPTION_MANUAL_TUNNEL,
     _build_dsn,
     _parse_dsn,
@@ -130,6 +135,31 @@ def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
         else:
             mkdir_mock.assert_called_once()
             shutil_move_mock.assert_called_once()
+
+
+@contextmanager
+def patch_stored_keyring(
+    return_value: Keyring = FIXTURE_KEYRING, side_effect: Exception | None = None
+) -> Generator[Keyring]:
+    """Patch loading the keyring file stored by a previous import."""
+    with patch(
+        "homeassistant.components.knx.storage.keyring.sync_load_keyring",
+        return_value=return_value,
+        side_effect=side_effect,
+    ):
+        yield return_value
+
+
+def _key_source_options(result: config_entries.ConfigFlowResult) -> list[str]:
+    """Return the offered IP Secure key sources of a form."""
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    key_source_selector = next(
+        value
+        for key, value in data_schema.schema.items()
+        if key == CONF_KNX_SECURE_KEY_SOURCE
+    )
+    return list(key_source_selector.config["options"])
 
 
 @contextmanager
@@ -360,43 +390,43 @@ async def test_routing_secure_manual_setup(
             CONF_KNX_ROUTING_SECURE: True,
         },
     )
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "secure_key_source_menu_routing"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"next_step_id": "secure_routing_manual"},
-    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "secure_routing_manual"
+    assert result["step_id"] == "secure_routing"
     assert not result["errors"]
+    assert _key_source_options(result) == [
+        KEY_SOURCE_KNXKEYS_UPLOAD,
+        KEY_SOURCE_MANUAL,
+    ]
 
     result_invalid_key1 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_MANUAL,
             # invalid hex string
             CONF_KNX_ROUTING_BACKBONE_KEY: "xxaacc44bbaacc44bbaacc44bbaaccyy",
             CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
         },
     )
     assert result_invalid_key1["type"] is FlowResultType.FORM
-    assert result_invalid_key1["step_id"] == "secure_routing_manual"
+    assert result_invalid_key1["step_id"] == "secure_routing"
     assert result_invalid_key1["errors"] == {"backbone_key": "invalid_backbone_key"}
 
     result_invalid_key2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_MANUAL,
             CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44",  # invalid length
             CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
         },
     )
     assert result_invalid_key2["type"] is FlowResultType.FORM
-    assert result_invalid_key2["step_id"] == "secure_routing_manual"
+    assert result_invalid_key2["step_id"] == "secure_routing"
     assert result_invalid_key2["errors"] == {"backbone_key": "invalid_backbone_key"}
 
     secure_routing_manual = await hass.config_entries.flow.async_configure(
         result_invalid_key2["flow_id"],
         {
+            CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_MANUAL,
             CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44bbaacc44bbaacc44",
             CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
         },
@@ -451,21 +481,15 @@ async def test_routing_secure_keyfile(
             CONF_KNX_ROUTING_SECURE: True,
         },
     )
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "secure_key_source_menu_routing"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"next_step_id": "secure_knxkeys"},
-    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "secure_knxkeys"
+    assert result["step_id"] == "secure_routing"
     assert not result["errors"]
 
     with patch_file_upload():
         routing_secure_knxkeys = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_KNXKEYS_UPLOAD,
                 CONF_KEYRING_FILE: FIXTURE_UPLOAD_UUID,
                 CONF_KNX_KNXKEY_PASSWORD: "password",
             },
@@ -519,7 +543,8 @@ async def test_routing_secure_keyfile(
                 CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP,
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
-                CONF_KNX_ROUTE_BACK: False,
+                # hidden for TCP - value is discarded
+                CONF_KNX_ROUTE_BACK: True,
             },
             "Tunneling TCP @ 192.168.0.1",
             {
@@ -1090,10 +1115,10 @@ async def test_form_with_automatic_connection_handling(
     knx_setup.assert_called_once()
 
 
-async def _get_menu_step_secure_tunnel(
+async def _get_secure_tunnel_step(
     hass: HomeAssistant,
 ) -> config_entries.ConfigFlowResult:
-    """Return flow in secure_tunnel menu step."""
+    """Return flow in secure_tunnel step."""
     gateway = _gateway_descriptor(
         "192.168.0.1",
         3675,
@@ -1124,8 +1149,13 @@ async def _get_menu_step_secure_tunnel(
         result["flow_id"],
         {CONF_KNX_GATEWAY: str(gateway)},
     )
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "secure_key_source_menu_tunnel"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "secure_tunnel"
+    assert not result["errors"]
+    assert _key_source_options(result) == [
+        KEY_SOURCE_KNXKEYS_UPLOAD,
+        KEY_SOURCE_MANUAL,
+    ]
     return result
 
 
@@ -1138,11 +1168,11 @@ async def _get_menu_step_secure_tunnel(
         requires_secure=True,
     ),
 )
-async def test_get_secure_menu_step_manual_tunnelling(
+async def test_get_secure_tunnel_step_manual_tunnelling(
     request_description_mock: MagicMock,
     hass: HomeAssistant,
 ) -> None:
-    """Test flow reaches secure_tunnelling menu from manual config."""
+    """Test flow reaches secure_tunnel step from manual config."""
     gateway = _gateway_descriptor(
         "192.168.0.1",
         3675,
@@ -1184,25 +1214,18 @@ async def test_get_secure_menu_step_manual_tunnelling(
             CONF_PORT: 3675,
         },
     )
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "secure_key_source_menu_tunnel"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "secure_tunnel"
 
 
 async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup) -> None:
     """Test configure tunneling secure keys manually."""
-    menu_step = await _get_menu_step_secure_tunnel(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        menu_step["flow_id"],
-        {"next_step_id": "secure_tunnel_manual"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "secure_tunnel_manual"
-    assert not result["errors"]
+    result = await _get_secure_tunnel_step(hass)
 
     secure_tunnel_manual = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
+            CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_MANUAL,
             CONF_KNX_SECURE_USER_ID: 2,
             CONF_KNX_SECURE_USER_PASSWORD: "password",
             CONF_KNX_SECURE_DEVICE_AUTHENTICATION: "device_auth",
@@ -1228,27 +1251,19 @@ async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup) ->
 
 async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup) -> None:
     """Test configure secure knxkeys."""
-    menu_step = await _get_menu_step_secure_tunnel(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        menu_step["flow_id"],
-        {"next_step_id": "secure_knxkeys"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "secure_knxkeys"
-    assert not result["errors"]
+    result = await _get_secure_tunnel_step(hass)
 
     with patch_file_upload():
         secure_knxkeys = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_KNXKEYS_UPLOAD,
                 CONF_KEYRING_FILE: FIXTURE_UPLOAD_UUID,
                 CONF_KNX_KNXKEY_PASSWORD: "test",
             },
         )
-    assert result["type"] is FlowResultType.FORM
+    assert secure_knxkeys["type"] is FlowResultType.FORM
     assert secure_knxkeys["step_id"] == "knxkeys_tunnel_select"
-    assert not result["errors"]
     secure_knxkeys = await hass.config_entries.flow.async_configure(
         secure_knxkeys["flow_id"],
         {CONF_KNX_TUNNEL_ENDPOINT_IA: CONF_KNX_AUTOMATIC},
@@ -1278,16 +1293,8 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup) -> None:
 
 @pytest.mark.usefixtures("knx_setup")
 async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant) -> None:
-    """Test configure secure knxkeys but file was not found."""
-    menu_step = await _get_menu_step_secure_tunnel(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        menu_step["flow_id"],
-        {"next_step_id": "secure_knxkeys"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "secure_knxkeys"
-    assert not result["errors"]
+    """Test configure secure knxkeys with an invalid keyring password."""
+    result = await _get_secure_tunnel_step(hass)
 
     with patch_file_upload(
         side_effect=InvalidSecureConfiguration(),
@@ -1295,21 +1302,22 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant) -
         secure_knxkeys = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_KNXKEYS_UPLOAD,
                 CONF_KEYRING_FILE: FIXTURE_UPLOAD_UUID,
                 CONF_KNX_KNXKEY_PASSWORD: "password",
             },
         )
         assert secure_knxkeys["type"] is FlowResultType.FORM
-        assert secure_knxkeys["errors"]
-        assert (
-            secure_knxkeys["errors"][CONF_KNX_KNXKEY_PASSWORD]
-            == "keyfile_invalid_signature"
-        )
+        assert secure_knxkeys["step_id"] == "secure_tunnel"
+        assert secure_knxkeys["errors"] == {
+            CONF_KNX_KNXKEY_PASSWORD: "keyfile_invalid_signature"
+        }
 
     with patch_file_upload():
         secure_knxkeys = await hass.config_entries.flow.async_configure(
             secure_knxkeys["flow_id"],
             {
+                CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_KNXKEYS_UPLOAD,
                 CONF_KEYRING_FILE: FIXTURE_UPLOAD_UUID,
                 CONF_KNX_KNXKEY_PASSWORD: "test",
             },
@@ -1324,35 +1332,37 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant) -
 
 @pytest.mark.usefixtures("knx_setup")
 async def test_configure_secure_knxkeys_no_tunnel_for_host(hass: HomeAssistant) -> None:
-    """Test configure secure knxkeys but file was not found."""
-    menu_step = await _get_menu_step_secure_tunnel(hass)
-
-    result = await hass.config_entries.flow.async_configure(
-        menu_step["flow_id"],
-        {"next_step_id": "secure_knxkeys"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "secure_knxkeys"
-    assert not result["errors"]
+    """Test configure secure knxkeys with a keyring not matching the gateway."""
+    result = await _get_secure_tunnel_step(hass)
 
     with patch_file_upload(return_value=Mock()) as mock_keyring:
         mock_keyring.get_tunnel_interfaces_by_host.return_value = []
         secure_knxkeys = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_KNXKEYS_UPLOAD,
                 CONF_KEYRING_FILE: FIXTURE_UPLOAD_UUID,
                 CONF_KNX_KNXKEY_PASSWORD: "password",
             },
         )
-        assert secure_knxkeys["type"] is FlowResultType.FORM
-        assert secure_knxkeys["step_id"] == "knxkeys_tunnel_select"
-        assert secure_knxkeys["errors"] == {"base": "keyfile_no_tunnel_for_host"}
+    assert secure_knxkeys["type"] is FlowResultType.FORM
+    assert secure_knxkeys["step_id"] == "secure_tunnel"
+    assert secure_knxkeys["errors"] == {"base": "keyfile_no_tunnel_for_host"}
+    assert secure_knxkeys["description_placeholders"] == {CONF_HOST: "1.0.0"}
 
-    secure_knxkeys = await hass.config_entries.flow.async_configure(
+    # the key source can be changed in the same form
+    secure_tunnel_manual = await hass.config_entries.flow.async_configure(
         secure_knxkeys["flow_id"],
-        {CONF_KNX_TUNNEL_ENDPOINT_IA: CONF_KNX_AUTOMATIC},
+        {
+            CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_MANUAL,
+            CONF_KNX_SECURE_USER_ID: 2,
+            CONF_KNX_SECURE_USER_PASSWORD: "password",
+            CONF_KNX_SECURE_DEVICE_AUTHENTICATION: "device_auth",
+        },
     )
-    assert secure_knxkeys["type"] is FlowResultType.CREATE_ENTRY
+    assert secure_tunnel_manual["type"] is FlowResultType.CREATE_ENTRY
+    assert secure_tunnel_manual["data"][CONF_KNX_SECURE_USER_ID] == 2
+    assert CONF_KNX_KNXKEY_FILENAME not in secure_tunnel_manual["data"]
 
 
 async def test_reconfigure_flow_connection_type(
@@ -1447,7 +1457,8 @@ async def test_reconfigure_flow_secure_manual_to_keyfile(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     knx_setup.reset_mock()
-    menu_step = await mock_config_entry.start_reconfigure_flow(hass)
+    with patch_stored_keyring(side_effect=FileNotFoundError()):
+        menu_step = await mock_config_entry.start_reconfigure_flow(hass)
     with patch(
         "homeassistant.components.knx.config_flow.GatewayScanner"
     ) as gateway_scanner_mock:
@@ -1473,28 +1484,26 @@ async def test_reconfigure_flow_secure_manual_to_keyfile(
         result["flow_id"],
         {CONF_KNX_GATEWAY: str(gateway)},
     )
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "secure_key_source_menu_tunnel"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"next_step_id": "secure_knxkeys"},
-    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "secure_knxkeys"
+    assert result["step_id"] == "secure_tunnel"
     assert not result["errors"]
+    # the stored keyring file does not exist, so it can't be reused
+    assert _key_source_options(result) == [
+        KEY_SOURCE_KNXKEYS_UPLOAD,
+        KEY_SOURCE_MANUAL,
+    ]
 
     with patch_file_upload():
         secure_knxkeys = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_KNXKEYS_UPLOAD,
                 CONF_KEYRING_FILE: FIXTURE_UPLOAD_UUID,
                 CONF_KNX_KNXKEY_PASSWORD: "test",
             },
         )
-    assert result["type"] is FlowResultType.FORM
+    assert secure_knxkeys["type"] is FlowResultType.FORM
     assert secure_knxkeys["step_id"] == "knxkeys_tunnel_select"
-    assert not result["errors"]
     secure_knxkeys = await hass.config_entries.flow.async_configure(
         secure_knxkeys["flow_id"],
         {CONF_KNX_TUNNEL_ENDPOINT_IA: "1.0.1"},
@@ -1713,6 +1722,422 @@ async def test_reconfigure_keyfile_upload(hass: HomeAssistant, knx_setup) -> Non
         },
     )
     knx_setup.assert_called_once()
+
+
+SECURE_TUNNEL_ENTRY_DATA = {
+    **DEFAULT_ENTRY_DATA,
+    CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
+    CONF_KNX_SECURE_USER_ID: 2,
+    CONF_KNX_SECURE_USER_PASSWORD: "password",
+    CONF_KNX_SECURE_DEVICE_AUTHENTICATION: "device_auth",
+    CONF_KNX_KNXKEY_FILENAME: "knx/keyring.knxkeys",
+    CONF_KNX_KNXKEY_PASSWORD: "test",
+    CONF_HOST: "192.168.0.1",
+    CONF_PORT: 3675,
+    CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
+    CONF_KNX_ROUTE_BACK: False,
+    CONF_KNX_LOCAL_IP: None,
+}
+
+
+async def test_reconfigure_secure_tunnel_existing_keyring(
+    hass: HomeAssistant, knx_setup: AsyncMock
+) -> None:
+    """Test reconfigure flow reusing the stored keyring for a secure tunnel."""
+    mock_config_entry = MockConfigEntry(
+        title="KNX",
+        domain=DOMAIN,
+        version=2,
+        data=SECURE_TUNNEL_ENTRY_DATA,
+        options=DEFAULT_ENTRY_OPTIONS,
+    )
+    gateway = _gateway_descriptor(
+        "192.168.0.1",
+        3675,
+        supports_tunnelling_tcp=True,
+        requires_secure=True,
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    knx_setup.reset_mock()
+
+    with patch_stored_keyring():
+        menu_step = await mock_config_entry.start_reconfigure_flow(hass)
+    assert menu_step["description_placeholders"] == {
+        "current_connection": "Secure Tunneling (TCP) @ 192.168.0.1:3675",
+        "keyring_project": "Fixture",
+    }
+
+    with patch(
+        "homeassistant.components.knx.config_flow.GatewayScanner"
+    ) as gateway_scanner_mock:
+        gateway_scanner_mock.return_value = GatewayScannerMock([gateway])
+        result = await hass.config_entries.flow.async_configure(
+            menu_step["flow_id"],
+            {"next_step_id": "connection_type"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING},
+        )
+        assert result["step_id"] == "tunnel"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_KNX_GATEWAY: str(gateway)},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "secure_tunnel"
+    assert not result["errors"]
+    assert _key_source_options(result) == [
+        KEY_SOURCE_KNXKEYS_EXISTING,
+        KEY_SOURCE_KNXKEYS_UPLOAD,
+        KEY_SOURCE_MANUAL,
+    ]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_KNXKEYS_EXISTING},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "knxkeys_tunnel_select"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_KNX_TUNNEL_ENDPOINT_IA: "1.0.1"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    _assert_mock_entry_data(
+        mock_config_entry,
+        {
+            **SECURE_TUNNEL_ENTRY_DATA,
+            CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
+            CONF_KNX_SECURE_USER_ID: None,
+            CONF_KNX_SECURE_USER_PASSWORD: None,
+            CONF_KNX_TUNNEL_ENDPOINT_IA: "1.0.1",
+            CONF_KNX_ROUTING_BACKBONE_KEY: None,
+            CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: None,
+        },
+    )
+    knx_setup.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "load_error",
+    [
+        pytest.param(FileNotFoundError(), id="file_missing"),
+        pytest.param(InvalidSecureConfiguration(), id="invalid_password"),
+    ],
+)
+async def test_reconfigure_secure_tunnel_stored_keyring_unusable(
+    hass: HomeAssistant, knx_setup: AsyncMock, load_error: Exception
+) -> None:
+    """Test the stored keyring is not offered if it can't be loaded."""
+    mock_config_entry = MockConfigEntry(
+        title="KNX",
+        domain=DOMAIN,
+        version=2,
+        data=SECURE_TUNNEL_ENTRY_DATA,
+        options=DEFAULT_ENTRY_OPTIONS,
+    )
+    gateway = _gateway_descriptor(
+        "192.168.0.1",
+        3675,
+        supports_tunnelling_tcp=True,
+        requires_secure=True,
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    knx_setup.reset_mock()
+
+    with patch_stored_keyring(side_effect=load_error):
+        menu_step = await mock_config_entry.start_reconfigure_flow(hass)
+    assert menu_step["description_placeholders"] == {
+        "current_connection": "Secure Tunneling (TCP) @ 192.168.0.1:3675",
+        "keyring_project": "knx/keyring.knxkeys",
+    }
+
+    with patch(
+        "homeassistant.components.knx.config_flow.GatewayScanner"
+    ) as gateway_scanner_mock:
+        gateway_scanner_mock.return_value = GatewayScannerMock([gateway])
+        result = await hass.config_entries.flow.async_configure(
+            menu_step["flow_id"],
+            {"next_step_id": "connection_type"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING},
+        )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_KNX_GATEWAY: str(gateway)},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "secure_tunnel"
+    assert _key_source_options(result) == [
+        KEY_SOURCE_KNXKEYS_UPLOAD,
+        KEY_SOURCE_MANUAL,
+    ]
+    knx_setup.assert_not_called()
+
+
+async def test_reconfigure_secure_routing_existing_keyring(
+    hass: HomeAssistant, knx_setup: AsyncMock
+) -> None:
+    """Test reconfigure flow reusing the stored keyring for secure routing."""
+    start_data = {
+        **DEFAULT_ENTRY_DATA,
+        CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
+        CONF_KNX_KNXKEY_FILENAME: "knx/keyring.knxkeys",
+        CONF_KNX_KNXKEY_PASSWORD: "test",
+    }
+    mock_config_entry = MockConfigEntry(
+        title="KNX",
+        domain=DOMAIN,
+        version=2,
+        data=start_data,
+        options=DEFAULT_ENTRY_OPTIONS,
+    )
+    gateway = _gateway_descriptor("192.168.0.1", 3676, requires_secure=True)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    knx_setup.reset_mock()
+
+    with patch_stored_keyring():
+        menu_step = await mock_config_entry.start_reconfigure_flow(hass)
+    assert menu_step["description_placeholders"] == {
+        "current_connection": "Routing as 0.0.240",
+        "keyring_project": "Fixture",
+    }
+
+    with patch(
+        "homeassistant.components.knx.config_flow.GatewayScanner"
+    ) as gateway_scanner_mock:
+        gateway_scanner_mock.return_value = GatewayScannerMock([gateway])
+        result = await hass.config_entries.flow.async_configure(
+            menu_step["flow_id"],
+            {"next_step_id": "connection_type"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING},
+        )
+        assert result["step_id"] == "routing"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.240",
+            CONF_KNX_ROUTING_SECURE: True,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "secure_routing"
+    assert not result["errors"]
+    assert _key_source_options(result) == [
+        KEY_SOURCE_KNXKEYS_EXISTING,
+        KEY_SOURCE_KNXKEYS_UPLOAD,
+        KEY_SOURCE_MANUAL,
+    ]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_KNXKEYS_EXISTING},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    _assert_mock_entry_data(
+        mock_config_entry,
+        {
+            **start_data,
+            CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING_SECURE,
+            CONF_KNX_ROUTING_BACKBONE_KEY: None,
+            CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: None,
+            CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
+            CONF_KNX_SECURE_USER_ID: None,
+            CONF_KNX_SECURE_USER_PASSWORD: None,
+            CONF_KNX_TUNNEL_ENDPOINT_IA: None,
+        },
+    )
+    knx_setup.assert_called_once()
+
+
+@patch(
+    "homeassistant.components.knx.config_flow.GatewayScanner",
+    return_value=GatewayScannerMock(),
+)
+async def test_routing_secure_keyfile_no_backbone_key(
+    gateway_scanner_mock: MagicMock, hass: HomeAssistant, knx_setup: AsyncMock
+) -> None:
+    """Test routing secure setup rejects a keyfile without backbone key."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+            CONF_KNX_MCAST_PORT: 3671,
+            CONF_KNX_INDIVIDUAL_ADDRESS: "0.0.123",
+            CONF_KNX_ROUTING_SECURE: True,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "secure_routing"
+
+    with patch_file_upload(return_value=Keyring()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_KNXKEYS_UPLOAD,
+                CONF_KEYRING_FILE: FIXTURE_UPLOAD_UUID,
+                CONF_KNX_KNXKEY_PASSWORD: "password",
+            },
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "secure_routing"
+    assert result["errors"] == {"base": "keyfile_no_backbone_key"}
+
+    with patch_file_upload():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_KNXKEYS_UPLOAD,
+                CONF_KEYRING_FILE: FIXTURE_UPLOAD_UUID,
+                CONF_KNX_KNXKEY_PASSWORD: "test",
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Secure Routing as 0.0.123"
+    assert result["data"][CONF_KNX_KNXKEY_PASSWORD] == "test"
+    knx_setup.assert_called_once()
+
+
+async def test_reconfigure_keyfile_upload_no_backbone_key(
+    hass: HomeAssistant, knx_setup: AsyncMock
+) -> None:
+    """Test importing a keyfile without backbone key for secure routing."""
+    start_data = {
+        **DEFAULT_ENTRY_DATA,
+        CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING_SECURE,
+        CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44bbaacc44bbaacc44",
+        CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
+    }
+    mock_config_entry = MockConfigEntry(
+        title="KNX",
+        domain=DOMAIN,
+        version=2,
+        data=start_data,
+        options=DEFAULT_ENTRY_OPTIONS,
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    knx_setup.reset_mock()
+    menu_step = await mock_config_entry.start_reconfigure_flow(hass)
+    assert menu_step["description_placeholders"] == {
+        "current_connection": "Secure Routing as 0.0.240",
+        "keyring_project": "-",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        menu_step["flow_id"],
+        {"next_step_id": "secure_knxkeys"},
+    )
+    assert result["step_id"] == "secure_knxkeys"
+
+    with patch_file_upload(return_value=Keyring()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEYRING_FILE: FIXTURE_UPLOAD_UUID,
+                CONF_KNX_KNXKEY_PASSWORD: "password",
+            },
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "secure_knxkeys"
+    assert result["errors"] == {"base": "keyfile_no_backbone_key"}
+    knx_setup.assert_not_called()
+
+    with patch_file_upload():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEYRING_FILE: FIXTURE_UPLOAD_UUID,
+                CONF_KNX_KNXKEY_PASSWORD: "test",
+            },
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    _assert_mock_entry_data(
+        mock_config_entry,
+        {
+            **start_data,
+            CONF_KNX_KNXKEY_FILENAME: "knx/keyring.knxkeys",
+            CONF_KNX_KNXKEY_PASSWORD: "test",
+            CONF_KNX_ROUTING_BACKBONE_KEY: None,
+            CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: None,
+        },
+    )
+    knx_setup.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "current_connection"),
+    [
+        pytest.param(
+            {CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC},
+            "Automatic",
+            id="automatic",
+        ),
+        pytest.param(
+            {
+                CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3675,
+            },
+            "UDP (Tunneling v1) @ 192.168.0.1:3675",
+            id="tunneling_udp",
+        ),
+        pytest.param(
+            {
+                CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3675,
+                CONF_KNX_TUNNEL_ENDPOINT_IA: "1.0.1",
+            },
+            "TCP (Tunneling v2) @ 192.168.0.1:3675 as 1.0.1",
+            id="tunneling_tcp_endpoint",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("knx_setup")
+async def test_reconfigure_menu_description(
+    hass: HomeAssistant, entry_data: dict[str, Any], current_connection: str
+) -> None:
+    """Test the reconfigure menu describes the current connection."""
+    mock_config_entry = MockConfigEntry(
+        title="KNX",
+        domain=DOMAIN,
+        version=2,
+        data={**DEFAULT_ENTRY_DATA, **entry_data},
+        options=DEFAULT_ENTRY_OPTIONS,
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    menu_step = await mock_config_entry.start_reconfigure_flow(hass)
+    assert menu_step["type"] is FlowResultType.MENU
+    assert menu_step["description_placeholders"] == {
+        "current_connection": current_connection,
+        "keyring_project": "-",
+    }
 
 
 async def test_options_communication_settings(
