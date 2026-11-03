@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, TypeVar, override
+from typing import Any, override
 
 from aiohttp import ClientSession
 from airos.airos6 import AirOS6, AirOS6Data
@@ -31,8 +31,6 @@ type AirOSUpdateData = dict[str, Any]
 
 type AirOSConfigEntry = ConfigEntry[AirOSRuntimeData]
 
-T = TypeVar("T", bound=AirOSDataDetect | AirOSUpdateData)
-
 
 @dataclass
 class AirOSRuntimeData:
@@ -44,7 +42,7 @@ class AirOSRuntimeData:
     owns_session: bool = False
 
 
-async def async_fetch_airos_data(
+async def async_fetch_airos_data[T: AirOSDataDetect | AirOSUpdateData](
     airos_device: AirOSDeviceDetect,
     update_method: Callable[[], Awaitable[T]],
 ) -> T:

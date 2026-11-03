@@ -4945,7 +4945,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             title=self._subentry_data[CONF_DEVICE][CONF_NAME],
             description_placeholders={
                 "entity": full_entity_name,
-                CONF_PLATFORM: platform,
+                "platform": platform,
             },
         )
 

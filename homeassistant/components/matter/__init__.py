@@ -91,10 +91,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
+    """Migrate an old config entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        _async_migrate_eve_temperature_offset(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
     """Set up Matter from a config entry."""
-    _async_migrate_eve_temperature_offset(hass, entry)
-
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await _async_ensure_addon_running(hass, entry)
 

@@ -26,7 +26,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import utcnow
 
 from . import (
-    DEFAULT_UNIQUEID,
     TEST_CLIENT,
     TEST_CLIENT_2,
     TEST_CLIENT_2_ENTITY_ID,
@@ -102,7 +101,9 @@ async def test_clients_update_auth_failed(hass: HomeAssistant) -> None:
 
 
 async def test_restoring_clients(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test restoring existing device_tracker entities if not detected on startup."""
     entry = mock_config_entry()
@@ -111,7 +112,7 @@ async def test_restoring_clients(
     entity_registry.async_get_or_create(
         "device_tracker",
         DOMAIN,
-        DEFAULT_UNIQUEID,
+        TEST_CLIENT[API_CLIENT_MAC],
         suggested_object_id="ruckus_test_device",
         config_entry=entry,
     )
@@ -123,6 +124,14 @@ async def test_restoring_clients(
     device = hass.states.get(TEST_CLIENT_ENTITY_ID)
     assert device is not None
     assert device.state == STATE_NOT_HOME
+    entity_entry = entity_registry.async_get(TEST_CLIENT_ENTITY_ID)
+    assert entity_entry is not None
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert device_entry.name == TEST_CLIENT[API_CLIENT_MAC]
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(TEST_CLIENT[API_CLIENT_MAC]))
+    }
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -211,10 +220,39 @@ async def test_client_device_name(
     device = device_registry.async_get(entity_entry.device_id)
     assert device is not None
     assert device.name == TEST_CLIENT[API_CLIENT_HOSTNAME]
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(TEST_CLIENT[API_CLIENT_MAC]))
+    }
     assert (
         hass.states.get(TEST_CLIENT_ENTITY_ID).attributes[ATTR_FRIENDLY_NAME]
         == TEST_CLIENT[API_CLIENT_HOSTNAME]
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_client_without_hostname(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a client without a hostname names its device by the MAC address."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    with RuckusAjaxApiPatchContext(
+        active_clients=[{**TEST_CLIENT, API_CLIENT_HOSTNAME: ""}]
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get("device_tracker.aa_bb_cc_dd_ee_ff")
+    assert entity_entry is not None
+    device = device_registry.async_get(entity_entry.device_id)
+    assert device is not None
+    assert device.name == TEST_CLIENT[API_CLIENT_MAC]
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(TEST_CLIENT[API_CLIENT_MAC]))
+    }
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
