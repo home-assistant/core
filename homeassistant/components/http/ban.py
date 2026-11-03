@@ -140,9 +140,12 @@ async def process_wrong_login(request: Request) -> None:
 
     try:
         form_data = await request.json()
-        username = html.escape(form_data.get("username"))
+        if isinstance(form_data, dict) and isinstance(
+            raw_username := form_data.get("username"), str
+        ):
+            username = html.escape(raw_username)
 
-        base_msg = f"Failed login attempt (with username: '{username}') from {remote_host} ({remote_addr})."
+            base_msg = f"Failed login attempt (with username: '{username}') from {remote_host} ({remote_addr})."
     except JSONDecodeError:
         pass
 
