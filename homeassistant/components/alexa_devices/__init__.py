@@ -108,7 +108,12 @@ def _move_legacy_settings(hass: HomeAssistant) -> None:
     if not old_file.exists() or new_file.exists():
         return
     new_file.parent.mkdir(parents=True, exist_ok=True)
-    old_file.replace(new_file)
+    try:
+        old_file.replace(new_file)
+    except FileNotFoundError:
+        if new_file.exists():
+            return
+        raise
     # Only removed when empty, debug dumps may still be there
     with suppress(OSError):
         old_dir.rmdir()
