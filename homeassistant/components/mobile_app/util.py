@@ -26,6 +26,7 @@ from .const import (
     DATA_DEVICES,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_NOTIFY,
+    DATA_PENDING_UPDATES,
     DATA_STORE,
     DOMAIN,
 )
@@ -79,7 +80,8 @@ async def async_create_cloud_hook(
     """Create a cloud hook."""
     async with _CLOUD_HOOK_LOCK:
         hook = await cloud.async_get_or_create_cloudhook(hass, webhook_id)
-        if entry:
+        # The app may have registered again with another webhook while awaiting
+        if entry and entry.data[CONF_WEBHOOK_ID] == webhook_id:
             hass.config_entries.async_update_entry(
                 entry, data={**entry.data, CONF_CLOUDHOOK_URL: hook}
             )
@@ -123,6 +125,15 @@ def _async_move_sensors(
                 new_unique_id=to_prefix + entity.unique_id.removeprefix(from_prefix),
             )
 
+    # Updates of disabled sensors are kept until the sensor is enabled
+    for pending_updates in hass.data[DOMAIN][DATA_PENDING_UPDATES].values():
+        for unique_id in [
+            uid for uid in pending_updates if uid.startswith(from_prefix)
+        ]:
+            update = pending_updates.pop(unique_id)
+            update[CONF_WEBHOOK_ID] = to_webhook_id
+            pending_updates[to_prefix + unique_id.removeprefix(from_prefix)] = update
+
 
 async def async_update_registration(
     hass: HomeAssistant, entry: ConfigEntry, registration: dict[str, Any]
@@ -135,6 +146,7 @@ async def async_update_registration(
     """
     old_registration = entry.data
     old_title = entry.title
+    old_disabled_by = entry.disabled_by
     old_webhook_id = old_registration[CONF_WEBHOOK_ID]
     new_webhook_id = registration[CONF_WEBHOOK_ID]
 
@@ -143,7 +155,7 @@ async def async_update_registration(
         entry, title=registration[ATTR_DEVICE_NAME], data=registration
     )
     try:
-        if entry.disabled_by:
+        if old_disabled_by:
             # The apps register again when the webhook of a disabled entry
             # doesn't respond, so enable the entry instead of failing each time
             reloaded = await hass.config_entries.async_set_disabled_by(
@@ -160,6 +172,10 @@ async def async_update_registration(
         hass.config_entries.async_update_entry(
             entry, title=old_title, data=old_registration
         )
+        if old_disabled_by:
+            await hass.config_entries.async_set_disabled_by(
+                entry.entry_id, old_disabled_by
+            )
         await async_delete_registration_cloudhook(hass, registration)
         return False
 

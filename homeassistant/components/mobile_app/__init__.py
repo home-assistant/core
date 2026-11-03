@@ -135,7 +135,9 @@ async def _async_setup_cloudhook(
 
     def clean_cloudhook() -> None:
         """Clean up cloudhook from config entry."""
-        if CONF_CLOUDHOOK_URL in entry.data:
+        if CONF_CLOUDHOOK_URL in entry.data and (
+            entry.data[CONF_WEBHOOK_ID] == webhook_id
+        ):
             data = dict(entry.data)
             data.pop(CONF_CLOUDHOOK_URL)
             hass.config_entries.async_update_entry(entry, data=data)
@@ -150,6 +152,9 @@ async def _async_setup_cloudhook(
 
     def on_cloudhook_change(cloudhook: dict[str, Any] | None) -> None:
         """Handle cloudhook changes."""
+        if entry.data[CONF_WEBHOOK_ID] != webhook_id:
+            # The app has registered again with another webhook
+            return
         if cloudhook:
             if entry.data.get(CONF_CLOUDHOOK_URL) == cloudhook[CONF_CLOUDHOOK_URL]:
                 return

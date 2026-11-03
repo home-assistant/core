@@ -26,6 +26,7 @@ from homeassistant.components.mobile_app.const import (
     DOMAIN,
 )
 from homeassistant.components.mobile_app.http_api import RegistrationsView
+from homeassistant.components.mobile_app.util import async_create_cloud_hook
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryDisabler,
@@ -303,6 +304,65 @@ async def test_registration_again_setup_fails(
         json={"type": "get_config", "data": {}},
     )
     assert resp.status == HTTPStatus.OK
+
+
+async def test_registration_again_disabled_entry_setup_fails(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test a disabled entry stays disabled if registering again fails."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    old_data = dict(entry.data)
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, ConfigEntryDisabler.USER
+    )
+
+    with patch(
+        "homeassistant.components.mobile_app.async_setup_entry",
+        side_effect=Exception("Setup failed"),
+    ):
+        resp = await api_client.post(
+            "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+        )
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert entry.disabled_by is ConfigEntryDisabler.USER
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert entry.data == old_data
+
+
+async def test_old_cloudhook_not_stored_after_registering_again(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test a cloudhook created for the old webhook isn't stored in the entry."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    old_webhook_id = (await resp.json())[CONF_WEBHOOK_ID]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    new_data = dict(entry.data)
+
+    # A cloudhook which was being created for the old webhook completes
+    with patch(
+        "homeassistant.components.cloud.async_get_or_create_cloudhook",
+        return_value="https://hooks.nabu.casa/old",
+    ):
+        await async_create_cloud_hook(hass, old_webhook_id, entry)
+    assert entry.data == new_data
 
 
 async def test_registration_concurrent(

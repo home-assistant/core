@@ -4,16 +4,29 @@ import asyncio
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
 from aiohttp import ClientError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, MockUser, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.mobile_app.const import DATA_LIVE_ACTIVITY_TOKENS, DOMAIN
+from homeassistant.components.mobile_app.const import (
+    DATA_CONFIG_ENTRIES,
+    DATA_LIVE_ACTIVITY_TOKENS,
+    DATA_REGISTRATION_LOCK,
+    DOMAIN,
+)
+from homeassistant.components.mobile_app.push_notification import PUSH_CONFIRM_TIMEOUT
+from homeassistant.components.mobile_app.util import async_update_registration
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TITLE,
@@ -479,6 +492,61 @@ async def test_notify_ws_not_confirming(
     )
 
     assert len(aioclient_mock.mock_calls) == 3
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param(
+            "mobile_app_test", {ATTR_MESSAGE: "Hello world"}, id="notify_service"
+        ),
+        pytest.param(
+            SERVICE_SEND_MESSAGE,
+            {ATTR_ENTITY_ID: "notify.test", ATTR_MESSAGE: "Hello world"},
+            id="notify_entity",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_push_receiver")
+async def test_notify_ws_fallback_after_registering_again(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: WebSocketGenerator,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test an unconfirmed notification falls back with its original registration."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+            "support_confirm": True,
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    await hass.services.async_call(NOTIFY_DOMAIN, service, service_data, blocking=True)
+    assert len(aioclient_mock.mock_calls) == 0
+
+    # The app registers again for local push only
+    entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]["mock-webhook_id"]
+    async with hass.data[DOMAIN][DATA_REGISTRATION_LOCK]:
+        assert await async_update_registration(
+            hass,
+            entry,
+            {**entry.data, "app_data": {}, "webhook_id": "new-webhook-id"},
+        )
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=PUSH_CONFIRM_TIMEOUT + 1)
+    )
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call_json = aioclient_mock.mock_calls[0][2]
+    assert call_json["push_token"] == "PUSH_TOKEN"
+    assert call_json["registration_info"]["webhook_id"] == "mock-webhook_id"
 
 
 @pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
