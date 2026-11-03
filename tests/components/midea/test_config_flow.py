@@ -2707,3 +2707,100 @@ async def test_dhcp_discovery_no_match(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
     assert config_entry.data[CONF_IP_ADDRESS] == TEST_IP_ADDRESS
+
+
+@pytest.mark.parametrize(
+    ("discovered_subtype", "cloud_model", "expected"),
+    [
+        (5, "9", 5),
+        (0, "5", 5),
+        (0, "not-a-number", 0),
+    ],
+)
+async def test_subtype_prefers_discovery_over_cloud(
+    hass: HomeAssistant,
+    discovered_subtype: int,
+    cloud_model: str,
+    expected: int,
+) -> None:
+    """Test the subtype used for the token check comes from discovery when known."""
+    discovered = {
+        TEST_DEVICE_ID: {
+            **BASE_DATA,
+            CONF_TYPE: TEST_TYPE,
+            CONF_SUBTYPE: discovered_subtype,
+        }
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    flow_id = result["flow_id"]
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, user_input={"next_step_id": "search"}
+    )
+    assert result["step_id"] == "search"
+
+    with patch(
+        "homeassistant.components.midea.config_flow.discover",
+        return_value=discovered,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, user_input={CONF_IP_ADDRESS: "auto"}
+        )
+    assert result["step_id"] == "auto"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, user_input={CONF_DEVICE: TEST_DEVICE_ID}
+    )
+    assert result["step_id"] == "auth_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, user_input={"login_mode": LOGIN_MODE_ACCOUNT}
+    )
+    assert result["step_id"] == "login_credentials"
+
+    cloud = MagicMock()
+    cloud.login = AsyncMock(return_value=True)
+    cloud.get_device_info = AsyncMock(return_value={"model_number": cloud_model})
+    cloud.get_cloud_keys = AsyncMock(
+        return_value={"method": {"token": TEST_TOKEN, "key": TEST_KEY}}
+    )
+    dm = MagicMock(spec=MideaDevice)
+    dm.connect = AsyncMock(return_value=True)
+    dm.close_socket = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
+            return_value=object(),
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
+            return_value=cloud,
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
+            AsyncMock(return_value={}),
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.device_selector",
+            return_value=dm,
+        ) as mock_device_selector,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={
+                CONF_SERVER: DEFAULT_CLOUD,
+                CONF_ACCOUNT: "user",
+                CONF_PASSWORD: "pass",
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
+    assert result["result"].data[CONF_SUBTYPE] == expected
+    # subtype is the 10th positional argument of device_selector()
+    assert {call.args[9] for call in mock_device_selector.call_args_list} == {expected}

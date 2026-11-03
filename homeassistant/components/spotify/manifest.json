@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.music_radio_services"],
   "codeowners": ["@frenck", "@joostlek"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/spotify",
   "integration_type": "service",

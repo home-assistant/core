@@ -16,6 +16,7 @@
   ],
   "codeowners": ["@bieniu", "@thecode", "@chemelli74", "@bdraco"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["bluetooth", "http", "network"],
   "documentation": "https://www.home-assistant.io/integrations/shelly",
   "integration_type": "device",
