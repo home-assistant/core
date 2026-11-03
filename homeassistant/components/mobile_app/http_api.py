@@ -11,12 +11,7 @@ import probatio
 from homeassistant.components import cloud
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    CONF_WEBHOOK_ID,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import slugify
 
@@ -26,6 +21,8 @@ from .const import (
     ATTR_APP_NAME,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_OS_NAME,
     ATTR_OS_VERSION,
     ATTR_SUPPORTS_ENCRYPTION,
