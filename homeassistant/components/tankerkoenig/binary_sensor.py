@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
-from .const import ATTR_OPENING_TIMES
 from .coordinator import TankerkoenigConfigEntry, TankerkoenigDataUpdateCoordinator
 from .entity import TankerkoenigCoordinatorEntity
 
@@ -22,6 +21,9 @@ from .entity import TankerkoenigCoordinatorEntity
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_OPENING_TIMES = "opening_times"
+ATTR_OVERRIDES = "overrides"
 
 # Tankerkoenig marks a station that never closes with `wholeDay` and sends no opening
 # times for it. Returning that as an opening time keeps a single list for both.
@@ -64,18 +66,6 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
         super().__init__(coordinator, station)
         self._station_id = station.id
         self._attr_unique_id = f"{station.id}_status"
-        self._opening_times: list[JsonValueType] = []
-        if station.whole_day:
-            self._opening_times = [dict(WHOLE_DAY_OPENING_TIME)]
-        elif station.opening_times:
-            self._opening_times = [
-                {
-                    "days": opening_time.text,
-                    "start_time": opening_time.start,
-                    "end_time": opening_time.end,
-                }
-                for opening_time in station.opening_times
-            ]
         if coordinator.show_on_map:
             self._attr_extra_state_attributes = {
                 EntityStateAttribute.LATITUDE: station.lat,
@@ -90,5 +80,23 @@ class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorE
         return data is not None and data.status == Status.OPEN
 
     async def async_get_opening_times(self) -> ServiceResponse:
-        """Return the opening times of the station."""
-        return {ATTR_OPENING_TIMES: self._opening_times}
+        """Return the opening times of the station and their temporary changes."""
+        station = await self.coordinator.async_get_station_details(self._station_id)
+        return {
+            ATTR_OPENING_TIMES: _opening_times(station),
+            ATTR_OVERRIDES: list(station.overrides or []),
+        }
+
+
+def _opening_times(station: Station) -> list[JsonValueType]:
+    """Return the regular opening times of a station."""
+    if station.whole_day:
+        return [dict(WHOLE_DAY_OPENING_TIME)]
+    return [
+        {
+            "days": opening_time.text,
+            "start_time": opening_time.start,
+            "end_time": opening_time.end,
+        }
+        for opening_time in station.opening_times or []
+    ]

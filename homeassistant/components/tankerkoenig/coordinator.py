@@ -1,6 +1,6 @@
 """The Tankerkoenig update coordinator."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from math import ceil
 from typing import override
@@ -18,14 +18,23 @@ from aiotankerkoenig import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, CONF_API_KEY, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_STATIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# Opening times rarely change, so the details of a station are fetched again at
+# most once per hour, however often the opening times are asked for.
+STATION_DETAILS_MAX_AGE = timedelta(hours=1)
 
 type TankerkoenigConfigEntry = ConfigEntry[TankerkoenigDataUpdateCoordinator]
 
@@ -53,6 +62,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
 
         self._selected_stations: list[str] = self.config_entry.data[CONF_STATIONS]
         self.stations: dict[str, Station] = {}
+        self._station_details_fetched: dict[str, datetime] = {}
         self.show_on_map: bool = self.config_entry.options[CONF_SHOW_ON_MAP]
 
         self._tankerkoenig = Tankerkoenig(
@@ -90,6 +100,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                 continue
 
             self.stations[station_id] = station
+            self._station_details_fetched[station_id] = dt_util.utcnow()
 
         entity_reg = er.async_get(self.hass)
         for entity in er.async_entries_for_config_entry(
@@ -116,6 +127,42 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                 "This might invalidate your api-key on the long run. "
                 "Try using a smaller radius"
             )
+
+    async def async_get_station_details(self, station_id: str) -> Station:
+        """Return the details of a station, fetched again once they are an hour old."""
+        if (
+            dt_util.utcnow() - self._station_details_fetched[station_id]
+            < STATION_DETAILS_MAX_AGE
+        ):
+            return self.stations[station_id]
+
+        try:
+            station = await self._tankerkoenig.station_details(station_id)
+        except TankerkoenigInvalidKeyError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_api_key",
+            ) from err
+        except TankerkoenigRateLimitError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rate_limit_reached",
+            ) from err
+        except TankerkoenigConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+            ) from err
+        except TankerkoenigError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="station_update_failed",
+                translation_placeholders={"station_ids": station_id},
+            ) from err
+
+        self.stations[station_id] = station
+        self._station_details_fetched[station_id] = dt_util.utcnow()
+        return station
 
     @override
     async def _async_update_data(self) -> dict[str, PriceInfo]:

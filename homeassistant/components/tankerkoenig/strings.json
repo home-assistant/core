@@ -200,7 +200,7 @@
   },
   "services": {
     "get_opening_times": {
-      "description": "Retrieves the opening times of a gas station.",
+      "description": "Retrieves the opening times of a gas station and their temporary changes.",
       "name": "Get opening times"
     }
   }
