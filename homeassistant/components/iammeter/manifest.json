@@ -4,6 +4,7 @@
   "categories": ["energy.meters_monitoring"],
   "codeowners": ["@lewei50", "@IAMMETER", "@miwyf"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/iammeter",
   "integration_type": "device",
   "iot_class": "local_polling",
