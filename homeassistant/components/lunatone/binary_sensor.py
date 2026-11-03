@@ -1,5 +1,7 @@
 """Platform for Lunatone binary sensor integration."""
 
+from collections.abc import Callable
+from functools import partial
 from typing import override
 
 from homeassistant.components.binary_sensor import (
@@ -31,23 +33,55 @@ async def async_setup_entry(
     coordinator_info = config_entry.runtime_data.coordinator_info
     coordinator_scan = config_entry.runtime_data.coordinator_scan
 
-    assert config_entry.unique_id is not None
+    config_entry_unique_id = config_entry.unique_id
+    assert config_entry_unique_id is not None
 
-    entities: list[BinarySensorEntity] = [
-        LunatoneDALIScanStatus(
-            coordinator_scan, coordinator_info, config_entry.unique_id
-        )
-    ]
-    entities.extend(
+    async_add_entities(
         [
             LunatoneDALIScanStatus(
-                coordinator_scan, coordinator_info, config_entry.unique_id, int(line_id)
+                coordinator_scan, coordinator_info, config_entry_unique_id
             )
-            for line_id in coordinator_info.data.lines
         ]
     )
 
-    async_add_entities(entities)
+    def _add_entities(
+        entity_builder: dict[str, Callable[[], BinarySensorEntity]],
+        known_entities: set[str],
+    ) -> None:
+        current_entities = entity_builder.keys()
+        new_entities = current_entities - known_entities
+        stale_entities = known_entities - current_entities
+
+        if new_entities:
+            async_add_entities(
+                [
+                    entity_builder[entity_unique_id]()
+                    for entity_unique_id in new_entities
+                ]
+            )
+            known_entities.update(new_entities)
+        known_entities.difference_update(stale_entities)
+
+    known_entities: set[str] = set()
+
+    @callback
+    def _check_entities() -> None:
+        entity_builder: dict[str, Callable[[], BinarySensorEntity]] = {}
+        for line_id in map(int, coordinator_info.data.lines):
+            unique_id = LunatoneDALIScanStatus.construct_unique_id(
+                config_entry_unique_id, line_id
+            )
+            entity_builder[unique_id] = partial(
+                LunatoneDALIScanStatus,
+                coordinator_scan,
+                coordinator_info,
+                config_entry_unique_id,
+                line_id,
+            )
+        _add_entities(entity_builder, known_entities)
+
+    _check_entities()
+    config_entry.async_on_unload(coordinator_info.async_add_listener(_check_entities))
 
 
 class LunatoneDALIScanStatus(
