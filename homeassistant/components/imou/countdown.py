@@ -12,11 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    COUNT_DOWN_MAX_MINUTES,
-    PARAM_COUNT_DOWN_SWITCH,
-    imou_device_identifier,
-)
+from .const import PARAM_COUNT_DOWN_SWITCH, imou_device_identifier
 
 if TYPE_CHECKING:
     from .coordinator import ImouDataUpdateCoordinator
@@ -32,14 +28,14 @@ def parse_countdown_minutes(device: ImouHaDevice) -> int:
 
 
 def minutes_until(value: datetime, *, now: datetime | None = None) -> int:
-    """Return whole minutes from now until value, clamped to the cloud range."""
+    """Return whole minutes from now until value (0 when not in the future)."""
     current = now or dt_util.utcnow()
     if value.tzinfo is None:
         value = value.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
     secs = (value - current).total_seconds()
     if secs <= 0:
         return 0
-    return min(COUNT_DOWN_MAX_MINUTES, ceil(secs / 60))
+    return ceil(secs / 60)
 
 
 class CountdownTracker:
@@ -57,6 +53,17 @@ class CountdownTracker:
     def ends_at(self, device_key: str) -> datetime | None:
         """Return the local end time, if a countdown is running."""
         return self._ends.get(device_key)
+
+    def remaining_minutes(self, device_key: str, *, now: datetime | None = None) -> int:
+        """Return whole minutes left for a local end, rounding up."""
+        end = self._ends.get(device_key)
+        if end is None:
+            return 0
+        current = now or dt_util.utcnow()
+        secs = (end - current).total_seconds()
+        if secs <= 0:
+            return 0
+        return ceil(secs / 60)
 
     def start_minutes(
         self,
@@ -97,17 +104,21 @@ class CountdownTracker:
         coordinator: ImouDataUpdateCoordinator,
         device: ImouHaDevice,
     ) -> None:
-        """Replace the local end with remaining minutes from a cloud refresh."""
+        """Align the local end with the cloud, without jittering unchanged timers."""
         status = device.sensors.get(PARAM_STATUS, {}).get(PARAM_STATE)
         if status == DeviceStatus.OFFLINE.value:
             # Offline refreshes keep the last countdown text; do not reset the end.
             return
-        self.start_minutes(
-            hass,
-            coordinator,
-            imou_device_identifier(device),
-            parse_countdown_minutes(device),
-        )
+        device_key = imou_device_identifier(device)
+        minutes = parse_countdown_minutes(device)
+        if minutes <= 0:
+            self.start_minutes(hass, coordinator, device_key, 0)
+            return
+        # Cloud only reports whole minutes. Keep the existing end when the
+        # remaining minute count still matches so polls do not shift the deadline.
+        if device_key in self._ends and self.remaining_minutes(device_key) == minutes:
+            return
+        self.start_minutes(hass, coordinator, device_key, minutes)
 
     def sync_all(
         self, hass: HomeAssistant, coordinator: ImouDataUpdateCoordinator

@@ -77,14 +77,21 @@ class ImouOverchargeNumber(ImouEntity, NumberEntity):
 
     entity_description: NumberEntityDescription
 
-    @property
-    @override
-    def native_max_value(self) -> float:
-        """Higher-capacity plugs accept a larger watt limit."""
-        ref = self.device.texts[PARAM_OVERCHARGE_SWITCH].get(PARAM_REF)
+    def __init__(
+        self,
+        coordinator: ImouDataUpdateCoordinator,
+        description: NumberEntityDescription,
+        device: ImouHaDevice,
+    ) -> None:
+        """Initialize the max-power number and cache the watt ceiling."""
+        super().__init__(coordinator, description, device)
+        # Cache at setup: capability attributes are read before availability
+        # when a device leaves the account, and must not touch self.device.
+        ref = device.texts[PARAM_OVERCHARGE_SWITCH].get(PARAM_REF)
         if ref == OVERCHARGE_HIGH_REF:
-            return float(OVERCHARGE_MAX_WATTS_HIGH)
-        return float(OVERCHARGE_MAX_WATTS_DEFAULT)
+            self._attr_native_max_value = float(OVERCHARGE_MAX_WATTS_HIGH)
+        else:
+            self._attr_native_max_value = float(OVERCHARGE_MAX_WATTS_DEFAULT)
 
     @property
     @override

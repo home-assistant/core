@@ -212,6 +212,9 @@
     "select_option_failed": {
       "message": "Imou rejected the new option"
     },
+    "countdown_too_far": {
+      "message": "Choose a time within the next {hours} hours"
+    },
     "set_text_value_failed": {
       "message": "Imou rejected the new value"
     },
