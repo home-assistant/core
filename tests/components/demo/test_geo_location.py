@@ -21,7 +21,6 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -95,22 +94,3 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         async_fire_time_changed(hass, utcnow + DEFAULT_UPDATE_INTERVAL)
         await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.async_entity_ids(geo_location.DOMAIN) == []
-
-
-@pytest.mark.usefixtures("geo_location_only")
-async def test_setup_platform_deprecated(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test the YAML platform raises an issue and adds no duplicate events."""
-    assert await async_setup_component(
-        hass, geo_location.DOMAIN, {geo_location.DOMAIN: [{"platform": DOMAIN}]}
-    )
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(
-        DOMAIN, "deprecated_geo_location_platform_config"
-    )
-    # The events come from the Demo config entry only
-    assert len(hass.states.async_entity_ids(geo_location.DOMAIN)) == (
-        NUMBER_OF_DEMO_DEVICES
-    )

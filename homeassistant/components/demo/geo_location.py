@@ -10,15 +10,8 @@ from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,25 +39,6 @@ EVENTS = [
 ]
 
 SOURCE = "demo"
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Raise an issue for the deprecated YAML platform configuration."""
-    # Setting up this platform sets up the Demo config entry, which adds the events
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_geo_location_platform_config",
-        breaks_in_ha_version="2027.6.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_geo_location_platform_config",
-    )
 
 
 async def async_setup_entry(
