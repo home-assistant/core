@@ -60,7 +60,7 @@ class SilverCrestIrEventEntity(
             return
 
         try:
-            command_code = SilverCrestFanCode(command_received.code)
+            command_code = SilverCrestFanCode(command_received.control_word)
         except ValueError:
             return
 
