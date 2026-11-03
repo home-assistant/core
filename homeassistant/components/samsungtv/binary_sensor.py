@@ -22,6 +22,21 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     if coordinator.bridge.supports_art_mode:
         async_add_entities([SamsungTVArtModeBinarySensor(coordinator=coordinator)])
+        return
+
+    # Frame support is only known once device info was read, which fails
+    # while the TV is unreachable, so add the sensor when it shows up later.
+    added = False
+
+    @callback
+    def _async_add_when_supported() -> None:
+        nonlocal added
+        if added or not coordinator.bridge.supports_art_mode:
+            return
+        added = True
+        async_add_entities([SamsungTVArtModeBinarySensor(coordinator=coordinator)])
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_when_supported))
 
 
 class SamsungTVArtModeBinarySensor(SamsungTVEntity, BinarySensorEntity):

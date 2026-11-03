@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from samsungtvws.exceptions import ConnectionFailure
+from samsungtvws.exceptions import ConnectionFailure, ResponseError
 
 from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
@@ -76,6 +76,33 @@ async def test_art_mode_off_when_tv_off(
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     art_api.get_artmode.assert_not_called()
+
+
+async def test_art_mode_added_when_tv_reachable_later(
+    hass: HomeAssistant,
+    remote_websocket: Mock,
+    rest_api: Mock,
+    art_api: Mock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the art mode sensor is added when the TV is unreachable at startup."""
+    remote_websocket.start_listening.side_effect = OSError("Boom")
+    rest_api.rest_device_info.side_effect = ResponseError("Boom")
+    await setup_samsungtv_entry(hass, ENTRYDATA_WEBSOCKET)
+    assert hass.states.get(ENTITY_ID) is None
+
+    remote_websocket.start_listening.side_effect = None
+    rest_api.rest_device_info.side_effect = None
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UE43LS003.json", DOMAIN
+    )
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(
