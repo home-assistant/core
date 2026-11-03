@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import AsyncGenerator
 import contextlib
+from contextvars import ContextVar
 import io
 from pathlib import Path
 import sys
@@ -1089,7 +1090,8 @@ async def test_failed_exhausted_close_aborts_live_child(
         processes.append(process)
         return process
 
-    gen = tts._async_convert_audio(ffmpeg_ready, "wav", source, "wav")
+    # This OS-child fixture tests eager writer close, not WAV probing.
+    gen = tts._async_convert_audio(ffmpeg_ready, None, source, "wav")
     owner = None
     try:
         with (
@@ -2497,6 +2499,10 @@ async def test_known_exit_precedes_stdin_error(
             asyncio.current_task() is owner
             and return_when == asyncio.FIRST_COMPLETED
             and timeout is None
+            and any(
+                isinstance(task, asyncio.Task) and task.get_name() == "tts_ffmpeg_wait"
+                for task in fs
+            )
         ):
             # Scheduled after the owner has entered the real wait, not after
             # a sleep that guesses when the pending set was constructed.
@@ -4586,4 +4592,206 @@ async def test_native_wav_complete_outcome(
             assert caught.value is sentinel
         assert closed.is_set()
     finally:
+        await gen.aclose()
+
+
+@pytest.mark.parametrize("shutdown", [False, True])
+@pytest.mark.parametrize("late_error", [False, True])
+async def test_header_blocked_generator_finalizer_is_supervised(
+    ffmpeg_ready: HomeAssistant,
+    shutdown: bool,
+    late_error: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Header cancellation cannot trap the owner in the generator's finally."""
+    pulling = asyncio.Event()
+    closing = asyncio.Event()
+    release = asyncio.Event()
+    closed = asyncio.Event()
+    source_tasks = []
+
+    async def source() -> AsyncGenerator[bytes]:
+        source_tasks.append(asyncio.current_task())
+        try:
+            pulling.set()
+            await asyncio.Event().wait()
+            yield b""
+        finally:
+            closing.set()
+            while not release.is_set():
+                with contextlib.suppress(asyncio.CancelledError):
+                    await release.wait()
+            closed.set()
+            if late_error:
+                raise RuntimeError("late header finalizer sentinel")
+
+    gen = tts._async_convert_audio(ffmpeg_ready, "wav", source(), "wav")
+    owner = asyncio.create_task(anext(gen))
+    stop = None
+    try:
+        await asyncio.wait_for(pulling.wait(), 2)
+        assert not owner.done()
+        if shutdown:
+            stop = asyncio.create_task(ffmpeg_ready.async_stop(force=True))
+        else:
+            owner.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await _observe(owner, 2.5)
+        assert closing.is_set() and not closed.is_set()
+        source_task = source_tasks[0]
+        assert source_task is not owner
+        assert source_task in ffmpeg_ready._background_tasks
+        assert not source_task.done()
+        if stop is not None:
+            await _observe(stop, 2.5)
+        assert not release.is_set()
+        release.set()
+        await asyncio.wait({source_task}, timeout=2)
+        assert source_task.done() and closed.is_set()
+        await asyncio.sleep(0)
+        if late_error:
+            assert "late header finalizer sentinel" in caplog.text
+    finally:
+        release.set()
+        if not owner.done():
+            owner.cancel()
+        await asyncio.gather(owner, *source_tasks, return_exceptions=True)
+        if stop is not None:
+            await asyncio.gather(stop, return_exceptions=True)
+        await gen.aclose()
+
+
+@pytest.mark.parametrize("source_format", ["raw", "streaming_wav", "finite_wav"])
+@pytest.mark.parametrize("transformed", [False, True])
+@pytest.mark.parametrize("early_close", [False, True])
+async def test_source_context_survives_header_native_and_writer_handoff(
+    ffmpeg_ready: HomeAssistant,
+    wav_audio: bytes,
+    source_format: str,
+    transformed: bool,
+    early_close: bool,
+) -> None:
+    """Tokens set before a yield reset in the same source-owner context."""
+    context = ContextVar("tts_source_context", default="consumer")
+    closed = asyncio.Event()
+    source_tasks = []
+    pcm = wav_audio[44:]
+    payload = pcm if source_format == "raw" else wav_audio
+    if source_format == "streaming_wav":
+        payload = wav_audio[:40] + bytes(4) + pcm
+
+    async def source() -> AsyncGenerator[bytes]:
+        token = context.set("source")
+        source_tasks.append(asyncio.current_task())
+        try:
+            yield payload
+            assert context.get() == "source"
+            assert asyncio.current_task() is source_tasks[0]
+            yield b"\x03\x04"
+        finally:
+            context.reset(token)
+            closed.set()
+
+    gen = tts._async_convert_audio(
+        ffmpeg_ready,
+        None if source_format == "raw" else "wav",
+        source(),
+        "wav",
+        to_sample_rate=8000 if transformed else None,
+        from_pcm_format=tts.PcmFormat(16000, 2, 1) if source_format == "raw" else None,
+    )
+    try:
+        if early_close:
+            assert (await anext(gen)).startswith(b"RIFF")
+            if not transformed and source_format != "finite_wav":
+                assert await anext(gen) == pcm
+            await gen.aclose()
+        else:
+            output = await _collect(gen)
+            assert output.startswith(b"RIFF")
+            if not transformed:
+                expected = pcm if source_format == "finite_wav" else pcm + b"\x03\x04"
+                assert output[44:] == expected
+        assert closed.is_set()
+        assert context.get() == "consumer"
+    finally:
+        await gen.aclose()
+
+
+@pytest.mark.parametrize("late_error", [False, True])
+@pytest.mark.parametrize("interrupt", ["none", "cancel", "shutdown"])
+async def test_native_healthy_close_blocks_cache_until_its_actual_result(
+    ffmpeg_ready: HomeAssistant,
+    late_error: bool,
+    interrupt: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Healthy close has no abort deadline, but interrupted observers do."""
+    release = asyncio.Event()
+    close_tasks = []
+    failure = RuntimeError("delayed native close sentinel")
+
+    class Source(_ExhaustedSource):
+        async def aclose(self) -> None:
+            close_tasks.append(asyncio.current_task())
+            self.close_entered.set()
+            while not release.is_set():
+                with contextlib.suppress(asyncio.CancelledError):
+                    await release.wait()
+            self.closed.set()
+            if late_error:
+                raise failure
+
+    source = Source(0)
+    gen = tts._async_convert_audio(
+        ffmpeg_ready, None, source, "wav", from_pcm_format=tts.PcmFormat(16000, 2, 1)
+    )
+    cache = tts.TTSCache("close-regression", "wav", gen)
+    owner = asyncio.create_task(cache.async_load_data())
+    stop = None
+    try:
+        await asyncio.wait_for(source.close_entered.wait(), 2)
+        done, _ = await asyncio.wait(
+            {owner}, timeout=tts._FFMPEG_CLEANUP_TIMEOUT + 0.15
+        )
+        assert not done, "normal EOF was published before source close completed"
+        assert cache._result_data is None
+        assert not source.closed.is_set()
+        if interrupt == "cancel":
+            owner.cancel()
+        elif interrupt == "shutdown":
+            stop = asyncio.create_task(ffmpeg_ready.async_stop(force=True))
+        if interrupt != "none":
+            with pytest.raises(asyncio.CancelledError):
+                await _observe(owner, 2.5)
+            if stop is not None:
+                await _observe(stop, 2.5)
+            assert cache._result_data is None
+            assert not source.closed.is_set()
+            assert close_tasks[0] in ffmpeg_ready._background_tasks
+            assert not close_tasks[0].done()
+        release.set()
+        if interrupt == "none":
+            if late_error:
+                with pytest.raises(RuntimeError) as caught:
+                    await _observe(owner, 2)
+                assert caught.value is failure
+                assert cache._result_data is None
+            else:
+                output = await _observe(owner, 2)
+                assert output[44:] == b"R" * 100
+                assert cache._result_data == output
+        await asyncio.wait(set(close_tasks), timeout=2)
+        assert all(task.done() for task in close_tasks)
+        assert source.closed.is_set()
+        await asyncio.sleep(0)
+        if late_error and interrupt != "none":
+            assert str(failure) in caplog.text
+    finally:
+        release.set()
+        if not owner.done():
+            owner.cancel()
+        await asyncio.gather(owner, *close_tasks, return_exceptions=True)
+        if stop is not None:
+            await asyncio.gather(stop, return_exceptions=True)
         await gen.aclose()

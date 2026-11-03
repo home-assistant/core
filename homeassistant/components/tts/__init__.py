@@ -599,6 +599,107 @@ async def _async_prepend_audio(
         yield chunk
 
 
+class _AudioSourceOwner:
+    """Pull and finalize an original source in one demand-driven task context."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        source: AsyncGenerator[bytes],
+        requested: asyncio.Future[None],
+    ) -> None:
+        self._source = source
+        self._requested = requested
+        self._demand = asyncio.Event()
+        self._response: asyncio.Future[bytes] | None = None
+        self._closing = False
+        self._pulling = False
+        self.on_error: Callable[[BaseException], None] | None = None
+        self.task = hass.async_create_background_task(self._run(), "tts_audio_source")
+        self.task.add_done_callback(_ffmpeg_late_result)
+
+    async def _run(self) -> None:
+        """Do not prefetch or close before the consumer observes exhaustion."""
+        exhausted = False
+        try:
+            while True:
+                await self._demand.wait()
+                self._demand.clear()
+                if self._closing:
+                    return
+                response = self._response
+                assert response is not None
+                if exhausted:
+                    response.set_exception(StopAsyncIteration())
+                    continue
+                self._pulling = True
+                try:
+                    chunk = await anext(self._source)
+                except BaseException as err:
+                    response.set_exception(err)
+                    exhausted = True
+                    if isinstance(err, asyncio.CancelledError):
+                        task = asyncio.current_task()
+                        assert task is not None
+                        task.uncancel()
+                    if bool(self._closing) and not isinstance(
+                        err, asyncio.CancelledError
+                    ):
+                        raise
+                    if not isinstance(
+                        err, (StopAsyncIteration, asyncio.CancelledError)
+                    ):
+                        if self.on_error is not None:
+                            self.on_error(err)
+                else:
+                    response.set_result(chunk)
+                finally:
+                    self._pulling = False
+        finally:
+            await self._source.aclose()
+
+    async def stream(self) -> AsyncGenerator[bytes]:
+        """Forward demand without moving source work into a new context."""
+        while True:
+            response = asyncio.get_running_loop().create_future()
+            # An interrupted observer must still retrieve a late pull outcome.
+            response.add_done_callback(
+                lambda future: None if future.cancelled() else future.exception()
+            )
+            self._response = response
+            self._demand.set()
+            await asyncio.wait(
+                {response, self.task, self._requested},
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            if self._requested.done():
+                raise asyncio.CancelledError
+            if not response.done():
+                self.task.result()
+                return
+            try:
+                chunk = response.result()
+            except StopAsyncIteration:
+                return
+            yield chunk
+
+    async def async_close(self) -> None:
+        """Stop demand and observe closure without cancelling a healthy close."""
+        self._closing = True
+        self._demand.set()
+        if self._pulling and not self.task.cancelling():
+            self.task.cancel()
+        try:
+            await asyncio.wait({self.task})
+        except asyncio.CancelledError:
+            if not self.task.done() and not self.task.cancelling():
+                self.task.cancel()
+            await asyncio.wait({self.task})
+            self.task.result()
+            raise
+        self.task.result()
+
+
 async def _async_convert_audio(
     hass: HomeAssistant,
     from_extension: str | None,
@@ -670,6 +771,13 @@ async def _async_convert_audio_owned(  # noqa: C901
 
     is_streaming_wav = is_input_gen and from_extension == "wav"
     is_live_input = is_streaming_wav or from_pcm_format is not None
+    source_owner: _AudioSourceOwner | None = None
+    header_task: asyncio.Task | None = None
+    prespawn_cleanup: asyncio.Task | None = None
+    if is_streaming_wav:
+        assert isinstance(audio_input, AsyncGenerator)
+        source_owner = _AudioSourceOwner(hass, audio_input, handle.requested)
+        audio_input = source_owner.stream()
     original_audio_input = audio_input
 
     async def close_input() -> None:
@@ -681,6 +789,9 @@ async def _async_convert_audio_owned(  # noqa: C901
             if audio_input is not original_audio_input
             else (audio_input,)
         )
+        if header_task is not None and not header_task.done():
+            header_task.cancel()
+            await asyncio.wait({header_task})
         error: Exception | None = None
         for source in sources:
             try:
@@ -690,14 +801,35 @@ async def _async_convert_audio_owned(  # noqa: C901
                     error = err
                 else:
                     _LOGGER.warning("TTS source close failed", exc_info=True)
+        if source_owner is not None:
+            try:
+                await source_owner.async_close()
+            except Exception as err:
+                if error is None:
+                    error = err
+                else:
+                    _LOGGER.warning("TTS source close failed", exc_info=True)
         if error is not None:
             raise error
 
+    def prespawn_finished(task: asyncio.Task) -> None:
+        _ffmpeg_late_result(task)
+        if not handle.terminal.done():
+            handle.terminal.set_result(None)
+        _conversion_coordinator(hass).active.discard(handle)
+
+    def close_prespawn() -> asyncio.Task:
+        nonlocal prespawn_cleanup
+        if prespawn_cleanup is None:
+            prespawn_cleanup = hass.async_create_background_task(
+                close_input(), "tts_ffmpeg_source_close"
+            )
+            prespawn_cleanup.add_done_callback(prespawn_finished)
+        return prespawn_cleanup
+
     async def close_before_spawn(primary: BaseException) -> None:
         """Keep the primary error and retrieve an interrupted close result."""
-        close_task = hass.async_create_background_task(
-            close_input(), "tts_ffmpeg_source_close"
-        )
+        close_task = close_prespawn()
         try:
             await _async_ffmpeg_join(close_task)
         except asyncio.CancelledError:
@@ -709,8 +841,20 @@ async def _async_convert_audio_owned(  # noqa: C901
         # Unwrapping the container lets ffmpeg start streaming immediately
         # instead of buffering ahead to inspect the WAV file.
         assert isinstance(audio_input, AsyncGenerator)
+        handle.cleanup = close_prespawn
+        header_task = hass.async_create_background_task(
+            _async_read_streaming_wav_header(audio_input), "tts_wav_header"
+        )
+        header_task.add_done_callback(
+            lambda task: None if task.cancelled() else task.exception()
+        )
         try:
-            pcm_info, consumed = await _async_read_streaming_wav_header(audio_input)
+            await asyncio.wait(
+                {header_task, handle.requested}, return_when=asyncio.FIRST_COMPLETED
+            )
+            if handle.requested.done():
+                raise asyncio.CancelledError  # noqa: TRY301
+            pcm_info, consumed = header_task.result()
         except BaseException as primary:
             await close_before_spawn(primary)
             raise
@@ -732,23 +876,11 @@ async def _async_convert_audio_owned(  # noqa: C901
         # a pipe, since readers like the wave module take a data size of 0
         # literally.
         assert isinstance(audio_input, AsyncGenerator)
-        pull_task: asyncio.Task | None = None
+        if source_owner is None:
+            source_owner = _AudioSourceOwner(hass, audio_input, handle.requested)
+            audio_input = source_owner.stream()
+            original_audio_input = audio_input
         native_cleanup: asyncio.Task | None = None
-
-        def native_pull_result(task: asyncio.Task) -> None:
-            if not task.cancelled() and not isinstance(
-                task.exception(), StopAsyncIteration
-            ):
-                _ffmpeg_late_result(task)
-
-        async def close_native_input() -> None:
-            if pull_task is not None:
-                if not pull_task.done():
-                    if not pull_task.cancelling():
-                        pull_task.cancel()
-                    await asyncio.wait({pull_task})
-                native_pull_result(pull_task)
-            await close_input()
 
         def native_finished(task: asyncio.Task) -> None:
             _ffmpeg_late_result(task)
@@ -760,7 +892,7 @@ async def _async_convert_audio_owned(  # noqa: C901
             nonlocal native_cleanup
             if native_cleanup is None:
                 native_cleanup = hass.async_create_background_task(
-                    close_native_input(), "tts_native_source_close"
+                    close_input(), "tts_native_source_close"
                 )
                 native_cleanup.add_done_callback(native_finished)
             return native_cleanup
@@ -787,29 +919,25 @@ async def _async_convert_audio_owned(  # noqa: C901
                 b"data",
                 0xFFFFFFFF,
             )
-            while True:
+            async for chunk in audio_input:
                 if handle.requested.done():
                     raise asyncio.CancelledError
-                pull_task = hass.async_create_background_task(
-                    anext(audio_input), "tts_native_source_pull"
-                )
-                pull_task.add_done_callback(native_pull_result)
-                await asyncio.wait(
-                    {pull_task, handle.requested}, return_when=asyncio.FIRST_COMPLETED
-                )
-                if handle.requested.done():
-                    raise asyncio.CancelledError
-                try:
-                    chunk = pull_task.result()
-                except StopAsyncIteration:
-                    break
                 yield chunk
         finally:
             native_primary = sys.exception()
             native_cleanup = close_native()
             native_cleanup.add_done_callback(_ffmpeg_late_result)
             try:
-                await _async_ffmpeg_join(native_cleanup)
+                if native_primary is None:
+                    await asyncio.wait(
+                        {native_cleanup, handle.requested},
+                        return_when=asyncio.FIRST_COMPLETED,
+                    )
+                    if handle.requested.done():
+                        raise asyncio.CancelledError  # noqa: TRY301
+                    native_cleanup.result()
+                else:
+                    await _async_ffmpeg_join(native_cleanup)
             except asyncio.CancelledError:
                 if native_primary is not None:
                     raise native_primary from None
@@ -1010,6 +1138,15 @@ async def _async_convert_audio_owned(  # noqa: C901
     source_failed = asyncio.Event()
     stdin_error: OSError | None = None
     stdin_failed = asyncio.Event()
+
+    if source_owner is not None:
+
+        def source_error(error: BaseException) -> None:
+            nonlocal source_read_error
+            source_read_error = error
+            source_failed.set()
+
+        source_owner.on_error = source_error
 
     if is_input_gen:
         # Input is a generator, so we must manually feed in chunks
