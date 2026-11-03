@@ -90,7 +90,10 @@ class PlaceholderKeysChecker(BaseChecker):
         """Report constant keys in a placeholder dict literal."""
         if not isinstance(node, nodes.Dict):
             return
-        if any(isinstance(value, nodes.Dict) for _, value in node.items):
+        if any(
+            isinstance(value, nodes.Dict) and not isinstance(key, nodes.DictUnpack)
+            for key, value in node.items
+        ):
             # A mapping of placeholder dicts, keyed by translation key
             for _, value in node.items:
                 self._check_placeholders(value)

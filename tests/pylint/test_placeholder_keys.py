@@ -223,6 +223,13 @@ EXTRA_PLACEHOLDERS = {"issue": {CONF_HOST: host}}
         ),
         pytest.param(
             """
+self.async_show_form(description_placeholders={CONF_HOST: host, **{"name": name}})
+""",
+            "CONF_HOST",
+            id="unpacked_dict_literal",
+        ),
+        pytest.param(
+            """
 self._description_placeholders = {CONF_HOST: host}
 """,
             "CONF_HOST",
