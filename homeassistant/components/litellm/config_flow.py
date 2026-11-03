@@ -184,7 +184,7 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
             ),
-            description_placeholders={CONF_URL: reauth_entry.data[CONF_URL]},
+            description_placeholders={"url": reauth_entry.data[CONF_URL]},
             errors=errors,
         )
 
