@@ -9,7 +9,11 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import cloud, person
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.config_entries import ConfigEntry, OperationNotAllowed
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigEntryState,
+    OperationNotAllowed,
+)
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -152,6 +156,11 @@ async def async_update_registration(
     has been reloaded with the new registration, otherwise the entry keeps the
     old registration and the cloudhook of the new one is deleted.
     """
+    if entry.state is ConfigEntryState.FAILED_UNLOAD:
+        # The entry can't be reloaded, so changing it couldn't be undone
+        await async_delete_registration_cloudhook(hass, registration)
+        return False
+
     old_registration = entry.data
     old_title = entry.title
     old_disabled_by = entry.disabled_by
@@ -174,18 +183,22 @@ async def async_update_registration(
     except OperationNotAllowed:
         reloaded = False
 
-    if not reloaded:
+    # The reload doesn't set up the entry if it was disabled meanwhile
+    if not reloaded or entry.state is not ConfigEntryState.LOADED:
         # The app keeps using the old registration when registering fails
         _async_move_sensors(hass, entry, new_webhook_id, old_webhook_id)
         hass.config_entries.async_update_entry(
             entry, title=old_title, data=old_registration
         )
-        if old_disabled_by:
-            # Fails if the entry is in a state which can't be unloaded
-            with suppress(OperationNotAllowed):
+        # Fails if the entry is in a state which can't be unloaded
+        with suppress(OperationNotAllowed):
+            if old_disabled_by:
                 await hass.config_entries.async_set_disabled_by(
                     entry.entry_id, old_disabled_by
                 )
+            elif not entry.disabled_by and entry.state.recoverable:
+                # Set up the entry again with the old registration
+                await hass.config_entries.async_reload(entry.entry_id)
         await async_delete_registration_cloudhook(hass, registration)
         return False
 

@@ -223,6 +223,11 @@ class MobileAppNotificationService(BaseNotificationService):
         for target in targets:
             entry: ConfigEntry = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target]
 
+            if entry.data[ATTR_WEBHOOK_ID] != target:
+                # The app is registering again with another webhook
+                failed_targets.append(target)
+                continue
+
             if target in local_push_channels:
                 # The app may register again before a queued notification is sent
                 local_push_channels[target].async_send_notification(

@@ -6,7 +6,7 @@ from collections.abc import Generator
 from http import HTTPStatus
 import json
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
@@ -273,7 +273,7 @@ async def test_registration_again_unload_fails(
 async def test_registration_again_setup_fails(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
-    """Test the old registration is kept if the entry can't be set up."""
+    """Test the old registration is set up again if the new one can't be."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     api_client = await hass_client()
 
@@ -284,21 +284,21 @@ async def test_registration_again_setup_fails(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     old_data = dict(entry.data)
 
-    with patch(
-        "homeassistant.components.mobile_app.async_setup_entry",
-        side_effect=Exception("Setup failed"),
+    # Only the setup with the new registration fails
+    with patch.object(
+        mobile_app,
+        "async_setup_entry",
+        wraps=mobile_app.async_setup_entry,
+        side_effect=[Exception("Setup failed"), DEFAULT],
     ):
         resp = await api_client.post(
             "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
         )
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == old_data
     assert hass.data[DOMAIN][DATA_DELETED_IDS] == []
 
-    # The old registration is used when the entry is set up again
-    assert await hass.config_entries.async_reload(entry.entry_id)
-    assert entry.state is ConfigEntryState.LOADED
     resp = await api_client.post(
         f"/api/webhook/{old_data[CONF_WEBHOOK_ID]}",
         json={"type": "get_config", "data": {}},
@@ -337,7 +337,9 @@ async def test_registration_again_disabled_entry_setup_fails(
 
 
 async def test_registration_again_disabled_entry_failed_unload(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test registering again for a disabled entry which failed to unload."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -365,6 +367,55 @@ async def test_registration_again_disabled_entry_failed_unload(
     assert (await resp.json()) == {"message": "Failed to register the app"}
     assert entry.disabled_by is ConfigEntryDisabler.USER
     assert entry.data == old_data
+    # The entities of the disabled entry stay disabled
+    assert (
+        entity_registry.async_get("device_tracker.test_1").disabled_by
+        is er.RegistryEntryDisabler.CONFIG_ENTRY
+    )
+
+
+async def test_registration_again_entry_disabled_during_reload(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test registering again fails if the entry is disabled during the reload."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    api_client = await hass_client()
+
+    resp = await api_client.post(
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+    )
+    assert resp.status == HTTPStatus.CREATED
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    old_data = dict(entry.data)
+
+    unload_started = asyncio.Event()
+    continue_unload = asyncio.Event()
+    original_unload_entry = mobile_app.async_unload_entry
+
+    async def _blocking_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        unload_started.set()
+        await continue_unload.wait()
+        await original_unload_entry(hass, entry)
+
+    with patch.object(mobile_app, "async_unload_entry", _blocking_unload_entry):
+        register_task = asyncio.create_task(
+            api_client.post("/api/mobile_app/registrations", json=REGISTER_CLEARTEXT)
+        )
+        await unload_started.wait()
+        disable_task = hass.async_create_task(
+            hass.config_entries.async_set_disabled_by(
+                entry.entry_id, ConfigEntryDisabler.USER
+            )
+        )
+        continue_unload.set()
+        resp = await register_task
+        await disable_task
+
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert entry.disabled_by is ConfigEntryDisabler.USER
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert entry.data == old_data
+    assert hass.data[DOMAIN][DATA_DELETED_IDS] == []
 
 
 async def test_old_cloudhook_not_stored_after_registering_again(
