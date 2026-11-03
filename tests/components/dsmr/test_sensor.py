@@ -2208,7 +2208,9 @@ async def test_belgian_history_sensor_integration(
         for month, peak in months
     ]
 
-    telegram_callback(history_telegram(((dt.datetime(2026, 12, 1, tzinfo=dt.UTC), "4.125"),)))
+    telegram_callback(
+        history_telegram(((dt.datetime(2026, 12, 1, tzinfo=dt.UTC), "4.125"),))
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
