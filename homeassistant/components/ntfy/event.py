@@ -18,14 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_MESSAGE,
-    CONF_PRIORITY,
-    CONF_TAGS,
-    CONF_TITLE,
-    CONF_TOPIC,
-    DOMAIN,
-)
+from .const import CONF_MESSAGE, CONF_PRIORITY, CONF_TAGS, CONF_TITLE, DOMAIN
 from .coordinator import NtfyConfigEntry
 from .entity import NtfyBaseEntity
 
@@ -117,7 +110,7 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
                     is_fixable=True,
                     severity=ir.IssueSeverity.ERROR,
                     translation_key="topic_protected",
-                    translation_placeholders={CONF_TOPIC: self.topic},
+                    translation_placeholders={"topic": self.topic},
                     data={"unique_id": self.unique_id, "topic": self.topic},
                 )
                 return
