@@ -17,8 +17,15 @@ from homeassistant.components.hassio.const import (
     HASSIO_STATS_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
 )
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -49,7 +56,9 @@ def mock_all(
     ingress_panels: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
-    host_info.return_value = replace(host_info.return_value, agent_version="1.0.0")
+    host_info.return_value = replace(
+        host_info.return_value, agent_version="1.0.0", disk_life_time=12.5
+    )
     addons_list.return_value[1] = replace(
         addons_list.return_value[1], version_latest="3.2.0", update_available=True
     )
@@ -93,6 +102,7 @@ def mock_all(
         ("sensor.home_assistant_operating_system_version", "1.0.0"),
         ("sensor.home_assistant_operating_system_newest_version", "1.0.0"),
         ("sensor.home_assistant_host_os_agent_version", "1.0.0"),
+        ("sensor.home_assistant_host_disk_lifetime", "12.5"),
         ("sensor.home_assistant_core_cpu_percent", "0.99"),
         ("sensor.home_assistant_supervisor_cpu_percent", "0.99"),
         ("sensor.test_version", "2.0.0"),
@@ -141,6 +151,38 @@ async def test_sensor(
     # Verify that the entity have the expected state.
     state = hass.states.get(entity_id)
     assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
+)
+@patch.dict(os.environ, MOCK_ENVIRON)
+async def test_disk_lifetime_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    host_info: AsyncMock,
+) -> None:
+    """Test the disk lifetime sensor attributes and a disk without lifetime data."""
+    entity_id = "sensor.home_assistant_host_disk_lifetime"
+    # Only NVMe and eMMC disks report a lifetime, Supervisor returns None otherwise.
+    host_info.return_value = replace(host_info.return_value, disk_life_time=None)
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
 @pytest.mark.parametrize(
