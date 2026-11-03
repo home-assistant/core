@@ -776,6 +776,7 @@ def create_mbus_entities(
     entry: ConfigEntry,
     dsmr_version: str,
     discovered: dict[int, set[str]],
+    channel_identifiers: dict[int, str],
 ) -> Generator[DSMREntity]:
     """Create MBUS Entities."""
     mbus_devices: list[MbusDevice] = getattr(telegram, "MBUS_DEVICES", [])
@@ -800,11 +801,8 @@ def create_mbus_entities(
         if not descriptions:
             continue
 
-        if identifier := getattr(device, "MBUS_EQUIPMENT_IDENTIFIER", None):
-            serial_ = identifier.value
-            rename_old_gas_to_mbus(hass, entry, serial_)
-        else:
-            serial_ = ""
+        # Keep the established identity if a later telegram omits the identifier.
+        serial_ = channel_identifiers.get(device.channel_id, "")
 
         for description in descriptions:
             discovered_descriptions.add(description.key)
@@ -843,12 +841,75 @@ async def async_setup_entry(
     dsmr_version = entry.data[CONF_DSMR_VERSION]
     entities: list[DSMREntity] = []
     discovered: dict[int, set[str]] = {0: set()}
+    channel_identifiers: dict[int, str] = {}
+
+    @callback
+    def reconcile_mbus_identifiers(telegram: Telegram) -> None:
+        """Preserve M-Bus identities when an identifier arrives after discovery."""
+        for device in getattr(telegram, "MBUS_DEVICES", []):
+            identifier = getattr(device, "MBUS_EQUIPMENT_IDENTIFIER", None)
+            if identifier is None or not (serial := identifier.value):
+                continue
+            channel = device.channel_id
+            known_serial = channel_identifiers.get(channel)
+            if known_serial == serial:
+                continue
+            if known_serial is not None:
+                LOGGER.warning(
+                    "M-Bus identifier changed for channel %s; keeping existing identity",
+                    channel,
+                )
+                continue
+            channel_identifiers[channel] = serial
+            rename_old_gas_to_mbus(hass, entry, serial)
+
+            registry = er.async_get(hass)
+            device_registry = dr.async_get(hass)
+            for entity in entities:
+                if entity._mbus_id != channel:
+                    continue
+                description = entity.entity_description
+                if not (description.is_gas or description.is_water or description.is_heat):
+                    continue
+                new_unique_id = serial
+                if description.key.startswith("belgium_gas_"):
+                    new_unique_id += f"_{description.key}"
+                registered_id = registry.async_get_entity_id(
+                    SENSOR_DOMAIN, DOMAIN, entity.unique_id
+                )
+                if registered_id is not None:
+                    old_device_id = registry.async_get(registered_id).device_id
+                    new_device = device_registry.async_get_or_create(
+                        config_entry_id=entry.entry_id,
+                        identifiers={(DOMAIN, serial)},
+                    )
+                    registry.async_update_entity(
+                        registered_id,
+                        new_unique_id=new_unique_id,
+                        device_id=new_device.id,
+                    )
+                    if old_device_id is not None and not er.async_entries_for_device(
+                        registry, old_device_id, include_disabled_entities=True
+                    ):
+                        device_registry.async_remove_device(old_device_id)
+                entity._attr_unique_id = new_unique_id
+                device_name = (
+                    DEVICE_NAME_GAS
+                    if description.is_gas
+                    else DEVICE_NAME_WATER if description.is_water else DEVICE_NAME_HEAT
+                )
+                entity._attr_device_info = DeviceInfo(
+                    identifiers={(DOMAIN, serial)}, name=device_name
+                )
 
     @callback
     def async_discover_entities(telegram: Telegram) -> None:
         """Add sensor entities for newly received fields."""
+        reconcile_mbus_identifiers(telegram)
         new_entities = list(
-            create_mbus_entities(hass, telegram, entry, dsmr_version, discovered)
+            create_mbus_entities(
+                hass, telegram, entry, dsmr_version, discovered, channel_identifiers
+            )
         )
         for description in SENSORS:
             if (
