@@ -6,6 +6,7 @@
     "vehicles_transport.bikes_scooters"
   ],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/citybikes",
   "iot_class": "cloud_polling",
   "quality_scale": "legacy",

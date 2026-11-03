@@ -25,7 +25,7 @@ from .entity import WemoEntity
 class AttributeSensorDescription(SensorEntityDescription):
     """SensorEntityDescription for WeMo AttributeSensor entities."""
 
-    # AttributeSensor does not support UNDEFINED,
+    # AttributeSensor does not support Undefined,
     # restrict the type to str | None.
     name: str | None = None
     state_conversion: Callable[[StateType], StateType] | None = None

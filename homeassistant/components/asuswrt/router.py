@@ -204,6 +204,7 @@ class AsusWrtRouter:
             CONF_REQUIRE_IP: True,
         }
         self._options.update(entry.options)
+        self._data = dict(entry.data)
 
         self._api: AsusWrtBridge = AsusWrtBridge.get_bridge(
             self.hass, dict(self._entry.data), self._options
@@ -373,6 +374,12 @@ class AsusWrtRouter:
         self._on_close.clear()
 
     @callback
+    def async_forget_device(self, mac: str) -> None:
+        """Stop tracking a client until it connects again."""
+        if self._devices.pop(mac, None) is not None:
+            async_dispatcher_send(self.hass, self.signal_device_removed, mac)
+
+    @callback
     def async_on_close(self, func: CALLBACK_TYPE) -> None:
         """Add a function to call when router is closed."""
         self._on_close.append(func)
@@ -389,6 +396,10 @@ class AsusWrtRouter:
 
         self._options.update(new_options)
         return req_reload
+
+    def data_changed(self, new_data: Mapping[str, Any]) -> bool:
+        """Return if the connection data differs from the data used at setup."""
+        return new_data != self._data
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -418,6 +429,11 @@ class AsusWrtRouter:
     def signal_device_update(self) -> str:
         """Event specific per AsusWrt entry to signal updates in devices."""
         return f"{DOMAIN}-device-update"
+
+    @property
+    def signal_device_removed(self) -> str:
+        """Event specific per AsusWrt entry to signal a removed device."""
+        return f"{DOMAIN}-device-removed-{self._entry.entry_id}"
 
     @property
     def host(self) -> str:

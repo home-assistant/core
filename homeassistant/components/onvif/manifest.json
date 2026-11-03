@@ -4,6 +4,7 @@
   "categories": ["security_safety.cameras"],
   "codeowners": ["@jterrace"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["ffmpeg"],
   "dhcp": [
     {

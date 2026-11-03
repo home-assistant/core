@@ -1212,7 +1212,7 @@ async def test_update_after_write_during_read(
     config_entry: MockConfigEntry,
     calendar: Mock,
 ) -> None:
-    """Test a write during a full read is read on the next update."""
+    """Test a write during a full read is read right after it."""
     calendar.get_objects_by_sync_token.side_effect = [
         sync_report("token-1"),
         sync_report("token-2"),
@@ -1222,14 +1222,13 @@ async def test_update_after_write_during_read(
 
     def write_during_search(**kwargs: Any) -> list[Todo]:
         add_item_from_executor(hass)
+        calendar.search.side_effect = None
+        calendar.search.return_value = [create_todo(calendar, "1", TODO_NEEDS_ACTION)]
         return []
 
     calendar.search.side_effect = write_during_search
     await async_update_entity(hass, TEST_ENTITY)
-
-    calendar.search.side_effect = None
-    calendar.search.return_value = [create_todo(calendar, "1", TODO_NEEDS_ACTION)]
-    await async_update_entity(hass, TEST_ENTITY)
+    await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY)
     assert state
