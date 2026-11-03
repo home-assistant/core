@@ -844,7 +844,7 @@ async def test_validation_gas(
                     "affected_entities": {("sensor.gas_consumption_1", "beers")},
                     "translation_placeholders": {
                         "energy_units": ENERGY_UNITS_STRING,
-                        "gas_units": "CCF, ft³, m³, L, MCF",
+                        "gas_units": "ft³, CCF, MCF, m³, L",
                     },
                 },
                 {
@@ -874,8 +874,8 @@ async def test_validation_gas(
                     "translation_placeholders": {
                         "price_units": (
                             f"{ENERGY_PRICE_UNITS_STRING},"
-                            " EUR/CCF, EUR/ft³, EUR/m³,"
-                            " EUR/L, EUR/MCF"
+                            " EUR/ft³, EUR/CCF, EUR/MCF,"
+                            " EUR/m³, EUR/L"
                         )
                     },
                 },
@@ -928,8 +928,8 @@ async def test_validation_gas(
                     "translation_placeholders": {
                         "price_units": (
                             f"{ENERGY_PRICE_UNITS_STRING},"
-                            " EUR/CCF, EUR/ft³, EUR/m³,"
-                            " EUR/L, EUR/MCF"
+                            " EUR/ft³, EUR/CCF, EUR/MCF,"
+                            " EUR/m³, EUR/L"
                         )
                     },
                 }
@@ -1199,7 +1199,7 @@ async def test_validation_water(
                     "type": "entity_unexpected_unit_water",
                     "affected_entities": {("sensor.water_consumption_1", "beers")},
                     "translation_placeholders": {
-                        "water_units": "CCF, ft³, m³, fl. oz., gal, L, MCF"
+                        "water_units": "ft³, CCF, MCF, m³, L, gal, fl. oz."
                     },
                 },
                 {
@@ -1228,7 +1228,7 @@ async def test_validation_water(
                     "affected_entities": {("sensor.water_price_2", "EUR/invalid")},
                     "translation_placeholders": {
                         "price_units": (
-                            "EUR/CCF, EUR/ft³, EUR/m³, EUR/fl. oz., EUR/gal, EUR/L, EUR/MCF"
+                            "EUR/ft³, EUR/CCF, EUR/MCF, EUR/m³, EUR/L, EUR/gal, EUR/fl. oz."
                         )
                     },
                 },
@@ -1326,7 +1326,7 @@ async def test_validation_device_consumption_water_entity_unexpected_unit(
                     "type": "entity_unexpected_unit_water",
                     "affected_entities": {("sensor.unexpected_unit", "beers")},
                     "translation_placeholders": {
-                        "water_units": "CCF, ft³, m³, fl. oz., gal, L, MCF"
+                        "water_units": "ft³, CCF, MCF, m³, L, gal, fl. oz."
                     },
                 }
             ]

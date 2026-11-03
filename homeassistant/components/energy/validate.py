@@ -47,12 +47,10 @@ GAS_USAGE_UNITS: dict[str, tuple[UnitOfEnergy | UnitOfVolume, ...]] = {
     sensor.SensorDeviceClass.ENERGY: ENERGY_USAGE_UNITS[
         sensor.SensorDeviceClass.ENERGY
     ],
-    sensor.SensorDeviceClass.GAS: (
-        UnitOfVolume.CENTUM_CUBIC_FEET,
-        UnitOfVolume.CUBIC_FEET,
-        UnitOfVolume.CUBIC_METERS,
-        UnitOfVolume.LITERS,
-        UnitOfVolume.MILLE_CUBIC_FEET,
+    sensor.SensorDeviceClass.GAS: tuple(
+        unit
+        for unit in UnitOfVolume
+        if unit in sensor.DEVICE_CLASS_UNITS[sensor.SensorDeviceClass.GAS]
     ),
 }
 GAS_PRICE_UNITS = tuple(
@@ -63,14 +61,10 @@ GAS_PRICE_UNIT_ERROR = "entity_unexpected_unit_gas_price"
 GAS_PRICE_UNIT_MISMATCH_ERROR = "entity_gas_price_unit_mismatch"
 WATER_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.WATER,)
 WATER_USAGE_UNITS: dict[str, tuple[UnitOfVolume, ...]] = {
-    sensor.SensorDeviceClass.WATER: (
-        UnitOfVolume.CENTUM_CUBIC_FEET,
-        UnitOfVolume.CUBIC_FEET,
-        UnitOfVolume.CUBIC_METERS,
-        UnitOfVolume.FLUID_OUNCES,
-        UnitOfVolume.GALLONS,
-        UnitOfVolume.LITERS,
-        UnitOfVolume.MILLE_CUBIC_FEET,
+    sensor.SensorDeviceClass.WATER: tuple(
+        unit
+        for unit in UnitOfVolume
+        if unit in sensor.DEVICE_CLASS_UNITS[sensor.SensorDeviceClass.WATER]
     ),
 }
 WATER_PRICE_UNITS = tuple(
