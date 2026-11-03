@@ -74,6 +74,16 @@ class CometBlueServiceArgument(StrEnum):
     TEMPERATURE = "temperature"
 
 
+_SCHEDULE_DAYS: Final = (
+    CometBlueServiceArgument.MONDAY,
+    CometBlueServiceArgument.TUESDAY,
+    CometBlueServiceArgument.WEDNESDAY,
+    CometBlueServiceArgument.THURSDAY,
+    CometBlueServiceArgument.FRIDAY,
+    CometBlueServiceArgument.SATURDAY,
+    CometBlueServiceArgument.SUNDAY,
+)
+
 ScheduleEntry = TypedDict(
     "ScheduleEntry",
     {
@@ -167,13 +177,7 @@ SCHEDULE_DAY_SCHEMA = probatio.All(
     _validate_cometblue_schedule,
 )
 SERVICE_SCHEDULE_SCHEMA = {
-    probatio.Optional(CometBlueServiceArgument.MONDAY): SCHEDULE_DAY_SCHEMA,
-    probatio.Optional(CometBlueServiceArgument.TUESDAY): SCHEDULE_DAY_SCHEMA,
-    probatio.Optional(CometBlueServiceArgument.WEDNESDAY): SCHEDULE_DAY_SCHEMA,
-    probatio.Optional(CometBlueServiceArgument.THURSDAY): SCHEDULE_DAY_SCHEMA,
-    probatio.Optional(CometBlueServiceArgument.FRIDAY): SCHEDULE_DAY_SCHEMA,
-    probatio.Optional(CometBlueServiceArgument.SATURDAY): SCHEDULE_DAY_SCHEMA,
-    probatio.Optional(CometBlueServiceArgument.SUNDAY): SCHEDULE_DAY_SCHEMA,
+    probatio.Optional(day): SCHEDULE_DAY_SCHEMA for day in _SCHEDULE_DAYS
 }
 SERVICE_HOLIDAY_SCHEMA = {
     probatio.Required(CometBlueServiceArgument.FROM): cv.datetime,
@@ -225,10 +229,10 @@ async def set_schedule(
         entity.entity_id,
         entity.coordinator.address,
         ", ".join(
-            day for day in ATTR_ALL_DAYS if service_call.data.get(day) is not None
+            day for day in _SCHEDULE_DAYS if service_call.data.get(day) is not None
         ),
     )
-    for day in ATTR_ALL_DAYS:
+    for day in _SCHEDULE_DAYS:
         LOGGER.debug(
             "Settings schedule for %s: %s",
             day,
@@ -237,7 +241,7 @@ async def set_schedule(
     values = {
         day: {k: v.strftime("%H:%M") for k, v in sched.items()}
         for day, sched in service_call.data.items()
-        if sched is not None and day in ATTR_ALL_DAYS
+        if sched is not None and day in _SCHEDULE_DAYS
     }
     await entity.coordinator.send_command(
         entity.coordinator.device.set_weekdays_async,
