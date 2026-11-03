@@ -95,7 +95,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="usb_confirm",
             description_placeholders={
                 "manufacturer": MANUFACTURER,
-                CONF_DEVICE: self.data.get(CONF_DEVICE, ""),
+                "device": self.data.get(CONF_DEVICE, ""),
             },
         )
 
