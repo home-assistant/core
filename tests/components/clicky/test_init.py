@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.clicky.const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .common import _make_report
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:

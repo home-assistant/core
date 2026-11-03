@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.clicky.const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN
 from homeassistant.components.clicky.sensor import SENSOR_TYPES
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import _make_report
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
