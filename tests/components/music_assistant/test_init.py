@@ -43,6 +43,7 @@ from .common import (
 PLAYER_1_ID = "00:00:00:00:00:01"
 PLAYER_2_ID = "00:00:00:00:00:02"
 PLAYER_2_ENTITY_ID = "media_player.my_super_test_player_2"
+STALE_PLAYER_ID = "stale_player"
 EXPOSE_TO_HA_VALUE = {
     "key": ATTR_CONF_EXPOSE_PLAYER_TO_HA,
     "type": "boolean",
@@ -470,6 +471,36 @@ async def test_player_config_toggle(
     assert device_entry
 
 
+async def test_player_config_hides_unregistered_player(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test disabling the config of an unregistered player removes its device."""
+    config_entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, STALE_PLAYER_ID)},
+    )
+
+    await trigger_subscription_callback(
+        hass,
+        music_assistant_client,
+        EventType.PLAYER_CONFIG_UPDATED,
+        STALE_PLAYER_ID,
+        {
+            "player_id": STALE_PLAYER_ID,
+            "provider": "test",
+            "enabled": False,
+            "values": {},
+        },
+    )
+
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, STALE_PLAYER_ID), config_entry.entry_id
+    )
+
+
 @pytest.mark.parametrize(
     ("enabled", "expose_to_ha", "expected_added"),
     [
@@ -551,14 +582,14 @@ async def test_setup_removes_hidden_player(
         pytest.param(
             [
                 PlayerConfig(
-                    values={}, provider="test", player_id="stale_player", enabled=False
+                    values={}, provider="test", player_id=STALE_PLAYER_ID, enabled=False
                 )
             ],
             False,
             id="config_disabled",
         ),
         pytest.param(
-            [PlayerConfig(values={}, provider="test", player_id="stale_player")],
+            [PlayerConfig(values={}, provider="test", player_id=STALE_PLAYER_ID)],
             True,
             id="player_not_registered",
         ),
@@ -577,7 +608,7 @@ async def test_setup_stale_device_cleanup(
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "stale_player")},
+        identifiers={(DOMAIN, STALE_PLAYER_ID)},
     )
     player_configs = await music_assistant_client.config.get_player_configs()
     music_assistant_client.config.get_player_configs = AsyncMock(
@@ -587,7 +618,7 @@ async def test_setup_stale_device_cleanup(
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "stale_player"), config_entry.entry_id
+        (DOMAIN, STALE_PLAYER_ID), config_entry.entry_id
     )
     assert (device_entry is not None) is expected_present
 

@@ -259,8 +259,9 @@ async def async_setup_entry(  # noqa: C901
         exposed = player_config.enabled and player_config.get_value(
             ATTR_CONF_EXPOSE_PLAYER_TO_HA, True
         )
-        if not exposed and player_id in entry.runtime_data.discovered_players:
-            # player is disabled or no longer exposed to Home Assistant
+        if not exposed:
+            # player is disabled or no longer exposed to Home Assistant;
+            # also drops a device kept at setup for an unregistered player
             remove_player(player_id)
         elif exposed and player_id not in entry.runtime_data.discovered_players:
             # player is now enabled and exposed to Home Assistant
