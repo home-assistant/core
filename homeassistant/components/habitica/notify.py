@@ -114,7 +114,7 @@ class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
                 translation_domain=DOMAIN,
                 translation_key="send_message_forbidden",
                 translation_placeholders={
-                    CONF_NAME: self.translation_placeholders[CONF_NAME],
+                    "name": self.translation_placeholders[CONF_NAME],
                     "reason": e.error.message,
                 },
             ) from e
@@ -123,7 +123,7 @@ class HabiticaBaseNotifyEntity(HabiticaBase, NotifyEntity):
                 translation_domain=DOMAIN,
                 translation_key="send_message_not_found",
                 translation_placeholders={
-                    CONF_NAME: self.translation_placeholders[CONF_NAME],
+                    "name": self.translation_placeholders[CONF_NAME],
                     "reason": e.error.message,
                 },
             ) from e
