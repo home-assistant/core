@@ -189,6 +189,29 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         const.DOMAIN,
+        const.SERVICE_INVOKE_CC_API,
+        _async_invoke_cc_api,
+        schema=probatio.Schema(
+            probatio.All(
+                {
+                    **TARGET_VALIDATORS,
+                    probatio.Required(const.ATTR_COMMAND_CLASS): probatio.All(
+                        probatio.Coerce(int), probatio.Coerce(CommandClass)
+                    ),
+                    probatio.Optional(const.ATTR_ENDPOINT): probatio.Coerce(int),
+                    probatio.Required(const.ATTR_METHOD_NAME): cv.string,
+                    probatio.Required(const.ATTR_PARAMETERS): list,
+                },
+                probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+            ),
+        ),
+        description_placeholders={
+            "api_docs_url": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index"
+        },
+    )
+
+    hass.services.async_register(
+        const.DOMAIN,
         const.SERVICE_REFRESH_NOTIFICATIONS,
         _async_refresh_notifications,
         schema=probatio.Schema(
@@ -389,7 +412,7 @@ def raise_exceptions_from_results(
         raise HomeAssistantError("\n".join(lines))
 
 
-async def _async_invoke_cc_api(
+async def _async_call_cc_api(
     nodes_or_endpoints: Collection[_NodeOrEndpointType],
     command_class: CommandClass,
     method_name: str,
@@ -502,6 +525,65 @@ async def _async_ping(call: ServiceCall) -> None:
     raise_exceptions_from_results(nodes, results)
 
 
+async def _async_invoke_cc_api(call: ServiceCall) -> None:
+    """Invoke a command class API."""
+    command_class: CommandClass = call.data[const.ATTR_COMMAND_CLASS]
+    method_name: str = call.data[const.ATTR_METHOD_NAME]
+    parameters: list[Any] = call.data[const.ATTR_PARAMETERS]
+    nodes = _async_get_nodes(call)
+
+    # If an endpoint is provided, we assume the user wants to call the CC API on
+    # that endpoint for all target nodes
+    if (endpoint := call.data.get(const.ATTR_ENDPOINT)) is not None:
+        await _async_call_cc_api(
+            {node.endpoints[endpoint] for node in nodes},
+            command_class,
+            method_name,
+            *parameters,
+        )
+        return
+
+    # If no endpoint is provided, we target endpoint 0 for all device and area
+    # nodes and we target the endpoint of the primary value for all entities
+    # specified.
+    ent_reg = er.async_get(call.hass)
+    endpoints: set[Endpoint] = set()
+    for area_id in call.data.get(ATTR_AREA_ID, []):
+        for node in async_get_nodes_from_area_id(call.hass, area_id, ent_reg):
+            endpoints.add(node.endpoints[0])
+
+    for device_id in call.data.get(ATTR_DEVICE_ID, []):
+        try:
+            node = async_get_node_from_device_id(call.hass, device_id)
+        # Invalid targets are skipped with a warning, like invalid entities below
+        # pylint: disable-next=home-assistant-action-swallowed-exception
+        except ValueError as err:
+            _LOGGER.warning(err.args[0])
+            continue
+        endpoints.add(node.endpoints[0])
+
+    for entity_id in call.data.get(ATTR_ENTITY_ID, []):
+        if (
+            not (entity_entry := ent_reg.async_get(entity_id))
+            or entity_entry.platform != const.DOMAIN
+        ):
+            _LOGGER.warning(
+                "Skipping entity %s as it is not a valid %s entity",
+                entity_id,
+                const.DOMAIN,
+            )
+            continue
+        node = async_get_node_from_entity_id(call.hass, entity_id, ent_reg)
+        if (value_id := get_value_id_from_unique_id(entity_entry.unique_id)) is None:
+            _LOGGER.warning("Skipping entity %s as it has no value ID", entity_id)
+            continue
+
+        endpoint_idx = node.values[value_id].endpoint
+        endpoints.add(node.endpoints[endpoint_idx if endpoint_idx is not None else 0])
+
+    await _async_call_cc_api(endpoints, command_class, method_name, *parameters)
+
+
 async def _async_refresh_notifications(call: ServiceCall) -> None:
     """Refresh notifications on a node."""
     nodes = _async_get_nodes(call)
@@ -510,7 +592,7 @@ async def _async_refresh_notifications(call: ServiceCall) -> None:
     param: dict[str, int] = {"notificationType": notification_type.value}
     if notification_event is not None:
         param["notificationEvent"] = notification_event
-    await _async_invoke_cc_api(nodes, CommandClass.NOTIFICATION, "get", param)
+    await _async_call_cc_api(nodes, CommandClass.NOTIFICATION, "get", param)
 
 
 class ZWaveServices:
@@ -760,32 +842,6 @@ class ZWaveServices:
             ),
         )
 
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_INVOKE_CC_API,
-            self.async_invoke_cc_api,
-            schema=probatio.Schema(
-                probatio.All(
-                    {
-                        **TARGET_VALIDATORS,
-                        probatio.Required(const.ATTR_COMMAND_CLASS): probatio.All(
-                            probatio.Coerce(int), probatio.Coerce(CommandClass)
-                        ),
-                        probatio.Optional(const.ATTR_ENDPOINT): probatio.Coerce(int),
-                        probatio.Required(const.ATTR_METHOD_NAME): cv.string,
-                        probatio.Required(const.ATTR_PARAMETERS): list,
-                    },
-                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-            description_placeholders={
-                "api_docs_url": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index"
-            },
-        )
-
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
@@ -1019,63 +1075,3 @@ class ZWaveServices:
             raise HomeAssistantError(
                 "Unable to set value via multicast"
             ) from SetValueFailed(f"{result.status} {result.message}")
-
-    async def async_invoke_cc_api(self, service: ServiceCall) -> None:
-        """Invoke a command class API."""
-        command_class: CommandClass = service.data[const.ATTR_COMMAND_CLASS]
-        method_name: str = service.data[const.ATTR_METHOD_NAME]
-        parameters: list[Any] = service.data[const.ATTR_PARAMETERS]
-
-        # If an endpoint is provided, we assume the user wants to call the CC API on
-        # that endpoint for all target nodes
-        if (endpoint := service.data.get(const.ATTR_ENDPOINT)) is not None:
-            await _async_invoke_cc_api(
-                {node.endpoints[endpoint] for node in service.data[const.ATTR_NODES]},
-                command_class,
-                method_name,
-                *parameters,
-            )
-            return
-
-        # If no endpoint is provided, we target endpoint 0 for all device and area
-        # nodes and we target the endpoint of the primary value for all entities
-        # specified.
-        endpoints: set[Endpoint] = set()
-        for area_id in service.data.get(ATTR_AREA_ID, []):
-            for node in async_get_nodes_from_area_id(
-                self._hass, area_id, self._ent_reg, self._dev_reg
-            ):
-                endpoints.add(node.endpoints[0])
-
-        for device_id in service.data.get(ATTR_DEVICE_ID, []):
-            try:
-                node = async_get_node_from_device_id(self._hass, device_id)
-            except ValueError as err:
-                _LOGGER.warning(err.args[0])
-                continue
-            endpoints.add(node.endpoints[0])
-
-        for entity_id in service.data.get(ATTR_ENTITY_ID, []):
-            if (
-                not (entity_entry := self._ent_reg.async_get(entity_id))
-                or entity_entry.platform != const.DOMAIN
-            ):
-                _LOGGER.warning(
-                    "Skipping entity %s as it is not a valid %s entity",
-                    entity_id,
-                    const.DOMAIN,
-                )
-                continue
-            node = async_get_node_from_entity_id(self._hass, entity_id, self._ent_reg)
-            if (
-                value_id := get_value_id_from_unique_id(entity_entry.unique_id)
-            ) is None:
-                _LOGGER.warning("Skipping entity %s as it has no value ID", entity_id)
-                continue
-
-            endpoint_idx = node.values[value_id].endpoint
-            endpoints.add(
-                node.endpoints[endpoint_idx if endpoint_idx is not None else 0]
-            )
-
-        await _async_invoke_cc_api(endpoints, command_class, method_name, *parameters)
