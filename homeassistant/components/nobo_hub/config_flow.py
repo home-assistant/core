@@ -261,7 +261,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                CONF_SERIAL: reconfigure_entry.data[CONF_SERIAL],
+                "serial": reconfigure_entry.data[CONF_SERIAL],
             },
         )
 

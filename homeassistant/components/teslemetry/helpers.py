@@ -23,13 +23,25 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_KEY_FILE
+from .const import (
+    BLE_PARENT_KEY,
+    BLE_PARENT_LOCK_KEY,
+    DOMAIN,
+    ISSUE_GATEWAY_NOT_FOUND,
+    LOGGER,
+    VEHICLE_KEY_FILE,
+)
 
 GATEWAY_OUT_OF_RANGE = 11
 
 
 class PowerwallKeyRejectedError(Exception):
     """Signal that the gateway refused a v1r-signed read with our RSA key."""
+
+
+def gateway_issue_id(site_id: int) -> str:
+    """Return the repair issue id for a site whose local gateway was not found."""
+    return f"{ISSUE_GATEWAY_NOT_FOUND}_{site_id}"
 
 
 def cloud_energy_site(api: EnergySite | EnergySiteRouter) -> TeslemetryEnergySite:

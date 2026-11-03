@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@my-pv", "@rrooggiieerr"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "registered_devices": true

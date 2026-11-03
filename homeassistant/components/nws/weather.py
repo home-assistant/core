@@ -116,7 +116,6 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
     """Representation of a weather condition."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_should_poll = False
     _attr_supported_features = (
         WeatherEntityFeature.FORECAST_HOURLY | WeatherEntityFeature.FORECAST_TWICE_DAILY
     )

@@ -3,7 +3,11 @@
 from functools import lru_cache
 from typing import Any, final, override
 
-from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
+from awesomeversion import (
+    AwesomeVersion,
+    AwesomeVersionCompareException,
+    AwesomeVersionStrategy,
+)
 from propcache.api import cached_property
 
 from homeassistant.const import (
@@ -37,7 +41,14 @@ class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
 @lru_cache(maxsize=256)
 def _version_is_newer(latest_version: str, installed_version: str) -> bool:
     """Return True if latest_version is newer than installed_version."""
-    return AwesomeVersion(latest_version) > installed_version
+    latest = AwesomeVersion(latest_version)
+    installed = AwesomeVersion(installed_version)
+
+    # AwesomeVersion ranks special versions (e.g. "latest") above all others,
+    # which would hide updates away from them.
+    if AwesomeVersionStrategy.SPECIALCONTAINER in (latest.strategy, installed.strategy):
+        return latest != installed
+    return latest > installed
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
