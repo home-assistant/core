@@ -27,7 +27,7 @@ def async_create_consent_required_issue(
         severity=ir.IssueSeverity.ERROR,
         translation_key="consent_required",
         translation_placeholders={
-            CONF_ACCOUNT_NUMBER: account_number,
+            "account_number": account_number,
         },
         learn_more_url=LEARN_MORE_URL,
         config_entry_id=entry.entry_id,

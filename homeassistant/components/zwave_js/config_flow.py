@@ -617,7 +617,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="zeroconf_confirm",
             description_placeholders={
                 "home_id": home_id_display,
-                CONF_URL: self.ws_address[5:],
+                "url": self.ws_address[5:],
             },
         )
 

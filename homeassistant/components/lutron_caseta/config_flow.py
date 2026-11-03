@@ -165,8 +165,8 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="link",
             errors=errors,
             description_placeholders={
-                CONF_NAME: self.bridge_id,
-                CONF_HOST: self.data[CONF_HOST],
+                "name": self.bridge_id,
+                "host": self.data[CONF_HOST],
             },
         )
 
