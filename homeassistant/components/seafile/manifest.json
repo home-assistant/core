@@ -10,5 +10,5 @@
   "iot_class": "local_polling",
   "loggers": ["aioseafile"],
   "quality_scale": "silver",
-  "requirements": ["aioseafile==0.1.1"]
+  "requirements": ["aioseafile==0.1.3"]
 }
