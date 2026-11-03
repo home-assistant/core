@@ -6,7 +6,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any, override
 
-from xknx.devices import Device as XknxDevice, Light as XknxLight
+from xknx.devices import Cover as XknxCover, Device as XknxDevice, Light as XknxLight
 from xknx.telegram import telegram_context
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
 from xknx.telegram.apci import GroupValueWrite
@@ -143,6 +143,8 @@ class _KnxEntityBase(Entity):
     _device_state_initialized = False
     _service_context: Context | None = None
     _service_context_set: float = 0
+    _travel_context: Context | None = None
+    _travel_context_until: float = 0
 
     @property
     @override
@@ -158,6 +160,7 @@ class _KnxEntityBase(Entity):
     @override
     def async_set_context(self, context: Context) -> None:
         """Remember the context supplied by HA for a new action."""
+        self._travel_context = None
         self._service_context = context
         self._service_context_set = time.time()
         super().async_set_context(context)
@@ -185,11 +188,18 @@ class _KnxEntityBase(Entity):
                 update.context if isinstance(update.context, Context) else Context()
             )
             state = self.state
-            if (
-                isinstance(context, KnxTelegramContext)
-                and (service_context := self._recent_service_context) is not None
-            ):
-                context = service_context
+            if isinstance(context, KnxTelegramContext):
+                if update.from_state_address:
+                    if (
+                        self._travel_context is not None
+                        and time.time() <= self._travel_context_until
+                    ):
+                        context = self._travel_context
+                    elif (service_context := self._recent_service_context) is not None:
+                        context = service_context
+                else:
+                    # A bus command supersedes an earlier HA action, even within 5s.
+                    self._service_context = None
             if isinstance(context, KnxTelegramContext):
                 old_state = self.hass.states.get(self.entity_id)
                 can_attribute = old_state is not None and (
@@ -213,6 +223,12 @@ class _KnxEntityBase(Entity):
                 # Eligibility is per entity; event deduplication is per telegram.
                 if not can_attribute or not context.logged:
                     context = Context()
+            if isinstance(device, XknxCover) and not update.from_state_address:
+                self._travel_context = context
+                # Keep the cause through the final feedback; feedback cannot renew it.
+                self._travel_context_until = (
+                    time.time() + device.remaining_travel_time() + 1
+                )
             super().async_set_context(context)
             # Lights expose an uninitialized KNX state as "off" in HA.
             self._device_state_initialized = (

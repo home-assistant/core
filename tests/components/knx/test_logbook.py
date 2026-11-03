@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -553,3 +553,54 @@ async def test_read_has_no_sender_context(hass: HomeAssistant, knx: KNXTestKit) 
     assert all(telegram.context is None for telegram in telegrams)
     assert hass.states.get(SWITCH_ENTITY_ID).context is previous
     assert len(events) == 1
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_cover_late_feedback_recorded_activity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Recorded final position retains the wall switch rather than the actuator."""
+    # Advance travel time without freezing recorder timestamps to identical values.
+    clock = Mock()
+    clock.time.return_value = 1000.0
+    with (
+        patch("homeassistant.components.knx.entity.time", clock),
+        patch("xknx.devices.travelcalculator.time", clock),
+    ):
+        start = dt_util.utcnow() - timedelta(seconds=1)
+        assert await async_setup_component(hass, "logbook", {})
+        await knx.setup_integration(
+            {
+                "cover": {
+                    "name": "test",
+                    "move_long_address": "2/0/1",
+                    "position_state_address": "2/0/4",
+                    "travelling_time_down": 60,
+                }
+            },
+            state_updater=False,
+        )
+        await knx.receive_response("2/0/4", (0,))
+        await knx.receive_write("2/0/1", True, source="1.1.23")
+        clock.time.return_value += 59.5
+        await knx.receive_write("2/0/4", (255,), source="1.1.40")
+        await async_wait_recording_done(hass)
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "logbook/get_events",
+                "start_time": start.isoformat(),
+                "entity_ids": [COVER_ENTITY_ID],
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        entries = [
+            entry for entry in response["result"] if entry.get("state") == "closed"
+        ]
+        assert len(entries) == 1, response
+        assert entries[0]["context_name"] == "1.1.23"
+        assert entries[0]["context_event_type"] == EVENT_KNX_STATE_CHANGED
