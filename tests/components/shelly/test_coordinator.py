@@ -447,13 +447,22 @@ async def test_rpc_reload_on_cfg_change(
     assert hass.states.get(entity_id) is None
 
 
-async def test_rpc_no_reload_on_plugs_ui_cfg_change(
+@pytest.mark.parametrize(
+    ("component", "update_method"),
+    [
+        ("plugs_ui", "update_plugs_ui_config"),
+        ("powerstrip_ui", "update_powerstrip_ui_config"),
+    ],
+)
+async def test_rpc_no_reload_on_ui_cfg_change(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    component: str,
+    update_method: str,
 ) -> None:
-    """Test RPC plug LED config change does not reload the entry."""
+    """Test RPC UI config change fetches the config without reloading the entry."""
     entity_id = "switch.test_name_test_switch_0"
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
@@ -469,7 +478,7 @@ async def test_rpc_no_reload_on_plugs_ui_cfg_change(
         {
             "events": [
                 {
-                    "component": "plugs_ui",
+                    "component": component,
                     "event": "config_changed",
                     "restart_required": False,
                     "ts": 1668522399.2,
@@ -480,6 +489,8 @@ async def test_rpc_no_reload_on_plugs_ui_cfg_change(
         },
     )
     await hass.async_block_till_done()
+
+    getattr(mock_rpc_device, update_method).assert_awaited_once()
 
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)

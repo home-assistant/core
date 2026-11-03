@@ -104,6 +104,13 @@ class ShellyEntryData:
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
 
+# Components whose config changes only affect entity state, so they are
+# refreshed on config_changed instead of reloading the entry
+RPC_CONFIG_UPDATERS: dict[str, Callable[[RpcDevice], Coroutine[Any, Any, None]]] = {
+    "plugs_ui": lambda device: device.update_plugs_ui_config(),
+    "powerstrip_ui": lambda device: device.update_powerstrip_ui_config(),
+}
+
 
 class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     DataUpdateCoordinator[None]
@@ -635,6 +642,17 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
         return _unsubscribe
 
+    async def _async_update_component_config(self, component: str) -> None:
+        """Fetch the changed component config and update entities."""
+        try:
+            await RPC_CONFIG_UPDATERS[component](self.device)
+        except (DeviceConnectionError, RpcCallError) as err:
+            LOGGER.debug(
+                "Error updating %s config for %s: %s", component, self.name, err
+            )
+            return
+        self.async_update_listeners()
+
     @callback
     def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:
         """Handle device events."""
@@ -652,8 +670,13 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             for event_callback in self._event_listeners:
                 event_callback(event)
 
-            # Plug LED settings do not change any entity, so they need no reload
-            if event_type == "config_changed" and component == "plugs_ui":
+            if event_type == "config_changed" and component in RPC_CONFIG_UPDATERS:
+                self.config_entry.async_create_background_task(
+                    self.hass,
+                    self._async_update_component_config(component),
+                    "rpc device component config update",
+                    eager_start=True,
+                )
                 continue
 
             if event_type in ("component_added", "component_removed", "config_changed"):
