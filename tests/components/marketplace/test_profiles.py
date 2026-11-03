@@ -51,7 +51,14 @@ from .const import REPOSITORY_PLUGIN, TOKEN
 
 INTEGRATION_PATH = Path(marketplace_integration.__file__).parent
 
-MIRROR_HOSTS = {"ghapi.hacs.vip", "ghrp2.hacs.vip", "ghrp.hacs.vip", "data-v2.hacs.vip"}
+MIRROR_HOSTS = {
+    "ghapi.hacs.vip",
+    "ghrp2.hacs.vip",
+    "ghrp.hacs.vip",
+    "data-v2.hasscn.top",
+    "data-v2.hacs.vip",
+    "gh-proxy.org",
+}
 
 FILE = github_raw_file(repository="owner/repository", ref="main", path="file.txt")
 FIRST_MIRROR = f"https://ghrp2.hacs.vip/raw/{FILE.path}"
@@ -59,7 +66,8 @@ SECOND_MIRROR = f"https://ghrp.hacs.vip/raw/{FILE.path}"
 
 OTHER_FILE = github_raw_file(repository="owner/repository", ref="main", path="other")
 
-CATALOG_MIRROR = "https://data-v2.hacs.vip/integration/data.json"
+CATALOG_MIRROR = "https://data-v2.hasscn.top/integration/data.json"
+CATALOG_SECOND_MIRROR = "https://data-v2.hacs.vip/integration/data.json"
 CATALOG_ORIGINAL = "https://data-v2.hacs.xyz/integration/data.json"
 
 SLEEP = "homeassistant.components.marketplace.base.asyncio.sleep"
@@ -149,9 +157,16 @@ async def test_default_profile_without_options(
 async def test_china_profile_fetches_the_catalog_from_the_mirror(
     marketplace: MarketplaceManager, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test the startup with the China profile only asks the mirrors."""
+    """Test the startup with the China profile only asks the mirrors.
+
+    The catalog mirror only answers requests that name the Marketplace.
+    """
     assert marketplace.configuration.profile.id == "hasscn"
-    assert _requested_hosts(aioclient_mock) == {"data-v2.hacs.vip"}
+    assert _requested_hosts(aioclient_mock) == {"data-v2.hasscn.top"}
+    assert {
+        headers["User-Agent"].split("/")[0]
+        for _, _, _, headers in aioclient_mock.mock_calls
+    } == {"HomeAssistantMarketplace"}
 
 
 @pytest.mark.parametrize(
@@ -312,11 +327,25 @@ async def test_download_falls_back_to_the_next_mirror(
 
 
 @pytest.mark.parametrize("download_profile", ["hasscn"])
+async def test_download_falls_back_to_the_proxy(
+    marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
+) -> None:
+    """Test the public proxy is the last resort, it gets the full original URL."""
+    for url in (FIRST_MIRROR, SECOND_MIRROR):
+        response_mocker.add(url, mocked_response(url, status=HTTPStatus.BAD_GATEWAY))
+    proxied = f"https://gh-proxy.org/https://raw.githubusercontent.com/{FILE.path}"
+    response_mocker.add(proxied, mocked_response(proxied, content=b"proxied"))
+
+    assert await marketplace.async_download_file(FILE) == b"proxied"
+
+
+@pytest.mark.parametrize("download_profile", ["hasscn"])
 async def test_download_fails_when_every_mirror_fails(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test a file no mirror has gives nothing, the same as without mirrors."""
-    for url in (FIRST_MIRROR, SECOND_MIRROR):
+    proxied = f"https://gh-proxy.org/https://raw.githubusercontent.com/{FILE.path}"
+    for url in (FIRST_MIRROR, SECOND_MIRROR, proxied):
         response_mocker.add(
             url, mocked_response(url, status=HTTPStatus.NOT_FOUND), keep=True
         )
@@ -328,10 +357,9 @@ async def test_download_fails_when_every_mirror_fails(
 async def test_catalog_falls_back_to_the_original(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
-    """Test the catalog comes from the original when the mirror fails."""
-    response_mocker.add(
-        CATALOG_MIRROR, mocked_response(CATALOG_MIRROR, status=HTTPStatus.BAD_GATEWAY)
-    )
+    """Test the catalog comes from the next endpoint when the mirrors fail."""
+    for url in (CATALOG_MIRROR, CATALOG_SECOND_MIRROR):
+        response_mocker.add(url, mocked_response(url, status=HTTPStatus.BAD_GATEWAY))
     response_mocker.add(
         CATALOG_ORIGINAL, mocked_response(CATALOG_ORIGINAL, json_content=_catalog(1))
     )
@@ -370,11 +398,13 @@ async def test_catalog_answer_that_is_unusable_falls_back(
     unusable: dict[str, Any],
     usable: dict[str, Any] | list[dict[str, Any]],
 ) -> None:
-    """Test a mirror answering JSON that is no catalog falls back to the original."""
-    mirror = f"https://data-v2.hacs.vip/{section}/data.json"
-    original = f"https://data-v2.hacs.xyz/{section}/data.json"
+    """Test a mirror answering JSON that is no catalog falls back to the next one."""
+    mirror = f"https://data-v2.hasscn.top/{section}/data.json"
+    second_mirror = f"https://data-v2.hacs.vip/{section}/data.json"
     response_mocker.add(mirror, mocked_response(mirror, json_content=unusable))
-    response_mocker.add(original, mocked_response(original, json_content=usable))
+    response_mocker.add(
+        second_mirror, mocked_response(second_mirror, json_content=usable)
+    )
 
     assert await getattr(marketplace.data_client, method)(*args)
 
@@ -384,9 +414,8 @@ async def test_catalog_that_fails_everywhere_raises_the_last_error(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test the catalog error is the one of the last endpoint, as without mirrors."""
-    response_mocker.add(
-        CATALOG_MIRROR, mocked_response(CATALOG_MIRROR, status=HTTPStatus.BAD_GATEWAY)
-    )
+    for url in (CATALOG_MIRROR, CATALOG_SECOND_MIRROR):
+        response_mocker.add(url, mocked_response(url, status=HTTPStatus.BAD_GATEWAY))
     response_mocker.add(
         CATALOG_ORIGINAL, mocked_response(CATALOG_ORIGINAL, content=b"{not json")
     )
@@ -571,5 +600,5 @@ async def test_system_health_checks_the_mirrors(
         "https://ghapi.hacs.vip",
         "https://ghrp2.hacs.vip/raw/hacs/default/main/integration",
         "https://ghrp2.hacs.vip/",
-        "https://data-v2.hacs.vip/data.json",
+        "https://data-v2.hasscn.top/data.json",
     ]

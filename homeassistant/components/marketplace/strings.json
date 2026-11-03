@@ -346,12 +346,12 @@
         },
         "step": {
           "init": {
-            "description": "The Marketplace can not reach its catalog. Mirrors run by {operator} are available for your country.\n\nEverything the Marketplace downloads, the catalog and the content you install, then goes through {operator} instead of GitHub. Your GitHub account is not used with the mirrors. You can switch back at any time from the menu in the Marketplace.",
+            "description": "The Marketplace can not reach its catalog. Unofficial mirrors run by {operator} are available for your country.\n\nEverything the Marketplace downloads, the catalog and the content you install, then goes through these mirrors instead of GitHub. When the mirrors can not be reached, downloads fall back to third-party proxies. Your GitHub account is not used with the mirrors or the proxies. You can switch back at any time from the menu in the Marketplace.",
             "menu_options": {
               "ignore": "Keep using GitHub, stop suggesting this",
               "use_profile": "Use the mirrors"
             },
-            "title": "Use mirrors for the Marketplace?"
+            "title": "Use unofficial mirrors for the Marketplace?"
           }
         }
       },
@@ -402,10 +402,10 @@
     "step": {
       "init": {
         "data": {
-          "profile": "Get content from"
+          "profile": "Download from"
         },
         "data_description": {
-          "profile": "Where the Marketplace gets the catalog and the content you install from. A mirror sends all Marketplace traffic through whoever runs it, and does not get your GitHub account."
+          "profile": "Routes Marketplace traffic, the catalog and content you install, through the selected source. Third-party mirrors and proxies do not use your GitHub account, and you can switch back to GitHub at any time."
         },
         "title": "Download source"
       }
@@ -415,7 +415,7 @@
     "profile": {
       "options": {
         "default": "GitHub (run by GitHub and the Open Home Foundation)",
-        "hasscn": "China mirrors (run by the Home Assistant China community, hasscn.top)"
+        "hasscn": "Unofficial China mirrors (run by the Home Assistant China community, hasscn.top, with third-party proxies as a fallback)"
       }
     }
   },

@@ -74,6 +74,7 @@ def _load_proxy_fixtures() -> dict[str, bytes]:
 MIRRORED_HOSTS = {
     "ghapi.hacs.vip": "api.github.com",
     "data-v2.hacs.vip": "data-v2.hacs.xyz",
+    "data-v2.hasscn.top": "data-v2.hacs.xyz",
 }
 # These serve raw content below /raw, the rest is what github.com serves
 GITHUB_MIRRORS = ("ghrp.hacs.vip", "ghrp2.hacs.vip")
@@ -86,6 +87,11 @@ def _fixture_key(url: URL) -> str:
     """
     host = MIRRORED_HOSTS.get(url.host, url.host)
     path = url.path
+
+    # A public proxy takes the full URL as its path
+    if host == "gh-proxy.org":
+        proxied = URL(path.removeprefix("/"))
+        host, path = proxied.host, proxied.path
     if host in GITHUB_MIRRORS:
         host = "github.com"
         if path.startswith("/raw/"):

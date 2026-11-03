@@ -97,15 +97,29 @@ GITHUB = DownloadProfile(
     },
 )
 
-# The mirrors serve the same paths as GitHub, raw content below /raw
+# The mirrors serve the same paths as GitHub, raw content below /raw. A public
+# third-party proxy is the last resort for downloads, it takes the full URL.
 CHINA_MIRRORS = DownloadProfile(
     id="hasscn",
     operator="the Home Assistant China community (hasscn.top)",
     api="https://ghapi.hacs.vip",
-    github=("https://ghrp2.hacs.vip", "https://ghrp.hacs.vip"),
-    raw=("https://ghrp2.hacs.vip/raw", "https://ghrp.hacs.vip/raw"),
-    # The mirror of the catalog can lag behind, the original is the fallback
-    catalog=("https://data-v2.hacs.vip", "https://data-v2.hacs.xyz"),
+    github=(
+        "https://ghrp2.hacs.vip",
+        "https://ghrp.hacs.vip",
+        "https://gh-proxy.org/https://github.com",
+    ),
+    raw=(
+        "https://ghrp2.hacs.vip/raw",
+        "https://ghrp.hacs.vip/raw",
+        "https://gh-proxy.org/https://raw.githubusercontent.com",
+    ),
+    # data-v2.hasscn.top only answers requests that carry the User-Agent of
+    # the Marketplace. The original is the last fallback.
+    catalog=(
+        "https://data-v2.hasscn.top",
+        "https://data-v2.hacs.vip",
+        "https://data-v2.hacs.xyz",
+    ),
     countries=frozenset({"CN"}),
 )
 
