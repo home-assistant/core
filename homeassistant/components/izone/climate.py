@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 import logging
+import math
 from typing import TYPE_CHECKING, Any, override
 
 from pizone import Controller, Zone
@@ -49,15 +50,18 @@ _IZONE_FAN_TO_HA = {
 ATTR_CONTROL_ZONE_SOURCE = "control_zone_source"
 
 
-def _validate_setpoint_step(temp: float) -> None:
-    """Reject setpoints the bridge cannot represent."""
-    # The climate service only enforces min/max, not the step.
-    if temp % PRECISION_HALVES:
+def _normalize_setpoint(temp: float) -> float:
+    """Snap a setpoint to the bridge's 0.5 °C step, rejecting off-step values."""
+    # The climate service only enforces min/max, not the step. Unit conversion
+    # leaves float noise (74.3 °F -> 23.499999999999996 °C), so allow a tolerance.
+    rounded = round(temp / PRECISION_HALVES) * PRECISION_HALVES
+    if not math.isclose(temp, rounded, abs_tol=1e-6):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_temperature_step",
             translation_placeholders={"value": f"{temp:g}"},
         )
+    return rounded
 
 
 async def async_setup_entry(
@@ -363,7 +367,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
             self.async_schedule_update_ha_state(True)
             return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            _validate_setpoint_step(temp)
+            temp = _normalize_setpoint(temp)
             await self._async_run_and_update(self.controller.set_temp_setpoint(temp))
 
     @override
@@ -513,7 +517,7 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
         if self._zone.mode is not Zone.Mode.AUTO:
             return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            _validate_setpoint_step(temp)
+            temp = _normalize_setpoint(temp)
             await self._async_run_and_update(self._zone.set_temp_setpoint(temp))
 
     @override
