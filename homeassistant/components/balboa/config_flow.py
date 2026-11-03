@@ -96,10 +96,9 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
             data = {CONF_HOST: self._host}
             return self.async_create_entry(title=self._model, data=data)
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders={CONF_HOST: self._host},
+            description_placeholders={"host": self._host},
         )
 
     @override

@@ -336,22 +336,43 @@ async def test_control_zone_source_controller_owner(
     assert entity.attributes[ATTR_TEMPERATURE] == 24.0
 
 
+@pytest.mark.parametrize(
+    "zone_ctrl",
+    [
+        pytest.param(99, id="unmatched_index"),
+        pytest.param(None, id="missing_ctrlzone"),
+    ],
+)
 async def test_control_zone_source_unmatched_owner(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
+    zone_ctrl: int | None,
 ) -> None:
-    """Source is omitted when no owner matches."""
+    """Source is omitted when no owner matches; current uses return air."""
+    mock_controller.zone_ctrl = zone_ctrl
     mock_controller.control_setpoint_owner = None
     mock_controller.control_setpoint = None
+    mock_controller.temp_return = 21.0
     await setup_integration(hass, mock_config_entry)
 
     entity = hass.states.get(CONTROLLER_ENTITY)
     assert entity is not None
     assert ATTR_CONTROL_ZONE_SOURCE not in entity.attributes
+    assert entity.attributes["control_zone"] == zone_ctrl
+    assert entity.attributes["control_zone_name"] is None
+    assert entity.attributes["control_zone_setpoint"] is None
+    assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
 
 
+@pytest.mark.parametrize(
+    "disabled_by",
+    [
+        pytest.param(None, id="enabled_zone"),
+        pytest.param(er.RegistryEntryDisabler.USER, id="disabled_zone"),
+    ],
+)
 async def test_control_zone_source_follows_entity_id_rename(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -360,8 +381,16 @@ async def test_control_zone_source_follows_entity_id_rename(
     mock_zones: list[Mock],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    disabled_by: er.RegistryEntryDisabler | None,
 ) -> None:
     """Source tracks the zone climate entity_id after a rename."""
+    entity_registry.async_get_or_create(
+        CLIMATE_DOMAIN,
+        DOMAIN,
+        "000000001_z1",
+        suggested_object_id="living_room",
+        disabled_by=disabled_by,
+    )
     mock_controller.control_setpoint_owner = mock_zones[0]
     mock_controller.control_setpoint = mock_zones[0].temp_setpoint
     await setup_integration(hass, mock_config_entry)

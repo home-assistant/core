@@ -453,8 +453,8 @@ class IssueRegistry(BaseRegistry):
         return issue
 
     @callback
-    @verify_event_loop_thread("issue_registry.async_begin_refresh")
-    def async_begin_refresh(
+    @verify_event_loop_thread("issue_registry.async_refresh_issues")
+    def async_refresh_issues(
         self,
         domain: str,
         *,
@@ -462,7 +462,7 @@ class IssueRegistry(BaseRegistry):
         issue_ids: Iterable[str] | None = None,
         config_entry_id: str | None = None,
     ) -> IssuesRefresh:
-        """Begin a refresh of a set of issues, see async_begin_issues_refresh."""
+        """Begin a refresh of a set of issues, see the async_refresh_issues helper."""
         if issue_id_pattern is not None and issue_ids is not None:
             raise ValueError("At most one of issue_id_pattern and issue_ids is allowed")
         if issue_ids is not None:
@@ -698,7 +698,7 @@ def delete_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None:
 
 
 @callback
-def async_begin_issues_refresh(
+def async_refresh_issues(
     hass: HomeAssistant,
     domain: str,
     *,
@@ -720,7 +720,7 @@ def async_begin_issues_refresh(
     The returned object is a context manager which finishes the refresh on a clean
     exit and cancels it if an exception is raised.
     """
-    return async_get(hass).async_begin_refresh(
+    return async_get(hass).async_refresh_issues(
         domain,
         issue_id_pattern=issue_id_pattern,
         issue_ids=issue_ids,

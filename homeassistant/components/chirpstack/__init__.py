@@ -44,7 +44,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ChirpStackConfigEntry) -
     try:
         await connection.async_connect()
         unregister = await lorawan.async_register_connection(
-            hass, entry, connection=connection
+            hass,
+            entry,
+            connection=connection,
+            configuration_url=f"{entry.data[CONF_ENDPOINT]}/",
         )
     except AuthenticationError as error:
         await connection.close()

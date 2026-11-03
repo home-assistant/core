@@ -1,5 +1,6 @@
 """Constants for the Alert integration."""
 
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Final
 
@@ -25,3 +26,11 @@ CONF_DATA = "data"
 
 DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
+
+
+class AlertService(StrEnum):
+    """Store keys for Alert services."""
+
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"

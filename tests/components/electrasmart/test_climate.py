@@ -40,8 +40,9 @@ from homeassistant.helpers.entity_component import async_update_entity
 ENTITY_ID = "climate.living_room"
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_turn_on_keeps_the_mode_the_ac_was_last_running_in(
-    hass: HomeAssistant, mock_api: Mock, mock_device: Mock, setup_integration: None
+    hass: HomeAssistant, mock_api: Mock, mock_device: Mock
 ) -> None:
     """Turning on must not force a mode on the device."""
     await hass.services.async_call(
@@ -53,8 +54,9 @@ async def test_turn_on_keeps_the_mode_the_ac_was_last_running_in(
     mock_api.set_state.assert_awaited_once_with(mock_device)
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_turn_on_falls_back_to_cool_when_no_mode_can_be_restored(
-    hass: HomeAssistant, mock_api: Mock, mock_device: Mock, setup_integration: None
+    hass: HomeAssistant, mock_api: Mock, mock_device: Mock
 ) -> None:
     """A unit that reports no previous mode must still turn on."""
     mock_device.turn_on = Mock(return_value=False)
@@ -68,8 +70,9 @@ async def test_turn_on_falls_back_to_cool_when_no_mode_can_be_restored(
     mock_api.set_state.assert_awaited_once_with(mock_device)
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_turn_off_turns_the_device_off(
-    hass: HomeAssistant, mock_api: Mock, mock_device: Mock, setup_integration: None
+    hass: HomeAssistant, mock_api: Mock, mock_device: Mock
 ) -> None:
     """Turning off goes through set_hvac_mode, which calls turn_off()."""
     await hass.services.async_call(
@@ -80,8 +83,9 @@ async def test_turn_off_turns_the_device_off(
     mock_api.set_state.assert_awaited_once_with(mock_device)
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_set_hvac_mode_still_selects_the_requested_mode(
-    hass: HomeAssistant, mock_api: Mock, mock_device: Mock, setup_integration: None
+    hass: HomeAssistant, mock_api: Mock, mock_device: Mock
 ) -> None:
     """Explicitly picking a mode must keep working."""
     await hass.services.async_call(
@@ -96,8 +100,9 @@ async def test_set_hvac_mode_still_selects_the_requested_mode(
     mock_api.set_state.assert_awaited_once_with(mock_device)
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_set_fan_mode(
-    hass: HomeAssistant, mock_api: Mock, mock_device: Mock, setup_integration: None
+    hass: HomeAssistant, mock_api: Mock, mock_device: Mock
 ) -> None:
     """Setting a fan mode sends the new speed to the API."""
     await hass.services.async_call(
@@ -111,8 +116,9 @@ async def test_set_fan_mode(
     mock_api.set_state.assert_awaited_once_with(mock_device)
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_set_temperature(
-    hass: HomeAssistant, mock_api: Mock, mock_device: Mock, setup_integration: None
+    hass: HomeAssistant, mock_api: Mock, mock_device: Mock
 ) -> None:
     """Setting a target temperature sends it to the API."""
     await hass.services.async_call(
@@ -135,11 +141,11 @@ async def test_set_temperature(
         (SWING_OFF, False, False),
     ],
 )
+@pytest.mark.usefixtures("setup_integration")
 async def test_set_swing_mode(
     hass: HomeAssistant,
     mock_api: Mock,
     mock_device: Mock,
-    setup_integration: None,
     swing_mode: str,
     horizontal: bool,
     vertical: bool,
@@ -160,11 +166,11 @@ async def test_set_swing_mode(
 @pytest.mark.parametrize(
     ("preset_mode", "shabat"), [(PRESET_SHABAT, True), (PRESET_NONE, False)]
 )
+@pytest.mark.usefixtures("setup_integration")
 async def test_set_preset_mode(
     hass: HomeAssistant,
     mock_api: Mock,
     mock_device: Mock,
-    setup_integration: None,
     preset_mode: str,
     shabat: bool,
 ) -> None:
@@ -180,9 +186,8 @@ async def test_set_preset_mode(
     mock_api.set_state.assert_awaited_once_with(mock_device)
 
 
-async def test_command_failure_raises(
-    hass: HomeAssistant, mock_api: Mock, setup_integration: None
-) -> None:
+@pytest.mark.usefixtures("setup_integration")
+async def test_command_failure_raises(hass: HomeAssistant, mock_api: Mock) -> None:
     """A failing command surfaces as a Home Assistant error."""
     mock_api.set_state = AsyncMock(side_effect=ElectraApiError("Failed to set state"))
 
@@ -197,9 +202,8 @@ async def test_command_failure_raises(
         )
 
 
-async def test_rejected_command_raises(
-    hass: HomeAssistant, mock_api: Mock, setup_integration: None
-) -> None:
+@pytest.mark.usefixtures("setup_integration")
+async def test_rejected_command_raises(hass: HomeAssistant, mock_api: Mock) -> None:
     """A command the API refuses surfaces as a Home Assistant error."""
     mock_api.set_state = AsyncMock(return_value={"status": 1, "data": {"res": 0}})
 
@@ -214,17 +218,17 @@ async def test_rejected_command_raises(
         )
 
 
-async def test_update_polls_the_cloud(
-    hass: HomeAssistant, mock_api: Mock, setup_integration: None
-) -> None:
+@pytest.mark.usefixtures("setup_integration")
+async def test_update_polls_the_cloud(hass: HomeAssistant, mock_api: Mock) -> None:
     """A scheduled update asks the API for the latest telemetry."""
     await async_update_entity(hass, ENTITY_ID)
 
     mock_api.get_last_telemtry.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_update_is_skipped_right_after_a_command(
-    hass: HomeAssistant, mock_api: Mock, setup_integration: None
+    hass: HomeAssistant, mock_api: Mock
 ) -> None:
     """A command is not followed by a poll, as the API lags behind it."""
     await hass.services.async_call(
@@ -245,10 +249,10 @@ async def test_update_is_skipped_right_after_a_command(
         (False, False, SWING_OFF),
     ],
 )
+@pytest.mark.usefixtures("setup_integration")
 async def test_swing_mode_reflects_the_device(
     hass: HomeAssistant,
     mock_device: Mock,
-    setup_integration: None,
     horizontal: bool,
     vertical: bool,
     expected: str,
@@ -262,10 +266,10 @@ async def test_swing_mode_reflects_the_device(
     assert hass.states.get(ENTITY_ID).attributes[ATTR_SWING_MODE] == expected
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_unavailable_device_warns_once_and_recovers(
     hass: HomeAssistant,
     mock_device: Mock,
-    setup_integration: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """An offline AC is unavailable, and the warning is logged once per outage."""
@@ -293,10 +297,10 @@ async def test_unavailable_device_warns_once_and_recovers(
     assert "is now available" in caplog.text
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_update_failure_keeps_the_old_state(
     hass: HomeAssistant,
     mock_api: Mock,
-    setup_integration: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A failed poll keeps the last known state and logs the failure."""
@@ -309,3 +313,32 @@ async def test_update_failure_keeps_the_old_state(
     assert "Failed to get climate.living_room state" in caplog.text
     assert "Failed to retrieve telemetry" in caplog.text
     assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 22
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_failed_updates_are_counted_until_the_next_success(
+    hass: HomeAssistant,
+    mock_api: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Consecutive failures are counted, and a successful poll resets the count."""
+    failure = AsyncMock(side_effect=ElectraApiError("Failed to retrieve telemetry"))
+    mock_api.get_last_telemtry = failure
+
+    await async_update_entity(hass, ENTITY_ID)
+    await async_update_entity(hass, ENTITY_ID)
+
+    assert "try #2 since last success" in caplog.text
+
+    caplog.clear()
+    mock_api.get_last_telemtry = AsyncMock()
+
+    await async_update_entity(hass, ENTITY_ID)
+
+    assert "Failed to get" not in caplog.text
+
+    mock_api.get_last_telemtry = failure
+
+    await async_update_entity(hass, ENTITY_ID)
+
+    assert "try #1 since last success" in caplog.text

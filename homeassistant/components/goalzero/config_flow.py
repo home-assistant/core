@@ -53,12 +53,11 @@ class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
-                CONF_HOST: self._discovered_ip,
-                CONF_NAME: DEFAULT_NAME,
+                "host": self._discovered_ip,
+                "name": DEFAULT_NAME,
             },
         )
 

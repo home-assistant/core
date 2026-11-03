@@ -1,7 +1,7 @@
 """Support for Axis camera streaming."""
 
 from typing import override
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
@@ -92,8 +92,10 @@ class AxisCamera(AxisEntity, MjpegCamera):
         )
 
         stream_options = self.generate_options(add_video_codec_h264=True)
+        username = quote(self.hub.config.username, safe="")
+        password = quote(self.hub.config.password, safe="")
         self._stream_source = (
-            f"rtsp://{self.hub.config.username}:{self.hub.config.password}"
+            f"rtsp://{username}:{password}"
             f"@{self.hub.config.host}/axis-media/media.amp{stream_options}"
         )
 
@@ -135,6 +137,10 @@ class AxisCamera(AxisEntity, MjpegCamera):
 
         if self.hub.config.video_source != DEFAULT_VIDEO_SOURCE:
             options_dict["camera"] = self.hub.config.video_source
+
+        # Companion devices reject media requests without this parameter
+        if self.hub.api.config.is_companion:
+            options_dict["Axis-Orig-Sw"] = "true"
 
         if not options_dict:
             return ""

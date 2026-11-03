@@ -26,6 +26,51 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "beep_enabled": {
+        "name": "Beep enabled"
+      },
+      "running": {
+        "name": "Running"
+      },
+      "screen_locked": {
+        "name": "Screen locked"
+      },
+      "shutoff_valve": {
+        "name": "Shutoff valve"
+      }
+    },
+    "sensor": {
+      "alert_count": {
+        "name": "Alert count"
+      },
+      "available_hot_water": {
+        "name": "Available hot water"
+      },
+      "compressor_health": {
+        "name": "Compressor health"
+      },
+      "override_status": {
+        "name": "Override status"
+      },
+      "power_usage_today": {
+        "name": "Energy usage today"
+      },
+      "running_state": {
+        "name": "Running state"
+      },
+      "tank_health": {
+        "name": "Tank health"
+      },
+      "water_usage_today": {
+        "name": "Water usage today"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      }
+    }
+  },
   "exceptions": {
     "invalid_credentials": {
       "message": "Invalid credentials provided"

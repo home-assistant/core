@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, EVOHOME_DATA, EvoService
+from .const import DOMAIN, EVOHOME_DATA, NEXT_SP_FROM, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
 from .helpers import as_snake_case
@@ -189,12 +189,10 @@ class EvoZone(EvoChild, EvoClimateEntity):
         if duration is None:
             until = None  # indefinitely
         elif duration.total_seconds() == 0:
-            await self._update_schedule()
-            until = self.setpoints.get("next_sp_from")
+            await self.coordinator.async_ensure_schedule(self._evo_device)
+            until = self.setpoints.get(NEXT_SP_FROM)
         else:
-            until = dt_util.now() + duration
-
-        until = dt_util.as_utc(until) if until else None
+            until = dt_util.utcnow() + duration
 
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
@@ -260,10 +258,9 @@ class EvoZone(EvoChild, EvoClimateEntity):
             if self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:
                 until = self._evo_device.until
             if self._evo_device.mode == EvoZoneMode.FOLLOW_SCHEDULE:
-                await self._update_schedule()
-                until = self.setpoints.get("next_sp_from")
+                await self.coordinator.async_ensure_schedule(self._evo_device)
+                until = self.setpoints.get(NEXT_SP_FROM)
 
-        until = dt_util.as_utc(until) if until else None
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
@@ -303,15 +300,14 @@ class EvoZone(EvoChild, EvoClimateEntity):
             return
 
         if evo_preset_mode == EvoZoneMode.TEMPORARY_OVERRIDE:
-            await self._update_schedule()
-            until = self.setpoints.get("next_sp_from")
+            await self.coordinator.async_ensure_schedule(self._evo_device)
+            until = self.setpoints.get(NEXT_SP_FROM)
         else:  # EvoZoneMode.PERMANENT_OVERRIDE
             until = None
 
         temperature = self._evo_device.target_heat_temperature
         assert temperature is not None  # mypy check
 
-        until = dt_util.as_utc(until) if until else None
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
@@ -382,7 +378,7 @@ class EvoController(EvoClimateEntity):
         if period is not None:
             timing_mode, until = SZ_PERIOD, dt_util.start_of_local_day() + period
         elif duration is not None:
-            timing_mode, until = SZ_DURATION, dt_util.now() + duration
+            timing_mode, until = SZ_DURATION, dt_util.utcnow() + duration
 
         if timing_mode is not None:
             if not mode_info[SZ_CAN_BE_TEMPORARY]:

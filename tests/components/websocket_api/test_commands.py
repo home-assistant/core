@@ -4406,6 +4406,10 @@ async def test_extract_from_target(
         areas={label_area.id},
     )
 
+    # A target which only has an exclude block is accepted while editing
+    msg = await call_command({"exclude": {"entity_id": ["light.direct"]}})
+    _assert_extract_from_target_command_result(msg)
+
 
 async def test_extract_from_target_expand_group(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket

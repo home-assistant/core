@@ -142,7 +142,6 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             discovery_info.vid,
             discovery_info.pid,
         )
-        self._set_confirm_only()
         self.context["title_placeholders"] = {
             CONF_NAME: f"Insteon PLM {self._device_name}"
         }
@@ -158,7 +157,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm_usb",
-            description_placeholders={CONF_NAME: self._device_name},
+            description_placeholders={"name": self._device_name},
         )
 
     @override
