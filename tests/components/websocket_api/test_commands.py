@@ -4596,13 +4596,13 @@ async def test_extract_from_target_validation_error(
     assert "error" in msg
 
 
-async def test_explain_target_exclude(
+async def test_explain_target(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test explain_target_exclude command."""
+    """Test explain_target command."""
     kitchen = area_registry.async_create("Kitchen")
     in_kitchen = entity_registry.async_get_or_create("light", "test", "unique1")
     entity_registry.async_update_entity(in_kitchen.entity_id, area_id=kitchen.id)
@@ -4610,7 +4610,7 @@ async def test_explain_target_exclude(
 
     await websocket_client.send_json_auto_id(
         {
-            "type": "explain_target_exclude",
+            "type": "explain_target",
             "target": {
                 "area_id": [kitchen.id],
                 "entity_id": [other.entity_id],
@@ -4646,16 +4646,16 @@ async def test_explain_target_exclude(
     }
 
 
-async def test_explain_target_exclude_all_entities(
+async def test_explain_target_all_entities(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
-    """Test explain_target_exclude command when all entities are targeted."""
+    """Test explain_target command when all entities are targeted."""
     hass.states.async_set("light.kitchen", "on")
     hass.states.async_set("light.hallway", "on")
 
     await websocket_client.send_json_auto_id(
         {
-            "type": "explain_target_exclude",
+            "type": "explain_target",
             "target": {"entity_id": "all", "exclude": {"entity_id": "light.kitchen"}},
         }
     )
@@ -4681,14 +4681,14 @@ async def test_explain_target_exclude_all_entities(
     }
 
 
-async def test_explain_target_exclude_filters_unreadable_entities(
+async def test_explain_target_filters_unreadable_entities(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test explain_target_exclude only returns entities the user can read."""
+    """Test explain_target only returns entities the user can read."""
     hass_admin_user.groups = []
     hass_admin_user.mock_policy({"entities": {"entity_ids": {"light.permitted": True}}})
 
@@ -4704,7 +4704,7 @@ async def test_explain_target_exclude_filters_unreadable_entities(
 
     await websocket_client.send_json_auto_id(
         {
-            "type": "explain_target_exclude",
+            "type": "explain_target",
             "target": {
                 "area_id": [kitchen.id],
                 "entity_id": ["light.not_permitted"],

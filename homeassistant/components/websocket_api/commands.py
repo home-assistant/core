@@ -116,7 +116,7 @@ def async_register_commands(
     async_reg(hass, handle_call_service)
     async_reg(hass, handle_entity_source)
     async_reg(hass, handle_execute_script)
-    async_reg(hass, handle_explain_target_exclude)
+    async_reg(hass, handle_explain_target)
     async_reg(hass, handle_extract_from_target)
     async_reg(hass, handle_fire_event)
     async_reg(hass, handle_get_conditions_for_target)
@@ -970,17 +970,17 @@ def handle_extract_from_target(
 @callback
 @decorators.websocket_command(
     {
-        probatio.Required("type"): "explain_target_exclude",
+        probatio.Required("type"): "explain_target",
         probatio.Required("target"): cv.ENTITY_SERVICE_FIELDS,
         probatio.Optional("expand_group", default=True): bool,
         probatio.Optional("primary_entities_only", default=True): bool,
     }
 )
-def handle_explain_target_exclude(
+def handle_explain_target(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle explain target exclude command."""
-    explanation = target_helpers.async_explain_exclude(
+    """Handle explain target command."""
+    explanation = target_helpers.async_explain_target(
         hass,
         target_helpers.TargetSelection(msg["target"]),
         expand_group=msg["expand_group"],

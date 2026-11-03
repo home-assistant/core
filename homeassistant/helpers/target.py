@@ -439,8 +439,8 @@ class ExcludeEffect:
 
 
 @dataclasses.dataclass(slots=True)
-class ExcludeExplanation:
-    """How the exclude block of a target selection affects its items."""
+class TargetExplanation:
+    """What the items of a target selection resolve to and the exclude takes out."""
 
     includes: list[TargetItemEntities]
     excludes: list[ExcludeEffect]
@@ -458,14 +458,14 @@ def _iter_target_items(
 
 
 @callback
-def async_explain_exclude(
+def async_explain_target(
     hass: HomeAssistant,
     target_selection: TargetSelection,
     expand_group: bool = True,
     *,
     primary_entities_only: bool = True,
-) -> ExcludeExplanation:
-    """Explain which entities each exclude takes out of each targeted item.
+) -> TargetExplanation:
+    """Explain what each targeted item resolves to and what each exclude takes out.
 
     Items are resolved the same way as async_extract_referenced_entity_ids
     resolves the whole target selection, so the union of what is reported here
@@ -487,7 +487,7 @@ def async_explain_exclude(
         includes.append(TargetItemEntities(item_type, item_id, entities))
 
     if target_selection.exclude is None:
-        return ExcludeExplanation(includes, [])
+        return TargetExplanation(includes, [])
 
     excludes: list[ExcludeEffect] = []
     for item_type, item_id, selection in _iter_target_items(target_selection.exclude):
@@ -501,7 +501,7 @@ def async_explain_exclude(
                 )
         excludes.append(effect)
 
-    return ExcludeExplanation(includes, excludes)
+    return TargetExplanation(includes, excludes)
 
 
 class TargetEntityChangeTracker(abc.ABC):

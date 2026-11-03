@@ -747,7 +747,7 @@ async def test_extract_excluded_entity_ids(
 
 
 @pytest.mark.usefixtures("registries_mock")
-async def test_explain_exclude(hass: HomeAssistant) -> None:
+async def test_explain_target(hass: HomeAssistant) -> None:
     """Test explaining what each exclude takes out of each targeted item."""
     target_selection = target.TargetSelection(
         {
@@ -760,9 +760,9 @@ async def test_explain_exclude(hass: HomeAssistant) -> None:
             },
         }
     )
-    assert target.async_explain_exclude(
+    assert target.async_explain_target(
         hass, target_selection
-    ) == target.ExcludeExplanation(
+    ) == target.TargetExplanation(
         includes=[
             target.TargetItemEntities(
                 "entity", "light.hidden_in_area", {"light.hidden_in_area"}
@@ -805,11 +805,11 @@ async def test_explain_exclude(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("registries_mock")
-async def test_explain_exclude_without_exclude(hass: HomeAssistant) -> None:
+async def test_explain_target_without_exclude(hass: HomeAssistant) -> None:
     """Test explaining a target selection without an exclude block."""
-    assert target.async_explain_exclude(
+    assert target.async_explain_target(
         hass, target.TargetSelection({ATTR_DEVICE_ID: "device-no-area-id"})
-    ) == target.ExcludeExplanation(
+    ) == target.TargetExplanation(
         includes=[
             target.TargetItemEntities("device", "device-no-area-id", {"light.no_area"})
         ],
@@ -818,10 +818,10 @@ async def test_explain_exclude_without_exclude(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("registries_mock")
-async def test_explain_exclude_all_entities(hass: HomeAssistant) -> None:
+async def test_explain_target_all_entities(hass: HomeAssistant) -> None:
     """Test explaining an exclude when all entities are targeted."""
     hass.states.async_set("light.in_area", STATE_ON)
-    explanation = target.async_explain_exclude(
+    explanation = target.async_explain_target(
         hass,
         target.TargetSelection(
             {ATTR_ENTITY_ID: "all", CONF_EXCLUDE: {ATTR_AREA_ID: "test-area"}}
@@ -860,7 +860,7 @@ async def test_explain_exclude_all_entities(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.usefixtures("registries_mock")
-async def test_explain_exclude_expand_group(
+async def test_explain_target_expand_group(
     hass: HomeAssistant,
     expand_group: bool,
     expected_removed: list[target.TargetItemEntities],
@@ -872,7 +872,7 @@ async def test_explain_exclude_expand_group(
     await platform.async_add_entities([direct_group])
     await hass.async_block_till_done()
 
-    explanation = target.async_explain_exclude(
+    explanation = target.async_explain_target(
         hass,
         target.TargetSelection(
             {
