@@ -6,7 +6,7 @@ import logging
 import os
 from pathlib import Path, PurePath
 from typing import Any
-from unittest.mock import AsyncMock, Mock, PropertyMock, call, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorBadRequestError, SupervisorError
@@ -359,11 +359,6 @@ async def test_setup_onboarding_supervisor_no_update(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch("homeassistant.components.hassio.async_is_onboarded", return_value=False),
-        patch(
-            "homeassistant.components.hassio.AutoUpdateManager.unavailable_reason",
-            new_callable=PropertyMock,
-            return_value=None,
-        ),
     ):
         result = await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
@@ -374,6 +369,49 @@ async def test_setup_onboarding_supervisor_no_update(
     assert entry.state is ConfigEntryState.LOADED
     assert entry.options[OPTION_CORE_AUTO_UPDATE] is True
     supervisor_client.supervisor.update.assert_called_once()
+
+
+async def test_setup_onboarding_preserves_explicit_auto_update_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test onboarding does not override an explicit automatic update opt-out."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={OPTION_CORE_AUTO_UPDATE: False},
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch("homeassistant.components.hassio.async_is_onboarded", return_value=False),
+    ):
+        result = await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert result
+    assert entry.options[OPTION_CORE_AUTO_UPDATE] is False
+
+
+async def test_setup_onboarded_preserves_unset_auto_update_option(
+    hass: HomeAssistant,
+) -> None:
+    """Test existing installations are not given the new-install default."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={}, options={}, unique_id=DOMAIN
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch("homeassistant.components.hassio.async_is_onboarded", return_value=True),
+    ):
+        result = await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert result
+    assert OPTION_CORE_AUTO_UPDATE not in entry.options
 
 
 async def test_setup_onboarding_supervisor_update_error(
