@@ -43,7 +43,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: The integration has no options flow.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable:
@@ -59,12 +59,12 @@ rules:
   discovery-update-info: done
   discovery: done
   docs-data-update: todo
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices: todo
+  docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Each config entry is a single device.
