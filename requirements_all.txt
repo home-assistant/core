@@ -640,7 +640,7 @@ asyncsleepiq==1.7.2
 asyncssh==2.24.0
 
 # homeassistant.components.atomberg
-atomberg-api==0.1.0
+atomberg-api==0.1.1
 
 # homeassistant.components.aurora
 auroranoaa==0.0.5
