@@ -1,6 +1,8 @@
 """The tests for the london_air platform."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
+from typing import Any
 from unittest.mock import AsyncMock
 
 from pylondonair import (
@@ -13,6 +15,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.london_air.const import CONF_LOCATIONS, DOMAIN
+from homeassistant.components.london_air.sensor import async_setup_platform
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -180,5 +183,42 @@ async def test_multiple_yaml_blocks_merge_locations(
     assert len(entries) == 1
     assert set(entries[0].data[CONF_LOCATIONS]) == {"Merton", "Barnet"}
 
+    assert hass.states.get("sensor.merton") is not None
+    assert hass.states.get("sensor.barnet") is not None
+
+
+async def test_concurrent_yaml_imports_merge_locations(
+    hass: HomeAssistant,
+    london_air_data: LondonAirData,
+    mock_london_air_client: AsyncMock,
+) -> None:
+    """Test that concurrently imported YAML blocks still merge into one entry."""
+    mock_london_air_client.async_update.return_value = london_air_data
+
+    async def test_connection() -> None:
+        await asyncio.sleep(0)
+
+    mock_london_air_client.async_test_connection.side_effect = test_connection
+
+    async def add_entities(entities: Any) -> None:
+        pass
+
+    await asyncio.gather(
+        async_setup_platform(
+            hass,
+            {"platform": "london_air", "locations": ["Merton"]},
+            add_entities,
+        ),
+        async_setup_platform(
+            hass,
+            {"platform": "london_air", "locations": ["Barnet"]},
+            add_entities,
+        ),
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert set(entries[0].data[CONF_LOCATIONS]) == {"Merton", "Barnet"}
     assert hass.states.get("sensor.merton") is not None
     assert hass.states.get("sensor.barnet") is not None
