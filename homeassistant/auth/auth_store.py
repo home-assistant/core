@@ -40,8 +40,7 @@ INITIAL_LOAD_SAVE_DELAY = 300
 
 DEFAULT_SAVE_DELAY = 1
 
-# Each save postpones any pending one, so a frequently used long-lived access
-# token must not schedule a save on every request.
+# Limits auth store writes caused by frequently used long-lived access tokens.
 LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL = timedelta(minutes=1)
 
 
@@ -65,6 +64,7 @@ class AuthStore:
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._token_id_to_user_id: dict[str, str] = {}
+        self._usage_save_pending = False
 
     async def async_get_groups(self) -> list[models.Group]:
         """Retrieve all users."""
@@ -296,14 +296,20 @@ class AuthStore:
     ) -> None:
         """Update long-lived access token last used information."""
         now = dt_util.utcnow()
+        # The access token is created without an IP, so its first use is always recorded
         if (
-            refresh_token.last_used_at is not None
+            refresh_token.last_used_ip == remote_ip
+            and refresh_token.last_used_at is not None
             and now - refresh_token.last_used_at
             < LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL
         ):
             return
         refresh_token.last_used_at = now
         refresh_token.last_used_ip = remote_ip
+        # A pending save collects the data when writing, rescheduling would postpone it
+        if self._usage_save_pending:
+            return
+        self._usage_save_pending = True
         self._async_schedule_save()
 
     @callback
@@ -540,6 +546,7 @@ class AuthStore:
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return the data to store."""
+        self._usage_save_pending = False
         users = [
             {
                 "id": user.id,

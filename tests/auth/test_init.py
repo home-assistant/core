@@ -886,19 +886,28 @@ async def test_log_access_token_usage_long_lived_access_token(
         token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     )
     manager.async_create_access_token(refresh_token)
-    created_at = refresh_token.last_used_at
+
+    # Creating the access token logs usage, but the first use is still recorded
+    freezer.tick(timedelta(seconds=1))
+    manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
+    first_used_at = dt_util.utcnow()
+    assert refresh_token.last_used_at == first_used_at
+    assert refresh_token.last_used_ip == "192.168.0.1"
 
     freezer.tick(
         auth_store.LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL - timedelta(seconds=1)
     )
     manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
-    assert refresh_token.last_used_at == created_at
-    assert refresh_token.last_used_ip is None
+    assert refresh_token.last_used_at == first_used_at
 
-    freezer.tick(timedelta(seconds=1))
-    manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
+    # A different IP is recorded within the interval
+    manager.async_log_access_token_usage(refresh_token, "192.168.0.2")
     assert refresh_token.last_used_at == dt_util.utcnow()
-    assert refresh_token.last_used_ip == "192.168.0.1"
+    assert refresh_token.last_used_ip == "192.168.0.2"
+
+    freezer.tick(auth_store.LONG_LIVED_ACCESS_TOKEN_USAGE_INTERVAL)
+    manager.async_log_access_token_usage(refresh_token, "192.168.0.2")
+    assert refresh_token.last_used_at == dt_util.utcnow()
     assert refresh_token.expire_at is None
 
     await flush_store(manager._store._store)
@@ -906,7 +915,43 @@ async def test_log_access_token_usage_long_lived_access_token(
     await store2.async_load()
     stored_token = store2.async_get_refresh_token(refresh_token.id)
     assert stored_token.last_used_at == refresh_token.last_used_at
-    assert stored_token.last_used_ip == "192.168.0.1"
+    assert stored_token.last_used_ip == "192.168.0.2"
+
+
+async def test_log_access_token_usage_does_not_postpone_pending_save(
+    hass: HomeAssistant,
+) -> None:
+    """Test logging token usage doesn't postpone an already pending save."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    token_1 = await manager.async_create_refresh_token(
+        user,
+        client_name="Script 1",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    token_2 = await manager.async_create_refresh_token(
+        user,
+        client_name="Script 2",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    store = manager._store._store
+    await flush_store(store)
+
+    with patch.object(
+        store, "async_delay_save", wraps=store.async_delay_save
+    ) as mock_delay_save:
+        manager.async_log_access_token_usage(token_1, "192.168.0.1")
+        manager.async_log_access_token_usage(token_2, "192.168.0.2")
+        assert mock_delay_save.call_count == 1
+
+        await flush_store(store)
+        manager.async_log_access_token_usage(token_1, "192.168.0.3")
+        assert mock_delay_save.call_count == 2
+
+    # The pending save picked up the usage logged after scheduling it
+    store2 = auth_store.AuthStore(hass)
+    await store2.async_load()
+    assert store2.async_get_refresh_token(token_2.id).last_used_ip == "192.168.0.2"
 
 
 async def test_log_access_token_usage_ignores_normal_token(
