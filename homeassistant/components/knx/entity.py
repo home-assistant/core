@@ -212,16 +212,14 @@ class _KnxEntityBase(Entity):
                         and isinstance(update.telegram.payload, GroupValueWrite)
                     )
                 )
-                if (
-                    can_attribute
-                    and old_state is not None
-                    and state is not None
-                    and old_state.state != state
-                ):
-                    # Log the origin before the state event for live Activity.
-                    context.async_log(self.hass)
-                # Eligibility is per entity; event deduplication is per telegram.
-                if not can_attribute or not context.logged:
+                if can_attribute and old_state is not None and state is not None:
+                    if old_state.state != state:
+                        # Log the origin before the state event for live Activity.
+                        context.async_log(self.hass)
+                    elif old_state.context is not context:
+                        # Another entity logging this telegram does not attribute ours.
+                        context = Context()
+                else:
                     context = Context()
             if isinstance(device, XknxCover) and not update.from_state_address:
                 self._travel_context = context

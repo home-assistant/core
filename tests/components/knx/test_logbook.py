@@ -604,3 +604,45 @@ async def test_cover_late_feedback_recorded_activity(
         assert len(entries) == 1, response
         assert entries[0]["context_name"] == "1.1.23"
         assert entries[0]["context_event_type"] == EVENT_KNX_STATE_CHANGED
+
+
+@pytest.mark.parametrize("first_entity", ["cover.test", "light.test"])
+async def test_shared_telegram_attribute_only_context(
+    hass: HomeAssistant, knx: KNXTestKit, first_entity: str
+) -> None:
+    """Another entity's event must not attribute an attribute-only update."""
+    await knx.setup_integration(
+        {
+            "cover": {
+                "name": "test",
+                "move_long_address": "2/0/1",
+                "position_state_address": "1/1/3",
+            },
+            "light": {
+                "name": "test",
+                "address": "1/1/1",
+                "brightness_address": "1/1/3",
+            },
+        },
+        state_updater=False,
+    )
+    await knx.receive_response("1/1/3", (0,))
+    await knx.receive_response("1/1/1", True)
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
+    devices = sorted(
+        knx.xknx.devices.devices_by_group_address(GroupAddress("1/1/3")),
+        key=lambda device: device.name != first_entity,
+    )
+    with patch.object(
+        type(knx.xknx.devices), "devices_by_group_address", return_value=devices
+    ):
+        await knx.receive_write("1/1/3", (255,), source="1.1.23")
+    assert len(events) == 1
+    assert hass.states.get(COVER_ENTITY_ID).state == "closed"
+    assert hass.states.get(COVER_ENTITY_ID).context is events[0].context
+    light = hass.states.get(LIGHT_ENTITY_ID)
+    assert light.state == "on"
+    assert light.attributes["brightness"] == 255
+    assert light.context is not events[0].context
+    assert light.context.user_id is None
+    assert light.context.parent_id is None
