@@ -2,7 +2,7 @@
 
 import asyncio
 from asyncio import CancelledError
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -39,10 +39,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
@@ -66,8 +62,6 @@ from .const import (
     LOGGER,
     RFXTRX_DSMR_PROTOCOL,
 )
-
-EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
 
 UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
@@ -777,7 +771,11 @@ def is_supported_description(
 
 
 def create_mbus_entities(
-    hass: HomeAssistant, telegram: Telegram, entry: ConfigEntry, dsmr_version: str
+    hass: HomeAssistant,
+    telegram: Telegram,
+    entry: ConfigEntry,
+    dsmr_version: str,
+    discovered: dict[int, set[str]],
 ) -> Generator[DSMREntity]:
     """Create MBUS Entities."""
     mbus_devices: list[MbusDevice] = getattr(telegram, "MBUS_DEVICES", [])
@@ -787,7 +785,19 @@ def create_mbus_entities(
         type_ = int(device_type.value)
 
         if type_ not in SENSORS_MBUS_DEVICE_TYPE:
-            LOGGER.warning("Unsupported MBUS_DEVICE_TYPE (%d)", type_)
+            if device.channel_id not in discovered:
+                LOGGER.warning("Unsupported MBUS_DEVICE_TYPE (%d)", type_)
+                discovered[device.channel_id] = set()
+            continue
+
+        discovered_descriptions = discovered.setdefault(device.channel_id, set())
+        descriptions = [
+            description
+            for description in SENSORS_MBUS_DEVICE_TYPE[type_]
+            if description.key not in discovered_descriptions
+            and is_supported_description(device, description, dsmr_version)
+        ]
+        if not descriptions:
             continue
 
         if identifier := getattr(device, "MBUS_EQUIPMENT_IDENTIFIER", None):
@@ -796,9 +806,8 @@ def create_mbus_entities(
         else:
             serial_ = ""
 
-        for description in SENSORS_MBUS_DEVICE_TYPE.get(type_, ()):
-            if not is_supported_description(device, description, dsmr_version):
-                continue
+        for description in descriptions:
+            discovered_descriptions.add(description.key)
             yield DSMREntity(
                 description,
                 entry,
@@ -833,44 +842,40 @@ async def async_setup_entry(
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]
     entities: list[DSMREntity] = []
-    initialized: bool = False
-    add_entities_handler: Callable[[], None] | None
+    discovered: dict[int, set[str]] = {0: set()}
 
     @callback
-    def init_async_add_entities(telegram: Telegram) -> None:
-        """Add the sensor entities after the first telegram was received."""
-        nonlocal add_entities_handler
-        assert add_entities_handler is not None
-        add_entities_handler()
-        add_entities_handler = None
-
-        entities.extend(create_mbus_entities(hass, telegram, entry, dsmr_version))
-
-        entities.extend(
-            [
-                (
-                    DSMRBelgiumDemandHistory(description, entry, telegram)
-                    if description.key == "belgium_maximum_demand_history"
-                    else DSMREntity(
-                        description,
-                        entry,
-                        telegram,
-                        *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
-                    )
-                )
-                for description in SENSORS
-                if is_supported_description(telegram, description, dsmr_version)
-                and (
-                    (not description.is_gas and not description.is_heat)
-                    or CONF_SERIAL_ID_GAS in entry.data
-                )
-            ]
+    def async_discover_entities(telegram: Telegram) -> None:
+        """Add sensor entities for newly received fields."""
+        new_entities = list(
+            create_mbus_entities(hass, telegram, entry, dsmr_version, discovered)
         )
-        async_add_entities(entities)
+        for description in SENSORS:
+            if (
+                description.key in discovered[0]
+                or not is_supported_description(telegram, description, dsmr_version)
+                or (
+                    (description.is_gas or description.is_heat)
+                    and CONF_SERIAL_ID_GAS not in entry.data
+                )
+            ):
+                continue
+            new_entities.append(
+                DSMRBelgiumDemandHistory(description, entry, telegram)
+                if description.key == "belgium_maximum_demand_history"
+                else DSMREntity(
+                    description,
+                    entry,
+                    telegram,
+                    *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
+                )
+            )
+            discovered[0].add(description.key)
 
-    add_entities_handler = async_dispatcher_connect(
-        hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), init_async_add_entities
-    )
+        if new_entities:
+            entities.extend(new_entities)
+            async_add_entities(new_entities)
+
     min_time_between_updates = timedelta(
         seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
     )
@@ -878,18 +883,14 @@ async def async_setup_entry(
     @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram: Telegram | None) -> None:
         """Update entities with latest telegram and trigger state update."""
-        nonlocal initialized
         # Make all device entities aware of new telegram
         for entity in entities:
             entity.update_data(telegram)
 
         entry.runtime_data.telegram = telegram
 
-        if not initialized and telegram:
-            initialized = True
-            async_dispatcher_send(
-                hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), telegram
-            )
+        if telegram:
+            async_discover_entities(telegram)
 
     # Legacy network entries stored host and port separately; combine them into
     # the single socket://host:port form newer entries already use, in memory
@@ -1028,8 +1029,6 @@ async def async_setup_entry(
 
     @callback
     def _async_stop(_: Event) -> None:
-        if add_entities_handler is not None:
-            add_entities_handler()
         task.cancel()
 
     # Make sure task is cancelled on shutdown (or tests complete)

@@ -2,20 +2,46 @@
 
 import asyncio
 from collections.abc import Generator
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from dsmr_parser.clients.protocol import DSMRProtocol
 from dsmr_parser.clients.rfxtrx_protocol import RFXtrxDSMRProtocol
 from dsmr_parser.obis_references import (
     BELGIUM_EQUIPMENT_IDENTIFIER,
+    CURRENT_ELECTRICITY_USAGE,
     EQUIPMENT_IDENTIFIER,
     EQUIPMENT_IDENTIFIER_GAS,
     LUXEMBOURG_EQUIPMENT_IDENTIFIER,
     P1_MESSAGE_TIMESTAMP,
     Q3D_EQUIPMENT_IDENTIFIER,
 )
-from dsmr_parser.objects import CosemObject
+from dsmr_parser.objects import CosemObject, Telegram
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a Belgian DSMR config entry."""
+    return MockConfigEntry(
+        domain="dsmr",
+        unique_id="/dev/ttyUSB0",
+        data={"port": "/dev/ttyUSB0", "dsmr_version": "5B", "serial_id": "1234"},
+        options={"time_between_update": 0},
+    )
+
+
+@pytest.fixture
+def electricity_telegram() -> Telegram:
+    """Return a telegram without optional fields or M-Bus devices."""
+    telegram = Telegram()
+    telegram.add(
+        CURRENT_ELECTRICITY_USAGE,
+        CosemObject((1, 0), [{"value": Decimal("0.250"), "unit": "kW"}]),
+        "CURRENT_ELECTRICITY_USAGE",
+    )
+    return telegram
 
 
 @pytest.fixture
