@@ -154,14 +154,3 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     probatio.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
     probatio.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
 }
-
-# Same keys without defaults, used in CONFIG_SCHEMA to validate
-# without injecting default values (so we can detect explicit keys).
-COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS = {
-    (
-        probatio.Optional(k.schema)
-        if isinstance(k, probatio.Optional) and k.default is not probatio.UNDEFINED
-        else k
-    ): v
-    for k, v in COMPONENT_CONFIG_SCHEMA_CONNECTION.items()
-}
