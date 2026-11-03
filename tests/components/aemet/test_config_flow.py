@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aemet_opendata.exceptions import AuthError
+from aemet_opendata.exceptions import AemetTimeout, AuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -158,10 +158,19 @@ async def test_form_duplicated_id(
         assert result["reason"] == "already_configured"
 
 
-async def test_form_auth_error(hass: HomeAssistant) -> None:
-    """Test setting up with api auth error."""
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AuthError, "invalid_api_key"),
+        (AemetTimeout, "cannot_connect"),
+    ],
+)
+async def test_form_errors(
+    hass: HomeAssistant, exception: Exception, error: str
+) -> None:
+    """Test setting up with an API error, then recovering."""
     mocked_aemet = MagicMock()
-    mocked_aemet.select_coordinates.side_effect = AuthError
+    mocked_aemet.select_coordinates.side_effect = exception
 
     with patch(
         "homeassistant.components.aemet.config_flow.AEMET",
@@ -179,7 +188,7 @@ async def test_form_auth_error(hass: HomeAssistant) -> None:
             user_input=CONFIG,
         )
 
-        assert result["errors"] == {"base": "invalid_api_key"}
+        assert result["errors"] == {"base": error}
 
         mocked_aemet.select_coordinates = AsyncMock()
         result = await hass.config_entries.flow.async_configure(
@@ -190,8 +199,15 @@ async def test_form_auth_error(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_reauth(hass: HomeAssistant) -> None:
-    """Test the reauth flow, including recovery from an invalid API key."""
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AuthError, "invalid_api_key"),
+        (AemetTimeout, "cannot_connect"),
+    ],
+)
+async def test_reauth(hass: HomeAssistant, exception: Exception, error: str) -> None:
+    """Test the reauth flow, including recovery from an API error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="40.30403754--3.72935236",
@@ -204,7 +220,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     mocked_aemet = MagicMock()
-    mocked_aemet.select_coordinates.side_effect = AuthError
+    mocked_aemet.select_coordinates.side_effect = exception
 
     with patch(
         "homeassistant.components.aemet.config_flow.AEMET",
@@ -221,7 +237,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "invalid_api_key"}
+        assert result["errors"] == {"base": error}
 
         mocked_aemet.select_coordinates = AsyncMock()
         result = await hass.config_entries.flow.async_configure(
