@@ -13,6 +13,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
@@ -253,6 +254,24 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.device_config[CONF_HOST] = host
         return await self.async_step_confirm()
+
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Update the host of a known device that got a new IP address."""
+        mac = format_mac(discovery_info.macaddress)
+
+        for entry in self._async_current_entries(include_ignore=False):
+            if format_mac(entry.data[CONF_MAC]) == mac:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_HOST: discovery_info.ip},
+                    reason="already_configured",
+                    reload_even_if_entry_is_unchanged=False,
+                )
+
+        return self.async_abort(reason="no_devices_found")
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
