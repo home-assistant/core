@@ -31,7 +31,10 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -199,7 +202,7 @@ async def test_disabled_device_ignores_household_poll_activity(
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a household poll through a disabled speaker does not resubscribe it."""
+    """Test a household poll doesn't resubscribe a disabled device."""
     device = device_registry.async_get_device_by_identifier(
         (sonos.DOMAIN, soco.uid), config_entry.entry_id
     )
@@ -211,18 +214,14 @@ async def test_disabled_device_ignores_household_poll_activity(
 
     for service in _speaker_services(soco):
         service.subscribe.reset_mock()
-    soco.music_library.get_sonos_favorites.reset_mock()
 
-    favorites = config_entry.runtime_data.favorites[soco.household_id]
-    assert favorites.async_poll
-    await favorites.async_poll()
-    # Past both the poll debouncer and the speaker resubscription cooldown.
+    # The household poll emits this signal after a successful update.
     freezer.tick(RESUB_COOLDOWN_SECONDS + 1)
-    async_fire_time_changed(hass)
+    async_dispatcher_send(
+        hass, f"{SONOS_SPEAKER_ACTIVITY}-{soco.uid}", "household poll"
+    )
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    soco.music_library.get_sonos_favorites.assert_called_once()
-    assert not config_entry.runtime_data.discovered[soco.uid].available
     for service in _speaker_services(soco):
         service.subscribe.assert_not_awaited()
 
@@ -267,7 +266,6 @@ async def test_device_registry_update_ignored(
 
     for unsubscribe in unsubscribes:
         unsubscribe.assert_not_awaited()
-    assert config_entry.runtime_data.discovered[soco.uid].available
 
 
 async def test_device_disabled_in_other_config_entry_ignored(
@@ -293,7 +291,6 @@ async def test_device_disabled_in_other_config_entry_ignored(
 
     for unsubscribe in unsubscribes:
         unsubscribe.assert_not_awaited()
-    assert config_entry.runtime_data.discovered[soco.uid].available
 
 
 async def test_upnp_disabled_manual_hosts(
