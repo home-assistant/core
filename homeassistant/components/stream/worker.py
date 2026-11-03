@@ -731,7 +731,7 @@ def stream_worker(
         audio_stream = None
     transcode_audio = bool(
         audio_stream
-        and audio_stream.name == "pcm_alaw"
+        and audio_stream.name not in AUDIO_CODECS
         and any(
             getattr(output, "requires_aac_audio", False)
             for output in stream_state.outputs

@@ -2,7 +2,7 @@
 
 import asyncio
 from collections import deque
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, AsyncIterator, Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
@@ -224,11 +224,14 @@ class RecordingProcess:
                 queue.put_nowait(fragment)
                 self._subscribers[queue] += len(fragment)
 
-    async def fragments(self) -> AsyncIterator[bytes]:
+    async def fragments(self) -> AsyncGenerator[bytes]:
         """Yield initialization, buffered data, then new fragments to one client."""
-        if self._task is None:
+        task = self._task
+        if task is None:
             raise RuntimeError("Recording process is not running")
         await self._ready.wait()
+        if self._stop_task is not None or self._task is not task:
+            return
         if not self.buffer.initialization:
             raise RuntimeError("FFmpeg did not produce an initialization segment")
         if self._subscribers:
@@ -239,10 +242,14 @@ class RecordingProcess:
         try:
             yield initialization
             for fragment in buffered:
+                if self._stop_task is not None or self._task is not task:
+                    return
                 yield fragment
-            if self._task.done():
+            if self._stop_task is not None or self._task is not task or task.done():
                 return
             while (queued_fragment := await queue.get()) is not None:
+                if self._stop_task is not None or self._task is not task:
+                    return
                 self._subscribers[queue] -= len(queued_fragment)
                 yield queued_fragment
         finally:

@@ -16,9 +16,7 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from pytest_homeassistant.typing import ClientSessionGenerator
 
-from homeassistant.components.homekit.hksv_stream import (  # pylint: disable=home-assistant-component-root-import
-    SharedCameraStream,
-)
+from homeassistant.components.homekit.hksv_stream import SharedCameraStream  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
     DOMAIN,
@@ -633,10 +631,11 @@ async def test_hksv_output_coexists_with_hls(
         await stream.stop()
 
 
-async def test_hksv_audio_with_hls(
-    hass: HomeAssistant, setup_component, stream_worker_sync, tmp_path: Path
-) -> None:
-    """One real worker sends AAC-converted source audio to both outputs."""
+@pytest.fixture(params=["pcm_alaw", "pcm_mulaw", "libopus"])
+async def unsupported_audio_source(
+    hass: HomeAssistant, tmp_path: Path, request: pytest.FixtureRequest
+) -> Path:
+    """Create a real H.264 source with audio that cannot be remuxed directly."""
     if not (ffmpeg := shutil.which("ffmpeg")):
         pytest.skip("ffmpeg unavailable")
     path = tmp_path / "source.mkv"
@@ -664,7 +663,7 @@ async def test_hksv_audio_with_hls(
                 "-g",
                 "30",
                 "-c:a",
-                "pcm_alaw",
+                request.param,
                 "-f",
                 "matroska",
                 "-y",
@@ -675,7 +674,22 @@ async def test_hksv_audio_with_hls(
         )
     )
     if result.returncode:
-        pytest.skip("ffmpeg test encoders unavailable")
+        pytest.skip(f"ffmpeg test encoder {request.param} unavailable")
+    return path
+
+
+async def test_hksv_audio_with_hls(
+    hass: HomeAssistant,
+    setup_component,
+    stream_worker_sync,
+    unsupported_audio_source: Path,
+) -> None:
+    """One real worker sends AAC-converted source audio to both outputs."""
+    path = unsupported_audio_source
+    with av.open(str(path)) as source:
+        source_packets = {
+            bytes(packet) for packet in source.demux(video=0) if packet.size
+        }
     stream_worker_sync.pause()
     stream = create_stream(hass, str(path), {}, dynamic_stream_settings())
     hls = stream.add_provider(HLS_PROVIDER)
@@ -694,9 +708,43 @@ async def test_hksv_audio_with_hls(
             BytesIO(fragment.initialization + fragment.data), format="mp4"
         ) as media:
             assert media.streams.audio[0].codec_context.name == "aac"
+            assert media.streams.video[0].codec_context.name == "h264"
+            output_packets = [
+                bytes(packet) for packet in media.demux(video=0) if packet.size
+            ]
+            assert output_packets
+            assert all(packet in source_packets for packet in output_packets)
         assert any(s.complete for s in hls.get_segments())
         await shared.close()
         assert stream.outputs()[HLS_PROVIDER] is hls
+    finally:
+        stream_worker_sync.resume()
+        await stream.stop()
+
+
+async def test_hls_drops_unsupported_audio_without_aac_request(
+    hass: HomeAssistant,
+    setup_component,
+    stream_worker_sync,
+    unsupported_audio_source: Path,
+) -> None:
+    """HLS alone retains its historical unsupported-audio exclusion."""
+    stream_worker_sync.pause()
+    stream = create_stream(
+        hass, str(unsupported_audio_source), {}, dynamic_stream_settings()
+    )
+    hls = stream.add_provider(HLS_PROVIDER)
+    try:
+        await stream.start()
+        async with asyncio.timeout(5):
+            while not hls.get_segments() or not hls.get_segments()[0].parts:
+                await asyncio.sleep(0.01)
+        segment = hls.get_segments()[0]
+        with av.open(
+            BytesIO(segment.init + segment.parts[0].data), format="mp4"
+        ) as media:
+            assert not media.streams.audio
+            assert media.streams.video[0].codec_context.name == "h264"
     finally:
         stream_worker_sync.resume()
         await stream.stop()

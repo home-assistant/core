@@ -1,9 +1,10 @@
 """Isolated lifecycle checks for the experimental HKSV controller."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 import logging
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -460,7 +461,7 @@ async def test_recording_request_counts_and_safe_logging(
     controller.configuration = object()
     controller._process = Process()
     recording = controller._open_recording(object(), 2)
-    controller._closed = True
+    controller.active = False
     assert [fragment async for fragment in recording] == [
         (b"initialization", False),
         (b"media", True),
@@ -918,3 +919,286 @@ async def test_observe_live_source_uses_supplied_lease(
     lease.attached = True
     lease._closed = True
     assert await controller.observe_live_source(lease) is None
+
+
+@pytest.mark.parametrize("closed", [False, True])
+@pytest.mark.parametrize("delivered", [0, 1, 2])
+async def test_recording_privacy_revocation_before_next_yield(
+    delivered: int, closed: bool
+) -> None:
+    """Camera privacy stops output before the next init or media fragment."""
+
+    class Process:
+        running = True
+
+        async def fragments(self) -> AsyncIterator[bytes]:
+            yield b"init"
+            yield b"one"
+            yield b"two"
+
+    async def source() -> None:
+        return None
+
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller._ready = True
+    controller.active = True
+    controller.configuration = object()
+    controller._process = Process()
+    recording = controller._open_recording(object(), 1)
+    for _ in range(delivered):
+        await anext(recording)
+    controller.camera_active = closed
+    controller._closed = closed
+    with pytest.raises(StopAsyncIteration):
+        await anext(recording)
+    assert not controller._stream_active
+    controller.camera_active = True
+    controller._closed = False
+    next_recording = controller._open_recording(object(), 2)
+    assert await anext(next_recording) == (b"init", False)
+    await next_recording.aclose()
+    assert not controller._stream_active
+
+
+@pytest.mark.parametrize("closed", [False, True])
+async def test_recording_privacy_revocation_during_fragment_wait(closed: bool) -> None:
+    """A fragment arriving after privacy changes is never sent."""
+    waiting = asyncio.Event()
+    release = asyncio.Event()
+
+    class Process:
+        running = True
+
+        async def fragments(self) -> AsyncIterator[bytes]:
+            yield b"init"
+            waiting.set()
+            await release.wait()
+            yield b"private"
+
+    async def source() -> None:
+        return None
+
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller._ready = True
+    controller.active = True
+    controller.configuration = object()
+    controller._process = Process()
+    recording = controller._open_recording(object(), 1)
+    assert await anext(recording) == (b"init", False)
+    next_fragment = asyncio.create_task(anext(recording))
+    await waiting.wait()
+    controller.camera_active = closed
+    controller._closed = closed
+    release.set()
+    with pytest.raises(StopAsyncIteration):
+        await next_fragment
+    assert not controller._stream_active
+    controller.camera_active = True
+    controller._closed = False
+    next_recording = controller._open_recording(object(), 2)
+    assert await anext(next_recording) == (b"init", False)
+    await next_recording.aclose()
+
+
+async def test_privacy_revocation_closes_fragment_subscription() -> None:
+    """Release the media subscription before another recording is accepted."""
+    subscriptions = 0
+
+    class Process:
+        running = True
+
+        async def fragments(self) -> AsyncIterator[bytes]:
+            nonlocal subscriptions
+            subscriptions += 1
+            try:
+                yield b"init"
+                yield b"private"
+            finally:
+                subscriptions -= 1
+
+    async def source() -> None:
+        return None
+
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller._ready = True
+    controller.active = True
+    controller.configuration = object()
+    controller._process = Process()
+    recording = controller._open_recording(object(), 1)
+    assert await anext(recording) == (b"init", False)
+    assert subscriptions == 1
+    controller.camera_active = False
+    with pytest.raises(StopAsyncIteration):
+        await anext(recording)
+    assert subscriptions == 0
+    controller.camera_active = True
+    next_recording = controller._open_recording(object(), 2)
+    assert await anext(next_recording) == (b"init", False)
+    await next_recording.aclose()
+    assert subscriptions == 0
+
+
+async def test_camera_privacy_cancels_hds_multichunk_transfer() -> None:
+    """A revoked session cannot transmit later chunks of an already yielded fragment."""
+    from pyhap.datastream import HDSServer  # noqa: PLC0415
+
+    first_media_chunk = asyncio.Event()
+    chunks: list[bytes] = []
+
+    async def source() -> None:
+        return None
+
+    class Process:
+        running = True
+
+        async def fragments(self) -> AsyncIterator[bytes]:
+            yield b"init"
+            yield b"x" * (0x40000 * 3)
+
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller._ready = True
+    controller.active = True
+    controller.configuration = object()
+    controller._process = Process()
+    controller._schedule_reconcile = lambda: None
+    owner = object()
+    writer = MagicMock()
+
+    async def send(_header: dict, body: dict) -> None:
+        packet = body["packets"][0]
+        if packet["metadata"]["dataType"] == "mediaFragment":
+            chunks.append(packet["data"])
+            first_media_chunk.set()
+            await asyncio.Event().wait()
+
+    stream = controller._open_recording(owner, 1)
+    transfer = asyncio.create_task(HDSServer._send_fragments(send, 1, stream))
+    controller.hds._connections[transfer] = (owner, writer)
+    await first_media_chunk.wait()
+    assert controller._recording_owner is owner
+    controller._change_camera_active(0)
+    with pytest.raises(asyncio.CancelledError):
+        await transfer
+    writer.close.assert_called_once_with()
+    assert len(chunks) == 1
+    assert len(chunks[0]) == 0x40000
+    assert controller._recording_owner is None
+    assert not controller._stream_active
+    controller.hds._connections.pop(transfer)
+    controller._change_camera_active(1)
+    another_owner = object()
+    another = controller._open_recording(another_owner, 2)
+    assert await anext(another) == (b"init", False)
+    assert controller._recording_owner is another_owner
+    await another.aclose()
+    assert controller._recording_owner is None
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_camera_privacy_closes_authenticated_hds_socket(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Privacy closes an authenticated socket while its media send is in progress."""
+    import pyhap.datastream as h  # noqa: PLC0415
+
+    first_chunk = asyncio.Event()
+    cancelled = asyncio.Event()
+    fragment_closed = asyncio.Event()
+    sent_chunks: list[int] = []
+
+    async def source() -> None:
+        return None
+
+    class Process:
+        running = True
+
+        async def fragments(self) -> AsyncIterator[bytes]:
+            try:
+                yield b"init"
+                yield b"x" * (0x40000 + 1)
+            finally:
+                fragment_closed.set()
+
+    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller._ready = True
+    controller.active = True
+    controller.configuration = object()
+    controller._process = Process()
+    controller._schedule_reconcile = lambda: None
+    server = controller.hds
+    original_send_fragments = server._send_fragments
+
+    async def send_fragments(
+        send: Callable[[dict[str, Any], dict[str, Any]], Awaitable[None]],
+        stream_id: int,
+        fragments: AsyncIterator[tuple[bytes, bool]],
+    ) -> bool:
+        async def paused_send(header: dict[str, Any], body: dict[str, Any]) -> None:
+            await send(header, body)
+            if (
+                body.get("packets")
+                and body["packets"][0]["metadata"]["dataType"] == "mediaFragment"
+            ):
+                sent_chunks.append(len(body["packets"][0]["data"]))
+                first_chunk.set()
+                await asyncio.Event().wait()
+
+        try:
+            return await original_send_fragments(paused_send, stream_id, fragments)
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    monkeypatch.setattr(server, "_send_fragments", send_fragments)
+    port = await server.start("127.0.0.1")
+    writer = None
+    try:
+        owner = object()
+        secret, salt = b"x" * 32, b"y" * 32
+        _, accessory_salt = server.prepare_session(secret, salt, owner)
+        outgoing, incoming = h.derive_keys(secret, salt, accessory_salt)
+        tx, rx = h.HDSCipher(incoming), h.HDSCipher(outgoing)
+        reader, writer = await asyncio.open_connection("127.0.0.1", port)
+
+        async def send(header: dict[str, Any], body: dict[str, Any]) -> None:
+            writer.write(tx.encrypt(h.encode_message(header, body)))
+            await writer.drain()
+
+        async def read() -> tuple[dict[str, Any], dict[str, Any]]:
+            frame = await asyncio.wait_for(server._read_frame(reader), 2)
+            return h.decode_message(rx.decrypt(frame))
+
+        await send({"protocol": "control", "request": "hello", "id": 1}, {})
+        header, _ = await read()
+        assert header["status"] == 0
+        await send(
+            {"protocol": "dataSend", "request": "open", "id": 2},
+            {"streamId": 42, "type": "ipcamera.recording", "target": "controller"},
+        )
+        header, body = await read()
+        assert header["status"] == body["status"] == 0
+        _, initialization = await read()
+        assert (
+            initialization["packets"][0]["metadata"]["dataType"]
+            == "mediaInitialization"
+        )
+        _, first = await read()
+        assert first["packets"][0]["metadata"]["dataType"] == "mediaFragment"
+        await asyncio.wait_for(first_chunk.wait(), 2)
+        assert controller._recording_owner is owner
+        controller._change_camera_active(0)
+        assert await asyncio.wait_for(reader.read(), 2) == b""
+        await asyncio.wait_for(cancelled.wait(), 2)
+        await asyncio.wait_for(fragment_closed.wait(), 2)
+        assert sent_chunks == [0x40000]
+        assert controller._recording_owner is None
+        assert not controller._stream_active
+        controller._change_camera_active(1)
+        second = controller._open_recording(object(), 43)
+        assert await anext(second) == (b"init", False)
+        await second.aclose()
+    finally:
+        if writer is not None:
+            writer.close()
+            await writer.wait_closed()
+        await server.close()

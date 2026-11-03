@@ -6,6 +6,7 @@ The owner must explicitly attach services and stop this controller on teardown.
 import asyncio
 import base64
 from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import aclosing
 from dataclasses import replace
 import logging
 import time
@@ -132,6 +133,7 @@ class HKSVController:
         self._close_task: asyncio.Task[None] | None = None
         self._cleanup_tasks: set[asyncio.Task[None]] = set()
         self._stream_active = False
+        self._recording_owner: object | None = None
         self._hds_accepted = 0
         self._hds_rejected = 0
         self._hds_final_offered = 0
@@ -173,6 +175,8 @@ class HKSVController:
         if value not in (0, 1):
             raise ValueError("invalid camera active value")
         self.camera_active = bool(value)
+        if not self.camera_active and self._recording_owner is not None:
+            self.hds.close_owner(self._recording_owner)
         if self.on_state_loaded:
             self.on_state_loaded()
         if not self.camera_active and self.on_camera_disabled:
@@ -763,51 +767,62 @@ class HKSVController:
             self.camera_entity_id,
             self._hds_accepted,
         )
-        return self._recording(process)
+        return self._recording(process, owner)
+
+    def _can_deliver_recording(self) -> bool:
+        """Check privacy before sending recording data."""
+        return not self._closed and self.camera_active
 
     async def _recording(
-        self, process: RecordingProcess
+        self, process: RecordingProcess, owner: object | None = None
     ) -> AsyncIterator[tuple[bytes, bool]]:
         if self._stream_active:
             self._reject_recording(2, "busy")
+        if not self._can_deliver_recording():
+            return
         self._stream_active = True
+        self._recording_owner = owner
         completed = False
         media_fragments = 0
         try:
             start = time.monotonic()
             first = True
-            async for fragment in process.fragments():
-                if first:
-                    first = False
-                    yield fragment, False
-                    continue
-                media_fragments += 1
-                # A HomeKit request is itself an event; allow a full fragment even
-                # if motion was only a short event pulse. Cap individual clips.
-                last = (
-                    not self.active
-                    or not self.camera_active
-                    or self._closed
-                    or (
-                        not self._motion_detected
-                        and time.monotonic() >= self._motion_until
-                        and time.monotonic() - start >= 4
+            async with aclosing(process.fragments()) as fragments:
+                async for fragment in fragments:
+                    if not self._can_deliver_recording():
+                        return
+                    if first:
+                        first = False
+                        yield fragment, False
+                        if not self._can_deliver_recording():
+                            return
+                        continue
+                    media_fragments += 1
+                    # A HomeKit request is itself an event; allow a full fragment even
+                    # if motion was only a short event pulse. Cap individual clips.
+                    last = (
+                        not self.active
+                        or (
+                            not self._motion_detected
+                            and time.monotonic() >= self._motion_until
+                            and time.monotonic() - start >= 4
+                        )
+                        or time.monotonic() - start >= 60
                     )
-                    or time.monotonic() - start >= 60
-                )
-                if last:
-                    completed = True
-                    self._hds_final_offered += 1
-                    _LOGGER.info(
-                        "%s: Secure Video final fragment offered to transport fragments=%s total_final_offered=%s; delivery and acknowledgement not observed by delegate",
-                        self.camera_entity_id,
-                        media_fragments,
-                        self._hds_final_offered,
-                    )
-                yield fragment, last
-                if last:
-                    return
+                    if last:
+                        completed = True
+                        self._hds_final_offered += 1
+                        _LOGGER.info(
+                            "%s: Secure Video final fragment offered to transport fragments=%s total_final_offered=%s; delivery and acknowledgement not observed by delegate",
+                            self.camera_entity_id,
+                            media_fragments,
+                            self._hds_final_offered,
+                        )
+                    yield fragment, last
+                    if last or not self._can_deliver_recording():
+                        return
         finally:
+            self._recording_owner = None
             self._stream_active = False
             if not completed:
                 self._hds_interrupted += 1

@@ -1359,3 +1359,40 @@ async def test_copy_disables_attempted_tracks_after_insufficient_window(
         not copy_video,
         not copy_audio,
     )
+
+
+@pytest.mark.parametrize("delivered", [1, 2, 3])
+async def test_recording_fragments_stop_discards_remaining_buffer(
+    delivered: int,
+) -> None:
+    """Stopping after a yield prevents both stale buffers and reader races."""
+    process = RecordingProcess(["ffmpeg"], 4, 300)
+    process.buffer.set_initialization(b"init")
+    process.buffer.append(b"one")
+    process.buffer.append(b"two")
+    process._ready.set()
+    process._task = asyncio.create_task(asyncio.Event().wait())
+    stream = process.fragments()
+    for _ in range(delivered):
+        await anext(stream)
+    await process.stop()
+    with pytest.raises(StopAsyncIteration):
+        await anext(stream)
+    assert not process._subscribers
+
+
+async def test_recording_fragments_keep_buffer_after_natural_reader_exit() -> None:
+    """A naturally completed reader still permits its buffered clip to drain."""
+    process = RecordingProcess(["ffmpeg"], 4, 300)
+    process.buffer.set_initialization(b"init")
+    process.buffer.append(b"one")
+    process.buffer.append(b"two")
+    process._ready.set()
+    process._task = asyncio.create_task(asyncio.sleep(0))
+    await process._task
+    assert [fragment async for fragment in process.fragments()] == [
+        b"init",
+        b"one",
+        b"two",
+    ]
+    await process.stop()
