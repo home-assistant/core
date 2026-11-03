@@ -37,18 +37,52 @@
       "camera_in_use": {
         "name": "Camera in use"
       },
+      "locked": {
+        "name": "Locked"
+      },
       "pending_reboot": {
         "name": "Pending reboot"
       }
     },
+    "button": {
+      "power_hibernate": {
+        "name": "Hibernate"
+      },
+      "power_lock": {
+        "name": "Lock"
+      },
+      "power_logout": {
+        "name": "Log out"
+      },
+      "power_shutdown": {
+        "name": "Shut down"
+      },
+      "power_sleep": {
+        "name": "Sleep"
+      }
+    },
     "media_player": {
+      "audio": {
+        "name": "Audio"
+      },
+      "audio_output": {
+        "name": "{name} output"
+      },
       "media": {
         "name": "Media"
       }
     },
     "number": {
+      "audio_input_volume": {
+        "name": "{name} input volume"
+      },
       "display_brightness": {
         "name": "Display {display_id} brightness"
+      }
+    },
+    "select": {
+      "audio_input": {
+        "name": "Audio input"
       }
     },
     "sensor": {
@@ -132,8 +166,17 @@
       "gpu_core_clock_speed": {
         "name": "{gpu_name} clock speed"
       },
+      "gpu_decoder_usage_percentage": {
+        "name": "{gpu_name} decoder usage"
+      },
+      "gpu_encoder_usage_percentage": {
+        "name": "{gpu_name} encoder usage"
+      },
       "gpu_fan_speed": {
         "name": "{gpu_name} fan speed"
+      },
+      "gpu_fan_speed_percentage": {
+        "name": "{gpu_name} fan speed percentage"
       },
       "gpu_memory_clock_speed": {
         "name": "{gpu_name} memory clock speed"
@@ -141,11 +184,20 @@
       "gpu_memory_free": {
         "name": "{gpu_name} memory free"
       },
+      "gpu_memory_total": {
+        "name": "{gpu_name} memory total"
+      },
       "gpu_memory_used": {
         "name": "{gpu_name} memory used"
       },
       "gpu_memory_used_percentage": {
-        "name": "{gpu_name} memory used %"
+        "name": "{gpu_name} memory usage"
+      },
+      "gpu_performance_state": {
+        "name": "{gpu_name} performance state"
+      },
+      "gpu_power_limit": {
+        "name": "{gpu_name} power limit"
       },
       "gpu_power_usage": {
         "name": "{gpu_name} power usage"
@@ -155,6 +207,9 @@
       },
       "gpu_usage_percentage": {
         "name": "{gpu_name} usage %"
+      },
+      "idle_time": {
+        "name": "Idle time"
       },
       "kernel": {
         "name": "Kernel"
@@ -178,7 +233,7 @@
         "name": "Memory used"
       },
       "memory_used_percentage": {
-        "name": "Memory used %"
+        "name": "Memory usage"
       },
       "network_download_rate": {
         "name": "Network download rate"
@@ -216,6 +271,12 @@
       "space_used": {
         "name": "{partition} space used"
       },
+      "swap_used": {
+        "name": "Swap used"
+      },
+      "swap_used_percentage": {
+        "name": "Swap usage"
+      },
       "version": {
         "name": "Version"
       },
@@ -224,12 +285,21 @@
       }
     },
     "switch": {
+      "audio_input_mute": {
+        "name": "{name} input mute"
+      },
       "display_power": {
         "name": "Display {display_id} power"
       }
     }
   },
   "exceptions": {
+    "audio_control_failed": {
+      "message": "Failed to control audio device {name}: {error}"
+    },
+    "audio_device_not_found": {
+      "message": "No audio device named {name}"
+    },
     "authentication_failed": {
       "message": "Authentication failed for {title} ({host})"
     },
@@ -239,8 +309,17 @@
     "display_control_failed": {
       "message": "Failed to control display {display_id}: {error}"
     },
+    "media_control_failed": {
+      "message": "Failed to control the media player: {error}"
+    },
+    "media_player_not_found": {
+      "message": "No media player named {name}"
+    },
     "no_data_received": {
       "message": "No data received from {host}"
+    },
+    "power_command_failed": {
+      "message": "Failed to send the power command: {error}"
     },
     "process_not_found": {
       "message": "Could not find process with ID {id}."

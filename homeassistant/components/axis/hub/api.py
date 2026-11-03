@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from ..const import LOGGER
+from ..const import CONF_COMPANION, LOGGER
 from ..errors import AuthenticationRequired, CannotConnect
 
 
@@ -58,4 +58,21 @@ async def get_axis_api(
         LOGGER.exception("Unknown Axis communication error occurred")
         raise AuthenticationRequired from err
 
+    # Companion devices reject initialization requests with Axis-Orig-Sw
+    if CONF_COMPANION in config:
+        api.config.is_companion = config[CONF_COMPANION]
+
     return api
+
+
+def is_companion_device(api: axis.AxisDevice) -> bool:
+    """Return if device belongs to the AXIS Companion product line."""
+    vapix = api.vapix
+    handler = (
+        vapix.basic_device_info
+        if vapix.basic_device_info.initialized
+        else vapix.params.brand_handler
+    )
+    return (item := handler.get("0")) is not None and (
+        "Companion" in item.product_full_name
+    )

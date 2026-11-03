@@ -1,4 +1,178 @@
 # serializer version: 1
+# name: test_media_player_platform[media_player.hostname_audio-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'Headphones',
+        'HDMI Output',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.hostname_audio',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Audio',
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': 'Audio',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 3084>,
+    'translation_key': 'audio',
+    'unique_id': 'uuid_audio',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player_platform[media_player.hostname_audio-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Audio',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Headphones',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'Headphones',
+        'HDMI Output',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 3084>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.hostname_audio',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_media_player_platform[media_player.hostname_hdmi_output_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.hostname_hdmi_output_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'HDMI Output output',
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': 'HDMI Output output',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 1036>,
+    'translation_key': 'audio_output',
+    'unique_id': 'uuid_audio_output_alsa_output.pci-0000_00_1f.3.hdmi-stereo',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player_platform[media_player.hostname_hdmi_output_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname HDMI Output output',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 1036>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.hostname_hdmi_output_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_media_player_platform[media_player.hostname_headphones_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('system_bridge', 'uuid')]>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.hostname_headphones_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Headphones output',
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': 'Headphones output',
+    'platform': 'system_bridge',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 1036>,
+    'translation_key': 'audio_output',
+    'unique_id': 'uuid_audio_output_alsa_output.usb-Generic_USB_Audio-00.HiFi__Speaker__sink',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player_platform[media_player.hostname_headphones_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'hostname Headphones output',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 1036>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.hostname_headphones_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_media_player_platform[media_player.hostname_media-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -6,6 +180,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'Automatic',
+        'vlc',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
@@ -31,7 +209,7 @@
     'platform': 'system_bridge',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 20529>,
+    'supported_features': <MediaPlayerEntityFeature: 318519>,
     'translation_key': 'media',
     'unique_id': 'uuid_media',
     'unit_of_measurement': None,
@@ -51,7 +229,13 @@
       <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'title',
       <MediaPlayerEntityStateAttribute.MEDIA_TRACK: 'media_track'>: 1,
       <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: True,
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 20529>,
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Automatic',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        'Automatic',
+        'vlc',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 318519>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.hostname_media',
