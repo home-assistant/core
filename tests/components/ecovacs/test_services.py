@@ -8,7 +8,7 @@ from deebot_client.device import Device
 import pytest
 
 from homeassistant.components.ecovacs.const import DOMAIN
-from homeassistant.components.ecovacs.services import SERVICE_RAW_GET_POSITIONS
+from homeassistant.components.ecovacs.services import EcovacsService
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -80,7 +80,7 @@ async def test_get_positions_service(
 
     assert await hass.services.async_call(
         DOMAIN,
-        SERVICE_RAW_GET_POSITIONS,
+        EcovacsService.RAW_GET_POSITIONS,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
         return_response=True,
