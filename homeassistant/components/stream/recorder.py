@@ -73,8 +73,9 @@ class RecorderOutput(StreamOutput):
         output_a = None
 
         last_stream_id = -1
-        # The running duration of processed segments. Note that this is in av.time_base
-        # units which seem to be defined inversely to how stream time_bases are defined
+        # The end of the recording's presentation so far. Note that this is in
+        # av.time_base units which seem to be defined inversely to how stream
+        # time_bases are defined
         running_duration = 0
 
         last_sequence = -math.inf
@@ -149,12 +150,19 @@ class RecorderOutput(StreamOutput):
                     continue
                 packet.pts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
                 packet.dts += pts_adjuster[packet.stream.type]  # type: ignore[operator]
+                # With B-frames the last frame in decode order does not end last
+                running_duration = max(
+                    running_duration,
+                    math.ceil(
+                        av.time_base
+                        * (packet.pts + (packet.duration or 0))
+                        * packet.time_base
+                    ),
+                )
                 stream = output_v if packet.stream.type == "video" else output_a
                 assert stream
                 packet.stream = stream
                 output.mux(packet)
-
-            running_duration += source.duration - source.start_time
 
             source.close()
 

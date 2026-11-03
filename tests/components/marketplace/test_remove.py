@@ -61,6 +61,27 @@ async def test_removing_a_theme_keeps_a_handwritten_theme(
     assert handwritten.exists()
 
 
+async def test_removing_a_theme_without_a_known_folder(
+    marketplace: MarketplaceManager,
+    config_dir: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a theme HACS stored without its file name can still be removed."""
+    repository = marketplace.repositories.get_by_id(THEME_ID)
+    repository.data.installed = True
+    repository.data.file_name = ""
+    repository.data.directory = None
+    other_theme = config_dir / "themes/other/other.yaml"
+    other_theme.parent.mkdir(parents=True)
+    other_theme.write_text("Other Theme:\n  primary-color: red\n")
+
+    await repository.uninstall()
+
+    assert not repository.data.installed
+    assert other_theme.exists()
+    assert "remove it by hand" in caplog.text
+
+
 async def test_template_refresh_keeps_the_installed_file_name(
     marketplace: MarketplaceManager,
 ) -> None:

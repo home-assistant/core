@@ -7,6 +7,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from reolink_aio.enums import ConnectionEnum
 from reolink_aio.exceptions import (
     ApiError,
@@ -63,8 +64,6 @@ from .conftest import (
     TEST_USERNAME,
     TEST_USERNAME2,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("reolink_host")
 

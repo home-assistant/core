@@ -1,8 +1,13 @@
 {
   "domain": "squeezebox",
   "name": "Squeezebox (Lyrion Music Server)",
+  "categories": [
+    "media_entertainment.speakers_audio",
+    "media_entertainment.music_radio_services"
+  ],
   "codeowners": ["@rajlaud", "@pssc", "@peteS-UK"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "squeezebox*",

@@ -2,6 +2,7 @@
 
 import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pywaze.route_calculator import WRCError
 
 from homeassistant.components.waze_travel_time.config_flow import WazeConfigFlow
@@ -24,8 +25,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "sensor.waze_travel_time"
 
@@ -149,10 +148,14 @@ async def test_excl_filter(hass: HomeAssistant) -> None:
     ("error_fixture", "log_message"),
     [
         pytest.param(
-            "mock_update_wrcerror", "Error on retrieving data: ", id="wrcerror"
+            "mock_update_wrcerror",
+            "An error occurred while retrieving data from Waze",
+            id="wrcerror",
         ),
         pytest.param(
-            "mock_update_connect_error", "Connection error: ", id="connect_error"
+            "mock_update_connect_error",
+            "An error occurred while connecting to Waze",
+            id="connect_error",
         ),
     ],
 )

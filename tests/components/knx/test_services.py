@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.components.knx import async_unload_entry as knx_async_unload_entry
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import KNXTestKit
-
-from tests.common import async_capture_events
 
 
 @pytest.mark.parametrize(

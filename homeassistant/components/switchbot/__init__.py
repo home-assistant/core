@@ -7,7 +7,6 @@ import switchbot
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
-from homeassistant.components.sensor import ConfigType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -20,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CURTAIN_SPEED,
@@ -32,7 +32,6 @@ from .const import (
     DEPRECATED_MODEL_TYPE_MIGRATIONS,
     DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
     DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
-    DEPRECATED_SENSOR_TYPE_HYGROMETER,
     DEPRECATED_SENSOR_TYPE_HYGROMETER_CO2,
     DOMAIN,
     ENCRYPTED_MODELS,
@@ -66,7 +65,7 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.METER.value: [Platform.SENSOR],
     SupportedModels.METER_PLUS.value: [Platform.SENSOR],
-    SupportedModels.METER_PRO.value: [Platform.SENSOR],
+    SupportedModels.METER_PRO.value: [Platform.BUTTON, Platform.SENSOR],
     SupportedModels.INDOOR_OUTDOOR_THERMO_HYGROMETER.value: [Platform.SENSOR],
     SupportedModels.METER_PRO_CO2.value: [
         Platform.BUTTON,
@@ -227,7 +226,10 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.WEATHER_STATION.value: [Platform.SENSOR],
-    SupportedModels.UNIVERSAL_REMOTE.value: [Platform.SENSOR],
+    SupportedModels.UNIVERSAL_REMOTE.value: [
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
     SupportedModels.CANDLE_WARMER_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.RGBIC_NEON_ROPE_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.RGBIC_NEON_WIRE_ROPE_LIGHT.value: [
@@ -289,6 +291,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.ART_FRAME.value: switchbot.SwitchbotArtFrame,
     SupportedModels.KEYPAD_VISION.value: switchbot.SwitchbotKeypadVision,
     SupportedModels.KEYPAD_VISION_PRO.value: switchbot.SwitchbotKeypadVision,
+    SupportedModels.METER_PRO.value: switchbot.SwitchbotMeterPro,
     SupportedModels.METER_PRO_CO2.value: switchbot.SwitchbotMeterProCO2,
     SupportedModels.LOCK_VISION_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_VISION.value: switchbot.SwitchbotLock,
@@ -467,17 +470,30 @@ def _entry_address(entry: SwitchbotConfigEntry) -> str:
 def _migrate_deprecated_model_type(
     hass: HomeAssistant, entry: SwitchbotConfigEntry, sensor_type: str
 ) -> SupportedModels | None:
-    """Resolve a deprecated sensor type from its BLE advertisement."""
+    """Resolve a deprecated sensor type from its BLE advertisements."""
     model_migrations = DEPRECATED_MODEL_TYPE_MIGRATIONS[sensor_type]
     address = _entry_address(entry).upper()
+    # The model is only in the scan response, which passive scanners never
+    # receive, so the best advertisement alone may not identify the device.
+    scanner_devices = bluetooth.async_scanner_devices_by_address(
+        hass, address, connectable=False
+    )
+    advertisements = [
+        (scanner_device.ble_device, scanner_device.advertisement)
+        for scanner_device in scanner_devices
+    ]
     if service_info := bluetooth.async_last_service_info(
         hass, address, connectable=True
     ) or bluetooth.async_last_service_info(hass, address, connectable=False):
-        parsed_adv = switchbot.parse_advertisement_data(
-            service_info.device, service_info.advertisement
-        )
+        advertisements.insert(0, (service_info.device, service_info.advertisement))
+    for device, advertisement in advertisements:
+        parsed_adv = switchbot.parse_advertisement_data(device, advertisement)
         if parsed_adv and (adv_model := parsed_adv.data.get("modelName")):
             return model_migrations.get(adv_model)
+    # Keep a legacy type that is still supported instead of blocking setup
+    # while the device is only heard without a scan response.
+    if scanner_devices and sensor_type in SupportedModels:
+        return SupportedModels(sensor_type)
     return None
 
 
@@ -512,16 +528,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
                 address = _entry_address(entry)
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
-                    translation_key="device_not_found_error",
+                    translation_key="model_not_determined_error",
                     translation_placeholders={
                         "sensor_type": sensor_type,
                         "address": address,
                         "reason": bluetooth.async_address_reachability_diagnostics(
                             hass,
                             address.upper(),
-                            BluetoothReachabilityIntent.CONNECTION
-                            if sensor_type != DEPRECATED_SENSOR_TYPE_HYGROMETER
-                            else BluetoothReachabilityIntent.PASSIVE_ADVERTISEMENT,
+                            BluetoothReachabilityIntent.ACTIVE_ADVERTISEMENT,
                         ),
                     },
                 )

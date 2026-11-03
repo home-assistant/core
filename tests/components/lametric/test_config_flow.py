@@ -16,6 +16,9 @@ from demetriek import (
     Sound,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.lametric import config_flow
 from homeassistant.components.lametric.const import DOMAIN
@@ -30,10 +33,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 SSDP_DISCOVERY_INFO = SsdpServiceInfo(
     ssdp_usn="mock_usn",

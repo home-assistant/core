@@ -4,6 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
@@ -12,6 +13,7 @@ from systembridgeconnector.exceptions import (
 
 from homeassistant import config_entries
 from homeassistant.components.system_bridge.const import DOMAIN
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -25,8 +27,6 @@ from . import (
     FIXTURE_ZEROCONF_INPUT,
     mock_data_listener,
 )
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager
@@ -46,7 +46,7 @@ def _patch_success() -> Generator[None]:
         ),
         patch(
             "homeassistant.components.system_bridge.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -85,7 +85,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.system_bridge.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -501,7 +501,7 @@ async def test_reauth_flow(
         ),
         patch(
             "homeassistant.components.system_bridge.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -511,6 +511,24 @@ async def test_reauth_flow(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauth_flow_reloads_once(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Test a successful reauth reloads a loaded entry once."""
+    result = await init_integration.start_reauth_flow(hass)
+
+    with patch.object(hass.config_entries, "async_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_TOKEN: "new-token"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert init_integration.data[CONF_TOKEN] == "new-token"
+    mock_reload.assert_called_once_with(init_integration.entry_id)
 
 
 async def test_zeroconf_flow(hass: HomeAssistant) -> None:
@@ -539,7 +557,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.system_bridge.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

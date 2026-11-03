@@ -5,6 +5,7 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
 from homeassistant.components.wallbox.const import CHARGER_JWT_TTL
@@ -20,8 +21,6 @@ from .const import (
     MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
     WALLBOX_STATUS_RESPONSE_NO_POWER_BOOST,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

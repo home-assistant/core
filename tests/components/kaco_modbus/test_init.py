@@ -9,6 +9,7 @@ from kaco_modbus.testing import BLUEPLANET_86TL3, with_manufacturer
 from modbus_connection import ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.kaco_modbus.const import DOMAIN
 from homeassistant.components.kaco_modbus.coordinator import SCAN_INTERVAL
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_SERIAL
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_and_unload_entry(

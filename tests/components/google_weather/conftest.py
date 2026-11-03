@@ -7,22 +7,22 @@ from google_weather_api import (
     CurrentConditionsResponse,
     DailyForecastResponse,
     HourlyForecastResponse,
+    MinuteForecastResponse,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.google_weather.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_json_object_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.google_weather.async_setup_entry", return_value=True
+        "homeassistant.components.google_weather.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -65,6 +65,9 @@ def mock_google_weather_api() -> Generator[AsyncMock]:
     hourly_forecast = HourlyForecastResponse.from_dict(
         load_json_object_fixture("hourly_forecast.json", DOMAIN)
     )
+    minute_forecast = MinuteForecastResponse.from_dict(
+        load_json_object_fixture("minute_forecast.json", DOMAIN)
+    )
 
     with (
         patch(
@@ -79,5 +82,6 @@ def mock_google_weather_api() -> Generator[AsyncMock]:
         api.async_get_current_conditions.return_value = current_conditions
         api.async_get_daily_forecast.return_value = daily_forecast
         api.async_get_hourly_forecast.return_value = hourly_forecast
+        api.async_get_minute_forecast.return_value = minute_forecast
 
         yield api

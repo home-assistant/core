@@ -1,6 +1,6 @@
 """The AirNow integration."""
 
-import datetime
+import datetime as dt
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> No
     longitude = entry.data[CONF_LONGITUDE]
 
     # Reports are published hourly but update twice per hour
-    update_interval = datetime.timedelta(minutes=30)
+    update_interval = dt.timedelta(minutes=30)
 
     # Setup the Coordinator
     session = async_get_clientsession(hass)

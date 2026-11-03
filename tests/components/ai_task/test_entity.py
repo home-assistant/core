@@ -2,6 +2,7 @@
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ai_task import async_generate_data
 from homeassistant.const import STATE_UNKNOWN
@@ -9,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import selector
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.freeze_time("2025-06-08 16:28:13")

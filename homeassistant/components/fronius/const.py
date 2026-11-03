@@ -1,11 +1,10 @@
 """Constants for the Fronius integration."""
 
 from datetime import timedelta
-from enum import StrEnum
 from typing import Final, NamedTuple, TypedDict
+from urllib.parse import urlsplit
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.typing import StateType
 
 DOMAIN: Final = "fronius"
 
@@ -31,6 +30,13 @@ def discovery_signal(entry_id: str) -> str:
     return f"{_SOLAR_NET_DISCOVERY_NEW}_{entry_id}"
 
 
+def host_from_config(host: str) -> str | None:
+    """Return the lowercased host name of a configured host, or None if unusable."""
+    # the configured host may be a bare host name or a full URL
+    url = host if "://" in host else f"//{host}"
+    return urlsplit(url).hostname
+
+
 SOLAR_NET_ID_POWER_FLOW: SolarNetId = "power_flow"
 SOLAR_NET_ID_SYSTEM: SolarNetId = "system"
 SOLAR_NET_RESCAN_TIMER: Final = 60
@@ -49,46 +55,10 @@ class FroniusDeviceInfo(NamedTuple):
     """Information about a Fronius inverter device."""
 
     device_info: DeviceInfo
+    # registry id of the inverter device, the parent of its MPPT child devices
+    device_id: str
     solar_net_id: SolarNetId
     unique_id: str
-
-
-class InverterStatusCodeOption(StrEnum):
-    """Status codes for Fronius inverters."""
-
-    # these are keys for state translations - so snake_case is used
-    STARTUP = "startup"
-    RUNNING = "running"
-    STANDBY = "standby"
-    BOOTLOADING = "bootloading"
-    ERROR = "error"
-    IDLE = "idle"
-    READY = "ready"
-    SLEEPING = "sleeping"
-
-
-_INVERTER_STATUS_CODES: Final[dict[int, InverterStatusCodeOption]] = {
-    0: InverterStatusCodeOption.STARTUP,
-    1: InverterStatusCodeOption.STARTUP,
-    2: InverterStatusCodeOption.STARTUP,
-    3: InverterStatusCodeOption.STARTUP,
-    4: InverterStatusCodeOption.STARTUP,
-    5: InverterStatusCodeOption.STARTUP,
-    6: InverterStatusCodeOption.STARTUP,
-    7: InverterStatusCodeOption.RUNNING,
-    8: InverterStatusCodeOption.STANDBY,
-    9: InverterStatusCodeOption.BOOTLOADING,
-    10: InverterStatusCodeOption.ERROR,
-    11: InverterStatusCodeOption.IDLE,
-    12: InverterStatusCodeOption.READY,
-    13: InverterStatusCodeOption.SLEEPING,
-    # 255: "Unknown" is handled by `None` state - same as the invalid codes.
-}
-
-
-def get_inverter_status_message(code: StateType) -> InverterStatusCodeOption | None:
-    """Return a status message for a given status code."""
-    return _INVERTER_STATUS_CODES.get(code)  # type: ignore[arg-type]
 
 
 INVERTER_ERROR_CODES: Final[dict[int, str]] = {
@@ -250,57 +220,3 @@ INVERTER_ERROR_CODES: Final[dict[int, str]] = {
     1196: "inverter_required_setup_values_not_received",
     65000: "dc_connection_inverter_battery_interrupted",
 }
-
-
-class MeterLocationCodeOption(StrEnum):
-    """Meter location codes for Fronius meters."""
-
-    # these are keys for state translations - so snake_case is used
-    FEED_IN = "feed_in"
-    CONSUMPTION_PATH = "consumption_path"
-    GENERATOR = "external_generator"
-    EXT_BATTERY = "external_battery"
-    SUBLOAD = "subload"
-
-
-def get_meter_location_description(code: StateType) -> MeterLocationCodeOption | None:
-    """Return a location_description for a given location code."""
-    match int(code):  # type: ignore[arg-type]
-        case 0:
-            return MeterLocationCodeOption.FEED_IN
-        case 1:
-            return MeterLocationCodeOption.CONSUMPTION_PATH
-        case 3:
-            return MeterLocationCodeOption.GENERATOR
-        case 4:
-            return MeterLocationCodeOption.EXT_BATTERY
-        case _ as _code if 256 <= _code <= 511:
-            return MeterLocationCodeOption.SUBLOAD
-    return None
-
-
-class OhmPilotStateCodeOption(StrEnum):
-    """OhmPilot state codes for Fronius inverters."""
-
-    # these are keys for state translations - so snake_case is used
-    UP_AND_RUNNING = "up_and_running"
-    KEEP_MINIMUM_TEMPERATURE = "keep_minimum_temperature"
-    LEGIONELLA_PROTECTION = "legionella_protection"
-    CRITICAL_FAULT = "critical_fault"
-    FAULT = "fault"
-    BOOST_MODE = "boost_mode"
-
-
-_OHMPILOT_STATE_CODES: Final[dict[int, OhmPilotStateCodeOption]] = {
-    0: OhmPilotStateCodeOption.UP_AND_RUNNING,
-    1: OhmPilotStateCodeOption.KEEP_MINIMUM_TEMPERATURE,
-    2: OhmPilotStateCodeOption.LEGIONELLA_PROTECTION,
-    3: OhmPilotStateCodeOption.CRITICAL_FAULT,
-    4: OhmPilotStateCodeOption.FAULT,
-    5: OhmPilotStateCodeOption.BOOST_MODE,
-}
-
-
-def get_ohmpilot_state_message(code: StateType) -> OhmPilotStateCodeOption | None:
-    """Return a status message for a given status code."""
-    return _OHMPILOT_STATE_CODES.get(code)  # type: ignore[arg-type]

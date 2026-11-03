@@ -7,6 +7,7 @@ from operator import attrgetter
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
@@ -64,8 +65,6 @@ from .consts import (
     USERNAME,
     VERIFY_SSL,
 )
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
 

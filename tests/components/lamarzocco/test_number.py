@@ -12,6 +12,7 @@ from pylamarzocco.const import (
 )
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -26,12 +27,96 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import async_init_integration
 
-from tests.common import MockConfigEntry
-
 DOSE_MODE_HA_TO_LM = {
     "dose1": DoseMode.DOSE_1,
     "dose2": DoseMode.DOSE_2,
 }
+
+
+@pytest.mark.parametrize(
+    "device_fixture", [ModelName.LINEA_MICRA, ModelName.LINEA_MINI, ModelName.GS3_AV]
+)
+async def test_coffee_temperature_limits(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Expose the coffee boiler limits supplied by each machine."""
+    boiler = mock_lamarzocco.dashboard.config[WidgetType.CM_COFFEE_BOILER]
+    boiler.target_temperature_step = 0.5
+    await async_init_integration(hass, mock_config_entry)
+    state = hass.states.get(
+        f"number.{mock_lamarzocco.serial_number}_coffee_target_temperature"
+    )
+    assert state
+    assert state.attributes["min"] == boiler.target_temperature_min
+    assert state.attributes["max"] == boiler.target_temperature_max
+    assert state.attributes["step"] == boiler.target_temperature_step
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "temperature"),
+    [
+        (ModelName.LINEA_MICRA, 80),
+        (ModelName.LINEA_MICRA, 83),
+        (ModelName.LINEA_MICRA, 100),
+        (ModelName.LINEA_MINI, 83),
+        (ModelName.GS3_AV, 110),
+    ],
+)
+async def test_coffee_temperature_supported_values(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    temperature: float,
+) -> None:
+    """Allow valid temperatures outside the formerly hard-coded range."""
+    await async_init_integration(hass, mock_config_entry)
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: (
+                f"number.{mock_lamarzocco.serial_number}_coffee_target_temperature"
+            ),
+            ATTR_VALUE: temperature,
+        },
+        blocking=True,
+    )
+    mock_lamarzocco.set_coffee_target_temperature.assert_called_once_with(
+        temperature=temperature
+    )
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "temperature"),
+    [
+        (ModelName.LINEA_MICRA, 79.9),
+        (ModelName.LINEA_MICRA, 100.1),
+        (ModelName.GS3_AV, 110.1),
+    ],
+)
+async def test_coffee_temperature_unsupported_values(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    temperature: float,
+) -> None:
+    """Reject temperatures outside the machine's reported range."""
+    await async_init_integration(hass, mock_config_entry)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: (
+                    f"number.{mock_lamarzocco.serial_number}_coffee_target_temperature"
+                ),
+                ATTR_VALUE: temperature,
+            },
+            blocking=True,
+        )
+    mock_lamarzocco.set_coffee_target_temperature.assert_not_called()
 
 
 @pytest.mark.parametrize(

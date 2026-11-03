@@ -16,6 +16,17 @@ from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 from aiogithubapi.models.release import GitHubReleaseModel
 from awesomeversion import AwesomeVersion
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_mock_service,
+    mock_integration,
+)
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 from yarl import URL
@@ -66,15 +77,6 @@ from . import (
 )
 from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_mock_service,
-    mock_integration,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-from tests.typing import WebSocketGenerator
 
 RATE_LIMITED = {"message": "API rate limit exceeded for 127.0.0.1."}
 

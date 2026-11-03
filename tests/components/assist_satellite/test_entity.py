@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
@@ -39,7 +40,6 @@ from homeassistant.exceptions import (
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
 
-from tests.common import MockUser
 from tests.components.tts.common import MockResultStream
 
 

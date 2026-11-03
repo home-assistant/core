@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from multidict import CIMultiDict
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -11,8 +12,6 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import oauth2
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 ACCESS_TOKEN = "mock-access-token"
 TOKEN_URL = "https://example.com/token"

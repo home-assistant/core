@@ -4,6 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_fixture,
+    load_json_object_fixture,
+)
 from python_homeassistant_analytics import CurrentAnalytics
 from python_homeassistant_analytics.models import Addon, CustomIntegration, Integration
 
@@ -14,15 +19,13 @@ from homeassistant.components.analytics_insights.const import (
     DOMAIN,
 )
 
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.analytics_insights.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

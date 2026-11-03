@@ -1,5 +1,8 @@
 """Test the Rainforest Eagle diagnostics."""
 
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.rainforest_eagle.const import (
     CONF_CLOUD_ID,
@@ -8,9 +11,6 @@ from homeassistant.components.rainforest_eagle.const import (
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_200_RESPONSE_WITHOUT_PRICE
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(

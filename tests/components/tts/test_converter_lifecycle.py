@@ -201,7 +201,9 @@ async def test_owner_close_stops_held_source_and_reaps(
         finally:
             closed.set()
 
-    gen = tts._async_convert_audio(ffmpeg_ready, "wav", source(), "wav")
+    gen = tts._async_convert_audio(
+        ffmpeg_ready, "wav", source(), "wav", to_sample_rate=8000
+    )
     close_task = None
     try:
         with patch(
@@ -1651,6 +1653,7 @@ async def test_converted_override_close_reaps_live_ffmpeg(
         output.writeframes(b"\x01\x02" * (16000 * 120))
 
     manager = SimpleNamespace(
+        converted_override_cache={},
         token_to_stream={},
         token_to_stream_cleanup=SimpleNamespace(schedule=lambda: None),
     )
@@ -1710,6 +1713,7 @@ async def test_converted_override_close_reaps_live_ffmpeg(
             await asyncio.wait_for(gen.aclose(), 3)
             assert processes[0].returncode is not None  # Before harness cleanup.
             assert converters[0].ag_frame is None
+            assert not manager.converted_override_cache
             if boundary == "public":
                 assert len(inners) == 1 and inners[0].ag_frame is None
     finally:
@@ -4419,4 +4423,167 @@ async def test_acquired_process_checks_shutdown_before_eager_source_pull(
             if process.returncode is None:
                 process.kill()
             await asyncio.wait_for(process.wait(), 3)
+        await gen.aclose()
+
+
+@pytest.mark.parametrize("raw_pcm", [False, True])
+@pytest.mark.parametrize("boundary", ["header", "audio", "cancel", "shutdown"])
+async def test_native_wav_source_ownership(
+    ffmpeg_ready: HomeAssistant, wav_audio: bytes, raw_pcm: bool, boundary: str
+) -> None:
+    """The no-process path owns its source without pulling ahead of demand."""
+    pulled = asyncio.Event()
+    release = asyncio.Event()
+    closed = asyncio.Event()
+    pulls = []
+    pcm_format = tts.PcmFormat(16000, 2, 1)
+    header = wav_audio[:40] + bytes(4)
+    prefix = wav_audio[44:2044]
+    tail = wav_audio[2044:4044]
+
+    async def source() -> AsyncGenerator[bytes]:
+        try:
+            pulls.append("prefix")
+            yield prefix if raw_pcm else header + prefix
+            pulls.append("tail")
+            pulled.set()
+            await release.wait()
+            yield tail
+        finally:
+            closed.set()
+
+    original_source = source()
+    gen = tts._async_convert_audio(
+        ffmpeg_ready,
+        None if raw_pcm else "wav",
+        original_source,
+        "wav",
+        from_pcm_format=pcm_format if raw_pcm else None,
+    )
+    owner = None
+    try:
+        with patch(
+            "homeassistant.components.tts.asyncio.create_subprocess_exec"
+        ) as spawn:
+            assert (await anext(gen)).startswith(b"RIFF")
+            if boundary != "header":
+                assert await anext(gen) == prefix
+            assert not pulled.is_set()
+            if boundary == "cancel":
+                owner = asyncio.create_task(anext(gen))
+                await asyncio.wait_for(pulled.wait(), 2)
+                owner.cancel()
+                with pytest.raises(asyncio.CancelledError):
+                    await _observe(owner)
+            elif boundary == "shutdown":
+                await ffmpeg_ready.async_stop(force=True)
+            else:
+                await asyncio.wait_for(gen.aclose(), 2)
+            if boundary == "header" and raw_pcm:
+                assert not pulls  # Closing an unstarted async generator runs no body.
+                assert original_source.ag_frame is None
+            else:
+                assert closed.is_set()
+            spawn.assert_not_called()
+    finally:
+        release.set()
+        if owner is not None:
+            if not owner.done():
+                owner.cancel()
+            await asyncio.gather(owner, return_exceptions=True)
+        await gen.aclose()
+
+
+@pytest.mark.parametrize("late_error", [False, True])
+async def test_native_wav_cancel_has_finite_source_close(
+    ffmpeg_ready: HomeAssistant, late_error: bool, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A slow native-source finalizer stays owned after finite cancellation."""
+    entered = asyncio.Event()
+    closing = asyncio.Event()
+    release = asyncio.Event()
+    closed = asyncio.Event()
+
+    async def source() -> AsyncGenerator[bytes]:
+        try:
+            yield b"\x01\x02"
+            entered.set()
+            await asyncio.Event().wait()
+        finally:
+            closing.set()
+            await release.wait()
+            closed.set()
+            if late_error:
+                raise RuntimeError("native source late close error")
+
+    gen = tts._async_convert_audio(
+        ffmpeg_ready, None, source(), "wav", from_pcm_format=tts.PcmFormat(16000, 2, 1)
+    )
+    owner = None
+    try:
+        assert (await anext(gen)).startswith(b"RIFF")
+        assert await anext(gen) == b"\x01\x02"
+        owner = asyncio.create_task(anext(gen))
+        await asyncio.wait_for(entered.wait(), 2)
+        owner.cancel()
+        await asyncio.wait_for(closing.wait(), 2)
+        with pytest.raises(asyncio.CancelledError):
+            await _observe(owner)
+        assert not closed.is_set()
+        assert any(
+            not task.done() and task.get_name().startswith("tts_native_")
+            for task in ffmpeg_ready._background_tasks
+        )
+        release.set()
+        await ffmpeg_ready.async_block_till_done(wait_background_tasks=True)
+        assert closed.is_set()
+        if late_error:
+            assert "native source late close error" in caplog.text
+    finally:
+        release.set()
+        if owner is not None:
+            if not owner.done():
+                owner.cancel()
+            await asyncio.gather(owner, return_exceptions=True)
+        await gen.aclose()
+
+
+@pytest.mark.parametrize("outcome", ["success", "pull_error", "close_error"])
+async def test_native_wav_complete_outcome(
+    ffmpeg_ready: HomeAssistant, outcome: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Native completion retains exact samples and the original source outcome."""
+    sentinel = RuntimeError("native primary sentinel")
+    closed = asyncio.Event()
+
+    async def source() -> AsyncGenerator[bytes]:
+        try:
+            yield b"\x01\x02"
+            if outcome == "pull_error":
+                raise sentinel
+            yield b"\x03\x04"
+        finally:
+            closed.set()
+            if outcome == "close_error":
+                raise sentinel
+
+    gen = tts._async_convert_audio(
+        ffmpeg_ready, None, source(), "wav", from_pcm_format=tts.PcmFormat(16000, 2, 1)
+    )
+    try:
+        assert (await anext(gen)).startswith(b"RIFF")
+        assert await anext(gen) == b"\x01\x02"
+        if outcome == "success":
+            assert await anext(gen) == b"\x03\x04"
+            with pytest.raises(StopAsyncIteration):
+                await anext(gen)
+            assert "cleanup task failed" not in caplog.text
+        else:
+            if outcome == "close_error":
+                assert await anext(gen) == b"\x03\x04"
+            with pytest.raises(RuntimeError) as caught:
+                await anext(gen)
+            assert caught.value is sentinel
+        assert closed.is_set()
+    finally:
         await gen.aclose()

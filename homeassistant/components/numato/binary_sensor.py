@@ -7,20 +7,18 @@ from typing import override
 from numato_gpio import NumatoGpioError
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import CONF_DEVICES, DEVICE_DEFAULT_NAME
+from homeassistant.const import (
+    CONF_BINARY_SENSORS,
+    CONF_DEVICES,
+    CONF_ID,
+    DEVICE_DEFAULT_NAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    CONF_BINARY_SENSORS,
-    CONF_ID,
-    CONF_INVERT_LOGIC,
-    CONF_PORTS,
-    DATA_API,
-    DOMAIN,
-)
+from . import CONF_INVERT_LOGIC, CONF_PORTS, DATA_API, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

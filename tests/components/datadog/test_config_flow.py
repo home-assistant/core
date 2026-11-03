@@ -2,14 +2,14 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.datadog.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .common import MOCK_CONFIG, MOCK_DATA, MOCK_OPTIONS
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(hass: HomeAssistant) -> None:

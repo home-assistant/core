@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
-import datetime
+import datetime as dt
 from typing import Any, override
 
 import probatio
@@ -63,7 +63,7 @@ UNITS: dict[str, str] = {
 }
 ICON = "mdi:chart-line"
 
-DEFAULT_MIN_STATE_DURATION = datetime.timedelta(0)
+DEFAULT_MIN_STATE_DURATION = dt.timedelta(0)
 
 
 def exactly_two_period_keys[_T: dict[str, Any]](conf: _T) -> _T:
@@ -130,8 +130,8 @@ async def async_setup_platform(
     entity_states: list[str] = config[CONF_STATE]
     start: Template | None = config.get(CONF_START)
     end: Template | None = config.get(CONF_END)
-    duration: datetime.timedelta | None = config.get(CONF_DURATION)
-    min_state_duration: datetime.timedelta = config[CONF_MIN_STATE_DURATION]
+    duration: dt.timedelta | None = config.get(CONF_DURATION)
+    min_state_duration: dt.timedelta = config[CONF_MIN_STATE_DURATION]
     sensor_type: str = config[CONF_TYPE]
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)

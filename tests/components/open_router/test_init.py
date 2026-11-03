@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import httpx
 from openai import AuthenticationError, OpenAIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_open_router import (
     OpenRouterAuthenticationError,
     OpenRouterConnectionError,
@@ -22,8 +23,6 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_migrate_entry_from_v1_1_to_v1_4(
@@ -74,7 +73,7 @@ async def test_migrate_entry_from_v1_1_to_v1_4(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -143,7 +142,7 @@ async def test_migrate_entry_from_v1_2_to_v1_4(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -194,7 +193,7 @@ async def test_migrate_entry_web_search_not_reapplied(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -236,7 +235,7 @@ async def test_migrate_entry_v1_3_to_v1_4_unknown_model(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -276,7 +275,7 @@ async def test_migrate_entry_v1_3_to_v1_4_keeps_existing_modalities(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

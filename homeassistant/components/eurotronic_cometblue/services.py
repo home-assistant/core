@@ -64,20 +64,13 @@ ScheduleEntry = TypedDict(
 def _validate_half_precision(value: float) -> float:
     """Return True if the value is a half precision float."""
 
-    try:
-        r = value % 0.5
-        if r != 0:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_half_precision",
-                translation_placeholders={"value": str(value), "remainder": str(r)},
-            )
-    except TypeError as err:
+    r = value % 0.5
+    if r != 0:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="invalid_float",
-            translation_placeholders={"value": str(value)},
-        ) from err
+            translation_key="invalid_half_precision",
+            translation_placeholders={"value": str(value), "remainder": str(r)},
+        )
     return value
 
 

@@ -28,6 +28,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.os_error import os_read_error
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import NFAndroidTVConfigEntry
@@ -156,12 +157,8 @@ async def _resolve_media(hass: HomeAssistant, media_source: dict[str, Any]) -> b
         )
     try:
         return await hass.async_add_executor_job(media.path.read_bytes)
-    except OSError as e:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="media_not_readable",
-            translation_placeholders={CONF_NAME: media.path.name},
-        ) from e
+    except OSError as err:
+        raise os_read_error(err, str(media.path)) from err
 
 
 async def async_get_service(

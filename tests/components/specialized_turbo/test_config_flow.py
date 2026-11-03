@@ -4,6 +4,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from bleak import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from specialized_turbo import (
     DecryptionError,
     EncryptionKeyProviderError,
@@ -41,8 +42,6 @@ from .conftest import (
     make_service_info,
     make_wrapped_key,
 )
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

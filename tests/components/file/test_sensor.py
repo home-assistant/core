@@ -3,12 +3,11 @@
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 
 from homeassistant.components.file import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, get_fixture_path
 
 
 @patch("os.path.isfile", Mock(return_value=True))

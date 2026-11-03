@@ -1,6 +1,6 @@
 """The todoist integration."""
 
-import datetime
+import datetime as dt
 import logging
 
 from todoist_api_python.api_async import TodoistAPIAsync
@@ -16,7 +16,7 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(minutes=1)
+SCAN_INTERVAL = dt.timedelta(minutes=1)
 
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]

@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Collection
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from functools import partial
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
@@ -89,6 +89,18 @@ _STATIC_CLASSES = {
 }
 
 
+def _comparable_config(conf: ConfData) -> ConfData:
+    """Return the config without metadata, and without the SSL profile if unused.
+
+    Without a certificate the profile has no effect, so a default config
+    persisted with an earlier default profile is still the default config.
+    """
+    conf = _strip_meta(conf)
+    if CONF_SSL_CERTIFICATE not in conf:
+        conf.pop(CONF_SSL_PROFILE, None)
+    return conf
+
+
 def make_server(
     hass: HomeAssistant,
     conf: ConfData,
@@ -111,11 +123,10 @@ def make_server(
         ssl_profile=conf[CONF_SSL_PROFILE],
         supervisor_unix_socket_path=supervisor_unix_socket_path,
         # Only the unconfigured default config on the new Supervisor default
-        # port bridges the previous one; compare without metadata so a default
-        # config reloaded from disk still matches.
+        # port bridges the previous one.
         port_transition=(
             ENV_SUPERVISOR in os.environ
-            and _strip_meta(conf) == _strip_meta(_DEFAULT_CONFIG)
+            and _comparable_config(conf) == _comparable_config(_DEFAULT_CONFIG)
             and conf[CONF_SERVER_PORT] != SERVER_PORT
         ),
     )
@@ -534,7 +545,7 @@ class HomeAssistantHTTP:
             .public_key(key.public_key())
             .serial_number(x509.random_serial_number())
             .not_valid_before(now)
-            .not_valid_after(now + datetime.timedelta(days=30))
+            .not_valid_after(now + dt.timedelta(days=30))
             .add_extension(
                 x509.SubjectAlternativeName([x509.DNSName(host)]),
                 critical=False,

@@ -10,6 +10,7 @@ from aioengiebelgium import (
     MfaMethod,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.engie_be.const import (
@@ -23,8 +24,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .conftest import EMAIL, PASSWORD, SUBJECT
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_EMAIL: EMAIL,

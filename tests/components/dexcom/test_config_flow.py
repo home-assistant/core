@@ -7,6 +7,7 @@ from unittest.mock import patch
 from pydexcom import Region
 from pydexcom.errors import AccountError, SessionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.dexcom.const import DOMAIN
@@ -16,15 +17,13 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import CONFIG
 
-from tests.common import MockConfigEntry
-
 
 @contextmanager
 def _patch_success() -> Generator[None]:
     """Patch the Dexcom client and entry setup."""
     with (
         patch("homeassistant.components.dexcom.config_flow.Dexcom"),
-        patch("homeassistant.components.dexcom.async_setup_entry", return_value=True),
+        patch("homeassistant.components.dexcom.async_setup_entry", return_value=None),
     ):
         yield
 
@@ -42,7 +41,7 @@ async def test_form(hass: HomeAssistant) -> None:
         patch("homeassistant.components.dexcom.config_flow.Dexcom"),
         patch(
             "homeassistant.components.dexcom.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -153,7 +152,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     with (
         patch("homeassistant.components.dexcom.config_flow.Dexcom") as mock_dexcom,
-        patch("homeassistant.components.dexcom.async_setup_entry", return_value=True),
+        patch("homeassistant.components.dexcom.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PASSWORD: "new_password"}

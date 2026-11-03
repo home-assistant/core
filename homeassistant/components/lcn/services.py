@@ -9,9 +9,9 @@ from pypck.device import DeviceConnection
 
 from homeassistant.const import (
     CONF_BRIGHTNESS,
-    CONF_DEVICE_ID,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
+    CommonServiceArgument,
 )
 from homeassistant.core import (
     HomeAssistant,
@@ -59,7 +59,7 @@ class LcnServiceCall:
 
     schema = probatio.Schema(
         {
-            probatio.Required(CONF_DEVICE_ID): cv.string,
+            probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
         }
     )
     supports_response = SupportsResponse.NONE
@@ -74,7 +74,10 @@ class LcnServiceCall:
         # device_connections is keyed by the ids of the main devices LCN registers
         # for its modules and groups, so a child device has no connection
         device, entry = async_get_device_and_config_entry(
-            self.hass, DOMAIN, service.data[CONF_DEVICE_ID], include_child_devices=False
+            self.hass,
+            DOMAIN,
+            service.data[CommonServiceArgument.DEVICE_ID],
+            include_child_devices=False,
         )
         return entry.runtime_data.device_connections[device.id]
 

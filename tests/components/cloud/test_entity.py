@@ -2,13 +2,14 @@
 
 import base64
 from collections.abc import Callable
-import datetime
+import datetime as dt
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from PIL import Image
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, llm, selector
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -367,7 +366,7 @@ async def test_prepare_chat_for_generation_passes_messages_through(
                 data={
                     "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
                     "response_type": "action_done",
-                    "speech_slots": {"time": datetime.time(12, 0)},
+                    "speech_slots": {"time": dt.time(12, 0)},
                     "data": {"success": [], "failed": []},
                 }
             ),

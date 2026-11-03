@@ -9,6 +9,12 @@ from infrared_protocols.commands.samsung_ac import (
     SamsungACFanMode,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -33,13 +39,6 @@ from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
 )
 
 _STORED_CLIMATE_DATA = {

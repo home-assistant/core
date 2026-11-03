@@ -1,5 +1,8 @@
 """Tests for victron_gx diagnostics."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
@@ -7,10 +10,6 @@ from victron_mqtt.testing import finalize_injection, inject_message
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_INSTALLATION_ID
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

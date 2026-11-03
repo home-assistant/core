@@ -3,7 +3,7 @@
 import logging
 from typing import Final
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN: Final = "mastodon"
 
@@ -36,9 +36,11 @@ ATTR_NOTE = "note"
 ATTR_AVATAR = "avatar"
 ATTR_AVATAR_MIME_TYPE = "avatar_mime_type"
 ATTR_DELETE_AVATAR = "delete_avatar"
+ATTR_AVATAR_DESCRIPTION = "avatar_description"
 ATTR_HEADER = "header"
 ATTR_HEADER_MIME_TYPE = "header_mime_type"
 ATTR_DELETE_HEADER = "delete_header"
+ATTR_HEADER_DESCRIPTION = "header_description"
 ATTR_BOT = "bot"
 ATTR_DISCOVERABLE = "discoverable"
 ATTR_FIELDS = "fields"
