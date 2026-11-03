@@ -3,8 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_mac_address": "The MAC address is missing from the Zeroconf record",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_nas": "The credentials belong to a different NAS than the one being re-authenticated."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

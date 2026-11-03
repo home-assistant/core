@@ -534,6 +534,81 @@ async def test_reauth(hass: HomeAssistant, service: MagicMock) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_with_filestation(
+    hass: HomeAssistant, service_with_filestation: MagicMock
+) -> None:
+    """Test reauthentication skips the backup location and keeps the options."""
+    options = {
+        CONF_BACKUP_SHARE: "/ha_backup",
+        CONF_BACKUP_PATH: "automatic_ha_backups",
+        CONF_SNAPSHOT_QUALITY: 1,
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: f"{PASSWORD}_invalid",
+        },
+        options=options,
+        unique_id=SERIAL,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_with_filestation,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == PASSWORD
+    assert entry.options == options
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_wrong_nas(hass: HomeAssistant, service: MagicMock) -> None:
+    """Test reauthentication aborts when the credentials reach a different NAS."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: f"{PASSWORD}_invalid",
+        },
+        unique_id=SERIAL_2,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_nas"
+    assert entry.data[CONF_PASSWORD] == f"{PASSWORD}_invalid"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfig_user(hass: HomeAssistant, service: MagicMock) -> None:
     """Test re-configuration of already existing entry by user."""
     MockConfigEntry(

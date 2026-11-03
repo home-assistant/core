@@ -21,6 +21,7 @@ from synology_dsm.exceptions import (
 )
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -248,7 +249,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
             self.shares = await self.api.file.get_shared_folders(only_writable=True)
 
-        if self.shares and not backup_path:
+        # Reauth keeps the backup location from the entry options
+        if self.shares and not backup_path and self.source != SOURCE_REAUTH:
             self.saved_user_input = user_input
             return await self.async_step_backup_share()
 
@@ -275,12 +277,18 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input.get(CONF_VOLUMES):
             config_data[CONF_VOLUMES] = user_input[CONF_VOLUMES]
 
-        if existing_entry:
-            reason = (
-                "reauth_successful" if self.reauth_conf else "reconfigure_successful"
-            )
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_nas")
             return self.async_update_reload_and_abort(
-                existing_entry, data=config_data, options=config_options, reason=reason
+                self._get_reauth_entry(), data=config_data
+            )
+
+        if existing_entry:
+            return self.async_update_reload_and_abort(
+                existing_entry,
+                data=config_data,
+                options=config_options,
+                reason="reconfigure_successful",
             )
 
         return self.async_create_entry(
