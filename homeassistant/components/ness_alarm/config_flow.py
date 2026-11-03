@@ -224,6 +224,6 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
                 subconfig_entry.data,
             ),
             description_placeholders={
-                CONF_ZONE_NUMBER: str(subconfig_entry.data[CONF_ZONE_NUMBER])
+                "zone_number": str(subconfig_entry.data[CONF_ZONE_NUMBER])
             },
         )
