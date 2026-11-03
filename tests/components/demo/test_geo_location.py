@@ -76,6 +76,28 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("geo_location_only")
+async def test_unload_entry(hass: HomeAssistant) -> None:
+    """Test unloading the config entry removes the events and stops updates."""
+    utcnow = dt_util.utcnow()
+    with freeze_time(utcnow):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert len(hass.states.async_entity_ids(geo_location.DOMAIN)) == (
+            NUMBER_OF_DEMO_DEVICES
+        )
+
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+        assert hass.states.async_entity_ids(geo_location.DOMAIN) == []
+
+        # The update timer is cancelled, so no new events are added
+        async_fire_time_changed(hass, utcnow + DEFAULT_UPDATE_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert hass.states.async_entity_ids(geo_location.DOMAIN) == []
+
+
+@pytest.mark.usefixtures("geo_location_only")
 async def test_setup_platform_deprecated(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
