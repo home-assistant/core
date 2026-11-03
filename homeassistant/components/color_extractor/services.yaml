@@ -7,6 +7,13 @@ turn_on:
       example: https://www.example.com/images/logo.png
       selector:
         text:
+    min_brightness:
+      example: 30
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: slider
     color_extract_path:
       example: /opt/images/logo.png
       selector:
@@ -17,6 +24,13 @@ get_color:
       example: https://www.example.com/images/logo.png
       selector:
         text:
+    min_brightness:
+      example: 30
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: slider
     color_extract_path:
       example: /opt/images/logo.png
       selector:
