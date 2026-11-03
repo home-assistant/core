@@ -233,7 +233,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         host = cast(str, urlparse(discovery_info.ssdp_location).hostname)
 
         await self.async_set_unique_id(discovery_info.upnp[ATTR_UPNP_UDN])
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._abort_if_unique_id_configured()
         self._async_abort_entries_match({CONF_HOST: host})
 
         scalarweb_info = discovery_info.upnp["X_ScalarWebAPI_DeviceInfo"]
