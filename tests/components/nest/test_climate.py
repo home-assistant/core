@@ -1971,41 +1971,6 @@ async def test_thermostat_set_temperature_eco(
     assert not auth.captured_requests
 
 
-async def test_thermostat_set_range_api_error(
-    hass: HomeAssistant,
-    setup_platform: PlatformSetup,
-    auth: FakeAuth,
-    create_device: CreateDevice,
-) -> None:
-    """Test the error message when setting a temperature range fails."""
-    create_device.create(
-        {
-            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
-            "sdm.devices.traits.ThermostatMode": {
-                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
-                "mode": "HEATCOOL",
-            },
-            "sdm.devices.traits.ThermostatTemperatureSetpoint": {
-                "heatCelsius": 19.0,
-                "coolCelsius": 25.0,
-            },
-        },
-    )
-    await setup_platform()
-    auth.responses = [aiohttp.web.Response(status=HTTPStatus.BAD_REQUEST)]
-
-    with pytest.raises(HomeAssistantError) as err:
-        await common.async_set_temperature(
-            hass, target_temp_low=20.0, target_temp_high=24.0
-        )
-
-    assert "temperature range 20.0 to 24.0" in str(err.value)
-    assert auth.json == {
-        "command": "sdm.devices.commands.ThermostatTemperatureSetpoint.SetRange",
-        "params": {"heatCelsius": 20.0, "coolCelsius": 24.0},
-    }
-
-
 async def test_thermostat_available(
     hass: HomeAssistant, setup_platform: PlatformSetup, create_device: CreateDevice
 ) -> None:

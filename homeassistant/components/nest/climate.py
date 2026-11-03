@@ -68,14 +68,10 @@ FAN_MODE_MAP = {
 FAN_INV_MODE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 FAN_INV_MODES = list(FAN_INV_MODE_MAP)
 
-# Max duration for fan timer in seconds (12 hours), per the SDM API.
-MAX_FAN_DURATION = 43200
-
-# Minimum gap between low and high target temps, per the SDM API.
-MIN_TEMP_RANGE = 1.66667
-
+MAX_FAN_DURATION = 43200  # 12 hours is the max in the SDM API
 MIN_TEMP = 10
 MAX_TEMP = 32
+MIN_TEMP_RANGE = 1.66667
 
 
 async def async_setup_entry(
@@ -336,10 +332,7 @@ class ThermostatEntity(ClimateEntity):
             # Ensure there is a minimum gap between new high and low temps.
             if high_temp - low_temp < MIN_TEMP_RANGE:
                 # Move the temp that did not change to maintain the minimum gap.
-                if (
-                    self.native_target_temperature_high
-                    and abs(high_temp - self.native_target_temperature_high) < 0.01
-                ):
+                if abs(high_temp - self.native_target_temperature_high) < 0.01:
                     high_temp = low_temp + MIN_TEMP_RANGE
                 else:
                     low_temp = high_temp - MIN_TEMP_RANGE
@@ -352,12 +345,12 @@ class ThermostatEntity(ClimateEntity):
         trait = self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
 
         try:
-            if hvac_mode == HVACMode.HEAT and temp:
-                await trait.set_heat(temp)
-            elif hvac_mode == HVACMode.COOL and temp:
-                await trait.set_cool(temp)
             if hvac_mode == HVACMode.HEAT_COOL and low_temp and high_temp:
                 await trait.set_range(low_temp, high_temp)
+            elif hvac_mode == HVACMode.COOL and temp:
+                await trait.set_cool(temp)
+            elif hvac_mode == HVACMode.HEAT and temp:
+                await trait.set_heat(temp)
         except ApiException as err:
             raise HomeAssistantError(
                 f"Error setting {self.entity_id} {temperature_description}: {err}"
