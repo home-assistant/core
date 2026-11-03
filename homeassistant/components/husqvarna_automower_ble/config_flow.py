@@ -11,7 +11,7 @@ from bleak_retry_connector import get_device
 from gardena_bluetooth.const import ScanService
 from gardena_bluetooth.parse import ProductType
 from gardena_bluetooth.scan import async_get_manufacturer_data
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfo
@@ -20,16 +20,16 @@ from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 
 from .const import DOMAIN, LOGGER
 
-BLUETOOTH_SCHEMA = vol.Schema(
+BLUETOOTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PIN): str,
+        probatio.Required(probatio.Secret(CONF_PIN)): str,
     }
 )
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ADDRESS): str,
-        vol.Required(CONF_PIN): str,
+        probatio.Required(CONF_ADDRESS): str,
+        probatio.Required(probatio.Secret(CONF_PIN)): str,
     }
 )
 
@@ -170,6 +170,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Failed to probe device (%s): %s", self.address, exception)
             return None
 
+        # The library returns None for the values it couldn't read
+        if manufacturer is None or device_type is None:
+            LOGGER.debug("Failed to read the device info of %s", self.address)
+            return None
+
         title = manufacturer + " " + device_type
 
         LOGGER.debug("Found device: %s", title)
@@ -219,14 +224,16 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         self.mower_name = title
 
-        try:
-            errors: dict[str, str] = {}
+        errors: dict[str, str] = {}
 
+        try:
             (channel_id, mower) = await self.connect_mower(device)
 
             response_result = await mower.connect(device)
             await mower.disconnect()
-
+        except TimeoutError, BleakError:
+            return self.async_abort(reason="cannot_connect")
+        else:
             if response_result is not ResponseResult.OK:
                 LOGGER.debug("cannot connect, response: %s", response_result)
 
@@ -262,8 +269,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                     errors=errors,
                 )
-        except TimeoutError, BleakError:
-            return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=title,
@@ -313,6 +318,13 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 response_result = await mower.connect(device)
                 await mower.disconnect()
+
+            except TimeoutError, BleakError:
+                # We don't want to abort a reauth flow when we can't connect, so
+                # we just show the form again with an error.
+                errors["base"] = "cannot_connect"
+
+            else:
                 if (
                     response_result is ResponseResult.INVALID_PIN
                     or response_result is ResponseResult.NOT_ALLOWED
@@ -325,11 +337,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._get_reauth_entry(),
                         data=reauth_entry.data | {CONF_PIN: self.pin},
                     )
-
-            except TimeoutError, BleakError:
-                # We don't want to abort a reauth flow when we can't connect, so
-                # we just show the form again with an error.
-                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="reauth_confirm",

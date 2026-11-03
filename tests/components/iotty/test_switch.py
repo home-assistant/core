@@ -3,6 +3,7 @@
 from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 from iottycloud.verbs import RESULT, STATUS, STATUS_OFF, STATUS_ON
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.iotty.const import DOMAIN
@@ -21,8 +22,6 @@ from homeassistant.helpers import (
 )
 
 from .conftest import test_ls_one_added, test_ls_one_removed, test_ou_one_added
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def check_command_ok(

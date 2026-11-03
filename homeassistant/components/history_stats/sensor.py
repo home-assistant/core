@@ -2,10 +2,10 @@
 
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
-import datetime
+import datetime as dt
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -63,13 +63,13 @@ UNITS: dict[str, str] = {
 }
 ICON = "mdi:chart-line"
 
-DEFAULT_MIN_STATE_DURATION = datetime.timedelta(0)
+DEFAULT_MIN_STATE_DURATION = dt.timedelta(0)
 
 
 def exactly_two_period_keys[_T: dict[str, Any]](conf: _T) -> _T:
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
     if sum(param in conf for param in CONF_PERIOD_KEYS) != 2:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "You must provide exactly 2 of the following: start, end, duration"
         )
     return conf
@@ -81,27 +81,33 @@ def no_ratio_total[_T: dict[str, Any]](conf: _T) -> _T:
         conf.get(CONF_TYPE) == CONF_TYPE_RATIO
         and conf.get(CONF_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     ):
-        raise vol.Invalid("State class total_increasing not to be used with type ratio")
+        raise probatio.Invalid(
+            "State class total_increasing not to be used with type ratio"
+        )
     return conf
 
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     SENSOR_PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Required(CONF_STATE): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_START): cv.template,
-            vol.Optional(CONF_END): cv.template,
-            vol.Optional(CONF_DURATION): cv.time_period,
-            vol.Optional(
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+            probatio.Required(CONF_STATE): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            ),
+            probatio.Optional(CONF_START): cv.template,
+            probatio.Optional(CONF_END): cv.template,
+            probatio.Optional(CONF_DURATION): cv.time_period,
+            probatio.Optional(
                 CONF_MIN_STATE_DURATION, default=DEFAULT_MIN_STATE_DURATION
             ): cv.time_period,
-            vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME): vol.In(CONF_TYPE_KEYS),
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(
+            probatio.Optional(CONF_TYPE, default=CONF_TYPE_TIME): probatio.In(
+                CONF_TYPE_KEYS
+            ),
+            probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            probatio.Optional(CONF_UNIQUE_ID): cv.string,
+            probatio.Optional(
                 CONF_STATE_CLASS, default=SensorStateClass.MEASUREMENT
-            ): vol.In(
+            ): probatio.In(
                 [None, SensorStateClass.MEASUREMENT, SensorStateClass.TOTAL_INCREASING]
             ),
         }
@@ -124,8 +130,8 @@ async def async_setup_platform(
     entity_states: list[str] = config[CONF_STATE]
     start: Template | None = config.get(CONF_START)
     end: Template | None = config.get(CONF_END)
-    duration: datetime.timedelta | None = config.get(CONF_DURATION)
-    min_state_duration: datetime.timedelta = config[CONF_MIN_STATE_DURATION]
+    duration: dt.timedelta | None = config.get(CONF_DURATION)
+    min_state_duration: dt.timedelta = config[CONF_MIN_STATE_DURATION]
     sensor_type: str = config[CONF_TYPE]
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)

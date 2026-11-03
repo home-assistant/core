@@ -4,8 +4,8 @@ from json.decoder import JSONDecodeError
 from typing import Any, override
 
 from dremel3dpy import Dremel3DPrinter
+import probatio
 from requests.exceptions import ConnectTimeout, HTTPError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -14,8 +14,8 @@ from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN, LOGGER
 
 
-def _schema_with_defaults(host: str = "") -> vol.Schema:
-    return vol.Schema({vol.Required(CONF_HOST, default=host): cv.string})
+def _schema_with_defaults(host: str = "") -> probatio.Schema:
+    return probatio.Schema({probatio.Required(CONF_HOST, default=host): cv.string})
 
 
 class Dremel3DPrinterConfigFlow(ConfigFlow, domain=DOMAIN):

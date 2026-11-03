@@ -10,7 +10,7 @@ from .coordinator import Alpha2BaseCoordinator, Alpha2ConfigEntry
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Alpha2ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Alpha2ConfigEntry) -> None:
     """Set up a config entry."""
     base = Alpha2Base(entry.data[CONF_HOST])
     coordinator = Alpha2BaseCoordinator(hass, entry, base)
@@ -21,12 +21,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: Alpha2ConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: Alpha2ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Alpha2ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: Alpha2ConfigEntry) -> None:

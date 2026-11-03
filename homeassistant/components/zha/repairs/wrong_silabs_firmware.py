@@ -63,13 +63,16 @@ def _detect_radio_hardware(hass: HomeAssistant, device: str) -> HardwareType:
     return HardwareType.OTHER
 
 
-async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> bool:
+async def warn_on_wrong_silabs_firmware(
+    hass: HomeAssistant, device: str, config_entry_id: str | None = None
+) -> bool:
     """Create a repair issue if the wrong type of SiLabs firmware is detected."""
     # Only consider actual serial ports
     if device.startswith("socket://"):
         return False
 
     app_type = await probe_silabs_firmware_type(
+        hass,
         device,
         application_probe_methods=[
             (ApplicationType.GECKO_BOOTLOADER, 115200),
@@ -92,11 +95,16 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
         # reconnect, it should work
         raise AlreadyRunningEZSP
 
+    if app_type == ApplicationType.SPINEL_ZIGGURAT:
+        # ZHA uses this firmware through the Ziggurat radio type
+        return False
+
     hardware_type = _detect_radio_hardware(hass, device)
     ir.async_create_issue(
         hass,
         domain=DOMAIN,
         issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
+        config_entry_id=config_entry_id,
         is_fixable=False,
         is_persistent=True,
         severity=ir.IssueSeverity.ERROR,

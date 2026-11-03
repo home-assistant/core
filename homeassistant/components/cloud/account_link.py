@@ -1,7 +1,6 @@
 """Account linking via the cloud."""
 
 from datetime import datetime
-from http import HTTPStatus
 import logging
 from typing import Any, override
 
@@ -11,11 +10,6 @@ from hass_nabucasa import account_link
 
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import (
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-    OAuth2TokenRequestTransientError,
-)
 from homeassistant.helpers import config_entry_oauth2_flow, event
 
 from .const import DATA_CLOUD, DOMAIN
@@ -113,6 +107,12 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
         """Domain that is providing the implementation."""
         return DOMAIN
 
+    @property
+    @override
+    def service_domain(self) -> str:
+        """Domain of the service the tokens are for."""
+        return self.service
+
     @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
@@ -157,35 +157,7 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
     @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
-        try:
-            new_token = await account_link.async_fetch_access_token(
-                self.hass.data[DATA_CLOUD], self.service, token["refresh_token"]
-            )
-        except aiohttp.ClientResponseError as err:
-            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
-                raise OAuth2TokenRequestTransientError(
-                    request_info=err.request_info,
-                    history=err.history,
-                    status=err.status,
-                    message=err.message,
-                    headers=err.headers,
-                    domain=self.service,
-                ) from err
-            if 400 <= err.status <= 499:
-                raise OAuth2TokenRequestReauthError(
-                    request_info=err.request_info,
-                    history=err.history,
-                    status=err.status,
-                    message=err.message,
-                    headers=err.headers,
-                    domain=self.service,
-                ) from err
-            raise OAuth2TokenRequestError(
-                request_info=err.request_info,
-                history=err.history,
-                status=err.status,
-                message=err.message,
-                headers=err.headers,
-                domain=self.service,
-            ) from err
+        new_token = await account_link.async_fetch_access_token(
+            self.hass.data[DATA_CLOUD], self.service, token["refresh_token"]
+        )
         return {**token, **new_token}

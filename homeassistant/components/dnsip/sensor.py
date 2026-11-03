@@ -27,6 +27,8 @@ from .const import (
     DOMAIN,
 )
 
+PARALLEL_UPDATES = 1
+
 DEFAULT_RETRIES = 2
 MAX_RESULTS = 10
 
@@ -153,7 +155,7 @@ class WanIpSensor(SensorEntity):
             await self._resolver.close()
             return ips
         except DNSError as err:
-            _LOGGER.warning("Exception while resolving host: %s", err)
+            _LOGGER.debug("Exception while resolving host: %s", err)
             await self._resolver.close()
             return ips
 
@@ -172,9 +174,13 @@ class WanIpSensor(SensorEntity):
             sorted_ips = sort_ips(ips, querytype=self.querytype)
             self._attr_native_value = sorted_ips[0]
             self._attr_extra_state_attributes["ip_addresses"] = sorted_ips
+            if not self._attr_available:
+                _LOGGER.info("DNS resolution recovered for host: %s", self.hostname)
             self._attr_available = True
             self._retries = DEFAULT_RETRIES
         elif self._retries > 0:
             self._retries -= 1
         else:
+            if self._attr_available:
+                _LOGGER.error("DNS resolution failed for host: %s", self.hostname)
             self._attr_available = False

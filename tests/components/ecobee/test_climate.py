@@ -6,25 +6,26 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import const
 from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.ecobee.climate import (
-    ATTR_PRESET_MODE,
-    ATTR_SENSOR_LIST,
-    PRESET_AWAY_INDEFINITELY,
-    Thermostat,
-)
+from homeassistant.components.ecobee.climate import PRESET_AWAY_INDEFINITELY, Thermostat
 from homeassistant.components.ecobee.const import DOMAIN
-from homeassistant.components.ecobee.services import _async_get_thermostats
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
+from homeassistant.components.ecobee.services import (
+    EcobeeServiceArgument,
+    _async_get_thermostats,
+)
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    STATE_OFF,
+    CommonServiceArgument,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "climate.ecobee"
 
@@ -458,14 +459,15 @@ async def test_remote_sensors(hass: HomeAssistant) -> None:
 
 
 async def test_remote_sensor_devices(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test remote sensor devices."""
     await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
     freezer.tick(100)
     async_fire_time_changed(hass)
     state = hass.states.get(ENTITY_ID)
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     for device in device_registry.devices:
         if device.name == "Remote Sensor 1":
             remote_sensor_1_id = device.id
@@ -545,7 +547,9 @@ async def test_remote_sensor_ids_names(hass: HomeAssistant) -> None:
     assert sorted(name_by_user_list) == sorted(["Remote Sensor 1", "ecobee"])
 
 
-async def test_remote_sensors_ignore_non_ecobee_devices(hass: HomeAssistant) -> None:
+async def test_remote_sensors_ignore_non_ecobee_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Devices from other integrations sharing a sensor's name are not matched.
 
     Regression test: the remote-sensor device lookup matched by device name across
@@ -553,7 +557,6 @@ async def test_remote_sensors_ignore_non_ecobee_devices(hass: HomeAssistant) -> 
     an ecobee sensor's name was wrongly reported as a participating sensor.
     """
     await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # A device from another integration that shares the ecobee sensor's name.
     other_entry = MockConfigEntry(domain="other")
@@ -579,11 +582,12 @@ async def test_remote_sensors_ignore_non_ecobee_devices(hass: HomeAssistant) -> 
     assert sorted(name_by_user_list) == sorted(["Remote Sensor 1", "ecobee"])
 
 
-async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
+async def test_set_sensors_used_in_climate(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test set sensors used in climate."""
     # Get device_id of remote sensor from the device registry.
     await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     for device in device_registry.devices:
         if device.name == "Remote Sensor 1":
             remote_sensor_1_id = device.id
@@ -604,9 +608,9 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: [remote_sensor_1_id],
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.PRESET_MODE: "Climate1",
+                EcobeeServiceArgument.DEVICE_IDS: [remote_sensor_1_id],
             },
             blocking=True,
         )
@@ -619,8 +623,8 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_SENSOR_LIST: [remote_sensor_1_id],
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.DEVICE_IDS: [remote_sensor_1_id],
             },
             blocking=True,
         )
@@ -635,9 +639,9 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: [ecobee_id],
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.PRESET_MODE: "Climate1",
+                EcobeeServiceArgument.DEVICE_IDS: [ecobee_id],
             },
             blocking=True,
         )
@@ -649,9 +653,9 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: "InvalidClimate",
-                ATTR_SENSOR_LIST: [remote_sensor_1_id],
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.PRESET_MODE: "InvalidClimate",
+                EcobeeServiceArgument.DEVICE_IDS: [remote_sensor_1_id],
             },
             blocking=True,
         )
@@ -664,9 +668,9 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: ["abcd"],
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.PRESET_MODE: "Climate1",
+                EcobeeServiceArgument.DEVICE_IDS: ["abcd"],
             },
             blocking=True,
         )
@@ -679,9 +683,9 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: [remote_sensor_2_id],
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.PRESET_MODE: "Climate1",
+                EcobeeServiceArgument.DEVICE_IDS: [remote_sensor_2_id],
             },
             blocking=True,
         )
@@ -691,9 +695,9 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
             DOMAIN,
             "set_sensors_used_in_climate",
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_PRESET_MODE: "Climate1",
-                ATTR_SENSOR_LIST: [
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                EcobeeServiceArgument.PRESET_MODE: "Climate1",
+                EcobeeServiceArgument.DEVICE_IDS: [
                     remote_sensor_1_id,
                     device_from_other_integration.id,
                 ],

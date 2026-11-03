@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AzureDevOpsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AzureDevOpsConfigEntry) -> None:
     """Set up Azure DevOps from a config entry."""
 
     # Create the data update coordinator
@@ -36,9 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AzureDevOpsConfigEntry) 
     # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload Azure DevOps config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

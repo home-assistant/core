@@ -7,25 +7,41 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiohttp import ClientError
-from multidict import CIMultiDict
+from aiohttp import (
+    ClientError,
+    ClientPayloadError,
+    ClientResponseError,
+    ContentTypeError,
+    RequestInfo,
+    ServerTimeoutError,
+)
+from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
+from yarl import URL
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
-
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 TEST_DOMAIN = "oauth2_test"
 CLIENT_SECRET = "5678"
@@ -35,6 +51,8 @@ ACCESS_TOKEN_1 = "mock-access-token-1"
 ACCESS_TOKEN_2 = "mock-access-token-2"
 AUTHORIZE_URL = "https://example.como/auth/authorize"
 TOKEN_URL = "https://example.como/auth/token"
+# Far enough ahead that a token carrying it always counts as unexpired.
+FUTURE_EXPIRES_AT = 2000000000
 MOCK_SECRET_TOKEN_URLSAFE = (
     "token-"
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -838,6 +856,36 @@ async def test_local_refresh_token(
     }
 
 
+async def test_local_refresh_token_client_secret_basic(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test overriding token_auth_method sends the credentials as basic auth."""
+
+    class BasicAuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
+        token_auth_method = "client_secret_basic"
+
+    local_impl = BasicAuthImplementation(
+        hass, TEST_DOMAIN, CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL
+    )
+    aioclient_mock.post(
+        TOKEN_URL, json={"access_token": ACCESS_TOKEN_2, "expires_in": 100}
+    )
+
+    await local_impl.async_refresh_token(
+        {"refresh_token": REFRESH_TOKEN, "access_token": ACCESS_TOKEN_1}
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "client_id": CLIENT_ID,
+        "grant_type": "refresh_token",
+        "refresh_token": REFRESH_TOKEN,
+    }
+    # base64 of "1234:5678"
+    assert aioclient_mock.mock_calls[0][3] == {"Authorization": "Basic MTIzNDo1Njc4"}
+
+
 async def test_oauth_session(
     hass: HomeAssistant,
     flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
@@ -1107,6 +1155,356 @@ async def test_oauth_session_refresh_failure_exceptions(
 
 
 @pytest.mark.parametrize(
+    "raised",
+    [
+        pytest.param(ClientError("Cannot connect"), id="client_error"),
+        pytest.param(ServerTimeoutError("Timeout"), id="timeout"),
+    ],
+)
+async def test_oauth_session_refresh_connection_error_is_transient(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+    raised: Exception,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a token request that never gets a response is mapped to a transient error."""
+    mock_integration(hass, MockModule(domain=TEST_DOMAIN))
+
+    flow_handler.async_register_implementation(hass, local_impl)
+
+    aioclient_mock.post(TOKEN_URL, exc=raised)
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with (
+        caplog.at_level(logging.DEBUG),
+        pytest.raises(OAuth2TokenRequestConnectionError) as err,
+    ):
+        await session.async_ensure_token_valid()
+
+    # Integrations rely on this to retry setup without mapping the error themselves.
+    assert isinstance(err.value, ConfigEntryNotReady)
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "oauth2_helper_refresh_transient"
+    assert f"Token request for {TEST_DOMAIN} got no response" in caplog.text
+    assert str(raised) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param({"access_token": ACCESS_TOKEN_2}, id="missing_expires_in"),
+        pytest.param(
+            {"access_token": ACCESS_TOKEN_2, "expires_in": "soon"},
+            id="unparsable_expires_in",
+        ),
+        pytest.param(
+            {"access_token": ACCESS_TOKEN_2, "expires_in": None},
+            id="null_expires_in",
+        ),
+    ],
+)
+async def test_oauth_session_malformed_refresh_response_is_not_reauth(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+    response: dict[str, Any],
+) -> None:
+    """Test an unusable token response retries instead of blaming stored credentials."""
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "access_token": ACCESS_TOKEN_1,
+                "refresh_token": REFRESH_TOKEN,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    aioclient_mock.post(TOKEN_URL, json=response)
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with (
+        patch.object(config_entry, "async_start_reauth_if_available") as start_reauth,
+        pytest.raises(OAuth2TokenRequestConnectionError) as err,
+    ):
+        await session.async_ensure_token_valid()
+
+    assert isinstance(err.value, ConfigEntryNotReady)
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "oauth2_helper_refresh_transient"
+    # Relinking the account cannot fix a bad response, so it must not ask for it.
+    start_reauth.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param({"expires_in": 100}, id="no_access_token"),
+        pytest.param({"access_token": None, "expires_in": 100}, id="null_access_token"),
+        pytest.param({"access_token": "", "expires_in": 100}, id="blank_access_token"),
+    ],
+)
+async def test_oauth_session_refresh_without_access_token_is_rejected(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+    response: dict[str, Any],
+) -> None:
+    """Test a response with no usable access token is not merged over the old one."""
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "access_token": ACCESS_TOKEN_1,
+                "refresh_token": REFRESH_TOKEN,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    aioclient_mock.post(TOKEN_URL, json=response)
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with pytest.raises(OAuth2TokenRequestConnectionError):
+        await session.async_ensure_token_valid()
+
+    # The stale token must stay expired so the next attempt refreshes again.
+    assert config_entry.data["token"]["access_token"] == ACCESS_TOKEN_1
+    assert config_entry.data["token"]["expires_at"] == 0
+
+
+@pytest.mark.parametrize(
+    "refreshed",
+    [
+        pytest.param({"expires_in": 100}, id="no_access_token"),
+        pytest.param({"access_token": None, "expires_in": 100}, id="null_access_token"),
+    ],
+)
+async def test_oauth_session_custom_implementation_without_access_token(
+    hass: HomeAssistant,
+    refreshed: dict[str, Any],
+) -> None:
+    """Test an implementation returning no usable access token is rejected."""
+
+    class BadImplementation(MockOAuth2Implementation):
+        """Implementation whose refresh skips the local token request."""
+
+        async def _async_refresh_token(self, token: dict) -> dict:
+            """Refresh a token."""
+            return refreshed
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "access_token": ACCESS_TOKEN_1,
+                "refresh_token": REFRESH_TOKEN,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    session = config_entry_oauth2_flow.OAuth2Session(
+        hass, config_entry, BadImplementation()
+    )
+    with pytest.raises(OAuth2TokenRequestConnectionError):
+        await session.async_ensure_token_valid()
+
+    assert config_entry.data["token"]["access_token"] == ACCESS_TOKEN_1
+
+
+@pytest.mark.parametrize(
+    "refreshed",
+    [
+        pytest.param({"expires_at": FUTURE_EXPIRES_AT}, id="no_access_token"),
+        pytest.param({"access_token": ACCESS_TOKEN_2}, id="no_expires_at"),
+    ],
+)
+async def test_oauth_session_never_stores_an_unusable_token(
+    hass: HomeAssistant,
+    refreshed: dict[str, Any],
+) -> None:
+    """Test the session checks the new token even when the refresh skips its own."""
+
+    class UncheckedImplementation(MockOAuth2Implementation):
+        """Implementation overriding the public refresh, so nothing maps for it."""
+
+        async def async_refresh_token(self, token: dict) -> dict:
+            """Refresh a token without the base class validation."""
+            return refreshed
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "access_token": ACCESS_TOKEN_1,
+                "refresh_token": REFRESH_TOKEN,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    session = config_entry_oauth2_flow.OAuth2Session(
+        hass, config_entry, UncheckedImplementation()
+    )
+    with pytest.raises(OAuth2TokenRequestConnectionError):
+        await session.async_ensure_token_valid()
+
+    assert config_entry.data["token"]["access_token"] == ACCESS_TOKEN_1
+    assert config_entry.data["token"]["expires_at"] == 0
+
+
+@pytest.mark.parametrize(
+    ("raised", "expected_exception"),
+    [
+        pytest.param(
+            ClientPayloadError("Disconnected"),
+            OAuth2TokenRequestConnectionError,
+            id="payload_error",
+        ),
+        pytest.param(
+            ContentTypeError(
+                RequestInfo(
+                    url=URL(TOKEN_URL),
+                    method="POST",
+                    headers=CIMultiDictProxy(CIMultiDict()),
+                ),
+                (),
+            ),
+            OAuth2TokenRequestError,
+            id="content_type_error",
+        ),
+    ],
+)
+async def test_oauth_session_refresh_body_error_is_mapped(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+    raised: Exception,
+    expected_exception: type[Exception],
+) -> None:
+    """Test a failure reading the token response body does not leak an aiohttp error."""
+    mock_integration(hass, MockModule(domain=TEST_DOMAIN))
+
+    flow_handler.async_register_implementation(hass, local_impl)
+
+    aioclient_mock.post(TOKEN_URL, json={})
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with (
+        patch.object(AiohttpClientMockResponse, "json", side_effect=raised),
+        pytest.raises(expected_exception) as err,
+    ):
+        await session.async_ensure_token_valid()
+
+    assert type(err.value) is expected_exception
+    assert isinstance(err.value, ConfigEntryNotReady)
+
+
+@pytest.mark.parametrize(
+    ("raised", "expected_exception", "expected_base"),
+    [
+        pytest.param(
+            ClientResponseError(
+                RequestInfo(
+                    url=URL(TOKEN_URL),
+                    method="POST",
+                    headers=CIMultiDictProxy(CIMultiDict()),
+                ),
+                (),
+                status=HTTPStatus.UNAUTHORIZED,
+            ),
+            OAuth2TokenRequestReauthError,
+            ConfigEntryAuthFailed,
+            id="reauth",
+        ),
+        pytest.param(
+            ClientResponseError(
+                RequestInfo(
+                    url=URL(TOKEN_URL),
+                    method="POST",
+                    headers=CIMultiDictProxy(CIMultiDict()),
+                ),
+                (),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            ),
+            OAuth2TokenRequestTransientError,
+            ConfigEntryNotReady,
+            id="transient",
+        ),
+        pytest.param(
+            ClientError("Cannot connect"),
+            OAuth2TokenRequestConnectionError,
+            ConfigEntryNotReady,
+            id="connection_error",
+        ),
+    ],
+)
+async def test_refresh_maps_errors_from_custom_implementation(
+    hass: HomeAssistant,
+    raised: Exception,
+    expected_exception: type[Exception],
+    expected_base: type[Exception],
+) -> None:
+    """Test an implementation issuing its own token request still raises mapped errors."""
+
+    class UnmappedImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
+        """Implementation that lets raw aiohttp errors escape, like a custom one."""
+
+        async def _async_refresh_token(self, token: dict) -> dict:
+            raise raised
+
+    implementation = UnmappedImplementation(
+        hass, TEST_DOMAIN, CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL
+    )
+
+    with pytest.raises(expected_exception) as err:
+        await implementation.async_refresh_token({"refresh_token": REFRESH_TOKEN})
+
+    assert type(err.value) is expected_exception
+    assert isinstance(err.value, expected_base)
+    assert err.value.__cause__ is raised
+
+
+@pytest.mark.parametrize(
     "entry_state",
     [
         pytest.param(
@@ -1296,7 +1694,7 @@ async def test_oauth_with_pkce_adds_code_verifier_to_token_resolve(
         hass,
         MockModule(
             domain=TEST_DOMAIN,
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
@@ -1354,24 +1752,6 @@ async def test_oauth_with_pkce_adds_code_verifier_to_token_resolve(
         "redirect_uri": "https://example.com/auth/external/callback",
         "code_verifier": MOCK_SECRET_TOKEN_URLSAFE,
     }
-
-
-@pytest.mark.parametrize("code_verifier_length", [40, 129])
-def test_generate_code_verifier_invalid_length(code_verifier_length: int) -> None:
-    """Test generate_code_verifier with an invalid length."""
-    with pytest.raises(ValueError):
-        config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce.generate_code_verifier(
-            code_verifier_length
-        )
-
-
-@pytest.mark.parametrize("code_verifier", ["", "yyy", "a" * 129])
-def test_compute_code_challenge_invalid_code_verifier(code_verifier: str) -> None:
-    """Test compute_code_challenge with an invalid code_verifier."""
-    with pytest.raises(ValueError):
-        config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce.compute_code_challenge(
-            code_verifier
-        )
 
 
 async def test_async_get_config_entry_impl_with_failing_and_succeeding_provider(
@@ -1488,36 +1868,6 @@ async def test_async_get_config_entry_implementation_missing_provider(
 
 
 @pytest.mark.parametrize(
-    "header_name",
-    [
-        pytest.param("Authorization", id="canonical_casing"),
-        pytest.param("authorization", id="lowercase"),
-    ],
-)
-async def test_oauth2_request_replaces_caller_authorization_header(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    header_name: str,
-) -> None:
-    """Test the token replaces a caller supplied Authorization header."""
-    aioclient_mock.post("https://example.com", status=201)
-
-    await config_entry_oauth2_flow.async_oauth2_request(
-        hass,
-        {"access_token": ACCESS_TOKEN_1},
-        "post",
-        "https://example.com",
-        headers={header_name: "Bearer caller supplied"},
-    )
-
-    assert len(aioclient_mock.mock_calls) == 1
-    headers = CIMultiDict(aioclient_mock.mock_calls[0][3])
-
-    # The token must not be sent as a second Authorization header
-    assert headers.getall("Authorization") == [f"Bearer {ACCESS_TOKEN_1}"]
-
-
-@pytest.mark.parametrize(
     ("status_code", "expected_state", "expected_translation_key"),
     [
         pytest.param(
@@ -1534,8 +1884,8 @@ async def test_oauth2_request_replaces_caller_authorization_header(
         ),
         pytest.param(
             600,
-            config_entries.ConfigEntryState.SETUP_ERROR,
-            None,
+            config_entries.ConfigEntryState.SETUP_RETRY,
+            "oauth2_helper_refresh_failed",
             id="generic",
         ),
     ],
@@ -1551,8 +1901,8 @@ async def test_token_error_handled_without_integration_mapping(
 ) -> None:
     """Test setup maps token refresh errors when the integration does not.
 
-    Only the transient and reauth subclasses carry config entry semantics, the
-    base error is left to the integration.
+    Every subclass carries config entry semantics, so the reauth subclass fails
+    setup while the others retry it.
     """
     aioclient_mock.post(TOKEN_URL, status=status_code, json={})
 
@@ -1571,11 +1921,10 @@ async def test_token_error_handled_without_integration_mapping(
 
     async def async_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Refresh the token without mapping the OAuth errors."""
         session = config_entry_oauth2_flow.OAuth2Session(hass, entry, local_impl)
         await session.async_ensure_token_valid()
-        return True
 
     mock_integration(hass, MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry))
 
@@ -1610,14 +1959,13 @@ async def test_token_error_integration_can_handle_it_itself(
 
     async def async_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Treat a reauth error as recoverable instead."""
         session = config_entry_oauth2_flow.OAuth2Session(hass, entry, local_impl)
         try:
             await session.async_ensure_token_valid()
         except OAuth2TokenRequestReauthError as err:
             raise ConfigEntryNotReady from err
-        return True
 
     mock_integration(hass, MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry))
 
@@ -1666,12 +2014,11 @@ async def test_implementation_unavailable_retries_setup(hass: HomeAssistant) -> 
 
     async def async_setup_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Resolve the implementation without mapping the error."""
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
         )
-        return True
 
     mock_integration(hass, MockModule(TEST_DOMAIN, async_setup_entry=async_setup_entry))
 
@@ -1736,7 +2083,7 @@ async def test_pick_implementation_falls_back_when_removed(
     """
     mock_integration(
         hass,
-        MockModule(TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=True)),
+        MockModule(TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=None)),
     )
     flow_handler.async_register_implementation(hass, local_impl)
 

@@ -1,6 +1,7 @@
 """Test the System Bridge integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
@@ -14,8 +15,6 @@ from homeassistant.components.media_source import (
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -77,6 +76,22 @@ async def test_directory(
         name=f"{DOMAIN}_media_source_directory",
         exclude=paths("children", "media_content_id"),
     )
+
+
+async def test_directory_children_content_type(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test subdirectories have a string media content type."""
+    browse_media_directory = await async_browse_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{init_integration.entry_id}~~documents",
+    )
+
+    assert [
+        (child.title, child.media_content_type)
+        for child in browse_media_directory.children
+    ] == [("testsubdirectory", "")]
 
 
 async def test_subdirectory(

@@ -1,5 +1,4 @@
 """Utilities for the LinkPlay component."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from aiohttp import ClientSession
 from linkplay.utils import async_create_unverified_client_session
@@ -7,13 +6,12 @@ from linkplay.utils import async_create_unverified_client_session
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import Event, HomeAssistant, callback
 
-from .const import DATA_SESSION, DOMAIN
+from .const import SESSION_KEY
 
 
 async def async_get_client_session(hass: HomeAssistant) -> ClientSession:
     """Get a ClientSession that can be used with LinkPlay devices."""
-    hass.data.setdefault(DOMAIN, {})
-    if DATA_SESSION not in hass.data[DOMAIN]:
+    if SESSION_KEY not in hass.data:
         clientsession: ClientSession = await async_create_unverified_client_session()
 
         @callback
@@ -22,8 +20,7 @@ async def async_get_client_session(hass: HomeAssistant) -> ClientSession:
             clientsession.detach()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_websession)
-        hass.data[DOMAIN][DATA_SESSION] = clientsession
+        hass.data[SESSION_KEY] = clientsession
         return clientsession
 
-    session: ClientSession = hass.data[DOMAIN][DATA_SESSION]
-    return session
+    return hass.data[SESSION_KEY]

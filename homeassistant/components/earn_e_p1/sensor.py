@@ -46,7 +46,26 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="voltage_l1",
-        translation_key="voltage_l1",
+        translation_key="voltage_phase",
+        translation_placeholders={"phase": "1"},
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="voltage_l2",
+        translation_key="voltage_phase",
+        translation_placeholders={"phase": "2"},
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="voltage_l3",
+        translation_key="voltage_phase",
+        translation_placeholders={"phase": "3"},
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -54,7 +73,26 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="current_l1",
-        translation_key="current_l1",
+        translation_key="current_phase",
+        translation_placeholders={"phase": "1"},
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="current_l2",
+        translation_key="current_phase",
+        translation_placeholders={"phase": "2"},
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="current_l3",
+        translation_key="current_phase",
+        translation_placeholders={"phase": "3"},
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -140,11 +178,11 @@ async def async_setup_entry(
                 for description in SENSOR_DESCRIPTIONS
                 if description.key in new_keys
             )
-        if not pending_keys:
+        if not pending_keys or coordinator.data_complete:
             _async_remove_listener()
 
     _async_add_sensors()
-    if pending_keys:
+    if pending_keys and not coordinator.data_complete:
         remove_listener = coordinator.async_add_listener(_async_add_sensors)
         entry.async_on_unload(_async_remove_listener)
 

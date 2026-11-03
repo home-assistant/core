@@ -1,7 +1,7 @@
 """Tests for Broadlink helper functions."""
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.broadlink.helpers import data_packet, mac_address
 from homeassistant.core import HomeAssistant
@@ -52,5 +52,5 @@ async def test_invalid_mac_address(hass: HomeAssistant) -> None:
         "a1b-2-c3-d4-e5-fg",
     ]
     for mac in invalid:
-        with pytest.raises((ValueError, vol.Invalid)):
+        with pytest.raises((ValueError, probatio.Invalid)):
             mac_address(mac)

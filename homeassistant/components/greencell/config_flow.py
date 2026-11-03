@@ -7,7 +7,7 @@ import logging
 from typing import Any, override
 
 from greencell_client.utils import GreencellUtils
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
@@ -110,10 +110,11 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Manual step: start active discovery process."""
         try:
-            if not mqtt.is_connected(self.hass):
-                return self.async_abort(reason="mqtt_not_connected")
+            mqtt_connected = mqtt.is_connected(self.hass)
         except KeyError:
             return self.async_abort(reason="mqtt_not_configured")
+        if not mqtt_connected:
+            return self.async_abort(reason="mqtt_not_connected")
 
         return await self.async_step_discover()
 
@@ -168,9 +169,9 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="select",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SERIAL_NUMBER): vol.In(
+                    probatio.Required(CONF_SERIAL_NUMBER): probatio.In(
                         list(self._discovered.keys())
                     )
                 }

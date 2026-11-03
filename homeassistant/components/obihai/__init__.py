@@ -11,7 +11,7 @@ from .const import LOGGER, PLATFORMS
 type ObihaiConfigEntry = ConfigEntry[ObihaiConnection]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ObihaiConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ObihaiConfigEntry) -> None:
     """Set up from a config entry."""
 
     requester = ObihaiConnection(
@@ -23,10 +23,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ObihaiConfigEntry) -> bo
     entry.runtime_data = requester
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ObihaiConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ObihaiConfigEntry) -> None:
     """Migrate old entry."""
 
     version = entry.version
@@ -44,9 +42,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ObihaiConfigEntry) -> 
 
     LOGGER.debug("Migration to version %s successful", entry.version)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ObihaiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ObihaiConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

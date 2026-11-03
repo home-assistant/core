@@ -9,22 +9,18 @@ from pyhap.const import CATEGORY_THERMOSTAT
 from pyhap.service import Service
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_SWING_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_SWING_MODE,
     SWING_OFF,
     ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -225,8 +221,8 @@ class HomeKitClimateAccessory(HomeAccessory):
             cool_char.properties[PROP_MAX_VALUE],
         )
         return {
-            ATTR_TARGET_TEMP_HIGH: self._temperature_to_states(high),
-            ATTR_TARGET_TEMP_LOW: self._temperature_to_states(low),
+            ClimateServiceArgument.TARGET_TEMP_HIGH: self._temperature_to_states(high),
+            ClimateServiceArgument.TARGET_TEMP_LOW: self._temperature_to_states(low),
         }
 
     def _temperature_to_homekit(self, temp: float) -> float:
@@ -243,12 +239,12 @@ class HomeKitClimateAccessory(HomeAccessory):
         if not self.ordered_fan_speeds or not 0 < speed <= 100:
             return None
         mode = fan_speed_to_mode(self.ordered_fan_speeds, self.fan_modes, speed)
-        return {ATTR_FAN_MODE: mode}
+        return {ClimateServiceArgument.FAN_MODE: mode}
 
     def _set_fan_speed(self, speed: int) -> None:
         """Send the climate fan mode for a HomeKit rotation speed."""
         if (params := self._fan_speed_params(speed)) is not None:
-            self._dispatch_climate_write(SERVICE_SET_FAN_MODE, params)
+            self._dispatch_climate_write(ClimateService.SET_FAN_MODE, params)
 
     def _swing_mode_params(self, swing_on: int) -> dict[str, Any] | None:
         """Return the set_swing_mode data for a HomeKit swing toggle."""
@@ -256,13 +252,15 @@ class HomeKitClimateAccessory(HomeAccessory):
             return None
         _LOGGER.debug("%s: Set swing mode to %s", self.entity_id, swing_on)
         return {
-            ATTR_SWING_MODE: self.swing_on_mode if swing_on else self.swing_off_mode
+            ClimateServiceArgument.SWING_MODE: self.swing_on_mode
+            if swing_on
+            else self.swing_off_mode
         }
 
     def _set_swing_mode(self, swing_on: int) -> None:
         """Send the climate swing mode for a HomeKit swing toggle."""
         if (params := self._swing_mode_params(swing_on)) is not None:
-            self._dispatch_climate_write(SERVICE_SET_SWING_MODE, params)
+            self._dispatch_climate_write(ClimateService.SET_SWING_MODE, params)
 
     def _update_fan_speed_char(self, attributes: Mapping[str, Any]) -> None:
         """Update the rotation speed characteristic from the current fan mode."""
@@ -341,7 +339,9 @@ class HomeKitClimateAccessory(HomeAccessory):
             self._reject_char_write(self.char_fan_active, 1)
             return
         mode = self._get_on_mode() if active else self.fan_modes[FAN_OFF]
-        self._dispatch_climate_write(SERVICE_SET_FAN_MODE, {ATTR_FAN_MODE: mode})
+        self._dispatch_climate_write(
+            ClimateService.SET_FAN_MODE, {ClimateServiceArgument.FAN_MODE: mode}
+        )
 
     def _set_fan_auto(self, auto: int) -> None:
         """Send the climate fan mode for a HomeKit fan auto toggle.
@@ -351,7 +351,9 @@ class HomeKitClimateAccessory(HomeAccessory):
         """
         _LOGGER.debug("%s: Set fan auto to %s", self.entity_id, auto)
         mode = self.fan_modes[FAN_AUTO] if auto else self._get_on_mode()
-        self._dispatch_climate_write(SERVICE_SET_FAN_MODE, {ATTR_FAN_MODE: mode})
+        self._dispatch_climate_write(
+            ClimateService.SET_FAN_MODE, {ClimateServiceArgument.FAN_MODE: mode}
+        )
 
     @callback
     def _async_update_fan_service(self, new_state: State) -> None:

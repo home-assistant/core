@@ -4,6 +4,7 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 
+from annotationlib import Format
 import asyncio
 from collections import UserDict, defaultdict, deque
 from collections.abc import (
@@ -17,11 +18,12 @@ from collections.abc import (
 )
 import concurrent.futures
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import enum
 import functools
 import inspect
 import logging
+import operator
 import re
 import threading
 import time
@@ -41,8 +43,12 @@ from typing import (
     override,
 )
 
+import probatio
 from propcache.api import cached_property, under_cached_property
-import voluptuous as vol
+
+# 'typing_extensions.sentinel' is not supported by Pylance yet, requires >2026.4.1
+# Use temporary alias to make the switch easier later.
+from typing_extensions import Sentinel as sentinel
 
 from . import util
 from .const import (
@@ -114,7 +120,7 @@ FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
 CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 type CALLBACK_TYPE = Callable[[], None]
 
@@ -149,9 +155,9 @@ class EventStateReportedData(EventStateEventData):
     A state reported event is fired when on state write the state is unchanged.
     """
 
-    last_reported: datetime.datetime
+    last_reported: dt.datetime
     new_state: State
-    old_last_reported: datetime.datetime
+    old_last_reported: dt.datetime
 
 
 # How long to wait until things that run on startup have to finish.
@@ -179,8 +185,8 @@ def split_entity_id(entity_id: str) -> tuple[str, str]:
 
 _OBJECT_ID = r"(?!_)[\da-z_]+(?<!_)"
 _DOMAIN = r"(?!.+__)" + _OBJECT_ID
-VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"$")
-VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"$")
+VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"\Z")
+VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"\Z")
 
 
 @functools.lru_cache(64)
@@ -212,6 +218,66 @@ def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
     setattr(func, "_hass_callback", True)  # noqa: B010
     return func
+
+
+def _get_hass_identity(obj: HomeAssistant) -> HomeAssistant:
+    """Return the HomeAssistant instance passed in."""
+    return obj
+
+
+_get_hass_public = operator.attrgetter("hass")
+_get_hass_private = operator.attrgetter("_hass")
+
+
+def verify_event_loop_thread[**_P, _R](
+    what: str,
+) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+    """Report and raise if the decorated function is not called from the event loop.
+
+    The first argument of the decorated function must be either the
+    HomeAssistant instance or an object with a hass or _hass attribute.
+    It may be passed by keyword. Where hass is found is resolved on the
+    first call and then reused.
+    """
+
+    def decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
+        first_parameter = next(
+            iter(
+                inspect.signature(func, annotation_format=Format.FORWARDREF).parameters
+            )
+        )
+        get_hass: Callable[[Any], HomeAssistant]
+
+        def resolve_get_hass(obj: Any) -> HomeAssistant:
+            nonlocal get_hass
+            if isinstance(obj, HomeAssistant):
+                get_hass = _get_hass_identity
+            elif hasattr(obj, "hass"):
+                get_hass = _get_hass_public
+            else:
+                get_hass = _get_hass_private
+            return get_hass(obj)
+
+        get_hass = resolve_get_hass
+
+        @functools.wraps(func)
+        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+            get_hass(
+                args[0] if args else kwargs[first_parameter]
+            ).verify_event_loop_thread(what)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+@callback
+def async_noop() -> None:
+    """Do nothing; use instead of `lambda: None` where a callback is expected.
+
+    For example, as the unsubscribe function when nothing was subscribed.
+    """
 
 
 def is_callback(func: Callable[..., Any]) -> bool:
@@ -644,7 +710,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_add_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.4",
@@ -700,7 +766,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_add_hass_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
+            "https://contributors.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.5",
@@ -974,7 +1040,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_run_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.4",
@@ -1389,7 +1455,7 @@ class Event(Generic[_DataT]):
         self._cache: dict[str, Any] = {}
 
     @under_cached_property
-    def time_fired(self) -> datetime.datetime:
+    def time_fired(self) -> dt.datetime:
         """Return time fired as a timestamp."""
         return dt_util.utc_from_timestamp(self.time_fired_timestamp)
 
@@ -1705,7 +1771,7 @@ class EventBus:
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
-        run_immediately: bool | object = _SENTINEL,
+        run_immediately: bool | _SENTINEL = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1722,14 +1788,15 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if run_immediately in (True, False):
+        if run_immediately is not _SENTINEL:
             # late import to avoid circular imports
             from .helpers import frame  # noqa: PLC0415
 
             frame.report_usage(
                 "calls `async_listen` with run_immediately",
-                core_behavior=frame.ReportBehavior.LOG,
-                breaks_in_ha_version="2025.5",
+                core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.ERROR,
             )
 
         if event_filter is not None and not is_callback_check_partial(event_filter):
@@ -1781,7 +1848,7 @@ class EventBus:
         self,
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
-        run_immediately: bool | object = _SENTINEL,
+        run_immediately: bool | _SENTINEL = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1792,14 +1859,15 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if run_immediately in (True, False):
+        if run_immediately is not _SENTINEL:
             # late import to avoid circular imports
             from .helpers import frame  # noqa: PLC0415
 
             frame.report_usage(
                 "calls `async_listen_once` with run_immediately",
-                core_behavior=frame.ReportBehavior.LOG,
-                breaks_in_ha_version="2025.5",
+                core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.ERROR,
             )
 
         one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(
@@ -1866,9 +1934,9 @@ class State:
     """The state of the entity."""
     attributes: ReadOnlyDict[str, Any]
     """Extra information on entity and state"""
-    last_changed: datetime.datetime
+    last_changed: dt.datetime
     """Last time the state was changed."""
-    last_reported: datetime.datetime
+    last_reported: dt.datetime
     """Last time the state was reported.
 
     Note: When the state is set and neither the state nor attributes are
@@ -1882,7 +1950,7 @@ class State:
     When handling a state report event, the last_reported attribute may be
     modified and last_reported from the event data should be used instead.
     """
-    last_updated: datetime.datetime
+    last_updated: dt.datetime
     """Last time the state or attributes were changed."""
     context: Context
     """Context in which the state was created."""
@@ -1907,9 +1975,9 @@ class State:
         entity_id: str,
         state: str,
         attributes: Mapping[str, Any] | None = None,
-        last_changed: datetime.datetime | None = None,
-        last_reported: datetime.datetime | None = None,
-        last_updated: datetime.datetime | None = None,
+        last_changed: dt.datetime | None = None,
+        last_reported: dt.datetime | None = None,
+        last_updated: dt.datetime | None = None,
         context: Context | None = None,
         validate_entity_id: bool | None = True,
         state_info: StateInfo | None = None,
@@ -2013,7 +2081,7 @@ class State:
 
     def as_dict(
         self,
-    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
+    ) -> ReadOnlyDict[str, dt.datetime | Collection[Any]]:
         """Return a ReadOnlyDict representation of the State.
 
         Async friendly.
@@ -2026,7 +2094,7 @@ class State:
     @under_cached_property
     def _as_read_only_dict(
         self,
-    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
+    ) -> ReadOnlyDict[str, dt.datetime | Collection[Any]]:
         """Return a ReadOnlyDict representation of the State."""
         as_dict = self._as_dict
         context = as_dict["context"]
@@ -2111,7 +2179,11 @@ class State:
             last_reported = dt_util.parse_datetime(last_reported)
 
         if context := json_dict.get("context"):
-            context = Context(id=context.get("id"), user_id=context.get("user_id"))
+            context = Context(
+                id=context.get("id"),
+                user_id=context.get("user_id"),
+                parent_id=context.get("parent_id"),
+            )
 
         return cls(
             json_dict["entity_id"],
@@ -2692,7 +2764,7 @@ class ServiceRegistry:
             [ServiceCall],
             Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
-        schema: vol.Schema | None = None,
+        schema: probatio.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register a service.
@@ -2710,6 +2782,7 @@ class ServiceRegistry:
         ).result()
 
     @callback
+    @verify_event_loop_thread("hass.services.async_register")
     def async_register(
         self,
         domain: str,
@@ -2733,7 +2806,6 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("hass.services.async_register")
         self._async_register(
             domain,
             service,
@@ -2795,12 +2867,12 @@ class ServiceRegistry:
         ).result()
 
     @callback
+    @verify_event_loop_thread("hass.services.async_remove")
     def async_remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler.
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("hass.services.async_remove")
         self._async_remove(domain, service)
 
     @callback
@@ -2924,7 +2996,7 @@ class ServiceRegistry:
         if handler.schema:
             try:
                 processed_data: dict[str, Any] = handler.schema(service_data)
-            except vol.Invalid:
+            except probatio.Invalid:
                 _LOGGER.debug(
                     "Invalid data for service call %s.%s: %s",
                     domain,

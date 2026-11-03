@@ -7,9 +7,17 @@ the ``solaredged`` library.
 """
 
 from collections.abc import Set as AbstractSet
+from datetime import datetime
+from functools import partial
 from typing import TYPE_CHECKING
 
-from solaredged import SolarEdge, SolarEdgeConnectionError, SolarEdgeError
+from modbus_connection import ModbusUnit
+from solaredged import (
+    InverterExtended,
+    SolarEdge,
+    SolarEdgeConnectionError,
+    SolarEdgeError,
+)
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import Platform
@@ -20,17 +28,26 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    ATTACHMENT_SCAN_INTERVAL,
+    CONF_SILENT_BLOCKS,
     CONF_UNIT_ID,
+    DISCOVERY_SUBSYSTEMS,
     DOMAIN,
     LOGGER,
+    READ_TIMEOUT,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
     SUBSYSTEM_BATTERIES,
     SUBSYSTEM_COMMON,
+    SUBSYSTEM_EXPORT_CONTROL,
+    SUBSYSTEM_GRID_STATUS,
     SUBSYSTEM_INVERTER,
     SUBSYSTEM_METERS,
+    SUBSYSTEM_POWER_CONTROL,
+    SUBSYSTEM_STORAGE_CONTROL,
 )
 from .coordinator import (
     SolarEdgeModbusConfigEntry,
@@ -40,12 +57,18 @@ from .coordinator import (
 from .entity import attachment_identity, inverter_device_info
 from .helpers import create_modbus_params
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SolarEdgeModbusConfigEntry
-) -> bool:
+) -> None:
     """Set up SolarEdge Modbus from a config entry."""
     serial_number = entry.unique_id
     if TYPE_CHECKING:
@@ -64,8 +87,14 @@ async def async_setup_entry(
             translation_placeholders={"error": str(err)},
         ) from err
 
+    # Blocks that were still silent on the last attachment check are taken for
+    # absent, so setting up does not wait out a timeout for each. The first
+    # check after setup asks them for real again, which is where a block that
+    # has started answering is found.
+    known_silent = _known_silent_blocks(entry)
+
     try:
-        solaredge = await SolarEdge.async_probe(unit)
+        solaredge = await SolarEdge.async_probe(unit, assume_absent=known_silent)
     except SolarEdgeConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -77,6 +106,9 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="no_solaredge_device",
         ) from err
+
+    # Only now: the probe gives up on a silent block after the link's default.
+    unit.require_timeout(READ_TIMEOUT)
 
     readings = SolarEdgeModbusDataUpdateCoordinator(
         hass,
@@ -122,8 +154,8 @@ async def async_setup_entry(
     # Registered up front: a meter sub-device can only name the inverter it
     # hangs off once that device has an ID.
     device_info = inverter_device_info(solaredge, serial_number)
-    inverter = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **device_info
+    inverter = dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=device_info
     )
     # The readings poll already proved the link; a control block that refuses
     # one read leaves its own entities unavailable instead of failing setup.
@@ -134,24 +166,145 @@ async def async_setup_entry(
         settings=settings,
         device_info=device_info,
         inverter_device_id=inverter.id,
+        attachments=_attachment_identities(solaredge),
     )
 
-    if silent := solaredge.unresponsive_blocks & {
-        SUBSYSTEM_BATTERIES,
-        SUBSYSTEM_METERS,
-    }:
+    silent = solaredge.unresponsive_blocks & _probed_blocks(solaredge).keys()
+    if newly_silent := silent - known_silent:
         LOGGER.warning(
-            "%s did not answer for its %s while probing, so their entities are"
-            " missing until it does; reloading probes again",
+            "%s did not answer for %s while probing, so the entities those"
+            " would carry are missing; this is looked at again in %s minutes",
             entry.title,
-            " and ".join(sorted(silent)),
+            " and ".join(sorted(newly_silent)),
+            int(ATTACHMENT_SCAN_INTERVAL.total_seconds() // 60),
         )
 
     _async_remove_stale_devices(hass, entry, solaredge, serial_number, silent=silent)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
+    # What is wired to the inverter is read while setting up, so a meter or
+    # battery added or removed later needs the entry to load again to be seen.
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass,
+            partial(_async_reload_when_attachments_change, hass, entry, unit),
+            ATTACHMENT_SCAN_INTERVAL,
+        )
+    )
+
+
+def _known_silent_blocks(entry: SolarEdgeModbusConfigEntry) -> frozenset[str]:
+    """Return the blocks the last attachment check settled as silent.
+
+    Blocks that finding hardware depends on are never settled, so one stored
+    by anything else is not taken for absent either.
+    """
+    return frozenset(entry.data.get(CONF_SILENT_BLOCKS, ())) - DISCOVERY_SUBSYSTEMS
+
+
+def _attachment_identities(solaredge: SolarEdge) -> frozenset[str]:
+    """Return what the meters and batteries attached right now are known by."""
+    return frozenset(
+        [
+            *(
+                f"meter_{attachment_identity(meter, index)}"
+                for index, meter in enumerate(solaredge.meters, 1)
+            ),
+            *(
+                f"battery_{attachment_identity(battery, index)}"
+                for index, battery in enumerate(solaredge.batteries, 1)
+            ),
+        ]
+    )
+
+
+def _probed_blocks(solaredge: SolarEdge) -> dict[str, int]:
+    """Return what probing found, as far as this entry is built on it.
+
+    A block that answers decides which entities exist, and probing happens once
+    while setting up, so a block that was silent then leaves its platform empty
+    until the entry loads again. Counted rather than flagged, so what is there
+    once reads the same as what can be there three times.
+    """
+    return {
+        SUBSYSTEM_METERS: len(solaredge.meters),
+        SUBSYSTEM_BATTERIES: len(solaredge.batteries),
+        SUBSYSTEM_GRID_STATUS: isinstance(solaredge.inverter, InverterExtended),
+        SUBSYSTEM_STORAGE_CONTROL: solaredge.storage_control is not None,
+        SUBSYSTEM_EXPORT_CONTROL: solaredge.export_control is not None,
+        SUBSYSTEM_POWER_CONTROL: solaredge.power_control is not None,
+    }
+
+
+async def _async_reload_when_attachments_change(
+    hass: HomeAssistant,
+    entry: SolarEdgeModbusConfigEntry,
+    unit: ModbusUnit,
+    _now: datetime,
+) -> None:
+    """Reload the entry when the hardware wired to the inverter changed."""
+    solaredge = entry.runtime_data.solaredge
+
+    # Swapping one meter for another leaves the count alone, but the polls have
+    # been reading the new one's serial number since it was wired in.
+    if _attachment_identities(solaredge) != entry.runtime_data.attachments:
+        LOGGER.info(
+            "%s: what is attached changed, reloading to pick that up",
+            entry.title,
+        )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+        return
+
+    try:
+        probed = await SolarEdge.async_probe(
+            unit, assume_absent=entry.runtime_data.settled_silent_blocks
+        )
+    except SolarEdgeError as err:
+        # Nothing to conclude from a probe that did not finish; the coordinators
+        # report an inverter that stopped answering.
+        LOGGER.debug("%s: could not probe for attached hardware: %s", entry.title, err)
+        return
+
+    # Silent while setting up and silent again here. A block that answered at
+    # setup and merely blipped now is not settled, or one timeout would hide a
+    # later removal until the entry loads again. Blocks that finding hardware
+    # depends on are never settled: picking up what was wired in later is what
+    # asking is for.
+    settled = (
+        probed.unresponsive_blocks & solaredge.unresponsive_blocks
+    ) - DISCOVERY_SUBSYSTEMS
+    entry.runtime_data.settled_silent_blocks = settled
+
+    # Kept with the entry for the next setup, before a reload below can start
+    # one: a block that answered here must not be taken for absent by it. Only
+    # blocks whose return this check reloads for are kept: any other block that
+    # started answering later would stay unseen until something else reloaded.
+    kept = settled & _probed_blocks(probed).keys()
+    if kept != _known_silent_blocks(entry):
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_SILENT_BLOCKS: sorted(kept)}
+        )
+
+    known = _probed_blocks(solaredge)
+    for name, found in _probed_blocks(probed).items():
+        if found == known[name]:
+            continue
+        # A block that stayed silent is taken for absent, which is not the same
+        # as the inverter saying it is gone, and reloading on that would drop a
+        # device, or a whole platform, over one timeout.
+        if found < known[name] and name in probed.unresponsive_blocks:
+            continue
+
+        LOGGER.info(
+            "%s: %s went from %s to %s, reloading to pick that up",
+            entry.title,
+            name,
+            known[name],
+            found,
+        )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+        return
 
 
 def _async_remove_stale_devices(
@@ -198,6 +351,6 @@ def _async_remove_stale_devices(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SolarEdgeModbusConfigEntry
-) -> bool:
+) -> None:
     """Unload SolarEdge Modbus config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

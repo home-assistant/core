@@ -4,7 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -40,9 +40,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'air-purifier')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -77,9 +77,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'air-purifier')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -140,7 +140,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -178,9 +178,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -228,7 +228,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -264,9 +264,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '400s-purifier')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -301,9 +301,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '400s-purifier')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -338,9 +338,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '400s-purifier')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -417,7 +417,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -453,9 +453,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '600s-purifier')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -490,9 +490,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '600s-purifier')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -527,9 +527,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '600s-purifier')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -601,12 +601,201 @@
     'state': '5',
   })
 # ---
+# name: test_sensor_state[Air Purifier Vital 200S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'vital200s-purifier',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LAP-V201S-WUS',
+      'model_id': None,
+      'name': 'Air Purifier Vital 200S',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[Air Purifier Vital 200S][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'vital200s-purifier')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.air_purifier_vital_200s_air_quality',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Air quality',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Air quality',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'air_quality',
+      'unique_id': 'vital200s-purifier-air-quality',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'vital200s-purifier')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.air_purifier_vital_200s_pm2_5',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'PM2.5',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
+      'original_icon': None,
+      'original_name': 'PM2.5',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'vital200s-purifier-pm25',
+      'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'device_class': None,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'vital200s-purifier')]>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.air_purifier_vital_200s_filter_lifetime',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Filter lifetime',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Filter lifetime',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'filter_life',
+      'unique_id': 'vital200s-purifier-filter-life',
+      'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+  ])
+# ---
+# name: test_sensor_state[Air Purifier Vital 200S][sensor.air_purifier_vital_200s_air_quality]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Vital 200S Air quality',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_vital_200s_air_quality',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'excellent',
+  })
+# ---
+# name: test_sensor_state[Air Purifier Vital 200S][sensor.air_purifier_vital_200s_filter_lifetime]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Vital 200S Filter lifetime',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_vital_200s_filter_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '99',
+  })
+# ---
+# name: test_sensor_state[Air Purifier Vital 200S][sensor.air_purifier_vital_200s_pm2_5]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Vital 200S PM2.5',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_vital_200s_pm2_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -644,9 +833,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Cooking')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -684,9 +873,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Cooking')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -722,9 +911,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Cooking')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -760,9 +949,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Cooking')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -809,9 +998,9 @@
         ]),
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Cooking')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -930,7 +1119,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -968,9 +1157,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Standby')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1005,9 +1194,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Standby')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1040,9 +1229,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Standby')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1078,9 +1267,9 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Standby')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1127,9 +1316,9 @@
         ]),
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'CS158Standby')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1241,12 +1430,48 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_state[CoreBreeze 432S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': None,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'corebreeze432s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LPF-R432S-AEU',
+      'model_id': None,
+      'name': 'CoreBreeze 432S',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CoreBreeze 432S][entities]
+  list([
+  ])
+# ---
 # name: test_sensor_state[Dimmable Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1282,7 +1507,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1318,7 +1543,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1356,9 +1581,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '200s-humidifier4321')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1407,7 +1632,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1445,9 +1670,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '6000s')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1482,9 +1707,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '6000s')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1522,9 +1747,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '6000s')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -1604,7 +1829,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1642,9 +1867,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', '600s-humidifier')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1693,7 +1918,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1731,9 +1956,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'outlet')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1771,9 +1996,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'outlet')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1811,9 +2036,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'outlet')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1851,9 +2076,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'outlet')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1891,9 +2116,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'outlet')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -1931,9 +2156,9 @@
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'device_class': None,
-      'device_id': <ANY>,
+      'device_id': <DeviceEntry identifiers=[('vesync', 'outlet')]>,
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
@@ -2065,7 +2290,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -2101,7 +2326,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -2137,7 +2362,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -2165,42 +2390,6 @@
   ])
 # ---
 # name: test_sensor_state[Wall Switch][entities]
-  list([
-  ])
-# ---
-# name: test_sensor_state[CoreBreeze 432S][devices]
-  list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'vesync',
-          'corebreeze432s',
-        ),
-      }),
-      'labels': set({
-      }),
-      'manufacturer': 'VeSync',
-      'model': 'LPF-R432S-AEU',
-      'model_id': None,
-      'name': 'CoreBreeze 432S',
-      'name_by_user': None,
-      'serial_number': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_sensor_state[CoreBreeze 432S][entities]
   list([
   ])
 # ---

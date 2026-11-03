@@ -5,17 +5,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pylutron import OccupancyGroup
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lutron.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.lutron.async_setup_entry", return_value=True
+        "homeassistant.components.lutron.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -48,6 +47,13 @@ def mock_lutron() -> Generator[MagicMock]:
         light.is_dimmable = True
         light.type = "LIGHT"
         light.last_level.return_value = 0
+
+        # pylutron's Output.set_level() stores the new level, which last_level()
+        # then returns. Mirror that so the mock behaves like the library.
+        def _set_level(new_level, fade_time_seconds=None):
+            light.last_level.return_value = new_level
+
+        light.set_level.side_effect = _set_level
         area.outputs.append(light)
 
         # Mock a switch

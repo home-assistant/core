@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import xml.etree.ElementTree as ET
 
 import aiohttp
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.environment_canada.const import (
@@ -37,25 +38,45 @@ from homeassistant.components.environment_canada.const import (
     SECTION_RADAR,
     SECTION_TIME,
 )
-from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_LANGUAGE,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import build_mocks, init_integration
 
-from tests.common import MockConfigEntry
+TEST_STATION = "123"
+TEST_LATITUDE = 42.42
+TEST_LONGITUDE = -42.42
 
 FAKE_CONFIG = {
-    CONF_STATION: "123",
-    CONF_LANGUAGE: "English",
-    CONF_LATITUDE: 42.42,
-    CONF_LONGITUDE: -42.42,
+    CONF_STATION: TEST_STATION,
+    CONF_LANGUAGE: "english",
+    CONF_LATITUDE: TEST_LATITUDE,
+    CONF_LONGITUDE: TEST_LONGITUDE,
+}
+USER_INPUT = {
+    CONF_STATION: TEST_STATION,
+    CONF_LANGUAGE: "en",
+    CONF_LOCATION: {
+        CONF_LATITUDE: TEST_LATITUDE,
+        CONF_LONGITUDE: TEST_LONGITUDE,
+    },
 }
 FAKE_TITLE = "Universal title!"
 FAKE_STATIONS = [
     {"label": "Toronto, ON", "value": "123"},
     {"label": "Ottawa, ON", "value": "456"},
     {"label": "Montreal, QC", "value": "789"},
+]
+
+LANGUAGE_PARAMS = [
+    pytest.param("en", "english", id="english"),
+    pytest.param("fr", "french", id="french"),
 ]
 
 
@@ -84,26 +105,31 @@ def mocked_stations():
     )
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(("language", "ec_language"), LANGUAGE_PARAMS)
+async def test_create_entry(
+    hass: HomeAssistant, language: str, ec_language: str
+) -> None:
     """Test creating an entry."""
     with (
-        mocked_ec(),
+        mocked_ec() as mock_ec,
         mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         flow = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], FAKE_CONFIG
+            flow["flow_id"], user_input={**USER_INPUT, CONF_LANGUAGE: language}
         )
         await hass.async_block_till_done()
+        mock_ec.assert_called_once_with(station_id=TEST_STATION, language=ec_language)
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == FAKE_CONFIG
+        assert result["data"] == {**FAKE_CONFIG, CONF_LANGUAGE: ec_language}
         assert result["title"] == FAKE_TITLE
+        assert result["result"].unique_id == f"{TEST_STATION}-{ec_language}"
 
 
 async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
@@ -120,14 +146,14 @@ async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
         mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         flow = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], FAKE_CONFIG
+            flow["flow_id"], user_input=USER_INPUT
         )
         await hass.async_block_till_done()
         assert result["type"] is FlowResultType.ABORT
@@ -144,7 +170,9 @@ async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
         (ValueError, "unknown"),
     ],
 )
-async def test_exception_handling(hass: HomeAssistant, error) -> None:
+async def test_exception_handling(
+    hass: HomeAssistant, error: tuple[Exception | type[Exception], str]
+) -> None:
     """Test exception handling."""
     exc, base_error = error
     with (
@@ -158,51 +186,46 @@ async def test_exception_handling(hass: HomeAssistant, error) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            {},
+            flow["flow_id"], user_input=USER_INPUT
         )
         await hass.async_block_till_done()
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": base_error}
 
-
-async def test_lat_lon_not_specified(hass: HomeAssistant) -> None:
-    """Test that the import step works when coordinates are not specified."""
     with (
         mocked_ec(),
         mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
-        fake_config = dict(FAKE_CONFIG)
-        del fake_config[CONF_LATITUDE]
-        del fake_config[CONF_LONGITUDE]
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=fake_config
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input=USER_INPUT
         )
         await hass.async_block_till_done()
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == FAKE_CONFIG
-        assert result["title"] == FAKE_TITLE
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_coordinates_without_station(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(("language", "ec_language"), LANGUAGE_PARAMS)
+async def test_coordinates_without_station(
+    hass: HomeAssistant, language: str, ec_language: str
+) -> None:
     """Test setup with coordinates but no station ID."""
     with (
-        mocked_ec(),
+        mocked_ec() as mock_ec,
         mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
-        # Config with coordinates but no station
         config_no_station = {
-            CONF_LANGUAGE: "English",
-            CONF_LATITUDE: 42.42,
-            CONF_LONGITUDE: -42.42,
+            CONF_LANGUAGE: language,
+            CONF_LOCATION: {
+                CONF_LATITUDE: TEST_LATITUDE,
+                CONF_LONGITUDE: TEST_LONGITUDE,
+            },
         }
         flow = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -211,9 +234,13 @@ async def test_coordinates_without_station(hass: HomeAssistant) -> None:
             flow["flow_id"], config_no_station
         )
         await hass.async_block_till_done()
+        mock_ec.assert_called_once_with(
+            coordinates=(TEST_LATITUDE, TEST_LONGITUDE), language=ec_language
+        )
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == FAKE_CONFIG
+        assert result["data"] == {**FAKE_CONFIG, CONF_LANGUAGE: ec_language}
         assert result["title"] == FAKE_TITLE
+        assert result["result"].unique_id == f"{TEST_STATION}-{ec_language}"
 
 
 async def _setup_with_options(
@@ -246,7 +273,7 @@ async def _setup_with_options(
     return ecmap
 
 
-def _section_field_names(data_schema: vol.Schema, section_key: str) -> set[str]:
+def _section_field_names(data_schema: probatio.Schema, section_key: str) -> set[str]:
     """Return the field names nested inside a given section of a data schema."""
     for key, value in data_schema.schema.items():
         if str(key) == section_key:
@@ -254,7 +281,7 @@ def _section_field_names(data_schema: vol.Schema, section_key: str) -> set[str]:
     raise KeyError(section_key)
 
 
-def _section_defaults(data_schema: vol.Schema, section_key: str) -> dict[str, Any]:
+def _section_defaults(data_schema: probatio.Schema, section_key: str) -> dict[str, Any]:
     """Return the default values nested inside a given section of a data schema."""
     for key, value in data_schema.schema.items():
         if str(key) == section_key:
@@ -325,7 +352,7 @@ async def test_options_flow_save(hass: HomeAssistant, ec_data: dict[str, Any]) -
     }
     with patch(
         "homeassistant.components.environment_canada.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], submitted

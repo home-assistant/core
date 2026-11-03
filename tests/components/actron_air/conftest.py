@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from actron_neo_api.models.auth import ActronAirDeviceCode, ActronAirUserInfo
@@ -10,14 +9,13 @@ from actron_neo_api.models.settings import ActronAirUserAirconSettings
 from actron_neo_api.models.status import ActronAirStatus
 from actron_neo_api.models.system import ActronAirACSystem, ActronAirSystemInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.actron_air.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -105,7 +103,7 @@ def mock_actron_api(mock_actron_api_class: MagicMock) -> Generator[AsyncMock]:
 
         # Build status from fixture JSON
         status = ActronAirStatus.model_validate(
-            json.loads(load_fixture("status.json", DOMAIN))
+            load_json_object_fixture("status.json", DOMAIN)
         )
         status.set_api(api)
 
@@ -152,7 +150,7 @@ def mock_zone() -> MagicMock:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock async_setup_entry."""
     with patch(
-        "homeassistant.components.actron_air.async_setup_entry", return_value=True
+        "homeassistant.components.actron_air.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

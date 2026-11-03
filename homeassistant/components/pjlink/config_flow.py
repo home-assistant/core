@@ -3,23 +3,22 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pypjlink import Projector
 from pypjlink.projector import ProjectorError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PASSWORD): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -68,32 +67,3 @@ class PJLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml."""
-
-        host: str = import_config[CONF_HOST]
-        port: int = import_config.get(CONF_PORT, DEFAULT_PORT)
-        password: str | None = import_config.get(CONF_PASSWORD)
-
-        self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
-        try:
-            projector_name = await self.hass.async_add_executor_job(
-                validate_projector_connection, host, port, password
-            )
-        except TimeoutError, OSError:
-            return self.async_abort(reason="cannot_connect")
-        except RuntimeError, ProjectorError:
-            return self.async_abort(reason="invalid_auth")
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-        else:
-            import_data: dict[str, Any] = {CONF_HOST: host, CONF_PORT: port}
-            if password:
-                import_data[CONF_PASSWORD] = password
-            return self.async_create_entry(
-                title=import_config.get(CONF_NAME, projector_name), data=import_data
-            )

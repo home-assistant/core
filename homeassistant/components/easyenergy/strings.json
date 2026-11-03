@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
@@ -24,10 +21,10 @@
         "name": "Time of highest price - today"
       },
       "hours_priced_equal_or_higher": {
-        "name": "Hours priced equal or higher than current - today"
+        "name": "Periods priced equal or higher than current - today"
       },
       "hours_priced_equal_or_lower": {
-        "name": "Hours priced equal or lower than current - today"
+        "name": "Periods priced equal or lower than current - today"
       },
       "lowest_price_time": {
         "name": "Time of lowest price - today"
@@ -49,6 +46,9 @@
   "exceptions": {
     "connection_error": {
       "message": "Error communicating with the easyEnergy API."
+    },
+    "fetch_prices_error": {
+      "message": "Error fetching prices from the easyEnergy API."
     },
     "invalid_date": {
       "message": "Invalid date provided. Got {date}"

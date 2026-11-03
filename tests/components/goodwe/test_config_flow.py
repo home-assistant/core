@@ -4,6 +4,8 @@ from unittest.mock import MagicMock, patch
 
 from goodwe import InverterError
 from goodwe.const import GOODWE_UDP_PORT
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.goodwe.const import (
     CONF_MODEL_FAMILY,
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_SERIAL
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_PORT = GOODWE_UDP_PORT
@@ -34,7 +34,7 @@ async def test_manual_setup(hass: HomeAssistant, mock_inverter: MagicMock) -> No
 
     with (
         patch(
-            "homeassistant.components.goodwe.async_setup_entry", return_value=True
+            "homeassistant.components.goodwe.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -49,6 +49,7 @@ async def test_manual_setup(hass: HomeAssistant, mock_inverter: MagicMock) -> No
         CONF_PORT: TEST_PORT,
         CONF_MODEL_FAMILY: "MagicMock",
     }
+    assert result["result"].unique_id == TEST_SERIAL
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -69,7 +70,7 @@ async def test_manual_setup_already_exists(
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with patch("homeassistant.components.goodwe.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.goodwe.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: TEST_HOST}
         )
@@ -79,6 +80,7 @@ async def test_manual_setup_already_exists(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_inverter")
 async def test_manual_setup_device_offline(hass: HomeAssistant) -> None:
     """Test manually setting up, device offline."""
     result = await hass.config_entries.flow.async_init(
@@ -99,3 +101,9 @@ async def test_manual_setup_device_offline(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "connection_error"}
+
+    with patch("homeassistant.components.goodwe.async_setup_entry", return_value=None):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

@@ -2,14 +2,14 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import mock_restore_cache
+
 from homeassistant.components import conversation
 from homeassistant.components.conversation import DOMAIN
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import mock_restore_cache
 
 
 async def test_state_set_and_restore(hass: HomeAssistant) -> None:

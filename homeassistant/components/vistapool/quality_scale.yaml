@@ -60,7 +60,13 @@ rules:
   docs-supported-functions: done
   docs-use-cases: done
   dynamic-devices: done
-  entity-device-class: todo
+  entity-device-class:
+    status: done
+    comment: >-
+      All entities use a device class where Home Assistant offers a matching
+      one. Chlorine, UV and the electrolysis production rate (g/h) have no
+      applicable class; the conductivity reading is reported without a unit,
+      so it cannot be labelled as a conductivity measurement.
   entity-translations: done
   exception-translations: done
   icon-translations: done
