@@ -28,12 +28,12 @@ class DaikinServiceArgument(StrEnum):
     MODE = "mode"
 
 
-ATTR_MODE_MANUAL = "manual"
-ATTR_MODE_AUTO = "auto"
+MODE_MANUAL = "manual"
+MODE_AUTO = "auto"
 
 DAIKIN_DEMAND_CONTROL_MODES: dict[str, int] = {
-    ATTR_MODE_MANUAL: 0,
-    ATTR_MODE_AUTO: 2,
+    MODE_MANUAL: 0,
+    MODE_AUTO: 2,
 }
 
 SET_DEMAND_CONTROL_SCHEMA = probatio.Schema(
@@ -43,9 +43,9 @@ SET_DEMAND_CONTROL_SCHEMA = probatio.Schema(
         probatio.Optional(DaikinServiceArgument.MAX_POW, default=100): probatio.All(
             probatio.Coerce(int), probatio.Range(min=40, max=100)
         ),
-        probatio.Optional(
-            DaikinServiceArgument.MODE, default=ATTR_MODE_MANUAL
-        ): probatio.In(DAIKIN_DEMAND_CONTROL_MODES),
+        probatio.Optional(DaikinServiceArgument.MODE, default=MODE_MANUAL): probatio.In(
+            DAIKIN_DEMAND_CONTROL_MODES
+        ),
     }
 )
 
