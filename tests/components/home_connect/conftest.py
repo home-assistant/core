@@ -340,7 +340,7 @@ def mock_client(
 
     appliances = [appliance] if appliance else appliances
 
-    async def stream_all_events() -> AsyncGenerator[EventMessage]:
+    async def stream_all_events() -> AsyncGenerator[EventMessage | None]:
         """Mock stream_all_events."""
         while True:
             for event in await event_queue.get():
@@ -465,7 +465,7 @@ def mock_client_with_exception(
 
     event_queue: asyncio.Queue[list[EventMessage]] = asyncio.Queue()
 
-    async def stream_all_events() -> AsyncGenerator[EventMessage]:
+    async def stream_all_events() -> AsyncGenerator[EventMessage | None]:
         """Mock stream_all_events."""
         while True:
             for event in await event_queue.get():
