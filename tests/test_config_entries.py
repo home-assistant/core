@@ -33,7 +33,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -126,7 +125,7 @@ def mock_handlers() -> Generator[None]:
             if user_input is None:
                 return self.async_show_form(
                     step_id="reauth_confirm",
-                    description_placeholders={CONF_NAME: "Custom title"},
+                    description_placeholders={"name": "Custom title"},
                 )
             return self.async_abort(reason="test")
 
