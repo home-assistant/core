@@ -674,3 +674,156 @@ async def test_repeated_command_without_device_update(
     assert hass.states.get(entity_id).state == "off"
     assert hass.states.get(entity_id).context is context
     assert not events
+
+
+@pytest.mark.parametrize(
+    ("elapsed", "state_before_feedback"),
+    [
+        pytest.param(19.9, "closing", id="feedback-first"),
+        pytest.param(20.5, "open", id="timer-first"),
+    ],
+)
+async def test_cover_retarget_keeps_sender(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+    elapsed: float,
+    state_before_feedback: str,
+) -> None:
+    """A new target retains its sender even without a direction change."""
+    await knx.setup_integration(
+        {
+            "cover": {
+                "name": "test",
+                "move_long_address": "2/0/1",
+                "position_address": "2/0/3",
+                "position_state_address": "2/0/4",
+                "travelling_time_down": 60,
+                "travelling_time_up": 60,
+            }
+        },
+        state_updater=False,
+    )
+    await knx.receive_response("2/0/4", (0,))
+    await knx.receive_write("2/0/1", True, source="1.1.22")
+    freezer.tick(timedelta(seconds=10))
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
+    await knx.receive_write("2/0/3", (128,), source="1.1.23")
+    assert hass.states.get(COVER_ENTITY_ID).state == "closing"
+    assert not events
+    freezer.tick(timedelta(seconds=elapsed))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(COVER_ENTITY_ID).state == state_before_feedback
+    await knx.receive_write("2/0/4", (128,), source="1.1.40")
+    assert hass.states.get(COVER_ENTITY_ID).state == "open"
+    assert len(events) == 1
+    assert events[0].data["source"] == "1.1.23"
+    assert hass.states.get(COVER_ENTITY_ID).context is events[0].context
+
+
+async def test_group_command_replaces_previous_service_context(
+    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
+) -> None:
+    """Feedback must retain the newer action received through a passive address."""
+    await knx.setup_integration(
+        {
+            "light": [
+                {
+                    "name": "test",
+                    "address": ["1/1/1", "1/1/9"],
+                    "brightness_address": "1/1/3",
+                    "brightness_state_address": "1/1/4",
+                },
+                {"name": "central", "address": "1/1/9"},
+            ]
+        },
+        state_updater=False,
+    )
+    await knx.receive_response("1/1/1", True)
+    await knx.receive_response("1/1/4", (0,))
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                {
+                    "alias": "Group feedback observer",
+                    "triggers": [
+                        {
+                            "trigger": "numeric_state",
+                            "entity_id": LIGHT_ENTITY_ID,
+                            "attribute": "brightness",
+                            "above": 100,
+                        }
+                    ],
+                    "actions": [{"event": "brightness_observed"}],
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    automations = async_capture_events(hass, "automation_triggered")
+    old_context = Context()
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": LIGHT_ENTITY_ID},
+        blocking=True,
+        context=old_context,
+    )
+    await knx.assert_write("1/1/1", False)
+    new_context = Context()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.central"},
+        blocking=True,
+        context=new_context,
+    )
+    await knx.assert_write("1/1/9", True)
+    assert hass.states.get(LIGHT_ENTITY_ID).context is new_context
+    freezer.tick(timedelta(milliseconds=100))
+    await knx.receive_write("1/1/4", (128,), source="1.1.40")
+    assert hass.states.get(LIGHT_ENTITY_ID).context is new_context
+    assert len(automations) == 1
+    assert automations[0].context.parent_id == new_context.id
+    freezer.tick(timedelta(seconds=5))
+    await knx.receive_write("1/1/4", (0,), source="1.1.40")
+    assert hass.states.get(LIGHT_ENTITY_ID).context is not new_context
+    assert hass.states.get(LIGHT_ENTITY_ID).context is not old_context
+
+
+async def test_delayed_rgb_initial_responses(
+    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
+) -> None:
+    """Learning separate color channels is not a new action."""
+    await knx.setup_integration(
+        {
+            "light": {
+                "name": "test",
+                "individual_colors": {
+                    "red": {"brightness_address": "1/1/3"},
+                    "green": {"brightness_address": "1/1/5"},
+                    "blue": {"brightness_address": "1/1/7"},
+                },
+            }
+        },
+        state_updater=False,
+    )
+    events = async_capture_events(hass, EVENT_KNX_STATE_CHANGED)
+    for address, value in (("1/1/3", 0), ("1/1/5", 128), ("1/1/7", 0)):
+        await knx.receive_response(address, (value,))
+        freezer.tick(timedelta(seconds=0.3))
+        async_fire_time_changed(hass)
+        await knx.xknx.task_registry.block_till_done()
+        await hass.async_block_till_done()
+        assert not events
+    assert hass.states.get(LIGHT_ENTITY_ID).state == "on"
+    await knx.receive_response("1/1/5", (0,))
+    freezer.tick(timedelta(seconds=0.3))
+    async_fire_time_changed(hass)
+    await knx.xknx.task_registry.block_till_done()
+    await hass.async_block_till_done()
+    assert hass.states.get(LIGHT_ENTITY_ID).state == "off"
+    assert len(events) == 1
