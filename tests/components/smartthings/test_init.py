@@ -2,6 +2,7 @@
 
 from dataclasses import replace
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -509,7 +510,10 @@ async def test_refreshing_token_while_loaded(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-@pytest.mark.parametrize(("status", "reauth_flows"), [(500, 0), (400, 1)])
+@pytest.mark.parametrize(
+    ("response", "reauth_flows"),
+    [({"status": 500}, 0), ({"status": 400}, 1), ({"exc": TimeoutError}, 0)],
+)
 async def test_error_refreshing_token_while_loaded(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -517,13 +521,13 @@ async def test_error_refreshing_token_while_loaded(
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
-    status: int,
+    response: dict[str, Any],
     reauth_flows: int,
 ) -> None:
     """Test a failed token refresh keeps the entry loaded and warns once."""
     await setup_integration(hass, mock_config_entry)
     aioclient_mock.post(
-        "https://auth-global.api.smartthings.com/oauth/token", status=status
+        "https://auth-global.api.smartthings.com/oauth/token", **response
     )
 
     for delta in (timedelta(hours=1), timedelta(minutes=1)):

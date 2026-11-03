@@ -155,7 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         nonlocal refresh_failing
         try:
             await session.async_ensure_token_valid()
-        except OAuth2TokenRequestBaseError as err:
+        except (OAuth2TokenRequestBaseError, TimeoutError) as err:
             if not refresh_failing:
                 _LOGGER.warning("Error refreshing the token: %s", err)
             refresh_failing = True
