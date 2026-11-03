@@ -113,15 +113,15 @@
       "init": {
         "data": {
           "battery_type": "Battery chemistry",
-          "rate_limit": "Rate limit",
-          "rate_limit_mode": "Sensor update rate limit:"
+          "rate_limit": "Minimum time between reads",
+          "rate_limit_mode": "Rate limit mode"
         },
         "data_description": {
           "battery_type": "Select the type of battery that is being monitored.",
-          "rate_limit": "The minimum allowed time between sensor updates (in seconds).",
-          "rate_limit_mode": "Select if/when you want to rate limit sensor updates."
+          "rate_limit": "In seconds. A Bluetooth read that would start sooner than this after the previous read is skipped. This never schedules extra reads.",
+          "rate_limit_mode": "Choose when the minimum time between reads applies. Charging state comes from the latest reading."
         },
-        "description": "By default sensors are updated every time a BM2 advertisement is seen or every 60 seconds.  The rate limit is a way of throttling updates if the BM2 is sending out a lot of advertisements.\n\nIt is recommended to select the appropriate battery chemistry as the BM2 by default has some strange definitions of overall status.",
+        "description": "Sensors are updated by reading the BM2 over Bluetooth. A read is triggered when a BM2 advertisement is received (at most once every 10 seconds), or after 60 seconds if no advertisement has triggered one. The rate limit lengthens the minimum time between reads, for example when the BM2 advertises frequently.\n\nIt is recommended to select the appropriate battery chemistry as the BM2 by default has some strange definitions of overall status.",
         "title": "Options"
       }
     }
