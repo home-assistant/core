@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable, Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -369,13 +369,6 @@ class ToolResultContentDeltaDict(TypedDict, total=False):
     tool_name: str
     result: llm.ToolResult
     tool_result: JsonObjectType
-
-
-def _is_intent_tool(tool: llm.Tool) -> bool:
-    """Return True if the tool, unwrapped from any namespace, handles an intent."""
-    while isinstance(tool, llm.NamespacedTool):
-        tool = tool.tool
-    return isinstance(tool, llm.IntentTool)
 
 
 @dataclass
@@ -789,7 +782,25 @@ class ChatLog:
         Some models fail when the history calls a tool that is not offered.
         """
         tool_names = {tool.name for tool in tools}
-        intent_tool_names = [tool.name for tool in tools if _is_intent_tool(tool)]
+        # Map the names an intent call can carry in the history to the name it
+        # is offered as now: the intent type recorded by local handling, and
+        # this or an inner tool name a previous namespace prefix left behind.
+        intent_names: dict[str, str | None] = {}
+        intent_types: dict[str, str | None] = {}
+        for tool in tools:
+            inner = tool
+            names = {tool.name}
+            while isinstance(inner, llm.NamespacedTool):
+                inner = inner.tool
+                names.add(inner.name)
+            if not isinstance(inner, llm.IntentTool):
+                continue
+            for name in names:
+                # Two tools answering to one name can never match uniquely.
+                intent_names[name] = None if name in intent_names else tool.name
+            intent_types[inner.intent_type] = (
+                None if inner.intent_type in intent_types else tool.name
+            )
         renamed: dict[str, str] = {}
         for index, content in enumerate(self.content):
             if isinstance(content, AssistantContent) and content.tool_calls:
@@ -797,18 +808,26 @@ class ChatLog:
                 for call_index, tool_call in enumerate(tool_calls):
                     if not tool_call.external or tool_call.tool_name in tool_names:
                         continue
-                    # A name renamed in an earlier turn may carry an old prefix.
-                    intent_name = tool_call.tool_name.rpartition("__")[2]
-                    matches = [
-                        name
-                        for name in intent_tool_names
-                        if name == intent_name or name.endswith(f"__{intent_name}")
-                    ]
+                    # A name renamed in an earlier turn may carry an old prefix,
+                    # so also try every suffix that is still a prefixed name.
+                    # A bare suffix may be part of the intent type itself.
+                    names = {tool_call.tool_name}
+                    pos = 0
+                    while (pos := tool_call.tool_name.find("__", pos)) != -1:
+                        pos += 2
+                        if "__" in (suffix := tool_call.tool_name[pos:]):
+                            names.add(suffix)
+                    matches = {
+                        match
+                        for name in names
+                        if (match := intent_names.get(name)) is not None
+                    }
+                    if (match := intent_types.get(tool_call.tool_name)) is not None:
+                        matches.add(match)
                     if len(matches) == 1:
-                        tool_calls[call_index] = replace(
-                            tool_call, tool_name=matches[0]
-                        )
-                        renamed[tool_call.id] = matches[0]
+                        matched = next(iter(matches))
+                        tool_calls[call_index] = replace(tool_call, tool_name=matched)
+                        renamed[tool_call.id] = matched
                 if tool_calls != content.tool_calls:
                     self.content[index] = replace(content, tool_calls=tool_calls)
             elif (
@@ -851,6 +870,7 @@ class ChatLog:
             # Keep the system prompt and tools static between turns, so LLM
             # providers can cache them. Tool calls use the context of this turn.
             self.llm_api.llm_context = llm_context
+            self._async_match_external_tool_names(self.llm_api.tools)
             self.llm_input_provided_index = len(self.content)
             self.async_trace(
                 {"messages": list(self.content), "tools": self.llm_api.tools}
