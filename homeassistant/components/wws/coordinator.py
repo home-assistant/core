@@ -54,12 +54,6 @@ class WwsCoordinator(
         if self.data is not None:
             self.async_update_listeners()
 
-    @callback
-    @override
-    def async_update_listeners(self) -> None:
-        """Notify entities when data or availability changes."""
-        super().async_update_listeners()
-
     @override
     async def _async_update_data(self) -> dict[str, Sequence[dict[str, Any]]]:
         """Fetch the latest prices and measurements from the API."""
