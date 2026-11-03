@@ -328,15 +328,6 @@ class ThermostatEntity(ClimateEntity):
             hvac_mode = kwargs[ATTR_HVAC_MODE]
             await self.async_set_hvac_mode(hvac_mode)
 
-        if low_temp and high_temp:
-            # Ensure there is a minimum gap between new high and low temps.
-            if high_temp - low_temp < MIN_TEMP_RANGE:
-                # Move the temp that did not change to maintain the minimum gap.
-                if abs(high_temp - self.native_target_temperature_high) < 0.01:
-                    high_temp = low_temp + MIN_TEMP_RANGE
-                else:
-                    low_temp = high_temp - MIN_TEMP_RANGE
-
         if ThermostatTemperatureSetpointTrait.NAME not in self._device.traits:
             raise HomeAssistantError(
                 f"Error setting {self.entity_id} {temperature_description}: "
@@ -346,6 +337,13 @@ class ThermostatEntity(ClimateEntity):
 
         try:
             if hvac_mode == HVACMode.HEAT_COOL and low_temp and high_temp:
+                # Ensure there is a minimum gap between new high and low temps.
+                if high_temp - low_temp < MIN_TEMP_RANGE:
+                    # Move the temp that did not change to maintain the minimum gap.
+                    if abs(high_temp - self.native_target_temperature_high) < 0.01:
+                        high_temp = low_temp + MIN_TEMP_RANGE
+                    else:
+                        low_temp = high_temp - MIN_TEMP_RANGE
                 await trait.set_range(low_temp, high_temp)
             elif hvac_mode == HVACMode.COOL and temp:
                 await trait.set_cool(temp)
