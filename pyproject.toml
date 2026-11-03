@@ -415,7 +415,7 @@ per-file-ignores = [
   # use-implicit-booleaness-not-comparison: Tests need to validate that a list
   # or a dict is returned
   "tests/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
-  "packages/pytest-home-assistant/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
+  "packages/pytest-homeassistant/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
 ]
 
 [tool.pylint.REPORTS]

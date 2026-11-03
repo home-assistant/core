@@ -246,3 +246,25 @@ async def test_device_tracker_device_names(
     state = hass.states.get(hostname_entity_id)
     assert state.state == STATE_NOT_HOME
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Workstation"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_reload_without_hostname_keeps_device_name(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: mock.AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a client without hostname on reload keeps its device name."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_opnsense_client.get_arp_table.return_value = [{**ARP[1], "hostname": ""}]
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, ARP[1]["mac"]), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == "Desktop"

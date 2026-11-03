@@ -4,7 +4,7 @@ from enum import StrEnum
 
 import probatio
 
-from homeassistant.const import CONF_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, service
 
@@ -25,7 +25,7 @@ class BlueCurrentServiceArgument(StrEnum):
 
 SERVICE_START_CHARGE_SESSION_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_DEVICE_ID): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
         # When no charging card is provided, use no charging card
         # (BCU_APP = no charging card).
         probatio.Optional(
@@ -42,7 +42,7 @@ async def start_charge_session(service_call: ServiceCall) -> None:
     charging_card_id = service_call.data[BlueCurrentServiceArgument.CHARGING_CARD_ID]
 
     device, config_entry = service.async_get_device_and_config_entry(
-        service_call.hass, DOMAIN, service_call.data[CONF_DEVICE_ID]
+        service_call.hass, DOMAIN, service_call.data[CommonServiceArgument.DEVICE_ID]
     )
 
     connector = config_entry.runtime_data

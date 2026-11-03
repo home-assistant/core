@@ -6,7 +6,7 @@ from aioamazondevices.const.metadata import ALEXA_INFO_SKILLS
 from aioamazondevices.const.sounds import SOUNDS_LIST
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
@@ -38,19 +38,19 @@ class AlexaDevicesServiceArgument(StrEnum):
 SCHEMA_SOUND_SERVICE = probatio.Schema(
     {
         probatio.Required(AlexaDevicesServiceArgument.SOUND): cv.string,
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
     },
 )
 SCHEMA_CUSTOM_COMMAND = probatio.Schema(
     {
         probatio.Required(AlexaDevicesServiceArgument.TEXT_COMMAND): cv.string,
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
     }
 )
 SCHEMA_INFO_SKILL = probatio.Schema(
     {
         probatio.Required(AlexaDevicesServiceArgument.INFO_SKILL): cv.string,
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
     }
 )
 
@@ -63,7 +63,10 @@ def async_get_entry_id_for_service_call(
     config_entry: AmazonConfigEntry
     # Callers read the device's serial number, which only a main device has
     device, config_entry = service.async_get_device_and_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID], include_child_devices=False
+        call.hass,
+        DOMAIN,
+        call.data[CommonServiceArgument.DEVICE_ID],
+        include_child_devices=False,
     )
     return (device, config_entry)
 

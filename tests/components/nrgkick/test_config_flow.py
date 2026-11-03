@@ -566,6 +566,7 @@ async def test_zeroconf_json_api_disabled_with_credentials(
         CONF_USERNAME: "user",
         CONF_PASSWORD: "pass",
     }
+    assert result["result"].unique_id == "TEST123456"
 
 
 @pytest.mark.parametrize(
