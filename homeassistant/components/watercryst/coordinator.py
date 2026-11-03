@@ -15,7 +15,8 @@ from pyocat import (
 )
 from pyocat.models import DeviceResponse, MeasurementResponse, StateResponse
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -162,6 +163,25 @@ class WatercrystUpdateCoordinator(WatercrystBaseCoordinator[DeviceResponse]):
         )
         self.state = state
         self.measurements = measurements
+
+        @callback
+        def _handle_update() -> None:
+            registry = dr.async_get(hass)
+            device = registry.async_get_device_by_identifier(
+                identifier=(DOMAIN, config_entry.entry_id),
+                config_entry_id=config_entry.entry_id,
+            )
+            if device:
+                registry.async_update_device(
+                    device.id,
+                    sw_version=self.data.current_firmware_version,
+                    hw_version=self.data.current_hardware_version,
+                    model=" ".join(p for p in (self.data.line, self.data.series) if p),
+                    model_id=self.data.device_type_number,
+                    name=self.data.name or config_entry.title,
+                )
+
+        config_entry.async_on_unload(self.async_add_listener(_handle_update))
 
     @override
     async def _async_fetch_data(self) -> DeviceResponse:

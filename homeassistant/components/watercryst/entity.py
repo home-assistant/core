@@ -29,10 +29,10 @@ def _build_device_info(
         connections.add((CONNECTION_NETWORK_MAC, format_mac(mac)))
 
     return DeviceInfo(
-        identifiers={(DOMAIN, info.biocat_serial)},
+        identifiers={(DOMAIN, config_entry.entry_id)},
         connections=connections,
         manufacturer="WATERCryst",
-        model=" ".join(part for part in (info.line, info.series) if part) or None,
+        model=" ".join(p for p in (info.line, info.series) if p),
         model_id=info.device_type_number,
         name=info.name or config_entry.title,
         serial_number=info.biocat_serial,

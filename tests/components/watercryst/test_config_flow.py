@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pyocat import WTCApiDisabledError, WTCApiTemporaryError, WTCApiUnauthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.watercryst.const import DOMAIN
@@ -11,9 +12,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import http_status_error, request_error
-
-from tests.common import MockConfigEntry
+from .conftest import DEVICE_NAME, http_status_error, request_error
 
 
 @pytest.mark.usefixtures("mock_api_client")
@@ -37,7 +36,7 @@ async def test_form_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 
     assert result["result"].unique_id is not None
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "HA Device"
+    assert result["title"] == DEVICE_NAME
     assert result["data"] == {
         CONF_API_KEY: "<api-key>",
     }
@@ -121,7 +120,7 @@ async def test_form_raise_error(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "HA Device"
+    assert result["title"] == DEVICE_NAME
     assert result["data"] == {
         CONF_API_KEY: "<api-key>",
     }
