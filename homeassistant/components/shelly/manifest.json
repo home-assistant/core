@@ -23,9 +23,7 @@
   "iot_class": "local_push",
   "loggers": ["aioshelly"],
   "quality_scale": "platinum",
-  "requirements": [
-    "aioshelly @ git+https://github.com/mib1185/aioshelly@add-plugs-ui-powerstrip-ui"
-  ],
+  "requirements": ["aioshelly==14.1.0"],
   "zeroconf": [
     {
       "name": "shelly*",

@@ -50,7 +50,7 @@ PlexAPI==4.18.2
 ProgettiHWSW==0.1.4
 
 # homeassistant.components.cast
-PyChromecast==14.1.0
+PyChromecast==14.1.1
 
 # homeassistant.components.flume
 PyFlume==0.6.5
@@ -307,7 +307,7 @@ aioharmony==1.0.10
 aiohasupervisor==0.9.0
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.39.1
+aiohomeconnect==0.41.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==4.0.1
@@ -457,7 +457,7 @@ aiosaj==0.2.2
 aioseafile==0.1.3
 
 # homeassistant.components.shelly
-aioshelly==14.0.1
+aioshelly==14.1.0
 
 # homeassistant.components.skybell
 aioskybell==23.12.0
@@ -2735,7 +2735,7 @@ pysmlight==0.6.2
 pysnmp==7.1.27
 
 # homeassistant.components.snooz
-pysnooz==0.10.0
+pysnooz==0.10.1
 
 # homeassistant.components.soma
 pysoma==0.0.12
