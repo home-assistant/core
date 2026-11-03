@@ -20,8 +20,6 @@ from .const import DOMAIN
 from .hub import DeconzHub
 from .util import get_master_hub
 
-DECONZ_SERVICES = "deconz_services"
-
 
 class DeconzService(StrEnum):
     """Store keys for deCONZ services."""
@@ -54,12 +52,6 @@ SERVICE_CONFIGURE_DEVICE_SCHEMA = probatio.All(
 
 SELECT_GATEWAY_SCHEMA = probatio.All(
     probatio.Schema({probatio.Optional(DeconzServiceArgument.BRIDGEID): str})
-)
-
-SUPPORTED_SERVICES = (
-    DeconzService.CONFIGURE,
-    DeconzService.DEVICE_REFRESH,
-    DeconzService.REMOVE_ORPHANED_ENTRIES,
 )
 
 SERVICE_TO_SCHEMA = {
@@ -119,13 +111,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         elif service == DeconzService.REMOVE_ORPHANED_ENTRIES:
             await async_remove_orphaned_entries_service(hub)
 
-    for service in SUPPORTED_SERVICES:
+    for service, schema in SERVICE_TO_SCHEMA.items():
         async_register_admin_service(
             hass,
             DOMAIN,
             service,
             async_call_deconz_service,
-            schema=SERVICE_TO_SCHEMA[service],
+            schema=schema,
         )
 
 
