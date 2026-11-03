@@ -1,6 +1,7 @@
 """Support for the yandex speechkit tts  service."""
 
 import asyncio
+from enum import StrEnum
 from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -12,6 +13,7 @@ from homeassistant.components.tts import (
     CONF_LANG,
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
+    TextToSpeechCommonOption,
     TtsAudioType,
 )
 from homeassistant.const import CONF_API_KEY
@@ -70,6 +72,15 @@ DEFAULT_VOICE = "zahar"
 DEFAULT_EMOTION = "neutral"
 DEFAULT_SPEED = 1
 
+
+class YandexTextToSpeechOption(StrEnum):
+    """Store keys for the Yandex TTS text-to-speech options."""
+
+    CODEC = "codec"
+    EMOTION = "emotion"
+    SPEED = "speed"
+
+
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
@@ -91,7 +102,12 @@ PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     }
 )
 
-SUPPORTED_OPTIONS = [CONF_CODEC, CONF_VOICE, CONF_EMOTION, CONF_SPEED]
+SUPPORTED_OPTIONS: list[str] = [
+    YandexTextToSpeechOption.CODEC,
+    TextToSpeechCommonOption.VOICE,
+    YandexTextToSpeechOption.EMOTION,
+    YandexTextToSpeechOption.SPEED,
+]
 
 
 async def async_get_engine(hass, config, discovery_info=None):
@@ -147,10 +163,14 @@ class YandexSpeechKitProvider(Provider):
                     "text": message,
                     "lang": actual_language,
                     "key": self._key,
-                    "speaker": options.get(CONF_VOICE, self._speaker),
-                    "format": options.get(CONF_CODEC, self._codec),
-                    "emotion": options.get(CONF_EMOTION, self._emotion),
-                    "speed": options.get(CONF_SPEED, self._speed),
+                    "speaker": options.get(
+                        TextToSpeechCommonOption.VOICE, self._speaker
+                    ),
+                    "format": options.get(YandexTextToSpeechOption.CODEC, self._codec),
+                    "emotion": options.get(
+                        YandexTextToSpeechOption.EMOTION, self._emotion
+                    ),
+                    "speed": options.get(YandexTextToSpeechOption.SPEED, self._speed),
                 }
 
                 request = await websession.get(YANDEX_API_URL, params=url_param)

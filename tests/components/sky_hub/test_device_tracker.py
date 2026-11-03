@@ -316,3 +316,61 @@ async def test_device_name_updated(
     device = device_registry.async_get(registry_entry.device_id)
     assert device is not None
     assert device.name == expected_device_name
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_reload_without_name_keeps_device_name(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_router: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a client without name on reload keeps its device name."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_router.async_get_skyhub_data.return_value = [MockDevice(LAPTOP.mac, "")]
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, LAPTOP.mac), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == LAPTOP.name
+
+
+@pytest.mark.parametrize(
+    ("new_name", "expected_device_name"),
+    [
+        pytest.param("Work laptop", "Work laptop", id="renamed"),
+        pytest.param("", LAPTOP.name, id="name_removed"),
+    ],
+)
+async def test_disabled_tracker_device_renamed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_router: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    new_name: str,
+    expected_device_name: str,
+) -> None:
+    """Test the device of a disabled tracker follows client name changes."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    registry_entry = entity_registry.async_get("device_tracker.laptop")
+    assert registry_entry is not None
+    assert registry_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    mock_router.async_get_skyhub_data.return_value = [MockDevice(LAPTOP.mac, new_name)]
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get(registry_entry.device_id)
+    assert device is not None
+    assert device.name == expected_device_name

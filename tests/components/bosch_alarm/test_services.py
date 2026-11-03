@@ -9,12 +9,12 @@ import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.bosch_alarm.const import (
-    ATTR_DATETIME,
-    DOMAIN,
-    SERVICE_SET_DATE_TIME,
+from homeassistant.components.bosch_alarm.const import DOMAIN
+from homeassistant.components.bosch_alarm.services import (
+    BoschAlarmService,
+    BoschAlarmServiceArgument,
 )
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -40,10 +40,10 @@ async def test_set_date_time_service(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_DATE_TIME,
+        BoschAlarmService.SET_DATE_TIME,
         {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_DATETIME: dt_util.now(),
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            BoschAlarmServiceArgument.DATETIME: dt_util.now(),
         },
         blocking=True,
     )
@@ -61,10 +61,10 @@ async def test_set_date_time_service_fails_bad_entity(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATE_TIME,
+            BoschAlarmService.SET_DATE_TIME,
             {
-                ATTR_CONFIG_ENTRY_ID: "bad-config_id",
-                ATTR_DATETIME: dt_util.now(),
+                CommonServiceArgument.CONFIG_ENTRY_ID: "bad-config_id",
+                BoschAlarmServiceArgument.DATETIME: dt_util.now(),
             },
             blocking=True,
         )
@@ -86,10 +86,10 @@ async def test_set_date_time_service_fails_bad_params(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATE_TIME,
+            BoschAlarmService.SET_DATE_TIME,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_DATETIME: "",
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                BoschAlarmServiceArgument.DATETIME: "",
             },
             blocking=True,
         )
@@ -109,10 +109,10 @@ async def test_set_date_time_service_fails_bad_year_before(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATE_TIME,
+            BoschAlarmService.SET_DATE_TIME,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_DATETIME: dt.datetime(2038, 1, 1),
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                BoschAlarmServiceArgument.DATETIME: dt.datetime(2038, 1, 1),
             },
             blocking=True,
         )
@@ -133,10 +133,10 @@ async def test_set_date_time_service_fails_bad_year_after(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATE_TIME,
+            BoschAlarmService.SET_DATE_TIME,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_DATETIME: dt.datetime(2009, 1, 1),
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                BoschAlarmServiceArgument.DATETIME: dt.datetime(2009, 1, 1),
             },
             blocking=True,
         )
@@ -157,10 +157,10 @@ async def test_set_date_time_service_fails_connection_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATE_TIME,
+            BoschAlarmService.SET_DATE_TIME,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_DATETIME: dt_util.now(),
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                BoschAlarmServiceArgument.DATETIME: dt_util.now(),
             },
             blocking=True,
         )
@@ -178,10 +178,10 @@ async def test_set_date_time_service_fails_unloaded(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATE_TIME,
+            BoschAlarmService.SET_DATE_TIME,
             {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_DATETIME: dt_util.now(),
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                BoschAlarmServiceArgument.DATETIME: dt_util.now(),
             },
             blocking=True,
         )
