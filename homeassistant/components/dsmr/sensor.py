@@ -801,6 +801,22 @@ def create_mbus_entities(
         if not descriptions:
             continue
 
+        # A previously identified gas meter may already have registry entries
+        # after reload. Wait for its identifier rather than create duplicates
+        # from a partial telegram using a temporary device identity.
+        if type_ == MbusDeviceType.GAS and not channel_identifiers.get(
+            device.channel_id
+        ):
+            device_registry = dr.async_get(hass)
+            if any(
+                device_entry.name == DEVICE_NAME_GAS
+                and (DOMAIN, entry.entry_id) not in device_entry.identifiers
+                for device_entry in dr.async_entries_for_config_entry(
+                    device_registry, entry.entry_id
+                )
+            ):
+                continue
+
         # Keep the established identity if a later telegram omits the identifier.
         serial_ = channel_identifiers.get(device.channel_id, "")
 
@@ -874,11 +890,26 @@ async def async_setup_entry(
                 new_unique_id = serial
                 if description.key.startswith("belgium_gas_"):
                     new_unique_id += f"_{description.key}"
+                old_unique_id = entity.unique_id
+                if old_unique_id is None:
+                    continue
                 registered_id = registry.async_get_entity_id(
-                    SENSOR_DOMAIN, DOMAIN, entity.unique_id
+                    SENSOR_DOMAIN, DOMAIN, old_unique_id
                 )
                 if registered_id is not None:
-                    old_device_id = registry.async_get(registered_id).device_id
+                    registered_entry = registry.async_get(registered_id)
+                    if registered_entry is None:
+                        continue
+                    existing_id = registry.async_get_entity_id(
+                        SENSOR_DOMAIN, DOMAIN, new_unique_id
+                    )
+                    if existing_id is not None and existing_id != registered_id:
+                        LOGGER.warning(
+                            "M-Bus identity %s already registered; preserving existing entry",
+                            new_unique_id,
+                        )
+                        continue
+                    old_device_id = registered_entry.device_id
                     new_device = device_registry.async_get_or_create(
                         config_entry_id=entry.entry_id,
                         identifiers={(DOMAIN, serial)},

@@ -2492,9 +2492,8 @@ async def test_mbus_identity_stable_across_partial_telegrams(
 
     assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    connection_factory.call_args_list[-1][0][2](
-        gas_telegram(with_identifier=True)
-    )
+    reloaded_callback = connection_factory.call_args_list[-1][0][2]
+    reloaded_callback(gas_telegram(with_identifier=False))
     await hass.async_block_till_done()
     assert {
         entity.unique_id
@@ -2502,3 +2501,13 @@ async def test_mbus_identity_stable_across_partial_telegrams(
             entity_registry, mock_config_entry.entry_id
         )
     } == expected
+
+    reloaded_callback(gas_telegram(with_identifier=True))
+    await hass.async_block_till_done()
+    assert {
+        entity.unique_id
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    } == expected
+    assert hass.states.get(consumption_id).state == "1.5"

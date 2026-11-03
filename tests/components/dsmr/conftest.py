@@ -27,7 +27,12 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain="dsmr",
         unique_id="/dev/ttyUSB0",
-        data={"port": "/dev/ttyUSB0", "dsmr_version": "5B", "serial_id": "1234"},
+        data={
+            "port": "/dev/ttyUSB0",
+            "dsmr_version": "5B",
+            "serial_id": "1234",
+            "serial_id_gas": None,
+        },
         options={"time_between_update": 0},
     )
 
@@ -55,7 +60,11 @@ def dsmr_connection_fixture() -> Generator[tuple[MagicMock, MagicMock, MagicMock
     protocol.wait_closed = closed.wait
 
     async def connection_factory(*args, **kwargs):
-        """Return mocked out Asyncio classes."""
+        """Return mocked out Asyncio classes with closable connections."""
+        nonlocal closed
+        closed = asyncio.Event()
+        protocol.wait_closed = closed.wait
+        transport.close.side_effect = closed.set
         return (transport, protocol)
 
     connection_factory = MagicMock(wraps=connection_factory)
