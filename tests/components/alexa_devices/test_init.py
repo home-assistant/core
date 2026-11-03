@@ -2,8 +2,10 @@
 
 import asyncio
 from collections.abc import Callable
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+from aioamazondevices.api import SETTINGS_FILENAME
 from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 from aioamazondevices.structures import AmazonListInfo, AmazonListType
 import pytest
@@ -24,9 +26,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import setup_integration
 from .const import TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
+
+OLD_SETTINGS_FILE = f"{DOMAIN}/{SETTINGS_FILENAME}"
+NEW_SETTINGS_FILE = f"{STORAGE_DIR}/{DOMAIN}/{SETTINGS_FILENAME}"
+OLD_SETTINGS = '{"default_device": "old"}'
+NEW_SETTINGS = '{"default_device": "new"}'
 
 
 def _fail_todo_list_items(client: AsyncMock, error: Exception) -> None:
@@ -140,8 +148,51 @@ async def test_migrate_entry(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.minor_version == 3
+    assert config_entry.minor_version == 4
     assert config_entry.data[CONF_LOGIN_DATA][CONF_SITE] == "https://www.amazon.com"
+
+
+@pytest.mark.usefixtures("mock_amazon_devices_client")
+@pytest.mark.parametrize(
+    ("existing_files", "expected_new_settings", "old_dir_removed"),
+    [
+        pytest.param({OLD_SETTINGS_FILE: OLD_SETTINGS}, OLD_SETTINGS, True, id="moved"),
+        pytest.param(
+            {OLD_SETTINGS_FILE: OLD_SETTINGS, NEW_SETTINGS_FILE: NEW_SETTINGS},
+            NEW_SETTINGS,
+            False,
+            id="new_already_present",
+        ),
+    ],
+)
+async def test_migrate_settings_to_storage(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    tmp_path: Path,
+    existing_files: dict[str, str],
+    expected_new_settings: str,
+    old_dir_removed: bool,
+) -> None:
+    """Test library settings are moved from the config root into .storage."""
+    hass.config.config_dir = str(tmp_path)
+    for relative_path, content in existing_files.items():
+        file = tmp_path / relative_path
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_text(content)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        unique_id=TEST_USER_ID,
+        version=1,
+        minor_version=3,
+    )
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.minor_version == 4
+    assert (tmp_path / NEW_SETTINGS_FILE).read_text() == expected_new_settings
+    assert (tmp_path / DOMAIN).exists() is not old_dir_removed
 
 
 async def test_migrate_future_version_returns_false(
