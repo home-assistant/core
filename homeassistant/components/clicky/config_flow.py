@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyclicky import AuthenticationError, ClickyClient, ConnectionError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
@@ -19,10 +19,10 @@ from .const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SITE_ID): TextSelector(),
-        vol.Required(CONF_SITEKEY): TextSelector(
+        probatio.Required(CONF_SITE_ID): TextSelector(),
+        probatio.Required(CONF_SITEKEY): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
