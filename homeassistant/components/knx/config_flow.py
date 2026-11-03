@@ -749,19 +749,37 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass,
                     uploaded_file_id=user_input[CONF_KEYRING_FILE],
                     password=password,
+                    is_usable=lambda keyring: not self._validate_keyring(keyring)[0],
                 )
             except InvalidSecureConfiguration:
                 errors[CONF_KNX_KNXKEY_PASSWORD] = "keyfile_invalid_signature"
                 return None
-            # the uploaded file replaced the stored one
-            self._stored_keyring = StoredKeyring(keyring, filename, password)
 
         keyring_errors, keyring_placeholders = self._validate_keyring(keyring)
         if keyring_errors:
             errors.update(keyring_errors)
             description_placeholders.update(keyring_placeholders)
             return None
+        if key_source == KEY_SOURCE_KNXKEYS_UPLOAD:
+            # the uploaded file replaced the stored one
+            self._stored_keyring = StoredKeyring(keyring, filename, password)
         return await self._async_keyring_selected(keyring, filename, password)
+
+    def _add_suggested_values(
+        self, data_schema: probatio.Schema, user_input: dict[str, Any]
+    ) -> probatio.Schema:
+        """Keep the entered values after an error.
+
+        The uploaded file is consumed by the failed attempt, so it is not suggested.
+        """
+        return self.add_suggested_values_to_schema(
+            data_schema,
+            {
+                key: value
+                for key, value in user_input.items()
+                if key != CONF_KEYRING_FILE
+            },
+        )
 
     async def _async_key_source_fields(self, manual_configured: bool) -> VolDictType:
         """Return the fields to select the IP Secure key source and upload a keyring."""
@@ -854,7 +872,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         data_schema = probatio.Schema(fields)
         if user_input is not None:
-            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+            data_schema = self._add_suggested_values(data_schema, user_input)
         return self.async_show_form(
             step_id="secure_tunnel",
             data_schema=data_schema,
@@ -924,7 +942,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         data_schema = probatio.Schema(fields)
         if user_input is not None:
-            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+            data_schema = self._add_suggested_values(data_schema, user_input)
         return self.async_show_form(
             step_id="secure_routing",
             data_schema=data_schema,

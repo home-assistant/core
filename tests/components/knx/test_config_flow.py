@@ -109,8 +109,15 @@ async def fixture_knx_setup(hass: HomeAssistant):
 
 
 @contextmanager
-def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
-    """Patch file upload. Yields the Keyring instance (return_value)."""
+def patch_file_upload(
+    return_value: Keyring | Mock = FIXTURE_KEYRING,
+    side_effect: Exception | None = None,
+    stored: bool = True,
+) -> Generator[Keyring | Mock]:
+    """Patch file upload. Yields the Keyring instance (return_value).
+
+    `stored` is whether the uploaded file is expected to replace the stored one.
+    """
     with (
         patch(
             "homeassistant.components.knx.storage.keyring.process_uploaded_file"
@@ -129,12 +136,23 @@ def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
     ):
         file_upload_mock.return_value.__enter__.return_value = Mock()
         yield return_value
-        if side_effect:
+        if side_effect or not stored:
             mkdir_mock.assert_not_called()
             shutil_move_mock.assert_not_called()
         else:
             mkdir_mock.assert_called_once()
             shutil_move_mock.assert_called_once()
+
+
+def _suggested_values(result: config_entries.ConfigFlowResult) -> dict[str, Any]:
+    """Return the suggested values of a form."""
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    return {
+        key.schema: key.description["suggested_value"]
+        for key in data_schema.schema
+        if key.description and "suggested_value" in key.description
+    }
 
 
 @contextmanager
@@ -1312,6 +1330,11 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant) -
         assert secure_knxkeys["errors"] == {
             CONF_KNX_KNXKEY_PASSWORD: "keyfile_invalid_signature"
         }
+    # the upload is consumed, so a new file has to be selected
+    assert _suggested_values(secure_knxkeys) == {
+        CONF_KNX_SECURE_KEY_SOURCE: KEY_SOURCE_KNXKEYS_UPLOAD,
+        CONF_KNX_KNXKEY_PASSWORD: "password",
+    }
 
     with patch_file_upload():
         secure_knxkeys = await hass.config_entries.flow.async_configure(
@@ -1335,7 +1358,7 @@ async def test_configure_secure_knxkeys_no_tunnel_for_host(hass: HomeAssistant) 
     """Test configure secure knxkeys with a keyring not matching the gateway."""
     result = await _get_secure_tunnel_step(hass)
 
-    with patch_file_upload(return_value=Mock()) as mock_keyring:
+    with patch_file_upload(return_value=Mock(), stored=False) as mock_keyring:
         mock_keyring.get_tunnel_interfaces_by_host.return_value = []
         secure_knxkeys = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1992,7 +2015,7 @@ async def test_routing_secure_keyfile_no_backbone_key(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "secure_routing"
 
-    with patch_file_upload(return_value=Keyring()):
+    with patch_file_upload(return_value=Keyring(), stored=False):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -2052,7 +2075,7 @@ async def test_reconfigure_keyfile_upload_no_backbone_key(
     )
     assert result["step_id"] == "secure_knxkeys"
 
-    with patch_file_upload(return_value=Keyring()):
+    with patch_file_upload(return_value=Keyring(), stored=False):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
