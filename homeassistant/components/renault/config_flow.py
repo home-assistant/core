@@ -199,9 +199,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=REAUTH_SCHEMA,
             errors=errors,
             description_placeholders={
-                RenaultConfigurationKeys.USERNAME: reauth_entry.data[
-                    RenaultConfigurationKeys.USERNAME
-                ]
+                "username": reauth_entry.data[RenaultConfigurationKeys.USERNAME]
             },
         )
 
