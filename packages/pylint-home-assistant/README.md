@@ -1103,9 +1103,14 @@ don't match the `{placeholder}` slots in the `strings.json` message.
 
 ## `home_assistant_placeholder_keys` checker
 
-Checks the keys of the dicts passed as `description_placeholders` or
-`translation_placeholders`. A placeholder key refers to a `{placeholder}`
-slot in `strings.json`, not to a configuration key or attribute.
+Checks the keys of translation placeholder dicts. A placeholder key refers to
+a `{placeholder}` slot in `strings.json`, not to a configuration key or
+attribute.
+
+A dict literal is checked when its name ends in `placeholders`: a keyword
+argument such as `description_placeholders=`, an assignment such as
+`self.context["title_placeholders"] = {...}` or `placeholders = {...}`, or a
+dict entry such as `{"title_placeholders": {...}}`.
 
 ### `C7459`: `home-assistant-placeholder-key`
 
@@ -1119,6 +1124,12 @@ description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]}
 
 # Good
 description_placeholders={"username": entry.data[CONF_USERNAME]}
+
+# Bad
+self.context["title_placeholders"] = {CONF_HOST: discovery_info.host}
+
+# Good
+self.context["title_placeholders"] = {"host": discovery_info.host}
 ```
 
 ## `home_assistant_mdi_icons` checker
