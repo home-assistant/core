@@ -191,6 +191,9 @@
     "alarm_arm_disarm_failed": {
       "message": "Imou rejected the arming change"
     },
+    "countdown_too_far": {
+      "message": "Choose a time within the next {hours} hours"
+    },
     "fetch_devices_failed": {
       "message": "Could not list devices from Imou"
     },
@@ -211,9 +214,6 @@
     },
     "select_option_failed": {
       "message": "Imou rejected the new option"
-    },
-    "countdown_too_far": {
-      "message": "Choose a time within the next {hours} hours"
     },
     "set_text_value_failed": {
       "message": "Imou rejected the new value"
