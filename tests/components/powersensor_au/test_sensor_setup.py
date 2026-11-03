@@ -28,7 +28,12 @@ from homeassistant.components.powersensor_au.const import (
     ROLE_SOLAR,
     ROLE_WATER,
 )
-from homeassistant.const import EVENT_STATE_REPORTED, Platform
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_STATE_REPORTED,
+    Platform,
+    UnitOfEnergy,
+)
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -362,7 +367,7 @@ async def test_energy_converted_from_joules(
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """summation_joules is converted to kWh before storing state."""
+    """The energy total reported in joules is shown in kWh, its suggested unit."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
     await fire(
         {
@@ -392,7 +397,8 @@ async def test_energy_converted_from_joules(
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state is not None
-    assert float(state.state) == pytest.approx(1.0, rel=1e-4)
+    assert state.state == "1.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
 
 
 @pytest.mark.parametrize(

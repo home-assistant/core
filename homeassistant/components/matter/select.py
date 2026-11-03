@@ -50,6 +50,17 @@ PUMP_OPERATION_MODE_MAP = {
 }
 PUMP_OPERATION_MODE_MAP_REVERSE = {v: k for k, v in PUMP_OPERATION_MODE_MAP.items()}
 
+CAMERA_FEATURE_NIGHT_VISION = (
+    clusters.CameraAvStreamManagement.Bitmaps.Feature.kNightVision
+)
+
+NIGHT_VISION_MAP = {
+    clusters.CameraAvStreamManagement.Enums.TriStateAutoEnum.kOff: "off",
+    clusters.CameraAvStreamManagement.Enums.TriStateAutoEnum.kOn: "on",
+    clusters.CameraAvStreamManagement.Enums.TriStateAutoEnum.kAuto: "auto",
+}
+NIGHT_VISION_MAP_REVERSE = {v: k for k, v in NIGHT_VISION_MAP.items()}
+
 type SelectCluster = (
     clusters.ModeSelect
     | clusters.OvenMode
@@ -598,6 +609,20 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.PumpConfigurationAndControl.Attributes.OperationMode,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="CameraAvStreamManagementNightVision",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="night_vision",
+            options=list(NIGHT_VISION_MAP.values()),
+            device_to_ha=NIGHT_VISION_MAP.get,
+            ha_to_device=NIGHT_VISION_MAP_REVERSE.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.CameraAvStreamManagement.Attributes.NightVision,),
+        featuremap_contains=CAMERA_FEATURE_NIGHT_VISION,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
