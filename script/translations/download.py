@@ -60,8 +60,11 @@ def run_download_docker() -> None:
 
 
 def save_json(filename: Path, data: list | dict) -> None:
-    """Save JSON data to a file."""
-    filename.write_text(json.dumps(data, sort_keys=True, indent=4), encoding="utf-8")
+    """Save minified JSON data to a file to keep the package size small."""
+    filename.write_text(
+        json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
+        encoding="utf-8",
+    )
 
 
 def filter_translations(translations: dict[str, Any], strings: dict[str, Any]) -> None:
