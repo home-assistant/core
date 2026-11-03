@@ -26,6 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -46,6 +47,17 @@ _IZONE_FAN_TO_HA = {
 }
 
 ATTR_CONTROL_ZONE_SOURCE = "control_zone_source"
+
+
+def _validate_setpoint_step(temp: float) -> None:
+    """Reject setpoints the bridge cannot represent."""
+    # The climate service only enforces min/max, not the step.
+    if temp % PRECISION_HALVES:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_temperature_step",
+            translation_placeholders={"value": f"{temp:g}"},
+        )
 
 
 async def async_setup_entry(
@@ -351,6 +363,7 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
             self.async_schedule_update_ha_state(True)
             return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            _validate_setpoint_step(temp)
             await self._async_run_and_update(self.controller.set_temp_setpoint(temp))
 
     @override
@@ -500,6 +513,7 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
         if self._zone.mode is not Zone.Mode.AUTO:
             return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            _validate_setpoint_step(temp)
             await self._async_run_and_update(self._zone.set_temp_setpoint(temp))
 
     @override
