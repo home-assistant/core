@@ -9,19 +9,23 @@
     "step": {
       "user": {
         "data": {
-          "file_path": "File path",
-          "name": "[%key:common::config_flow::data::name%]"
+          "file_path": "File path"
         },
         "data_description": {
-          "file_path": "The full path to the image file to be displayed. Be sure the path of the file is in the allowed paths, you can read more about this in the documentation.",
-          "name": "Name for the created entity."
+          "file_path": "The full path to the image file to be displayed. Be sure the path of the file is in the allowed paths, you can read more about this in the documentation."
         }
       }
     }
   },
   "exceptions": {
+    "file_not_found": {
+      "message": "Could not read the image file {file_path}."
+    },
     "file_path_not_accessible": {
       "message": "Path {file_path} is not accessible"
+    },
+    "not_readable_path": {
+      "message": "Path {file_path} is not readable"
     }
   },
   "options": {

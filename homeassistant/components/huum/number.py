@@ -1,10 +1,12 @@
 """Control for steamer."""
 
 import logging
+from typing import override
 
 from huum.const import SaunaStatus
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberDeviceClass, NumberEntity
+from homeassistant.const import UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -34,7 +36,9 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
     """Representation of a steamer."""
 
     _attr_translation_key = "humidity"
-    _attr_native_max_value = 10
+    _attr_device_class = NumberDeviceClass.HUMIDITY
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
+    _attr_native_max_value = 40
     _attr_native_min_value = 0
     _attr_native_step = 1
 
@@ -45,10 +49,24 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
         self._attr_unique_id = coordinator.config_entry.entry_id
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
-        return self.coordinator.data.target_humidity
+        return self.coordinator.data.humidity
 
+    @property
+    @override
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        # The allowed steamer level drops as the target temperature rises.
+        data = self.coordinator.data
+        if data.maximum_target_humidity is not None:
+            return data.maximum_target_humidity
+        if data.target_temperature is not None:
+            return self.coordinator.huum.get_max_humidity(data.target_temperature)
+        return super().native_max_value
+
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         target_temperature = self.coordinator.data.target_temperature

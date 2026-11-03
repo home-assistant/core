@@ -26,6 +26,38 @@ LIGHT_AND_SIGNAL_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+# Non-event variant (first byte 0x08 instead of 0x48 clears the event bit);
+# qingping-ble 1.1.3 drops illuminance from CGPR1 event packets because the
+# trailing bytes after motion are not a valid reading there.
+LIGHT_SERVICE_INFO = BluetoothServiceInfo(
+    name="Qingping Motion & Light",
+    manufacturer_data={},
+    service_uuids=[],
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-60,
+    service_data={
+        "0000fdcd-0000-1000-8000-00805f9b34fb": (
+            b"\x08\x12\xcd\xd5`4-X\x08\x04\x00\r\x00\x00\x0f\x01\xee"
+        )
+    },
+    source="local",
+)
+
+
+VOC_NOISE_SERVICE_INFO = BluetoothServiceInfo(
+    name="Qingping Motion & Light",
+    manufacturer_data={},
+    service_uuids=[],
+    address="aa:bb:cc:dd:ee:ff",
+    rssi=-60,
+    service_data={
+        "0000fdcd-0000-1000-8000-00805f9b34fb": (
+            b"\x08\x12\xcd\xd5`4-X\x15\x029\x00\x19\x012"
+        )
+    },
+    source="local",
+)
+
 
 NO_DATA_SERVICE_INFO = BluetoothServiceInfo(
     name="Qingping Motion & Light",

@@ -1,6 +1,6 @@
 """Base class for all eQ-3 entities."""
 
-from typing import Any
+from typing import Any, override
 
 from eq3btsmart import Eq3Exception
 from eq3btsmart.const import Eq3Event
@@ -47,6 +47,7 @@ class Eq3Entity(Entity):
         suffix = f"_{unique_id_key}" if unique_id_key else ""
         self._attr_unique_id = f"{format_mac(self._eq3_config.mac_address)}{suffix}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
@@ -75,6 +76,7 @@ class Eq3Entity(Entity):
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
 
@@ -115,6 +117,7 @@ class Eq3Entity(Entity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Whether the entity is available."""
 

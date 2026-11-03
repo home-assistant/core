@@ -145,7 +145,7 @@ class SIAHub:
         underlying platforms, and then setup platforms, this
         reflects any changes in number of zones.
         """
-        if config_entry.state != ConfigEntryState.LOADED:
+        if config_entry.state is not ConfigEntryState.LOADED:
             return
         config_entry.runtime_data.update_accounts()
         await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

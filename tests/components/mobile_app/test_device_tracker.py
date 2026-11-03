@@ -5,18 +5,17 @@ from typing import Any
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.common import (
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components import zone
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
 
 
 @pytest.fixture
@@ -138,6 +137,51 @@ async def setup_zone(hass: HomeAssistant) -> None:
             },
             "School",
         ),
+        # Send in_zones only - first zone determines state
+        (
+            {"in_zones": ["zone.home"]},
+            {"in_zones": ["zone.home"]},
+            "home",
+        ),
+        (
+            {"in_zones": ["zone.office"]},
+            {"in_zones": ["zone.office"]},
+            "Office",
+        ),
+        (
+            {"in_zones": ["zone.home", "zone.office"]},
+            {"in_zones": ["zone.home", "zone.office"]},
+            "home",
+        ),
+        # Empty in_zones list - not_home
+        (
+            {"in_zones": []},
+            {"in_zones": []},
+            "not_home",
+        ),
+        # in_zones + location_name: in_zones wins, location_name ignored
+        (
+            {"in_zones": ["zone.office"], "location_name": "home"},
+            {"in_zones": ["zone.office"]},
+            "Office",
+        ),
+        # in_zones with empty list still suppresses location_name
+        (
+            {"in_zones": [], "location_name": "home"},
+            {"in_zones": []},
+            "not_home",
+        ),
+        # in_zones + gps: in_zones wins, gps coordinates still reported as attributes
+        (
+            {"gps": [10, 20], "in_zones": ["zone.school"]},
+            {
+                "latitude": 10,
+                "longitude": 20,
+                "gps_accuracy": 30,
+                "in_zones": ["zone.school"],
+            },
+            "School",
+        ),
     ],
 )
 async def test_sending_location(
@@ -180,6 +224,7 @@ async def test_sending_location(
             "altitude": 50.0,
             "course": 60,
             "speed": 70,
+            "tracking_type": "position",
             "vertical_accuracy": 80,
         }
         | expected_attributes
@@ -217,6 +262,7 @@ async def test_sending_location(
         "altitude": 5.0,
         "course": 6,
         "speed": 7,
+        "tracking_type": "position",
         "vertical_accuracy": 8,
         "in_zones": [],
     }
@@ -302,6 +348,7 @@ async def test_restoring_location(
                 "longitude": 20.0,
                 "gps_accuracy": 30,
                 "in_zones": ["zone.home"],
+                "tracking_type": "position",
             },
             {
                 "data": {
@@ -328,6 +375,7 @@ async def test_restoring_location(
                 "speed": 70,
                 "vertical_accuracy": 80,
                 "in_zones": [],
+                "tracking_type": "position",
             },
             {
                 "data": {
@@ -338,6 +386,33 @@ async def test_restoring_location(
                     "speed": 70,
                     "vertical_accuracy": 80,
                     "location_name": "office",
+                }
+            },
+        ),
+        # in_zones only
+        (
+            {"in_zones": ["zone.office"]},
+            "Office",
+            {
+                "friendly_name": "Test 1",
+                "source_type": "gps",
+                "battery_level": 40,
+                "altitude": 50.0,
+                "course": 60,
+                "speed": 70,
+                "vertical_accuracy": 80,
+                "in_zones": ["zone.office"],
+                "tracking_type": "position",
+            },
+            {
+                "data": {
+                    "gps_accuracy": 30,
+                    "battery": 40,
+                    "altitude": 50.0,
+                    "course": 60,
+                    "speed": 70,
+                    "vertical_accuracy": 80,
+                    "in_zones": ["zone.office"],
                 }
             },
         ),
@@ -412,6 +487,7 @@ async def test_saving_state(
                 "speed": 70,
                 "vertical_accuracy": 80,
                 "in_zones": ["zone.home"],
+                "tracking_type": "position",
             },
         ),
         # Coordinates outside any zone
@@ -430,6 +506,7 @@ async def test_saving_state(
                 "gps_accuracy": 3,
                 "battery_level": 4,
                 "in_zones": [],
+                "tracking_type": "position",
             },
         ),
         # Last update was a named location only (no coords)
@@ -452,6 +529,45 @@ async def test_saving_state(
                 "speed": 70,
                 "vertical_accuracy": 80,
                 "in_zones": [],
+                "tracking_type": "position",
+            },
+        ),
+        # Last update was an in_zones list (no coords)
+        (
+            {
+                "in_zones": ["zone.office"],
+                "battery": 40,
+                "altitude": 50.0,
+                "course": 60,
+                "speed": 70,
+                "vertical_accuracy": 80,
+            },
+            "Office",
+            {
+                "friendly_name": "Test 1",
+                "source_type": "gps",
+                "battery_level": 40,
+                "altitude": 50.0,
+                "course": 60,
+                "speed": 70,
+                "vertical_accuracy": 80,
+                "in_zones": ["zone.office"],
+                "tracking_type": "position",
+            },
+        ),
+        # Empty in_zones list - not_home
+        (
+            {
+                "in_zones": [],
+                "battery": 40,
+            },
+            "not_home",
+            {
+                "friendly_name": "Test 1",
+                "source_type": "gps",
+                "battery_level": 40,
+                "in_zones": [],
+                "tracking_type": "position",
             },
         ),
     ],
@@ -513,6 +629,7 @@ async def test_restoring_state(
                 "speed": 70,
                 "vertical_accuracy": 80,
                 "in_zones": ["zone.home"],
+                "tracking_type": "position",
             },
         ),
         # Coordinates outside any zone
@@ -534,6 +651,7 @@ async def test_restoring_state(
                 "gps_accuracy": 3,
                 "battery_level": 4,
                 "in_zones": [],
+                "tracking_type": "position",
             },
         ),
         # Last update was a named location only (no coords). The location name
@@ -559,6 +677,7 @@ async def test_restoring_state(
                 "speed": 70,
                 "vertical_accuracy": 80,
                 "in_zones": [],
+                "tracking_type": "position",
             },
         ),
     ],
@@ -602,6 +721,8 @@ async def test_restoring_state_legacy_fallback(
         {"battery": -1},
         # gps_accuracy rejected by cv.positive_float
         {"gps_accuracy": "not-a-number"},
+        # in_zones contains a non-zone entity_id
+        {"in_zones": ["sensor.foo"]},
     ],
 )
 async def test_restoring_state_invalid_extra_data(
@@ -653,4 +774,5 @@ async def test_restoring_state_invalid_extra_data(
         "friendly_name": "Test 1",
         "source_type": "gps",
         "in_zones": [],
+        "tracking_type": "position",
     }

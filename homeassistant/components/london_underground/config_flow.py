@@ -2,10 +2,10 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from london_tube_status import TubeData
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -16,7 +16,6 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_LINE, DEFAULT_LINES, DOMAIN, TUBE_LINES
 
@@ -31,12 +30,14 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         _: ConfigEntry,
     ) -> LondonUndergroundOptionsFlow:
         """Get the options flow for this handler."""
         return LondonUndergroundOptionsFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -63,9 +64,9 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LINE,
                         default=DEFAULT_LINES,
                     ): selector.SelectSelector(
@@ -78,40 +79,6 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
-        """Handle import from configuration.yaml."""
-        session = async_get_clientsession(self.hass)
-        data = TubeData(session)
-        try:
-            async with asyncio.timeout(10):
-                await data.update()
-        except Exception:
-            _LOGGER.exception(
-                "Unexpected error trying to connect"
-                " before importing config,"
-                " aborting import "
-            )
-            return self.async_abort(reason="cannot_connect")
-
-        _LOGGER.warning(
-            "Importing London Underground config from configuration.yaml: %s",
-            import_data,
-        )
-        # Extract lines from the sensor platform config
-        lines = import_data.get(CONF_LINE, DEFAULT_LINES)
-        if "London Overground" in lines:
-            _LOGGER.warning(
-                "London Overground was removed from the"
-                " configuration as the line has been"
-                " divided and renamed"
-            )
-            lines.remove("London Overground")
-        return self.async_create_entry(
-            title="London Underground",
-            data={},
-            options={CONF_LINE: import_data.get(CONF_LINE, DEFAULT_LINES)},
         )
 
 
@@ -134,9 +101,9 @@ class LondonUndergroundOptionsFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LINE,
                         default=self.config_entry.options.get(
                             CONF_LINE,

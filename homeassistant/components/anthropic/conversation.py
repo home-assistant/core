@@ -1,6 +1,6 @@
 """Conversation support for Anthropic."""
 
-from typing import Literal
+from typing import Literal, override
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -8,8 +8,8 @@ from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AnthropicConfigEntry
 from .const import DOMAIN
+from .coordinator import AnthropicConfigEntry
 from .entity import AnthropicBaseLLMEntity
 
 PARALLEL_UPDATES = 0
@@ -50,10 +50,12 @@ class AnthropicConversationEntity(
             )
 
     @property
+    @override
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
         return MATCH_ALL
 
+    @override
     async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,

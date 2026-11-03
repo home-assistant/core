@@ -1,12 +1,14 @@
 {
   "domain": "ghost",
   "name": "Ghost",
+  "categories": ["news_social_media"],
   "codeowners": ["@johnonolan"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/ghost",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aioghost"],
   "quality_scale": "gold",
-  "requirements": ["aioghost==0.4.0"]
+  "requirements": ["aioghost==0.4.16"]
 }

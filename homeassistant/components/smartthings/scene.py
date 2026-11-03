@@ -1,6 +1,6 @@
 """Support for scenes through the SmartThings cloud API."""
 
-from typing import Any
+from typing import Any, override
 
 from pysmartthings import Scene as STScene, SmartThings
 
@@ -25,6 +25,8 @@ async def async_setup_entry(
 class SmartThingsScene(Scene):
     """Define a SmartThings scene."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, scene: STScene, client: SmartThings) -> None:
         """Init the scene class."""
         self.client = client
@@ -32,11 +34,13 @@ class SmartThingsScene(Scene):
         self._attr_name = scene.name
         self._attr_unique_id = scene.scene_id
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
         await self.client.execute_scene(self._scene.scene_id)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Get attributes about the state."""
         return {

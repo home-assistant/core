@@ -1,5 +1,7 @@
 """The tests for the lawn mower platform."""
 
+from pytest_homeassistant.common import async_mock_service
+
 from homeassistant.components.lawn_mower import (
     DOMAIN,
     SERVICE_DOCK,
@@ -11,8 +13,6 @@ from homeassistant.components.lawn_mower import (
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-
-from tests.common import async_mock_service
 
 
 async def test_start_lawn_mower_intent(hass: HomeAssistant) -> None:
@@ -35,7 +35,7 @@ async def test_start_lawn_mower_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -60,7 +60,7 @@ async def test_start_lawn_mower_without_name(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -88,7 +88,7 @@ async def test_stop_lawn_mower_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
@@ -113,7 +113,7 @@ async def test_stop_lawn_mower_without_name(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN

@@ -31,15 +31,16 @@ activate_scene:
     dynamic:
       selector:
         boolean:
-    speed:
-      advanced: true
-      selector:
-        number:
-          min: 0
-          max: 100
-    brightness:
-      advanced: true
-      selector:
-        number:
-          min: 1
-          max: 255
+    scene_customization:
+      collapsed: true
+      fields:
+        speed:
+          selector:
+            number:
+              min: 0
+              max: 100
+        brightness:
+          selector:
+            number:
+              min: 1
+              max: 255

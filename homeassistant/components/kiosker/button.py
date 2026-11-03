@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from kiosker import KioskerAPI
 
@@ -10,7 +11,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import KioskerConfigEntry
+from .coordinator import KioskerConfigEntry
 from .entity import KioskerEntity
 
 PARALLEL_UPDATES = 1
@@ -72,6 +73,11 @@ BUTTONS: tuple[KioskerButtonEntityDescription, ...] = (
         translation_key="screensaver_interact",
         action_fn=lambda api: api.screensaver_interact(),
     ),
+    KioskerButtonEntityDescription(
+        key="blackoutClear",
+        translation_key="blackout_clear",
+        action_fn=lambda api: api.blackout_clear(),
+    ),
 )
 
 
@@ -93,6 +99,7 @@ class KioskerButton(KioskerEntity, ButtonEntity):
 
     entity_description: KioskerButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle button press."""
         if action_fn := self.entity_description.action_fn:

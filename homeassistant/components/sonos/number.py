@@ -1,7 +1,7 @@
 """Entity representing a Sonos number control."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import EntityCategory
@@ -119,6 +119,7 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         self.level_type = level_type
         self._attr_native_min_value, self._attr_native_max_value = valid_range
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Poll the value if subscriptions are not working."""
         await self.hass.async_add_executor_job(self.poll_state)
@@ -130,12 +131,14 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         setattr(self.speaker, self.level_type, state)
 
     @soco_error()
+    @override
     def set_native_value(self, value: float) -> None:
         """Set a new value."""
         from_number = LEVEL_FROM_NUMBER.get(self.level_type, int)
         setattr(self.soco, self.level_type, from_number(value))
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current value."""
         to_number = LEVEL_TO_NUMBER.get(self.level_type, int)

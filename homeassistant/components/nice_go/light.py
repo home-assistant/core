@@ -1,7 +1,7 @@
 """Nice G.O. light."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.const import Platform
@@ -18,6 +18,7 @@ from .entity import NiceGOEntity
 from .util import retry
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -53,6 +54,7 @@ class NiceGOLightEntity(NiceGOEntity, LightEntity):
     _attr_translation_key = "light"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the light is on or not."""
         if TYPE_CHECKING:
@@ -60,12 +62,14 @@ class NiceGOLightEntity(NiceGOEntity, LightEntity):
         return self.data.light_status
 
     @retry("light_on_error")
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
 
         await self.coordinator.api.light_on(self._device_id)
 
     @retry("light_off_error")
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
 

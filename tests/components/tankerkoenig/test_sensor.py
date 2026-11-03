@@ -3,15 +3,14 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.tankerkoenig import DOMAIN
+from homeassistant.components.tankerkoenig.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import PRICES_MISSING_FUELTYPE, STATION_MISSING_FUELTYPE
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("setup_integration")

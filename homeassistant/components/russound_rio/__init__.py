@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 type RussoundConfigEntry = ConfigEntry[RussoundRIOClient]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> None:
     """Set up a config entry."""
     handler: RussoundConnectionHandler
     if entry.data[CONF_TYPE] == TYPE_TCP:
@@ -72,52 +72,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
             controller.mac_address
             or f"{client.controllers[1].mac_address}-{controller_id}"
         )
-        connections = None
-        via_device = None
+        via_device_id: str | None = None
         configuration_url = None
         if controller_id != 1:
             assert client.controllers[1].mac_address
-            via_device = (
-                DOMAIN,
-                client.controllers[1].mac_address,
+            via_device_id = dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, client.controllers[1].mac_address),
+                config_entry_id=entry.entry_id,
             )
-        else:
-            assert controller.mac_address
-            connections = {(CONNECTION_NETWORK_MAC, controller.mac_address)}
         if isinstance(client.connection_handler, RussoundTcpConnectionHandler):
             configuration_url = f"http://{client.connection_handler.host}"
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
+        device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, _device_identifier)},
             manufacturer="Russound",
             name=controller.controller_type,
             model=controller.controller_type,
             sw_version=controller.firmware_version,
-            connections=connections,
-            via_device=via_device,
+            via_device_id=via_device_id,
             configuration_url=configuration_url,
+        )
+        if controller_id == 1:
+            assert controller.mac_address
+            device_info.connections = {(CONNECTION_NETWORK_MAC, controller.mac_address)}
+        device_registry.async_get_or_create_from_info(
+            config_entry_id=entry.entry_id, device_info=device_info
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.disconnect()
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: RussoundConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
-    if config_entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1:
         (
@@ -134,5 +128,3 @@ async def async_migrate_entry(
     _LOGGER.debug(
         "Migration to configuration version %s successful", config_entry.version
     )
-
-    return True

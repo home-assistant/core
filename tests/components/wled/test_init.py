@@ -5,14 +5,13 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from wled import WLEDConnectionError
+from pytest_homeassistant.common import MockConfigEntry
+from wled import WLEDConnectionClosedError, WLEDConnectionError
 
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
@@ -45,6 +44,41 @@ async def test_load_unload_config_entry(
 
     # Ensure everything is cleaned up nicely and are disconnected
     assert mock_wled.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
+async def test_unload_while_listening(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unloading ends the WebSocket listener without errors."""
+    connection_connected = asyncio.Future()
+    connection_closed = asyncio.Future()
+
+    async def listen(callback: Callable) -> None:
+        connection_connected.set_result(None)
+        await connection_closed
+
+    async def disconnect() -> None:
+        # Disconnecting ends the listener, like a closed WebSocket does.
+        if not connection_closed.done():
+            connection_closed.set_exception(WLEDConnectionClosedError("closed"))
+
+    mock_wled.listen.side_effect = listen
+    mock_wled.disconnect.side_effect = disconnect
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await connection_connected
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert "Unable to remove unknown job listener" not in caplog.text
 
 
 @patch(
@@ -93,7 +127,7 @@ async def test_migrate_entry_future_version_is_downgrade(
     await hass.async_block_till_done()
 
     assert result is False
-    assert entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert entry.version == 2
     assert entry.minor_version == 0
     assert entry.unique_id == "AABBCCDDEEFF"
@@ -110,7 +144,7 @@ async def test_migrate_entry_v1_to_1_2_no_duplicates(
     await hass.async_block_till_done()
 
     assert result is True
-    assert config_entry_v1.state == ConfigEntryState.LOADED
+    assert config_entry_v1.state is ConfigEntryState.LOADED
     assert config_entry_v1.version == 1
     assert config_entry_v1.minor_version == 2
     assert config_entry_v1.unique_id == "aabbccddeeff"
@@ -149,7 +183,7 @@ async def test_migrate_entry_v1_with_ignored_duplicates(
     await hass.async_block_till_done()
 
     assert result is True
-    assert config_entry_v1.state == ConfigEntryState.LOADED
+    assert config_entry_v1.state is ConfigEntryState.LOADED
     assert config_entry_v1.version == 1
     assert config_entry_v1.minor_version == 2
     assert config_entry_v1.unique_id == "aabbccddeeff"
@@ -162,7 +196,6 @@ async def test_migrate_entry_v1_with_ignored_duplicates(
 async def test_migrate_entry_v1_with_non_ignored_duplicate_aborts(
     hass: HomeAssistant,
     config_entry_v1: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Abort migration when there is another non-ignored entry with the same MAC."""
     config_entry_v1.add_to_hass(hass)
@@ -181,11 +214,14 @@ async def test_migrate_entry_v1_with_non_ignored_duplicate_aborts(
     await hass.async_block_till_done()
 
     assert result is False
-    assert config_entry_v1.state == ConfigEntryState.MIGRATION_ERROR
+    assert config_entry_v1.state is ConfigEntryState.MIGRATION_ERROR
     assert config_entry_v1.version == 1
     assert config_entry_v1.minor_version == 1
     assert config_entry_v1.unique_id == "AABBCCDDEEFF"
-    assert "multiple WLED config entries with the same MAC address" in caplog.text
+    assert config_entry_v1.reason == (
+        "Multiple WLED configuration entries exist for MAC address aabbccddeeff,"
+        " remove the duplicates to migrate"
+    )
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
@@ -207,7 +243,7 @@ async def test_migrate_entry_already_at_1_2_is_noop(
     await hass.async_block_till_done()
 
     assert result is True
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 1
     assert entry.minor_version == 2
     assert entry.unique_id == "aabbccddeeff"

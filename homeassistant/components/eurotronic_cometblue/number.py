@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from eurotronic_cometblue_ha import AsyncCometBlue
 
@@ -103,12 +103,14 @@ class CometBlueNumberEntity(CometBlueBluetoothEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.address}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         return self.coordinator.data.temperatures.get(
             self.entity_description.cometblue_key
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update to the device."""
 

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from forecast_solar.models import Estimate
 
@@ -21,9 +21,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ForecastSolarConfigEntry
 from .const import DOMAIN
-from .coordinator import ForecastSolarDataUpdateCoordinator
+from .coordinator import ForecastSolarConfigEntry, ForecastSolarDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -181,6 +180,7 @@ class ForecastSolarSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         if self.entity_description.state is None:

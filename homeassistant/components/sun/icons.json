@@ -1,4 +1,42 @@
 {
+  "conditions": {
+    "elevation": {
+      "condition": "mdi:sun-angle"
+    },
+    "is_ascending": {
+      "condition": "mdi:weather-sunset-up"
+    },
+    "is_blue_hour": {
+      "condition": "mdi:weather-sunset"
+    },
+    "is_descending": {
+      "condition": "mdi:weather-sunset-down"
+    },
+    "is_evening_twilight": {
+      "condition": "mdi:weather-sunset-down"
+    },
+    "is_golden_hour": {
+      "condition": "mdi:weather-sunset"
+    },
+    "is_midnight_sun": {
+      "condition": "mdi:weather-sunny"
+    },
+    "is_morning_twilight": {
+      "condition": "mdi:weather-sunset-up"
+    },
+    "is_night": {
+      "condition": "mdi:weather-night"
+    },
+    "is_polar_night": {
+      "condition": "mdi:weather-night"
+    },
+    "is_set": {
+      "condition": "mdi:weather-sunny-off"
+    },
+    "is_up": {
+      "condition": "mdi:weather-sunny"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "solar_rising": {
@@ -34,6 +72,56 @@
       "solar_elevation": {
         "default": "mdi:theme-light-dark"
       }
+    }
+  },
+  "triggers": {
+    "blue_hour_ended": {
+      "trigger": "mdi:weather-sunset"
+    },
+    "blue_hour_started": {
+      "trigger": "mdi:weather-sunset"
+    },
+    "dawn": {
+      "trigger": "mdi:weather-sunset-up"
+    },
+    "dusk": {
+      "trigger": "mdi:weather-sunset-down"
+    },
+    "elevation_changed": {
+      "trigger": "mdi:sun-angle"
+    },
+    "elevation_crossed_threshold": {
+      "trigger": "mdi:sun-angle"
+    },
+    "golden_hour_ended": {
+      "trigger": "mdi:weather-sunset"
+    },
+    "golden_hour_started": {
+      "trigger": "mdi:weather-sunset"
+    },
+    "midnight_sun_ended": {
+      "trigger": "mdi:weather-sunset"
+    },
+    "midnight_sun_started": {
+      "trigger": "mdi:weather-sunny"
+    },
+    "polar_night_ended": {
+      "trigger": "mdi:weather-sunset-up"
+    },
+    "polar_night_started": {
+      "trigger": "mdi:weather-night"
+    },
+    "solar_midnight": {
+      "trigger": "mdi:weather-night"
+    },
+    "solar_noon": {
+      "trigger": "mdi:weather-sunny"
+    },
+    "sunrise": {
+      "trigger": "mdi:weather-sunset-up"
+    },
+    "sunset": {
+      "trigger": "mdi:weather-sunset-down"
     }
   }
 }

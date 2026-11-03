@@ -1,7 +1,7 @@
 """Support for the Airzone sensors."""
 
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioairzone.const import (
     AZD_AIR_DEMAND,
@@ -135,6 +135,7 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
     entity_description: AirzoneBinarySensorEntityDescription
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()

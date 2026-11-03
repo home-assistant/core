@@ -1,6 +1,7 @@
 """Binary sensor platform for IronOS integration."""
 
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -10,8 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IronOSConfigEntry
-from .coordinator import IronOSLiveDataCoordinator
+from .coordinator import IronOSConfigEntry, IronOSLiveDataCoordinator
 from .entity import IronOSBaseEntity
 
 # Coordinator is used to centralize the data updates
@@ -47,6 +47,7 @@ class IronOSBinarySensorEntity(IronOSBaseEntity, BinarySensorEntity):
     coordinator: IronOSLiveDataCoordinator
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.coordinator.has_tip

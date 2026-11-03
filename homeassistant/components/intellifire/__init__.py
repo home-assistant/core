@@ -65,7 +65,7 @@ def _construct_common_data(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: IntellifireConfigEntry
-) -> bool:
+) -> None:
     """Migrate entries."""
     LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -129,10 +129,8 @@ async def async_migrate_entry(
             )
             LOGGER.debug("Migration to 1.3 successful (options keys renamed)")
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) -> None:
     """Set up IntelliFire from a config entry."""
 
     if CONF_USERNAME not in entry.data:
@@ -171,8 +169,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) 
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    return True
-
 
 async def async_update_options(
     hass: HomeAssistant, entry: IntellifireConfigEntry
@@ -192,11 +188,11 @@ async def async_update_options(
     current_control_mode = fireplace.control_mode
 
     # Only update modes that actually changed
-    if new_read_mode != current_read_mode:
+    if new_read_mode is not current_read_mode:
         LOGGER.debug("Updating read mode: %s -> %s", current_read_mode, new_read_mode)
         await fireplace.set_read_mode(new_read_mode)
 
-    if new_control_mode != current_control_mode:
+    if new_control_mode is not current_control_mode:
         LOGGER.debug(
             "Updating control mode: %s -> %s", current_control_mode, new_control_mode
         )
@@ -219,6 +215,6 @@ async def _async_wait_for_initialization(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: IntellifireConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -7,6 +7,7 @@
     ): IssueRegistryItemSnapshot({
       'active': True,
       'breaks_in_ha_version': None,
+      'config_entry_id': '1',
       'created': <ANY>,
       'data': dict({
         'country': 'DE',
@@ -25,7 +26,7 @@
       'translation_placeholders': dict({
         'country': 'DE',
         'remove_holidays': '2024-08-15',
-        'title': 'Mock Title',
+        'title': 'Workday Sensor DE BW',
       }),
     }),
     tuple(
@@ -34,6 +35,7 @@
     ): IssueRegistryItemSnapshot({
       'active': True,
       'breaks_in_ha_version': None,
+      'config_entry_id': '1',
       'created': <ANY>,
       'data': dict({
         'country': 'DE',
@@ -52,7 +54,7 @@
       'translation_placeholders': dict({
         'country': 'DE',
         'remove_holidays': '2025-08-15',
-        'title': 'Mock Title',
+        'title': 'Workday Sensor DE BW',
       }),
     }),
   })

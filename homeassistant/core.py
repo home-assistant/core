@@ -4,8 +4,9 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 
+from annotationlib import Format
 import asyncio
-from collections import UserDict, defaultdict
+from collections import UserDict, defaultdict, deque
 from collections.abc import (
     Callable,
     Collection,
@@ -17,11 +18,12 @@ from collections.abc import (
 )
 import concurrent.futures
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import enum
 import functools
 import inspect
 import logging
+import operator
 import re
 import threading
 import time
@@ -38,10 +40,15 @@ from typing import (
     cast,
     final,
     overload,
+    override,
 )
 
+import probatio
 from propcache.api import cached_property, under_cached_property
-import voluptuous as vol
+
+# 'typing_extensions.sentinel' is not supported by Pylance yet, requires >2026.4.1
+# Use temporary alias to make the switch easier later.
+from typing_extensions import Sentinel as sentinel
 
 from . import util
 from .const import (
@@ -113,7 +120,7 @@ FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
 CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 type CALLBACK_TYPE = Callable[[], None]
 
@@ -148,13 +155,15 @@ class EventStateReportedData(EventStateEventData):
     A state reported event is fired when on state write the state is unchanged.
     """
 
-    last_reported: datetime.datetime
+    last_reported: dt.datetime
     new_state: State
-    old_last_reported: datetime.datetime
+    old_last_reported: dt.datetime
 
 
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
+# How long to wait until startup jobs have to finish.
+TIMEOUT_STARTUP_JOBS = 15
 
 
 EVENTS_EXCLUDED_FROM_MATCH_ALL = {
@@ -176,8 +185,8 @@ def split_entity_id(entity_id: str) -> tuple[str, str]:
 
 _OBJECT_ID = r"(?!_)[\da-z_]+(?<!_)"
 _DOMAIN = r"(?!.+__)" + _OBJECT_ID
-VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"$")
-VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"$")
+VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"\Z")
+VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"\Z")
 
 
 @functools.lru_cache(64)
@@ -209,6 +218,66 @@ def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
     setattr(func, "_hass_callback", True)  # noqa: B010
     return func
+
+
+def _get_hass_identity(obj: HomeAssistant) -> HomeAssistant:
+    """Return the HomeAssistant instance passed in."""
+    return obj
+
+
+_get_hass_public = operator.attrgetter("hass")
+_get_hass_private = operator.attrgetter("_hass")
+
+
+def verify_event_loop_thread[**_P, _R](
+    what: str,
+) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+    """Report and raise if the decorated function is not called from the event loop.
+
+    The first argument of the decorated function must be either the
+    HomeAssistant instance or an object with a hass or _hass attribute.
+    It may be passed by keyword. Where hass is found is resolved on the
+    first call and then reused.
+    """
+
+    def decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
+        first_parameter = next(
+            iter(
+                inspect.signature(func, annotation_format=Format.FORWARDREF).parameters
+            )
+        )
+        get_hass: Callable[[Any], HomeAssistant]
+
+        def resolve_get_hass(obj: Any) -> HomeAssistant:
+            nonlocal get_hass
+            if isinstance(obj, HomeAssistant):
+                get_hass = _get_hass_identity
+            elif hasattr(obj, "hass"):
+                get_hass = _get_hass_public
+            else:
+                get_hass = _get_hass_private
+            return get_hass(obj)
+
+        get_hass = resolve_get_hass
+
+        @functools.wraps(func)
+        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+            get_hass(
+                args[0] if args else kwargs[first_parameter]
+            ).verify_event_loop_thread(what)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+@callback
+def async_noop() -> None:
+    """Do nothing; use instead of `lambda: None` where a callback is expected.
+
+    For example, as the unsubscribe function when nothing was subscribed.
+    """
 
 
 def is_callback(func: Callable[..., Any]) -> bool:
@@ -329,6 +398,7 @@ class HassJob[**_P, _R_co]:
         """Return if the job should be cancelled on shutdown."""
         return self._cancel_on_shutdown
 
+    @override
     def __repr__(self) -> str:
         """Return the job."""
         return f"<Job {self.name} {self.job_type} {self.target}>"
@@ -368,6 +438,7 @@ class CoreState(enum.Enum):
     final_write = "FINAL_WRITE"
     stopped = "STOPPED"
 
+    @override
     def __str__(self) -> str:
         """Return the event."""
         return self.value
@@ -386,6 +457,7 @@ class HomeAssistant:
         _hass.hass = hass
         return hass
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<HomeAssistant {self.state}>"
@@ -412,6 +484,7 @@ class HomeAssistant:
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
         self._shutdown_jobs: list[HassJobWithArgs] = []
+        self._startup_jobs: list[HassJobWithArgs] = []
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
@@ -499,6 +572,20 @@ class HomeAssistant:
         """
         _LOGGER.info("Starting Home Assistant %s", __version__)
 
+        def _log_startup_blocked(tasks: set[asyncio.Future[Any]]) -> None:
+            """Log when startup is blocked by tasks."""
+            _LOGGER.warning(
+                (
+                    "Something is blocking Home Assistant from wrapping up the start up"
+                    " phase. We're going to continue anyway. Please report the"
+                    " following info at"
+                    " https://github.com/home-assistant/core/issues: %s"
+                    " The system is waiting for tasks: %s"
+                ),
+                ", ".join(self.config.components),
+                tasks,
+            )
+
         self.set_state(CoreState.starting)
         self.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire_internal(EVENT_HOMEASSISTANT_START)
@@ -511,20 +598,23 @@ class HomeAssistant:
             )
 
         if pending:
-            _LOGGER.warning(
-                (
-                    "Something is blocking Home Assistant from wrapping up the start up"
-                    " phase. We're going to continue anyway. Please report the"
-                    " following info at"
-                    " https://github.com/home-assistant/core/issues: %s"
-                    " The system is waiting for tasks: %s"
-                ),
-                ", ".join(self.config.components),
-                self._tasks,
-            )
+            _log_startup_blocked(self._tasks)
 
-        # Allow automations to set up the start triggers before changing state
-        await asyncio.sleep(0)
+        # Run startup jobs
+        tasks: list[asyncio.Future[Any]] = []
+        for job in self._startup_jobs:
+            task_or_none = self.async_run_hass_job(job.job, *job.args)
+            if task_or_none is None:
+                continue
+            tasks.append(task_or_none)
+        self._startup_jobs.clear()
+        if not tasks:
+            pending = None
+        else:
+            _done, pending = await asyncio.wait(tasks, timeout=TIMEOUT_STARTUP_JOBS)
+
+        if pending:
+            _log_startup_blocked(pending)
 
         if self.state is not CoreState.starting:
             _LOGGER.warning(
@@ -620,7 +710,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_add_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.4",
@@ -676,7 +766,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_add_hass_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
+            "https://contributors.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.5",
@@ -950,7 +1040,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_run_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.4",
@@ -1031,6 +1121,9 @@ class HomeAssistant:
     ) -> CALLBACK_TYPE:
         """Add a HassJob which will be executed on shutdown.
 
+        The job will be called (and awaited if it returns a coroutine) before firing
+        of event EVENT_HOMEASSISTANT_STOP when Home Assistant is shutting down.
+
         This method must be run in the event loop.
 
         hassjob: HassJob
@@ -1044,6 +1137,44 @@ class HomeAssistant:
         @callback
         def remove_job() -> None:
             self._shutdown_jobs.remove(job_with_args)
+
+        return remove_job
+
+    @overload
+    @callback
+    def async_add_startup_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any]], *args: Any
+    ) -> CALLBACK_TYPE: ...
+
+    @overload
+    @callback
+    def async_add_startup_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE: ...
+
+    @callback
+    def async_add_startup_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE:
+        """Add a HassJob which will be executed on startup.
+
+        The job will be called (and awaited if it returns a coroutine) before firing
+        of event EVENT_HOMEASSISTANT_STARTED when Home Assistant is starting.
+
+        This method must be run in the event loop.
+
+        hassjob: HassJob
+        args: parameters for method to call.
+
+        Returns function to remove the job.
+        """
+        job_with_args = HassJobWithArgs(hassjob, args)
+        self._startup_jobs.append(job_with_args)
+
+        @callback
+        def remove_job() -> None:
+            if job_with_args in self._startup_jobs:
+                self._startup_jobs.remove(job_with_args)
 
         return remove_job
 
@@ -1232,6 +1363,7 @@ class Context:
         self.origin_event: Event[Any] | None = None
         self._cache: dict[str, Any] = {}
 
+    @override
     def __eq__(self, other: object) -> bool:
         """Compare contexts."""
         return isinstance(other, Context) and self.id == other.id
@@ -1278,6 +1410,7 @@ class EventOrigin(enum.Enum):
     local = "LOCAL"
     remote = "REMOTE"
 
+    @override
     def __str__(self) -> str:
         """Return the event."""
         return self.value
@@ -1322,7 +1455,7 @@ class Event(Generic[_DataT]):
         self._cache: dict[str, Any] = {}
 
     @under_cached_property
-    def time_fired(self) -> datetime.datetime:
+    def time_fired(self) -> dt.datetime:
         """Return time fired as a timestamp."""
         return dt_util.utc_from_timestamp(self.time_fired_timestamp)
 
@@ -1372,6 +1505,7 @@ class Event(Generic[_DataT]):
         """Return an event as a JSON fragment."""
         return json_fragment(json_bytes(self._as_dict))
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return _event_repr(self.event_type, self.origin, self.data)
@@ -1409,6 +1543,7 @@ class _OneTimeListener(Generic[_DataT]):
         self.remove = None
         self.hass.async_run_hass_job(self.listener_job, event)
 
+    @override
     def __repr__(self) -> str:
         """Return the representation of the listener and source module."""
         module = inspect.getmodule(self.listener_job.target)
@@ -1428,10 +1563,24 @@ def _verify_event_type_length_or_raise(event_type: EventType[_DataT] | str) -> N
         raise MaxLengthExceeded(event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE)
 
 
+# Maximum number of events event listeners may queue while a single top-level
+# event is being dispatched, to guard against event listeners firing events in
+# an endless loop.
+_MAX_QUEUED_EVENT_DISPATCHES: Final = 10_000
+
+
 class EventBus:
     """Allow the firing of and listening for events."""
 
-    __slots__ = ("_debug", "_hass", "_listeners", "_match_all_listeners")
+    __slots__ = (
+        "_debug",
+        "_dispatching",
+        "_event_queue",
+        "_hass",
+        "_listeners",
+        "_match_all_listeners",
+        "_queued_event_count",
+    )
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
@@ -1441,6 +1590,11 @@ class EventBus:
         self._match_all_listeners: list[_FilterableJobType[Any]] = []
         self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
+        self._event_queue: deque[
+            tuple[EventType[Any] | str, Any, EventOrigin, Context | None, float]
+        ] = deque()
+        self._dispatching = False
+        self._queued_event_count = 0
         self._async_logging_changed()
         self.async_listen(EVENT_LOGGING_CHANGED, self._async_logging_changed)
 
@@ -1520,6 +1674,47 @@ class EventBus:
                 "Bus:Handling %s", _event_repr(event_type, origin, event_data)
             )
 
+        if self._dispatching:
+            # A nested fire is queued and dispatched after the current
+            # dispatch. The fire time is captured now since dispatch is
+            # deferred.
+            if self._queued_event_count >= _MAX_QUEUED_EVENT_DISPATCHES:
+                # Guard against event listeners firing events in an endless
+                # loop: stop queuing further events and raise so the firing
+                # listener's error handling kicks in. Events already queued
+                # are still dispatched.
+                raise HomeAssistantError(
+                    f"Event {event_type} not fired: more than"
+                    f" {_MAX_QUEUED_EVENT_DISPATCHES} events were queued by event"
+                    " listeners while dispatching a single event; event listeners"
+                    " are likely firing events in an endless loop"
+                )
+            self._queued_event_count += 1
+            self._event_queue.append(
+                (event_type, event_data, origin, context, time_fired or time.time())
+            )
+            return
+
+        self._dispatching = True
+        self._queued_event_count = 0
+        try:
+            self._async_dispatch(event_type, event_data, origin, context, time_fired)
+            event_queue = self._event_queue
+            while event_queue:
+                self._async_dispatch(*event_queue.popleft())
+        finally:
+            self._dispatching = False
+
+    @callback
+    def _async_dispatch(
+        self,
+        event_type: EventType[_DataT] | str,
+        event_data: _DataT | None,
+        origin: EventOrigin,
+        context: Context | None,
+        time_fired: float | None,
+    ) -> None:
+        """Dispatch an event to its listeners."""
         listeners = self._listeners.get(event_type, EMPTY_LIST)
         if event_type not in EVENTS_EXCLUDED_FROM_MATCH_ALL:
             match_all_listeners = self._match_all_listeners
@@ -1576,7 +1771,7 @@ class EventBus:
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
-        run_immediately: bool | object = _SENTINEL,
+        run_immediately: bool | _SENTINEL = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1593,14 +1788,15 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if run_immediately in (True, False):
+        if run_immediately is not _SENTINEL:
             # late import to avoid circular imports
             from .helpers import frame  # noqa: PLC0415
 
             frame.report_usage(
                 "calls `async_listen` with run_immediately",
-                core_behavior=frame.ReportBehavior.LOG,
-                breaks_in_ha_version="2025.5",
+                core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.ERROR,
             )
 
         if event_filter is not None and not is_callback_check_partial(event_filter):
@@ -1652,7 +1848,7 @@ class EventBus:
         self,
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
-        run_immediately: bool | object = _SENTINEL,
+        run_immediately: bool | _SENTINEL = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1663,14 +1859,15 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if run_immediately in (True, False):
+        if run_immediately is not _SENTINEL:
             # late import to avoid circular imports
             from .helpers import frame  # noqa: PLC0415
 
             frame.report_usage(
                 "calls `async_listen_once` with run_immediately",
-                core_behavior=frame.ReportBehavior.LOG,
-                breaks_in_ha_version="2025.5",
+                core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.ERROR,
             )
 
         one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(
@@ -1737,9 +1934,9 @@ class State:
     """The state of the entity."""
     attributes: ReadOnlyDict[str, Any]
     """Extra information on entity and state"""
-    last_changed: datetime.datetime
+    last_changed: dt.datetime
     """Last time the state was changed."""
-    last_reported: datetime.datetime
+    last_reported: dt.datetime
     """Last time the state was reported.
 
     Note: When the state is set and neither the state nor attributes are
@@ -1753,7 +1950,7 @@ class State:
     When handling a state report event, the last_reported attribute may be
     modified and last_reported from the event data should be used instead.
     """
-    last_updated: datetime.datetime
+    last_updated: dt.datetime
     """Last time the state or attributes were changed."""
     context: Context
     """Context in which the state was created."""
@@ -1778,9 +1975,9 @@ class State:
         entity_id: str,
         state: str,
         attributes: Mapping[str, Any] | None = None,
-        last_changed: datetime.datetime | None = None,
-        last_reported: datetime.datetime | None = None,
-        last_updated: datetime.datetime | None = None,
+        last_changed: dt.datetime | None = None,
+        last_reported: dt.datetime | None = None,
+        last_updated: dt.datetime | None = None,
         context: Context | None = None,
         validate_entity_id: bool | None = True,
         state_info: StateInfo | None = None,
@@ -1884,7 +2081,7 @@ class State:
 
     def as_dict(
         self,
-    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
+    ) -> ReadOnlyDict[str, dt.datetime | Collection[Any]]:
         """Return a ReadOnlyDict representation of the State.
 
         Async friendly.
@@ -1897,7 +2094,7 @@ class State:
     @under_cached_property
     def _as_read_only_dict(
         self,
-    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
+    ) -> ReadOnlyDict[str, dt.datetime | Collection[Any]]:
         """Return a ReadOnlyDict representation of the State."""
         as_dict = self._as_dict
         context = as_dict["context"]
@@ -1982,7 +2179,11 @@ class State:
             last_reported = dt_util.parse_datetime(last_reported)
 
         if context := json_dict.get("context"):
-            context = Context(id=context.get("id"), user_id=context.get("user_id"))
+            context = Context(
+                id=context.get("id"),
+                user_id=context.get("user_id"),
+                parent_id=context.get("parent_id"),
+            )
 
         return cls(
             json_dict["entity_id"],
@@ -2002,7 +2203,7 @@ class State:
         a new one with the same id to ensure the old state
         can still be examined for comparison against the new state.
 
-        Since we are always going to fire a EVENT_STATE_CHANGED event
+        Since we are always going to fire an EVENT_STATE_CHANGED event
         after we remove a state from the state machine we need to make
         sure we don't end up holding a reference to the original context
         since it can never be garbage collected as each event would
@@ -2012,6 +2213,7 @@ class State:
             self.context.user_id, self.context.parent_id, self.context.id
         )
 
+    @override
     def __repr__(self) -> str:
         """Return the representation of the states."""
         attrs = f"; {util.repr_helper(self.attributes)}" if self.attributes else ""
@@ -2034,15 +2236,18 @@ class States(UserDict[str, State]):
         super().__init__()
         self._domain_index: defaultdict[str, dict[str, State]] = defaultdict(dict)
 
+    @override
     def values(self) -> ValuesView[State]:
         """Return the underlying values to avoid __iter__ overhead."""
         return self.data.values()
 
+    @override
     def __setitem__(self, key: str, entry: State) -> None:
         """Add an item."""
         self.data[key] = entry
         self._domain_index[entry.domain][entry.entity_id] = entry
 
+    @override
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
         entry = self[key]
@@ -2472,6 +2677,7 @@ class ServiceCall:
         self.context = context or Context()
         self.return_response = return_response
 
+    @override
     def __repr__(self) -> str:
         """Return the representation of the service."""
         if self.data:
@@ -2558,7 +2764,7 @@ class ServiceRegistry:
             [ServiceCall],
             Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
-        schema: vol.Schema | None = None,
+        schema: probatio.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register a service.
@@ -2576,6 +2782,7 @@ class ServiceRegistry:
         ).result()
 
     @callback
+    @verify_event_loop_thread("hass.services.async_register")
     def async_register(
         self,
         domain: str,
@@ -2599,7 +2806,6 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("hass.services.async_register")
         self._async_register(
             domain,
             service,
@@ -2661,12 +2867,12 @@ class ServiceRegistry:
         ).result()
 
     @callback
+    @verify_event_loop_thread("hass.services.async_remove")
     def async_remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler.
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("hass.services.async_remove")
         self._async_remove(domain, service)
 
     @callback
@@ -2790,7 +2996,7 @@ class ServiceRegistry:
         if handler.schema:
             try:
                 processed_data: dict[str, Any] = handler.schema(service_data)
-            except vol.Invalid:
+            except probatio.Invalid:
                 _LOGGER.debug(
                     "Invalid data for service call %s.%s: %s",
                     domain,

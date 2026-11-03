@@ -1,11 +1,12 @@
 """Sensor platform for Ista EcoTrend integration."""
 
-import asyncio
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from enum import StrEnum
 import logging
+from typing import override
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.models.statistics import (
     StatisticData,
@@ -13,7 +14,6 @@ from homeassistant.components.recorder.models.statistics import (
 )
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
-    get_instance,
     get_last_statistics,
 )
 from homeassistant.components.sensor import (
@@ -199,6 +199,7 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the device."""
 
@@ -208,6 +209,7 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
             value_type=self.entity_description.value_type,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
         # Perform initial statistics import when sensor is
@@ -217,9 +219,12 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
         await self.update_statistics()
         await super().async_added_to_hass()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""
-        asyncio.run_coroutine_threadsafe(self.update_statistics(), self.hass.loop)
+        self.coordinator.config_entry.async_create_task(
+            self.hass, self.update_statistics()
+        )
 
     async def update_statistics(self) -> None:
         """Import ista EcoTrend historical statistics."""
@@ -257,9 +262,9 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
 
         if last_stats:
             statistics_sum = last_stats[statistic_id][0].get("sum") or 0.0
-            statistics_since = datetime.datetime.fromtimestamp(
-                last_stats[statistic_id][0].get("end") or 0, tz=datetime.UTC
-            ) + datetime.timedelta(days=1)
+            statistics_since = dt.datetime.fromtimestamp(
+                last_stats[statistic_id][0].get("end") or 0, tz=dt.UTC
+            ) + dt.timedelta(days=1)
 
         if monthly_consumptions := get_statistics(
             self.coordinator.data[self.consumption_unit],

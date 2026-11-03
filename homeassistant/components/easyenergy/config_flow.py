@@ -1,6 +1,6 @@
 """Config flow for easyEnergy integration."""
 
-from typing import Any
+from typing import Any, override
 
 from easyenergy import EasyEnergy, EasyEnergyConnectionError
 
@@ -16,14 +16,12 @@ class EasyEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
 
         if user_input is not None:
             easyenergy = EasyEnergy(session=async_get_clientsession(self.hass))

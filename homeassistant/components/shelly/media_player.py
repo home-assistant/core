@@ -4,9 +4,9 @@ import base64
 import binascii
 import contextlib
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import hashlib
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
+from .coordinator import ShellyConfigEntry
 from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
@@ -110,20 +110,10 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     entity_description: RpcMediaPlayerDescription
 
     _last_media_position: int | None = None
-    _last_media_position_updated_at: datetime.datetime | None = None
+    _last_media_position_updated_at: dt.datetime | None = None
 
     _cached_thumb: str | None = None
     _cached_thumb_result: tuple[bytes, str] | None = None
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcMediaPlayerDescription,
-    ) -> None:
-        """Initialize Shelly RPC media player."""
-        super().__init__(coordinator, key, attribute, description)
 
     @property
     def _media_meta(self) -> dict[str, Any]:
@@ -131,6 +121,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return cast(dict[str, Any], self.status["playback"].get("media_meta", {}))
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return the state of the media player."""
         if self.status["playback"]["buffering"]:
@@ -142,6 +133,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return MediaPlayerState.IDLE
 
     @property
+    @override
     def volume_level(self) -> float | None:
         """Return the volume level of the media player (0..1)."""
         volume = self.status["playback"]["volume"]
@@ -149,6 +141,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return cast(float, volume) / 10
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Return the title of current playing media."""
         if title := self._media_meta.get("title"):
@@ -157,6 +150,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Return the artist of current playing media."""
         if self.status["playback"].get("media_type") == "RADIO":
@@ -168,6 +162,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Return the album name of current playing media."""
         if self.status["playback"].get("media_type") == "RADIO":
@@ -179,6 +174,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Return the duration of current playing media in seconds."""
         if self.status["playback"].get("media_type") == "RADIO":
@@ -190,6 +186,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Return the current playback position in seconds."""
         if (position := self._get_updated_media_position()) is not None:
@@ -198,13 +195,15 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return None
 
     @property
-    def media_position_updated_at(self) -> datetime.datetime | None:
+    @override
+    def media_position_updated_at(self) -> dt.datetime | None:
         """Return when the position was last updated."""
         self._get_updated_media_position()
 
         return self._last_media_position_updated_at
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return image of the media playing."""
         if not self.available:
@@ -213,6 +212,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return super().entity_picture
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Return the image URL of current playing media."""
         if (thumb := self._media_meta.get("thumb")) and thumb.startswith("http"):
@@ -221,11 +221,13 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_image_remotely_accessible(self) -> bool:
         """Return True if the image URL is remotely accessible."""
         return self.media_image_url is not None
 
     @property
+    @override
     def media_image_hash(self) -> str | None:
         """Hash value for media image."""
         thumb = self._media_meta.get("thumb")
@@ -248,6 +250,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
 
         return current_position
 
+    @override
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing track."""
         thumb = self._media_meta.get("thumb")
@@ -257,37 +260,44 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return result
 
     @rpc_call
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         if self.state != MediaPlayerState.PLAYING:
             await self.coordinator.device.media_play_or_pause()
 
     @rpc_call
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         if self.state == MediaPlayerState.PLAYING:
             await self.coordinator.device.media_play_or_pause()
 
     @rpc_call
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self.coordinator.device.media_stop()
 
     @rpc_call
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.coordinator.device.media_next()
 
     @rpc_call
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.coordinator.device.media_previous()
 
     @rpc_call
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.coordinator.device.media_set_volume(round(volume * 10))
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -355,9 +365,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def _async_browse_audio_files(self, expanded: bool = False) -> BrowseMedia:
         """Return BrowseMedia tree for audio files."""
         if expanded:
-            result: list[
-                dict[str, Any]
-            ] = await self.coordinator.device.media_list_media()
+            result = await self.coordinator.device.media_list_media()
             children: list[BrowseMedia] | None = [
                 BrowseMedia(
                     title=item["title"],
@@ -388,9 +396,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def _async_browse_radio_stations(self, expanded: bool = False) -> BrowseMedia:
         """Return BrowseMedia tree for radio stations."""
         if expanded:
-            result: list[
-                dict[str, Any]
-            ] = await self.coordinator.device.media_list_radio_stations()
+            result = await self.coordinator.device.media_list_radio_stations()
             children: list[BrowseMedia] | None = [
                 BrowseMedia(
                     title=station["name"],
@@ -418,6 +424,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         )
 
     @rpc_call
+    @override
     async def async_play_media(
         self,
         media_type: MediaType | str,

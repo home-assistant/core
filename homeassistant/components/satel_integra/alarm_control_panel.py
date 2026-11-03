@@ -1,7 +1,6 @@
 """Support for Satel Integra alarm, using ETHM module."""
 
-import asyncio
-import logging
+from typing import override
 
 from satel_integra import AlarmState
 
@@ -13,11 +12,18 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_ARM_HOME_MODE, CONF_PARTITION_NUMBER, SUBENTRY_TYPE_PARTITION
+from .const import (
+    CONF_ARM_HOME_MODE,
+    CONF_PARTITION_NUMBER,
+    DOMAIN,
+    SUBENTRY_TYPE_PARTITION,
+)
 from .coordinator import SatelConfigEntry, SatelIntegraPartitionsCoordinator
 from .entity import SatelIntegraEntity
+from .helpers import async_validate_command
 
 ALARM_STATE_MAP = {
     AlarmState.TRIGGERED: AlarmControlPanelState.TRIGGERED,
@@ -30,8 +36,6 @@ ALARM_STATE_MAP = {
     AlarmState.EXIT_COUNTDOWN_OVER_10: AlarmControlPanelState.ARMING,
     AlarmState.EXIT_COUNTDOWN_UNDER_10: AlarmControlPanelState.ARMING,
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -96,6 +100,7 @@ class SatelIntegraAlarmPanel(
         self._attr_alarm_state = self._read_alarm_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_alarm_state = self._read_alarm_state()
@@ -112,31 +117,55 @@ class SatelIntegraAlarmPanel(
 
         return AlarmControlPanelState.DISARMED
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not code:
-            _LOGGER.debug("Code was empty or None")
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_alarm_access_code",
+            )
 
         clear_alarm_necessary = (
             self._attr_alarm_state == AlarmControlPanelState.TRIGGERED
         )
 
-        await self._controller.disarm(code, [self._device_number])
+        await async_validate_command(
+            self._controller.disarm(
+                code,
+                [self._device_number],
+                wait_for_result=True,
+            )
+        )
 
         if clear_alarm_necessary:
-            # Wait 1s before clearing the alarm
-            await asyncio.sleep(1)
-            await self._controller.clear_alarm(code, [self._device_number])
+            await async_validate_command(
+                self._controller.clear_alarm(
+                    code,
+                    [self._device_number],
+                    wait_for_result=True,
+                )
+            )
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
+        await async_validate_command(
+            self._controller.arm(
+                code,
+                [self._device_number],
+                wait_for_result=True,
+            )
+        )
 
-        if code:
-            await self._controller.arm(code, [self._device_number])
-
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-
-        if code:
-            await self._controller.arm(code, [self._device_number], self._arm_home_mode)
+        await async_validate_command(
+            self._controller.arm(
+                code,
+                [self._device_number],
+                self._arm_home_mode,
+                wait_for_result=True,
+            )
+        )

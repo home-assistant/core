@@ -7,9 +7,9 @@ are short lived.
 """
 
 import asyncio
-import datetime
+import datetime as dt
 import logging
-from typing import Final
+from typing import Final, override
 
 from google_photos_library_api.api import GooglePhotosLibraryApi
 from google_photos_library_api.exceptions import GooglePhotosApiError
@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL: Final = datetime.timedelta(hours=24)
+UPDATE_INTERVAL: Final = dt.timedelta(hours=24)
 ALBUM_PAGE_SIZE = 50
 
 type GooglePhotosConfigEntry = ConfigEntry[GooglePhotosUpdateCoordinator]
@@ -51,6 +51,7 @@ class GooglePhotosUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> dict[str, str]:
         """Fetch albums from API endpoint."""
         albums: dict[str, str] = {}

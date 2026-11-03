@@ -1,6 +1,6 @@
 """Support for LG webOS TV notification service."""
 
-from typing import Any
+from typing import Any, override
 
 from aiowebostv import WebOsClient
 
@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import WebOsTvConfigEntry
 from .const import DOMAIN, WEBOSTV_EXCEPTIONS
+from .coordinator import WebOsTvConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -41,21 +41,18 @@ class LgWebOSNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._entry = entry
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the tv."""
-        client: WebOsClient = self._entry.runtime_data
+        client: WebOsClient = self._entry.runtime_data.client
         data = kwargs[ATTR_DATA]
         icon_path = data.get(ATTR_ICON) if data else None
 
         if not client.tv_state.is_on:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_device_off",
-                translation_placeholders={
-                    "name": str(self._entry.title),
-                    "func": __name__,
-                },
+                translation_placeholders={"name": str(self._entry.title)},
             )
         try:
             await client.send_message(message, icon_path=icon_path)

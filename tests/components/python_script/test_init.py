@@ -4,14 +4,14 @@ import logging
 from unittest.mock import mock_open, patch
 
 import pytest
+from pytest_homeassistant.common import patch_yaml_files
 
-from homeassistant.components.python_script import DOMAIN, FOLDER, execute
+from homeassistant.components.python_script.const import DOMAIN, FOLDER
+from homeassistant.components.python_script.helpers import execute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
-
-from tests.common import patch_yaml_files
 
 
 async def test_setup(hass: HomeAssistant) -> None:
@@ -25,10 +25,11 @@ async def test_setup(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
-        res = await async_setup_component(hass, "python_script", {})
+        res = await async_setup_component(hass, DOMAIN, {})
 
     assert res
     assert hass.services.has_service("python_script", "hello")
@@ -36,15 +37,13 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.python_script.open",
+            "homeassistant.components.python_script.helpers.open",
             mock_open(read_data="fake source"),
             create=True,
         ),
-        patch("homeassistant.components.python_script.execute") as mock_ex,
+        patch("homeassistant.components.python_script.helpers.execute") as mock_ex,
     ):
-        await hass.services.async_call(
-            "python_script", "hello", {"some": "data"}, blocking=True
-        )
+        await hass.services.async_call(DOMAIN, "hello", {"some": "data"}, blocking=True)
 
     assert len(mock_ex.mock_calls) == 1
     test_hass, script, source, data = mock_ex.mock_calls[0][1]
@@ -62,7 +61,7 @@ async def test_setup_fails_on_no_dir(
     with patch(
         "homeassistant.components.python_script.os.path.isdir", return_value=False
     ):
-        res = await async_setup_component(hass, "python_script", {})
+        res = await async_setup_component(hass, DOMAIN, {})
 
     assert not res
     assert "Folder python_scripts not found in configuration folder" in caplog.text
@@ -370,10 +369,11 @@ async def test_reload(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
-        res = await async_setup_component(hass, "python_script", {})
+        res = await async_setup_component(hass, DOMAIN, {})
 
     assert res
     assert hass.services.has_service("python_script", "hello")
@@ -389,15 +389,59 @@ async def test_reload(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
-        await hass.services.async_call("python_script", "reload", {}, blocking=True)
+        await hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
 
     assert not hass.services.has_service("python_script", "hello")
     assert hass.services.has_service("python_script", "hello2")
     assert hass.services.has_service("python_script", "world_beer")
     assert hass.services.has_service("python_script", "reload")
+
+
+@pytest.mark.parametrize("filename", ["reload.py", "RELOAD.py"])
+async def test_reload_name_is_reserved(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, filename: str
+) -> None:
+    """Test a script named reload does not replace the reload action."""
+    scripts = [
+        "/some/config/dir/python_scripts/hello.py",
+        f"/some/config/dir/python_scripts/{filename}",
+    ]
+    with (
+        patch(
+            "homeassistant.components.python_script.os.path.isdir", return_value=True
+        ),
+        patch(
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    assert "name is reserved" in caplog.text
+    assert hass.services.has_service("python_script", "hello")
+
+    scripts = [
+        "/some/config/dir/python_scripts/hello2.py",
+        f"/some/config/dir/python_scripts/{filename}",
+    ]
+    with (
+        patch(
+            "homeassistant.components.python_script.os.path.isdir", return_value=True
+        ),
+        patch(
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
+        ),
+    ):
+        await hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
+
+    # The built-in reload action ran, so the scripts were discovered again
+    assert not hass.services.has_service("python_script", "hello")
+    assert hass.services.has_service("python_script", "hello2")
 
 
 async def test_service_descriptions(hass: HomeAssistant) -> None:
@@ -426,7 +470,8 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts1
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts1,
         ),
         patch(
             "homeassistant.components.python_script.os.path.exists", return_value=True
@@ -480,7 +525,8 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts2
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts2,
         ),
         patch(
             "homeassistant.components.python_script.os.path.exists", return_value=True
@@ -515,7 +561,7 @@ time.sleep(2)
 time.sleep(5)
 """
 
-    with patch("homeassistant.components.python_script.time.sleep"):
+    with patch("homeassistant.components.python_script.helpers.time.sleep"):
         hass.async_add_executor_job(execute, hass, "test.py", source, {})
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -536,22 +582,23 @@ async def test_execute_with_output(
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
-        await async_setup_component(hass, "python_script", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     source = """
 output = {"result": f"hello {data.get('name', 'World')}"}
     """
 
     with patch(
-        "homeassistant.components.python_script.open",
+        "homeassistant.components.python_script.helpers.open",
         mock_open(read_data=source),
         create=True,
     ):
         response = await hass.services.async_call(
-            "python_script",
+            DOMAIN,
             "hello",
             {"name": "paulus"},
             blocking=True,
@@ -580,22 +627,23 @@ async def test_execute_no_output(
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
-        await async_setup_component(hass, "python_script", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     source = """
 no_output = {"result": f"hello {data.get('name', 'World')}"}
     """
 
     with patch(
-        "homeassistant.components.python_script.open",
+        "homeassistant.components.python_script.helpers.open",
         mock_open(read_data=source),
         create=True,
     ):
         response = await hass.services.async_call(
-            "python_script",
+            DOMAIN,
             "hello",
             {"name": "paulus"},
             blocking=True,
@@ -619,10 +667,11 @@ async def test_execute_wrong_output_type(hass: HomeAssistant) -> None:
             "homeassistant.components.python_script.os.path.isdir", return_value=True
         ),
         patch(
-            "homeassistant.components.python_script.glob.iglob", return_value=scripts
+            "homeassistant.components.python_script.services.glob.iglob",
+            return_value=scripts,
         ),
     ):
-        await async_setup_component(hass, "python_script", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     source = """
 output = f"hello {data.get('name', 'World')}"
@@ -630,14 +679,14 @@ output = f"hello {data.get('name', 'World')}"
 
     with (
         patch(
-            "homeassistant.components.python_script.open",
+            "homeassistant.components.python_script.helpers.open",
             mock_open(read_data=source),
             create=True,
         ),
         pytest.raises(ServiceValidationError),
     ):
         await hass.services.async_call(
-            "python_script",
+            DOMAIN,
             "hello",
             {"name": "paulus"},
             blocking=True,

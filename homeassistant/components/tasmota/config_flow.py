@@ -1,11 +1,12 @@
 """Config flow for Tasmota."""
 
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.mqtt import valid_subscribe_topic
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX, DOMAIN
@@ -20,12 +21,16 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self._prefix = DEFAULT_PREFIX
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by MQTT discovery."""
         if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         await self.async_set_unique_id(DOMAIN)
 
@@ -43,12 +48,16 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         return await self.async_step_config()
 
@@ -65,7 +74,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             prefix = prefix.removesuffix("/#")
             try:
                 valid_subscribe_topic(f"{prefix}/#")
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors["base"] = "invalid_discovery_topic"
                 bad_prefix = True
             else:
@@ -74,10 +83,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title="Tasmota", data=data)
 
         fields = {}
-        fields[vol.Optional(CONF_DISCOVERY_PREFIX, default=self._prefix)] = str
+        fields[probatio.Optional(CONF_DISCOVERY_PREFIX, default=self._prefix)] = str
 
         return self.async_show_form(
-            step_id="config", data_schema=vol.Schema(fields), errors=errors
+            step_id="config", data_schema=probatio.Schema(fields), errors=errors
         )
 
     async def async_step_confirm(

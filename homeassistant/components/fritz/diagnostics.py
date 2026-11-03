@@ -24,9 +24,11 @@ async def async_get_config_entry_diagnostics(
             "unique_id": avm_wrapper.unique_id.replace(
                 avm_wrapper.unique_id[6:11], "XX:XX"
             ),
+            "device_uptime_hours": await avm_wrapper.async_get_device_uptime_hours(),
             "current_firmware": avm_wrapper.current_firmware,
             "latest_firmware": avm_wrapper.latest_firmware,
             "update_available": avm_wrapper.update_available,
+            "firmware_extra_infos": await avm_wrapper.async_get_firmware_extra_infos(),
             "connection_type": avm_wrapper.device_conn_type,
             "is_router": avm_wrapper.device_is_router,
             "mesh_role": avm_wrapper.mesh_role,

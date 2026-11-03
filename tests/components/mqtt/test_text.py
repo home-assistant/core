@@ -4,12 +4,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import mqtt, text
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -39,12 +35,17 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.components import text
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {text.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {text.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
@@ -64,7 +65,7 @@ async def async_set_value(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -106,7 +107,7 @@ async def test_controlling_state_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -163,7 +164,7 @@ async def test_forced_text_length(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -237,7 +238,7 @@ async def test_controlling_validation_state_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -260,7 +261,7 @@ async def test_attribute_validation_max_greater_then_min(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -283,7 +284,7 @@ async def test_attribute_validation_max_not_greater_then_max_state_length(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -313,7 +314,44 @@ async def test_validation_payload_greater_then_max_state_length(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
+                text.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "command_template": "{{ this.entity_id }} {{ value }}",
+                    "unique_id": "very_unique",
+                }
+            }
+        }
+    ],
+)
+async def test_command_template_this_after_entity_id_change(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test this in a command template refers to the entity after a rename."""
+    mqtt_mock = await mqtt_mock_entry()
+    await async_set_value(hass, "text.test", "a")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "text.test a", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    entity_registry.async_update_entity("text.test", new_entity_id="text.renamed")
+    await hass.async_block_till_done()
+    await async_set_value(hass, "text.renamed", "b")
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "text.renamed b", 0, False, message_expiry_interval=None
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -356,7 +394,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -380,15 +418,15 @@ async def test_set_text_validation(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     # text too long
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await async_set_value(hass, "text.test", "yes yes yes yes")
 
     # text too short
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await async_set_value(hass, "text.test", "y")
 
     # text not matching pattern
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await async_set_value(hass, "text.test", "other")
 
     await async_set_value(hass, "text.test", "no")
@@ -421,7 +459,7 @@ async def test_default_availability_payload(
 ) -> None:
     """Test availability by default payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             text.DOMAIN: {
                 "name": "test",
                 "state_topic": "state-topic",
@@ -439,7 +477,7 @@ async def test_custom_availability_payload(
 ) -> None:
     """Test availability by custom payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             text.DOMAIN: {
                 "name": "test",
                 "state_topic": "state-topic",
@@ -515,7 +553,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -758,7 +796,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         text.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][text.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][text.DOMAIN],
         topic,
         value,
         attribute,

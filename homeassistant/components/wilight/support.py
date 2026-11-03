@@ -1,10 +1,10 @@
-"""Support for config validation using voluptuous and Translate Trigger."""
+"""Support for config validation using probatio and Translate Trigger."""
 
 import calendar
 import locale
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 
 def wilight_trigger(value: Any) -> str | None:
@@ -46,7 +46,7 @@ def wilight_trigger(value: Any) -> str | None:
     if (step == 7) & result_2:
         return value
 
-    raise vol.Invalid(err_desc)
+    raise probatio.Invalid(err_desc)
 
 
 def wilight_to_hass_trigger(value: str | None) -> str | None:

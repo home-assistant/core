@@ -1,6 +1,7 @@
 """Support for The Things Network entities."""
 
 import logging
+from typing import override
 
 from ttn_client import TTNBaseValue
 
@@ -42,6 +43,7 @@ class TTNEntity(CoordinatorEntity[TTNCoordinator]):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 

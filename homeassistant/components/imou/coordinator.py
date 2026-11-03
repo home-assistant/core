@@ -1,0 +1,185 @@
+"""Provides the Imou DataUpdateCoordinator."""
+
+import asyncio
+from collections.abc import Callable
+from datetime import timedelta
+import logging
+from typing import override
+
+from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
+from pyimouapi.ha_device import ImouHaDevice, ImouHaDeviceManager
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN, UPDATE_TIMEOUT, imou_device_identifier
+
+_LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=120)
+_QUOTA_CODE = "OP1013"
+
+type ImouConfigEntry = ConfigEntry[ImouDataUpdateCoordinator]
+
+
+class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
+    """Data update coordinator for Imou devices."""
+
+    config_entry: ImouConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device_manager: ImouHaDeviceManager,
+        config_entry: ImouConfigEntry,
+    ) -> None:
+        """Initialize the Imou data update coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="ImouDataUpdateCoordinator",
+            update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
+            always_update=True,
+        )
+        self._device_manager = device_manager
+        self.devices_by_key: dict[str, ImouHaDevice] = {}
+        self._devices_initialized = False
+        self.new_device_callbacks: list[Callable[[list[ImouHaDevice]], None]] = []
+        self.open_api_quota_exceeded = False
+
+    @property
+    def devices(self) -> list[ImouHaDevice]:
+        """Return the list of devices."""
+        return list(self.devices_by_key.values())
+
+    @property
+    def device_manager(self) -> ImouHaDeviceManager:
+        """Return the device manager."""
+        return self._device_manager
+
+    @callback
+    def register_new_device_callback(
+        self, callback_func: Callable[[list[ImouHaDevice]], None]
+    ) -> Callable[[], None]:
+        """Register a callback for new devices and return an unregister callback."""
+        self.new_device_callbacks.append(callback_func)
+
+        @callback
+        def remove_callback() -> None:
+            self.new_device_callbacks.remove(callback_func)
+
+        return remove_callback
+
+    def get_device(self, device_key: str) -> ImouHaDevice | None:
+        """Return the current device for device_key, if still on the account."""
+        return self.devices_by_key.get(device_key)
+
+    @override
+    async def _async_update_data(self) -> None:
+        """Update coordinator data."""
+        try:
+            async with asyncio.timeout(UPDATE_TIMEOUT):
+                fresh_devices = await self._device_manager.async_get_devices()
+        except TimeoutError as err:
+            self.open_api_quota_exceeded = False
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_timeout",
+            ) from err
+        except InvalidAppIdOrSecretException as err:
+            self.open_api_quota_exceeded = False
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except ImouException as err:
+            raise self._update_failed(err, "fetch_devices_failed") from err
+
+        fresh_by_key = {
+            imou_device_identifier(device): device for device in fresh_devices
+        }
+        self._async_add_remove_devices(fresh_by_key)
+        devices = list(self.devices_by_key.values())
+        if not devices:
+            self.open_api_quota_exceeded = False
+            return
+
+        try:
+            async with asyncio.timeout(UPDATE_TIMEOUT):
+                await self._device_manager.async_update_devices_status(devices)
+        except TimeoutError as err:
+            self.open_api_quota_exceeded = False
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_timeout",
+            ) from err
+        except InvalidAppIdOrSecretException as err:
+            self.open_api_quota_exceeded = False
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except ImouException as err:
+            raise self._update_failed(err, "update_devices_failed") from err
+
+        self.open_api_quota_exceeded = False
+
+    def _update_failed(
+        self, error: ImouException, translation_key: str
+    ) -> UpdateFailed:
+        """Record whether this failure is a used-up monthly quota."""
+        if _quota_exceeded(error):
+            self.open_api_quota_exceeded = True
+            translation_key = "quota_exceeded"
+        else:
+            self.open_api_quota_exceeded = False
+        return UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+        )
+
+    def _async_add_remove_devices(self, fresh_by_key: dict[str, ImouHaDevice]) -> None:
+        """Add new devices, remove devices no longer in the account.
+
+        This only tracks which devices exist on the account; per-device state
+        is updated in place by `async_update_devices_status`, so devices that
+        remain on the account keep their existing object and are not replaced.
+        """
+        if not self._devices_initialized:
+            self.devices_by_key = fresh_by_key
+            self._devices_initialized = True
+            return
+
+        current_keys = set(fresh_by_key)
+        known_keys = set(self.devices_by_key)
+
+        if current_keys == known_keys:
+            return
+
+        if removed_keys := known_keys - current_keys:
+            _LOGGER.debug("Removed Imou device(s): %s", ", ".join(removed_keys))
+            device_registry = dr.async_get(self.hass)
+            for device_key in removed_keys:
+                del self.devices_by_key[device_key]
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device_key), self.config_entry.entry_id
+                ):
+                    device_registry.async_remove_device(device.id)
+
+        if new_keys := current_keys - known_keys:
+            _LOGGER.debug("New Imou device(s) found: %s", ", ".join(new_keys))
+            new_devices = []
+            for device_key in new_keys:
+                self.devices_by_key[device_key] = fresh_by_key[device_key]
+                new_devices.append(fresh_by_key[device_key])
+            for new_device_callback in self.new_device_callbacks:
+                new_device_callback(new_devices)
+
+
+def _quota_exceeded(error: ImouException) -> bool:
+    """Return True when the Open Platform monthly call limit is used up."""
+    return _QUOTA_CODE in error.message

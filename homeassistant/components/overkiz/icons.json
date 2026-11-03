@@ -1,5 +1,19 @@
 {
   "entity": {
+    "button": {
+      "go_to_alias_favorite1": {
+        "default": "mdi:star"
+      },
+      "go_to_alias_partial": {
+        "default": "mdi:arrow-expand-vertical"
+      },
+      "go_to_alias_pedestrian": {
+        "default": "mdi:walk"
+      },
+      "go_to_alias_ventilation": {
+        "default": "mdi:weather-windy"
+      }
+    },
     "climate": {
       "overkiz": {
         "state_attributes": {
@@ -39,6 +53,26 @@
         "state": {
           "cooling": "mdi:snowflake",
           "heating": "mdi:heat-wave"
+        }
+      }
+    },
+    "water_heater": {
+      "overkiz": {
+        "state": {
+          "auto": "mdi:thermostat-auto",
+          "eco": "mdi:leaf",
+          "manual": "mdi:hand-back-right-outline",
+          "performance": "mdi:rocket-launch"
+        },
+        "state_attributes": {
+          "operation_mode": {
+            "state": {
+              "auto": "mdi:thermostat-auto",
+              "eco": "mdi:leaf",
+              "manual": "mdi:hand-back-right-outline",
+              "performance": "mdi:rocket-launch"
+            }
+          }
         }
       }
     }

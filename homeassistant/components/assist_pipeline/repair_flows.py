@@ -2,7 +2,7 @@
 
 from typing import cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.assist_satellite import DOMAIN as ASSIST_SATELLITE_DOMAIN
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
@@ -47,6 +47,6 @@ class AssistInProgressDeprecatedRepairFlow(RepairsFlow):
         }
         return self.async_show_form(
             step_id="confirm_disable_entity",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders=description_placeholders,
         )

@@ -1,8 +1,10 @@
 {
   "domain": "tradfri",
   "name": "IKEA TR\u00c5DFRI",
+  "categories": ["hubs_protocols.smart_home_hubs", "lighting.bulbs_lamps"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["zigbee"],
   "documentation": "https://www.home-assistant.io/integrations/tradfri",
   "homekit": {
     "models": ["TRADFRI"]
@@ -10,5 +12,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pytradfri"],
-  "requirements": ["pytradfri[async]==9.0.1"]
+  "requirements": ["pytradfri[async]==14.0.0"]
 }

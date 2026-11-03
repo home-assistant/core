@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -114,4 +113,4 @@ async def test_migrate_future_version_returns_false(
 
     await setup_integration(hass, config_entry)
 
-    assert config_entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR

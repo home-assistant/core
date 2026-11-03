@@ -1,8 +1,13 @@
 """Weather entity."""
 
+from typing import Any, override
+
 from google_weather_api import (
     DailyForecastResponse,
+    GoogleWeatherApiError,
     HourlyForecastResponse,
+    PrecipitationSegment,
+    QuantitativePrecipitationForecast,
     WeatherCondition,
 )
 
@@ -34,12 +39,16 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
+    ATTR_WEATHER_PRECIPITATION_UNIT,
+    UNIT_CONVERSIONS,
     CoordinatorWeatherEntity,
     Forecast,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -47,8 +56,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import (
     GoogleWeatherConfigEntry,
     GoogleWeatherCurrentConditionsCoordinator,
@@ -60,7 +71,7 @@ from .entity import GoogleWeatherBaseEntity
 PARALLEL_UPDATES = 0
 
 # Maps https://developers.google.com/maps/documentation/weather/weather-condition-icons
-# to https://developers.home-assistant.io/docs/core/entity/weather/#recommended-values-for-state-and-condition
+# to https://contributors.home-assistant.io/core/entities/weather/#conditions
 _CONDITION_MAP: dict[WeatherCondition.Type, str | None] = {
     WeatherCondition.Type.TYPE_UNSPECIFIED: None,
     WeatherCondition.Type.CLEAR: ATTR_CONDITION_SUNNY,
@@ -114,6 +125,32 @@ def _get_condition(
     if cond == ATTR_CONDITION_SUNNY and not is_daytime:
         return ATTR_CONDITION_CLEAR_NIGHT
     return cond
+
+
+# Values exposed in the get_minute_forecast action response. The API's enum names
+# stay out of the response so that a change on Google's side cannot break automations.
+_PRECIPITATION_TYPE_MAP: dict[
+    PrecipitationSegment.DominantPrecipitationType, str | None
+] = {
+    PrecipitationSegment.DominantPrecipitationType.DOMINANT_PRECIPITATION_TYPE_UNSPECIFIED: None,
+    PrecipitationSegment.DominantPrecipitationType.NONE: "none",
+    PrecipitationSegment.DominantPrecipitationType.RAIN: "rain",
+    PrecipitationSegment.DominantPrecipitationType.SNOW: "snow",
+    PrecipitationSegment.DominantPrecipitationType.HAIL: "hail",
+}
+
+_PRECIPITATION_INTENSITY_MAP: dict[
+    PrecipitationSegment.PrecipitationIntensity, str | None
+] = {
+    PrecipitationSegment.PrecipitationIntensity.PRECIPITATION_INTENSITY_UNSPECIFIED: None,
+    PrecipitationSegment.PrecipitationIntensity.NO_INTENSITY: "none",
+    PrecipitationSegment.PrecipitationIntensity.LIGHT: "light",
+    PrecipitationSegment.PrecipitationIntensity.MID_LIGHT: "mid_light",
+    PrecipitationSegment.PrecipitationIntensity.MODERATE: "moderate",
+    PrecipitationSegment.PrecipitationIntensity.MID_MODERATE: "mid_moderate",
+    PrecipitationSegment.PrecipitationIntensity.HEAVY: "heavy",
+    PrecipitationSegment.PrecipitationIntensity.MID_HEAVY: "mid_heavy",
+}
 
 
 async def async_setup_entry(
@@ -172,8 +209,62 @@ class GoogleWeatherEntity(
             twice_daily_coordinator=subentry_runtime_data.coordinator_daily_forecast,
         )
         GoogleWeatherBaseEntity.__init__(self, entry, subentry)
+        self._api = entry.runtime_data.api
+        self._latitude: float = subentry.data[CONF_LATITUDE]
+        self._longitude: float = subentry.data[CONF_LONGITUDE]
+
+    async def async_get_minute_forecast(self) -> dict[str, Any]:
+        """Return the precipitation nowcast for up to the next 6 hours."""
+        try:
+            response = await self._api.async_get_minute_forecast(
+                latitude=self._latitude, longitude=self._longitude
+            )
+        except GoogleWeatherApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="minute_forecast_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        return {
+            "start_time": response.overall_prediction_timeframe.start_time,
+            "end_time": response.overall_prediction_timeframe.end_time,
+            "segments": [
+                {
+                    "start_time": segment.time_frame.start_time,
+                    "end_time": segment.time_frame.end_time,
+                    "precipitation_type": _PRECIPITATION_TYPE_MAP[segment.type],
+                    "precipitation_probability": segment.probability,
+                    "precipitation": self._convert_precipitation(segment.qpf),
+                    "snowfall_amount": self._convert_precipitation(
+                        segment.snowfall_amount
+                    ),
+                    "intensity": _PRECIPITATION_INTENSITY_MAP[segment.intensity],
+                }
+                for segment in response.segments
+            ],
+        }
+
+    def _convert_precipitation(
+        self, amount: QuantitativePrecipitationForecast | None
+    ) -> float | None:
+        """Convert a precipitation amount to the entity's precipitation unit.
+
+        The API always reports amounts in millimeters because the client is
+        configured for metric units; expose them the same way weather.get_forecasts
+        does, in the unit the weather entity uses. The value is not rounded:
+        minute-level segments carry very small amounts that would collapse to
+        zero in coarser units and no longer add up over the forecast.
+        """
+        if amount is None:
+            return None
+        return UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
+            amount.quantity,
+            UnitOfPrecipitationDepth.MILLIMETERS,
+            self._precipitation_unit,
+        )
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         return _get_condition(
@@ -182,61 +273,73 @@ class GoogleWeatherEntity(
         )
 
     @property
+    @override
     def native_temperature(self) -> float:
         """Return the temperature."""
         return self.coordinator.data.temperature.degrees
 
     @property
+    @override
     def native_apparent_temperature(self) -> float:
         """Return the apparent temperature."""
         return self.coordinator.data.feels_like_temperature.degrees
 
     @property
+    @override
     def native_dew_point(self) -> float:
         """Return the dew point."""
         return self.coordinator.data.dew_point.degrees
 
     @property
+    @override
     def humidity(self) -> int:
         """Return the humidity."""
         return self.coordinator.data.relative_humidity
 
     @property
+    @override
     def uv_index(self) -> float:
         """Return the UV index."""
         return float(self.coordinator.data.uv_index)
 
     @property
+    @override
     def native_pressure(self) -> float:
         """Return the pressure."""
         return self.coordinator.data.air_pressure.mean_sea_level_millibars
 
     @property
+    @override
     def native_wind_gust_speed(self) -> float:
         """Return the wind gust speed."""
         return self.coordinator.data.wind.gust.value
 
     @property
+    @override
     def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return self.coordinator.data.wind.speed.value
 
     @property
+    @override
     def wind_bearing(self) -> int:
         """Return the wind bearing."""
         return self.coordinator.data.wind.direction.degrees
 
     @property
+    @override
     def native_visibility(self) -> float:
         """Return the visibility."""
         return self.coordinator.data.visibility.distance
 
     @property
+    @override
     def cloud_coverage(self) -> float:
         """Return the Cloud coverage in %."""
         return float(self.coordinator.data.cloud_cover)
 
     @callback
+    @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         coordinator = self.forecast_coordinators["daily"]
@@ -281,6 +384,7 @@ class GoogleWeatherEntity(
         ]
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         coordinator = self.forecast_coordinators["hourly"]
@@ -315,6 +419,7 @@ class GoogleWeatherEntity(
         ]
 
     @callback
+    @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
         coordinator = self.forecast_coordinators["twice_daily"]

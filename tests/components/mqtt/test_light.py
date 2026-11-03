@@ -191,26 +191,8 @@ from typing import Any
 from unittest.mock import call, patch
 
 import pytest
-
-from homeassistant.components import light, mqtt
-from homeassistant.components.mqtt.light.schema_basic import (
-    CONF_BRIGHTNESS_COMMAND_TOPIC,
-    CONF_COLOR_TEMP_COMMAND_TOPIC,
-    CONF_EFFECT_COMMAND_TOPIC,
-    CONF_EFFECT_LIST,
-    CONF_HS_COMMAND_TOPIC,
-    CONF_RGB_COMMAND_TOPIC,
-    CONF_RGBW_COMMAND_TOPIC,
-    CONF_RGBWW_COMMAND_TOPIC,
-    CONF_XY_COMMAND_TOPIC,
-    MQTT_LIGHT_ATTRIBUTES_BLOCKED,
-    VALUE_TEMPLATE_KEYS,
-)
-from homeassistant.components.mqtt.models import PublishPayloadType
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, State
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message, mock_restore_cache
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -240,19 +222,35 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import async_fire_mqtt_message, mock_restore_cache
+from homeassistant.components import light
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.light.schema_basic import (
+    CONF_BRIGHTNESS_COMMAND_TOPIC,
+    CONF_COLOR_TEMP_COMMAND_TOPIC,
+    CONF_EFFECT_COMMAND_TOPIC,
+    CONF_EFFECT_LIST,
+    CONF_HS_COMMAND_TOPIC,
+    CONF_RGB_COMMAND_TOPIC,
+    CONF_RGBW_COMMAND_TOPIC,
+    CONF_RGBWW_COMMAND_TOPIC,
+    CONF_XY_COMMAND_TOPIC,
+    MQTT_LIGHT_ATTRIBUTES_BLOCKED,
+    VALUE_TEMPLATE_KEYS,
+)
+from homeassistant.components.mqtt.models import PublishPayloadType
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
+
 from tests.components.light import common
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {light.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {light.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
-@pytest.mark.parametrize(
-    "hass_config", [{mqtt.DOMAIN: {light.DOMAIN: {"name": "test"}}}]
-)
+@pytest.mark.parametrize("hass_config", [{DOMAIN: {light.DOMAIN: {"name": "test"}}}])
 async def test_fail_setup_if_no_command_topic(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -267,7 +265,7 @@ async def test_fail_setup_if_no_command_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_light_rgb/status",
@@ -421,7 +419,7 @@ async def test_no_min_max_kelvin(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_light_rgb/status",
@@ -548,7 +546,7 @@ async def test_controlling_state_via_topic(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "name": "test",
                         "state_topic": "test_light_color_temp/status",
@@ -574,7 +572,7 @@ async def test_controlling_state_via_topic(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "name": "test",
                         "state_topic": "test_light_color_temp/status",
@@ -803,7 +801,7 @@ async def test_received_rgbx_values_set_state_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_light_rgb/status",
@@ -935,7 +933,7 @@ async def test_invalid_state_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_scale/status",
@@ -985,7 +983,7 @@ async def test_brightness_controlling_scale(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_scale_rgb/status",
@@ -1059,7 +1057,7 @@ async def test_brightness_from_rgb_controlling_scale(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_light_rgb/status",
@@ -1179,7 +1177,7 @@ async def test_controlling_state_via_topic_with_templates(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_rgb/set",
@@ -1445,7 +1443,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_rgb/set",
@@ -1494,7 +1492,7 @@ async def test_sending_mqtt_rgb_command_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_rgb/set",
@@ -1543,7 +1541,7 @@ async def test_sending_mqtt_rgbw_command_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_rgb/set",
@@ -1593,7 +1591,7 @@ async def test_sending_mqtt_rgbww_command_with_template(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "name": "test",
                         "command_topic": "test_light_color_temp/set",
@@ -1614,7 +1612,7 @@ async def test_sending_mqtt_rgbww_command_with_template(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "name": "test",
                         "command_topic": "test_light_color_temp/set",
@@ -1674,7 +1672,7 @@ async def test_sending_mqtt_color_temp_command_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -1718,7 +1716,7 @@ async def test_on_command_first(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -1761,7 +1759,7 @@ async def test_on_command_last(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -1826,7 +1824,7 @@ async def test_on_command_brightness(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -1908,7 +1906,7 @@ async def test_on_command_brightness_scaled(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -2010,7 +2008,7 @@ async def test_on_command_rgb(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -2126,7 +2124,7 @@ async def test_on_command_rgbw(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -2246,7 +2244,7 @@ async def test_on_command_rgbww(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -2293,7 +2291,7 @@ async def test_on_command_rgb_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -2345,7 +2343,7 @@ async def test_on_command_rgbw_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -2397,7 +2395,7 @@ async def test_on_command_rgbww_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "tasmota_B94927/cmnd/POWER",
@@ -2509,7 +2507,7 @@ async def test_on_command_white(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_light_rgb/status",
@@ -2664,7 +2662,7 @@ async def test_explicit_color_mode(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_light_rgb/status",
@@ -2752,7 +2750,7 @@ async def test_explicit_color_mode_templated(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "tasmota_B94927/tele/STATE",
@@ -2825,7 +2823,7 @@ async def test_white_state_update(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -2976,7 +2974,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -3636,7 +3634,7 @@ async def test_entity_debug_info_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_max_mireds/set",
@@ -3760,9 +3758,9 @@ async def test_publishing_with_custom_encoding(
     domain = light.DOMAIN
     config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG)
     if topic == "effect_command_topic":
-        config[mqtt.DOMAIN][domain]["effect_list"] = ["random", "color_loop"]
+        config[DOMAIN][domain]["effect_list"] = ["random", "color_loop"]
     elif topic == "white_command_topic":
-        config[mqtt.DOMAIN][domain]["rgb_command_topic"] = "some-cmd-topic"
+        config[DOMAIN][domain]["rgb_command_topic"] = "some-cmd-topic"
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -3847,7 +3845,7 @@ async def test_encoding_subscribable_topics(
     init_payload: tuple[str, str] | None,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][light.DOMAIN])
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][light.DOMAIN])
     config[CONF_EFFECT_COMMAND_TOPIC] = "light/CONF_EFFECT_COMMAND_TOPIC"
     config[CONF_RGB_COMMAND_TOPIC] = "light/CONF_RGB_COMMAND_TOPIC"
     config[CONF_BRIGHTNESS_COMMAND_TOPIC] = "light/CONF_BRIGHTNESS_COMMAND_TOPIC"
@@ -3888,7 +3886,7 @@ async def test_encoding_subscribable_topics_brightness(
     init_payload: tuple[str, str] | None,
 ) -> None:
     """Test handling of incoming encoded payload for a brightness only light."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][light.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][light.DOMAIN])
     config[CONF_BRIGHTNESS_COMMAND_TOPIC] = "light/CONF_BRIGHTNESS_COMMAND_TOPIC"
 
     await help_test_encoding_subscribable_topics(
@@ -3908,7 +3906,7 @@ async def test_encoding_subscribable_topics_brightness(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_brightness/set",
@@ -3962,7 +3960,7 @@ async def test_sending_mqtt_brightness_command_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_brightness/set",
@@ -4017,7 +4015,7 @@ async def test_sending_mqtt_effect_command_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_hs/set",
@@ -4065,7 +4063,7 @@ async def test_sending_mqtt_hs_command_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_xy/set",

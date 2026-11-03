@@ -1,6 +1,6 @@
 """A risco entity base class."""
 
-from typing import Any
+from typing import Any, override
 
 from pyrisco import RiscoCloud
 from pyrisco.cloud.zone import Zone as CloudZone
@@ -24,15 +24,10 @@ def zone_unique_id(risco: RiscoCloud, zone_id: int) -> str:
 class RiscoCloudEntity(CoordinatorEntity[RiscoDataUpdateCoordinator]):
     """Risco cloud entity base class."""
 
-    def __init__(
-        self, *, coordinator: RiscoDataUpdateCoordinator, **kwargs: Any
-    ) -> None:
-        """Init the entity."""
-        super().__init__(coordinator=coordinator, **kwargs)
-
     def _get_data_from_coordinator(self) -> None:
         raise NotImplementedError
 
+    @override
     def _handle_coordinator_update(self) -> None:
         self._get_data_from_coordinator()
         self.async_write_ha_state()
@@ -70,6 +65,7 @@ class RiscoCloudZoneEntity(RiscoCloudEntity):
         )
         self._attr_extra_state_attributes = {"zone_id": zone_id}
 
+    @override
     def _get_data_from_coordinator(self) -> None:
         self._zone = self.coordinator.data.zones[self._zone_id]
 
@@ -102,6 +98,7 @@ class RiscoLocalZoneEntity(Entity):
         )
         self._attr_extra_state_attributes = {"zone_id": zone_id}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         signal = zone_update_signal(self._zone_id)

@@ -9,6 +9,7 @@ from pypck.connection import (
     PchkLicenseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.lcn.config_flow import LcnFlowHandler, validate_connection
@@ -29,8 +30,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 CONFIG_DATA = {
     CONF_IP_ADDRESS: "127.0.0.1",
@@ -58,7 +57,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
     result = await flow.async_step_user(user_input=None)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -66,14 +65,22 @@ async def test_step_user(hass: HomeAssistant) -> None:
     """Test for user step."""
     with (
         patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
-        patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
+        patch("homeassistant.components.lcn.async_setup_entry", return_value=None),
     ):
         data = CONNECTION_DATA.copy()
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=data,
+        )
+
+        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == CONNECTION_DATA[CONF_HOST]
         assert result["data"] == {
             **CONNECTION_DATA,
@@ -89,12 +96,21 @@ async def test_step_user_existing_host(
     entry.add_to_hass(hass)
 
     with patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"):
-        config_data = entry.data.copy()
+        # The connection details of the existing entry, as the form asks for them
+        config_data = {key: entry.data[key] for key in CONNECTION_DATA}
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=config_data,
+        )
+
+        assert result["type"] is data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -118,11 +134,30 @@ async def test_step_user_error(
         data = CONNECTION_DATA.copy()
         data.update({CONF_HOST: "pchk"})
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=data,
+        )
+
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
         assert result["errors"] == errors
+
+    with (
+        patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
+        patch("homeassistant.components.lcn.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=data,
+        )
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_step_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -131,18 +166,18 @@ async def test_step_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> 
     old_entry_data = entry.data.copy()
 
     result = await entry.start_reconfigure_flow(hass)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     with (
         patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
-        patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
+        patch("homeassistant.components.lcn.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG_DATA.copy(),
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "reconfigure_successful"
 
         entry = hass.config_entries.async_get_entry(entry.entry_id)
@@ -169,7 +204,7 @@ async def test_step_reconfigure_error(
     entry.add_to_hass(hass)
 
     result = await entry.start_reconfigure_flow(hass)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     with patch(
@@ -181,8 +216,21 @@ async def test_step_reconfigure_error(
             CONFIG_DATA.copy(),
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
         assert result["errors"] == errors
+
+    with (
+        patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
+        patch("homeassistant.components.lcn.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG_DATA.copy(),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_validate_connection() -> None:

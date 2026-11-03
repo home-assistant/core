@@ -1,53 +1,28 @@
 """Each ElkM1 area will be created as a separate alarm_control_panel."""
 
-from typing import Any
+from typing import Any, override
 
 from elkm1_lib.areas import Area
 from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.keypads import Keypad
-import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    ATTR_CHANGED_BY,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityStateAttribute,
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import SERVICE_ALARM_ARM_VACATION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import VolDictType
 
 from . import ElkM1ConfigEntry
-from .const import (
-    ATTR_CHANGED_BY_ID,
-    ATTR_CHANGED_BY_KEYPAD,
-    ATTR_CHANGED_BY_TIME,
-    ELK_USER_CODE_SERVICE_SCHEMA,
-)
+from .const import ATTR_CHANGED_BY_ID, ATTR_CHANGED_BY_KEYPAD, ATTR_CHANGED_BY_TIME
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .models import ELKM1Data
-
-DISPLAY_MESSAGE_SERVICE_SCHEMA: VolDictType = {
-    vol.Optional("clear", default=2): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
-    vol.Optional("beep", default=False): cv.boolean,
-    vol.Optional("timeout", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=65535)
-    ),
-    vol.Optional("line1", default=""): cv.string,
-    vol.Optional("line2", default=""): cv.string,
-}
-
-SERVICE_ALARM_DISPLAY_MESSAGE = "alarm_display_message"
-SERVICE_ALARM_ARM_HOME_INSTANT = "alarm_arm_home_instant"
-SERVICE_ALARM_ARM_NIGHT_INSTANT = "alarm_arm_night_instant"
-SERVICE_ALARM_BYPASS = "alarm_bypass"
-SERVICE_ALARM_CLEAR_BYPASS = "alarm_clear_bypass"
 
 
 async def async_setup_entry(
@@ -61,39 +36,6 @@ async def async_setup_entry(
     entities: list[ElkEntity] = []
     create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_VACATION,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_alarm_arm_vacation",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_HOME_INSTANT,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_alarm_arm_home_instant",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_NIGHT_INSTANT,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_alarm_arm_night_instant",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_DISPLAY_MESSAGE,
-        DISPLAY_MESSAGE_SERVICE_SCHEMA,
-        "async_display_message",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_BYPASS,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_bypass",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_CLEAR_BYPASS,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_clear_bypass",
-    )
 
 
 class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
@@ -117,6 +59,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         self._changed_by: str | None = None
         self._state: AlarmControlPanelState | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback for ElkM1 changes."""
         await super().async_added_to_hass()
@@ -135,8 +78,10 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
             self._changed_by_time = last_state.attributes[ATTR_CHANGED_BY_TIME]
         if ATTR_CHANGED_BY_ID in last_state.attributes:
             self._changed_by_id = last_state.attributes[ATTR_CHANGED_BY_ID]
-        if ATTR_CHANGED_BY in last_state.attributes:
-            self._changed_by = last_state.attributes[ATTR_CHANGED_BY]
+        if AlarmControlPanelEntityStateAttribute.CHANGED_BY in last_state.attributes:
+            self._changed_by = last_state.attributes[
+                AlarmControlPanelEntityStateAttribute.CHANGED_BY
+            ]
 
     def _watch_keypad(self, keypad: Element, changeset: dict[str, Any]) -> None:
         assert isinstance(keypad, Keypad)
@@ -162,16 +107,19 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def code_format(self) -> CodeFormat | None:
         """Return the alarm code format."""
         return CodeFormat.NUMBER
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the element."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Attributes of the area."""
         attrs = self.initial_attrs()
@@ -191,10 +139,12 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         return attrs
 
     @property
+    @override
     def changed_by(self) -> str | None:
         """Last change triggered by."""
         return self._changed_by
 
+    @override
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         elk_state_to_hass_state = {
             ArmedStatus.DISARMED: AlarmControlPanelState.DISARMED,
@@ -225,21 +175,25 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     def _entry_exit_timer_is_running(self) -> bool:
         return self._element.timer1 > 0 or self._element.timer2 > 0
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if code is not None:
             self._element.disarm(int(code))
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if code is not None:
             self._element.arm(ArmLevel.ARMED_STAY, int(code))
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if code is not None:
             self._element.arm(ArmLevel.ARMED_AWAY, int(code))
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if code is not None:
@@ -255,6 +209,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         if code is not None:
             self._element.arm(ArmLevel.ARMED_NIGHT_INSTANT, int(code))
 
+    @override
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
         if code is not None:

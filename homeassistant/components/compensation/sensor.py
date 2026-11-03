@@ -1,21 +1,21 @@
 """Support for compensation sensor."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import numpy as np
 
 from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
     CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SensorEntity,
+    SensorEntityCapabilityAttribute,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
     CONF_MAXIMUM,
     CONF_MINIMUM,
     CONF_NAME,
@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -33,6 +34,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
     async_create_platform_config_not_supported_issue,
 )
@@ -88,6 +90,24 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Compensation sensor entry."""
+    compensation = entry.entry_id
+    conf: dict[str, Any] = hass.data[DATA_COMPENSATION][compensation]
+
+    source: str = conf[CONF_ENTITY_ID]
+    attribute: str | None = conf.get(CONF_ATTRIBUTE)
+    name = entry.title
+
+    async_add_entities(
+        [CompensationSensor(entry.entry_id, name, source, attribute, conf)]
+    )
+
+
 class CompensationSensor(SensorEntity):
     """Representation of a Compensation sensor."""
 
@@ -121,6 +141,7 @@ class CompensationSensor(SensorEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         self.async_on_remove(
@@ -130,8 +151,11 @@ class CompensationSensor(SensorEntity):
                 self._async_compensation_sensor_state_listener,
             )
         )
+        if (state := self.hass.states.get(self._source_entity_id)) is not None:
+            self._update_from_source_state(state)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         ret = {
@@ -153,33 +177,36 @@ class CompensationSensor(SensorEntity):
                 "While updating compensation %s, the new_state is None", self.name
             )
             self._attr_native_value = None
-            self.async_write_ha_state()
-            return
+        else:
+            self._update_from_source_state(new_state)
+        self.async_write_ha_state()
 
+    def _update_from_source_state(self, new_state: State) -> None:
+        """Update the compensated value from the source state."""
         if new_state.state == STATE_UNKNOWN:
             self._attr_native_value = None
-            self.async_write_ha_state()
             return
 
         if new_state.state == STATE_UNAVAILABLE:
             self._attr_available = False
-            self.async_write_ha_state()
             return
 
         self._attr_available = True
 
         if self.native_unit_of_measurement is None and self._source_attribute is None:
             self._attr_native_unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
 
         if self._attr_device_class is None and (
-            device_class := new_state.attributes.get(ATTR_DEVICE_CLASS)
+            device_class := new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         ):
             self._attr_device_class = device_class
 
         if self._attr_state_class is None and (
-            state_class := new_state.attributes.get(ATTR_STATE_CLASS)
+            state_class := new_state.attributes.get(
+                SensorEntityCapabilityAttribute.STATE_CLASS
+            )
         ):
             self._attr_state_class = state_class
 
@@ -207,5 +234,3 @@ class CompensationSensor(SensorEntity):
                 )
             else:
                 _LOGGER.warning("%s state is not numerical", self._source_entity_id)
-
-        self.async_write_ha_state()

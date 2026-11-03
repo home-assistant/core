@@ -5,11 +5,17 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiogithubapi import (
+    GitHubAuthenticatedUserModel,
     GitHubLoginDeviceModel,
     GitHubLoginOauthModel,
     GitHubRateLimitModel,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.github.const import (
     CONF_REPOSITORY,
@@ -21,12 +27,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_ACCESS_TOKEN
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    load_json_object_fixture,
-)
 
 
 @pytest.fixture
@@ -62,7 +62,7 @@ def mock_config_entry(
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.github.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.github.async_setup_entry", return_value=None):
         yield
 
 
@@ -155,5 +155,10 @@ def github_client(hass: HomeAssistant) -> Generator[AsyncMock]:
         graphql_mock = AsyncMock()
         graphql_mock.data = load_json_object_fixture("graphql.json", DOMAIN)
         client.graphql.return_value = graphql_mock
+        user_response_mock = MagicMock()
+        user_response_mock.data = GitHubAuthenticatedUserModel(
+            load_json_object_fixture("user.json", DOMAIN)
+        )
+        client.user.get = AsyncMock(return_value=user_response_mock)
         client.repos.events.subscribe = AsyncMock()
         yield client

@@ -6,6 +6,7 @@ Responsible for polling the device API endpoint and normalizing data for entitie
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiocentriconnect import CentriConnect, Tank
 from aiocentriconnect.exceptions import CentriConnectConnectionError, CentriConnectError
@@ -65,11 +66,14 @@ class CentriConnectCoordinator(DataUpdateCoordinator[Tank]):
             session=async_get_clientsession(hass),
         )
 
+    @override
     async def _async_setup(self) -> None:
         try:
             tank_data = await self.api_client.async_get_tank_data()
         except CentriConnectError as err:
-            raise UpdateFailed("Could not fetch device info") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="entry_setup_failed"
+            ) from err
         self.device_info = CentriConnectDeviceInfo(
             device_id=tank_data.device_id,
             device_name=tank_data.device_name,
@@ -79,12 +83,25 @@ class CentriConnectCoordinator(DataUpdateCoordinator[Tank]):
             tank_size_unit=tank_data.tank_size_unit,
         )
 
+    @override
     async def _async_update_data(self) -> Tank:
         """Fetch device state."""
         try:
             state = await self.api_client.async_get_tank_data()
         except CentriConnectConnectionError as err:
-            raise UpdateFailed(f"Error communicating with device: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={
+                    "error": repr(err),
+                },
+            ) from err
         except CentriConnectError as err:
-            raise UpdateFailed(f"Unexpected response: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unexpected_response",
+                translation_placeholders={
+                    "error": repr(err),
+                },
+            ) from err
         return state

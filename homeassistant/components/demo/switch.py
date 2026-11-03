@@ -1,6 +1,6 @@
 """Demo platform that has two fake switches."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -59,11 +59,13 @@ class DemoSwitch(SwitchEntity):
             name=device_name,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._attr_is_on = False

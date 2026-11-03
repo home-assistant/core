@@ -1,5 +1,7 @@
 """Base entity for Trafikverket Camera."""
 
+from typing import override
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -50,6 +52,7 @@ class TrafikverketCameraNonCameraEntity(TrafikverketCameraEntity):
         """Update _attr."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         self._update_attr()
         return super()._handle_coordinator_update()

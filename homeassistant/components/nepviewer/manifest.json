@@ -1,6 +1,7 @@
 {
   "domain": "nepviewer",
   "name": "NEPViewer",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@felipecrs"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nepviewer",

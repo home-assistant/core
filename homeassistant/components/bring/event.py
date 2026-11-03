@@ -2,6 +2,7 @@
 
 from dataclasses import asdict
 from datetime import datetime
+from typing import override
 
 from bring_api import ActivityType, BringList
 
@@ -9,8 +10,7 @@ from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BringConfigEntry
-from .coordinator import BringActivityCoordinator
+from .coordinator import BringActivityCoordinator, BringConfigEntry
 from .entity import BringBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -92,6 +92,7 @@ class BringEventEntity(BringBaseEntity, EventEntity):
             self.async_write_ha_state()
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
 
@@ -101,11 +102,13 @@ class BringEventEntity(BringBaseEntity, EventEntity):
             else super().entity_picture
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks with your device API/library."""
         await super().async_added_to_hass()
         self._async_handle_event()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         self._async_handle_event()
         return super()._handle_coordinator_update()

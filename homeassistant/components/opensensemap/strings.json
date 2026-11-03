@@ -1,0 +1,35 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "Failed to connect to openSenseMap.",
+      "invalid_station": "The provided station ID does not exist on openSenseMap."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_station": "[%key:component::opensensemap::config::abort::invalid_station%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "station_id": "Station ID"
+        },
+        "data_description": {
+          "station_id": "The unique identifier of your openSenseMap station. You can find it in the URL when viewing the station on opensensemap.org."
+        },
+        "description": "Add an openSenseMap station to monitor its measurements.",
+        "title": "Add openSenseMap station"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_air_quality": {
+      "description": "The openSenseMap air quality entity (`{entity_id}`) is deprecated. The particulate matter measurements it provided are now available as individual sensor entities.\n\nUpdate your dashboards and templates to use those sensor entities, then disable the air quality entity to have it removed after the next restart.",
+      "title": "The openSenseMap air quality entity is deprecated"
+    },
+    "deprecated_air_quality_in_use": {
+      "description": "The openSenseMap air quality entity (`{entity_id}`) is deprecated. The particulate matter measurements it provided are now available as individual sensor entities.\n\nIt is still used in the following automations or scripts:\n{items}\n\nUpdate them to use the sensor entities, then disable the air quality entity to have it removed after the next restart.",
+      "title": "[%key:component::opensensemap::issues::deprecated_air_quality::title%]"
+    }
+  }
+}

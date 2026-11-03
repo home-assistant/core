@@ -1,18 +1,31 @@
 """Test ViCare sensor entity."""
 
+from contextlib import ExitStack
+from datetime import timedelta
+import threading
+from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from PyViCare.PyViCareService import ViCareDeviceAccessor
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION, DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -35,19 +48,144 @@ async def test_all_entities(
         Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
         Fixture({"type:radiator"}, "vicare/ZigbeeTRV.json"),
         Fixture({"type:repeater"}, "vicare/ZigbeeRepeater.json"),
-        Fixture({"type:fhtMain"}, "vicare/FHTMain.json"),
-        Fixture({"type:fhtChannel"}, "vicare/FHTChannel.json"),
+        # FHT main and channel are the same physical zigbee node, so they share
+        # a gateway; this lets the channel link to the main via via_device.
+        Fixture({"type:fhtMain"}, "vicare/FHTMain.json", gateway_id="fht_gateway"),
+        Fixture(
+            {"type:fhtChannel"}, "vicare/FHTChannel.json", gateway_id="fht_gateway"
+        ),
+        Fixture({"type:boiler"}, "vicare/Vitoligno300C.json"),
+        Fixture({"type:virtual;smartRoomControl"}, "vicare/RoomControl.json"),
     ]
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_room_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that each room is a child device of its room control."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:virtual;smartRoomControl"}, "vicare/RoomControl.json"),
+    ]
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    room_control = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "gateway0_deviceId0"), mock_config_entry.entry_id
+    )
+    assert room_control is not None
+    assert room_control.name == "model0"
+    rooms = sorted(
+        (room.name, room.parent_device_id)
+        for room in dr.async_entries_for_parent_device(device_registry, room_control.id)
+    )
+    assert rooms == [("Room 0", room_control.id), ("Room 1", room_control.id)]
+
+
+async def test_room_control_without_rooms(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a room control without rooms adds no device."""
+    fixtures: list[Fixture] = [
+        Fixture(
+            {"type:virtual;smartRoomControl"}, "vicare/RoomControlWithoutRooms.json"
+        ),
+    ]
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert not dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_no_api_read_on_event_loop(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Entity values must be read in the executor, never on the event loop.
+
+    A PyViCare getter takes the library's cache lock and does blocking I/O when
+    that cache is cold, so reading a value from a property freezes the loop for
+    the length of an HTTP request.
+    """
+    fixtures: list[Fixture] = [
+        Fixture({"type:heatpump"}, "vicare/Vitocal250A.json"),
+        Fixture({"type:ventilation"}, "vicare/VitoPure.json"),
+    ]
+    mock_vicare = MockPyViCare(fixtures)
+    services = {id(d.service): d.service for d in mock_vicare.devices}
+
+    loop_thread_id = threading.get_ident()
+    reads_on_loop: list[str] = []
+    reads_in_executor: list[str] = []
+
+    def guard(service):
+        read_property = service.getProperty
+
+        def guarded_get_property(
+            accessor: ViCareDeviceAccessor, property_name: str
+        ) -> Any:
+            if threading.get_ident() == loop_thread_id:
+                reads_on_loop.append(property_name)
+            else:
+                reads_in_executor.append(property_name)
+            return read_property(accessor, property_name)
+
+        return patch.object(service, "getProperty", guarded_get_property)
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR, Platform.FAN]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+        entity_ids = hass.states.async_entity_ids(SENSOR_DOMAIN)
+        fan_ids = hass.states.async_entity_ids(FAN_DOMAIN)
+        assert entity_ids
+        assert fan_ids
+
+        with ExitStack() as stack:
+            for service in services.values():
+                stack.enter_context(guard(service))
+
+            freezer.tick(timedelta(seconds=DEFAULT_CACHE_DURATION * 2))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+            for entity_id in (entity_ids[0], fan_ids[0]):
+                await async_update_entity(hass, entity_id)
+
+    assert not reads_on_loop
+    # Without this the test would also pass if nothing read a value at all.
+    assert reads_in_executor

@@ -3,9 +3,10 @@
 from collections import namedtuple
 from datetime import timedelta
 import logging
+from typing import override
 
+import probatio
 import pybbox
-import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -25,7 +26,7 @@ DEFAULT_HOST = "192.168.1.254"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
+    {probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
 )
 
 
@@ -52,12 +53,14 @@ class BboxDeviceScanner(DeviceScanner):
 
         self.success_init = self._update_info()
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return [device.mac for device in self.last_results]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         filter_named = [

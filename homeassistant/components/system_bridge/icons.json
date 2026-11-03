@@ -4,18 +4,63 @@
       "camera_in_use": {
         "default": "mdi:webcam"
       },
+      "locked": {
+        "default": "mdi:lock-open-variant",
+        "state": {
+          "on": "mdi:lock"
+        }
+      },
       "pending_reboot": {
         "default": "mdi:restart"
       }
     },
+    "button": {
+      "power_hibernate": {
+        "default": "mdi:snowflake"
+      },
+      "power_lock": {
+        "default": "mdi:lock"
+      },
+      "power_logout": {
+        "default": "mdi:logout"
+      },
+      "power_shutdown": {
+        "default": "mdi:power"
+      },
+      "power_sleep": {
+        "default": "mdi:power-sleep"
+      }
+    },
     "media_player": {
+      "audio": {
+        "default": "mdi:speaker"
+      },
+      "audio_output": {
+        "default": "mdi:speaker"
+      },
       "media": {
         "default": "mdi:volume-high"
+      }
+    },
+    "number": {
+      "audio_input_volume": {
+        "default": "mdi:microphone"
+      },
+      "display_brightness": {
+        "default": "mdi:brightness-6"
+      }
+    },
+    "select": {
+      "audio_input": {
+        "default": "mdi:microphone-settings"
       }
     },
     "sensor": {
       "boot_time": {
         "default": "mdi:av-timer"
+      },
+      "cpu_power_core": {
+        "default": "mdi:chip"
       },
       "cpu_power_package": {
         "default": "mdi:chip"
@@ -23,8 +68,56 @@
       "cpu_speed": {
         "default": "mdi:speedometer"
       },
+      "disk_device_read_rate": {
+        "default": "mdi:database-arrow-down"
+      },
+      "disk_device_write_rate": {
+        "default": "mdi:database-arrow-up"
+      },
+      "disk_read_rate": {
+        "default": "mdi:database-arrow-down"
+      },
+      "disk_write_rate": {
+        "default": "mdi:database-arrow-up"
+      },
+      "display_refresh_rate": {
+        "default": "mdi:monitor"
+      },
+      "display_resolution_x": {
+        "default": "mdi:monitor"
+      },
+      "display_resolution_y": {
+        "default": "mdi:monitor"
+      },
       "displays_connected": {
         "default": "mdi:monitor"
+      },
+      "gpu_core_clock_speed": {
+        "default": "mdi:speedometer"
+      },
+      "gpu_fan_speed": {
+        "default": "mdi:fan"
+      },
+      "gpu_memory_clock_speed": {
+        "default": "mdi:speedometer"
+      },
+      "gpu_memory_free": {
+        "default": "mdi:memory"
+      },
+      "gpu_memory_used": {
+        "default": "mdi:memory"
+      },
+      "gpu_memory_used_percentage": {
+        "default": "mdi:memory"
+      },
+      "gpu_power_usage": {
+        "default": "mdi:lightning-bolt"
+      },
+      "gpu_usage_percentage": {
+        "default": "mdi:percent"
+      },
+      "idle_time": {
+        "default": "mdi:timer-sand"
       },
       "kernel": {
         "default": "mdi:devices"
@@ -32,11 +125,41 @@
       "load": {
         "default": "mdi:percent"
       },
+      "load_average": {
+        "default": "mdi:gauge"
+      },
+      "load_average_15": {
+        "default": "mdi:gauge"
+      },
+      "load_average_5": {
+        "default": "mdi:gauge"
+      },
       "memory_free": {
         "default": "mdi:memory"
       },
       "memory_used": {
         "default": "mdi:memory"
+      },
+      "memory_used_percentage": {
+        "default": "mdi:memory"
+      },
+      "network_download_rate": {
+        "default": "mdi:download-network"
+      },
+      "network_interface_download_rate": {
+        "default": "mdi:download-network"
+      },
+      "network_interface_link_rate": {
+        "default": "mdi:speedometer"
+      },
+      "network_interface_ssid": {
+        "default": "mdi:wifi"
+      },
+      "network_interface_upload_rate": {
+        "default": "mdi:upload-network"
+      },
+      "network_upload_rate": {
+        "default": "mdi:upload-network"
       },
       "os": {
         "default": "mdi:devices"
@@ -47,11 +170,37 @@
       "processes": {
         "default": "mdi:counter"
       },
+      "processes_load_cpu": {
+        "default": "mdi:percent"
+      },
+      "space_used": {
+        "default": "mdi:harddisk"
+      },
+      "swap_used": {
+        "default": "mdi:harddisk"
+      },
+      "swap_used_percentage": {
+        "default": "mdi:harddisk"
+      },
       "version": {
         "default": "mdi:counter"
       },
       "version_latest": {
         "default": "mdi:counter"
+      }
+    },
+    "switch": {
+      "audio_input_mute": {
+        "default": "mdi:microphone-off",
+        "state": {
+          "off": "mdi:microphone"
+        }
+      },
+      "display_power": {
+        "default": "mdi:monitor",
+        "state": {
+          "off": "mdi:monitor-off"
+        }
       }
     }
   },

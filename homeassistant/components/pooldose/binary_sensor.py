@@ -1,7 +1,7 @@
 """Binary sensors for the Seko PoolDose integration."""
 
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -12,7 +12,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PooldoseConfigEntry
+from .coordinator import PooldoseConfigEntry
 from .entity import PooldoseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -207,6 +207,7 @@ class PooldoseBinarySensor(PooldoseEntity, BinarySensorEntity):
     """Binary sensor entity for the Seko PoolDose Python API."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         data = cast(dict, self.get_data())

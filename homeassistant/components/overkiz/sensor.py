@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
 from pyoverkiz.types import StateType as OverkizStateType
@@ -15,13 +15,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -55,7 +54,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_BATTERY_LEVEL,
         name="Battery level",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -77,6 +76,26 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         icon="mdi:battery",
         device_class=SensorDeviceClass.ENUM,
         options=["good", "medium", "low", "critical"],
+        translation_key="battery",
+    ),
+    # SmokeSensor with separate batteries for the radio and sensor parts,
+    # e.g. the Somfy smoke sensor (9V radio block + 3V CR123 sensor cell).
+    OverkizSensorDescription(
+        key=OverkizState.IO_MAINTENANCE_RADIO_PART_BATTERY,
+        name="Radio battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:battery",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal"],
+        translation_key="battery",
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.IO_MAINTENANCE_SENSOR_PART_BATTERY,
+        name="Sensor battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:battery",
+        device_class=SensorDeviceClass.ENUM,
+        options=["absence", "low", "normal"],
         translation_key="battery",
     ),
     OverkizSensorDescription(
@@ -309,7 +328,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_value=lambda value: round(cast(float, value), 2),
         device_class=SensorDeviceClass.HUMIDITY,
         # core:MeasuredValueType = core:RelativeValueInPercentage
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # TemperatureSensor/TemperatureSensor
@@ -349,7 +368,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_CO_CONCENTRATION,
         name="CO concentration",
         device_class=SensorDeviceClass.CO,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # AirSensor/CO2Sensor
@@ -357,7 +376,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_CO2_CONCENTRATION,
         name="CO2 concentration",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # SunSensor/SunEnergySensor
@@ -429,6 +448,11 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.ENUM,
         options=["dead", "low_battery", "maintenance_required", "no_defect"],
     ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_ERROR_CODE,
+        name="Error code",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     # DomesticHotWaterProduction/WaterHeatingSystem
     OverkizSensorDescription(
         key=OverkizState.IO_HEAT_PUMP_OPERATING_TIME,
@@ -469,7 +493,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_TARGET_CLOSURE,
         name="Target closure",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_registry_enabled_default=False,
     ),
     # ThreeWayWindowHandle/WindowHandle
@@ -519,6 +543,9 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
 
 
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,
@@ -550,7 +577,7 @@ async def async_setup_entry(
                 description,
             )
             for state in device.definition.states
-            if (description := SUPPORTED_STATES.get(state.qualified_name))
+            if (description := SUPPORTED_STATES.get(state))
         )
 
     async_add_entities(entities)
@@ -562,19 +589,13 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
     entity_description: OverkizSensorDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
         state = self.device.states.get(self.entity_description.key)
 
-        if (
-            state is None
-            or state.value is None
-            # It seems that in some cases we return `None` if state.value is falsy.
-            # This is probably incorrect and should be fixed in a follow up PR.
-            # To ensure measurement sensors do not get an `unknown` state on
-            # a falsy value (e.g. 0 or 0.0) we also check the state_class.
-            or (self.state_class != SensorStateClass.MEASUREMENT and not state.value)
-        ):
+        # Empty strings are not valid enum options, but 0 is a valid value
+        if state is None or state.value is None or state.value == "":
             return None
 
         # Transform the value with a lambda function
@@ -587,22 +608,19 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         return state.value
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if (
-            not (default_unit := self.entity_description.native_unit_of_measurement)
-            or not (state := self.device.states.get(self.entity_description.key))
-            or not state.value
-        ):
+        if not (default_unit := self.entity_description.native_unit_of_measurement):
             return default_unit
 
         attrs = self.device.attributes
-        if (unit := attrs[f"{state.name}MeasuredValueType"]) and (
+        if (unit := attrs.get(f"{self.entity_description.key}MeasuredValueType")) and (
             unit_value := unit.value_as_str
         ):
             return OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)
 
-        if (unit := attrs[OverkizAttribute.CORE_MEASURED_VALUE_TYPE]) and (
+        if (unit := attrs.get(OverkizAttribute.CORE_MEASURED_VALUE_TYPE)) and (
             unit_value := unit.value_as_str
         ):
             ha_unit = OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)
@@ -639,6 +657,7 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         self._attr_name = "HomeKit setup code"
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the value of the sensor."""
         if state := self.device.attributes.get(OverkizAttribute.HOMEKIT_SETUP_CODE):
@@ -646,11 +665,12 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         return None
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         # By default this sensor will be listed at a virtual HomekitStack device,
         # but it makes more sense to show this at the gateway device
         # in the entity registry.
         return DeviceInfo(
-            identifiers={(DOMAIN, self.executor.get_gateway_id())},
+            identifiers={(DOMAIN, self.device.identifier.gateway_id)},
         )

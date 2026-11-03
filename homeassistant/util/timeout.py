@@ -7,7 +7,7 @@ like zones and freezing of timeouts.
 import asyncio
 import enum
 from types import TracebackType
-from typing import Any, Self
+from typing import Any, Self, override
 
 from .async_ import run_callback_threadsafe
 
@@ -260,7 +260,7 @@ class _GlobalTaskContext:
         await self._wait_zone.wait()
         await asyncio.sleep(self._cool_down)  # Allow context switch
         self._on_wait_task = None
-        if self.state != _State.TIMEOUT:
+        if self.state is not _State.TIMEOUT:
             return
         self._cancel_task()
 
@@ -382,6 +382,7 @@ class _ZoneTimeoutManager:
         self._tasks: list[_ZoneTaskContext] = []
         self._freezes: list[_ZoneFreezeContext] = []
 
+    @override
     def __repr__(self) -> str:
         """Representation of a zone."""
         return f"<{self.name}: {len(self._tasks)} / {len(self._freezes)}>"

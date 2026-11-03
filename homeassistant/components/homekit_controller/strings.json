@@ -6,7 +6,7 @@
       "already_configured": "Accessory is already configured with this controller.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_paired": "This accessory is already paired to another device. Please reset the accessory and try again.",
-      "ignored_model": "HomeKit support for this model is blocked as a more feature complete native integration is available.",
+      "ignored_model": "HomeKit support for this model is blocked as a more feature-complete native integration is available.",
       "invalid_config_entry": "This device is showing as ready to pair but there is already a conflicting configuration entry for it in Home Assistant that must first be removed.",
       "invalid_properties": "Invalid properties announced by device.",
       "no_devices": "No unpaired devices could be found"
@@ -22,11 +22,11 @@
     "flow_title": "{name} ({category})",
     "step": {
       "busy_error": {
-        "description": "Abort pairing on all controllers, or try restarting the device, then continue to resume pairing.",
+        "description": "Abort pairing on all controllers, or try restarting the device, then try pairing again.",
         "title": "The device is already pairing with another controller"
       },
       "max_tries_error": {
-        "description": "The device has received more than 100 unsuccessful authentication attempts. Try restarting the device, then continue to resume pairing.",
+        "description": "The device has received more than 100 unsuccessful authentication attempts. Try restarting the device, then try pairing again.",
         "title": "Maximum authentication attempts exceeded"
       },
       "pair": {
@@ -38,7 +38,7 @@
         "title": "Pair with a device via HomeKit Accessory Protocol"
       },
       "protocol_error": {
-        "description": "The device may not be in pairing mode and may require a physical or virtual button press. Ensure the device is in pairing mode or try restarting the device, then continue to resume pairing.",
+        "description": "The device may not be in pairing mode and may require a physical or virtual button press. Ensure the device is in pairing mode or try restarting the device, then try pairing again.",
         "title": "Error communicating with the accessory"
       },
       "user": {
@@ -71,6 +71,17 @@
     }
   },
   "entity": {
+    "button": {
+      "clear_hold": {
+        "name": "Clear hold"
+      },
+      "provision_preferred_thread_credentials": {
+        "name": "Provision preferred Thread credentials"
+      },
+      "setup": {
+        "name": "Setup"
+      }
+    },
     "event": {
       "button": {
         "state_attributes": {
@@ -95,14 +106,30 @@
         }
       }
     },
+    "number": {
+      "elevation": {
+        "name": "Elevation"
+      },
+      "sensitivity": {
+        "name": "Sensitivity"
+      },
+      "spray_quantity": {
+        "name": "Spray quantity"
+      },
+      "volume": {
+        "name": "Volume"
+      }
+    },
     "select": {
       "air_purifier_state_target": {
+        "name": "Air purifier mode",
         "state": {
           "automatic": "Automatic",
           "manual": "[%key:common::state::manual%]"
         }
       },
       "ecobee_mode": {
+        "name": "Current mode",
         "state": {
           "away": "[%key:common::state::not_home%]",
           "home": "[%key:common::state::home%]",
@@ -110,6 +137,7 @@
         }
       },
       "temperature_display_units": {
+        "name": "Temperature display units",
         "state": {
           "celsius": "Celsius",
           "fahrenheit": "Fahrenheit"
@@ -118,6 +146,7 @@
     },
     "sensor": {
       "air_purifier_state_current": {
+        "name": "Air purifier status",
         "state": {
           "idle": "[%key:common::state::idle%]",
           "inactive": "Inactive",
@@ -125,6 +154,7 @@
         }
       },
       "thread_node_capabilities": {
+        "name": "Thread capabilities",
         "state": {
           "border_router_capable": "Border Router Capable",
           "full": "Full End Device",
@@ -135,6 +165,7 @@
         }
       },
       "thread_status": {
+        "name": "Thread status",
         "state": {
           "border_router": "Border Router",
           "child": "Child",
@@ -145,8 +176,28 @@
           "router": "Router"
         }
       },
+      "valve_position": {
+        "name": "Valve position"
+      },
       "water_level": {
         "name": "Water level"
+      }
+    },
+    "switch": {
+      "airplay_enable": {
+        "name": "AirPlay enable"
+      },
+      "lock_physical_controls": {
+        "name": "Lock physical controls"
+      },
+      "mute": {
+        "name": "Mute"
+      },
+      "pairing_mode": {
+        "name": "Pairing mode"
+      },
+      "sleep_mode": {
+        "name": "Sleep mode"
       }
     }
   },

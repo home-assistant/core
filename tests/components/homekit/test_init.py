@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
@@ -22,7 +23,6 @@ from homeassistant.setup import async_setup_component
 
 from .util import PATH_HOMEKIT
 
-from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 
@@ -32,7 +32,8 @@ async def test_humanify_homekit_changed_event(hass: HomeAssistant, hk_driver) ->
     with patch("homeassistant.components.homekit.HomeKit") as mock_homekit:
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
-        assert await async_setup_component(hass, "homekit", {"homekit": {}})
+        type(homekit).async_stop = AsyncMock()
+        assert await async_setup_component(hass, DOMAIN, {"homekit": {}})
     assert await async_setup_component(hass, "logbook", {})
     await hass.async_block_till_done()
 
@@ -74,6 +75,7 @@ async def test_humanify_homekit_changed_event(hass: HomeAssistant, hk_driver) ->
 async def test_bridge_with_triggers(
     hass: HomeAssistant,
     hk_driver,
+    demo_cleanup,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:

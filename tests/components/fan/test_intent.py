@@ -1,5 +1,7 @@
 """Intent tests for the fan platform."""
 
+from pytest_homeassistant.common import async_mock_service
+
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN,
@@ -9,8 +11,6 @@ from homeassistant.components.fan import (
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-
-from tests.common import async_mock_service
 
 
 async def test_set_speed_intent(hass: HomeAssistant) -> None:
@@ -29,7 +29,7 @@ async def test_set_speed_intent(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN

@@ -19,7 +19,9 @@ EXPECTED_ENTRY_VERSION = (
 @callback
 def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
-    entries = hass.config_entries.async_entries(DOMAIN)
+    entries = hass.config_entries.async_entries(
+        DOMAIN, include_ignore=False, include_disabled=False
+    )
     return [
         HardwareInfo(
             board=None,

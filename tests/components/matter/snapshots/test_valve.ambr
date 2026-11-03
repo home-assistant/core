@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-000000000000003C-MatterNodeDevice')]>,
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
@@ -39,10 +39,10 @@
 # name: test_valves[mock_valve][mock_valve][valve.mock_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Mock Valve',
-      'is_closed': True,
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Valve',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.mock_valve',

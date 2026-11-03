@@ -2,9 +2,9 @@
 
 import asyncio
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
-from typing import Final
+from typing import Final, override
 
 from fitbit_web_api.models.device import Device
 
@@ -18,7 +18,7 @@ from .exceptions import FitbitApiException, FitbitAuthException
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL: Final = datetime.timedelta(minutes=30)
+UPDATE_INTERVAL: Final = dt.timedelta(minutes=30)
 TIMEOUT = 10
 
 type FitbitConfigEntry = ConfigEntry[FitbitData]
@@ -42,6 +42,7 @@ class FitbitDeviceCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         )
         self._api = api
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(TIMEOUT):

@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 
-from .const import ATTR_INSTALLED_VERSION, ATTR_LATEST_VERSION
+from .const import UpdateEntityStateAttribute
 
 
 @callback
@@ -20,10 +20,14 @@ def async_check_significant_change(
     if old_state != new_state:
         return True
 
-    if old_attrs.get(ATTR_INSTALLED_VERSION) != new_attrs.get(ATTR_INSTALLED_VERSION):
+    if old_attrs.get(UpdateEntityStateAttribute.INSTALLED_VERSION) != new_attrs.get(
+        UpdateEntityStateAttribute.INSTALLED_VERSION
+    ):
         return True
 
-    if old_attrs.get(ATTR_LATEST_VERSION) != new_attrs.get(ATTR_LATEST_VERSION):
+    if old_attrs.get(UpdateEntityStateAttribute.LATEST_VERSION) != new_attrs.get(
+        UpdateEntityStateAttribute.LATEST_VERSION
+    ):
         return True
 
     return False

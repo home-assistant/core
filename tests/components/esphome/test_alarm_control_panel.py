@@ -4,6 +4,7 @@ from unittest.mock import call
 
 from aioesphomeapi import (
     AlarmControlPanelCommand,
+    AlarmControlPanelEntityFeature as ESPHomeAlarmControlPanelEntityFeature,
     AlarmControlPanelEntityState as ESPHomeAlarmEntityState,
     AlarmControlPanelInfo,
     AlarmControlPanelState as ESPHomeAlarmState,
@@ -22,7 +23,6 @@ from homeassistant.components.alarm_control_panel import (
     SERVICE_ALARM_TRIGGER,
     AlarmControlPanelState,
 )
-from homeassistant.components.esphome.alarm_control_panel import EspHomeACPFeatures
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
@@ -40,12 +40,12 @@ async def test_generic_alarm_control_panel_requires_code(
             object_id="myalarm_control_panel",
             key=1,
             name="my alarm_control_panel",
-            supported_features=EspHomeACPFeatures.ARM_AWAY
-            | EspHomeACPFeatures.ARM_CUSTOM_BYPASS
-            | EspHomeACPFeatures.ARM_HOME
-            | EspHomeACPFeatures.ARM_NIGHT
-            | EspHomeACPFeatures.ARM_VACATION
-            | EspHomeACPFeatures.TRIGGER,
+            supported_features=ESPHomeAlarmControlPanelEntityFeature.ARM_AWAY
+            | ESPHomeAlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+            | ESPHomeAlarmControlPanelEntityFeature.ARM_HOME
+            | ESPHomeAlarmControlPanelEntityFeature.ARM_NIGHT
+            | ESPHomeAlarmControlPanelEntityFeature.ARM_VACATION
+            | ESPHomeAlarmControlPanelEntityFeature.TRIGGER,
             requires_code=True,
             requires_code_to_arm=True,
         )
@@ -172,12 +172,12 @@ async def test_generic_alarm_control_panel_no_code(
             object_id="myalarm_control_panel",
             key=1,
             name="my alarm_control_panel",
-            supported_features=EspHomeACPFeatures.ARM_AWAY
-            | EspHomeACPFeatures.ARM_CUSTOM_BYPASS
-            | EspHomeACPFeatures.ARM_HOME
-            | EspHomeACPFeatures.ARM_NIGHT
-            | EspHomeACPFeatures.ARM_VACATION
-            | EspHomeACPFeatures.TRIGGER,
+            supported_features=ESPHomeAlarmControlPanelEntityFeature.ARM_AWAY
+            | ESPHomeAlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+            | ESPHomeAlarmControlPanelEntityFeature.ARM_HOME
+            | ESPHomeAlarmControlPanelEntityFeature.ARM_NIGHT
+            | ESPHomeAlarmControlPanelEntityFeature.ARM_VACATION
+            | ESPHomeAlarmControlPanelEntityFeature.TRIGGER,
             requires_code=False,
             requires_code_to_arm=False,
         )
@@ -217,12 +217,12 @@ async def test_generic_alarm_control_panel_missing_state(
             object_id="myalarm_control_panel",
             key=1,
             name="my alarm_control_panel",
-            supported_features=EspHomeACPFeatures.ARM_AWAY
-            | EspHomeACPFeatures.ARM_CUSTOM_BYPASS
-            | EspHomeACPFeatures.ARM_HOME
-            | EspHomeACPFeatures.ARM_NIGHT
-            | EspHomeACPFeatures.ARM_VACATION
-            | EspHomeACPFeatures.TRIGGER,
+            supported_features=ESPHomeAlarmControlPanelEntityFeature.ARM_AWAY
+            | ESPHomeAlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+            | ESPHomeAlarmControlPanelEntityFeature.ARM_HOME
+            | ESPHomeAlarmControlPanelEntityFeature.ARM_NIGHT
+            | ESPHomeAlarmControlPanelEntityFeature.ARM_VACATION
+            | ESPHomeAlarmControlPanelEntityFeature.TRIGGER,
             requires_code=False,
             requires_code_to_arm=False,
         )

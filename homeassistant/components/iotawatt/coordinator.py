@@ -2,8 +2,10 @@
 
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from iotawattpy.iotawatt import Iotawatt
+from iotawattpy.sensor import Sensor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -22,7 +24,7 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 5
 type IotawattConfigEntry = ConfigEntry[IotawattUpdater]
 
 
-class IotawattUpdater(DataUpdateCoordinator):
+class IotawattUpdater(DataUpdateCoordinator[dict[str, dict[str, Sensor]]]):
     """Class to manage fetching update data from the IoTaWatt Energy Device."""
 
     api: Iotawatt | None = None
@@ -54,7 +56,8 @@ class IotawattUpdater(DataUpdateCoordinator):
         if self._last_run is None or last_run > self._last_run:
             self._last_run = last_run
 
-    async def _async_update_data(self):
+    @override
+    async def _async_update_data(self) -> dict[str, dict[str, Sensor]]:
         """Fetch sensors from IoTaWatt device."""
         if self.api is None:
             api = Iotawatt(
@@ -76,6 +79,9 @@ class IotawattUpdater(DataUpdateCoordinator):
 
             self.api = api
 
-        await self.api.update(lastUpdate=self._last_run)
+        try:
+            await self.api.update(lastUpdate=self._last_run)
+        except CONNECTION_ERRORS as err:
+            raise UpdateFailed("Connection failed") from err
         self._last_run = None
         return self.api.getSensors()

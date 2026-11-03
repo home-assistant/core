@@ -5,8 +5,10 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import stt
+from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,8 +23,6 @@ from . import (
     TTS_STREAMING_INFO,
     WAKE_WORD_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -40,7 +40,7 @@ async def init_components(hass: HomeAssistant):
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.wyoming.async_setup_entry", return_value=True
+        "homeassistant.components.wyoming.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -49,7 +49,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def stt_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -64,7 +64,7 @@ def stt_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def tts_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -79,7 +79,7 @@ def tts_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def wake_word_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -94,7 +94,7 @@ def wake_word_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def intent_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -109,7 +109,7 @@ def intent_config_entry(hass: HomeAssistant) -> ConfigEntry:
 def handle_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -221,7 +221,7 @@ def metadata(hass: HomeAssistant) -> stt.SpeechMetadata:
 def satellite_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,

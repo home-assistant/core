@@ -1,17 +1,20 @@
-"""The lock tests for the august platform."""
+"""Tests for the nexia climate platform."""
+
+from nexia.home import NexiaHome
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.core import HomeAssistant
 
-from .util import async_init_integration
+from .conftest import setup_integration
 
 
-async def test_climate_zones(hass: HomeAssistant) -> None:
+async def test_climate_zones(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:
     """Test creation climate zones."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, patch_nexia_home)
 
     state = hass.states.get("climate.nick_office_nick_office")
+    assert state is not None
     assert state.state == HVACMode.HEAT_COOL
     expected_attributes = {
         "attribution": "Data provided by Trane Technologies",
@@ -38,11 +41,11 @@ async def test_climate_zones(hass: HomeAssistant) -> None:
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(
-        state.attributes[key] == value for key, value in expected_attributes.items()
-    )
+    for key, value in expected_attributes.items():
+        assert state.attributes[key] == value, f"key = {key}"
 
     state = hass.states.get("climate.kitchen_kitchen")
+    assert state is not None
     assert state.state == HVACMode.HEAT_COOL
 
     expected_attributes = {
@@ -71,6 +74,5 @@ async def test_climate_zones(hass: HomeAssistant) -> None:
 
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(
-        state.attributes[key] == value for key, value in expected_attributes.items()
-    )
+    for key, value in expected_attributes.items():
+        assert state.attributes[key] == value, f"key = {key}"

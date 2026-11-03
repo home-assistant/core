@@ -5,7 +5,9 @@ from typing import Final
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from systembridgeconnector.const import EventKey, EventType
+from systembridgeconnector.models.fixtures.modules.audio import FIXTURE_AUDIO
 from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
 from systembridgeconnector.models.fixtures.modules.disks import FIXTURE_DISKS
@@ -40,8 +42,6 @@ from . import (
     mock_data_listener,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 REGISTER_MODULES: Final[list[Module]] = [
     Module.SYSTEM,
@@ -108,6 +108,7 @@ def mock_websocket_client(
         websocket_client = mock_websocket_client.return_value
         websocket_client.connected = False
         websocket_client.get_data.return_value = ModulesData(
+            audio=FIXTURE_AUDIO,
             battery=FIXTURE_BATTERY,
             cpu=FIXTURE_CPU,
             disks=FIXTURE_DISKS,
@@ -125,6 +126,54 @@ def mock_websocket_client(
             type=EventType.DATA_LISTENER_REGISTERED,
             message="Data listener registered",
             data={EventKey.MODULES: register_data_listener_model.modules},
+        )
+        websocket_client.open_url.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.OPENED,
+            message="Opened url",
+            data={"url": "https://example.com"},
+        )
+        websocket_client.open_path.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.OPENED,
+            message="Opened file",
+            data={"path": "/home/user/documents"},
+        )
+        websocket_client.power_shutdown.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.POWER_SHUTDOWN,
+            message="Shutdown",
+            data={},
+        )
+        websocket_client.keyboard_keypress.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.KEYBOARD_KEY_PRESSED,
+            message="Keyboard key pressed",
+            data={"key": "backspace"},
+        )
+        websocket_client.keyboard_text.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.KEYBOARD_TEXT_SENT,
+            message="Keyboard text sent",
+            data={"text": "Hello world"},
+        )
+        websocket_client.display_control.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.DISPLAY_CONTROLLED,
+            message="Display controlled",
+            data={},
+        )
+        websocket_client.media_control.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.MEDIA_CONTROLLED,
+            message="Media controlled",
+            data={},
+        )
+        websocket_client.audio_control.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.AUDIO_CONTROLLED,
+            message="Audio controlled",
+            data={},
         )
         # Trigger callback when listener is registered
         websocket_client.listen.side_effect = mock_data_listener

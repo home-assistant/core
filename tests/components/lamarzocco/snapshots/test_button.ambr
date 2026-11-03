@@ -2,7 +2,7 @@
 # name: test_start_backflush
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Start backflush',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Start backflush',
     }),
     'context': <ANY>,
     'entity_id': 'button.gs012345_start_backflush',
@@ -20,9 +20,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('lamarzocco', 'GS012345')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,

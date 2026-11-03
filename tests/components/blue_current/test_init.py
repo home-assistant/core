@@ -9,29 +9,22 @@ from bluecurrent_api.exceptions import (
     RequestLimitReached,
     WebsocketError,
 )
+from probatio import MultipleInvalid
 import pytest
-from voluptuous import MultipleInvalid
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.blue_current import async_setup_entry
-from homeassistant.components.blue_current.const import (
-    CHARGING_CARD_ID,
-    DOMAIN,
-    SERVICE_START_CHARGE_SESSION,
+from homeassistant.components.blue_current.const import DOMAIN
+from homeassistant.components.blue_current.services import (
+    BlueCurrentService,
+    BlueCurrentServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    IntegrationError,
-    ServiceValidationError,
-)
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(
@@ -59,29 +52,28 @@ async def test_load_unload_entry(
 
 
 @pytest.mark.parametrize(
-    ("api_error", "config_error"),
+    ("api_error", "config_state"),
     [
-        (InvalidApiToken, ConfigEntryAuthFailed),
-        (BlueCurrentException, ConfigEntryNotReady),
+        (InvalidApiToken, ConfigEntryState.SETUP_ERROR),
+        (BlueCurrentException, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_config_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     api_error: BlueCurrentException,
-    config_error: IntegrationError,
+    config_state: ConfigEntryState,
 ) -> None:
-    """Test if the correct config error is raised when connecting to the api fails."""
+    """Test if the correct config state is set when connecting to the api fails."""
     config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.blue_current.Client.validate_api_token",
-            side_effect=api_error,
-        ),
-        pytest.raises(config_error),
+    with patch(
+        "homeassistant.components.blue_current.Client.validate_api_token",
+        side_effect=api_error,
     ):
-        await async_setup_entry(hass, config_entry)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is config_state
 
 
 async def test_connect_websocket_error(
@@ -124,10 +116,10 @@ async def test_start_charging_action(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START_CHARGE_SESSION,
+        BlueCurrentService.START_CHARGE_SESSION,
         {
-            CONF_DEVICE_ID: list(device_registry.devices)[0],
-            CHARGING_CARD_ID: "TEST_CARD",
+            CONF_DEVICE_ID: list(device_registry._devices)[0],
+            BlueCurrentServiceArgument.CHARGING_CARD_ID: "TEST_CARD",
         },
         blocking=True,
     )
@@ -144,9 +136,9 @@ async def test_start_charging_action_without_card(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START_CHARGE_SESSION,
+        BlueCurrentService.START_CHARGE_SESSION,
         {
-            CONF_DEVICE_ID: list(device_registry.devices)[0],
+            CONF_DEVICE_ID: list(device_registry._devices)[0],
         },
         blocking=True,
     )
@@ -166,7 +158,7 @@ async def test_start_charging_action_errors(
         # No device id
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_CHARGE_SESSION,
+            BlueCurrentService.START_CHARGE_SESSION,
             {},
             blocking=True,
         )
@@ -175,7 +167,7 @@ async def test_start_charging_action_errors(
         # Invalid device id
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_CHARGE_SESSION,
+            BlueCurrentService.START_CHARGE_SESSION,
             {CONF_DEVICE_ID: "INVALID"},
             blocking=True,
         )
@@ -192,9 +184,9 @@ async def test_start_charging_action_errors(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_CHARGE_SESSION,
+            BlueCurrentService.START_CHARGE_SESSION,
             {
-                CONF_DEVICE_ID: list(device_registry.devices)[0],
+                CONF_DEVICE_ID: list(device_registry._devices)[0],
             },
             blocking=True,
         )
@@ -212,9 +204,9 @@ async def test_start_charging_action_errors(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_CHARGE_SESSION,
+            BlueCurrentService.START_CHARGE_SESSION,
             {
-                CONF_DEVICE_ID: list(device_registry.devices)[0],
+                CONF_DEVICE_ID: list(device_registry._devices)[0],
             },
             blocking=True,
         )

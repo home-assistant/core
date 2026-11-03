@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfRatio
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -70,6 +70,12 @@ SENSORS: tuple[GhostSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.members.get("comped", 0),
     ),
+    GhostSensorEntityDescription(
+        key="gift_members",
+        translation_key="gift_members",
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.members.get("gift", 0),
+    ),
     # Post metrics
     GhostSensorEntityDescription(
         key="published_posts",
@@ -123,7 +129,7 @@ SENSORS: tuple[GhostSensorEntityDescription, ...] = (
     GhostSensorEntityDescription(
         key="latest_email_open_rate",
         translation_key="latest_email_open_rate",
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda data: (
             data.latest_email.get("open_rate") if data.latest_email else None
         ),
@@ -139,7 +145,7 @@ SENSORS: tuple[GhostSensorEntityDescription, ...] = (
     GhostSensorEntityDescription(
         key="latest_email_click_rate",
         translation_key="latest_email_click_rate",
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda data: (
             data.latest_email.get("click_rate") if data.latest_email else None
         ),
@@ -299,6 +305,7 @@ class GhostSensorEntity(CoordinatorEntity[GhostDataUpdateCoordinator], SensorEnt
         )
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
@@ -339,6 +346,7 @@ class GhostNewsletterSensorEntity(
         return self.coordinator.data.newsletters.get(self._newsletter_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the entity is available."""
         return (
@@ -347,6 +355,7 @@ class GhostNewsletterSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the subscriber count for this newsletter."""
         if newsletter := self._get_newsletter_by_id():

@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from wyoming.asr import Transcript
+from wyoming.error import Error
 from wyoming.handle import Handled, NotHandled
 from wyoming.info import Info
 from wyoming.intent import Entity, Intent, IntentsStart, IntentsStop, NotRecognized
@@ -63,6 +64,8 @@ async def test_intent(
             assert intent_obj.slots.get("entity", {}).get("value") == "value"
             assert intent_obj.satellite_id == satellite_id
             assert intent_obj.device_id == device_id
+            # Entities must be filtered by exposure to the conversation assistant
+            assert intent_obj.assistant == conversation.DOMAIN
             response = intent_obj.create_response()
 
             # Add parts to test response rendering
@@ -104,7 +107,7 @@ async def test_intent(
         "device_id": device_id,
     }
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "success"
     assert result.conversation_id == conversation_id
@@ -189,7 +192,7 @@ async def test_multiple_intents(
             device_id=device_id,
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.speech, "No speech"
 
     # Speech results are joined with newlines because punctuation would be
@@ -250,7 +253,7 @@ async def test_intent_handle_error(
             agent_id=agent_id,
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
 
 
@@ -306,7 +309,7 @@ async def test_multiple_intents_handle_error(
             agent_id=agent_id,
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
 
     # Ensure that no tool calls were recorded
@@ -334,7 +337,7 @@ async def test_not_recognized(
             agent_id=agent_id,
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "failure"
@@ -372,10 +375,46 @@ async def test_handle(hass: HomeAssistant, init_wyoming_handle: ConfigEntry) -> 
         "device_id": device_id,
     }
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "success"
     assert result.conversation_id == conversation_id
+
+
+async def test_handle_other_user(
+    hass: HomeAssistant, init_wyoming_handle: ConfigEntry
+) -> None:
+    """Test the text of a refused user is not sent to the service."""
+    agent_id = "conversation.test_handle"
+    conversation_id = "conversation-1234"
+
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        MockAsyncTcpClient([Handled(text="success").event()]),
+    ):
+        await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=conversation_id,
+            context=Context(user_id="owner-user-id"),
+            agent_id=agent_id,
+        )
+
+    client = MockAsyncTcpClient([Handled(text="success").event()])
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        client,
+    ):
+        result = await conversation.async_converse(
+            hass=hass,
+            text="other text",
+            conversation_id=conversation_id,
+            context=Context(user_id="other-user-id"),
+            agent_id=agent_id,
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert not client.written
 
 
 async def test_not_handled(
@@ -397,10 +436,80 @@ async def test_not_handled(
             agent_id=agent_id,
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "failure"
+
+
+@pytest.mark.usefixtures("init_wyoming_intent")
+@pytest.mark.parametrize(
+    ("error_code", "expected_message"),
+    [
+        pytest.param(None, "Error from Wyoming service: Boom!", id="without_code"),
+        pytest.param(
+            "IntentError",
+            "Error from Wyoming service: Boom! (code: IntentError)",
+            id="with_code",
+        ),
+    ],
+)
+async def test_error_event(
+    hass: HomeAssistant, error_code: str | None, expected_message: str
+) -> None:
+    """Test that an error event from the service is reported."""
+    agent_id = "conversation.test_intent"
+
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        MockAsyncTcpClient([Error(text="Boom!", code=error_code).event()]),
+    ):
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=None,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.UNKNOWN
+    assert result.response.speech, "No speech"
+    assert result.response.speech.get("plain", {}).get("speech") == expected_message
+
+
+@pytest.mark.usefixtures("init_wyoming_intent")
+async def test_error_event_discards_received_intents(hass: HomeAssistant) -> None:
+    """Test that intents received before an error event are not handled."""
+    agent_id = "conversation.test_intent"
+
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        MockAsyncTcpClient(
+            [
+                IntentsStart().event(),
+                Intent(name="TestIntent").event(),
+                Error(text="Boom!").event(),
+            ]
+        ),
+    ):
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=None,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.UNKNOWN
+    assert result.response.speech, "No speech"
+    assert (
+        result.response.speech.get("plain", {}).get("speech")
+        == "Error from Wyoming service: Boom!"
+    )
 
 
 async def test_connection_lost(
@@ -422,7 +531,7 @@ async def test_connection_lost(
             agent_id=agent_id,
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.UNKNOWN
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == snapshot
@@ -451,7 +560,7 @@ async def test_oserror(
             agent_id=agent_id,
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.UNKNOWN
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == snapshot

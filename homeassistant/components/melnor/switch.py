@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from melnor_bluetooth.device import Valve
 
@@ -14,7 +14,7 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import MelnorConfigEntry, MelnorDataUpdateCoordinator
+from .coordinator import MelnorConfigEntry
 from .entity import MelnorZoneEntity, get_entities_for_valves
 
 
@@ -70,25 +70,19 @@ class MelnorZoneSwitch(MelnorZoneEntity, SwitchEntity):
 
     entity_description: MelnorSwitchEntityDescription
 
-    def __init__(
-        self,
-        coordinator: MelnorDataUpdateCoordinator,
-        entity_description: MelnorSwitchEntityDescription,
-        valve: Valve,
-    ) -> None:
-        """Initialize a switch for a melnor device."""
-        super().__init__(coordinator, entity_description, valve)
-
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.entity_description.state_fn(self._valve)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.entity_description.on_off_fn(self._valve, True)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.entity_description.on_off_fn(self._valve, False)

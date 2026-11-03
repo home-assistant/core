@@ -14,15 +14,19 @@ from nextdns import (
     Settings,
 )
 import pytest
-
-from homeassistant.components.nextdns.const import CONF_PROFILE_ID, DOMAIN
-from homeassistant.const import CONF_API_KEY
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_array_fixture,
     load_json_object_fixture,
 )
+
+from homeassistant.components.nextdns.const import (
+    CONF_PROFILE_ID,
+    DOMAIN,
+    SUBENTRY_TYPE_PROFILE,
+)
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_API_KEY
 
 ANALYTICS = load_json_object_fixture("analytics.json", DOMAIN)
 ANALYTICS_DNSSEC = AnalyticsDnssec(**ANALYTICS["dnssec"])
@@ -41,20 +45,47 @@ SETTINGS = Settings(**load_json_object_fixture("settings.json", DOMAIN))
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.nextdns.async_setup_entry", return_value=True
+        "homeassistant.components.nextdns.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_subentries() -> list[ConfigSubentryData]:
+    """Return a list of mock subentries."""
+    return [
+        ConfigSubentryData(
+            data={CONF_PROFILE_ID: "xyz12"},
+            subentry_type=SUBENTRY_TYPE_PROFILE,
+            title="Fake Profile",
+            unique_id="xyz12",
+        )
+    ]
+
+
+@pytest.fixture
+def mock_config_entry(mock_subentries: list[ConfigSubentryData]) -> MockConfigEntry:
     """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="NextDNS",
+        data={CONF_API_KEY: "fake_api_key"},
+        entry_id="d9aa37407ddac7b964a99e86312288d6",
+        version=2,
+        subentries_data=mock_subentries,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_v1() -> MockConfigEntry:
+    """Return a v1 mocked config entry for migration testing."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="Fake Profile",
         unique_id="xyz12",
         data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
         entry_id="d9aa37407ddac7b964a99e86312288d6",
+        version=1,
     )
 
 
@@ -80,7 +111,11 @@ def mock_nextdns_client(mock_nextdns: AsyncMock) -> AsyncMock:
     client.get_analytics_protocols.return_value = ANALYTICS_PROTOCOLS
     client.get_analytics_status.return_value = ANALYTICS_STATUS
     client.get_profile_id = Mock(return_value="xyz12")
-    client.get_profile_name = Mock(return_value="Fake Profile")
+    client.get_profile_name = Mock(
+        side_effect=lambda profile_id: next(
+            profile.name for profile in client.profiles if profile.id == profile_id
+        )
+    )
     client.get_profiles.return_value = PROFILES
     client.get_settings.return_value = SETTINGS
     client.set_setting.return_value = True

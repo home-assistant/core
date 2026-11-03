@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
@@ -69,6 +70,7 @@ class RainMachineButton(RainMachineEntity, ButtonEntity):
 
     entity_description: RainMachineButtonDescription
 
+    @override
     async def async_press(self) -> None:
         """Send out a restart command."""
         try:

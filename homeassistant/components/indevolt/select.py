@@ -1,7 +1,7 @@
 """Select platform for Indevolt integration."""
 
 from dataclasses import dataclass, field
-from typing import Final
+from typing import Final, override
 
 from indevolt_api import IndevoltConfig, IndevoltEnergyMode
 
@@ -10,9 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IndevoltConfigEntry
 from .const import DOMAIN
-from .coordinator import IndevoltCoordinator
+from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 from .entity import IndevoltEntity
 
 PARALLEL_UPDATES = 0
@@ -81,6 +80,7 @@ class IndevoltSelectEntity(IndevoltEntity, SelectEntity):
         self._option_to_value = {v: k for k, v in description.value_to_option.items()}
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the currently selected option."""
         raw_value = self.coordinator.data.get(self.entity_description.read_key)
@@ -90,6 +90,7 @@ class IndevoltSelectEntity(IndevoltEntity, SelectEntity):
         return self.entity_description.value_to_option.get(raw_value)
 
     @property
+    @override
     def available(self) -> bool:
         """Return False when the device is in a mode that cannot be selected."""
         if not super().available:
@@ -98,6 +99,7 @@ class IndevoltSelectEntity(IndevoltEntity, SelectEntity):
         raw_value = self.coordinator.data.get(self.entity_description.read_key)
         return raw_value not in self.entity_description.unavailable_values
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select a new option."""
         value = self._option_to_value[option]
@@ -106,7 +108,9 @@ class IndevoltSelectEntity(IndevoltEntity, SelectEntity):
         )
 
         if success:
-            await self.coordinator.async_request_refresh()
+            self.coordinator.async_optimistic_update(
+                self.entity_description.read_key, value
+            )
 
         else:
             raise HomeAssistantError(

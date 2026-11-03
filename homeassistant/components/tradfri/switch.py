@@ -1,9 +1,8 @@
 """Support for IKEA Tradfri switches."""
 
-from collections.abc import Callable
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, override
 
-from pytradfri.command import Command
+from pytradfri.api.aiocoap_api import APIRequestProtocol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -42,7 +41,7 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
-        api: Callable[[Command | list[Command]], Any],
+        api: APIRequestProtocol,
         gateway_id: str,
     ) -> None:
         """Initialize a switch."""
@@ -52,26 +51,32 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
             gateway_id=gateway_id,
         )
 
+        if TYPE_CHECKING:
+            assert self._device.socket_control is not None
         self._device_control = self._device.socket_control
         self._device_data = self._device_control.sockets[0]
 
+    @override
     def _refresh(self) -> None:
         """Refresh the device."""
-        self._device_data = self.coordinator.data.socket_control.sockets[0]
+        self._device_data = self._device_control.sockets[0]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         if not self._device_data:
             return False
-        return cast(bool, self._device_data.state)
+        return self._device_data.state
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
         if not self._device_control:
             return
         await self._api(self._device_control.set_state(False))
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
         if not self._device_control:

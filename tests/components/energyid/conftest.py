@@ -4,17 +4,16 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.energyid.const import (
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
     DOMAIN,
 )
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

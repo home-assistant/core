@@ -1,6 +1,6 @@
 """Support for Satel Integra modifiable outputs represented as switches."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigSubentry
@@ -16,6 +16,7 @@ from .const import (
 )
 from .coordinator import SatelConfigEntry, SatelIntegraOutputsCoordinator
 from .entity import SatelIntegraEntity
+from .helpers import async_validate_command
 
 PARALLEL_UPDATES = 0
 
@@ -76,6 +77,7 @@ class SatelIntegraSwitch(
         self._attr_is_on = self._get_state_from_coordinator()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = self._get_state_from_coordinator()
@@ -85,26 +87,33 @@ class SatelIntegraSwitch(
         """Method to get switch state from coordinator data."""
         return self.coordinator.data.get(self._device_number)
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
+    async def _async_set_output(self, state: bool) -> None:
+        """Set the output state and validate the result returned by the panel."""
         if self._code is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="missing_output_access_code",
             )
 
-        await self._controller.set_output(self._code, self._device_number, True)
+        await async_validate_command(
+            self._controller.set_output(
+                self._code,
+                self._device_number,
+                state,
+                wait_for_result=True,
+            )
+        )
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the device on."""
+        await self._async_set_output(True)
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self._code is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="missing_output_access_code",
-            )
-
-        await self._controller.set_output(self._code, self._device_number, False)
+        await self._async_set_output(False)
         self._attr_is_on = False
         self.async_write_ha_state()

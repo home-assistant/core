@@ -1,5 +1,7 @@
 """Demo platform that offers a fake radio frequency entity."""
 
+from typing import override
+
 from rf_protocols import RadioFrequencyCommand
 
 from homeassistant.components import persistent_notification
@@ -9,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
+from .const import DOMAIN
 
 PARALLEL_UPDATES = 0
 
@@ -52,10 +54,12 @@ class DemoRadioFrequency(RadioFrequencyTransmitterEntity):
         self._attr_name = entity_name
 
     @property
+    @override
     def supported_frequency_ranges(self) -> list[tuple[int, int]]:
         """Return supported frequency ranges."""
         return [(300_000_000, 928_000_000)]
 
+    @override
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Send an RF command."""
         persistent_notification.async_create(

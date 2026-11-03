@@ -2,6 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
+from typing import override
 
 from pysmhi import (
     SMHIFireForecast,
@@ -62,6 +63,7 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
             session=aiohttp_client.async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> SMHIForecastData:
         """Fetch data from SMHI."""
         try:
@@ -73,7 +75,8 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
                 )
         except SmhiForecastException as ex:
             raise UpdateFailed(
-                "Failed to retrieve the forecast from the SMHI API"
+                translation_domain=DOMAIN,
+                translation_key="forecast_update_failed",
             ) from ex
 
         return SMHIForecastData(
@@ -108,6 +111,7 @@ class SMHIFireDataUpdateCoordinator(DataUpdateCoordinator[SMHIFireForecastData])
             session=aiohttp_client.async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> SMHIFireForecastData:
         """Fetch data from SMHI."""
         try:
@@ -120,7 +124,8 @@ class SMHIFireDataUpdateCoordinator(DataUpdateCoordinator[SMHIFireForecastData])
                 )
         except SmhiFireForecastException as ex:
             raise UpdateFailed(
-                "Failed to retrieve the forecast from the SMHI API"
+                translation_domain=DOMAIN,
+                translation_key="fire_forecast_update_failed",
             ) from ex
 
         return SMHIFireForecastData(

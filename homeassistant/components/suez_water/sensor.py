@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
-from typing import Any
+from typing import Any, override
 
 from pysuez.const import ATTRIBUTION
 
@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import CURRENCY_EURO, UnitOfVolume
 from homeassistant.core import HomeAssistant
@@ -41,8 +42,8 @@ SENSORS: tuple[SuezWaterSensorEntityDescription, ...] = (
     SuezWaterSensorEntityDescription(
         key="water_price",
         translation_key="water_price",
-        native_unit_of_measurement=CURRENCY_EURO,
-        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda suez_data: suez_data.price,
     ),
 )
@@ -86,6 +87,7 @@ class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -94,11 +96,13 @@ class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra state of the sensor."""
         return self.entity_description.attr_fn(self.coordinator.data)

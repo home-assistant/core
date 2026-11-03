@@ -1,14 +1,17 @@
 """Config flow for EDL21 integration."""
 
-import voluptuous as vol
+from typing import override
+
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.selector import SerialPortSelector
 
 from .const import CONF_SERIAL_PORT, DEFAULT_TITLE, DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SERIAL_PORT): str,
+        probatio.Required(CONF_SERIAL_PORT): SerialPortSelector(),
     }
 )
 
@@ -18,6 +21,7 @@ class EDL21ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

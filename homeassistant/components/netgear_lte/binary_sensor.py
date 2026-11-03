@@ -1,5 +1,7 @@
 """Support for Netgear LTE binary sensors."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -49,6 +51,7 @@ class NetgearLTEBinarySensor(LTEEntity, BinarySensorEntity):
     """Netgear LTE binary sensor entity."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return getattr(self.coordinator.data, self.entity_description.key)

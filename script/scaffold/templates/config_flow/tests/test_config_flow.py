@@ -30,7 +30,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
                 CONF_PASSWORD: "test-password",
             },
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Name of the device"
@@ -81,7 +80,6 @@ async def test_form_invalid_auth(
                 CONF_PASSWORD: "test-password",
             },
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Name of the device"
@@ -133,7 +131,6 @@ async def test_form_cannot_connect(
                 CONF_PASSWORD: "test-password",
             },
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Name of the device"

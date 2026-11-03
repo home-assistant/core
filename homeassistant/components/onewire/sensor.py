@@ -5,7 +5,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
 from aio_ownet.exceptions import OWServerReturnError
 
@@ -35,12 +35,8 @@ from .const import (
     PRECISION_MAPPING_FAMILY_28,
 )
 from .entity import OneWireEntity
-from .onewirehub import (
-    SIGNAL_NEW_DEVICE_CONNECTED,
-    OneWireConfigEntry,
-    OneWireHub,
-    OWDeviceDescription,
-)
+from .model import OWDeviceDescription
+from .onewirehub import SIGNAL_NEW_DEVICE_CONNECTED, OneWireConfigEntry, OneWireHub
 
 # the library uses non-persistent connections
 # and concurrent access to the bus is managed by the server
@@ -464,6 +460,7 @@ class OneWireSensorEntity(OneWireEntity, SensorEntity):
     """Implementation of a 1-Wire sensor."""
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the state of the entity."""
         if (state := self._state) is None:

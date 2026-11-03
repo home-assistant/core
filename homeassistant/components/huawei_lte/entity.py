@@ -1,6 +1,7 @@
 """Support for Huawei LTE routers."""
 
 from datetime import timedelta
+from typing import override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -29,11 +30,13 @@ class HuaweiLteBaseEntity(Entity):
         raise NotImplementedError
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return unique ID for entity."""
         return f"{self.router.config_entry.unique_id}-{self._device_unique_id}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the entity is available."""
         return self._available
@@ -42,6 +45,7 @@ class HuaweiLteBaseEntity(Entity):
         """Update state."""
         raise NotImplementedError
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect to update signals."""
         self.async_on_remove(
@@ -58,6 +62,7 @@ class HuaweiLteBaseEntityWithDevice(HuaweiLteBaseEntity):
     """Base entity with device info."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Get info for matching with parent router."""
         return DeviceInfo(

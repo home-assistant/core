@@ -1,6 +1,6 @@
 """oAuth2 functions and classes for Geocaching API integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.application_credentials import (
     AuthImplementation,
@@ -33,10 +33,12 @@ class GeocachingOAuth2Implementation(AuthImplementation):
         )
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": "*", "response_type": "code"}
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Initialize local Geocaching API auth implementation."""
         redirect_uri = external_data["state"]["redirect_uri"]
@@ -51,6 +53,7 @@ class GeocachingOAuth2Implementation(AuthImplementation):
         token["redirect_uri"] = redirect_uri
         return token
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
         data = {

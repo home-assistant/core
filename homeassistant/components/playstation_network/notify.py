@@ -1,7 +1,7 @@
 """Notify platform for PlayStation Network."""
 
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPClientError,
@@ -117,6 +117,7 @@ class PlaystationNetworkNotifyBaseEntity(PlaystationNetworkServiceEntity, Notify
             assert self.psn_group
         self.psn_group.send_message(message)
 
+    @override
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
 
@@ -194,6 +195,7 @@ class PlaystationNetworkDirectMessageNotifyEntity(PlaystationNetworkNotifyBaseEn
 
         super().__init__(coordinator, self.entity_description)
 
+    @override
     def _send_message(self, message: str) -> None:
         if not self.psn_group:
             self.psn_group = self.coordinator.psn.psn.group(

@@ -3,13 +3,12 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ourgroceries import ClientError, InvalidLoginException
 from homeassistant.components.ourgroceries.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload(
@@ -49,4 +48,22 @@ async def test_init_failure(
     ourgroceries_config_entry: MockConfigEntry | None,
 ) -> None:
     """Test an initialization error on integration load."""
-    assert ourgroceries_config_entry.state == status
+    assert ourgroceries_config_entry.state is status
+
+
+@pytest.mark.parametrize("exception", [InvalidLoginException])
+@pytest.mark.usefixtures("login_with_error", "setup_integration")
+async def test_init_invalid_login_starts_reauth(
+    hass: HomeAssistant,
+    ourgroceries_config_entry: MockConfigEntry,
+) -> None:
+    """Test an invalid login fails setup and starts a reauth flow."""
+    assert ourgroceries_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        ourgroceries_config_entry.reason
+        == "Login to OurGroceries failed because the username or password is incorrect"
+    )
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == ourgroceries_config_entry.entry_id

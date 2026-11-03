@@ -13,8 +13,6 @@ ATTR_LAST_SAVED_AT: Final = "last_saved_at"
 
 ATTR_DURATION: Final = "duration"
 ATTR_DISTANCE: Final = "distance"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_ELEVATION: Final = "elevation"
 ATTR_HEIGHT: Final = "height"
 ATTR_WEIGHT: Final = "weight"
 ATTR_BODY: Final = "body"

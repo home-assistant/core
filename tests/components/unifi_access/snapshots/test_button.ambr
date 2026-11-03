@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('unifi_access', 'door-002')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_button_entities[button.back_door_unlock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Back Door Unlock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Unlock',
     }),
     'context': <ANY>,
     'entity_id': 'button.back_door_unlock',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('unifi_access', 'door-001')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_button_entities[button.front_door_unlock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Front Door Unlock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Unlock',
     }),
     'context': <ANY>,
     'entity_id': 'button.front_door_unlock',

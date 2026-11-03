@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
 from pyuptimerobot.const import API_PATH_MONITOR_DETAIL
 
@@ -28,8 +29,6 @@ from .common import (
     mock_uptimerobot_api_response,
     setup_uptimerobot_integration,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_presentation(hass: HomeAssistant) -> None:
@@ -158,7 +157,7 @@ async def test_action_execution_failure(hass: HomeAssistant) -> None:
         )
 
     assert exc_info.value.translation_domain == "uptimerobot"
-    assert exc_info.value.translation_key == "api_exception"
+    assert exc_info.value.translation_key == "api_switch_exception"
     assert exc_info.value.translation_placeholders == {
         "error": "Generic UptimeRobot exception"
     }
@@ -186,7 +185,7 @@ async def test_switch_api_failure(hass: HomeAssistant) -> None:
         )
 
     assert exc_info.value.translation_domain == "uptimerobot"
-    assert exc_info.value.translation_key == "api_exception"
+    assert exc_info.value.translation_key == "api_switch_exception"
     assert exc_info.value.translation_placeholders == {
         "error": "Generic UptimeRobot exception"
     }

@@ -2,12 +2,12 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.landisgyr_heat_meter.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 API_HEAT_METER_SERVICE = (
     "homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService"
@@ -67,6 +67,14 @@ async def test_migrate_entry(
         DOMAIN,
         "landisgyr_heat_meter_987654321_measuring_range_m3ph",
         suggested_object_id="heat_meter_measuring_range",
+        config_entry=mock_entry,
+    )
+    # Entity already using the new unique ID format (no migration needed)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "12345_heat_usage_gj",
+        suggested_object_id="heat_meter_heat_usage_gj",
         config_entry=mock_entry,
     )
 

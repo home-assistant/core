@@ -2,12 +2,13 @@
 
 import logging
 import threading
+from typing import override
 from uuid import UUID
 
+import probatio
 from pygatt import BLEAddressType
 from pygatt.backends import Characteristic, GATTToolBackend
 from pygatt.exceptions import BLEError, NotConnectedError, NotificationTimeout
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -29,10 +30,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DEVICE = "device"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_MODEL = "model"
-
 BLE_TEMP_HANDLE = 0x24
 BLE_TEMP_UUID = "0000ff92-0000-1000-8000-00805f9b34fb"
 
@@ -45,8 +42,8 @@ SKIP_HANDLE_LOOKUP = True
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_MAC): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -63,8 +60,7 @@ def setup_platform(
     _LOGGER.debug("Setting up")
 
     mon = Monitor(hass, mac, name)
-    add_entities([SkybeaconTemp(name, mon)])
-    add_entities([SkybeaconHumid(name, mon)])
+    add_entities([SkybeaconTemp(name, mon), SkybeaconHumid(name, mon)])
 
     def monitor_stop(_service_or_event):
         """Stop the monitor thread."""
@@ -78,7 +74,6 @@ def setup_platform(
 class SkybeaconHumid(SensorEntity):
     """Representation of a Skybeacon humidity sensor."""
 
-    _attr_extra_state_attributes = {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, name: str, mon: Monitor) -> None:
@@ -87,6 +82,7 @@ class SkybeaconHumid(SensorEntity):
         self._attr_name = name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the device."""
         return self.mon.data["humid"]
@@ -96,7 +92,6 @@ class SkybeaconTemp(SensorEntity):
     """Representation of a Skybeacon temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_extra_state_attributes = {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(self, name: str, mon: Monitor) -> None:
@@ -105,6 +100,7 @@ class SkybeaconTemp(SensorEntity):
         self._attr_name = name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the device."""
         return self.mon.data["temp"]
@@ -124,6 +120,7 @@ class Monitor(threading.Thread, SensorEntity):
         self.keep_going = True
         self.event = threading.Event()
 
+    @override
     def run(self):
         """Thread that keeps connection alive."""
         cached_char = Characteristic(BLE_TEMP_UUID, BLE_TEMP_HANDLE)

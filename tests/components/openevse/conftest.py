@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -32,13 +31,13 @@ def mock_charger() -> Generator[MagicMock]:
             "model": "openevse_wifi_v1",
         }
         # Websocket support
-        charger.ws_start = MagicMock()
+        charger.ws_start = AsyncMock()
         charger.ws_disconnect = AsyncMock()
         charger.websocket = MagicMock()
         charger.callback = None
         # Status sensors
+        charger.state = "Charging"
         charger.status = "Charging"
-        charger.vehicle = True
         charger.mode = "STA"
         charger.charge_mode = "fast"
         charger.divertmode = "normal"
@@ -90,6 +89,26 @@ def mock_charger() -> Generator[MagicMock]:
         # System diagnostic sensors
         charger.uptime = 86400  # 1 day in seconds
         charger.freeram = 50000
+        # Binary sensors
+        charger.vehicle = True
+        charger.divert_active = False
+        charger.using_ethernet = False
+        charger.shaper_active = False
+        charger.has_limit = False
+        charger.mqtt_connected = False
+        charger.get_override_state = AsyncMock(return_value="auto")
+        charger.get_override = AsyncMock(
+            return_value={
+                "state": "active",
+                "charge_current": 32,
+                "max_current": 48,
+                "energy_limit": 10000,
+                "time_limit": 3600,
+                "auto_release": True,
+            }
+        )
+        charger.set_override = AsyncMock()
+        charger.clear_override = AsyncMock()
         yield charger
 
 
@@ -97,7 +116,7 @@ def mock_charger() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.openevse.async_setup_entry", return_value=True
+        "homeassistant.components.openevse.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

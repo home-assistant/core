@@ -1,6 +1,7 @@
 """Fixtures for National Weather Service tests."""
 
 import asyncio
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -14,6 +15,7 @@ def mock_simple_nws():
     # set RETRY_STOP and RETRY_INTERVAL to avoid retries inside pynws in tests
     with (
         patch("homeassistant.components.nws.SimpleNWS") as mock_nws,
+        patch("homeassistant.components.nws.coordinator.SimpleNWS", mock_nws),
         patch("homeassistant.components.nws.coordinator.RETRY_STOP", 0),
         patch("homeassistant.components.nws.coordinator.RETRY_INTERVAL", 0),
     ):
@@ -36,6 +38,7 @@ def mock_simple_nws_times_out():
     # set RETRY_STOP and RETRY_INTERVAL to avoid retries inside pynws in tests
     with (
         patch("homeassistant.components.nws.SimpleNWS") as mock_nws,
+        patch("homeassistant.components.nws.coordinator.SimpleNWS", mock_nws),
         patch("homeassistant.components.nws.coordinator.RETRY_STOP", 0),
         patch("homeassistant.components.nws.coordinator.RETRY_INTERVAL", 0),
     ):
@@ -53,6 +56,16 @@ def mock_simple_nws_times_out():
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock async_setup_entry."""
+    with patch(
+        "homeassistant.components.nws.async_setup_entry",
+        return_value=None,
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
 def mock_simple_nws_config():
     """Mock pynws SimpleNWS with default values in config_flow."""
     with patch("homeassistant.components.nws.config_flow.SimpleNWS") as mock_nws:
@@ -67,7 +80,7 @@ def mock_simple_nws_config():
 def no_sensor():
     """Remove sensors."""
     with patch(
-        "homeassistant.components.nws.sensor.async_setup_entry", return_value=True
+        "homeassistant.components.nws.sensor.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -76,6 +89,6 @@ def no_sensor():
 def no_weather():
     """Remove weather."""
     with patch(
-        "homeassistant.components.nws.weather.async_setup_entry", return_value=True
+        "homeassistant.components.nws.weather.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

@@ -4,9 +4,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
 import logging
-from typing import Final
+from typing import Final, override
 
 from aiohttp import ClientResponseError
+from pymiele import MieleDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -16,7 +17,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN, MieleAppliance
 from .coordinator import MieleConfigEntry
-from .entity import MieleDevice, MieleEntity
+from .entity import MieleEntity
 
 PARALLEL_UPDATES = 1
 
@@ -94,6 +95,7 @@ class MieleSelectMode(MieleEntity, SelectEntity):
     entity_description: MieleSelectDescription
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the list of available options."""
         return sorted(
@@ -102,6 +104,7 @@ class MieleSelectMode(MieleEntity, SelectEntity):
         )
 
     @property
+    @override
     def current_option(self) -> str:
         """Retrieve currently selected option."""
         # There is no direct mapping from Miele 3rd party API, so we infer the
@@ -122,6 +125,7 @@ class MieleSelectMode(MieleEntity, SelectEntity):
 
         return MieleModes.NORMAL.name.lower()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the selected option."""
         new_mode = MieleModes[option.upper()].value

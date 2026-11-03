@@ -3,9 +3,7 @@
 from collections.abc import Iterable
 import json
 import logging
-from typing import Any
-
-import voluptuous as vol
+from typing import Any, override
 
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
@@ -18,11 +16,9 @@ from homeassistant.components.remote import (
     RemoteEntityFeature,
 )
 from homeassistant.core import HassJob, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ACTIVITY_POWER_OFF,
@@ -32,8 +28,6 @@ from .const import (
     DOMAIN,
     HARMONY_OPTIONS_UPDATE,
     PREVIOUS_ACTIVE_ACTIVITY,
-    SERVICE_CHANGE_CHANNEL,
-    SERVICE_SYNC,
 )
 from .data import HarmonyConfigEntry, HarmonyData
 from .entity import HarmonyEntity
@@ -43,12 +37,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # We want to fire remote commands right away
 PARALLEL_UPDATES = 0
-
-ATTR_CHANNEL = "channel"
-
-HARMONY_CHANGE_CHANNEL_SCHEMA: VolDictType = {
-    vol.Required(ATTR_CHANNEL): cv.positive_int,
-}
 
 
 async def async_setup_entry(
@@ -67,17 +55,6 @@ async def async_setup_entry(
     harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
     device = HarmonyRemote(data, default_activity, delay_secs, harmony_conf_file)
     async_add_entities([device])
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SYNC,
-        None,
-        "sync",
-    )
-    platform.async_register_entity_service(
-        SERVICE_CHANGE_CHANNEL, HARMONY_CHANGE_CHANNEL_SCHEMA, "change_channel"
-    )
 
 
 class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
@@ -129,6 +106,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         self._activity_starting = None
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Complete the initialization."""
         await super().async_added_to_hass()
@@ -163,16 +141,19 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         self._last_activity = last_state.attributes[ATTR_LAST_ACTIVITY]
 
     @property
+    @override
     def current_activity(self):
         """Return the current activity."""
         return self._current_activity
 
     @property
+    @override
     def activity_list(self):
         """Return the available activities."""
         return self._data.activity_names
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Add platform specific attributes."""
         return {
@@ -182,6 +163,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         }
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return False if PowerOff is the current activity, otherwise True."""
         return self._current_activity not in [None, "PowerOff"]
@@ -210,6 +192,7 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
         self.async_new_activity(self._data.current_activity)
         await self.hass.async_add_executor_job(self.write_config_file)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start an activity from the Harmony device."""
         _LOGGER.debug("%s: Turn On", self._data.name)
@@ -229,10 +212,12 @@ class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):
                 "%s: No activity specified with turn_on service", self._data.name
             )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Start the PowerOff activity."""
         await self._data.async_power_off()
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands to one device."""
         _LOGGER.debug("%s: Send Command", self._data.name)

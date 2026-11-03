@@ -1,7 +1,7 @@
 """Data update coordinator for the Nextcloud integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from nextcloudmonitor import NextcloudMonitor, NextcloudMonitorError
 
@@ -69,6 +69,7 @@ class NextcloudDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 leaf = False
         return result
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch all Nextcloud data."""
 

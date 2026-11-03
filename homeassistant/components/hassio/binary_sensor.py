@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiohasupervisor.models import AddonState
 from aiohasupervisor.models.mounts import MountState
@@ -38,7 +39,6 @@ ADDON_ENTITY_DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_registry_enabled_default=False,
         key="state",
-        translation_key="state",
         value_fn=lambda entity: (
             entity.coordinator.data.addons[entity.addon_slug].addon.state
             == AddonState.STARTED
@@ -98,6 +98,7 @@ class HassioAddonBinarySensor(HassioAddonEntity, BinarySensorEntity):
     entity_description: HassioAddonBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self)
@@ -109,6 +110,7 @@ class HassioMountBinarySensor(HassioMountEntity, BinarySensorEntity):
     entity_description: HassioMountBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self)

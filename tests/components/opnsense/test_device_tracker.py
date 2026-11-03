@@ -1,70 +1,270 @@
 """The tests for the opnsense device tracker platform."""
 
+from datetime import timedelta
 from unittest import mock
 
+from aiopnsense import OPNsenseConnectionError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components import opnsense
-from homeassistant.components.device_tracker import legacy
-from homeassistant.components.opnsense import CONF_API_SECRET, DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.components import device_tracker
+from homeassistant.components.opnsense import OPNsenseRuntimeData
+from homeassistant.components.opnsense.const import DOMAIN
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from .const import ARP
 
 
-@pytest.fixture(name="mocked_opnsense")
-def mocked_opnsense():
-    """Mock for aiopnsense.OPNsenseClient."""
-    with mock.patch.object(opnsense, "OPNsenseClient") as mocked_opn:
-        yield mocked_opn
-
-
-async def test_get_scanner(
-    hass: HomeAssistant, mocked_opnsense, mock_device_tracker_conf: list[legacy.Device]
+@pytest.mark.usefixtures("mock_opnsense_client")
+async def test_device_tracker_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test creating an opnsense scanner."""
-    opnsense_client = mock.AsyncMock()
-    mocked_opnsense.return_value = opnsense_client
-    opnsense_client.get_arp_table.return_value = [
-        {
-            "hostname": "",
-            "intf": "igb1",
-            "intf_description": "LAN",
-            "ip": "192.168.0.123",
-            "mac": "ff:ff:ff:ff:ff:ff",
-            "manufacturer": "",
-        },
-        {
-            "hostname": "Desktop",
-            "intf": "igb1",
-            "intf_description": "LAN",
-            "ip": "192.168.0.167",
-            "mac": "ff:ff:ff:ff:ff:fe",
-            "manufacturer": "OEM",
-        },
+    """Test device tracker platform setup."""
+
+    # Setup the integration
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check that device tracker entities are created
+    device_tracker_entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    device_tracker_entities = [
+        entity
+        for entity in device_tracker_entities
+        if entity.domain == device_tracker.DOMAIN
     ]
 
-    opnsense_client.get_interfaces.return_value = {
-        "wan": {"name": "WAN"},
-        "lan": {"name": "LAN"},
+    # Should have 2 devices from ARP table
+    assert len(device_tracker_entities) == 2
+
+    # Check the unique IDs are correct
+    entity_unique_ids = {entity.unique_id for entity in device_tracker_entities}
+    assert "ff:ff:ff:ff:ff:ff" in entity_unique_ids
+    assert "ff:ff:ff:ff:ff:fe" in entity_unique_ids
+
+
+@pytest.mark.usefixtures("mock_opnsense_client")
+async def test_device_tracker_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test device tracker entity states and attributes."""
+    # Setup the integration
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_tracker_entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    device_tracker_entities = [
+        entity
+        for entity in device_tracker_entities
+        if entity.domain == device_tracker.DOMAIN
+    ]
+    entity_ids_by_unique_id = {
+        entity.unique_id: entity.entity_id for entity in device_tracker_entities
     }
 
-    result = await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_URL: "https://fake_host_fun/api",
-                CONF_API_KEY: "fake_key",
-                CONF_API_SECRET: "fake_secret",
-                CONF_VERIFY_SSL: False,
-            }
+    # Enable entities (device trackers are disabled by default)
+    entity_registry.async_update_entity(
+        entity_ids_by_unique_id["ff:ff:ff:ff:ff:ff"], disabled_by=None
+    )
+    entity_registry.async_update_entity(
+        entity_ids_by_unique_id["ff:ff:ff:ff:ff:fe"], disabled_by=None
+    )
+
+    # Reload the config entry to activate the enabled entities
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Test first device (no hostname)
+    entity_id_1 = entity_ids_by_unique_id["ff:ff:ff:ff:ff:ff"]
+    state_1 = hass.states.get(entity_id_1)
+    assert state_1 is not None
+    assert state_1.state == "home"  # Should be connected since it's in ARP table
+    assert state_1.attributes.get("ip") == "192.168.0.123"
+    assert state_1.attributes.get("mac") == "ff:ff:ff:ff:ff:ff"
+
+    # Test second device (with hostname and manufacturer)
+    entity_id_2 = entity_ids_by_unique_id["ff:ff:ff:ff:ff:fe"]
+    state_2 = hass.states.get(entity_id_2)
+    assert state_2 is not None
+    assert state_2.state == "home"  # Should be connected since it's in ARP table
+    assert state_2.attributes.get("ip") == "192.168.0.167"
+    assert state_2.attributes.get("mac") == "ff:ff:ff:ff:ff:fe"
+
+
+async def test_device_tracker_with_interfaces_filter(
+    hass: HomeAssistant,
+    mock_opnsense_client: mock.AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test device tracker with interface filtering."""
+    # Create config entry with interface filtering
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "http://router.lan/api",
+            "api_key": "key",
+            "api_secret": "secret",
+            "verify_ssl": False,
+            "tracker_interfaces": ["WAN"],  # Filter to only WAN interface
         },
     )
+    mock_config_entry.runtime_data = OPNsenseRuntimeData(
+        client=mock_opnsense_client.return_value,
+        tracker_interfaces=["WAN"],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    # Setup the integration
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert result
-    device_1 = hass.states.get("device_tracker.desktop")
-    assert device_1 is not None
-    assert device_1.state == "home"
-    device_2 = hass.states.get("device_tracker.ff_ff_ff_ff_ff_ff")
-    assert device_2.state == "home"
+
+    # Check that no device tracker entities are created (since all devices are on LAN)
+    device_tracker_entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    device_tracker_entities = [
+        entity
+        for entity in device_tracker_entities
+        if entity.domain == device_tracker.DOMAIN
+    ]
+
+    assert len(device_tracker_entities) == 0
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_coordinator_update_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: mock.AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator wraps client errors as UpdateFailed."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.desktop").state != STATE_UNAVAILABLE
+
+    mock_opnsense_client.get_arp_table.side_effect = OPNsenseConnectionError(
+        "connection failed"
+    )
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.desktop").state == STATE_UNAVAILABLE
+
+    assert mock_opnsense_client.get_arp_table.call_count == 2
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_device_names(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: mock.AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the hostname names the device, and hostname changes rename it."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # A client without a hostname names its device by its MAC address
+    no_hostname_entity_id = "device_tracker.ff_ff_ff_ff_ff_ff"
+    hostname_entity_id = "device_tracker.desktop"
+    no_hostname_entry = entity_registry.async_get(no_hostname_entity_id)
+    hostname_entry = entity_registry.async_get(hostname_entity_id)
+    assert no_hostname_entry is not None
+    assert hostname_entry is not None
+    assert hostname_entry.original_name is None
+    no_hostname_device = device_registry.async_get(no_hostname_entry.device_id)
+    hostname_device = device_registry.async_get(hostname_entry.device_id)
+    assert no_hostname_device is not None
+    assert hostname_device is not None
+    assert no_hostname_device.name == "ff:ff:ff:ff:ff:ff"
+    assert no_hostname_device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "ff:ff:ff:ff:ff:ff")
+    }
+    assert hostname_device.name == "Desktop"
+    assert hostname_device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "ff:ff:ff:ff:ff:fe")
+    }
+    assert (
+        hass.states.get(no_hostname_entity_id).attributes[ATTR_FRIENDLY_NAME]
+        == "ff:ff:ff:ff:ff:ff"
+    )
+    assert (
+        hass.states.get(hostname_entity_id).attributes[ATTR_FRIENDLY_NAME] == "Desktop"
+    )
+
+    mock_opnsense_client.get_arp_table.return_value = [
+        {**ARP[0], "hostname": "Laptop"},
+        {**ARP[1], "hostname": "Workstation"},
+    ]
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(no_hostname_device.id).name == "Laptop"
+    assert device_registry.async_get(hostname_device.id).name == "Workstation"
+    assert (
+        hass.states.get(no_hostname_entity_id).attributes[ATTR_FRIENDLY_NAME]
+        == "Laptop"
+    )
+    assert (
+        hass.states.get(hostname_entity_id).attributes[ATTR_FRIENDLY_NAME]
+        == "Workstation"
+    )
+
+    # Offline clients and clients losing their hostname keep their device name
+    mock_opnsense_client.get_arp_table.return_value = [ARP[0]]
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(no_hostname_device.id).name == "Laptop"
+    assert device_registry.async_get(hostname_device.id).name == "Workstation"
+    state = hass.states.get(no_hostname_entity_id)
+    assert state.state == STATE_HOME
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Laptop"
+    state = hass.states.get(hostname_entity_id)
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Workstation"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_reload_without_hostname_keeps_device_name(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: mock.AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a client without hostname on reload keeps its device name."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_opnsense_client.get_arp_table.return_value = [{**ARP[1], "hostname": ""}]
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, ARP[1]["mac"]), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == "Desktop"

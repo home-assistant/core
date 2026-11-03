@@ -1,8 +1,10 @@
 {
   "domain": "guntamatic",
   "name": "Guntamatic",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@JensTimmerman"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": [],
   "dhcp": [
     {
@@ -14,5 +16,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "silver",
-  "requirements": ["guntamatic==1.8.0"]
+  "requirements": ["guntamatic==1.12.0"]
 }

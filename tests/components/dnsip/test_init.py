@@ -1,11 +1,10 @@
 """Test for DNS IP integration Init."""
 
-import asyncio
 from unittest.mock import patch
 
 from aiodns.error import DNSError
-from pycares import AresError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dnsip.const import (
     CONF_HOSTNAME,
@@ -22,8 +21,6 @@ from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from . import RetrieveDNS
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(hass: HomeAssistant) -> None:
@@ -180,8 +177,6 @@ async def test_migrate_error_from_future(hass: HomeAssistant) -> None:
     [
         TimeoutError(),
         DNSError(),
-        AresError(),
-        asyncio.CancelledError(),
     ],
 )
 async def test_setup_dns_error(hass: HomeAssistant, error: Exception) -> None:

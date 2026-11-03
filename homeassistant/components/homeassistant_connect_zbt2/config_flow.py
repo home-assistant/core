@@ -1,9 +1,7 @@
 """Config flow for the Home Assistant Connect ZBT-2 integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any, Protocol
-
-from universal_silabs_flasher.flasher import Zbt2Flasher
+from typing import TYPE_CHECKING, Any, Protocol, override
 
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import firmware_config_flow
@@ -13,6 +11,7 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
 )
 from homeassistant.components.usb import usb_service_info_from_device
 from homeassistant.config_entries import (
@@ -72,7 +71,7 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     context: ConfigFlowContext
 
     ZIGBEE_BAUDRATE = 460800
-    _flasher_cls = Zbt2Flasher
+    _flasher_type = FlasherType.ZBT2
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -119,12 +118,14 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Return the options flow."""
         return HomeAssistantConnectZBT2OptionsFlowHandler(config_entry)
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         discovery_info.device = await self.hass.async_add_executor_job(
@@ -163,6 +164,7 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
         return self._async_flow_finished()
 
+    @override
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
         assert self._usb_info is not None
@@ -207,6 +209,7 @@ class HomeAssistantConnectZBT2OptionsFlowHandler(
         # Regenerate the translation placeholders
         self._get_translation_placeholders()
 
+    @override
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
         assert self._probed_firmware_info is not None

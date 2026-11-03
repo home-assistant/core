@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 from time import time
+from typing import override
 
 from lacrosse_view import HTTPError, LaCrosse, Location, LoginError, Sensor
 
@@ -50,6 +51,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
+    @override
     async def _async_update_data(self) -> list[Sensor]:
         """Get the data for LaCrosse View."""
         now = int(time())

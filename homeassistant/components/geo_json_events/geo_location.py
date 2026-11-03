@@ -1,8 +1,7 @@
 """Support for generic GeoJSON events."""
 
-from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_geojson_generic_client.feed_entry import GenericFeedEntry
 
@@ -61,27 +60,28 @@ class GeoJsonLocationEvent(GeolocationEvent):
         self._feed_manager = feed_manager
         self._external_id = external_id
         self._attr_unique_id = f"{feed_manager.entry_id}_{external_id}"
-        self._remove_signal_delete: Callable[[], None]
-        self._remove_signal_update: Callable[[], None]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        self._remove_signal_delete = async_dispatcher_connect(
-            self.hass,
-            SIGNAL_DELETE_ENTITY.format(self._external_id),
-            self._delete_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_DELETE_ENTITY.format(self._external_id),
+                self._delete_callback,
+            )
         )
-        self._remove_signal_update = async_dispatcher_connect(
-            self.hass,
-            SIGNAL_UPDATE_ENTITY.format(self._external_id),
-            self._update_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_UPDATE_ENTITY.format(self._external_id),
+                self._update_callback,
+            )
         )
 
     @callback
     def _delete_callback(self) -> None:
         """Remove this entity."""
-        self._remove_signal_delete()
-        self._remove_signal_update()
         self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @callback
@@ -108,6 +108,7 @@ class GeoJsonLocationEvent(GeolocationEvent):
         self._attr_longitude = feed_entry.coordinates[1]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         if not self._external_id:

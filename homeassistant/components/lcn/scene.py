@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 import pypck
 
@@ -88,6 +88,7 @@ class LcnScene(LcnEntity, Scene):
                 config[CONF_DOMAIN_DATA][CONF_TRANSITION] * 1000.0
             )
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
         await self.device_connection.activate_scene(

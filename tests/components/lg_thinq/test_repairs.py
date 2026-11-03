@@ -3,20 +3,18 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.lg_thinq.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize("device_fixture", ["hood"])
@@ -61,9 +59,9 @@ async def test_deprecated_fan_speed_number_repair_flow(
     )
     assert issue is not None
     assert issue.is_fixable is True
+    assert issue.config_entry_id == mock_config_entry.entry_id
 
     # Start the repair flow
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
     result = await start_repair_fix_flow(
         client, DOMAIN, f"deprecated_fan_speed_number_{entity_id}"

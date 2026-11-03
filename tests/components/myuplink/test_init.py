@@ -6,6 +6,9 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.myuplink.const import DOMAIN, OAUTH2_TOKEN
@@ -19,10 +22,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import UNIQUE_ID
-
-from tests.common import MockConfigEntry, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 
 async def test_load_unload_entry(
@@ -216,25 +215,22 @@ async def test_device_remove_devices(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
-            )
-        },
+    device_entry = device_registry.async_get_device_by_identifier(
+        (
+            DOMAIN,
+            "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
+        ),
+        mock_config_entry.entry_id,
     )
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, mock_config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     old_device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "OLD-DEVICE-UUID")},
     )
-    response = await client.remove_device(
-        old_device_entry.id, mock_config_entry.entry_id
-    )
+    response = await client.remove_device(old_device_entry.id)
     assert response["success"]
 
 
@@ -277,6 +273,8 @@ async def test_device_info(
 ) -> None:
     """Test device registry integration."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), mock_config_entry.entry_id
+    )
     assert device_entry is not None
     assert device_entry == snapshot

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from azure.eventhub.exceptions import EventHubError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import azure_event_hub
 from homeassistant.components.azure_event_hub.const import CONF_SEND_INTERVAL, DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import FilterTest
 from .const import AZURE_EVENT_HUB_PATH, BASIC_OPTIONS, CS_CONFIG_FULL, SAS_CONFIG_FULL
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 

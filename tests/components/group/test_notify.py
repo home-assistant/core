@@ -6,6 +6,17 @@ from typing import Any
 from unittest.mock import MagicMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    get_fixture_path,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 
 from homeassistant import config as hass_config
 from homeassistant.components import notify
@@ -28,18 +39,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    MockPlatform,
-    get_fixture_path,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
-)
 
 
 class MockNotifyPlatform(MockPlatform):
@@ -111,7 +110,7 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
     """Test sending a message with to a notify group."""
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {},
     )
     await hass.async_block_till_done()
@@ -211,7 +210,7 @@ async def test_invalid_configuration(
     """Test failing to set up group with an invalid configuration."""
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {},
     )
     await hass.async_block_till_done()
@@ -244,7 +243,7 @@ async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
     """Verify we can reload the notify service."""
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {},
     )
     await hass.async_block_till_done()
@@ -270,7 +269,7 @@ async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
 
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "group",
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -313,19 +312,18 @@ class MockNotifyEntity(MockEntity, NotifyEntity):
 
 async def help_async_setup_entry_init(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
+) -> None:
     """Set up test config entry."""
     await hass.config_entries.async_forward_entry_setups(
         config_entry, [Platform.NOTIFY]
     )
-    return True
 
 
 async def help_async_unload_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
+) -> None:
     """Unload test config entry."""
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         config_entry, [Platform.NOTIFY]
     )
 

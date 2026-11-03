@@ -1,6 +1,6 @@
 """Support for Modbus fans."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import CONF_NAME
@@ -42,6 +42,7 @@ class ModbusFan(ModbusToggleEntity, FanEntity):
                 FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
             )
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -52,6 +53,7 @@ class ModbusFan(ModbusToggleEntity, FanEntity):
         await self.async_turn(self.command_on)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if fan is on.
 

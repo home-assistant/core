@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock, patch
 
 from meteo_lt import Forecast, MeteoLtAPI, Place
 import pytest
-
-from homeassistant.components.meteo_lt.const import CONF_PLACE_CODE, DOMAIN
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_array_fixture,
     load_json_object_fixture,
 )
+
+from homeassistant.components.meteo_lt.const import CONF_PLACE_CODE, DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -38,9 +37,9 @@ def mock_meteo_lt_api() -> Generator[AsyncMock]:
         mock_api.places = mock_places
         mock_api.fetch_places.return_value = None
 
-        mock_forecast = Forecast.from_dict(forecast_data)
-
-        mock_api.get_forecast.return_value = mock_forecast
+        mock_api.get_forecast.side_effect = lambda *args, **kwargs: Forecast.from_dict(
+            forecast_data
+        )
 
         # Mock get_nearest_place to return Vilnius
         mock_api.get_nearest_place.return_value = mock_places[0]
@@ -52,7 +51,7 @@ def mock_meteo_lt_api() -> Generator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.meteo_lt.async_setup_entry", return_value=True
+        "homeassistant.components.meteo_lt.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

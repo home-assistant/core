@@ -159,6 +159,22 @@ def test_fetch_package_info_no_files_yields_no_provenance_url(
         ),
         pytest.param(
             {
+                "Homepage": "https://github.com/foo/baz",
+                "GitLab": "https://gitlab.com/foo/bar",
+            },
+            "https://gitlab.com/foo/bar",
+            id="gitlab-key-outranks-homepage",
+        ),
+        pytest.param(
+            {
+                "Homepage": "https://github.com/foo/baz",
+                "Codeberg": "https://codeberg.org/foo/bar",
+            },
+            "https://codeberg.org/foo/bar",
+            id="codeberg-key-outranks-homepage",
+        ),
+        pytest.param(
+            {
                 "Funding": "https://opencollective.com/foo",
                 "Documentation": "https://github.com/foo/bar",
             },
@@ -175,6 +191,11 @@ def test_fetch_package_info_no_files_yields_no_provenance_url(
             {"Source": "https://github.com.evil.com/foo/bar"},
             None,
             id="rejects-host-suffix-lookalike",
+        ),
+        pytest.param(
+            {"Source": "https://codeberg.org.evil.com/foo/bar"},
+            None,
+            id="rejects-codeberg-host-suffix-lookalike",
         ),
         pytest.param(
             {"Source": "https://evil.com/?x=github.com"},
@@ -202,6 +223,85 @@ def test_fetch_package_info_picks_repo_url_from_project_urls(
     info = fetch_package_info("foo", "1.0")
 
     assert info.repo_url == expected_repo_url
+
+
+def test_fetch_package_info_extracts_yanked_fields(
+    requests_mock: rm.Mocker,
+) -> None:
+    """The fetcher lifts `yanked` and `yanked_reason` from PyPI."""
+    requests_mock.get(
+        _versioned_url("foo", "1.0"),
+        json={
+            "info": {
+                "project_urls": {},
+                "yanked": True,
+                "yanked_reason": "broken on 3.14",
+            },
+            "urls": [],
+        },
+    )
+
+    info = fetch_package_info("foo", "1.0")
+
+    assert info.found is True
+    assert info.yanked is True
+    assert info.yanked_reason == "broken on 3.14"
+
+
+def test_fetch_package_info_extracts_vulnerabilities(
+    requests_mock: rm.Mocker,
+) -> None:
+    """Active OSV / GHSA / CVE advisories on PyPI are surfaced and parsed."""
+    requests_mock.get(
+        _versioned_url("foo", "1.0"),
+        json={
+            "info": {"project_urls": {}},
+            "urls": [],
+            "vulnerabilities": [
+                {
+                    "id": "GHSA-aaaa-bbbb-cccc",
+                    "aliases": ["CVE-2099-12345"],
+                    "summary": "remote code execution",
+                    "fixed_in": ["1.1", "1.2"],
+                    "link": "https://osv.dev/vulnerability/GHSA-aaaa-bbbb-cccc",
+                    "withdrawn": None,
+                },
+                {
+                    "id": "GHSA-dddd-eeee-ffff",
+                    "aliases": [],
+                    "summary": "withdrawn advisory",
+                    "fixed_in": [],
+                    "link": "https://osv.dev/vulnerability/GHSA-dddd-eeee-ffff",
+                    "withdrawn": "2024-01-01T00:00:00Z",
+                },
+            ],
+        },
+    )
+
+    info = fetch_package_info("foo", "1.0")
+
+    # The withdrawn advisory is filtered out.
+    assert len(info.vulnerabilities) == 1
+    vuln = info.vulnerabilities[0]
+    assert vuln.id == "GHSA-aaaa-bbbb-cccc"
+    assert vuln.aliases == ("CVE-2099-12345",)
+    assert vuln.fixed_in == ("1.1", "1.2")
+    assert "remote code execution" in vuln.summary
+
+
+def test_fetch_package_info_defaults_when_yanked_fields_absent(
+    requests_mock: rm.Mocker,
+) -> None:
+    """Missing `yanked` keys default to False / None."""
+    requests_mock.get(
+        _versioned_url("foo", "1.0"),
+        json={"info": {"project_urls": {}}, "urls": []},
+    )
+
+    info = fetch_package_info("foo", "1.0")
+
+    assert info.yanked is False
+    assert info.yanked_reason is None
 
 
 def test_fetch_package_info_strips_dangerous_chars_from_repo_url(

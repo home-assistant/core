@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from simplipy.errors import SimplipyError
 from simplipy.system import System
@@ -76,6 +77,7 @@ class SimpliSafeButton(SimpliSafeEntity, ButtonEntity):
 
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Send out a restart command."""
         try:

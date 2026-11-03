@@ -13,11 +13,8 @@ from pyoverkiz.enums import (
 )
 
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
     Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -26,6 +23,7 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -38,12 +36,19 @@ LOGGER: logging.Logger = logging.getLogger(__package__)
 
 CONF_API_TYPE: Final = "api_type"
 CONF_HUB: Final = "hub"
-DEFAULT_SERVER: Final = Server.SOMFY_EUROPE
+CONF_GATEWAY_ID: Final = "gateway_id"
+CONF_REFRESH_TOKEN: Final = "refresh_token"
+CONF_SITE_OID: Final = "site_oid"
+DEFAULT_SERVER: Final = Server.SOMFY
 DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_LOCAL: Final = timedelta(seconds=5)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
+UPDATE_INTERVAL_SAUTER_SMART_CONTROL: Final = timedelta(seconds=25)
+# fetch_events allows 1 call per second, and refresh timing jitters, so leave margin.
+UPDATE_INTERVAL_EXECUTION: Final = timedelta(seconds=2)
+RATE_LIMIT_RETRY_AFTER: Final = timedelta(minutes=1)
 
 PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
@@ -51,6 +56,7 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
@@ -87,6 +93,7 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIClass.SWIMMING_POOL: Platform.SWITCH,
     UIClass.SWINGING_SHUTTER: Platform.COVER,
     UIClass.VENETIAN_BLIND: Platform.COVER,
+    UIClass.VENTILATION_SYSTEM: Platform.FAN,
     UIClass.WINDOW: Platform.COVER,
     UIWidget.ALARM_PANEL_CONTROLLER: Platform.ALARM_CONTROL_PANEL,
     UIWidget.ATLANTIC_ELECTRICAL_HEATER: Platform.CLIMATE,
@@ -118,7 +125,8 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIWidget.STATELESS_ALARM_CONTROLLER: Platform.SWITCH,
     UIWidget.STATEFUL_ALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,
     UIWidget.STATELESS_EXTERIOR_HEATING: Platform.SWITCH,
-    UIWidget.TSKALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,
+    UIWidget.THERMOSTAT_HEATING_TEMPERATURE_INTERFACE: Platform.CLIMATE,
+    UIWidget.TSK_ALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,
     UIWidget.VALVE_HEATING_TEMPERATURE_INTERFACE: Platform.CLIMATE,
 }
 
@@ -162,19 +170,19 @@ OVERKIZ_UNIT_TO_HA: dict[str, str] = {
     ),
     MeasuredValueType.FOSSIL_ENERGY_IN_WH: UnitOfEnergy.WATT_HOUR,
     MeasuredValueType.GRADIENT_IN_PERCENTAGE_PER_SECOND: (
-        f"{PERCENTAGE}/{UnitOfTime.SECONDS}"
+        f"{UnitOfRatio.PERCENTAGE}/{UnitOfTime.SECONDS}"
     ),
     MeasuredValueType.LENGTH_IN_METER: UnitOfLength.METERS,
     MeasuredValueType.LINEAR_SPEED_IN_METER_PER_SECOND: UnitOfSpeed.METERS_PER_SECOND,
     MeasuredValueType.LUMINANCE_IN_LUX: LIGHT_LUX,
-    MeasuredValueType.PARTS_PER_BILLION: CONCENTRATION_PARTS_PER_BILLION,
-    MeasuredValueType.PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
+    MeasuredValueType.PARTS_PER_BILLION: UnitOfRatio.PARTS_PER_BILLION,
+    MeasuredValueType.PARTS_PER_MILLION: UnitOfRatio.PARTS_PER_MILLION,
     MeasuredValueType.PARTS_PER_QUADRILLION: "ppq",
     MeasuredValueType.PARTS_PER_TRILLION: "ppt",
     MeasuredValueType.POWER_PER_SQUARE_METER: UnitOfIrradiance.WATTS_PER_SQUARE_METER,
     MeasuredValueType.PRESSURE_IN_HPA: UnitOfPressure.HPA,
     MeasuredValueType.PRESSURE_IN_MILLI_BAR: UnitOfPressure.MBAR,
-    MeasuredValueType.RELATIVE_VALUE_IN_PERCENTAGE: PERCENTAGE,
+    MeasuredValueType.RELATIVE_VALUE_IN_PERCENTAGE: UnitOfRatio.PERCENTAGE,
     MeasuredValueType.TEMPERATURE_IN_CELCIUS: UnitOfTemperature.CELSIUS,
     MeasuredValueType.TEMPERATURE_IN_KELVIN: UnitOfTemperature.KELVIN,
     MeasuredValueType.TIME_IN_SECOND: UnitOfTime.SECONDS,

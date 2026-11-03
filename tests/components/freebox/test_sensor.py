@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -15,8 +16,6 @@ from .const import (
     DATA_HOME_GET_NODES,
     DATA_STORAGE_GET_DISKS,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_network_speed(
@@ -100,6 +99,13 @@ async def test_temperature(hass: HomeAssistant, router: Mock) -> None:
     assert hass.states.get("sensor.freebox_server_r2_temperature_switch").state == "50"
     assert hass.states.get("sensor.freebox_server_r2_temperature_cpu_m").state == "60"
     assert hass.states.get("sensor.freebox_server_r2_temperature_cpu_b").state == "56"
+
+
+async def test_fan(hass: HomeAssistant, router: Mock) -> None:
+    """Test fan speed sensors expose API names and values."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    assert hass.states.get("sensor.freebox_server_r2_ventilateur_1").state == "2130"
 
 
 async def test_battery(

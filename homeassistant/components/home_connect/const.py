@@ -42,10 +42,19 @@ BSH_EVENT_PRESENT_STATE_CONFIRMED = "BSH.Common.EnumType.EventPresentState.Confi
 BSH_EVENT_PRESENT_STATE_OFF = "BSH.Common.EnumType.EventPresentState.Off"
 
 
+BSH_OPERATION_STATE_INACTIVE = "BSH.Common.EnumType.OperationState.Inactive"
+BSH_OPERATION_STATE_READY = "BSH.Common.EnumType.OperationState.Ready"
 BSH_OPERATION_STATE_DELAYED_START = "BSH.Common.EnumType.OperationState.DelayedStart"
 BSH_OPERATION_STATE_RUN = "BSH.Common.EnumType.OperationState.Run"
 BSH_OPERATION_STATE_PAUSE = "BSH.Common.EnumType.OperationState.Pause"
 BSH_OPERATION_STATE_FINISHED = "BSH.Common.EnumType.OperationState.Finished"
+
+# Option events that only describe the current run of the active program
+PROGRAM_PROGRESS_EVENT_KEYS = (
+    EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME,
+    EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS,
+    EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME,
+)
 
 
 REFRIGERATION_STATUS_DOOR_CLOSED = "Refrigeration.Common.EnumType.Door.States.Closed"
@@ -75,18 +84,36 @@ AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
 AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
 
 
+FAVORITE_PROGRAMS = {
+    ProgramKey.BSH_COMMON_FAVORITE_001,
+    ProgramKey.BSH_COMMON_FAVORITE_002,
+    ProgramKey.BSH_COMMON_FAVORITE_003,
+    ProgramKey.BSH_COMMON_FAVORITE_004,
+    ProgramKey.BSH_COMMON_FAVORITE_005,
+    ProgramKey.BSH_COMMON_FAVORITE_006,
+    ProgramKey.BSH_COMMON_FAVORITE_007,
+    ProgramKey.BSH_COMMON_FAVORITE_008,
+    ProgramKey.BSH_COMMON_FAVORITE_009,
+    ProgramKey.BSH_COMMON_FAVORITE_010,
+    ProgramKey.BSH_COMMON_FAVORITE_011,
+    ProgramKey.BSH_COMMON_FAVORITE_012,
+    ProgramKey.BSH_COMMON_FAVORITE_013,
+    ProgramKey.BSH_COMMON_FAVORITE_014,
+    ProgramKey.BSH_COMMON_FAVORITE_015,
+    ProgramKey.BSH_COMMON_FAVORITE_016,
+    ProgramKey.BSH_COMMON_FAVORITE_017,
+    ProgramKey.BSH_COMMON_FAVORITE_018,
+    ProgramKey.BSH_COMMON_FAVORITE_019,
+    ProgramKey.BSH_COMMON_FAVORITE_020,
+}
+
 TRANSLATION_KEYS_PROGRAMS_MAP = {
     bsh_key_to_translation_key(program.value): program
     for program in ProgramKey
-    if program
-    not in (
-        ProgramKey.UNKNOWN,
-        ProgramKey.BSH_COMMON_FAVORITE_001,
-        ProgramKey.BSH_COMMON_FAVORITE_002,
-    )
+    if program not in (ProgramKey.UNKNOWN, *FAVORITE_PROGRAMS)
 }
 
-PROGRAMS_TRANSLATION_KEYS_MAP = {
+PROGRAMS_TRANSLATION_KEYS_MAP: dict[ProgramKey, str] = {
     value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
 }
 
@@ -162,6 +189,7 @@ COFFEE_TEMPERATURE_OPTIONS = {
         "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.94C",
         "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.95C",
         "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.96C",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.98C",
     )
 }
 

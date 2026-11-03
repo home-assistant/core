@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from bring_api import (
     Bring,
@@ -81,6 +82,7 @@ class BringDataUpdateCoordinator(BringBaseCoordinator[dict[str, BringData]]):
         self.bring = bring
         self.previous_lists: set[str] = set()
 
+    @override
     async def _async_update_data(self) -> dict[str, BringData]:
         """Fetch the latest data from bring."""
 
@@ -135,6 +137,7 @@ class BringDataUpdateCoordinator(BringBaseCoordinator[dict[str, BringData]]):
 
         return list_dict
 
+    @override
     async def _async_setup(self) -> None:
         """Set up coordinator."""
 
@@ -173,9 +176,7 @@ class BringDataUpdateCoordinator(BringBaseCoordinator[dict[str, BringData]]):
         ):
             if not set(device.identifiers) & identifiers:
                 _LOGGER.debug("Removing obsolete device entry %s", device.name)
-                device_reg.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_reg.async_remove_device(device.id)
 
 
 class BringActivityCoordinator(BringBaseCoordinator[dict[str, BringActivityData]]):
@@ -201,6 +202,7 @@ class BringActivityCoordinator(BringBaseCoordinator[dict[str, BringActivityData]
         self.coordinator = coordinator
         self.lists = coordinator.lists
 
+    @override
     async def _async_update_data(self) -> dict[str, BringActivityData]:
         """Fetch activity data from bring."""
         self.lists = self.coordinator.lists

@@ -3,6 +3,8 @@
 from asyncio import Event, sleep
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.snooz.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
@@ -18,8 +20,6 @@ from . import (
     TEST_PAIRING_TOKEN,
     TEST_SNOOZ_DISPLAY_NAME,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
@@ -88,9 +88,14 @@ async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
 
 async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     """Test setup from service info cache with devices found."""
-    with patch(
-        "homeassistant.components.snooz.config_flow.async_discovered_service_info",
-        return_value=[SNOOZ_SERVICE_INFO_PAIRING],
+    with (
+        patch(
+            "homeassistant.components.snooz.config_flow.async_discovered_service_info",
+            return_value=[SNOOZ_SERVICE_INFO_PAIRING],
+        ),
+        patch(
+            "homeassistant.components.snooz.config_flow.bluetooth.async_request_active_scan"
+        ) as mock_request_active_scan,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -101,6 +106,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     assert result["data_schema"]
     # ensure discovered devices are listed as options
     assert result["data_schema"].schema["name"].container == [TEST_SNOOZ_DISPLAY_NAME]
+    mock_request_active_scan.assert_awaited_once_with(hass)
     await _test_setup_entry(
         hass, result["flow_id"], {CONF_NAME: TEST_SNOOZ_DISPLAY_NAME}
     )
@@ -165,7 +171,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.snooz.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.snooz.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_NAME: TEST_SNOOZ_DISPLAY_NAME},
@@ -353,7 +359,7 @@ async def _test_pairs_timeout(
 async def _test_setup_entry(
     hass: HomeAssistant, flow_id: str, user_input: dict | None = None
 ) -> None:
-    with patch("homeassistant.components.snooz.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.snooz.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             flow_id,
             user_input=user_input or {},

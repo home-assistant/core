@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry connections=[('sleep_as_android', '01JRD840SAZ55DGXBD78PTQ4EF')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_setup[sensor.sleep_as_android_alarm_label-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sleep as Android Alarm label',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sleep as Android Alarm label',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sleep_as_android_alarm_label',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry connections=[('sleep_as_android', '01JRD840SAZ55DGXBD78PTQ4EF')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
@@ -89,8 +89,8 @@
 # name: test_setup[sensor.sleep_as_android_next_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Sleep as Android Next alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sleep as Android Next alarm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sleep_as_android_next_alarm',

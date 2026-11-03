@@ -1,7 +1,7 @@
 """Provides a switch for Home Connect."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohomeconnect.model import OptionKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .common import setup_home_connect_entry, should_add_option_entity
 from .const import BSH_POWER_OFF, BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
@@ -218,6 +218,7 @@ async def async_setup_entry(
 class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
     """Generic switch class for Home Connect Binary Settings."""
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on setting."""
         try:
@@ -238,6 +239,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 },
             ) from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off setting."""
         try:
@@ -258,6 +260,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 },
             ) from err
 
+    @override
     def update_native_value(self) -> None:
         """Update the switch's status."""
         self._attr_is_on = self.appliance.settings[SettingKey(self.bsh_key)].value
@@ -266,8 +269,9 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     """Power switch class for Home Connect."""
 
-    power_off_state: str | None | UndefinedType = UNDEFINED
+    power_off_state: str | Undefined | None = Undefined
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
         try:
@@ -287,11 +291,12 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 },
             ) from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
-        if self.power_off_state is UNDEFINED:
+        if self.power_off_state is Undefined:
             await self.async_fetch_power_off_state()
-            if self.power_off_state is UNDEFINED:
+            if self.power_off_state is Undefined:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="unable_to_retrieve_turn_off",
@@ -324,6 +329,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 },
             ) from err
 
+    @override
     def update_native_value(self) -> None:
         """Set the value of the entity."""
         power_state = self.appliance.settings[SettingKey.BSH_COMMON_POWER_STATE]
@@ -336,7 +342,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             and value == self.power_off_state
         ):
             self._attr_is_on = False
-        elif self.power_off_state is UNDEFINED and value in [
+        elif self.power_off_state is Undefined and value in [
             BSH_POWER_OFF,
             BSH_POWER_STANDBY,
         ]:
@@ -372,14 +378,17 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 class HomeConnectSwitchOptionEntity(HomeConnectOptionEntity, SwitchEntity):
     """Switch option class for Home Connect."""
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the option."""
         await self.async_set_option(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the option."""
         await self.async_set_option(False)
 
+    @override
     def update_native_value(self) -> None:
         """Set the value of the entity."""
         self._attr_is_on = cast(bool | None, self.option_value)

@@ -24,7 +24,6 @@ CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY = "lr_s2_access_control_key"
 CONF_ADDON_LR_S2_AUTHENTICATED_KEY = "lr_s2_authenticated_key"
 CONF_ADDON_SOCKET = "socket"
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
-CONF_KEEP_OLD_DEVICES = "keep_old_devices"
 CONF_NETWORK_KEY = "network_key"
 CONF_S0_LEGACY_KEY = "s0_legacy_key"
 CONF_S2_ACCESS_CONTROL_KEY = "s2_access_control_key"
@@ -82,6 +81,7 @@ ATTR_TEST_NODE_ID = "test_node_id"
 ATTR_STATUS = "status"
 ATTR_ACKNOWLEDGED_FRAMES = "acknowledged_frames"
 ATTR_EVENT_TYPE_LABEL = "event_type_label"
+ATTR_URGENCY = "urgency"
 ATTR_DATA_TYPE_LABEL = "data_type_label"
 ATTR_NOTIFICATION_TYPE = "notification_type"
 ATTR_NOTIFICATION_EVENT = "notification_event"
@@ -180,6 +180,8 @@ ATTR_OPERATION_TYPE = "operation_type"
 ATTR_TWIST_ASSIST = "twist_assist"
 
 ADDON_SLUG = "core_zwave_js"
+
+NODE_STATUSES = ["asleep", "awake", "dead", "alive"]
 
 # Sensor entity description constants
 ENTITY_DESC_KEY_BATTERY_LIST_STATE = "battery_list_state"

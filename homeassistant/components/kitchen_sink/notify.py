@@ -1,5 +1,7 @@
 """Demo platform that offers a fake notify entity."""
 
+from typing import override
+
 from homeassistant.components import persistent_notification
 from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -7,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -55,6 +57,7 @@ class DemoNotify(NotifyEntity):
         )
         self._attr_name = entity_name
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send out a persistent notification."""
         persistent_notification.async_create(

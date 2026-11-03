@@ -7,7 +7,7 @@ details on Fitbit authorization.
 import base64
 from http import HTTPStatus
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import aiohttp
 
@@ -16,11 +16,12 @@ from homeassistant.components.application_credentials import (
     AuthorizationServer,
     ClientCredential,
 )
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from .exceptions import FitbitApiException, FitbitAuthException
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ class FitbitOAuth2Implementation(AuthImplementation):
     Authorization header.
     """
 
+    @override
     async def async_resolve_external_data(self, external_data: dict[str, Any]) -> dict:
         """Resolve the authorization code to tokens."""
         return await self._post(
@@ -43,6 +45,7 @@ class FitbitOAuth2Implementation(AuthImplementation):
             }
         )
 
+    @override
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         return await self._post(

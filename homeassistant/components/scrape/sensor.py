@@ -1,9 +1,9 @@
 """Support for getting data from websites with scraping."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -111,12 +111,12 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     for subentry in entry.subentries.values():
         sensor = dict(subentry.data)
-        sensor.update(sensor.pop("advanced", {}))
+        sensor.update(sensor.pop("additional", {}))
         sensor[CONF_UNIQUE_ID] = subentry.subentry_id
         sensor[CONF_NAME] = subentry.title
 
-        sensor_config: ConfigType = vol.Schema(
-            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
+        sensor_config: ConfigType = probatio.Schema(
+            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=probatio.ALLOW_EXTRA
         )(sensor)
 
         value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
@@ -188,6 +188,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
             self._sensor_name = self._rendered.get(CONF_NAME)
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the sensor.
 
@@ -221,6 +222,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         _LOGGER.debug("Parsed value: %s", value)
         return value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Ensure the data from the initial update is reflected in the state."""
         await super().async_added_to_hass()
@@ -247,6 +249,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         self._process_manual_data(variables)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         available1 = CoordinatorEntity.available.fget(self)  # type: ignore[attr-defined]
@@ -254,6 +257,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         return bool(available1 and available2 and self._attr_available)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_from_rest_data()

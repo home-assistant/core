@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
@@ -12,8 +12,7 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AutomowerConfigEntry
-from .coordinator import AutomowerDataUpdateCoordinator
+from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,6 +105,7 @@ class AutomowerButtonEntity(AutomowerControlEntity, ButtonEntity):
         self._attr_unique_id = f"{mower_id}_{description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return the available attribute of the entity."""
         return super().available and self.entity_description.available_fn(
@@ -113,6 +113,7 @@ class AutomowerButtonEntity(AutomowerControlEntity, ButtonEntity):
         )
 
     @handle_sending_exception
+    @override
     async def async_press(self) -> None:
         """Send a command to the mower."""
         await self.entity_description.press_fn(self.coordinator.api, self.mower_id)

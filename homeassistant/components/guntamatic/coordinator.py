@@ -1,8 +1,9 @@
 """Coordinator for Guntamatic integration."""
 
 import logging
+from typing import override
 
-from guntamatic.heater import Heater
+from guntamatic.heater import Heater, NoSerialException
 import requests
 
 from homeassistant.config_entries import ConfigEntry
@@ -31,12 +32,22 @@ class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
         )
         self.heater = Heater(entry.data[CONF_HOST])
 
+    @override
     async def _async_update_data(self) -> dict[str, list[str]]:
         """Fetch data from heater."""
         try:
             data: dict[str, list[str]] = await self.hass.async_add_executor_job(
                 self.heater.parse_data
             )
-        except requests.exceptions.ConnectionError as err:
-            raise UpdateFailed(f"Cannot connect to heater: {err}") from err
+        except requests.exceptions.RequestException as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        except NoSerialException as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_serial",
+            ) from err
         return data

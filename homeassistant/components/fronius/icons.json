@@ -1,5 +1,27 @@
 {
   "entity": {
+    "binary_sensor": {
+      "backup_mode": {
+        "default": "mdi:home-battery"
+      },
+      "battery_standby": {
+        "default": "mdi:power-standby"
+      }
+    },
+    "number": {
+      "ac_power_limit": {
+        "default": "mdi:speedometer-slow"
+      },
+      "battery_charge_power_limit": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "battery_discharge_power_limit": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "battery_minimum_reserve": {
+        "default": "mdi:battery-lock"
+      }
+    },
     "sensor": {
       "cash_factor": {
         "default": "mdi:cash-plus"
@@ -22,11 +44,23 @@
       "energy_reactive_ac_produced": {
         "default": "mdi:lightning-bolt-outline"
       },
+      "energy_total_pv": {
+        "default": "mdi:solar-power"
+      },
+      "modbus_mppt_current_dc": {
+        "default": "mdi:current-dc"
+      },
       "relative_autonomy": {
         "default": "mdi:home-circle-outline"
       },
       "relative_self_consumption": {
         "default": "mdi:solar-power"
+      },
+      "storage_energy_charged_total": {
+        "default": "mdi:battery-plus"
+      },
+      "storage_energy_discharged_total": {
+        "default": "mdi:battery-minus"
       },
       "voltage_dc": {
         "default": "mdi:current-dc"
@@ -39,6 +73,20 @@
       },
       "voltage_dc_mppt_no": {
         "default": "mdi:current-dc"
+      }
+    },
+    "switch": {
+      "ac_power_limit_enabled": {
+        "default": "mdi:speedometer-slow"
+      },
+      "battery_charge_power_limit_enabled": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "battery_discharge_power_limit_enabled": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "battery_grid_charging": {
+        "default": "mdi:transmission-tower-import"
       }
     }
   }

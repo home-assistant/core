@@ -16,7 +16,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -48,6 +52,26 @@ SCAN_INTERVAL = timedelta(seconds=30)
 SENSORS_TYPE_COUNT = "sensors_count"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_device_identifier(entry: ConfigEntry) -> tuple[str, str]:
+    """Return the device registry identifier of the router."""
+    return (DOMAIN, entry.unique_id or "AsusWRT")
+
+
+_ENTITY_MIGRATION_ID = {
+    "sensor_connected_device": "Devices Connected",
+    "sensor_rx_bytes": "Download",
+    "sensor_tx_bytes": "Upload",
+    "sensor_rx_rates": "Download Speed",
+    "sensor_tx_rates": "Upload Speed",
+    "sensor_load_avg1": "Load Avg (1m)",
+    "sensor_load_avg5": "Load Avg (5m)",
+    "sensor_load_avg15": "Load Avg (15m)",
+    "2.4GHz": "2.4GHz Temperature",
+    "5.0GHz": "5GHz Temperature",
+    "CPU": "CPU Temperature",
+}
 
 
 class AsusWrtSensorDataHandler:
@@ -180,6 +204,7 @@ class AsusWrtRouter:
             CONF_REQUIRE_IP: True,
         }
         self._options.update(entry.options)
+        self._data = dict(entry.data)
 
         self._api: AsusWrtBridge = AsusWrtBridge.get_bridge(
             self.hass, dict(self._entry.data), self._options
@@ -187,20 +212,6 @@ class AsusWrtRouter:
 
     def _migrate_entities_unique_id(self) -> None:
         """Migrate router entities to new unique id format."""
-        _ENTITY_MIGRATION_ID = {
-            "sensor_connected_device": "Devices Connected",
-            "sensor_rx_bytes": "Download",
-            "sensor_tx_bytes": "Upload",
-            "sensor_rx_rates": "Download Speed",
-            "sensor_tx_rates": "Upload Speed",
-            "sensor_load_avg1": "Load Avg (1m)",
-            "sensor_load_avg5": "Load Avg (5m)",
-            "sensor_load_avg15": "Load Avg (15m)",
-            "2.4GHz": "2.4GHz Temperature",
-            "5.0GHz": "5GHz Temperature",
-            "CPU": "CPU Temperature",
-        }
-
         entity_reg = er.async_get(self.hass)
         router_entries = er.async_entries_for_config_entry(
             entity_reg, self._entry.entry_id
@@ -363,6 +374,12 @@ class AsusWrtRouter:
         self._on_close.clear()
 
     @callback
+    def async_forget_device(self, mac: str) -> None:
+        """Stop tracking a client until it connects again."""
+        if self._devices.pop(mac, None) is not None:
+            async_dispatcher_send(self.hass, self.signal_device_removed, mac)
+
+    @callback
     def async_on_close(self, func: CALLBACK_TYPE) -> None:
         """Add a function to call when router is closed."""
         self._on_close.append(func)
@@ -380,20 +397,26 @@ class AsusWrtRouter:
         self._options.update(new_options)
         return req_reload
 
+    def data_changed(self, new_data: Mapping[str, Any]) -> bool:
+        """Return if the connection data differs from the data used at setup."""
+        return new_data != self._data
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         info = DeviceInfo(
             configuration_url=self._api.configuration_url,
-            identifiers={(DOMAIN, self._entry.unique_id or "AsusWRT")},
+            identifiers={get_device_identifier(self._entry)},
             name=self.host,
             model=self._api.model or "Asus Router",
             model_id=self._api.model_id,
             serial_number=self._api.serial_number,
             manufacturer="Asus",
         )
+        if label_mac := self._api.label_mac:
+            info.connections = {(CONNECTION_NETWORK_MAC, label_mac)}
         if self._api.firmware:
-            info["sw_version"] = self._api.firmware
+            info.sw_version = self._api.firmware
 
         return info
 
@@ -406,6 +429,11 @@ class AsusWrtRouter:
     def signal_device_update(self) -> str:
         """Event specific per AsusWrt entry to signal updates in devices."""
         return f"{DOMAIN}-device-update"
+
+    @property
+    def signal_device_removed(self) -> str:
+        """Event specific per AsusWrt entry to signal a removed device."""
+        return f"{DOMAIN}-device-removed-{self._entry.entry_id}"
 
     @property
     def host(self) -> str:

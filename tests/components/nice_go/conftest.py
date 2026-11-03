@@ -1,11 +1,12 @@
 """Common fixtures for the Nice G.O. tests."""
 
 from collections.abc import Generator
-from datetime import datetime
+import time
 from unittest.mock import AsyncMock, patch
 
 from nice_go import Barrier, BarrierState, ConnectionState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.nice_go.const import (
     CONF_REFRESH_TOKEN,
@@ -14,15 +15,13 @@ from homeassistant.components.nice_go.const import (
 )
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from tests.common import MockConfigEntry, load_json_array_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.nice_go.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -74,7 +73,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_EMAIL: "test-email",
             CONF_PASSWORD: "test-password",
             CONF_REFRESH_TOKEN: "test-refresh-token",
-            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+            CONF_REFRESH_TOKEN_CREATION_TIME: time.time(),
         },
         version=1,
         unique_id="test-email",

@@ -1,13 +1,16 @@
 """Tests for the Sonos Alarm switch platform."""
 
+from collections.abc import Callable, Coroutine
 from copy import copy
 from datetime import timedelta
-from unittest.mock import Mock, patch
+import logging
+from typing import Any
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from soco.exceptions import SoCoException, SoCoUPnPException
 
-from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import (
     DATA_SONOS_DISCOVERY_MANAGER,
     MODEL_SONOS_ARC_ULTRA,
@@ -41,18 +44,15 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
     MockSoCo,
     SoCoMockFactory,
+    SonosMockAlarmClock,
     SonosMockEvent,
-    SonosMockService,
     create_rendering_control_event,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_entity_registry(
@@ -279,12 +279,14 @@ async def test_alarm_create_delete(
 
 async def test_alarm_change_device(
     hass: HomeAssistant,
-    alarm_clock: SonosMockService,
-    alarm_clock_extended: SonosMockService,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    alarm_clock: SonosMockAlarmClock,
+    alarm_clock_extended: SonosMockAlarmClock,
     alarm_event: SonosMockEvent,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     soco_factory: SoCoMockFactory,
+    discover: MagicMock,
 ) -> None:
     """Test Sonos Alarm being moved to a different speaker.
 
@@ -293,37 +295,28 @@ async def test_alarm_change_device(
     created on the new speaker and removed from the old one.
     """
 
-    # Create the alarm on the soco_lr speaker
-    soco_factory.mock_zones = True
-    soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
-    alarm_dict = copy(alarm_clock.ListAlarms.return_value)
-    alarm_dict["CurrentAlarmList"] = alarm_dict["CurrentAlarmList"].replace(
-        "RINCON_test", f"{soco_lr.uid}"
-    )
-    alarm_dict["CurrentAlarmListVersion"] = "RINCON_test:900"
-    soco_lr.alarmClock.ListAlarms.return_value = alarm_dict
-    soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                "media_player": {
-                    "interface_addr": "127.0.0.1",
-                    "hosts": ["10.10.10.1", "10.10.10.2"],
-                }
-            }
-        },
-    )
-    await hass.async_block_till_done()
+    await async_setup_sonos()
 
     entity_id = "switch.sonos_alarm_14"
 
-    # Verify the alarm is created on the soco_lr speaker
+    # Verify the alarm starts on the initially discovered speaker.
     assert entity_id in entity_registry.entities
     entity = entity_registry.async_get(entity_id)
     device = device_registry.async_get(entity.device_id)
-    assert device.name == soco_lr.get_speaker_info()["zone_name"]
+    assert device.name == "Zone A"
+
+    # Discover a second speaker that the alarm can move to.
+    soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    discover.call_args.args[1](
+        SsdpServiceInfo(
+            ssdp_location=f"http://{soco_br.ip_address}/",
+            ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
+            ssdp_usn=f"uuid:{soco_br.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
+            upnp={ATTR_UPNP_UDN: f"uuid:{soco_br.uid}"},
+        ),
+        SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Simulate the alarm being moved to the soco_br speaker
     alarm_update = copy(alarm_clock_extended.ListAlarms.return_value)
@@ -423,6 +416,55 @@ async def test_tv_autoplay_poll_state(
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("attribute", "method_name"),
+    [
+        (ATTR_TV_AUTOPLAY, "GetAutoplayRoomUUID"),
+        (ATTR_TV_UNGROUP_AUTOPLAY, "GetAutoplayLinkedZones"),
+    ],
+)
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(OSError("Host is down"), id="connection_error"),
+        pytest.param(SoCoUPnPException("Poll failed", 500, ""), id="upnp_error"),
+    ],
+)
+async def test_tv_autoplay_poll_error(
+    hass: HomeAssistant,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+    caplog: pytest.LogCaptureFixture,
+    attribute: str,
+    method_name: str,
+    error: OSError | SoCoUPnPException,
+) -> None:
+    """Test that polling errors can be logged from the entity worker thread."""
+    entity_id = f"switch.zone_a_{attribute}"
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID.side_effect = None
+    soco.deviceProperties.GetAutoplayRoomUUID.return_value = {
+        "RoomUUID": "",
+        "Source": "TV",
+    }
+    soco.deviceProperties.GetAutoplayLinkedZones.side_effect = None
+    soco.deviceProperties.GetAutoplayLinkedZones.return_value = {
+        "IncludeLinkedZones": "1",
+        "Source": "TV",
+    }
+    await async_setup_sonos()
+
+    caplog.clear()
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.sonos.entity")
+    getattr(soco.deviceProperties, method_name).side_effect = error
+    await async_update_entity(hass, entity_id)
+
+    assert f"Could not poll: {error}" in caplog.text
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_tv_autoplay_not_created_for_non_ht(

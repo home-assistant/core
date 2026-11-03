@@ -5,6 +5,7 @@ Responsible for polling the device REST endpoints and normalizing data for entit
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from prana_local_api_client.exceptions import (
     PranaApiCommunicationError,
@@ -48,12 +49,14 @@ class PranaCoordinator(DataUpdateCoordinator[PranaState]):
 
         self.api_client = PranaLocalApiClient(host=entry.data[CONF_HOST], port=80)
 
+    @override
     async def _async_setup(self) -> None:
         try:
             self.device_info = await self.api_client.get_device_info()
         except PranaApiCommunicationError as err:
             raise ConfigEntryNotReady("Could not fetch device info") from err
 
+    @override
     async def _async_update_data(self) -> PranaState:
         """Fetch and normalize device state for all platforms."""
         try:

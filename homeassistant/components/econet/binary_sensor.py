@@ -1,5 +1,7 @@
 """Support for Rheem EcoNet water heaters."""
 
+from typing import override
+
 from pyeconet.equipment import Equipment, EquipmentType
 
 from homeassistant.components.binary_sensor import (
@@ -16,22 +18,22 @@ from .entity import EcoNetEntity
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="shutoff_valve_open",
-        name="shutoff_valve",
+        translation_key="shutoff_valve",
         device_class=BinarySensorDeviceClass.OPENING,
     ),
     BinarySensorEntityDescription(
         key="running",
-        name="running",
+        translation_key="running",
         device_class=BinarySensorDeviceClass.POWER,
     ),
     BinarySensorEntityDescription(
         key="screen_locked",
-        name="screen_locked",
+        translation_key="screen_locked",
         device_class=BinarySensorDeviceClass.LOCK,
     ),
     BinarySensorEntityDescription(
         key="beep_enabled",
-        name="beep_enabled",
+        translation_key="beep_enabled",
         device_class=BinarySensorDeviceClass.SOUND,
     ),
 )
@@ -60,18 +62,19 @@ async def async_setup_entry(
 class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
     """Define a Econet binary sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, econet_device: Equipment, description: BinarySensorEntityDescription
     ) -> None:
         """Initialize."""
         super().__init__(econet_device)
         self.entity_description = description
-        self._attr_name = f"{econet_device.device_name}_{description.name}"
-        self._attr_unique_id = (
-            f"{econet_device.device_id}_{econet_device.device_name}_{description.name}"
-        )
+        # Translation keys are also legacy unique-ID suffixes and must stay stable.
+        self._attr_unique_id = f"{econet_device.device_id}_{econet_device.device_name}_{description.translation_key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return getattr(self._econet, self.entity_description.key)

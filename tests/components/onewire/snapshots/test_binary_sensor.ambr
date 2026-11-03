@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '05.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -40,7 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/05.111111111111/sensed',
-      'friendly_name': '05.111111111111 Sensed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '05.111111111111 Sensed',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.05_111111111111_sensed',
@@ -58,9 +58,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '12.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -91,7 +91,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/12.111111111111/sensed.A',
-      'friendly_name': '12.111111111111 Sensed A',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12.111111111111 Sensed A',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.12_111111111111_sensed_a',
@@ -109,9 +109,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '12.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -142,7 +142,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/12.111111111111/sensed.B',
-      'friendly_name': '12.111111111111 Sensed B',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '12.111111111111 Sensed B',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.12_111111111111_sensed_b',
@@ -160,9 +160,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '29.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -193,7 +193,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.0',
-      'friendly_name': '29.111111111111 Sensed 0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '29.111111111111 Sensed 0',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_0',
@@ -211,9 +211,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '29.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -244,7 +244,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.1',
-      'friendly_name': '29.111111111111 Sensed 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '29.111111111111 Sensed 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_1',
@@ -262,9 +262,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '29.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -295,7 +295,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.2',
-      'friendly_name': '29.111111111111 Sensed 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '29.111111111111 Sensed 2',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_2',
@@ -313,9 +313,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '29.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -345,15 +345,14 @@
 # name: test_binary_sensors[binary_sensor.29_111111111111_sensed_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_file': '/29.111111111111/sensed.3',
-      'friendly_name': '29.111111111111 Sensed 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '29.111111111111 Sensed 3',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_binary_sensors[binary_sensor.29_111111111111_sensed_4-entry]
@@ -364,9 +363,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '29.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -397,7 +396,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.4',
-      'friendly_name': '29.111111111111 Sensed 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '29.111111111111 Sensed 4',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_4',
@@ -415,9 +414,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '29.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -448,7 +447,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.5',
-      'friendly_name': '29.111111111111 Sensed 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '29.111111111111 Sensed 5',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_5',
@@ -466,9 +465,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '29.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -499,7 +498,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.6',
-      'friendly_name': '29.111111111111 Sensed 6',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '29.111111111111 Sensed 6',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_6',
@@ -517,9 +516,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '29.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -550,7 +549,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.7',
-      'friendly_name': '29.111111111111 Sensed 7',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '29.111111111111 Sensed 7',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_7',
@@ -568,9 +567,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '3A.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -601,7 +600,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/3A.111111111111/sensed.A',
-      'friendly_name': '3A.111111111111 Sensed A',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '3A.111111111111 Sensed A',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.3a_111111111111_sensed_a',
@@ -619,9 +618,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', '3A.111111111111')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -652,7 +651,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/3A.111111111111/sensed.B',
-      'friendly_name': '3A.111111111111 Sensed B',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '3A.111111111111 Sensed B',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.3a_111111111111_sensed_b',
@@ -670,9 +669,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', 'EF.111111111113')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -702,9 +701,9 @@
 # name: test_binary_sensors[binary_sensor.ef_111111111113_hub_short_on_branch_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
       'device_file': '/EF.111111111113/hub/short.0',
-      'friendly_name': 'EF.111111111113 Hub short on branch 0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'EF.111111111113 Hub short on branch 0',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_0',
@@ -722,9 +721,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', 'EF.111111111113')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -754,9 +753,9 @@
 # name: test_binary_sensors[binary_sensor.ef_111111111113_hub_short_on_branch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
       'device_file': '/EF.111111111113/hub/short.1',
-      'friendly_name': 'EF.111111111113 Hub short on branch 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'EF.111111111113 Hub short on branch 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_1',
@@ -774,9 +773,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', 'EF.111111111113')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -806,9 +805,9 @@
 # name: test_binary_sensors[binary_sensor.ef_111111111113_hub_short_on_branch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
       'device_file': '/EF.111111111113/hub/short.2',
-      'friendly_name': 'EF.111111111113 Hub short on branch 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'EF.111111111113 Hub short on branch 2',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_2',
@@ -826,9 +825,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('onewire', 'EF.111111111113')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -858,9 +857,9 @@
 # name: test_binary_sensors[binary_sensor.ef_111111111113_hub_short_on_branch_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
       'device_file': '/EF.111111111113/hub/short.3',
-      'friendly_name': 'EF.111111111113 Hub short on branch 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'EF.111111111113 Hub short on branch 3',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_3',

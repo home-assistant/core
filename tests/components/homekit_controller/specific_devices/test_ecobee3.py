@@ -7,6 +7,8 @@ from typing import Any
 from unittest import mock
 
 from aiohomekit import AccessoryNotFoundError
+from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FakePairing
 
 from homeassistant.components.climate import ClimateEntityFeature
@@ -31,10 +33,11 @@ from ..common import (
 async def test_ecobee3_setup(hass: HomeAssistant) -> None:
     """Test that a Ecbobee 3 can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "ecobee3.json")
-    await setup_test_accessories(hass, accessories)
+    config_entry, _ = await setup_test_accessories(hass, accessories)
 
     await assert_devices_and_entities_created(
         hass,
+        config_entry.entry_id,
         DeviceTestInfo(
             unique_id=HUB_TEST_ACCESSORY_ID,
             name="HomeW",
@@ -130,7 +133,7 @@ async def test_ecobee3_setup(hass: HomeAssistant) -> None:
                 ),
                 EntityTestInfo(
                     entity_id="select.homew_current_mode",
-                    friendly_name="HomeW Current Mode",
+                    friendly_name="HomeW Current mode",
                     unique_id="00:00:00:00:00:00_1_16_33",
                     capabilities={"options": ["home", "sleep", "away"]},
                     state="home",
@@ -138,6 +141,37 @@ async def test_ecobee3_setup(hass: HomeAssistant) -> None:
             ],
         ),
     )
+
+
+async def test_ecobee3_current_temperature_after_config_change(
+    hass: HomeAssistant,
+) -> None:
+    """Test current temperature updates after the accessory map is replaced."""
+    accessories = await setup_accessories_from_file(hass, "ecobee3.json")
+    await setup_test_accessories(hass, accessories)
+
+    state = hass.states.get("sensor.homew_current_temperature")
+    assert state
+    assert state.state == "21.8"
+
+    accessories = await setup_accessories_from_file(hass, "ecobee3.json")
+    thermostat = next(
+        accessory.services.first(service_type=ServicesTypes.THERMOSTAT)
+        for accessory in accessories
+        if accessory.aid == 1
+    )
+    assert thermostat
+    current_temperature = thermostat.characteristics.first(
+        char_types=[CharacteristicsTypes.TEMPERATURE_CURRENT]
+    )
+    assert current_temperature
+    current_temperature.value = 22.4
+
+    await device_config_changed(hass, accessories)
+
+    state = hass.states.get("sensor.homew_current_temperature")
+    assert state
+    assert state.state == "22.4"
 
 
 async def test_ecobee3_setup_from_cache(

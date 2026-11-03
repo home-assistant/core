@@ -2,6 +2,7 @@
   "domain": "homekit",
   "name": "HomeKit Bridge",
   "after_dependencies": ["camera", "zeroconf"],
+  "categories": ["other_ecosystems"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["ffmpeg", "http", "network"],
@@ -10,7 +11,7 @@
   "loggers": ["pyhap"],
   "requirements": [
     "HAP-python==5.0.0",
-    "fnv-hash-fast==2.0.2",
+    "fnv-hash-fast==2.0.3",
     "homekit-audio-proxy==1.2.1",
     "PyQRCode==1.2.1",
     "base36==0.1.1"

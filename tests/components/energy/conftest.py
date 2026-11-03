@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.energy import async_get_manager
+from homeassistant.components.energy import DOMAIN, async_get_manager
 from homeassistant.components.energy.data import EnergyManager
 from homeassistant.components.recorder import Recorder
 from homeassistant.core import HomeAssistant
@@ -50,7 +50,7 @@ async def mock_energy_manager(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> EnergyManager:
     """Set up energy."""
-    assert await async_setup_component(hass, "energy", {"energy": {}})
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
     manager = await async_get_manager(hass)
     manager.data = manager.default_preferences()
     return manager

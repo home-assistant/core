@@ -1,5 +1,7 @@
 """Demo platform that offers a fake infrared entity."""
 
+from typing import override
+
 from infrared_protocols.commands import Command as InfraredCommand
 
 from homeassistant.components import persistent_notification
@@ -18,7 +20,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
+from .const import DOMAIN
 
 PARALLEL_UPDATES = 0
 
@@ -65,6 +67,7 @@ class DemoInfraredEntityBase(Entity):
 class DemoInfraredEmitter(DemoInfraredEntityBase, InfraredEmitterEntity):
     """Representation of a demo infrared emitter entity."""
 
+    @override
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command."""
         raw_timings = command.get_raw_timings()
@@ -82,6 +85,7 @@ class DemoInfraredReceiver(DemoInfraredEntityBase, InfraredReceiverEntity):
         """Handle received infrared command signal."""
         self._handle_received_signal(InfraredReceivedSignal(timings=raw_timings))
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Called when entity is added to hass."""
         await super().async_added_to_hass()

@@ -1,6 +1,7 @@
 """Number platform for Compit integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from compit_inext_api.consts import CompitParameter
 
@@ -314,6 +315,7 @@ class CompitNumber(CoordinatorEntity[CompitDataUpdateCoordinator], NumberEntity)
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -322,6 +324,7 @@ class CompitNumber(CoordinatorEntity[CompitDataUpdateCoordinator], NumberEntity)
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         value = self.coordinator.connector.get_current_value(
@@ -331,6 +334,7 @@ class CompitNumber(CoordinatorEntity[CompitDataUpdateCoordinator], NumberEntity)
             return None
         return value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.coordinator.connector.set_device_parameter(

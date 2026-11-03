@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from wled import WLED
 
@@ -66,6 +66,25 @@ async def async_setup_entry(
         ]
     )
 
+    # Only devices with the AudioReactive usermod installed report its state,
+    # and it can show up later, like after flashing firmware that has it.
+    audio_reactive_added = False
+
+    @callback
+    def async_add_audio_reactive_switch() -> None:
+        """Add the AudioReactive switch once the device reports the usermod."""
+        nonlocal audio_reactive_added
+        if audio_reactive_added or coordinator.data.state.audio_reactive is None:
+            return
+
+        audio_reactive_added = True
+        async_add_entities([WLEDAudioReactiveSwitch(coordinator)])
+
+    entry.async_on_unload(
+        coordinator.async_add_listener(async_add_audio_reactive_switch)
+    )
+    async_add_audio_reactive_switch()
+
     update_segments = partial(
         async_update_segments,
         coordinator,
@@ -88,6 +107,7 @@ class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_nightlight"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         state = self.coordinator.data.state
@@ -97,16 +117,19 @@ class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
         }
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return bool(self.coordinator.data.state.nightlight.on)
 
     @wled_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the WLED nightlight switch."""
         await self.coordinator.wled.nightlight(on=False)
 
     @wled_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the WLED nightlight switch."""
         await self.coordinator.wled.nightlight(on=True)
@@ -124,21 +147,25 @@ class WLEDSyncSendSwitch(WLEDEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_sync_send"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {ATTR_UDP_PORT: self.coordinator.data.info.udp_port}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return bool(self.coordinator.data.state.sync.send)
 
     @wled_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the WLED sync send switch."""
         await self.coordinator.wled.sync(send=False)
 
     @wled_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the WLED sync send switch."""
         await self.coordinator.wled.sync(send=True)
@@ -156,24 +183,67 @@ class WLEDSyncReceiveSwitch(WLEDEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_sync_receive"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {ATTR_UDP_PORT: self.coordinator.data.info.udp_port}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return bool(self.coordinator.data.state.sync.receive)
 
     @wled_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the WLED sync receive switch."""
         await self.coordinator.wled.sync(receive=False)
 
     @wled_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the WLED sync receive switch."""
         await self.coordinator.wled.sync(receive=True)
+
+
+class WLEDAudioReactiveSwitch(WLEDEntity, SwitchEntity):
+    """Defines a WLED AudioReactive switch."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "audio_reactive"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
+        """Initialize WLED AudioReactive switch."""
+        super().__init__(coordinator=coordinator)
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_audio_reactive"
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available and self.coordinator.data.state.audio_reactive is not None
+        )
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return the state of the switch."""
+        audio_reactive = self.coordinator.data.state.audio_reactive
+        return audio_reactive is not None and audio_reactive.on
+
+    @wled_exception_handler
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the WLED AudioReactive switch."""
+        await self.coordinator.wled.audio_reactive(on=False)
+
+    @wled_exception_handler
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the WLED AudioReactive switch."""
+        await self.coordinator.wled.audio_reactive(on=True)
 
 
 class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
@@ -207,6 +277,7 @@ class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -214,6 +285,7 @@ class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         segment = self.coordinator.data.state.segments[self._segment]
@@ -228,11 +300,13 @@ class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
         )
 
     @wled_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the WLED segment switch."""
         await self._async_set_state(True)
 
     @wled_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the WLED segment switch."""
         await self._async_set_state(False)

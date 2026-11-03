@@ -1,12 +1,11 @@
 """Config flow for the Cert Expiry platform."""
 
 from collections.abc import Mapping
-import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DEFAULT_PORT, DOMAIN
@@ -18,8 +17,6 @@ from .errors import (
     ValidationFailure,
 )
 from .helper import get_cert_expiry_timestamp
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -56,6 +53,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             return True
         return False
 
+    @override
     async def async_step_user(
         self,
         user_input: Mapping[str, Any] | None = None,
@@ -75,9 +73,6 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=title,
                     data={CONF_HOST: host, CONF_PORT: port},
                 )
-            if self.source == SOURCE_IMPORT:
-                _LOGGER.error("Config import failed for %s", user_input[CONF_HOST])
-                return self.async_abort(reason="import_failed")
         else:
             user_input = {}
             user_input[CONF_HOST] = ""
@@ -85,10 +80,10 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                    vol.Required(
+                    probatio.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                    probatio.Required(
                         CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
                     ): int,
                 }
@@ -124,10 +119,10 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
-                        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
                     }
                 ),
                 user_input or reconfigure_entry.data,

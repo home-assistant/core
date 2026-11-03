@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from flexit_bacnet import FlexitBACnet
 
@@ -31,6 +32,7 @@ class FlexitSensorEntityDescription(SensorEntityDescription):
     """Describes a Flexit sensor entity."""
 
     value_fn: Callable[[FlexitBACnet], float]
+    exists_fn: Callable[[FlexitBACnet], bool] = lambda _: True
 
 
 SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
@@ -65,6 +67,16 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         translation_key="extract_air_temperature",
         value_fn=lambda data: data.extract_air_temperature,
+    ),
+    FlexitSensorEntityDescription(
+        key="extract_air_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        translation_key="extract_air_humidity",
+        value_fn=lambda data: data.extract_air_humidity,
+        # Only some models have a built-in humidity sensor, the others report 0
+        exists_fn=lambda data: data.extract_air_humidity > 0,
     ),
     FlexitSensorEntityDescription(
         key="room_temperature",
@@ -162,7 +174,9 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        FlexitSensor(coordinator, description) for description in SENSOR_TYPES
+        FlexitSensor(coordinator, description)
+        for description in SENSOR_TYPES
+        if description.exists_fn(coordinator.data)
     )
 
 
@@ -189,6 +203,7 @@ class FlexitSensor(FlexitEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

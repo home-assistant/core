@@ -1,9 +1,9 @@
 """Config flow for moat ble integration."""
 
-from typing import Any
+from typing import Any, override
 
 from moat_ble import MoatBluetoothDeviceData as DeviceData
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -26,6 +26,7 @@ class MoatConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: DeviceData | None = None
         self._discovered_devices: dict[str, str] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -51,13 +52,13 @@ class MoatConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(title=title, data={})
 
-        self._set_confirm_only()
         placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -86,7 +87,7 @@ class MoatConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_ADDRESS): vol.In(self._discovered_devices)}
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): probatio.In(self._discovered_devices)}
             ),
         )

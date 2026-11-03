@@ -1,11 +1,15 @@
 """Support for StarLine button."""
 
+from typing import override
+
+from starline import StarlineDevice
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import StarlineConfigEntry
-from .account import StarlineAccount, StarlineDevice
+from .account import StarlineAccount
 from .entity import StarlineEntity
 
 BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (
@@ -61,10 +65,12 @@ class StarlineButton(StarlineEntity, ButtonEntity):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._device.online
 
+    @override
     def press(self) -> None:
         """Press the button."""
         self._account.api.set_car_state(self._device.device_id, self._key, True)

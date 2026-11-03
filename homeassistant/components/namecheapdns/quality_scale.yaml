@@ -14,9 +14,15 @@ rules:
   docs-actions:
     status: exempt
     comment: the integration has no actions
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: integration has no entities
@@ -97,7 +103,9 @@ rules:
     status: exempt
     comment: integration has no entities or actions
   reconfiguration-flow: done
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: integration has no repairs
   stale-devices:
     status: exempt
     comment: integration has no devices

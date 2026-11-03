@@ -5,6 +5,7 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.upnp.const import (
@@ -36,8 +37,6 @@ from .conftest import (
     TEST_UDN,
     TEST_USN,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures(
@@ -71,6 +70,7 @@ async def test_flow_ssdp(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 @pytest.mark.usefixtures(
@@ -105,6 +105,7 @@ async def test_flow_ssdp_ignore(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant) -> None:
@@ -180,6 +181,7 @@ async def test_flow_ssdp_no_mac_address(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: None,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 @pytest.mark.usefixtures("mock_mac_address_from_host")
@@ -428,6 +430,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 @pytest.mark.usefixtures(
@@ -478,6 +481,7 @@ async def test_flow_ssdp_with_mismatched_udn(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 async def test_options_flow(
@@ -491,10 +495,13 @@ async def test_options_flow(
     user_input = {
         CONFIG_ENTRY_FORCE_POLL: True,
     }
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input,
-    )
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as mock_reload:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input,
+        )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -503,3 +510,4 @@ async def test_options_flow(
     assert mock_config_entry.options == {
         CONFIG_ENTRY_FORCE_POLL: True,
     }
+    mock_reload.assert_called_once_with(mock_config_entry.entry_id)

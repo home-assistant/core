@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
@@ -24,8 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_fixture_path
 
 
 async def test_default_state(
@@ -349,7 +348,7 @@ async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
     )
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {
             "group": {
                 "group_zero": {"entities": "switch.something", "icon": "mdi:work"},
@@ -379,7 +378,7 @@ async def test_reload_with_base_integration_platform_not_setup(
     """Test the ability to reload switches."""
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {
             "group": {
                 "group_zero": {"entities": "switch.something", "icon": "mdi:work"},

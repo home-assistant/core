@@ -3,12 +3,11 @@
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from dynalite_devices_lib.dynalitebase import DynaliteBaseDevice
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import dynalite
 from homeassistant.const import ATTR_SERVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 ATTR_METHOD = "method"
 ATTR_ARGS = "args"
@@ -48,13 +47,13 @@ async def create_entity_from_device(hass: HomeAssistant, device: DynaliteBaseDev
     return mock_dyn_dev.mock_calls[1][2]["update_device_func"]
 
 
-async def run_service_tests(hass: HomeAssistant, device, platform, services):
+async def run_service_tests(hass: HomeAssistant, device, domain, services):
     """Run a series of service calls and check entity and device behave correctly."""
     for cur_item in services:
         service = cur_item[ATTR_SERVICE]
         args = cur_item.get(ATTR_ARGS, {})
-        service_data = {"entity_id": f"{platform}.name", **args}
-        await hass.services.async_call(platform, service, service_data, blocking=True)
+        service_data = {"entity_id": f"{domain}.name", **args}
+        await hass.services.async_call(domain, service, service_data, blocking=True)
         await hass.async_block_till_done()
         for check_item in services:
             check_method = getattr(device, check_item[ATTR_METHOD])

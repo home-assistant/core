@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,10 +12,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
+    TEMPERATURE,
     EntityCategory,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -49,8 +50,6 @@ CURRENT_SYSTEM_PRESSURE = "current_system_pressure"
 HIGH_SYSTEM_PRESSURE = "high_system_pressure"
 LOW_SYSTEM_PRESSURE = "low_system_pressure"
 BATTERY = "battery"
-# pylint: disable-next=home-assistant-duplicate-const
-TEMPERATURE = "temperature"
 INLET_TDS = "inlet_tds"
 OUTLET_TDS = "outlet_tds"
 CARTRIDGE_1_LIFE = "cart1"
@@ -141,7 +140,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=BATTERY,
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=0,
         value_fn=lambda device: device.drop_api.battery(),
         state_class=SensorStateClass.MEASUREMENT,
@@ -158,7 +157,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=INLET_TDS,
         translation_key=INLET_TDS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda device: device.drop_api.inlet_tds(),
@@ -166,7 +165,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=OUTLET_TDS,
         translation_key=OUTLET_TDS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda device: device.drop_api.outlet_tds(),
@@ -174,7 +173,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=CARTRIDGE_1_LIFE,
         translation_key=CARTRIDGE_1_LIFE,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
@@ -183,7 +182,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=CARTRIDGE_2_LIFE,
         translation_key=CARTRIDGE_2_LIFE,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
@@ -192,7 +191,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
     DROPSensorEntityDescription(
         key=CARTRIDGE_3_LIFE,
         translation_key=CARTRIDGE_3_LIFE,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
@@ -274,6 +273,7 @@ class DROPSensor(DROPEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator)

@@ -2,9 +2,14 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -24,19 +29,28 @@ class ViCareFlowHandler(
     MINOR_VERSION = 1
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        if self.source != SOURCE_REAUTH and self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+        if (
+            self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE)
+            and self._async_current_entries()
+        ):
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         return await super().async_step_user(user_input)
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry after OAuth or update existing for reauth."""
         if self.source == SOURCE_REAUTH:
@@ -44,6 +58,10 @@ class ViCareFlowHandler(
             return self.async_update_reload_and_abort(
                 reauth_entry,
                 data={**reauth_entry.data, **data},
+            )
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data_updates=data
             )
 
         return self.async_create_entry(
@@ -66,6 +84,13 @@ class ViCareFlowHandler(
 
         return await self.async_step_user()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """User initiated reconfiguration."""
+        return await self.async_step_user()
+
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -77,6 +102,9 @@ class ViCareFlowHandler(
         self._abort_if_unique_id_configured()
 
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(
+                reason="single_instance_allowed",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+            )
 
         return await self.async_step_user()

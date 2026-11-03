@@ -3,14 +3,22 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from elgato import BatteryInfo, ElgatoNoBatteryError, Info, Settings, State
+from elgato import (
+    BatteryInfo,
+    ElgatoNoBatteryError,
+    FirmwareImage,
+    FirmwareVersion,
+    Info,
+    Settings,
+    State,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path, load_fixture
 
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, get_fixture_path, load_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
@@ -44,7 +52,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.elgato.async_setup_entry", return_value=True
+        "homeassistant.components.elgato.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -90,6 +98,31 @@ def mock_elgato(device_fixtures: str, state_variant: str) -> Generator[MagicMock
             elgato.battery.side_effect = ElgatoNoBatteryError
 
         yield elgato
+
+
+@pytest.fixture(autouse=True)
+def mock_firmware_catalog() -> Generator[MagicMock]:
+    """Return a mocked Elgato firmware catalog.
+
+    The catalog reads Elgato's servers, so this is autouse: no test gets to
+    reach them. The builds here are ahead of what the device fixtures
+    report, which leaves an update waiting by default.
+    """
+    with patch(
+        "homeassistant.components.elgato.coordinator.FirmwareCatalog", autospec=True
+    ) as catalog_mock:
+        catalog = catalog_mock.return_value
+        catalog.versions.return_value = {
+            53: FirmwareVersion(board_type=53, build_number=222, version="1.0.3"),
+            202: FirmwareVersion(board_type=202, build_number=240, version="1.0.4"),
+        }
+        catalog.download.return_value = FirmwareImage(
+            board_type=53,
+            build_number=222,
+            version="1.0.3",
+            data=b"\x00" * 8192,
+        )
+        yield catalog
 
 
 @pytest.fixture

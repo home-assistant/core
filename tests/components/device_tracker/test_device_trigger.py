@@ -1,8 +1,9 @@
 """The tests for Device Tracker device triggers."""
 
+from probatio import to_field_list
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation, zone
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -16,8 +17,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 AWAY_LATITUDE = 32.881011
 AWAY_LONGITUDE = -117.234758
@@ -327,7 +326,7 @@ async def test_get_trigger_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -366,7 +365,7 @@ async def test_get_trigger_capabilities_legacy(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
