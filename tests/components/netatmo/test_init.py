@@ -27,7 +27,12 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import cloud, netatmo, webhook
 from homeassistant.components.cloud import SIGNAL_CLOUD_CONNECTION_STATE
 from homeassistant.components.netatmo import DOMAIN, coordinator
-from homeassistant.components.netatmo.coordinator import ACCOUNT
+from homeassistant.components.netatmo.coordinator import (
+    ACCOUNT,
+    WEATHER,
+    NetatmoDataHandler,
+    NetatmoPublisher,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
@@ -2595,3 +2600,82 @@ async def test_calls_stop_counting_once_they_leave_the_window(
     freezer.tick(timedelta(seconds=coordinator.RATE_LIMIT_WINDOW + 1))
 
     assert data_handler._calls_in_the_last_hour() == 0
+
+
+async def _remove_publisher(
+    data_handler: NetatmoDataHandler, publisher: NetatmoPublisher
+) -> None:
+    """Unsubscribe every subscriber of a publisher, which drops it."""
+    for update_callback in list(publisher.subscriptions):
+        await data_handler.unsubscribe(publisher.name, update_callback)
+
+
+async def _subscribe_new_publisher(
+    data_handler: NetatmoDataHandler, batch: list[NetatmoPublisher]
+) -> None:
+    await data_handler.subscribe(WEATHER, WEATHER, None)
+
+
+async def _unsubscribe_fetching_publisher(
+    data_handler: NetatmoDataHandler, batch: list[NetatmoPublisher]
+) -> None:
+    await _remove_publisher(data_handler, batch[0])
+
+
+async def _unsubscribe_pending_publisher(
+    data_handler: NetatmoDataHandler, batch: list[NetatmoPublisher]
+) -> None:
+    await _remove_publisher(data_handler, batch[-1])
+
+
+async def _force_update(
+    data_handler: NetatmoDataHandler, batch: list[NetatmoPublisher]
+) -> None:
+    data_handler.async_force_update(batch[-1].name)
+
+
+@pytest.mark.parametrize(
+    ("mutate_queue", "skipped"),
+    [
+        pytest.param(_subscribe_new_publisher, [], id="subscribe"),
+        pytest.param(_unsubscribe_fetching_publisher, [], id="unsubscribe_fetching"),
+        pytest.param(_unsubscribe_pending_publisher, [-1], id="unsubscribe_pending"),
+        pytest.param(_force_update, [], id="force_update"),
+    ],
+)
+async def test_queue_changes_while_a_fetch_is_awaited(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mutate_queue: Callable[
+        [NetatmoDataHandler, list[NetatmoPublisher]], Coroutine[Any, Any, None]
+    ],
+    skipped: list[int],
+) -> None:
+    """Test that an update polls its whole batch when the queue changes meanwhile."""
+    mutate = False
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        nonlocal mutate
+        if mutate:
+            mutate = False
+            await mutate_queue(data_handler, batch)
+        return await fake_post_request(hass, *args, **kwargs)
+
+    await _setup_switch_platform(hass, config_entry, fake_post)
+    data_handler = config_entry.runtime_data
+    batch = list(data_handler._queue)
+
+    assert len(batch) >= 2
+    for publisher in batch:
+        publisher.next_scan = 0
+
+    mutate = True
+    await data_handler.async_update(dt_util.utcnow())
+
+    assert not mutate
+    assert [publisher for publisher in batch if publisher.next_scan <= time()] == [
+        batch[index] for index in skipped
+    ]
+    assert sorted(publisher.name for publisher in data_handler._queue) == sorted(
+        data_handler.publisher
+    )
