@@ -13,12 +13,12 @@ from homeassistant.const import (
     CONF_PORT,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, EBUSD_DATA, SENSOR_TYPES, EbusdServiceArgument
+from .const import DOMAIN, EBUSD_DATA, SENSOR_TYPES
 from .services import setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,11 +110,8 @@ class EbusdData:
             _LOGGER.error(err)
             raise RuntimeError(err) from err
 
-    def write(self, call: ServiceCall) -> None:
+    def write(self, name: str, value: str) -> None:
         """Call write method on ebusd."""
-        name = call.data.get(EbusdServiceArgument.NAME)
-        value = call.data.get(EbusdServiceArgument.VALUE)
-
         try:
             _LOGGER.debug("Opening socket to ebusd %s", name)
             command_result = ebusdpy.write(self._address, self._circuit, name, value)
