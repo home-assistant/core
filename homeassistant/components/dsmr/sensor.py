@@ -5,7 +5,7 @@ from asyncio import CancelledError
 from collections.abc import Callable, Generator
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from enum import IntEnum
 from functools import partial
 from typing import override
@@ -445,6 +445,46 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
+        key="belgium_version_information",
+        translation_key="belgium_version_information",
+        obis_reference="BELGIUM_VERSION_INFORMATION",
+        dsmr_versions={"5B"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_equipment_identifier",
+        translation_key="belgium_equipment_identifier",
+        obis_reference="BELGIUM_EQUIPMENT_IDENTIFIER",
+        dsmr_versions={"5B"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_switch_position",
+        translation_key="belgium_switch_position",
+        obis_reference="ACTUAL_SWITCH_POSITION",
+        dsmr_versions={"5B"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_text_message",
+        translation_key="belgium_text_message",
+        obis_reference="TEXT_MESSAGE",
+        dsmr_versions={"5B"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_maximum_demand_history",
+        translation_key="belgium_maximum_demand_history",
+        obis_reference="BELGIUM_MAXIMUM_DEMAND_13_MONTHS",
+        dsmr_versions={"5B"},
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
         key="belgium_current_average_demand",
         translation_key="current_average_demand",
         obis_reference="BELGIUM_CURRENT_AVERAGE_DEMAND",
@@ -588,6 +628,33 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
 
 SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
     MbusDeviceType.GAS: (
+        DSMRSensorEntityDescription(
+            key="belgium_gas_device_type",
+            translation_key="belgium_gas_device_type",
+            obis_reference="MBUS_DEVICE_TYPE",
+            dsmr_versions={"5B"},
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+                is_gas=True,
+        ),
+        DSMRSensorEntityDescription(
+            key="belgium_gas_equipment_identifier",
+            translation_key="belgium_gas_equipment_identifier",
+            obis_reference="MBUS_EQUIPMENT_IDENTIFIER",
+            dsmr_versions={"5B"},
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+                is_gas=True,
+        ),
+        DSMRSensorEntityDescription(
+            key="belgium_gas_valve_position",
+            translation_key="belgium_gas_valve_position",
+            obis_reference="MBUS_VALVE_POSITION",
+            dsmr_versions={"5B"},
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+                is_gas=True,
+        ),
         DSMRSensorEntityDescription(
             key="gas_reading",
             translation_key="gas_meter_reading",
@@ -780,11 +847,15 @@ async def async_setup_entry(
 
         entities.extend(
             [
-                DSMREntity(
-                    description,
-                    entry,
-                    telegram,
-                    *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
+                (
+                    DSMRBelgiumDemandHistory(description, entry, telegram)
+                    if description.key == "belgium_maximum_demand_history"
+                    else DSMREntity(
+                        description,
+                        entry,
+                        telegram,
+                        *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
+                    )
                 )
                 for description in SENSORS
                 if is_supported_description(telegram, description, dsmr_version)
@@ -1095,3 +1166,59 @@ class DSMREntity(SensorEntity):
             return "low"
 
         return None
+
+
+class DSMRBelgiumDemandHistory(DSMREntity):
+    """Expose the most recent valid Belgian monthly demand and all peak records."""
+
+    def __init__(
+        self,
+        entity_description: DSMRSensorEntityDescription,
+        entry: ConfigEntry,
+        telegram: Telegram,
+    ) -> None:
+        """Initialize historical maximum demand sensor."""
+        super().__init__(entity_description, entry, telegram, SensorDeviceClass.POWER, "kW")
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the last valid monthly peak."""
+        peaks = get_dsmr_object(self.telegram, 0, self.entity_description.obis_reference)
+        if not isinstance(peaks, list):
+            return None
+        valid = [peak for peak in peaks if self._valid_peak(peak)]
+        return float(valid[-1].value) if valid else None
+
+    @staticmethod
+    def _valid_peak(peak: object) -> bool:
+        """Ignore placeholder records with invalid month timestamps."""
+        month = getattr(peak, "datetime", None)
+        return (
+            isinstance(month, datetime)
+            and 2000 <= month.year <= 2100
+            and getattr(peak, "value", None) is not None
+        )
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, list[dict[str, str | float | None]]]:
+        """Expose all valid demand peaks and their occurrence times."""
+        peaks = get_dsmr_object(self.telegram, 0, self.entity_description.obis_reference)
+        if not isinstance(peaks, list):
+            return {"monthly_peaks": []}
+        return {
+            "monthly_peaks": [
+                {
+                    "month": peak.datetime.strftime("%Y-%m"),
+                    "peak": float(peak.value),
+                    "occurred": (
+                        peak.occurred.isoformat()
+                        if isinstance(peak.occurred, datetime)
+                        else None
+                    ),
+                }
+                for peak in peaks
+                if self._valid_peak(peak)
+            ]
+        }
