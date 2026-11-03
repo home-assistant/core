@@ -1,6 +1,6 @@
 """Client for the catalog data."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientSession, ClientTimeout
 import probatio
@@ -9,6 +9,7 @@ from homeassistant.util.json import json_loads
 
 from .const import DOMAIN
 from .exceptions import MarketplaceError, NotModifiedError
+from .profiles import Endpoint, ProfileEndpoints
 from .utils.logger import LOGGER
 from .utils.response import async_read_limited
 from .utils.validate import (
@@ -21,9 +22,12 @@ from .utils.validate import (
 class CatalogClient:
     """Fetch the catalog data the Marketplace is built from."""
 
-    def __init__(self, session: ClientSession, client_name: str) -> None:
+    def __init__(
+        self, session: ClientSession, client_name: str, endpoints: ProfileEndpoints
+    ) -> None:
         """Initialize."""
         self._client_name = client_name
+        self._endpoints = endpoints
         self._etags: dict[str, str | None] = {}
         self._session = session
 
@@ -108,9 +112,37 @@ class CatalogClient:
         self._etags[f"{section}/data.json"] = etag
 
     async def _async_get_section(self, section: str) -> tuple[Any, str | None]:
-        """Fetch a section of the catalog and its ETag, a 304 raises NotModifiedError."""
+        """Fetch a section from the first endpoint that answers, with its ETag.
+
+        An endpoint that fails falls back to the next. A 304 raises
+        NotModifiedError.
+        """
+        failed: list[str] = []
+        error: MarketplaceError | None = None
+
+        for base in self._endpoints.bases(Endpoint.CATALOG):
+            try:
+                data, etag = await self._async_fetch(base, section)
+            except NotModifiedError:
+                self._endpoints.worked(Endpoint.CATALOG, base, failed)
+                raise
+            except MarketplaceError as exception:
+                error = exception
+                failed.append(base)
+                continue
+
+            self._endpoints.worked(Endpoint.CATALOG, base, failed)
+            return data, etag
+
+        # A profile has at least one catalog endpoint
+        if TYPE_CHECKING:
+            assert error is not None
+        raise error
+
+    async def _async_fetch(self, base: str, section: str) -> tuple[Any, str | None]:
+        """Fetch a section from an endpoint, a 304 raises NotModifiedError."""
         endpoint = f"{section}/data.json"
-        url = f"https://data-v2.hacs.xyz/{endpoint}"
+        url = f"{base}/{endpoint}"
         try:
             async with self._session.get(
                 url,
