@@ -12,6 +12,7 @@ from pylondonair import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.london_air.const import CONF_LOCATIONS, DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -154,3 +155,30 @@ async def test_second_update_throttled(
         blocking=True,
     )
     assert mock_london_air_client.async_update.await_count == 1
+
+
+async def test_multiple_yaml_blocks_merge_locations(
+    hass: HomeAssistant,
+    london_air_data: LondonAirData,
+    mock_london_air_client: AsyncMock,
+) -> None:
+    """Test that multiple YAML blocks merge their locations into one entry."""
+    mock_london_air_client.async_update.return_value = london_air_data
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {"platform": "london_air", "locations": ["Merton"]},
+                {"platform": "london_air", "locations": ["Barnet"]},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert set(entries[0].data[CONF_LOCATIONS]) == {"Merton", "Barnet"}
+
+    assert hass.states.get("sensor.merton") is not None
+    assert hass.states.get("sensor.barnet") is not None

@@ -55,25 +55,34 @@ async def async_setup_platform(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
-    if (
-        result["type"] is FlowResultType.ABORT
-        and (reason := result["reason"]) != "single_instance_allowed"
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{reason}",
-            breaks_in_ha_version=BREAKS_IN_HA_VERSION,
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_import_issue",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": INTEGRATION_TITLE,
-            },
-        )
-        return
+    if result["type"] is FlowResultType.ABORT:
+        if (reason := result["reason"]) == "single_instance_allowed":
+            # Additional YAML blocks abort as single-instance; merge their locations.
+            entry = hass.config_entries.async_entries(DOMAIN)[0]
+            existing = entry.data[CONF_LOCATIONS]
+            additional = [loc for loc in config[CONF_LOCATIONS] if loc not in existing]
+            if additional:
+                hass.config_entries.async_update_entry(
+                    entry,
+                    data={**entry.data, CONF_LOCATIONS: existing + additional},
+                )
+                await hass.config_entries.async_reload(entry.entry_id)
+        else:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{reason}",
+                breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": INTEGRATION_TITLE,
+                },
+            )
+            return
 
     ir.async_create_issue(
         hass,
