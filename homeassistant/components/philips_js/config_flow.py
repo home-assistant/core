@@ -89,7 +89,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._current[CONF_HOST] = host
         self._current[CONF_SYSTEM] = hub.system
         self._current[CONF_API_VERSION] = hub.api_version
-        self.context.update({"title_placeholders": {CONF_NAME: hub.name}})
+        self.context.update({"title_placeholders": {"name": hub.name}})
 
         if serialnumber := hub.system.get("serialnumber"):
             await self.async_set_unique_id(serialnumber)

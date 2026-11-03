@@ -129,8 +129,8 @@ class TeslaWallConnectorConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         self.context["title_placeholders"] = {
-            CONF_HOST: self.ip_address,
-            WALLCONNECTOR_SERIAL_NUMBER: serial_number,
+            "host": self.ip_address,
+            "serial_number": serial_number,
         }
         return await self.async_step_user()
 
