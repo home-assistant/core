@@ -287,7 +287,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         hk_data[CONF_EXCLUDE_ACCESSORY_MODE] = True
         return self.async_show_form(
             step_id="pairing",
-            description_placeholders={CONF_NAME: hk_data[CONF_NAME]},
+            description_placeholders={"name": hk_data[CONF_NAME]},
         )
 
     async def _async_add_entries_for_accessory_mode_entities(

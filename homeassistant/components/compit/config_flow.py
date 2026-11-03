@@ -107,6 +107,6 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_SCHEMA,
-            description_placeholders={CONF_EMAIL: reauth_entry_data[CONF_EMAIL]},
+            description_placeholders={"email": reauth_entry_data[CONF_EMAIL]},
             errors=errors,
         )
