@@ -198,6 +198,11 @@ async def handle_webhook(
         _LOGGER.warning("Received invalid JSON from mobile_app device: %s", device_name)
         return empty_okay_response(status=HTTPStatus.BAD_REQUEST)
 
+    if config_entry.data[CONF_WEBHOOK_ID] != webhook_id:
+        # The app registered again, possibly for another user, while the
+        # request was received
+        return Response(status=HTTPStatus.GONE)
+
     if (
         ATTR_WEBHOOK_ENCRYPTED not in req_data
         and config_entry.data[ATTR_SUPPORTS_ENCRYPTION]

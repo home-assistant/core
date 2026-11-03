@@ -95,10 +95,33 @@ async def async_retire_webhook(
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
     store = hass.data[DOMAIN][DATA_STORE]
     await store.async_save(savable_state(hass))
+    await async_delete_registration_cloudhook(hass, registration)
 
+
+async def async_delete_registration_cloudhook(
+    hass: HomeAssistant, registration: Mapping[str, Any]
+) -> None:
+    """Delete the cloudhook of a registration, if it has one."""
     if CONF_CLOUDHOOK_URL in registration:
         with suppress(cloud.CloudNotAvailable, ValueError):
-            await cloud.async_delete_cloudhook(hass, webhook_id)
+            await cloud.async_delete_cloudhook(hass, registration[CONF_WEBHOOK_ID])
+
+
+@callback
+def _async_move_sensors(
+    hass: HomeAssistant, entry: ConfigEntry, from_webhook_id: str, to_webhook_id: str
+) -> None:
+    """Move the sensors of an entry to another webhook ID."""
+    entity_registry = er.async_get(hass)
+    # Sensor unique IDs are prefixed with the webhook ID
+    from_prefix = f"{from_webhook_id}_"
+    to_prefix = f"{to_webhook_id}_"
+    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if entity.unique_id.startswith(from_prefix):
+            entity_registry.async_update_entity(
+                entity.entity_id,
+                new_unique_id=to_prefix + entity.unique_id.removeprefix(from_prefix),
+            )
 
 
 async def async_update_registration(
@@ -106,33 +129,43 @@ async def async_update_registration(
 ) -> bool:
     """Update the entry of an app which registers again.
 
-    Return True if the entry has been reloaded with the new registration.
+    Must be called with the registration lock held. Return True if the entry
+    has been reloaded with the new registration, otherwise the entry keeps the
+    old registration and the cloudhook of the new one is deleted.
     """
     old_registration = entry.data
-    entity_registry = er.async_get(hass)
+    old_title = entry.title
+    old_webhook_id = old_registration[CONF_WEBHOOK_ID]
+    new_webhook_id = registration[CONF_WEBHOOK_ID]
 
-    # Sensor unique IDs are prefixed with the webhook ID
-    old_prefix = f"{old_registration[CONF_WEBHOOK_ID]}_"
-    new_prefix = f"{registration[CONF_WEBHOOK_ID]}_"
-    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
-        if entity.unique_id.startswith(old_prefix):
-            entity_registry.async_update_entity(
-                entity.entity_id,
-                new_unique_id=new_prefix + entity.unique_id.removeprefix(old_prefix),
-            )
-
+    _async_move_sensors(hass, entry, old_webhook_id, new_webhook_id)
     hass.config_entries.async_update_entry(
         entry, title=registration[ATTR_DEVICE_NAME], data=registration
     )
     try:
-        reloaded = await hass.config_entries.async_reload(entry.entry_id)
+        if entry.disabled_by:
+            # The apps register again when the webhook of a disabled entry
+            # doesn't respond, so enable the entry instead of failing each time
+            reloaded = await hass.config_entries.async_set_disabled_by(
+                entry.entry_id, None
+            )
+        else:
+            reloaded = await hass.config_entries.async_reload(entry.entry_id)
     except OperationNotAllowed:
         reloaded = False
+
     if not reloaded:
+        # The app keeps using the old registration when registering fails
+        _async_move_sensors(hass, entry, new_webhook_id, old_webhook_id)
+        hass.config_entries.async_update_entry(
+            entry, title=old_title, data=old_registration
+        )
+        await async_delete_registration_cloudhook(hass, registration)
         return False
 
     await async_retire_webhook(hass, old_registration)
 
+    entity_registry = er.async_get(hass)
     if devt_entity_id := entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, registration[ATTR_DEVICE_ID]
     ):

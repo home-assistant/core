@@ -1,6 +1,7 @@
 """Integrates Native Apps to Home Assistant."""
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
+import asyncio
 from contextlib import suppress
 from functools import partial
 from typing import Any, override
@@ -46,6 +47,7 @@ from .const import (
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DATA_PUSH_CHANNEL,
+    DATA_REGISTRATION_LOCK,
     DATA_STORE,
     DOMAIN,
     SENSOR_TYPES,
@@ -89,6 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
+        DATA_REGISTRATION_LOCK: asyncio.Lock(),
     }
 
     # Tokens can expire while Home Assistant is stopped.

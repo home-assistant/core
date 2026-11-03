@@ -1,4 +1,5 @@
 """Provides an HTTP API for mobile_app."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from contextlib import suppress
 from http import HTTPStatus
@@ -8,10 +9,13 @@ from aiohttp.web import Request, Response
 from nacl.secret import SecretBox
 import probatio
 
+from homeassistant.auth.models import User
 from homeassistant.components import cloud
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import slugify
 
@@ -30,10 +34,15 @@ from .const import (
     CONF_REMOTE_UI_URL,
     CONF_SECRET,
     CONF_USER_ID,
+    DATA_REGISTRATION_LOCK,
     DOMAIN,
     SCHEMA_APP_DATA,
 )
-from .util import async_create_cloud_hook, async_update_registration
+from .util import (
+    async_create_cloud_hook,
+    async_delete_registration_cloudhook,
+    async_update_registration,
+)
 
 
 class RegistrationsView(HomeAssistantView):
@@ -64,50 +73,14 @@ class RegistrationsView(HomeAssistantView):
     async def post(self, request: Request, data: dict) -> Response:
         """Handle the POST request for registration."""
         hass = request.app[KEY_HASS]
-
-        webhook_id = secrets.token_hex()
         user = request["hass_user"]
 
-        entry = None
-        if ATTR_DEVICE_ID in data:
-            entry = hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, f"{data[ATTR_APP_ID]}-{data[ATTR_DEVICE_ID]}"
-            )
-        if entry is not None and entry.disabled_by:
+        # Serialize registrations, an app registering again updates its entry
+        async with hass.data[DOMAIN][DATA_REGISTRATION_LOCK]:
+            registered = await _async_register(hass, user, data)
+        if not registered:
             return self.json_message(
-                "The registration of this device is disabled", HTTPStatus.CONFLICT
-            )
-
-        if (
-            not user.local_only
-            and cloud.async_active_subscription(hass)
-            and cloud.async_is_connected(hass)
-        ):
-            data[CONF_CLOUDHOOK_URL] = await async_create_cloud_hook(
-                hass, webhook_id, None
-            )
-
-        data[CONF_WEBHOOK_ID] = webhook_id
-
-        if data[ATTR_SUPPORTS_ENCRYPTION]:
-            data[CONF_SECRET] = secrets.token_hex(SecretBox.KEY_SIZE)
-
-        data[CONF_USER_ID] = user.id
-
-        # Fallback to DEVICE_ID if slug is empty.
-        if not slugify(data[ATTR_DEVICE_NAME], separator=""):
-            data[ATTR_DEVICE_NAME] = data[ATTR_DEVICE_ID]
-
-        if entry is None:
-            await hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, data=data, context={"source": "registration"}
-                )
-            )
-        elif not await async_update_registration(hass, entry, data):
-            return self.json_message(
-                "Failed to update the registration",
-                HTTPStatus.INTERNAL_SERVER_ERROR,
+                "Failed to register the app", HTTPStatus.INTERNAL_SERVER_ERROR
             )
 
         remote_ui_url = None
@@ -124,3 +97,43 @@ class RegistrationsView(HomeAssistantView):
             },
             status_code=HTTPStatus.CREATED,
         )
+
+
+async def _async_register(hass: HomeAssistant, user: User, data: dict) -> bool:
+    """Register an app, return True if successful."""
+    webhook_id = secrets.token_hex()
+
+    if (
+        not user.local_only
+        and cloud.async_active_subscription(hass)
+        and cloud.async_is_connected(hass)
+    ):
+        data[CONF_CLOUDHOOK_URL] = await async_create_cloud_hook(hass, webhook_id, None)
+
+    data[CONF_WEBHOOK_ID] = webhook_id
+
+    if data[ATTR_SUPPORTS_ENCRYPTION]:
+        data[CONF_SECRET] = secrets.token_hex(SecretBox.KEY_SIZE)
+
+    data[CONF_USER_ID] = user.id
+
+    # Fallback to DEVICE_ID if slug is empty.
+    if not slugify(data[ATTR_DEVICE_NAME], separator=""):
+        data[ATTR_DEVICE_NAME] = data[ATTR_DEVICE_ID]
+
+    if ATTR_DEVICE_ID in data and (
+        entry := hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, f"{data[ATTR_APP_ID]}-{data[ATTR_DEVICE_ID]}"
+        )
+    ):
+        return await async_update_registration(hass, entry, data)
+
+    result = await hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, data=data, context={"source": "registration"}
+        )
+    )
+    if result["type"] is FlowResultType.CREATE_ENTRY:
+        return True
+    await async_delete_registration_cloudhook(hass, data)
+    return False
