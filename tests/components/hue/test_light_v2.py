@@ -2,19 +2,25 @@
 
 import asyncio
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.components.light import ColorMode
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import color as color_util
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
-from .const import FAKE_DEVICE, FAKE_LIGHT, FAKE_ZIGBEE_CONNECTIVITY
+from .const import (
+    FAKE_DEVICE,
+    FAKE_GRADIENT_LIGHT,
+    FAKE_LIGHT,
+    FAKE_ZIGBEE_CONNECTIVITY,
+)
 
 GRADIENT_LIGHT_ID = "8015b17f-8336-415b-966a-b364bd082397"
 GRADIENT_LIGHT_ENTITY_ID = "light.hue_light_with_color_and_color_temperature_gradient"
@@ -576,6 +582,153 @@ async def test_gradient_segment_color_fallback(
         "on": {"on": True},
         "gradient": gradient_json(expected_points),
     }
+
+
+async def test_gradient_segments_sequential_writes(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test a write keeps the points of a previous write the bridge has not echoed."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    for index, xy_color in ((0, (0.1, 0.2)), (1, (0.3, 0.4))):
+        await hass.services.async_call(
+            "light",
+            "turn_on",
+            {"entity_id": GRADIENT_SEGMENT_ENTITY_IDS[index], "xy_color": xy_color},
+            blocking=True,
+        )
+
+    # the second request carries both new colors
+    expected_points = list(GRADIENT_POINTS)
+    expected_points[0] = (0.1, 0.2)
+    expected_points[1] = (0.3, 0.4)
+    assert len(mock_bridge_v2.mock_requests) == 2
+    assert mock_bridge_v2.mock_requests[1]["json"]["gradient"] == gradient_json(
+        expected_points
+    )
+
+    # once the bridge reports its points those are the baseline again
+    reported_points = [(0.5, 0.5), (0.6, 0.6), (0.7, 0.7), (0.8, 0.8), (0.9, 0.9)]
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "id": GRADIENT_LIGHT_ID,
+            "type": "light",
+            "gradient": {
+                "points": [
+                    {"color": {"xy": {"x": x, "y": y}}} for x, y in reported_points
+                ]
+            },
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": GRADIENT_SEGMENT_ENTITY_IDS[2], "xy_color": (0.123, 0.456)},
+        blocking=True,
+    )
+
+    expected_points = list(reported_points)
+    expected_points[2] = (0.123, 0.456)
+    assert len(mock_bridge_v2.mock_requests) == 3
+    assert mock_bridge_v2.mock_requests[2]["json"]["gradient"] == gradient_json(
+        expected_points
+    )
+
+
+async def test_gradient_segments_write_failure(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test a failed request reaches all merged callers and leaves no stale state."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    with patch.object(
+        mock_bridge_v2, "async_request_call", side_effect=HomeAssistantError
+    ):
+        results = await asyncio.gather(
+            *(
+                hass.services.async_call(
+                    "light",
+                    "turn_on",
+                    {"entity_id": GRADIENT_SEGMENT_ENTITY_IDS[index], "xy_color": xy},
+                    blocking=True,
+                )
+                for index, xy in ((0, (0.1, 0.2)), (1, (0.3, 0.4)))
+            ),
+            return_exceptions=True,
+        )
+    assert len(results) == 2
+    for result in results:
+        assert isinstance(result, HomeAssistantError)
+
+    # the failed colors are dropped, the next write starts from the light state
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": GRADIENT_SEGMENT_ENTITY_IDS[2], "xy_color": (0.123, 0.456)},
+        blocking=True,
+    )
+
+    expected_points = list(GRADIENT_POINTS)
+    expected_points[2] = (0.123, 0.456)
+    assert len(mock_bridge_v2.mock_requests) == 1
+    assert mock_bridge_v2.mock_requests[0]["json"] == {
+        "on": {"on": True},
+        "gradient": gradient_json(expected_points),
+    }
+
+
+async def test_gradient_segments_turn_off_coalesced(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test turning off several segments at once results in one request."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    await asyncio.gather(
+        *(
+            hass.services.async_call(
+                "light", "turn_off", {"entity_id": entity_id}, blocking=True
+            )
+            for entity_id in GRADIENT_SEGMENT_ENTITY_IDS[:3]
+        )
+    )
+
+    assert len(mock_bridge_v2.mock_requests) == 1
+    assert mock_bridge_v2.mock_requests[0]["json"] == {"on": {"on": False}}
+
+
+async def test_gradient_light_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
+    """Test a gradient light added to the bridge gets its segment lights."""
+    await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
+
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    mock_bridge_v2.api.emit_event("add", FAKE_GRADIENT_LIGHT)
+    await hass.async_block_till_done()
+
+    segment_entity_ids = [
+        f"light.hue_mocked_device_segment_{number}" for number in range(1, 4)
+    ]
+    test_entity = hass.states.get("light.hue_mocked_device")
+    assert test_entity is not None
+    assert test_entity.attributes["group_entities"] == segment_entity_ids
+    segment_1 = hass.states.get(segment_entity_ids[0])
+    assert segment_1 is not None
+    assert segment_1.attributes["friendly_name"] == "Hue mocked device Segment 1"
+    assert segment_1.state == "on"
+    assert segment_1.attributes["brightness"] == 128
+    assert segment_1.attributes["xy_color"] == (0.1, 0.2)
+    # the light reports fewer points than it is capable of, the rest shows its color
+    segment_3 = hass.states.get(segment_entity_ids[2])
+    assert segment_3 is not None
+    assert segment_3.attributes["xy_color"] == (0.3127, 0.329)
 
 
 async def test_light_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:

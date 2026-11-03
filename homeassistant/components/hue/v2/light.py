@@ -391,7 +391,6 @@ class HueGradientSegmentLight(HueBaseEntity, LightEntity):
         """Initialize the segment light."""
         super().__init__(bridge, controller, resource)
         self.resource = resource
-        self.controller = controller
         self._writer = writer
         self._index = number - 1
         self._attr_unique_id = gradient_segment_unique_id(resource, number)
@@ -420,38 +419,38 @@ class HueGradientSegmentLight(HueBaseEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on, setting the color of this segment when given."""
-        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
-        brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
-        if (xy_color := kwargs.get(ATTR_XY_COLOR)) is None:
-            await self.bridge.async_request_call(
-                self.controller.set_state,
-                id=self.resource.id,
-                on=True,
-                brightness=brightness,
-                transition_time=transition,
-            )
-            return
-        await self._writer.async_set_point(
-            self._index, xy_color, brightness, transition
+        point = None
+        if (xy_color := kwargs.get(ATTR_XY_COLOR)) is not None:
+            point = (self._index, xy_color)
+        await self._writer.async_set_state(
+            on=True,
+            brightness=normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS)),
+            transition=normalize_hue_transition(kwargs.get(ATTR_TRANSITION)),
+            point=point,
         )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
-        await self.bridge.async_request_call(
-            self.controller.set_state,
-            id=self.resource.id,
+        await self._writer.async_set_state(
             on=False,
-            transition_time=transition,
+            brightness=None,
+            transition=normalize_hue_transition(kwargs.get(ATTR_TRANSITION)),
         )
+
+    @callback
+    @override
+    def on_update(self) -> None:
+        """Handle a state update of the light reported by the bridge."""
+        self._writer.resource_updated()
 
 
 class HueGradientWriter:
-    """Write segment colors of a gradient light to the bridge.
+    """Write the state of the segments of a gradient light to the bridge.
 
-    The bridge only accepts the full list of points, so colors written to
-    several segments at the same time are merged into a single request.
+    The segments share one light resource, so writes to several segments at
+    the same time are merged into a single request. Colors are sent as the
+    full list of gradient points.
     """
 
     def __init__(
@@ -461,20 +460,29 @@ class HueGradientWriter:
         self._bridge = bridge
         self._controller = controller
         self._resource = resource
+        self._pending_on: bool | None = None
         self._pending_points: dict[int, tuple[float, float]] = {}
         self._pending_brightness: float | None = None
         self._pending_transition: float | None = None
+        self._written_points: list[tuple[float, float]] | None = None
         self._flush_task: asyncio.Task[None] | None = None
 
-    async def async_set_point(
+    async def async_set_state(
         self,
-        index: int,
-        xy_color: tuple[float, float],
+        on: bool,
         brightness: float | None,
         transition: float | None,
+        point: tuple[int, tuple[float, float]] | None = None,
     ) -> None:
-        """Set the color of one point, sent together with concurrent writes."""
-        self._pending_points[index] = xy_color
+        """Set the light state, optionally with the color of one gradient point.
+
+        The write is sent together with writes of other segments made at the
+        same time.
+        """
+        self._pending_on = on
+        if point is not None:
+            index, xy_color = point
+            self._pending_points[index] = xy_color
         if brightness is not None:
             self._pending_brightness = brightness
         if transition is not None:
@@ -484,26 +492,45 @@ class HueGradientWriter:
         # shielded so a cancelled caller does not drop the writes of the others
         await asyncio.shield(self._flush_task)
 
+    @callback
+    def resource_updated(self) -> None:
+        """Handle a state update of the light reported by the bridge."""
+        self._written_points = None
+
     async def _async_flush(self) -> None:
-        """Send the pending points to the bridge after the coalescing window."""
+        """Send the pending state to the bridge after the coalescing window."""
         await asyncio.sleep(GRADIENT_COALESCE_DELAY)
         # take the pending state before the request so writes arriving while it
         # is in flight start a new flush instead of getting lost
+        on, self._pending_on = self._pending_on, None
         points, self._pending_points = self._pending_points, {}
         brightness, self._pending_brightness = self._pending_brightness, None
         transition, self._pending_transition = self._pending_transition, None
         self._flush_task = None
-        gradient = self._resource.gradient
+        gradient_points = None
+        gradient_mode = None
+        if points:
+            gradient = self._resource.gradient
+            # the resource only reflects a write once the bridge reports it back,
+            # so until then the last written points are the baseline for the rest
+            if (baseline := self._written_points) is None:
+                baseline = [
+                    gradient_point_color(self._resource, index)
+                    for index in range(gradient.points_capable)
+                ]
+            gradient_points = [
+                points.get(index, color) for index, color in enumerate(baseline)
+            ]
+            # the bridge resets the mode to interpolated when it is omitted
+            gradient_mode = gradient.mode
         await self._bridge.async_request_call(
             self._controller.set_state,
             id=self._resource.id,
-            on=True,
+            on=on,
             brightness=brightness,
             transition_time=transition,
-            gradient_points=[
-                points.get(index) or gradient_point_color(self._resource, index)
-                for index in range(gradient.points_capable)
-            ],
-            # the bridge resets the mode to interpolated when it is omitted
-            gradient_mode=gradient.mode,
+            gradient_points=gradient_points,
+            gradient_mode=gradient_mode,
         )
+        if gradient_points is not None:
+            self._written_points = gradient_points
