@@ -79,7 +79,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=error)
 
         self._discovered_host = discovery_info.ip
-        self.context["title_placeholders"] = {CONF_HOST: discovery_info.ip}
+        self.context["title_placeholders"] = {"host": discovery_info.ip}
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(

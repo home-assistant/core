@@ -47,11 +47,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      coordinator.py, media_player.py and remote.py are below 95%.
-      There are no tests for the button, media_player and remote platforms.
+  test-coverage: done
 
   # Gold
   devices: done
