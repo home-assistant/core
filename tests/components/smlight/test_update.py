@@ -29,13 +29,7 @@ from homeassistant.components.update import (
     SERVICE_INSTALL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -122,11 +116,11 @@ async def test_catalog_connection_error_recovery(
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
     catalog_responses: list[list[Firmware] | SmlightConnectionError],
 ) -> None:
     """Test catalog connection errors preserve availability and recover."""
-    await setup_integration(hass, mock_config_entry)
+    entry = await setup_integration(hass, mock_config_entry)
+    coordinator = entry.runtime_data.firmware
     assert hass.states.get("update.mock_title_core_firmware").state == STATE_ON
     assert hass.states.get("update.mock_title_zigbee_firmware").state == STATE_ON
 
@@ -137,11 +131,10 @@ async def test_catalog_connection_error_recovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert "Catalog unavailable" in caplog.text
-    assert hass.states.get("update.mock_title_core_firmware").state != STATE_UNAVAILABLE
-    assert (
-        hass.states.get("update.mock_title_zigbee_firmware").state != STATE_UNAVAILABLE
-    )
+    assert coordinator.last_exception is None
+    assert coordinator.last_update_success
+    assert hass.states.get("update.mock_title_core_firmware").state == STATE_ON
+    assert hass.states.get("update.mock_title_zigbee_firmware").state == STATE_ON
 
     mock_smlight_client.get_firmware_version.side_effect = side_effect
     mock_smlight_client.get_info.side_effect = None
