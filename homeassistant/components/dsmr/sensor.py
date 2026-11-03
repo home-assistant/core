@@ -8,9 +8,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import IntEnum
 from functools import partial
-from zoneinfo import ZoneInfo
 from typing import override
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 from dsmr_parser.clients.protocol import create_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
@@ -1094,6 +1094,8 @@ class DSMREntity(SensorEntity):
                 self._attr_unique_id = f"{device_serial}"
             else:
                 self._attr_unique_id = f"{device_serial}_{mbus_id}"
+            if entity_description.key.startswith("belgium_gas_"):
+                self._attr_unique_id += f"_{entity_description.key}"
         else:
             self._attr_unique_id = f"{device_serial}_{entity_description.key}"
 
@@ -1139,7 +1141,15 @@ class DSMREntity(SensorEntity):
         if self.entity_description.obis_reference == "ELECTRICITY_ACTIVE_TARIFF":
             return self.translate_tariff(value, self._entry.data[CONF_DSMR_VERSION])
 
-        with suppress(TypeError):
+        if self.entity_description.key in {
+            "belgium_version_information",
+            "belgium_equipment_identifier",
+            "belgium_gas_equipment_identifier",
+            "belgium_text_message",
+        }:
+            return str(value)
+
+        with suppress(TypeError, ValueError):
             value = round(float(value), DEFAULT_PRECISION)
 
         # Make sure we do not return a zero value for an energy sensor
@@ -1179,13 +1189,17 @@ class DSMRBelgiumDemandHistory(DSMREntity):
         telegram: Telegram,
     ) -> None:
         """Initialize historical maximum demand sensor."""
-        super().__init__(entity_description, entry, telegram, SensorDeviceClass.POWER, "kW")
+        super().__init__(
+            entity_description, entry, telegram, SensorDeviceClass.POWER, "kW"
+        )
 
     @property
     @override
     def native_value(self) -> float | None:
         """Return the last valid monthly peak."""
-        peaks = get_dsmr_object(self.telegram, 0, self.entity_description.obis_reference)
+        peaks = get_dsmr_object(
+            self.telegram, 0, self.entity_description.obis_reference
+        )
         if not isinstance(peaks, list):
             return None
         valid = [peak for peak in peaks if self._valid_peak(peak)]
@@ -1212,7 +1226,10 @@ class DSMRBelgiumDemandHistory(DSMREntity):
         return {
             "monthly_peaks": [
                 {
-                    "month": (peak.datetime.astimezone(ZoneInfo("Europe/Brussels")).date() - timedelta(days=1)).strftime("%Y-%m"),
+                    "month": (
+                        peak.datetime.astimezone(ZoneInfo("Europe/Brussels")).date()
+                        - timedelta(days=1)
+                    ).strftime("%Y-%m"),
                     "peak": float(peak.value),
                     "occurred": (
                         peak.occurred.isoformat()
