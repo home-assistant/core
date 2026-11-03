@@ -25,11 +25,15 @@ from dsmr_parser.obis_references import (
     MBUS_EQUIPMENT_IDENTIFIER,
     MBUS_METER_READING,
 )
-from dsmr_parser.objects import CosemObject, MBusObject, Telegram
+from dsmr_parser.objects import CosemObject, MBusObject, MBusObjectPeak, Telegram
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, patch
 
-from homeassistant.components.dsmr.sensor import SENSORS, SENSORS_MBUS_DEVICE_TYPE
+from homeassistant.components.dsmr.sensor import (
+    DSMRBelgiumDemandHistory,
+    SENSORS,
+    SENSORS_MBUS_DEVICE_TYPE,
+)
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -1961,3 +1965,77 @@ def test_all_obis_references_exists() -> None:
     for sensors in SENSORS_MBUS_DEVICE_TYPE.values():
         for sensor in sensors:
             assert hasattr(obis_references, sensor.obis_reference)
+
+
+def test_belgian_diagnostic_descriptions() -> None:
+    """Belgian diagnostic descriptions are limited to DSMR 5B."""
+    keys = {
+        "belgium_version_information",
+        "belgium_equipment_identifier",
+        "belgium_switch_position",
+        "belgium_text_message",
+        "belgium_maximum_demand_history",
+    }
+    descriptions = {description.key: description for description in SENSORS}
+    assert keys <= descriptions.keys()
+    for key in keys:
+        assert descriptions[key].dsmr_versions == {"5B"}
+    gas_keys = {
+        "belgium_gas_device_type",
+        "belgium_gas_equipment_identifier",
+        "belgium_gas_valve_position",
+    }
+    gas_descriptions = {
+        description.key: description
+        for description in SENSORS_MBUS_DEVICE_TYPE[3]
+    }
+    assert gas_keys <= gas_descriptions.keys()
+
+
+def test_belgian_monthly_demand_history() -> None:
+    """Expose completed months, ignoring malformed placeholder peak records."""
+    from dsmr_parser.obis_references import BELGIUM_MAXIMUM_DEMAND_13_MONTHS
+
+    description = next(
+        item for item in SENSORS
+        if item.key == "belgium_maximum_demand_history"
+    )
+    telegram = Telegram()
+    peaks = [
+        MBusObjectPeak(
+            (0, 0),
+            [
+                {"value": None},
+                {"value": None},
+                {"value": Decimal("0"), "unit": "kW"},
+            ],
+        ),
+        MBusObjectPeak(
+            (0, 0),
+            [
+                {"value": dt.datetime(2026, 11, 1, tzinfo=dt.UTC)},
+                {"value": dt.datetime(2026, 10, 29, 16, 30, tzinfo=dt.UTC)},
+                {"value": Decimal("3.277"), "unit": "kW"},
+            ],
+        ),
+    ]
+    telegram.add(
+        BELGIUM_MAXIMUM_DEMAND_13_MONTHS,
+        peaks,
+        "BELGIUM_MAXIMUM_DEMAND_13_MONTHS",
+    )
+    entry = MockConfigEntry(
+        domain="dsmr",
+        data={"serial_id": "test-meter", "dsmr_version": "5B"},
+    )
+    entity = DSMRBelgiumDemandHistory(description, entry, telegram)
+    assert entity.native_value == 3.277
+    assert entity.extra_state_attributes == {
+        "monthly_peaks": [
+            {
+                "month": "2026-10",
+                "peak": 3.277,
+                "occurred": "2026-10-29T16:30:00+00:00",
+            }
+        ]
+    }
