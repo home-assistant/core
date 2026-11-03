@@ -24,6 +24,8 @@ from homeassistant.const import (
     STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import async_setup_component
 
 from . import (
     BASE_OPTIONS,
@@ -281,23 +283,56 @@ async def test_setup_config_path(
     assert mock_client.call_args.kwargs.get(CONF_PATH) == expected_path
 
 
-@pytest.mark.parametrize(
-    "config_ext",
-    [
-        {"host": "host"},
-        {"username": "user", "password": "password"},
-        {"api_version": influxdb.API_VERSION_2},
-        {"token": "token", "organization": "organization"},
-        {"precision": "invalid"},
-    ],
-)
-async def test_invalid_config_schema(
-    hass: HomeAssistant,
-    config_ext: dict[str, Any],
-) -> None:
-    """Test that connection keys and invalid options are rejected in YAML."""
+async def test_invalid_config_schema(hass: HomeAssistant) -> None:
+    """Test that invalid options are rejected in YAML."""
     with pytest.raises(probatio.Invalid):
-        influxdb.CONFIG_SCHEMA({"influxdb": config_ext})
+        influxdb.CONFIG_SCHEMA({"influxdb": {"precision": "invalid"}})
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "mock_client", "config_base"),
+    [
+        pytest.param(
+            {"influxdb": {"host": "host", "port": 123, "precision": "s"}},
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            id="v1",
+        ),
+        pytest.param(
+            {
+                "influxdb": {
+                    "api_version": influxdb.API_VERSION_2,
+                    "token": "token",
+                    "organization": "organization",
+                    "bucket": "bucket",
+                    "precision": "s",
+                }
+            },
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            id="v2",
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_removed_connection_keys(
+    hass: HomeAssistant,
+    hass_config: ConfigType,
+    mock_client: MagicMock,
+    config_base: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that leftover YAML connection keys are logged and ignored."""
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=config_base)
+    mock_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, hass_config)
+    await hass.async_block_till_done()
+
+    assert mock_entry.state is ConfigEntryState.LOADED
+    for key in hass_config[DOMAIN].keys() - {"precision"}:
+        assert f"The '{key}' option has been removed" in caplog.text
+    assert "The 'precision' option" not in caplog.text
 
 
 async def _setup(

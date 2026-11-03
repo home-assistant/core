@@ -195,7 +195,24 @@ INFLUX_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: INFLUX_SCHEMA},
+    {
+        DOMAIN: probatio.All(
+            cv.removed(CONF_API_VERSION, raise_if_present=False),
+            cv.removed(CONF_HOST, raise_if_present=False),
+            cv.removed(CONF_PORT, raise_if_present=False),
+            cv.removed(CONF_SSL, raise_if_present=False),
+            cv.removed(CONF_VERIFY_SSL, raise_if_present=False),
+            cv.removed(CONF_SSL_CA_CERT, raise_if_present=False),
+            cv.removed(CONF_USERNAME, raise_if_present=False),
+            cv.removed(CONF_PASSWORD, raise_if_present=False),
+            cv.removed(CONF_DB_NAME, raise_if_present=False),
+            cv.removed(CONF_TOKEN, raise_if_present=False),
+            cv.removed(CONF_ORG, raise_if_present=False),
+            cv.removed(CONF_BUCKET, raise_if_present=False),
+            cv.removed(CONF_PATH, raise_if_present=False),
+            INFLUX_SCHEMA,
+        )
+    },
     extra=probatio.ALLOW_EXTRA,
 )
 
