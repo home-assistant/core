@@ -361,7 +361,8 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         if not check_conditions(self._cond_func, variables):
             return
 
-        # Triggers without a context pass None, which must clear the previous one
+        # Triggers without a context pass None, which clears the previous context.
+        # Needs review: other async_set_context callers skip None and keep it.
         self.async_set_context(self.coordinator.data["context"])  # type: ignore[arg-type]
         if self._render_availability_template(variables):
             self._render_templates(variables)
