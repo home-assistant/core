@@ -368,7 +368,7 @@ class HueGradientSegmentLight(HueBaseEntity, LightEntity):
     """One color point of a Hue gradient light.
 
     On/off and brightness apply to the whole light, as the Hue API has no
-    per-point control for them.
+    per-point control for them. Segments are hidden by default.
     """
 
     entity_description = LightEntityDescription(
@@ -379,6 +379,9 @@ class HueGradientSegmentLight(HueBaseEntity, LightEntity):
     _attr_color_mode = ColorMode.XY
     _attr_supported_color_modes = {ColorMode.XY}
     _attr_supported_features = LightEntityFeature.TRANSITION
+    # area and device targets skip hidden entities, so whole-room commands
+    # reach only the main light instead of fanning out to every segment
+    _attr_entity_registry_visible_default = False
 
     def __init__(
         self,
