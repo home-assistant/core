@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
 
 @callback
 def _async_check_model_lifecycle(
-    hass: HomeAssistant, entry: AnthropicConfigEntry
+    hass: HomeAssistant, entry: AnthropicConfigEntry | None
 ) -> None:
     """Update the shared repair issue for deprecated or retired models."""
     for config_entry in hass.config_entries.async_entries(DOMAIN):
@@ -85,6 +85,14 @@ def _async_check_model_lifecycle(
 async def async_unload_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> None:
     """Unload Anthropic."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Not on plain unload: a reload would recreate the issue and drop its ignore
+    if entry.disabled_by:
+        _async_check_model_lifecycle(hass, None)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> None:
+    """Remove the model lifecycle issue if only the removed entry needed it."""
+    _async_check_model_lifecycle(hass, None)
 
 
 async def async_update_options(
