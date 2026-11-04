@@ -110,8 +110,10 @@ async def test_purge_big_database(hass: HomeAssistant, recorder_mock: Recorder) 
         with session_scope(hass=hass) as session:
             states = session.query(States)
             state_attributes = session.query(StateAttributes)
-            assert states.count() == 24
-            assert state_attributes.count() == 1
+            # Each of the 12 runs keeps the old state its first state in the
+            # window links to
+            assert states.count() == 36
+            assert state_attributes.count() == 2
 
 
 async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) -> None:
@@ -157,8 +159,8 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
     with session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
-        assert states.count() == 2
-        assert state_attributes.count() == 1
+        assert states.count() == 3
+        assert state_attributes.count() == 2
 
     assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
@@ -169,9 +171,12 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
         state_map_by_state = {state.state: state for state in states_after_purge}
         dontpurgeme_5 = state_map_by_state["dontpurgeme_5"]
         dontpurgeme_4 = state_map_by_state["dontpurgeme_4"]
+        # Kept since dontpurgeme_4 links to it
+        purgeme_3 = state_map_by_state["purgeme_3"]
 
         assert dontpurgeme_5.old_state_id == dontpurgeme_4.state_id
-        assert dontpurgeme_4.old_state_id is None
+        assert dontpurgeme_4.old_state_id == purgeme_3.state_id
+        assert purgeme_3.old_state_id is None
 
     finished = purge_old_data(recorder_mock, purge_before, repack=False)
     assert finished
@@ -181,8 +186,8 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
     with session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
-        assert states.count() == 2
-        assert state_attributes.count() == 1
+        assert states.count() == 3
+        assert state_attributes.count() == 2
 
         assert recorder_mock.states_manager.oldest_ts != oldest_ts
         assert recorder_mock.states_manager.oldest_ts == states[0].last_updated_ts
@@ -558,8 +563,9 @@ async def test_purge_method(
         )
         statistics = session.query(StatisticsShortTerm)
 
-        # only purged old states, events and statistics
-        assert states.count() == 4
+        # only purged old states, events and statistics, the newest old state
+        # is kept since the oldest state in the window links to it
+        assert states.count() == 5
         assert events.count() == 4
         assert statistics.count() == 4
 
@@ -579,8 +585,9 @@ async def test_purge_method(
         recorder_runs = session.query(RecorderRuns)
         statistics_runs = session.query(StatisticsRuns)
 
-        # we should only have 2 states, events and statistics left after purging
-        assert states.count() == 2
+        # we should only have 2 events and statistics left after purging, and
+        # 3 states since the oldest state in the window links to an old one
+        assert states.count() == 3
         assert events.count() == 2
         assert statistics.count() == 2
 
@@ -2473,3 +2480,33 @@ async def test_purge_after_state_that_cannot_be_serialized(
     with session_scope(hass=hass) as session:
         states = session.query(States).order_by(States.state_id)
         assert [state.state for state in states] == ["2", "1"]
+
+
+async def test_purge_keeps_old_state_of_states_in_retention_window(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test purge keeps the state a not yet purged state change links to."""
+    now = dt_util.utcnow()
+    with freeze_time(now - timedelta(days=35)):
+        hass.states.async_set("binary_sensor.smoke", "off")
+        await async_wait_recording_done(hass)
+    with freeze_time(now - timedelta(days=2)):
+        hass.states.async_set("binary_sensor.smoke", "on")
+        await async_wait_recording_done(hass)
+    with freeze_time(now):
+        hass.states.async_set("binary_sensor.smoke", "off")
+        await async_wait_recording_done(hass)
+
+    def _states() -> list[tuple[str, bool]]:
+        with session_scope(hass=hass) as session:
+            states = list(session.query(States).order_by(States.state_id))
+            ids = {state.state_id for state in states}
+            return [(state.state, state.old_state_id in ids) for state in states]
+
+    # The "on" change links to the old "off", which must survive the purge
+    assert purge_old_data(recorder_mock, now - timedelta(days=10), repack=False)
+    assert _states() == [("off", False), ("on", True), ("off", True)]
+
+    # Once the "on" change is outside the window, the old "off" is purged too
+    assert purge_old_data(recorder_mock, now - timedelta(days=1), repack=False)
+    assert _states() == [("on", False), ("off", True)]
