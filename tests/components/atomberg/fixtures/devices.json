@@ -12,21 +12,6 @@
       },
       {
         "command": "speed"
-      },
-      {
-        "command": "sleep"
-      },
-      {
-        "command": "timer"
-      },
-      {
-        "command": "led"
-      },
-      {
-        "command": "brightness"
-      },
-      {
-        "command": "light_mode"
       }
     ]
   },

@@ -3,20 +3,12 @@
     "device_id": "a4cf12abcdef",
     "is_online": true,
     "power": true,
-    "last_recorded_speed": 3,
-    "sleep_mode": false,
-    "led": true,
-    "last_recorded_brightness": 60,
-    "last_recorded_color": "warm",
-    "timer_hours": 2,
-    "timer_time_elapsed_mins": 15
+    "last_recorded_speed": 3
   },
   {
     "device_id": "a4cf12123456",
     "is_online": true,
     "power": false,
-    "last_recorded_speed": 2,
-    "sleep_mode": false,
-    "led": false
+    "last_recorded_speed": 2
   }
 ]
