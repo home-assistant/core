@@ -1,7 +1,5 @@
 """Tests for the Hot Spring sensor platform."""
 
-import math
-
 from hotspring import Spa, TemperatureUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -95,14 +93,6 @@ async def test_freshwater_iq_sensors_absent_without_iq(
         pytest.param("orp", None, STATE_UNKNOWN, id="unknown_orp"),
         pytest.param(
             "sensor_life_percentage", None, STATE_UNKNOWN, id="unknown_sensor_life"
-        ),
-        pytest.param("ph", math.inf, STATE_UNKNOWN, id="nonfinite_ph"),
-        pytest.param("chlorine", math.inf, STATE_UNKNOWN, id="nonfinite_chlorine"),
-        pytest.param(
-            "sensor_life_percentage",
-            math.inf,
-            STATE_UNKNOWN,
-            id="nonfinite_sensor_life",
         ),
     ],
 )

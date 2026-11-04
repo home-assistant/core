@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import math
 from typing import override
 
 from hotspring import Spa, TemperatureUnit
@@ -31,13 +30,6 @@ from .entity import HotSpringEntity
 PARALLEL_UPDATES = 0
 
 
-def _fwiq_reading(value: float | None) -> StateType:
-    """Reject non-finite readings not normalized by python-hotspring 4.0.1."""
-    if value is None or not math.isfinite(value):
-        return None
-    return value
-
-
 @dataclass(frozen=True, kw_only=True)
 class HotSpringSensorEntityDescription(SensorEntityDescription):
     """Describes Hot Spring sensor entity."""
@@ -54,7 +46,7 @@ SENSORS: tuple[HotSpringSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         suggested_display_precision=2,
-        value_fn=lambda spa: _fwiq_reading(spa.freshwater_iq.chlorine),
+        value_fn=lambda spa: spa.freshwater_iq.chlorine,
         exists_fn=lambda spa: spa.freshwater_iq.installed,
     ),
     HotSpringSensorEntityDescription(
@@ -71,7 +63,7 @@ SENSORS: tuple[HotSpringSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PH,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
-        value_fn=lambda spa: _fwiq_reading(spa.freshwater_iq.ph),
+        value_fn=lambda spa: spa.freshwater_iq.ph,
         exists_fn=lambda spa: spa.freshwater_iq.installed,
     ),
     HotSpringSensorEntityDescription(
@@ -81,7 +73,7 @@ SENSORS: tuple[HotSpringSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=1,
-        value_fn=lambda spa: _fwiq_reading(spa.freshwater_iq.sensor_life_percentage),
+        value_fn=lambda spa: spa.freshwater_iq.sensor_life_percentage,
         exists_fn=lambda spa: spa.freshwater_iq.installed,
     ),
     HotSpringSensorEntityDescription(
