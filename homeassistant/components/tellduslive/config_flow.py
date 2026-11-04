@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithReload,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
@@ -56,7 +56,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithReload:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Return the options flow."""
         return TelldusLiveOptionsFlow()
 
@@ -180,7 +180,7 @@ def _seconds_selector(minimum: int, maximum: int) -> NumberSelector:
     )
 
 
-class TelldusLiveOptionsFlow(OptionsFlowWithReload):
+class TelldusLiveOptionsFlow(OptionsFlow):
     """Handle the Telldus Live options."""
 
     async def async_step_init(

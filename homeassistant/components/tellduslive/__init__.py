@@ -30,6 +30,7 @@ from .const import (
     KEY_SESSION,
     NOT_SO_PRIVATE_KEY,
     PUBLIC_KEY,
+    RETRY_RESET_AFTER_OK,
     SIGNAL_UPDATE_ENTITY,
     SNAPSHOT_SAVE_DELAY,
     STORAGE_VERSION,
@@ -81,7 +82,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) 
             hass, client.async_start(), "tellduslive_start"
         ),
     )
+    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     await client.async_restore()
+
+
+async def _async_options_updated(
+    hass: HomeAssistant, entry: TelldusLiveConfigEntry
+) -> None:
+    """Apply changed options without reloading the entry."""
+    entry.runtime_data.client.async_options_updated()
 
 
 async def async_unload_entry(
@@ -138,6 +147,9 @@ class TelldusLiveClient:
         self._cancel_update: CALLBACK_TYPE | None = None
         self._stopped = False
         self._failures = 0
+        self._backoff = 0
+        self._ok_streak = 0
+        self._updating = False
         self._first_refresh_done = False
         self._hubs_registered = False
         self._hub_ids: set[str] = set()
@@ -149,9 +161,13 @@ class TelldusLiveClient:
         self._store: Store[dict[str, Any]] = Store(
             hass, STORAGE_VERSION, f"{DOMAIN}.{config_entry.entry_id}"
         )
-        options = config_entry.options
+        self._load_options()
+
+    def _load_options(self) -> None:
+        """Read the polling and retry settings from the config entry."""
+        options = self._config_entry.options
         self._interval: float = options.get(
-            KEY_SCAN_INTERVAL, config_entry.data[KEY_SCAN_INTERVAL]
+            KEY_SCAN_INTERVAL, self._config_entry.data[KEY_SCAN_INTERVAL]
         )
         self._retry_initial: float = options.get(
             KEY_RETRY_INITIAL_DELAY, DEFAULT_RETRY_INITIAL_DELAY
@@ -163,6 +179,17 @@ class TelldusLiveClient:
             KEY_REQUEST_DELAY, DEFAULT_REQUEST_DELAY
         )
         _LOGGER.debug("Update interval %s seconds", self._interval)
+
+    @callback
+    def async_options_updated(self) -> None:
+        """Use changed options and re-arm the pending update timer."""
+        self._load_options()
+        if self._stopped or self._updating or self._cancel_update is None:
+            return
+        self._cancel_update()
+        self._cancel_update = async_call_later(
+            self._hass, self._next_delay(), self.update
+        )
 
     async def async_start(self) -> None:
         """Start refreshing from the API once the snapshot is restored."""
@@ -314,25 +341,38 @@ class TelldusLiveClient:
 
     def _retry_delay(self, err: TelldusLiveError) -> float:
         """Return the backoff delay after a failed refresh."""
-        delay = min(self._retry_initial * 2 ** (self._failures - 1), self._retry_max)
+        delay = min(self._retry_initial * 2 ** (self._backoff - 1), self._retry_max)
         if isinstance(err, TelldusLiveRateLimitError) and err.retry_after:
             delay = max(delay, err.retry_after)
         return delay
 
+    def _next_delay(self) -> float:
+        """Return the wait until the next refresh."""
+        if self._failures:
+            return min(self._retry_initial * 2 ** (self._backoff - 1), self._retry_max)
+        return self._interval
+
     async def update(self, *args: Any) -> None:
         """Poll the API, retrying with backoff when it fails."""
         delay = self._interval
+        self._updating = True
         try:
             await self._async_fetch()
         except TelldusLiveError as err:
             self._failures += 1
+            self._backoff += 1
+            self._ok_streak = 0
             delay = self._retry_delay(err)
             _LOGGER.warning(
                 "Telldus Live request failed (%s), retrying in %s seconds", err, delay
             )
         else:
             self._failures = 0
+            self._ok_streak += 1
+            if self._ok_streak >= RETRY_RESET_AFTER_OK:
+                self._backoff = 0
         finally:
+            self._updating = False
             self._first_refresh_done = True
             async_dispatcher_send(self._hass, self.signal_update)
             # An update still in flight at unload must not schedule another.

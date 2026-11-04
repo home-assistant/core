@@ -16,6 +16,8 @@ from homeassistant.components.tellduslive.const import (
     DOMAIN,
     KEY_RETRY_INITIAL_DELAY,
     KEY_RETRY_MAX_DELAY,
+    KEY_SCAN_INTERVAL,
+    RETRY_RESET_AFTER_OK,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -240,7 +242,7 @@ async def test_retry_delay(
     """Test the exponential backoff, capped and honoring Retry-After."""
     await _setup(hass, mock_config_entry)
     client = mock_config_entry.runtime_data.client
-    client._failures = failures
+    client._backoff = failures
 
     assert client._retry_delay(TelldusLiveRateLimitError("x", retry_after)) == expected
 
@@ -262,9 +264,107 @@ async def test_retry_options_used(
     )
     await _setup(hass, mock_config_entry)
     client = mock_config_entry.runtime_data.client
-    client._failures = 3
+    client._backoff = 3
 
     assert client._retry_delay(TelldusLiveError("x")) == 8
+
+
+@pytest.mark.parametrize(
+    ("ok_refreshes", "expected_backoff"),
+    [
+        pytest.param(1, 3, id="one_ok_keeps_backoff"),
+        pytest.param(RETRY_RESET_AFTER_OK - 1, 3, id="almost_enough_oks"),
+        pytest.param(RETRY_RESET_AFTER_OK, 0, id="enough_oks_resets"),
+    ],
+)
+async def test_backoff_resets_after_consecutive_oks(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+    ok_refreshes: int,
+    expected_backoff: int,
+) -> None:
+    """Test the backoff only restarts after several OK refreshes in a row."""
+    await _setup(hass, mock_config_entry)
+    client = mock_config_entry.runtime_data.client
+    client._backoff = 3
+    client._failures = 3
+    client._ok_streak = 0
+
+    for _ in range(ok_refreshes):
+        await client.update()
+
+    assert client._backoff == expected_backoff
+    assert client.status == "ok"
+
+
+async def test_failure_breaks_ok_streak(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+) -> None:
+    """Test a failure between OK refreshes restarts the OK count."""
+    await _setup(hass, mock_config_entry)
+    client = mock_config_entry.runtime_data.client
+    client._backoff = 1
+    client._failures = 1
+    client._ok_streak = 0
+
+    for _ in range(RETRY_RESET_AFTER_OK - 1):
+        await client.update()
+    mock_tellduslive.update.side_effect = TelldusLiveError("down")
+    await client.update()
+    mock_tellduslive.update.side_effect = None
+    for _ in range(RETRY_RESET_AFTER_OK - 1):
+        await client.update()
+
+    assert client._backoff == 2
+
+
+async def test_options_applied_without_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+) -> None:
+    """Test changed options re-arm the timer and do not reload the entry."""
+    await _setup(hass, mock_config_entry)
+    mock_tellduslive.update.reset_mock()
+
+    with patch.object(hass.config_entries, "async_reload") as mock_reload:
+        hass.config_entries.async_update_entry(
+            mock_config_entry,
+            options={**mock_config_entry.options, KEY_SCAN_INTERVAL: 40},
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+    assert mock_config_entry.runtime_data.client._interval == 40
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=41))
+    await hass.async_block_till_done()
+
+    assert mock_tellduslive.update.call_count == 1
+
+
+async def test_options_change_during_update_keeps_single_timer(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+) -> None:
+    """Test an options change while refreshing does not add a second timer."""
+    await _setup(hass, mock_config_entry)
+    client = mock_config_entry.runtime_data.client
+    mock_tellduslive.update.reset_mock()
+    client._updating = True
+    pending = client._cancel_update
+
+    with patch(
+        "homeassistant.components.tellduslive.async_call_later"
+    ) as mock_call_later:
+        client.async_options_updated()
+
+    mock_call_later.assert_not_called()
+    assert client._cancel_update is pending
 
 
 async def test_command_rejected(
