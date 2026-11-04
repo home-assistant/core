@@ -4,10 +4,7 @@ import asyncio
 import shutil
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
-from uuid import uuid4
 
-from pyhap.hap_handler import HAPStatusError
-from pyhap.hap_session import HAPSession
 import pytest
 
 from homeassistant.components import camera, ffmpeg
@@ -95,28 +92,28 @@ async def test_camera_motion_missing_at_start(hass: HomeAssistant, run_driver) -
     for char in accessory._hksv_stream_chars:
         assert char.value == 1
         assert accessory.iid_manager.get_iid(char) is not None
-    session = HAPSession(uuid4(), b"x" * 32)
     first = accessory._hksv_stream_chars[0]
-    first.client_update_value(0, session=session)
+    first.client_update_value(0, sender_client_addr=("127.0.0.1", 1234))
     assert not accessory._hksv.stream_active(0)
     with pytest.raises(RuntimeError, match="stream is disabled"):
         await accessory.start_stream({"id": "disabled", "stream_idx": 0}, {})
-    first.client_update_value(1, session=session)
+    first.client_update_value(1, sender_client_addr=("127.0.0.1", 1234))
     assert accessory._hksv.stream_active(0)
     slot_zero = {"id": "slot_zero", "stream_idx": 0}
     slot_one = {"id": "slot_one", "stream_idx": 1}
     accessory.sessions.update({"slot_zero": slot_zero, "slot_one": slot_one})
     with patch.object(accessory, "stop_stream", new_callable=AsyncMock) as stop_stream:
-        first.client_update_value(0, session=session)
+        first.client_update_value(0, sender_client_addr=("127.0.0.1", 1234))
         await hass.async_block_till_done()
         stop_stream.assert_awaited_once_with(slot_zero)
-    first.client_update_value(1, session=session)
+    first.client_update_value(1, sender_client_addr=("127.0.0.1", 1234))
     accessory.sessions.clear()
     session_info = {"id": "existing"}
     accessory.sessions["existing"] = session_info
-    session = HAPSession(uuid4(), b"x" * 32)
     with patch.object(accessory, "stop_stream", new_callable=AsyncMock) as stop_stream:
-        accessory._hksv.services.camera_active.client_update_value(0, session=session)
+        accessory._hksv.services.camera_active.client_update_value(
+            0, sender_client_addr=("127.0.0.1", 1234)
+        )
         await hass.async_block_till_done()
         stop_stream.assert_awaited_once_with(session_info)
         assert accessory._hksv_motion_active.value is False
@@ -166,7 +163,7 @@ async def test_live_and_snapshot_available_while_hksv_probes(
     request = {"id": "test", "stream_idx": 0}
     with pytest.raises(RuntimeError, match="stream is disabled"):
         await accessory.start_stream(request, {})
-    with pytest.raises(HAPStatusError):
+    with pytest.raises(RuntimeError):
         await accessory.async_get_snapshot({"image-width": 640, "image-height": 360})
     entered, release = asyncio.Event(), asyncio.Event()
 
@@ -201,7 +198,7 @@ async def test_live_and_snapshot_available_while_hksv_probes(
             controller.camera_active = False
             with pytest.raises(RuntimeError, match="stream is disabled"):
                 await accessory.start_stream(request, {})
-            with pytest.raises(HAPStatusError):
+            with pytest.raises(RuntimeError):
                 await accessory.async_get_snapshot(
                     {"image-width": 640, "image-height": 360}
                 )
@@ -625,7 +622,7 @@ async def test_shared_snapshot_checks_privacy_after_decode(
         patch.object(
             accessory, "_async_get_hksv_source", AsyncMock(return_value=shared)
         ),
-        pytest.raises(HAPStatusError),
+        pytest.raises(RuntimeError),
     ):
         await accessory.async_get_snapshot({"image-width": 640, "image-height": 360})
     shared.close.assert_awaited_once()
@@ -761,7 +758,7 @@ async def test_snapshot_privacy_change_during_release(
         patch.object(
             accessory, "_async_get_hksv_source", AsyncMock(return_value=shared)
         ),
-        pytest.raises(HAPStatusError),
+        pytest.raises(RuntimeError),
     ):
         await accessory.async_get_snapshot({"image-width": 640, "image-height": 360})
 

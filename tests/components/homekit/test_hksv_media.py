@@ -8,8 +8,10 @@ from pathlib import Path
 import shutil
 import struct
 import subprocess
+from types import SimpleNamespace
 
 import av
+from pyhap.loader import get_loader
 import pytest
 
 from homeassistant.components.homekit import hksv_controller
@@ -33,6 +35,8 @@ from homeassistant.components.homekit.hksv_stream import (
     inspect_recording,
 )
 from homeassistant.components.stream import Orientation
+
+TEST_DRIVER = SimpleNamespace(loader=get_loader(), session_shared_keys={})
 
 
 def box(kind: bytes, data: bytes = b"") -> bytes:
@@ -404,7 +408,7 @@ async def test_monitored_copy_stops_before_invalid_fragment(
         return None
 
     controller = hksv_controller.HKSVController(
-        source, "ffmpeg", None, preserve_source=False
+        TEST_DRIVER, source, "ffmpeg", None, preserve_source=False
     )
     assert [
         f.data async for f in controller._monitored_copy(Shared(), config, True, False)
@@ -457,7 +461,7 @@ async def test_copy_probe_with_one_complete_fragment(
         4000, 1, 4000, 2, 2, 1600, 4000, 1920, 1080, 15, 0, 1, 0, 1, 32
     )
     controller = hksv_controller.HKSVController(
-        source, "ffmpeg", None, preserve_source=True
+        TEST_DRIVER, source, "ffmpeg", None, preserve_source=True
     )
     assert await controller._probe_copy(Shared(), config, False) == (True, False)
     assert windows == [(b"one",)]
@@ -539,7 +543,7 @@ async def test_copy_probe_checks_audio_across_fragment_boundary(
     config = RecordingConfiguration(
         4000, 1, 4000, 0, 2, 500, 1000, 320, 240, 15, 0, 1, 0, 2, 32
     )
-    controller = hksv_controller.HKSVController(source, "ffmpeg", None)
+    controller = hksv_controller.HKSVController(TEST_DRIVER, source, "ffmpeg", None)
     assert await controller._probe_copy(Shared(), config, True) == (
         True,
         expected_audio,
@@ -585,7 +589,7 @@ async def test_native_probe_waits_for_two_seconds_of_partial_media(
         4000, 1, 4000, 2, 2, 1600, 4000, 1920, 1080, 15, 0, 1, 0, 1, 32
     )
     controller = hksv_controller.HKSVController(
-        source, "ffmpeg", None, preserve_source=True
+        TEST_DRIVER, source, "ffmpeg", None, preserve_source=True
     )
     assert await controller._probe_copy(Shared(), config, False) == (True, False)
 
@@ -624,7 +628,7 @@ async def test_monitored_copy_yields_first_and_rejects_new_generation(
     config = RecordingConfiguration(
         4000, 1, 4000, 0, 2, 500, 1000, 320, 240, 15, 0, 1, 0, 2, 32
     )
-    controller = hksv_controller.HKSVController(source, "ffmpeg", None)
+    controller = hksv_controller.HKSVController(TEST_DRIVER, source, "ffmpeg", None)
     stream = controller._monitored_copy(Shared(), config, True, False)
     assert (await anext(stream)).data == b"one"
     with pytest.raises(StopAsyncIteration):
@@ -673,7 +677,7 @@ async def test_native_probe_adds_supported_resolution(
     async def source() -> Shared:
         return shared
 
-    controller = hksv_controller.HKSVController(source, "ffmpeg", None)
+    controller = hksv_controller.HKSVController(TEST_DRIVER, source, "ffmpeg", None)
     await controller._discover_native()
     assert (1280, 960, 30) in controller.capabilities.resolutions
     assert (1920, 1080, 30) in controller.capabilities.resolutions
@@ -958,7 +962,7 @@ async def test_audio_violation_does_not_disable_video_copy(
     async def source() -> None:
         return None
 
-    controller = hksv_controller.HKSVController(source, "ffmpeg", None)
+    controller = hksv_controller.HKSVController(TEST_DRIVER, source, "ffmpeg", None)
     assert [
         fragment.data
         async for fragment in controller._monitored_copy(Shared(), config, True, True)
@@ -1182,7 +1186,7 @@ async def test_strict_copy_uses_contiguous_two_segment_windows(
         4000, 1, 4000, 0, 2, 500, 2000, 320, 240, 15, 0, 1, 0, 2, 32
     )
     controller = hksv_controller.HKSVController(
-        source, "ffmpeg", None, preserve_source=False
+        TEST_DRIVER, source, "ffmpeg", None, preserve_source=False
     )
     assert await controller._probe_copy(Shared(), config, False) == (True, False)
     assert [
@@ -1222,7 +1226,7 @@ async def test_strict_copy_rejects_discontinuity(
         4000, 1, 4000, 0, 2, 500, 2000, 320, 240, 15, 0, 1, 0, 2, 32
     )
     controller = hksv_controller.HKSVController(
-        source, "ffmpeg", None, preserve_source=False
+        TEST_DRIVER, source, "ffmpeg", None, preserve_source=False
     )
     assert [
         f async for f in controller._monitored_copy(Shared(), config, True, False)
@@ -1306,7 +1310,7 @@ async def test_strict_copy_waits_for_short_segments(
         4000, 1, 4000, 0, 2, 500, 2000, 320, 240, 15, 0, 1, 0, 2, 32
     )
     controller = hksv_controller.HKSVController(
-        source, "ffmpeg", None, preserve_source=False
+        TEST_DRIVER, source, "ffmpeg", None, preserve_source=False
     )
     assert [
         f.data async for f in controller._monitored_copy(Shared(), config, True, False)
@@ -1355,7 +1359,7 @@ async def test_native_copy_combines_short_windows(
     config = RecordingConfiguration(
         4000, 1, 4000, 0, 2, 500, 2000, 320, 240, 15, 0, 1, 0, 2, 32
     )
-    controller = hksv_controller.HKSVController(source, "ffmpeg", None)
+    controller = hksv_controller.HKSVController(TEST_DRIVER, source, "ffmpeg", None)
     assert [
         f.data async for f in controller._monitored_copy(Shared(), config, True, False)
     ] == [b"one", b"two", b"three"]
@@ -1397,7 +1401,7 @@ async def test_native_copy_bounds_retained_window(
     config = RecordingConfiguration(
         4000, 1, 4000, 0, 2, 500, 2000, 320, 240, 15, 0, 1, 0, 2, 32
     )
-    controller = hksv_controller.HKSVController(source, "ffmpeg", None)
+    controller = hksv_controller.HKSVController(TEST_DRIVER, source, "ffmpeg", None)
     assert [
         f.sequence
         async for f in controller._monitored_copy(Shared(), config, True, False)
@@ -1454,7 +1458,7 @@ async def test_copy_disables_attempted_tracks_after_insufficient_window(
         4000, 1, 4000, 0, 2, 500, 2000, 320, 240, 15, 0, 1, 0, 2, 32
     )
     controller = hksv_controller.HKSVController(
-        source, "ffmpeg", None, preserve_source=False
+        TEST_DRIVER, source, "ffmpeg", None, preserve_source=False
     )
     assert [
         f

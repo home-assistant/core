@@ -1,15 +1,15 @@
 """Isolated lifecycle checks for the experimental HKSV controller."""
 
 import asyncio
-from collections.abc import AsyncIterator, Awaitable, Callable
+import base64
+from collections.abc import AsyncIterator
 import logging
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
 
-from pyhap.hap_session import HAPSession
-import pyhap.secure_video as s
+from pyhap import hds, hds_protocol, hds_recording, hds_server, hksv_recording, tlv
+from pyhap.loader import Loader
 import pytest
 
 from homeassistant.components.homekit import hksv_controller as c
@@ -17,6 +17,11 @@ from homeassistant.components.homekit.hksv_config import RecordingConfiguration
 from homeassistant.components.homekit.hksv_hardware import HardwareEncoder
 from homeassistant.components.homekit.hksv_stream import SharedFragment
 from homeassistant.components.stream import Orientation
+
+
+def _driver() -> SimpleNamespace:
+    """Create an official HAP catalog and per-session key store."""
+    return SimpleNamespace(loader=Loader(), session_shared_keys={})
 
 
 class Store:
@@ -52,18 +57,16 @@ class HDS:
         """Start the fake transport."""
         self.started = True
 
-    async def close(self) -> None:
+    async def stop(self) -> None:
         """Close the fake transport."""
         self.closed = True
 
-    def prepare_session(self, secret, salt, owner):
-        """Prepare an authenticated session."""
-        assert self.started and secret == b"x" * 32 and salt == b"y" * 32
-        return 4321, b"z" * 32
+    port = 4321
 
-    def close_owner(self, owner: object) -> None:
-        """Record the closed owner."""
-        self.owner_closed = owner
+    def register_transport(self, secret: bytes, salt: bytes) -> bytes:
+        """Prepare an authenticated transport."""
+        assert self.started and secret == b"x" * 32 and salt == b"y" * 32
+        return b"z" * 32
 
 
 def test_session_and_lifecycle() -> None:
@@ -74,21 +77,24 @@ def test_session_and_lifecycle() -> None:
             return None
 
         store = Store()
-        controller = c.HKSVController(source, "ffmpeg", store)
+        controller = c.HKSVController(_driver(), source, "ffmpeg", store)
         hds = controller.hds = HDS()
-        controller.services.hds = hds
         assert controller.active is False
         await controller.start()
         assert hds.started and not controller.camera_active
         assert controller.services.event_snapshots.value == 0
-        session = HAPSession(uuid4(), b"x" * 32)
-        request = s.b64(s.tlv((1, b"\0"), (2, b"\0"), (3, b"y" * 32)))
-        response = controller.services.setup.client_update_value(
-            request, session=session
+        address = ("127.0.0.1", 1234)
+        controller.driver.session_shared_keys[address] = b"x" * 32
+        request = tlv.encode(
+            b"\x01", b"\0", b"\x02", b"\0", b"\x03", b"y" * 32, to_base64=True
         )
-        assert s.parse_tlv(s.unb64(response))[3] == b"z" * 32
-        session.close()
-        assert hds.owner_closed is session
+        controller.services.setup.broker = MagicMock()
+        response = controller.services.setup.client_update_value(
+            request, sender_client_addr=address
+        )
+        fields = tlv.decode(response, from_base64=True)
+        assert fields[b"\x03"] == b"z" * 32
+        assert tlv.decode(fields[b"\x02"])[b"\x01"] == (4321).to_bytes(2, "little")
         await controller.close()
         assert hds.closed and store.data["camera_active"] is False
 
@@ -102,7 +108,7 @@ def test_encoder_failure_is_bounded_and_unstarted_stream_not_reserved() -> None:
         async def source():
             return None
 
-        ctl = c.HKSVController(source, "ffmpeg", Store())
+        ctl = c.HKSVController(_driver(), source, "ffmpeg", Store())
         ctl._ready = True
         ctl.active = True
         ctl.configuration = object()
@@ -153,7 +159,7 @@ def test_snapshot_permissions() -> None:
     async def source():
         return None
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller._ready = True
     controller._privacy_ready = True
     controller.services.event_snapshots.set_value(0, should_notify=False)
@@ -176,10 +182,9 @@ def test_writes_fail_closed_before_state_load() -> None:
     async def source():
         return None
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
-    session = HAPSession(uuid4(), b"x" * 32)
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     try:
-        controller.services.camera_active.client_update_value(0, session=session)
+        controller.services.camera_active.client_update_value(0)
     except RuntimeError:
         pass
     else:
@@ -226,7 +231,7 @@ def test_shared_source_attached_and_detached() -> None:
                 assert self.input_data is not None
                 await self.input_data.aclose()
 
-        ctl = c.HKSVController(source, "ffmpeg", Store())
+        ctl = c.HKSVController(_driver(), source, "ffmpeg", Store())
         ctl.hds = HDS()
         ctl.active = True
         ctl.configuration = SimpleNamespace(
@@ -278,7 +283,7 @@ async def test_hardware_failure_switches_to_software(
 
     probe = Probe()
     monkeypatch.setattr(c, "_HARDWARE_PROBE", probe)
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     process = FailedProcess()
     controller._process = process
     controller._active_hardware = HardwareEncoder("h264_vaapi", (), "", ())
@@ -312,7 +317,7 @@ async def test_audio_copy_failure_does_not_quarantine_hardware(
     probe = SimpleNamespace(report_failure=MagicMock())
     monkeypatch.setattr(c, "_HARDWARE_PROBE", probe)
     monkeypatch.setattr(c.asyncio, "sleep", AsyncMock())
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller._schedule_reconcile = lambda: None
     process = FailedProcess()
     hardware = HardwareEncoder("h264_vaapi", (), "", ())
@@ -394,7 +399,7 @@ async def test_hardware_runtime_failure_restarts_shared_stream_in_software(
     monkeypatch.setattr(c, "RecordingProcess", Process)
     monkeypatch.setattr(c, "ffmpeg_command", command)
     monkeypatch.setattr(c.asyncio, "sleep", fast_sleep)
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller.hds = HDS()
     monkeypatch.setattr(
         controller, "_probe_copy", AsyncMock(return_value=(False, False))
@@ -421,7 +426,9 @@ def test_selected_prebuffer_capability(seconds: int, milliseconds: int) -> None:
     async def source():
         return None
 
-    controller = c.HKSVController(source, "ffmpeg", Store(), prebuffer_seconds=seconds)
+    controller = c.HKSVController(
+        _driver(), source, "ffmpeg", Store(), prebuffer_seconds=seconds
+    )
     assert controller.capabilities.prebuffer_ms == milliseconds
     assert not controller.active
     assert controller._process is None
@@ -434,7 +441,7 @@ def test_invalid_prebuffer_rejected() -> None:
         return None
 
     with pytest.raises(ValueError, match="prebuffer"):
-        c.HKSVController(source, "ffmpeg", Store(), prebuffer_seconds=6)
+        c.HKSVController(_driver(), source, "ffmpeg", Store(), prebuffer_seconds=6)
 
 
 async def test_recording_request_counts_and_safe_logging(
@@ -453,10 +460,10 @@ async def test_recording_request_counts_and_safe_logging(
             yield b"media"
 
     controller = c.HKSVController(
-        source, "ffmpeg", Store(), camera_entity_id="camera.test"
+        _driver(), source, "ffmpeg", Store(), camera_entity_id="camera.test"
     )
     caplog.set_level(logging.INFO, logger=c.__name__)
-    with pytest.raises(c.HDSReject):
+    with pytest.raises(ValueError):
         controller._open_recording(object(), 1)
     assert controller._hds_rejected == 1
     assert "category=inactive" in caplog.text
@@ -487,7 +494,7 @@ async def test_restored_recording_waits_for_native_discovery() -> None:
 
     store = Store()
     store.data = {"selected": "eA==", "active": 1, "camera_active": 1}
-    controller = c.HKSVController(source, "ffmpeg", store)
+    controller = c.HKSVController(_driver(), source, "ffmpeg", store)
     controller.hds = HDS()
 
     async def discover():
@@ -520,24 +527,42 @@ async def test_restored_recording_waits_for_native_discovery() -> None:
 async def test_final_fragment_is_counted_when_transport_closes_generator(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """The HDS consumer closes after the last yield without resuming producer."""
-    from pyhap.datastream import HDSServer  # noqa: PLC0415
+    """The official HDS manager closes the producer after its last packet."""
 
     async def source() -> None:
         return None
 
     class Process:
+        running = True
+
         async def fragments(self) -> AsyncIterator[bytes]:
             yield b"initialization"
             yield b"media"
 
     controller = c.HKSVController(
-        source, "ffmpeg", Store(), camera_entity_id="camera.test"
+        _driver(), source, "ffmpeg", Store(), camera_entity_id="camera.test"
     )
-    controller.active = False
+    controller._ready = True
+    controller.active = True
+    controller.configuration = object()
+    controller._process = Process()
+    connection = MagicMock()
+    connection.drain = AsyncMock()
+
+    def sent(_protocol: str, _topic: str, message: dict[str, Any]) -> None:
+        if message["packets"][0]["metadata"]["dataType"] == "mediaInitialization":
+            controller.active = False
+
+    connection.send_event.side_effect = sent
+    manager = hds_recording.RecordingStreamManager(
+        connection,
+        lambda stream_id: controller._recording_packets(connection, stream_id),
+    )
+    manager._stream_id = 7
     caplog.set_level(logging.INFO, logger=c.__name__)
-    send = AsyncMock()
-    assert await HDSServer._send_fragments(send, 7, controller._recording(Process()))
+    await manager._stream()
+    assert connection.send_event.call_count == 2
+    assert connection.send_event.call_args.args[2]["endOfStream"] is True
     assert controller._hds_final_offered == 1
     assert controller._hds_interrupted == 0
     assert not controller._stream_active
@@ -547,15 +572,31 @@ async def test_final_fragment_is_counted_when_transport_closes_generator(
 
 
 def _selected_profile(profile: int) -> bytes:
-    """Build a valid recording selection for one advertised profile."""
-    u, t = s._u, s.tlv
-    container = t((1, b"\0"), (2, t((1, u(4000, 4)))))
-    recording = t((1, u(4000, 4)), (2, u(1, 8)), (3, container))
-    params = t((1, u(profile, 1)), (2, b"\2"), (3, u(1600, 4)), (4, u(4000, 4)))
-    attrs = t((1, u(1280, 2)), (2, u(720, 2)), (3, u(15, 1)))
-    video = t((1, b"\0"), (2, params), (3, attrs))
-    audio_params = t((1, b"\1"), (2, b"\0"), (3, b"\2"), (4, u(24, 4)))
-    return t((1, recording), (2, video), (3, t((1, b"\0"), (2, audio_params))))
+    """Build a valid selected configuration with the official codec."""
+    return hksv_recording.SelectedRecordingConfiguration(
+        recording=hksv_recording.SupportedRecordingConfiguration(
+            prebuffer_length_ms=4000,
+            event_triggers=1,
+            media_containers=[
+                hksv_recording.MediaContainerConfiguration(fragment_length_ms=4000)
+            ],
+        ),
+        video=hksv_recording.VideoCodecConfiguration(
+            codec_type=hksv_recording.VideoCodecType.H264,
+            profile=profile,
+            level=2,
+            bitrate_kbps=1600,
+            iframe_interval_ms=4000,
+            attributes=[hksv_recording.VideoAttributes(1280, 720, 15)],
+        ),
+        audio=hksv_recording.AudioCodecConfiguration(
+            codec_type=hksv_recording.AudioCodecType.AAC_LC,
+            channels=1,
+            bitrate_mode=hksv_recording.BitRateMode(0),
+            sample_rate=hksv_recording.AudioSampleRate(2),
+            max_audio_bitrate_kbps=24,
+        ),
+    ).encode()
 
 
 async def test_quality_renegotiation_and_legacy_state() -> None:
@@ -565,11 +606,11 @@ async def test_quality_renegotiation_and_legacy_state() -> None:
         return None
 
     store = Store()
-    baseline = s.b64(_selected_profile(0))
+    baseline = base64.b64encode(_selected_profile(0)).decode()
     store.data = {"camera_active": 0, "selected": baseline}
     changed = AsyncMock()
     compatible = c.HKSVController(
-        source, "ffmpeg", store, on_capabilities_changed=changed
+        _driver(), source, "ffmpeg", store, on_capabilities_changed=changed
     )
     compatible.hds = HDS()
     await compatible.start()
@@ -580,7 +621,12 @@ async def test_quality_renegotiation_and_legacy_state() -> None:
     await compatible.close()
 
     high = c.HKSVController(
-        source, "ffmpeg", store, quality="high", on_capabilities_changed=changed
+        _driver(),
+        source,
+        "ffmpeg",
+        store,
+        quality="high",
+        on_capabilities_changed=changed,
     )
     high.hds = HDS()
     await high.start()
@@ -597,7 +643,12 @@ async def test_quality_renegotiation_and_legacy_state() -> None:
     await high.close()
 
     restarted = c.HKSVController(
-        source, "ffmpeg", store, quality="high", on_capabilities_changed=changed
+        _driver(),
+        source,
+        "ffmpeg",
+        store,
+        quality="high",
+        on_capabilities_changed=changed,
     )
     restarted.hds = HDS()
     await restarted.start()
@@ -616,7 +667,12 @@ async def test_failed_capability_notification_does_not_block_recording() -> None
     store.data = {"camera_active": 0, "recording_profiles": [0, 1, 2]}
     failed = AsyncMock(side_effect=RuntimeError("notification failed"))
     controller = c.HKSVController(
-        source, "ffmpeg", store, quality="high", on_capabilities_changed=failed
+        _driver(),
+        source,
+        "ffmpeg",
+        store,
+        quality="high",
+        on_capabilities_changed=failed,
     )
     controller.hds = HDS()
     await controller.start()
@@ -625,7 +681,12 @@ async def test_failed_capability_notification_does_not_block_recording() -> None
     await controller.close()
     changed = AsyncMock()
     restarted = c.HKSVController(
-        source, "ffmpeg", store, quality="high", on_capabilities_changed=changed
+        _driver(),
+        source,
+        "ffmpeg",
+        store,
+        quality="high",
+        on_capabilities_changed=changed,
     )
     restarted.hds = HDS()
     await restarted.start()
@@ -661,7 +722,7 @@ async def test_failed_copied_tracks_fall_back(
         async def stop(self) -> None:
             return None
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     process = FailedProcess()
     controller._process = process
     controller._active_copy = copied
@@ -691,7 +752,7 @@ async def test_repeated_remux_failure_falls_back_in_stages(
         async def stop(self) -> None:
             return None
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     process = FailedProcess()
     controller._process = process
     controller._active_copy = (True, True)
@@ -724,7 +785,7 @@ async def test_known_video_copy_failure_keeps_audio_copy(
         async def stop(self) -> None:
             return None
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     process = FailedProcess()
     controller._process = process
     controller._active_copy = (True, True)
@@ -764,7 +825,7 @@ async def test_close_joins_cancelled_monitor_cleanup() -> None:
     async def source() -> None:
         return None
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller.hds = HDS()
     process = Process()
     shared = Shared()
@@ -795,7 +856,7 @@ async def test_start_failure_retries_and_recovers(
     shared.orientation = Orientation.NO_TRANSFORM
     shared.close = AsyncMock()
     source = AsyncMock(side_effect=[RuntimeError("transient"), shared])
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller.active = True
     controller._ready = True
     controller.configuration = RecordingConfiguration(
@@ -822,7 +883,7 @@ async def test_start_failure_stops_at_retry_limit(
 ) -> None:
     """Repeated acquisition failures cannot spin indefinitely."""
     source = AsyncMock(side_effect=RuntimeError("unavailable"))
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller.active = True
     controller._ready = True
     controller.configuration = RecordingConfiguration(
@@ -839,7 +900,7 @@ async def test_start_failure_retry_respects_privacy(
 ) -> None:
     """Disabling the camera during retry prevents another acquisition."""
     source = AsyncMock(side_effect=RuntimeError("unavailable"))
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller.active = True
     controller._ready = True
     controller.configuration = RecordingConfiguration(
@@ -880,7 +941,7 @@ async def test_close_joins_cancelled_lease_close() -> None:
     async def source() -> None:
         return None
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller.hds = HDS()
     controller._process = process = Process()
     controller._shared = shared = Shared()
@@ -917,7 +978,7 @@ async def test_observe_live_source_uses_supplied_lease(
     async def source() -> None:
         return None
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     lease = Lease()
     observation = SimpleNamespace(observation_seconds=3)
     monkeypatch.setattr(c, "inspect_recording", lambda *_: observation)
@@ -947,7 +1008,7 @@ async def test_recording_privacy_revocation_before_next_yield(
     async def source() -> None:
         return None
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller._ready = True
     controller.active = True
     controller.configuration = object()
@@ -986,7 +1047,7 @@ async def test_recording_privacy_revocation_during_fragment_wait(closed: bool) -
     async def source() -> None:
         return None
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller._ready = True
     controller.active = True
     controller.configuration = object()
@@ -1027,7 +1088,7 @@ async def test_privacy_revocation_closes_fragment_subscription() -> None:
     async def source() -> None:
         return None
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller._ready = True
     controller.active = True
     controller.configuration = object()
@@ -1047,11 +1108,11 @@ async def test_privacy_revocation_closes_fragment_subscription() -> None:
 
 
 async def test_camera_privacy_cancels_hds_multichunk_transfer() -> None:
-    """A revoked session cannot transmit later chunks of an already yielded fragment."""
-    from pyhap.datastream import HDSServer  # noqa: PLC0415
-
-    first_media_chunk = asyncio.Event()
+    """Revocation stops the SDK manager before the second media chunk."""
+    blocked = asyncio.Event()
     chunks: list[bytes] = []
+    callbacks = []
+    calls = 0
 
     async def source() -> None:
         return None
@@ -1063,41 +1124,52 @@ async def test_camera_privacy_cancels_hds_multichunk_transfer() -> None:
             yield b"init"
             yield b"x" * (0x40000 * 3)
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller._ready = True
     controller.active = True
     controller.configuration = object()
     controller._process = Process()
     controller._schedule_reconcile = lambda: None
-    owner = object()
-    writer = MagicMock()
+    connection = MagicMock()
+    connection.add_close_callback.side_effect = callbacks.append
 
-    async def send(_header: dict, body: dict) -> None:
-        packet = body["packets"][0]
-        if packet["metadata"]["dataType"] == "mediaFragment":
-            chunks.append(packet["data"])
-            first_media_chunk.set()
+    async def drain() -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 3:
+            blocked.set()
             await asyncio.Event().wait()
 
-    stream = controller._open_recording(owner, 1)
-    transfer = asyncio.create_task(HDSServer._send_fragments(send, 1, stream))
-    controller.hds._connections[transfer] = (owner, writer)
-    await first_media_chunk.wait()
-    assert controller._recording_owner is owner
+    def send_event(_protocol: str, _topic: str, message: dict[str, Any]) -> None:
+        packet = message["packets"][0]
+        if packet["metadata"]["dataType"] == "mediaFragment":
+            chunks.append(packet["data"])
+
+    connection.drain = drain
+    connection.send_event.side_effect = send_event
+    connection.close.side_effect = lambda: [
+        callback(connection) for callback in callbacks
+    ]
+    controller._connections.add(connection)
+    manager = hds_recording.RecordingStreamManager(
+        connection,
+        lambda stream_id: controller._recording_packets(connection, stream_id),
+    )
+    manager._stream_id = 1
+    manager._task = asyncio.create_task(manager._stream())
+    await asyncio.wait_for(blocked.wait(), 2)
+    assert controller._recording_owner is connection
     controller._change_camera_active(0)
     with pytest.raises(asyncio.CancelledError):
-        await transfer
-    writer.close.assert_called_once_with()
-    assert len(chunks) == 1
-    assert len(chunks[0]) == 0x40000
+        await manager._task
+    connection.close.assert_called_once_with()
+    assert len(chunks) == 1 and len(chunks[0]) == 0x40000
     assert controller._recording_owner is None
     assert not controller._stream_active
-    controller.hds._connections.pop(transfer)
+    controller._connections.discard(connection)
     controller._change_camera_active(1)
-    another_owner = object()
-    another = controller._open_recording(another_owner, 2)
+    another = controller._open_recording(object(), 2)
     assert await anext(another) == (b"init", False)
-    assert controller._recording_owner is another_owner
     await another.aclose()
     assert controller._recording_owner is None
 
@@ -1106,13 +1178,28 @@ async def test_camera_privacy_cancels_hds_multichunk_transfer() -> None:
 async def test_camera_privacy_closes_authenticated_hds_socket(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Privacy closes an authenticated socket while its media send is in progress."""
-    import pyhap.datastream as h  # noqa: PLC0415
+    """Close a real authenticated SDK HDS connection between media chunks."""
+    blocked, cancelled, fragment_closed = (
+        asyncio.Event(),
+        asyncio.Event(),
+        asyncio.Event(),
+    )
+    drain_calls = 0
+    original_drain = hds_server.HDSConnection.drain
 
-    first_chunk = asyncio.Event()
-    cancelled = asyncio.Event()
-    fragment_closed = asyncio.Event()
-    sent_chunks: list[int] = []
+    async def paused_drain(connection: hds_server.HDSConnection) -> None:
+        nonlocal drain_calls
+        await original_drain(connection)
+        drain_calls += 1
+        if drain_calls == 3:
+            blocked.set()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                cancelled.set()
+                raise
+
+    monkeypatch.setattr(hds_server.HDSConnection, "drain", paused_drain)
 
     async def source() -> None:
         return None
@@ -1127,78 +1214,73 @@ async def test_camera_privacy_closes_authenticated_hds_socket(
             finally:
                 fragment_closed.set()
 
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller._ready = True
     controller.active = True
     controller.configuration = object()
     controller._process = Process()
     controller._schedule_reconcile = lambda: None
     server = controller.hds
-    original_send_fragments = server._send_fragments
-
-    async def send_fragments(
-        send: Callable[[dict[str, Any], dict[str, Any]], Awaitable[None]],
-        stream_id: int,
-        fragments: AsyncIterator[tuple[bytes, bool]],
-    ) -> bool:
-        async def paused_send(header: dict[str, Any], body: dict[str, Any]) -> None:
-            await send(header, body)
-            if (
-                body.get("packets")
-                and body["packets"][0]["metadata"]["dataType"] == "mediaFragment"
-            ):
-                sent_chunks.append(len(body["packets"][0]["data"]))
-                first_chunk.set()
-                await asyncio.Event().wait()
-
-        try:
-            return await original_send_fragments(paused_send, stream_id, fragments)
-        except asyncio.CancelledError:
-            cancelled.set()
-            raise
-
-    monkeypatch.setattr(server, "_send_fragments", send_fragments)
     port = await server.start("127.0.0.1")
     writer = None
     try:
-        owner = object()
         secret, salt = b"x" * 32, b"y" * 32
-        _, accessory_salt = server.prepare_session(secret, salt, owner)
-        outgoing, incoming = h.derive_keys(secret, salt, accessory_salt)
-        tx, rx = h.HDSCipher(incoming), h.HDSCipher(outgoing)
+        address = ("127.0.0.1", 1234)
+        controller.driver.session_shared_keys[address] = secret
+        setup = tlv.encode(
+            b"\x01", b"\0", b"\x02", b"\0", b"\x03", salt, to_base64=True
+        )
+        controller.services.setup.broker = MagicMock()
+        response = controller.services.setup.client_update_value(
+            setup, sender_client_addr=address
+        )
+        fields = tlv.decode(response, from_base64=True)
+        assert fields[b"\x01"] == hds.SETUP_STATUS_SUCCESS
+        accessory_salt = fields[b"\x03"]
+        outgoing, incoming = hds.derive_keys(secret, salt, accessory_salt)
+        crypto = hds.HDSCrypto(incoming, outgoing)
         reader, writer = await asyncio.open_connection("127.0.0.1", port)
 
-        async def send(header: dict[str, Any], body: dict[str, Any]) -> None:
-            writer.write(tx.encrypt(h.encode_message(header, body)))
+        async def send(message: hds_protocol.Message) -> None:
+            writer.write(crypto.encrypt_frame(message.encode()))
             await writer.drain()
 
-        async def read() -> tuple[dict[str, Any], dict[str, Any]]:
-            frame = await asyncio.wait_for(server._read_frame(reader), 2)
-            return h.decode_message(rx.decrypt(frame))
+        async def read() -> hds_protocol.Message:
+            header = await asyncio.wait_for(reader.readexactly(4), 2)
+            length = int.from_bytes(header[1:], "big")
+            frame = bytearray(
+                header + await asyncio.wait_for(reader.readexactly(length + 16), 2)
+            )
+            payload = crypto.decrypt_frame(frame)
+            assert payload is not None
+            return hds_protocol.Message.decode(payload)
 
-        await send({"protocol": "control", "request": "hello", "id": 1}, {})
-        header, _ = await read()
-        assert header["status"] == 0
+        await send(hds_protocol.request("control", "hello", {}, 1))
+        assert (await read()).status == hds_protocol.HDSStatus.SUCCESS
         await send(
-            {"protocol": "dataSend", "request": "open", "id": 2},
-            {"streamId": 42, "type": "ipcamera.recording", "target": "controller"},
+            hds_protocol.request(
+                "dataSend",
+                "open",
+                {"streamId": 42, "type": "ipcamera.recording", "target": "controller"},
+                2,
+            )
         )
-        header, body = await read()
-        assert header["status"] == body["status"] == 0
-        _, initialization = await read()
+        opened = await read()
+        assert opened.status == hds_protocol.HDSStatus.SUCCESS
+        initialization = await read()
         assert (
-            initialization["packets"][0]["metadata"]["dataType"]
+            initialization.message["packets"][0]["metadata"]["dataType"]
             == "mediaInitialization"
         )
-        _, first = await read()
-        assert first["packets"][0]["metadata"]["dataType"] == "mediaFragment"
-        await asyncio.wait_for(first_chunk.wait(), 2)
-        assert controller._recording_owner is owner
+        first = await read()
+        assert first.message["packets"][0]["metadata"]["dataType"] == "mediaFragment"
+        assert len(first.message["packets"][0]["data"]) == 0x40000
+        await asyncio.wait_for(blocked.wait(), 2)
+        assert controller._recording_owner in controller._connections
         controller._change_camera_active(0)
         assert await asyncio.wait_for(reader.read(), 2) == b""
         await asyncio.wait_for(cancelled.wait(), 2)
         await asyncio.wait_for(fragment_closed.wait(), 2)
-        assert sent_chunks == [0x40000]
         assert controller._recording_owner is None
         assert not controller._stream_active
         controller._change_camera_active(1)
@@ -1209,7 +1291,7 @@ async def test_camera_privacy_closes_authenticated_hds_socket(
         if writer is not None:
             writer.close()
             await writer.wait_closed()
-        await server.close()
+        await server.stop()
 
 
 async def test_reconcile_reenabled_during_cleanup(
@@ -1227,7 +1309,7 @@ async def test_reconcile_reenabled_during_cleanup(
     lease.orientation = Orientation.NO_TRANSFORM
     lease.close = AsyncMock()
     source = AsyncMock(return_value=lease)
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller._ready = True
     controller.active = False
     controller.configuration = RecordingConfiguration(
@@ -1292,7 +1374,7 @@ async def test_native_probe_uses_previous_contiguous_media(
     monkeypatch.setattr(
         c.asyncio, "sleep", AsyncMock(side_effect=AssertionError("probe waited"))
     )
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     config = RecordingConfiguration(
         4000, 1, 4000, 0, 2, 500, 1000, 320, 240, 15, 0, 1, 0, 2, 32
     )
@@ -1338,7 +1420,7 @@ async def test_native_probe_does_not_combine_discontinuous_media(
         return None
 
     monkeypatch.setattr(c, "inspect_recording", inspect)
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     assert await controller.observe_live_source(Lease()) is short
     assert windows == [(b"partial",)]
 
@@ -1351,7 +1433,7 @@ async def test_recording_respects_shared_source_orientation(
     lease.orientation = Orientation.ROTATE_RIGHT
     lease.close = AsyncMock()
     source = AsyncMock(return_value=lease)
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller._ready = True
     controller.active = True
     controller.audio_active = True
@@ -1383,7 +1465,7 @@ async def test_recording_reconciles_changed_source_orientation(
     lease.orientation = Orientation.MIRROR
     lease.close = AsyncMock()
     source = AsyncMock(return_value=lease)
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller._ready = True
     controller.active = True
     controller.audio_active = True
@@ -1435,7 +1517,7 @@ async def test_orientation_change_during_recording_start(
     lease.orientation = Orientation.MIRROR
     lease.close = AsyncMock()
     source = AsyncMock(return_value=lease)
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller._ready = True
     controller.active = True
     controller.configuration = RecordingConfiguration(
@@ -1498,7 +1580,7 @@ async def test_orientation_change_does_not_open_inactive_camera(
 ) -> None:
     """Orientation notifications do not bypass loading, shutdown or privacy."""
     source = AsyncMock()
-    controller = c.HKSVController(source, "ffmpeg", Store())
+    controller = c.HKSVController(_driver(), source, "ffmpeg", Store())
     controller._ready = ready
     controller.active = active
     controller.camera_active = camera_active

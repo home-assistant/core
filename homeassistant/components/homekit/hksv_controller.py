@@ -5,20 +5,22 @@ The owner must explicitly attach services and stop this controller on teardown.
 
 import asyncio
 import base64
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
 from contextlib import aclosing, suppress
 from dataclasses import replace
 import logging
 import time
 from typing import Any, NoReturn
 
-from pyhap.datastream import HDSReject, HDSServer
-from pyhap.secure_video import HKSVServices, RecordingCapabilities, b64, parse_selected
+from pyhap import hds
+from pyhap.hds_recording import RecordingPacket, RecordingStreamManager
+from pyhap.hds_server import HDSConnection, HDSListener
 
 from homeassistant.components.stream.core import Orientation  # pylint: disable=home-assistant-component-root-import
 from homeassistant.exceptions import HomeAssistantError
 
 from .hksv_config import RecordingConfiguration
+from .hksv_hap import RecordingCapabilities, b64, make_services, parse_selected
 from .hksv_hardware import HARDWARE_ENCODER_PROBE as _HARDWARE_PROBE, HardwareEncoder
 from .hksv_media import (
     RecordingProcess,
@@ -43,6 +45,7 @@ class HKSVController:
 
     def __init__(
         self,
+        driver: Any,
         source: Callable[[], Awaitable[SharedCameraStream | None]],
         ffmpeg: str,
         store: Any,
@@ -76,13 +79,8 @@ class HKSVController:
         self._selected_value: str | None = None
         self._native_resolution: tuple[int, int, int] | None = None
         self.capabilities = RecordingCapabilities(
-            1280,
-            720,
-            15,
-            0,
-            2,
-            0,
-            2,
+            audio_codec=0,
+            audio_sample_rate=2,
             prebuffer_ms=prebuffer_seconds * 1000,
             resolutions=(
                 (1280, 720, 15),
@@ -95,10 +93,13 @@ class HKSVController:
         )
         self._persisted_profiles = list(self.capabilities.profiles)
         self.configuration: RecordingConfiguration | None = None
-        self.hds = HDSServer(self._open_recording)
-        self.services = HKSVServices(
-            self.hds, self.capabilities, self._set_configuration
-        )
+        self.driver = driver
+        self.hds = HDSListener()
+        self.hds.on_connection = self._on_hds_connection
+        self._connections: set[HDSConnection] = set()
+        self._delivery_tasks: set[asyncio.Task] = set()
+        self.services = make_services(driver, self.capabilities)
+        self._char_values = {}
         for char, handler in (
             (self.services.active, self._change_active),
             (self.services.camera_active, self._change_camera_active),
@@ -106,15 +107,12 @@ class HKSVController:
             (self.services.event_snapshots, self._change_snapshots),
             (self.services.periodic_snapshots, self._change_snapshots),
         ):
-            char.session_setter_callback = (
-                lambda value, session, char=char, handler=handler: self._session_write(
-                    char, handler, value
-                )
+            self._char_values[char] = char.value
+            char.setter_callback = lambda value, char=char, handler=handler: (
+                self._session_write(char, handler, value)
             )
-        selected_setter = self.services.selected.session_setter_callback
-        self.services.selected.session_setter_callback = lambda value, session: (
-            self._selected_write(selected_setter, value, session)
-        )
+        self.services.selected.setter_callback = self._selected_write
+        self.services.setup.setter_callback = self._setup_transport
         self.active = False
         self.camera_active = True
         self.audio_active = False
@@ -146,14 +144,71 @@ class HKSVController:
 
     def _session_write(self, char: Any, handler: Callable, value: Any) -> None:
         if not self._ready or self._closed:
+            char.set_value(self._char_values[char], should_notify=False)
             raise RuntimeError("HKSV settings are still loading")
-        handler(value)
+        try:
+            handler(value)
+        except ValueError, TypeError, RuntimeError:
+            char.set_value(self._char_values[char], should_notify=False)
+            raise
+        self._char_values[char] = value
         char.set_value(value)
 
-    def _selected_write(self, handler: Callable, value: str, session: Any) -> None:
+    def _selected_write(self, value: str) -> None:
         if not self._ready or self._closed:
+            self.services.selected.set_value(
+                self._selected_value or "", should_notify=False
+            )
             raise RuntimeError("HKSV settings are still loading")
-        handler(value, session)
+        try:
+            self._set_configuration(base64.b64decode(value, validate=True))
+        except ValueError, TypeError, RuntimeError:
+            self.services.selected.set_value(
+                self._selected_value or "", should_notify=False
+            )
+            raise
+
+    def _setup_transport(self, value: str, sender_client_addr: Any = None) -> str:
+        request = hds.SetupRequest.decode(base64.b64decode(value, validate=True))
+        secret = self.driver.session_shared_keys.get(sender_client_addr)
+        if (
+            not self._ready
+            or self._closed
+            or secret is None
+            or request.transport_type != hds.TRANSPORT_TYPE_TCP
+            or request.session_command != hds.SESSION_COMMAND_START
+            or len(request.controller_key_salt) != 32
+        ):
+            return b64(
+                hds.encode_setup_response(0, b"", status=hds.SETUP_STATUS_GENERIC_ERROR)
+            )
+        salt = self.hds.register_transport(secret, request.controller_key_salt)
+        return b64(hds.encode_setup_response(self.hds.port, salt))
+
+    def _on_hds_connection(self, connection: HDSConnection) -> None:
+        self._connections.add(connection)
+        connection.add_close_callback(self._connections.discard)
+        RecordingStreamManager(
+            connection, lambda stream_id: self._recording_packets(connection, stream_id)
+        )
+
+    async def _recording_packets(
+        self, connection: HDSConnection, stream_id: int
+    ) -> AsyncIterator[RecordingPacket]:
+        task = asyncio.current_task()
+        assert task is not None
+        self._delivery_tasks.add(task)
+        try:
+            try:
+                fragments = self._open_recording(connection, stream_id)
+            except ValueError:
+                connection.close()
+                return
+            async with aclosing(fragments):
+                async for data, last in fragments:
+                    yield RecordingPacket(data, is_last=last)
+        finally:
+            self._delivery_tasks.discard(task)
 
     def _set_configuration(self, raw: bytes) -> None:
         selected = parse_selected(raw, self.capabilities)
@@ -179,7 +234,8 @@ class HKSVController:
             raise ValueError("invalid camera active value")
         self.camera_active = bool(value)
         if not self.camera_active and self._recording_owner is not None:
-            self.hds.close_owner(self._recording_owner)
+            for connection in tuple(self._connections):
+                connection.close()
         if self.on_state_loaded:
             self.on_state_loaded()
         if not self.camera_active and self.on_camera_disabled:
@@ -302,6 +358,7 @@ class HKSVController:
         ):
             if key in state and state[key] in (0, 1, False, True):
                 char.set_value(int(state[key]), should_notify=False)
+        self._char_values.update((char, char.value) for char in self._char_values)
         self.active = bool(self.services.active.value)
         self.camera_active = bool(self.services.camera_active.value)
         self.audio_active = bool(self.services.audio_active.value)
@@ -315,7 +372,7 @@ class HKSVController:
             await self._discover_native()
         await self.hds.start()
         if self._is_closed():
-            await self.hds.close()
+            await self.hds.stop()
             return
         self._ready = True
         self._schedule_reconcile()
@@ -341,7 +398,7 @@ class HKSVController:
         self.capabilities = replace(self.capabilities, resolutions=resolutions)
         _, video, _ = self.capabilities.supported()
         self.services.recording.get_characteristic(
-            "Supported Video Recording Configuration"
+            "SupportedVideoRecordingConfiguration"
         ).set_value(video)
 
     async def _discover_native(self) -> None:
@@ -818,11 +875,11 @@ class HKSVController:
             category,
             self._hds_rejected,
         )
-        raise HDSReject(reason)
+        raise ValueError(f"Recording rejected: {reason}")
 
     def _open_recording(
         self, owner: object, stream_id: int
-    ) -> AsyncIterator[tuple[bytes, bool]]:
+    ) -> AsyncGenerator[tuple[bytes, bool]]:
         if not self._ready or not self.active or not self.camera_active:
             self._reject_recording(1, "inactive")
         if self.configuration is None:
@@ -846,7 +903,7 @@ class HKSVController:
 
     async def _recording(
         self, process: RecordingProcess, owner: object | None = None
-    ) -> AsyncIterator[tuple[bytes, bool]]:
+    ) -> AsyncGenerator[tuple[bytes, bool]]:
         if self._stream_active:
             self._reject_recording(2, "busy")
         if not self._can_deliver_recording():
@@ -918,7 +975,11 @@ class HKSVController:
                 await self.store.async_save(self._state())
             except Exception:
                 _LOGGER.exception("Could not persist HKSV state during shutdown")
-        await self.hds.close()
+        for connection in tuple(self._connections):
+            connection.close()
+        await self.hds.stop()
+        if self._delivery_tasks:
+            await asyncio.gather(*tuple(self._delivery_tasks), return_exceptions=True)
         if self._monitor_task:
             self._monitor_task.cancel()
             await asyncio.gather(self._monitor_task, return_exceptions=True)

@@ -14,7 +14,6 @@ from pyhap.camera import (
     Camera as PyhapCamera,
 )
 from pyhap.const import CATEGORY_CAMERA
-from pyhap.hap_handler import HAPStatusError
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import camera
@@ -314,6 +313,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             else:
                 try:
                     controller = HKSVController(
+                        self.driver,
                         self._async_get_hksv_source,
                         self._ffmpeg.binary,
                         Store(
@@ -352,11 +352,9 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                         serv_motion, "StatusActive", True
                     )
                     for index, management in enumerate(self._management):
-                        char = self._hksv_add_characteristic(management, "Active", 1)
-                        char.session_setter_callback = (
-                            lambda value, session, index=index, char=char: (
-                                self._hksv_set_stream_active(index, char, value)
-                            )
+                        char = management.get_characteristic("Active")
+                        char.setter_callback = lambda value, index=index, char=char: (
+                            self._hksv_set_stream_active(index, char, value)
                         )
                         self._hksv_stream_chars.append(char)
 
@@ -383,6 +381,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         """Update the authenticated controller's individual RTP setting."""
         assert self._hksv is not None
         if not self._hksv.ready or value not in (0, 1):
+            char.set_value(int(self._hksv.stream_active(index)), should_notify=False)
             raise ValueError("Invalid stream active state")
         self._hksv.set_stream_active(index, value)
         char.set_value(value)
@@ -1340,10 +1339,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             )
             return camera_image.content
         if self._hksv and not self._hksv.snapshot_allowed(image_size.get("reason")):
-            reason = image_size.get("reason")
-            raise HAPStatusError(
-                -70401 if reason is None and self._hksv.camera_active else -70412
-            )
+            raise RuntimeError("HomeKit camera snapshot is disabled")
         async with asyncio.timeout(SNAPSHOT_TIMEOUT):
             shared = await self._async_get_hksv_source()
             try:
@@ -1353,7 +1349,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             finally:
                 await shared.close()
         if self._hksv and not self._hksv.snapshot_allowed(image_size.get("reason")):
-            raise HAPStatusError(-70412)
+            raise RuntimeError("HomeKit camera snapshot is disabled")
         if image is None:
-            raise HAPStatusError(-70402)
+            raise RuntimeError("HomeKit camera snapshot is unavailable")
         return image
