@@ -117,6 +117,9 @@
       },
       "owner": {
         "default": "mdi:account"
+      },
+      "storage_percentage": {
+        "default": "mdi:cloud-percent"
       }
     }
   },
