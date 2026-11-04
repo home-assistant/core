@@ -35,10 +35,10 @@
       "status": {
         "name": "Status",
         "state": {
-          "starting": "Starting",
+          "error": "Error",
           "ok": "OK",
           "retrying": "Retrying",
-          "error": "Error"
+          "starting": "Starting"
         }
       },
       "uv": {
@@ -69,20 +69,20 @@
     },
     "step": {
       "init": {
-        "title": "Telldus Live options",
-        "description": "Telldus Live limits how many requests are accepted. When a request fails, it is retried with an increasing delay.",
         "data": {
-          "scan_interval": "Update interval",
+          "request_delay": "Delay between device requests",
           "retry_initial_delay": "Initial retry delay",
           "retry_max_delay": "Maximum retry delay",
-          "request_delay": "Delay between device requests"
+          "scan_interval": "Update interval"
         },
         "data_description": {
-          "scan_interval": "Seconds between refreshes.",
+          "request_delay": "Seconds to wait between the per-device requests made when a device is first seen.",
           "retry_initial_delay": "Seconds to wait before the first retry. The delay doubles on each failure.",
           "retry_max_delay": "Longest wait in seconds between retries.",
-          "request_delay": "Seconds to wait between the per-device requests made when a device is first seen."
-        }
+          "scan_interval": "Seconds between refreshes."
+        },
+        "description": "Telldus Live limits how many requests are accepted. When a request fails, it is retried with an increasing delay. Changes apply immediately.",
+        "title": "Telldus Live options"
       }
     }
   }
