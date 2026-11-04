@@ -17269,6 +17269,18 @@
       ],
       "supported_by": "fibaro"
     },
+    "zendure": {
+      "name": "Zendure",
+      "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "zerproc": {
       "name": "Zerproc",
       "integration_type": "hub",
