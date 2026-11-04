@@ -1,6 +1,7 @@
 """Test waze_travel_time services."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.waze_travel_time.const import (
     CONF_AVOID_FERRIES,
@@ -29,8 +30,6 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_REGION
 from homeassistant.core import HomeAssistant, ServiceResponse
 
 from .const import MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def call_service_get_travel_times(

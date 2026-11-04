@@ -63,7 +63,10 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 STEP_AUTH_DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
 
 STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
@@ -72,7 +75,7 @@ STEP_CAMERA_AUTH_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_LIVE_VIEW): bool,
         probatio.Optional(CONF_USERNAME): str,
-        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -283,7 +286,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_device
             )
 
-        self._set_confirm_only()
         placeholders = self._async_make_placeholders_from_discovery()
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -383,7 +385,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             # self.host is set by async_step_user and async_step_pick_device
             assert self.host is not None
-        placeholders: dict[str, str] = {CONF_HOST: self.host}
+        placeholders: dict[str, str] = {"host": self.host}
 
         if user_input:
             username = user_input[CONF_USERNAME]
@@ -827,7 +829,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         port = reconfigure_entry.data.get(CONF_PORT)
 
         if user_input is not None:
-            host, port = self._async_get_host_port(host)
+            host, port = self._async_get_host_port(user_input[CONF_HOST])
 
             self.host = host
             credentials = await get_credentials(self.hass)
@@ -867,6 +869,6 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 **placeholders,
-                CONF_MAC: reconfigure_entry.unique_id,
+                "mac": reconfigure_entry.unique_id,
             },
         )

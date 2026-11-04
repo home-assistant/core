@@ -74,6 +74,17 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Error connecting to device at location: {location}"
+    },
+    "communication_error": {
+      "message": "Unable to communicate with IGD at: {device_url}"
+    },
+    "device_not_discovered": {
+      "message": "Device not discovered: {usn}"
+    }
+  },
   "options": {
     "step": {
       "init": {

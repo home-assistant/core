@@ -2,13 +2,18 @@
 
 from collections.abc import Callable, Coroutine
 from datetime import datetime
+import errno
 import textwrap
 from typing import Any
+from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.local_todo.store import LocalTodoListStore
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
     ATTR_DUE_DATE,
@@ -20,13 +25,11 @@ from homeassistant.components.todo import (
     TodoServices,
 )
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
-from .conftest import TEST_ENTITY, TODO_NAME
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
+from .conftest import STORAGE_KEY, TEST_ENTITY, TODO_NAME
 
 type WsGetItemsType = Callable[[], Coroutine[Any, Any, list[dict[str, str]]]]
 type WsMoveItemType = Callable[[str, str | None], Coroutine[Any, Any, dict[str, Any]]]
@@ -82,6 +85,42 @@ EXPECTED_ADD_ITEM = {
     "status": "needs_action",
     "summary": "replace batteries",
 }
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            errno.EACCES, "os_write_permission_denied", id="permission_denied"
+        ),
+        pytest.param(errno.ENOSPC, "os_write_no_space", id="no_space"),
+        pytest.param(errno.EROFS, "os_write_read_only", id="read_only"),
+        pytest.param(errno.ENOENT, "os_write_dir_not_found", id="dir_not_found"),
+        pytest.param(errno.EIO, "os_write_error", id="other"),
+    ],
+)
+async def test_add_item_write_error(
+    hass: HomeAssistant, error: int, translation_key: str
+) -> None:
+    """Test adding a todo item when the list can't be written."""
+    with (
+        patch.object(LocalTodoListStore, "_store", side_effect=OSError(error, "Error")),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: "replace batteries"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {
+        "path": hass.config.path(f".storage/local_todo.{STORAGE_KEY}.ics")
+    }
 
 
 @pytest.mark.parametrize(
@@ -567,7 +606,7 @@ async def test_move_item_unknown(
     resp = await ws_move_item("unknown", "item-2")
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
-    assert "not found in todo list" in resp["error"]["message"]
+    assert "not found in to-do list" in resp["error"]["message"]
 
 
 async def test_move_item_previous_unknown(
@@ -591,7 +630,7 @@ async def test_move_item_previous_unknown(
     resp = await ws_move_item(items[0]["uid"], "unknown")
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
-    assert "not found in todo list" in resp["error"]["message"]
+    assert "not found in to-do list" in resp["error"]["message"]
 
 
 @pytest.mark.parametrize(

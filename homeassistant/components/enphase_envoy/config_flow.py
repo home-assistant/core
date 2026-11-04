@@ -152,7 +152,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.manual_token:
             # in manual token entry mode show token input field
-            schema[probatio.Optional(CONF_TOKEN, default="")] = str
+            schema[probatio.Optional(probatio.Secret(CONF_TOKEN), default="")] = str
         else:
             # in automatic token mode show username and password inputs
             schema[
@@ -160,7 +160,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME, default=self.username or default_username
                 )
             ] = str
-            schema[probatio.Optional(CONF_PASSWORD, default="")] = str
+            schema[probatio.Optional(probatio.Secret(CONF_PASSWORD), default="")] = str
 
         # option to switch between automatic and manual token entry modes
         schema[probatio.Optional(CONF_MANUAL_TOKEN, default=self.manual_token)] = bool
@@ -276,8 +276,8 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         serial = reauth_entry.unique_id or "-"
         self.context["title_placeholders"] = {
-            CONF_SERIAL: serial,
-            CONF_HOST: reauth_entry.data[CONF_HOST],
+            "serial": serial,
+            "host": reauth_entry.data[CONF_HOST],
         }
         description_placeholders.update(descriptions(serial, token_days_left))
         return self.async_show_form(
@@ -358,8 +358,8 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.unique_id:
             self.context["title_placeholders"] = {
-                CONF_SERIAL: self.unique_id,
-                CONF_HOST: host,
+                "serial": self.unique_id,
+                "host": host,
             }
         description_placeholders.update(descriptions("", token_days_left))
         return self.async_show_form(
@@ -423,8 +423,8 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         serial = reconfigure_entry.unique_id or "-"
         self.context["title_placeholders"] = {
-            CONF_SERIAL: serial,
-            CONF_HOST: reconfigure_entry.data[CONF_HOST],
+            "serial": serial,
+            "host": reconfigure_entry.data[CONF_HOST],
         }
         description_placeholders.update(descriptions(serial, token_days_left))
         return self.async_show_form(
@@ -472,7 +472,7 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithReload):
                 }
             ),
             description_placeholders={
-                CONF_SERIAL: self.config_entry.unique_id,
-                CONF_HOST: self.config_entry.data[CONF_HOST],
+                "serial": self.config_entry.unique_id,
+                "host": self.config_entry.data[CONF_HOST],
             },
         )

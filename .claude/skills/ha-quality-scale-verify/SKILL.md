@@ -5,48 +5,36 @@ description: Verifies that a Home Assistant integration follows a specific quali
 
 # Verify Quality Scale Rule
 
-You are verifying whether a Home Assistant integration follows a specific quality scale rule. Verify one rule at a time; to check a full tier, verify each of that tier's rules (run in parallel subagents when possible).
+You are verifying whether a Home Assistant integration follows a quality scale rule. Verify one rule at a time; to check a full tier, verify each of that tier's rules (parallel subagents when possible).
 
-## 1. Fetch rule documentation
-Retrieve the official rule documentation from:
-`https://raw.githubusercontent.com/home-assistant/developers.home-assistant/refs/heads/master/docs/core/integration-quality-scale/rules/{rule_name}.md`
-where `{rule_name}` is the rule identifier (e.g. `config-flow`, `entity-unique-id`, `parallel-updates`).
+Reading the code is not enough. Many rules have an objective threshold or a validator that CI enforces — run the tool and read its result instead of inferring from the source. Report the measured number or the tool's verdict; when a rule is a judgment from reading code, say so; when you could not check it, mark it **unverified** rather than implying a pass.
 
-## 2. Understand rule requirements
-Parse the rule documentation to identify:
-- Core requirements and mandatory implementations
-- Specific code patterns or configurations required
-- Common violations and anti-patterns
-- Exemption criteria (when a rule might not apply)
-- The quality tier this rule belongs to (Bronze, Silver, Gold, Platinum)
+## 1. Understand the rule
+Fetch the rule doc from `https://raw.githubusercontent.com/home-assistant/developers.home-assistant/refs/heads/master/docs/core/integration-quality-scale/rules/{rule_name}.md` and read the exact requirement — the wording matters (e.g. test-coverage is "Above 95% test coverage for all integration modules": per module, strictly above 95%). Note the tier the rule belongs to, its required patterns, and its exemption criteria.
 
-## 3. Analyze the integration code
-Examine the integration's codebase at `homeassistant/components/<integration domain>`, focusing on:
-- `manifest.json` for quality scale declaration and configuration
-- `quality_scale.yaml` for rule status (done, todo, exempt)
-- Relevant Python modules based on the rule requirements
-- Configuration files and service definitions as needed
+## 2. Inspect the integration
+Verify the code as it currently is (local working tree, or a checked-out PR head), not the base branch. In `homeassistant/components/<domain>`, read `manifest.json` (declared `quality_scale` tier), `quality_scale.yaml` (each rule's `done`/`todo`/`exempt`), and the modules and `tests/components/<domain>` relevant to the rule.
 
-Additional sources:
-- Integration docs: Fetch `https://raw.githubusercontent.com/home-assistant/home-assistant.io/refs/heads/current/source/_integrations/<integration domain>.markdown`
-- PyPI package info: `https://pypi.org/pypi/<package>/json`
+Other sources: the library on PyPI (`https://pypi.org/pypi/<package>/json`); and the integration docs, resolved in this order — the docs change under review, its linked docs PR, the `next` branch, then the `current` branch of home-assistant.io (`.../home-assistant.io/refs/heads/<branch>/source/_integrations/<domain>.markdown`). Docs for a tier bump usually land on `next` or a docs PR, so `current` alone is often stale.
 
-## 4. Verification process
-- Check if the rule is marked `done`, `todo`, or `exempt` in `quality_scale.yaml`
-- If marked `exempt`, verify the exemption reason is valid
-- If marked `done`, verify the actual implementation matches the requirements
-- Identify specific files and code sections that demonstrate compliance or violations
-- Consider the integration's declared quality tier when applying rules
-- Look for the exact implementation patterns specified in the rule
-- Check for common mistakes, anti-patterns, edge cases, and error handling requirements
-- Validate that implementations follow Home Assistant conventions
+## 3. Which rules to verify
+- **Tier bump** (the `quality_scale` value in `manifest.json` changes): verify every rule from Bronze up to the target tier, from scratch — do not trust the existing `done`/`exempt` marks.
+- **Rule status changes, same tier** (flips in `quality_scale.yaml`, or a new scorecard): verify every rule whose status the diff changes, in any direction. A revert to `todo` at or below the declared tier breaks the tier claim.
+- **Code change only** (no `quality_scale.yaml` or tier change): verify the changed code still satisfies the rules in force at the integration's current tier. Map the diff to the rules it implicates and check those — the bar is no regression.
+- **A single requested rule**: verify just that rule.
 
-Quality scale rules are cumulative: Bronze rules apply to all integrations with a quality scale, Silver rules apply to Silver+ integrations, and so on. Always consider the integration's target quality level when determining which rules to enforce.
+## 4. How to prove each rule
+Run checks in the project's dev environment. Match the versions the change pins (`ruff` from `requirements_test_pre_commit.txt`, `syrupy` from `requirements_test.txt`, the library from `manifest.json`) — version drift gives false passes and false failures. A missing or stale dependency (ModuleNotFoundError, mypy flagging library symbols) is a build-environment gap to fix, not a rule violation; don't assume an unfamiliar imported package is a mistake without confirming it is absent from the project's requirements.
+
+- **hassfest** (`python -m script.hassfest --integration-path homeassistant/components/<domain>`) — validates `quality_scale.yaml` and the validator-backed rules: `config-flow`, `runtime-data`, `test-before-setup`, `unique-config-entry`, `discovery`, `reconfiguration-flow`, `strict-typing` wiring. Caveats: a rule's validator runs only when that rule is `done`, so a clean run does not prove a `todo`/`exempt` rule — check those directly. `--integration-path` runs only the per-integration plugins, so the repo-wide ones do not run — notably `mypy_config` (needed for strict-typing, below) and the brand-metadata check that the `config_flow` plugin performs only on a full run.
+- **strict-typing** (platinum) — run mypy on the integration. It must be listed in `.strict-typing` (else mypy runs non-strict and passes vacuously), and `mypy.ini` must be in sync — validate that (`python3 -m script.hassfest -p mypy_config --action validate`); never let hassfest regenerate it (the default, which hides staleness). `mypy_config` is repo-wide, so scope a failure to the target before reporting it.
+- **test-coverage** (silver+) — regenerate translations first (tests load the generated `translations/en.json`, not `strings.json`), then run coverage. The rule is strictly above 95% **per module**; report every module not above 95% by exact covered/total (a rounded "95%" can be 94.7%), with missing lines.
+- **config-flow-test-coverage** (bronze) — `config_flow.py` fully covered, and every supported flow tested through error recovery to its correct terminal result: `CREATE_ENTRY` for user/discovery/import setup, `ABORT` + `reauth_successful`/`reconfigure_successful` for reauth/reconfigure, plus proof that a duplicate or otherwise-disallowed second entry is rejected — require the test to assert that the flow aborts, but accept the integration's reason (e.g. `already_configured`, `single_instance_allowed`, `already_configured_as_subentry`). Options flows count and live in `config_flow.py`, so they are already in scope. 100% line coverage without these scenarios still fails.
+- **docs-*** — confirm the required sections exist in the docs (resolved as in §2). A section absent from readable sources is a finding; mark unverified only when the docs could not be reached.
+- **brands** (bronze) — hassfest does not check this rule. A full run validates brand *metadata* (the in-repo `homeassistant/brands/*.json`) via the `config_flow` plugin, but never the icon/logo image assets, which live in the separate `home-assistant/brands` repo. Verify the required assets there or in the linked brands PR, else mark unverified.
+- **Everything else** — verify by reading the code against the rule doc.
+
+Rules are cumulative and enforced at or above their own tier (e.g. `test-coverage` is Silver — it does not fail a Bronze claim). A `done` rule whose check fails is a finding; so is an `exempt` reason that masks an implementation gap rather than genuine non-applicability.
 
 ## 5. Report findings
-Report only the rules that have issues. Do not list rules that pass or that are validly exempt. For each rule with an issue, provide:
-- **Rule**: The rule identifier and the problem (non-compliance, or an invalid/unjustified exemption)
-- **Evidence**: Specific file locations and code showing the violation
-- **Recommendation**: Actionable steps to achieve compliance
-
-If no rules have issues, say so in a single line. Be thorough but focused: examine only the aspects relevant to the rules being verified. If you cannot access the rule documentation or find the integration code, clearly state what information is missing and what you would need to complete the verification.
+Report the rules with issues and the rules you could not check. For each issue: the rule and the problem (non-compliance, over-claimed `done`, or invalid `exempt`), the evidence (measured result / tool output / file location), and the fix. For each unchecked rule: mark it unverified and say what is needed. State which checks you ran. If every rule you could check passes and nothing is left unverified, say so in one line.

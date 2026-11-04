@@ -98,16 +98,10 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
             )
 
         except DeviceInitializationError as e:
-            _LOGGER.error(
-                "Failed to initialize device with IP/Hostname"
-                " %s, please verify that the device is powered"
-                " on and reachable on port 3000",
-                self.config_entry.data[CONF_HOST],
-            )
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_initiate_connection",
-                translation_placeholders={CONF_HOST: self.config_entry.data[CONF_HOST]},
+                translation_placeholders={"host": self.config_entry.data[CONF_HOST]},
             ) from e
 
         self.data.unique_id = self.device.info_data.unique_id

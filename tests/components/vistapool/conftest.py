@@ -7,11 +7,10 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.vistapool.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 MOCK_USERNAME = "testuser@example.com"
 MOCK_PASSWORD = "testpassword"
@@ -73,9 +72,6 @@ def mock_vistapool_client(
     # default to an empty dict so always-on sensors come up with
     # `native_value=None` and module-gated sensors are skipped.
     client.fetch_pool_data = AsyncMock(return_value={})
-    # The token-refresh loop awaits `auth.get_client()` and expects
-    # `(client, refreshed)`.
-    mock_vistapool_auth.get_client = AsyncMock(return_value=(client, False))
     with (
         patch("homeassistant.components.vistapool.AquariteClient", return_value=client),
         patch(

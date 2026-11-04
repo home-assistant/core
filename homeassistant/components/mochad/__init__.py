@@ -29,7 +29,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Optional(CONF_HOST, default="localhost"): cv.string,
-                probatio.Optional(CONF_PORT, default=1099): cv.port,
+                probatio.Optional(CONF_PORT, default=1099): probatio.Port(),
             }
         )
     },

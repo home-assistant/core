@@ -37,5 +37,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to the Twinkly device at {host}"
+    }
   }
 }

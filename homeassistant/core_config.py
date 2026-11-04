@@ -61,7 +61,7 @@ from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import config_validation as cv, issue_registry as ir
 from .helpers.entity_values import EntityValues
 from .helpers.storage import Store
-from .helpers.typing import UNDEFINED, UndefinedType
+from .helpers.typing import Undefined
 from .util import dt as dt_util, location
 from .util.hass_dict import HassKey
 from .util.package import is_docker_env
@@ -279,17 +279,17 @@ CORE_CONFIG_SCHEMA = probatio.All(
             probatio.Optional(CONF_INTERNAL_URL): cv.url,
             probatio.Optional(CONF_EXTERNAL_URL): cv.url,
             probatio.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): probatio.All(
-                cv.ensure_list, [probatio.IsDir()]
+                probatio.EnsureList(), [probatio.IsDir()]
             ),
             probatio.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): probatio.All(
-                cv.ensure_list, [probatio.IsDir()]
+                probatio.EnsureList(), [probatio.IsDir()]
             ),
             probatio.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): probatio.All(
-                cv.ensure_list, [cv.url]
+                probatio.EnsureList(), [cv.url]
             ),
             probatio.Optional(CONF_PACKAGES, default={}): _PACKAGES_CONFIG_SCHEMA,
             probatio.Optional(CONF_AUTH_PROVIDERS): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [
                     auth_providers.AUTH_PROVIDER_SCHEMA.extend(
                         {
@@ -306,7 +306,7 @@ CORE_CONFIG_SCHEMA = probatio.All(
                 _no_duplicate_auth_provider,
             ),
             probatio.Optional(CONF_AUTH_MFA_MODULES): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [
                     auth_mfa_modules.MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
                         {
@@ -330,15 +330,18 @@ CORE_CONFIG_SCHEMA = probatio.All(
             probatio.Optional(CONF_WEBRTC): probatio.Schema(
                 {
                     probatio.Required(CONF_ICE_SERVERS): probatio.All(
-                        cv.ensure_list,
+                        probatio.EnsureList(),
                         [
                             probatio.Schema(
                                 {
                                     probatio.Required(CONF_URL): probatio.All(
-                                        cv.ensure_list, [validate_stun_or_turn_url]
+                                        probatio.EnsureList(),
+                                        [validate_stun_or_turn_url],
                                     ),
                                     probatio.Optional(CONF_USERNAME): cv.string,
-                                    probatio.Optional(CONF_CREDENTIAL): cv.string,
+                                    probatio.Optional(
+                                        probatio.Secret(CONF_CREDENTIAL)
+                                    ): cv.string,
                                 }
                             )
                         ],
@@ -730,11 +733,11 @@ class Config:
     async def _async_update(
         self,
         *,
-        country: str | UndefinedType | None = UNDEFINED,
+        country: str | Undefined | None = Undefined,
         currency: str | None = None,
         elevation: int | None = None,
-        external_url: str | UndefinedType | None = UNDEFINED,
-        internal_url: str | UndefinedType | None = UNDEFINED,
+        external_url: str | Undefined | None = Undefined,
+        internal_url: str | Undefined | None = Undefined,
         language: str | None = None,
         latitude: float | None = None,
         location_name: str | None = None,
@@ -746,15 +749,15 @@ class Config:
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
-        if country is not UNDEFINED:
+        if country is not Undefined:
             self.country = country
         if currency is not None:
             self.currency = currency
         if elevation is not None:
             self.elevation = elevation
-        if external_url is not UNDEFINED:
+        if external_url is not Undefined:
             self.external_url = external_url
-        if internal_url is not UNDEFINED:
+        if internal_url is not Undefined:
             self.internal_url = internal_url
         if language is not None:
             self.language = language
@@ -810,8 +813,8 @@ class Config:
             unit_system=data.get("unit_system_v2"),
             location_name=data.get("location_name"),
             time_zone=data.get("time_zone"),
-            external_url=data.get("external_url", UNDEFINED),
-            internal_url=data.get("internal_url", UNDEFINED),
+            external_url=data.get("external_url", Undefined),
+            internal_url=data.get("internal_url", Undefined),
             currency=data.get("currency"),
             country=data.get("country"),
             language=data.get("language"),
@@ -876,9 +879,7 @@ class Config:
                 try:
                     owner = await self.hass.auth.async_get_owner()
                     if owner is not None:
-                        from .components.frontend import (  # noqa: PLC0415
-                            storage as frontend_store,
-                        )
+                        from .components.frontend import storage as frontend_store  # noqa: PLC0415
 
                         owner_store = await frontend_store.async_user_store(
                             self.hass, owner.id

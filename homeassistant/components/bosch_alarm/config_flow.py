@@ -49,13 +49,13 @@ STEP_AUTH_DATA_SCHEMA_SOLUTION = probatio.Schema(
 STEP_AUTH_DATA_SCHEMA_AMAX = probatio.Schema(
     {
         probatio.Required(CONF_INSTALLER_CODE): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
 STEP_AUTH_DATA_SCHEMA_BG = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 

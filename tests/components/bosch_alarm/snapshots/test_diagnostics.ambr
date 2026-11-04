@@ -125,7 +125,7 @@
           'open': False,
         }),
       ]),
-      'family': 'BG_SERIES',
+      'family': 'B_SERIES',
       'firmware_version': '1.0.0',
       'history_events': list([
       ]),

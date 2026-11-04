@@ -17,7 +17,7 @@ _LOGGER = getLogger(__name__)
 UPLOAD_IMAGE_SCHEMA = probatio.Schema(
     {
         probatio.Required("device_id"): probatio.All(
-            cv.ensure_list, [cv.string], probatio.Length(min=1)
+            probatio.EnsureList(), [cv.string], probatio.NonEmpty()
         ),
         probatio.Required("image_url"): cv.url,
     }
@@ -39,7 +39,10 @@ async def handle_upload_image(call: ServiceCall) -> None:
             (iid[1] for iid in device.identifiers if iid[0] == DOMAIN), None
         )
         if device_mac is None:
-            raise ServiceValidationError("No valid MAC address obtained.")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_valid_mac_address",
+            )
 
         await config_entry.runtime_data.api.send_command(
             device_id=device_mac,

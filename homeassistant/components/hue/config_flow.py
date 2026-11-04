@@ -48,6 +48,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Hue config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback

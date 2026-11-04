@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.glances.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import HA_SENSOR_DATA, MOCK_REFERENCE_DATE, MOCK_USER_INPUT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensor_states(

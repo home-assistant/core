@@ -23,5 +23,10 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_board": {
+      "message": "Board \"{board}\" is (no longer) valid. Please remove the integration \"{title}\""
+    }
+  },
   "title": "Version"
 }

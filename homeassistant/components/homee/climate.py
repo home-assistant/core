@@ -80,7 +80,9 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
             AttributeType.TARGET_TEMPERATURE
         )
         assert self._target_temp is not None
-        self._attr_temperature_unit = str(HOMEE_UNIT_TO_HA_UNIT[self._target_temp.unit])
+        self._attr_native_temperature_unit = str(
+            HOMEE_UNIT_TO_HA_UNIT[self._target_temp.unit]
+        )
         self._attr_target_temperature_step = self._target_temp.step_value
         self._attr_unique_id = f"{self._attr_unique_id}-{self._target_temp.id}"
 
@@ -118,7 +120,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
             self._valve_position is not None and self._valve_position.current_value == 0
         ) or (
             self._temperature is not None
-            and self._temperature.current_value >= self.target_temperature
+            and self._temperature.current_value >= self.native_target_temperature
         ):
             return HVACAction.IDLE
 
@@ -142,7 +144,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._temperature is not None:
             return self._temperature.current_value
@@ -150,7 +152,7 @@ class HomeeClimate(HomeeNodeEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         assert self._target_temp is not None
         return self._target_temp.current_value

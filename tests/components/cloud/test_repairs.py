@@ -6,6 +6,9 @@ from unittest.mock import patch
 
 from hass_nabucasa.payments_api import PaymentsApiError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.components.cloud.repairs import (
@@ -18,10 +21,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import mock_cloud
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def test_do_not_create_repair_issues_at_startup_if_not_logged_in(

@@ -158,10 +158,15 @@
       }
     }
   },
-  "issues": {
-    "deprecated_effect_none": {
-      "description": "A light was turned on with the deprecated effect `None`. This has been replaced with `off`. Please update any automations, scenes, or scripts that use this effect.",
-      "title": "Light turned on with deprecated effect"
+  "exceptions": {
+    "bridge_initialization_failed": {
+      "message": "Failed to set up the Hue bridge at {host}"
+    },
+    "duplicate_entry": {
+      "message": "Another entry already exists for this Hue bridge, this entry will be removed"
+    },
+    "unload_failed": {
+      "message": "Failed to unload the Hue bridge"
     }
   },
   "options": {

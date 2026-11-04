@@ -45,6 +45,7 @@ CAMERA_TYPES: tuple[ImouCameraEntityDescription, ...] = (
         key="camera_hd",
         translation_key="camera_hd",
         resolution=PARAM_HD,
+        entity_registry_enabled_default=False,
     ),
 )
 

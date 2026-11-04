@@ -32,14 +32,14 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_IP_ADDRESS): cv.string,
-                probatio.Required(CONF_PORT): cv.port,
+                probatio.Required(CONF_PORT): probatio.Port(),
                 probatio.Required(CONF_TOPIC): cv.string,
                 probatio.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
                 probatio.Optional(
                     CONF_SECURITY_PROTOCOL, default="PLAINTEXT"
                 ): probatio.In(["PLAINTEXT", "SSL", "SASL_SSL"]),
                 probatio.Optional(CONF_USERNAME): cv.string,
-                probatio.Optional(CONF_PASSWORD): cv.string,
+                probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
             }
         )
     },

@@ -6,10 +6,8 @@ import pytest
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.components.intent_script import (
-    ScriptIntentHandler,
-    llm as intent_script_llm,
-)
+from homeassistant.components.intent_script import llm as intent_script_llm
+from homeassistant.components.intent_script.helpers import ScriptIntentHandler
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent, llm
 from homeassistant.setup import async_setup_component

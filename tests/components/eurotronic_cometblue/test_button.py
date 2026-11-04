@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .conftest import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry
 
 
 async def test_button_press_sync_time(

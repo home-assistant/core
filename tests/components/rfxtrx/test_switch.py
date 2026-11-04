@@ -3,6 +3,7 @@
 from unittest.mock import call
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +11,6 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
 from .conftest import create_rfx_test_entry
-
-from tests.common import mock_restore_cache
 
 EVENT_RFY_ENABLE_SUN_AUTO = "0C1a0000030101011300000003"
 EVENT_RFY_DISABLE_SUN_AUTO = "0C1a0000030101011400000003"

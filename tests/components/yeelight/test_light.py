@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from yeelight import (
     BulbException,
@@ -66,9 +67,6 @@ from homeassistant.components.yeelight.const import (
     YEELIGHT_TEMPERATURE_TRANSACTION,
 )
 from homeassistant.components.yeelight.light import (
-    ATTR_KELVIN,
-    ATTR_MINUTES,
-    ATTR_MODE,
     EFFECT_CANDLE_FLICKER,
     EFFECT_DATE_NIGHT,
     EFFECT_DISCO,
@@ -84,6 +82,11 @@ from homeassistant.components.yeelight.light import (
     EFFECT_SUNSET,
     EFFECT_TWITTER,
     EFFECT_WHATSAPP,
+    YEELIGHT_COLOR_EFFECT_LIST,
+)
+from homeassistant.components.yeelight.services import (
+    ATTR_KELVIN,
+    ATTR_MINUTES,
     SERVICE_SET_AUTO_DELAY_OFF_SCENE,
     SERVICE_SET_COLOR_FLOW_SCENE,
     SERVICE_SET_COLOR_SCENE,
@@ -92,10 +95,10 @@ from homeassistant.components.yeelight.light import (
     SERVICE_SET_MODE,
     SERVICE_SET_MUSIC_MODE,
     SERVICE_START_FLOW,
-    YEELIGHT_COLOR_EFFECT_LIST,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     CONF_HOST,
     CONF_NAME,
     STATE_OFF,
@@ -120,8 +123,6 @@ from . import (
     _patch_discovery,
     _patch_discovery_interval,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 CONFIG_ENTRY_DATA = {
     CONF_HOST: IP_ADDRESS,
