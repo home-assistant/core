@@ -481,23 +481,51 @@ async def test_reconfigure_errors(
     assert entry.data["password"] == "new-password"
 
 
-async def test_reconfigure_already_configured(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "other_entry_endpoint",
+    [
+        pytest.param({"host": "2.2.2.2", "port": 9999}, id="existing_duplicate"),
+        pytest.param(
+            {"host": "3.3.3.3", "port": 7777}, id="duplicate_during_validation"
+        ),
+    ],
+)
+async def test_reconfigure_already_configured(
+    hass: HomeAssistant, other_entry_endpoint: dict[str, Any]
+) -> None:
     """Test reconfigure aborts when host and port belong to another entry."""
     entry = MockConfigEntry(domain=DOMAIN, data=RECONFIGURE_ENTRY_DATA)
     entry.add_to_hass(hass)
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={"password": "other-password", "host": "2.2.2.2", "port": 9999},
-    ).add_to_hass(hass)
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, data={"password": "other-password", **other_entry_endpoint}
+    )
+    other_entry.add_to_hass(hass)
+
+    async def move_other_entry() -> None:
+        # Simulate another flow saving the same endpoint while validating.
+        hass.config_entries.async_update_entry(
+            other_entry,
+            data={**other_entry.data, "host": "2.2.2.2", "port": 9999},
+        )
 
     result = await entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"password": "new-password", "host": "2.2.2.2", "port": 9999},
-    )
+
+    with (
+        patch(
+            "homeassistant.components.vlc_telnet.config_flow.Client.connect",
+            side_effect=move_other_entry,
+        ),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.login"),
+        patch("homeassistant.components.vlc_telnet.config_flow.Client.disconnect"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "new-password", "host": "2.2.2.2", "port": 9999},
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert dict(entry.data) == RECONFIGURE_ENTRY_DATA
 
 
 async def test_reconfigure_keeps_endpoint_defaults(hass: HomeAssistant) -> None:

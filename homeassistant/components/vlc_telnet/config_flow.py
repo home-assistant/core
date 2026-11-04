@@ -152,13 +152,6 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="addon_managed")
 
         if user_input is not None:
-            if (user_input[CONF_HOST], user_input[CONF_PORT]) != (
-                reconfigure_entry.data[CONF_HOST],
-                reconfigure_entry.data[CONF_PORT],
-            ):
-                self._async_abort_entries_match(
-                    {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
-                )
             try:
                 await validate_input(self.hass, user_input)
             except CannotConnect:
@@ -169,6 +162,17 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                # Another flow may have claimed this endpoint while validating.
+                if (user_input[CONF_HOST], user_input[CONF_PORT]) != (
+                    reconfigure_entry.data[CONF_HOST],
+                    reconfigure_entry.data[CONF_PORT],
+                ):
+                    self._async_abort_entries_match(
+                        {
+                            CONF_HOST: user_input[CONF_HOST],
+                            CONF_PORT: user_input[CONF_PORT],
+                        }
+                    )
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates=user_input
                 )
