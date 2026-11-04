@@ -728,7 +728,7 @@ async def test_camera_reconnect_webhook(
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 7
+        assert fake_post_hits == 8
 
         # Fake camera reconnect (incomplete event should not change anything)
         response = {
@@ -933,7 +933,7 @@ async def test_doorbell_reconnect_webhook(
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 7
+        assert fake_post_hits == 8
 
         # Fake doorbell reconnect (incomplete event should not change anything)
         response = {
@@ -1060,7 +1060,7 @@ async def test_camera_webhook_consistency(
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 7
+        assert fake_post_hits == 8
 
         calls = fake_post_hits
 
@@ -1336,7 +1336,7 @@ async def test_setup_component_no_devices(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 7
+        assert fake_post_hits == 8
 
 
 async def test_camera_image_raises_exception(
@@ -1386,7 +1386,7 @@ async def test_camera_image_raises_exception(
         await camera.async_get_image(hass, camera_entity_indoor)
 
     assert excinfo.value.args == ("Unable to get image",)
-    assert fake_post_hits == 8
+    assert fake_post_hits == 9
 
 
 @pytest.mark.parametrize(
@@ -1571,3 +1571,85 @@ async def test_camera_unhealthy_status_scenarios(
             hass.states.get(camera_entity).attributes.get("alim_status")
             is expected_alim_status
         )
+
+
+@pytest.mark.parametrize(
+    ("camera_type", "camera_id", "camera_entity", "expected_motion_detection"),
+    [
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall", True),
+        ("NOC", "12:34:56:10:b9:0e", "camera.front", True),
+    ],
+)
+async def test_camera_availability_lifecycle(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    camera_type: str,
+    camera_id: str,
+    camera_entity: str,
+    expected_motion_detection: bool,
+) -> None:
+    """Test webhook event on camera reconnect."""
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Fake error during requesting backend data."""
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
+        ) as mock_webhook,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_webhook.return_value = "https://example.com"
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+
+        # Fake webhook activation
+        response = {
+            "push_type": "webhook_activation",
+        }
+        await simulate_webhook(hass, webhook_id, response)
+        await hass.async_block_till_done()
+
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+        assert (
+            hass.states.get(camera_entity).attributes.get("motion_detection")
+            is expected_motion_detection
+        )
+
+        mock_auth.return_value.async_post_api_request.side_effect = pyatmo.ApiError(
+            "API failure"
+        )
+
+        netatmo_data = config_entry.runtime_data
+        netatmo_data.last_update_success = False
+
+        # Mark all publishers failed, we need 3 times
+        for _ in range(3):
+            for publisher in netatmo_data.publisher.values():
+                publisher.last_update_success = False
+                netatmo_data.async_force_update(publisher.name)
+                await hass.async_block_till_done()
+
+        await advance_time(hass, freezer, **POLLING_INTERVAL)
+
+        for _ in range(3):
+            for publisher in netatmo_data.publisher.values():
+                await netatmo_data.async_fetch_data(publisher.name)
+                await hass.async_block_till_done()
+
+        assert hass.states.get(camera_entity).state == "unavailable"

@@ -30,6 +30,7 @@ from .const import (
     NETATMO_ALIM_STATUS_ONLINE,
     NETATMO_CREATE_CAMERA,
     NETATMO_DOORBELLS,
+    SIGNAL_NAME,
     WEBHOOK_PUSH_TYPE,
 )
 from .coordinator import EVENT, HOME, NetatmoConfigEntry, NetatmoDevice
@@ -93,26 +94,27 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         )
         self._light_state = None
 
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: f"{HOME}-{self.home.entity_id}",
+                    "update_callback": self.async_home_update_callback,
+                },
+                {
+                    "name": EVENT,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: f"{EVENT}-{self.home.entity_id}",
+                    "update_callback": self.async_event_update_callback,
+                },
+            ]
+        )
+
     @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{HOME}-{self.home.entity_id}",
-                self.async_home_update_callback,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{EVENT}-{self.home.entity_id}",
-                self.async_event_update_callback,
-            )
-        )
 
         for event_type in CAMERA_TRIGGERS:
             self.async_on_remove(
