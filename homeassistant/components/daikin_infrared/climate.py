@@ -6,13 +6,14 @@ from datetime import datetime, time
 from typing import Any, NamedTuple, Self, override
 
 from infrared_protocols.commands.daikin_ac import (
-    MAX_TEMPERATURE,
-    MIN_TEMPERATURE,
+    MAX_TEMP,
+    MIN_TEMP,
     DaikinAcBrightness,
     DaikinAcClock,
     DaikinAcComfort,
     DaikinAcCommand,
     DaikinAcFanSpeed,
+    DaikinAcFrames,
     DaikinAcMode,
     DaikinAcState,
 )
@@ -69,7 +70,7 @@ TEMPERATURE_RANGES: dict[DaikinAcMode, _TemperatureRange] = {
     DaikinAcMode.HEAT: _TemperatureRange(10, 30),
 }
 # Dry and fan only have no setpoint, so only the protocol's limits apply
-_FULL_RANGE = _TemperatureRange(MIN_TEMPERATURE, MAX_TEMPERATURE)
+_FULL_RANGE = _TemperatureRange(MIN_TEMP, MAX_TEMP)
 
 _HA_MODE_TO_LIB: dict[HVACMode, DaikinAcMode] = {
     HVACMode.HEAT_COOL: DaikinAcMode.AUTO,
@@ -153,7 +154,9 @@ class _DaikinAcExtraStoredData(ExtraStoredData):
             "state": _state_as_dict(self.state),
             "comfort": {
                 "comfort": self.comfort.comfort,
-                "brightness": self.comfort.brightness.name,
+                "brightness": (
+                    self.comfort.brightness.name if self.comfort.brightness else None
+                ),
             },
             "setpoints": {mode.name: value for mode, value in self.setpoints.items()},
         }
@@ -162,11 +165,12 @@ class _DaikinAcExtraStoredData(ExtraStoredData):
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize the stored data from a dict, or None if it is not valid."""
         try:
+            brightness = restored["comfort"]["brightness"]
             return cls(
                 state=_state_from_dict(restored["state"]),
                 comfort=DaikinAcComfort(
                     comfort=bool(restored["comfort"]["comfort"]),
-                    brightness=DaikinAcBrightness[restored["comfort"]["brightness"]],
+                    brightness=DaikinAcBrightness[brightness] if brightness else None,
                 ),
                 setpoints={
                     DaikinAcMode[mode]: float(value)
@@ -473,10 +477,10 @@ class DaikinAcClimateWithReceiver(DaikinAcClimate, InfraredReceiverConsumerEntit
         A signal holds one frame or a whole transmission, depending on how long the
         receiver waits before ending a capture, so each part is applied on its own.
         """
-        if (command := DaikinAcCommand.from_raw_timings(signal.timings)) is None:
+        if (frames := DaikinAcFrames.from_raw_timings(signal.timings)) is None:
             return
-        if command.comfort is not None:
-            self._comfort = command.comfort
-        if command.state is not None:
-            self._async_set_ac_state(command.state)
+        if frames.comfort is not None:
+            self._comfort = frames.comfort
+        if frames.state is not None:
+            self._async_set_ac_state(frames.state)
             self.async_write_ha_state()

@@ -638,16 +638,28 @@ async def test_restore_state(
     assert command.comfort == DaikinAcComfort(brightness=DaikinAcBrightness.OFF)
 
 
+@pytest.mark.parametrize(
+    "stored",
+    [
+        pytest.param(_STORED, id="brightness_off"),
+        # ESPHome's comfort frame gives no brightness
+        pytest.param(
+            {**_STORED, "comfort": {"comfort": True, "brightness": None}},
+            id="brightness_unset",
+        ),
+    ],
+)
 @pytest.mark.parametrize("has_receiver", [False])
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_restore_state_round_trip(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
+    stored: dict[str, Any],
 ) -> None:
     """Test the state saved at shutdown is the state that was restored."""
     mock_restore_cache_with_extra_data(
-        hass, [(State(_CLIMATE_ENTITY_ID, HVACMode.HEAT), _STORED)]
+        hass, [(State(_CLIMATE_ENTITY_ID, HVACMode.HEAT), stored)]
     )
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -662,8 +674,8 @@ async def test_restore_state_round_trip(
     ]
     # Powerful is dropped on restore, so it is saved as off
     assert saved["extra_data"] == {
-        **_STORED,
-        "state": {**_STORED["state"], "powerful": False},
+        **stored,
+        "state": {**stored["state"], "powerful": False},
     }
 
 
