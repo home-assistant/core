@@ -2,33 +2,38 @@
 
 from typing import Any, override
 
+from modbus_connection import ModbusTcpParams
 import probatio
 from python_qube_heatpump import QubeClient, async_get_device_info, parse_device_info
 
 from homeassistant.components import zeroconf
+from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DEFAULT_PORT, DOMAIN, MDNS_LOOKUP_TIMEOUT
+from .const import DEFAULT_PORT, DOMAIN, MDNS_LOOKUP_TIMEOUT, UNIT_ID
 
 HOST_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): TextSelector()})
 
 
-async def _async_validate_device(host: str) -> str | None:
-    """Connect and verify the device is a Qube; return an error key on failure."""
-    client = QubeClient(host, DEFAULT_PORT)
+async def _async_validate_device(hass: HomeAssistant, host: str) -> str | None:
+    """Verify the device is a Qube; return an error key on failure."""
     try:
-        if not await client.connect():
-            return "cannot_connect"
-        if not await client.async_verify_device():
-            return "not_qube_device"
-    except OSError:
+        async with async_get_temporary_unit(
+            hass, ModbusTcpParams(host=host, port=DEFAULT_PORT), UNIT_ID
+        ) as unit:
+            client = QubeClient(host, DEFAULT_PORT, UNIT_ID, unit=unit)
+            if await client.async_verify_device():
+                return None
+            # A failed request drops the link; an error reply leaves it up
+            return "not_qube_device" if client.is_connected else "cannot_connect"
+    except HomeAssistantError:
+        # The device is already in use over different link settings
         return "cannot_connect"
-    finally:
-        await client.close()
-    return None
 
 
 class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -50,7 +55,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({CONF_HOST: host})
 
-            if error := await _async_validate_device(host):
+            if error := await _async_validate_device(self.hass, host):
                 errors["base"] = error
             else:
                 # The controller's mDNS record carries a stable uuid; without
@@ -107,7 +112,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if error := await _async_validate_device(self._host):
+            if error := await _async_validate_device(self.hass, self._host):
                 errors["base"] = error
             else:
                 return self._async_create_qube_entry(self._host)
@@ -130,7 +135,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({CONF_HOST: host})
 
-            if error := await _async_validate_device(host):
+            if error := await _async_validate_device(self.hass, host):
                 errors["base"] = error
             else:
                 # Refuse a different controller when both uuids are known;
@@ -171,7 +176,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
             for other in self._async_current_entries(include_ignore=False)
         ):
             return True
-        return await _async_validate_device(entry.data[CONF_HOST]) is None
+        return await _async_validate_device(self.hass, entry.data[CONF_HOST]) is None
 
     def _async_create_qube_entry(self, host: str) -> ConfigFlowResult:
         """Create the config entry for a verified Qube."""
