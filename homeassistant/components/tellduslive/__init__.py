@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from functools import partial
 import logging
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -12,16 +13,25 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.storage import Store
 
-from .api import Session
+from .api import Session, TelldusLiveError, TelldusLiveRateLimitError
 from .const import (
+    DEFAULT_REQUEST_DELAY,
+    DEFAULT_RETRY_INITIAL_DELAY,
+    DEFAULT_RETRY_MAX_DELAY,
     DIM,
     DOMAIN,
+    KEY_REQUEST_DELAY,
+    KEY_RETRY_INITIAL_DELAY,
+    KEY_RETRY_MAX_DELAY,
     KEY_SCAN_INTERVAL,
     KEY_SESSION,
     NOT_SO_PRIVATE_KEY,
     PUBLIC_KEY,
     SIGNAL_UPDATE_ENTITY,
+    SNAPSHOT_SAVE_DELAY,
+    STORAGE_VERSION,
     TELLDUS_DISCOVERY_NEW,
     TURNON,
     UP,
@@ -62,31 +72,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) 
             translation_key="authentication_error",
         )
 
-    interval = entry.data[KEY_SCAN_INTERVAL]
-    _LOGGER.debug("Update interval %s seconds", interval)
-    client = TelldusLiveClient(hass, entry, session, interval)
+    client = TelldusLiveClient(hass, entry, session)
     entry.runtime_data = TelldusLiveData(
         client=client,
-        setup_task=hass.loop.create_task(async_new_client(hass, client, entry)),
+        setup_task=entry.async_create_background_task(
+            hass, client.async_start(), "tellduslive_start"
+        ),
     )
-
-
-async def async_new_client(
-    hass: HomeAssistant, client: TelldusLiveClient, entry: TelldusLiveConfigEntry
-) -> None:
-    """Add the hubs associated with the current client to device_registry."""
-    dev_reg = dr.async_get(hass)
-    for hub in await client.async_get_hubs():
-        _LOGGER.debug("Connected hub %s", hub["name"])
-        dev_reg.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, hub["id"])},
-            manufacturer="Telldus",
-            name=hub["name"],
-            model=hub["type"],
-            sw_version=hub["version"],
-        )
-    await client.update()
+    await client.async_restore()
 
 
 async def async_unload_entry(
@@ -102,27 +95,96 @@ async def async_unload_entry(
     )
 
 
+async def async_remove_entry(
+    hass: HomeAssistant, config_entry: TelldusLiveConfigEntry
+) -> None:
+    """Remove the stored snapshot of a removed config entry."""
+    await Store(
+        hass, STORAGE_VERSION, f"{DOMAIN}.{config_entry.entry_id}"
+    ).async_remove()
+
+
 class TelldusLiveClient:
     """Get the latest data and update the states."""
 
-    def __init__(self, hass, config_entry, session, interval):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TelldusLiveConfigEntry,
+        session: Session,
+    ) -> None:
         """Initialize the Tellus data object."""
-        self._known_devices = set()
-        self._device_infos = {}
+        self._known_devices: set[str] = set()
+        self._device_infos: dict[str, dict[str, Any]] = {}
         self._platforms_lock = asyncio.Lock()
         self.platforms: set[str] = set()
         self._cancel_update: CALLBACK_TYPE | None = None
         self._stopped = False
+        self._failures = 0
+        self._hubs_registered = False
+        self._restored = asyncio.Event()
 
         self._hass = hass
         self._config_entry = config_entry
         self._client = session
-        self._interval = interval
+        self._store: Store[dict[str, Any]] = Store(
+            hass, STORAGE_VERSION, f"{DOMAIN}.{config_entry.entry_id}"
+        )
+        options = config_entry.options
+        self._interval: float = options.get(
+            KEY_SCAN_INTERVAL, config_entry.data[KEY_SCAN_INTERVAL]
+        )
+        self._retry_initial: float = options.get(
+            KEY_RETRY_INITIAL_DELAY, DEFAULT_RETRY_INITIAL_DELAY
+        )
+        self._retry_max: float = options.get(
+            KEY_RETRY_MAX_DELAY, DEFAULT_RETRY_MAX_DELAY
+        )
+        self._request_delay: float = options.get(
+            KEY_REQUEST_DELAY, DEFAULT_REQUEST_DELAY
+        )
+        _LOGGER.debug("Update interval %s seconds", self._interval)
 
-    async def async_get_hubs(self):
-        """Return hubs registered for the user."""
-        clients = await self._hass.async_add_executor_job(self._client.get_clients)
-        return clients or []
+    async def async_start(self) -> None:
+        """Start refreshing from the API once the snapshot is restored."""
+        await self._restored.wait()
+        await self.update()
+
+    async def async_restore(self) -> None:
+        """Create entities from the last stored snapshot without using the API."""
+        try:
+            snapshot = await self._store.async_load()
+            if not snapshot:
+                return
+            self._client.load_state(snapshot["state"])
+            self._device_infos = snapshot["device_infos"]
+            for device_id in list(self._client.device_ids):
+                if device_id in self._device_infos:
+                    await self._discover(device_id)
+                    self._known_devices.add(device_id)
+        finally:
+            self._restored.set()
+
+    def _snapshot(self) -> dict[str, Any]:
+        """Return the data to persist."""
+        return {
+            "state": self._client.dump_state(),
+            "device_infos": self._device_infos,
+        }
+
+    def _async_register_hubs(self, hubs: list[dict[str, Any]]) -> None:
+        """Add the hubs associated with the current client to device_registry."""
+        dev_reg = dr.async_get(self._hass)
+        for hub in hubs:
+            _LOGGER.debug("Connected hub %s", hub["name"])
+            dev_reg.async_get_or_create(
+                config_entry_id=self._config_entry.entry_id,
+                identifiers={(DOMAIN, hub["id"])},
+                manufacturer="Telldus",
+                name=hub["name"],
+                model=hub["type"],
+                sw_version=hub["version"],
+            )
 
     def device_info(self, device_id):
         """Return device info."""
@@ -145,20 +207,23 @@ class TelldusLiveClient:
         _LOGGER.warning("Unidentified device type (methods: %d)", device.methods)
         return "switch"
 
-    async def _discover(self, device_id):
+    async def _discover(self, device_id: str) -> None:
         """Discover the component."""
         device = self._client.device(device_id)
         component = self.identify_device(device)
-        self._device_infos.update(
-            {device_id: await self._hass.async_add_executor_job(device.info)}
-        )
+        if device_id not in self._device_infos:
+            # Sequential and spaced out to stay below the API rate limit.
+            info = await self._hass.async_add_executor_job(device.info)
+            if not device.is_sensor:
+                await asyncio.sleep(self._request_delay)
+            self._device_infos[device_id] = info or {}
         async with self._platforms_lock:
             if component not in self.platforms:
                 await self._hass.config_entries.async_forward_entry_setups(
                     self._config_entry, [component]
                 )
                 self.platforms.add(component)
-        device_ids = []
+        device_ids: list[Any] = []
         if device.is_sensor:
             device_ids.extend(
                 (device.device_id, item.name, item.scale) for item in device.items
@@ -170,25 +235,48 @@ class TelldusLiveClient:
                 self._hass, TELLDUS_DISCOVERY_NEW.format(component, DOMAIN), _id
             )
 
-    async def update(self, *args):
-        """Periodically poll the servers for current state."""
+    async def _async_fetch(self) -> None:
+        """Fetch hubs, devices and sensors from the API."""
+        if not self._hubs_registered:
+            hubs = await self._hass.async_add_executor_job(self._client.get_clients)
+            self._async_register_hubs(hubs)
+            self._hubs_registered = True
         try:
-            if not await self._hass.async_add_executor_job(self._client.update):
-                _LOGGER.warning("Failed request")
-                return
-            dev_ids = {dev.device_id for dev in self._client.devices}
-            new_devices = dev_ids - self._known_devices
-            # just await each discover as `gather` use up all HTTPAdapter pools
-            for d_id in new_devices:
-                await self._discover(d_id)
-            self._known_devices |= new_devices
+            await self._hass.async_add_executor_job(self._client.update)
+        finally:
             async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
+        new_devices = {
+            dev.device_id for dev in self._client.devices
+        } - self._known_devices
+        for device_id in new_devices:
+            await self._discover(device_id)
+            self._known_devices.add(device_id)
+        self._store.async_delay_save(self._snapshot, SNAPSHOT_SAVE_DELAY)
+
+    def _retry_delay(self, err: TelldusLiveError) -> float:
+        """Return the backoff delay after a failed refresh."""
+        delay = min(self._retry_initial * 2 ** (self._failures - 1), self._retry_max)
+        if isinstance(err, TelldusLiveRateLimitError) and err.retry_after:
+            delay = max(delay, err.retry_after)
+        return delay
+
+    async def update(self, *args: Any) -> None:
+        """Poll the API, retrying with backoff when it fails."""
+        delay = self._interval
+        try:
+            await self._async_fetch()
+        except TelldusLiveError as err:
+            self._failures += 1
+            delay = self._retry_delay(err)
+            _LOGGER.warning(
+                "Telldus Live request failed (%s), retrying in %s seconds", err, delay
+            )
+        else:
+            self._failures = 0
         finally:
             # An update still in flight at unload must not schedule another.
             if not self._stopped:
-                self._cancel_update = async_call_later(
-                    self._hass, self._interval, self.update
-                )
+                self._cancel_update = async_call_later(self._hass, delay, self.update)
 
     @callback
     def async_cancel_update(self) -> None:

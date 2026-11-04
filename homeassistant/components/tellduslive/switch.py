@@ -48,11 +48,11 @@ class TelldusLiveSwitch(TelldusLiveEntity, SwitchEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self.device.turn_on()
+        self._command(self.device.turn_on())
         self.schedule_update_ha_state()
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self.device.turn_off()
+        self._command(self.device.turn_off())
         self.schedule_update_ha_state()

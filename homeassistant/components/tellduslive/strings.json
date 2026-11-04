@@ -46,6 +46,32 @@
   "exceptions": {
     "authentication_error": {
       "message": "Authentication with Telldus Live failed"
+    },
+    "command_failed": {
+      "message": "Telldus Live did not accept the command"
+    }
+  },
+  "options": {
+    "error": {
+      "retry_delay_order": "The initial retry delay must not be longer than the maximum retry delay."
+    },
+    "step": {
+      "init": {
+        "title": "Telldus Live options",
+        "description": "Telldus Live limits how many requests are accepted. When a request fails, it is retried with an increasing delay.",
+        "data": {
+          "scan_interval": "Update interval",
+          "retry_initial_delay": "Initial retry delay",
+          "retry_max_delay": "Maximum retry delay",
+          "request_delay": "Delay between device requests"
+        },
+        "data_description": {
+          "scan_interval": "Seconds between refreshes.",
+          "retry_initial_delay": "Seconds to wait before the first retry. The delay doubles on each failure.",
+          "retry_max_delay": "Longest wait in seconds between retries.",
+          "request_delay": "Seconds to wait between the per-device requests made when a device is first seen."
+        }
+      }
     }
   }
 }

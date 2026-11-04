@@ -37,7 +37,29 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_APPLICATION_NAME = "tellduslive"
+HTTP_TOO_MANY_REQUESTS = 429
 TOKEN_REFRESH_AGE = timedelta(hours=12)
+
+
+class TelldusLiveError(OSError):
+    """Error communicating with Telldus Live."""
+
+
+class TelldusLiveRateLimitError(TelldusLiveError):
+    """The API answered with 429 Too Many Requests."""
+
+    def __init__(self, message: str, retry_after: float | None = None) -> None:
+        """Initialize the error."""
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
+def _parse_retry_after(value: str | None) -> float | None:
+    """Parse a Retry-After header given in seconds."""
+    try:
+        return float(value) if value is not None else None
+    except ValueError:
+        return None
 
 
 def supports_local_api(device: str) -> bool:
@@ -283,70 +305,103 @@ class Session:
         """Return the raw representation of a device."""
         return self._state.get(device_id)
 
-    def _request(self, path: str, **params: Any) -> dict[str, Any] | None:
-        """Send a request to the API."""
+    def _request(self, path: str, **params: Any) -> dict[str, Any]:
+        """Send a request to the API.
+
+        Raises TelldusLiveError, or TelldusLiveRateLimitError on HTTP 429.
+        """
         try:
             self._session.maybe_refresh_token()
             url = urljoin(self._session.url, path)
             _LOGGER.debug("Request %s %s", url, params)
             response = self._session.get(url, params=params, timeout=REQUEST_TIMEOUT)
+            if response.status_code == HTTP_TOO_MANY_REQUESTS:
+                raise TelldusLiveRateLimitError(
+                    "Rate limited by Telldus Live",
+                    _parse_retry_after(response.headers.get("Retry-After")),
+                )
             response.raise_for_status()
             result = response.json()
+        except TelldusLiveError:
+            raise
         except (OSError, ValueError) as err:
-            _LOGGER.warning("Failed request: %s", err)
-            return None
+            raise TelldusLiveError(str(err)) from err
         _LOGGER.debug("Response %s %s", response.status_code, result)
         if "error" in result:
-            _LOGGER.warning("Failed request: %s", result["error"])
-            return None
+            raise TelldusLiveError(str(result["error"]))
         return result
 
     def execute(self, method: str, **params: Any) -> bool:
         """Make a request and return whether it was successful."""
-        response = self._request(method, **params)
-        return bool(response and response.get("status") == "success")
+        try:
+            response = self._request(method, **params)
+        except TelldusLiveError as err:
+            _LOGGER.warning("Failed request: %s", err)
+            return False
+        return response.get("status") == "success"
 
-    def _request_devices(self) -> list[dict[str, Any]] | None:
+    def _request_devices(self) -> list[dict[str, Any]]:
         """Request list of devices from server."""
         res = self._request(
             "devices/list", supportedMethods=SUPPORTED_METHODS, includeIgnored=0
         )
-        return res.get("device") if res else None
+        return res.get("device", [])
 
-    def _request_sensors(self) -> list[dict[str, Any]] | None:
+    def _request_sensors(self) -> list[dict[str, Any]]:
         """Request list of sensors from server."""
         res = self._request(
             "sensors/list", includeValues=1, includeScale=1, includeIgnored=0
         )
-        return res.get("sensor") if res else None
+        return res.get("sensor", [])
 
-    def update(self) -> bool:
+    def update(self) -> None:
         """Update all devices and sensors from server.
 
         Sensors are prefixed with '_' since devices and sensors do not share
-        a namespace and ids can collide.
+        a namespace and ids can collide. If one of the requests fails, the part
+        of the state it covers is kept and the first error is raised after
+        the other part has been updated.
         """
-
-        def collect(
-            devices: list[dict[str, Any]] | None, is_sensor: bool = False
-        ) -> dict[str, dict[str, Any]]:
-            return {
-                "_" * is_sensor + str(device["id"]): device
-                for device in devices or []
-                if device["name"] and not (is_sensor and "data" not in device)
-            }
-
-        devices = self._request_devices()
-        sensors = self._request_sensors()
-        new_state = collect(devices)
-        new_state.update(collect(sensors, True))
+        errors: list[TelldusLiveError] = []
+        new_state: dict[str, dict[str, Any]] = {}
+        for is_sensor, request in (
+            (False, self._request_devices),
+            (True, self._request_sensors),
+        ):
+            try:
+                items = request()
+            except TelldusLiveError as err:
+                errors.append(err)
+                new_state.update(
+                    {
+                        key: value
+                        for key, value in self._state.items()
+                        if key.startswith("_") == is_sensor
+                    }
+                )
+                continue
+            new_state.update(
+                {
+                    "_" * is_sensor + str(item["id"]): item
+                    for item in items
+                    if item["name"] and not (is_sensor and "data" not in item)
+                }
+            )
         self._state = new_state
+        if errors:
+            raise errors[0]
 
-        return devices is not None and sensors is not None
-
-    def request_info(self, device_id: str) -> dict[str, Any] | None:
+    def request_info(self, device_id: str) -> dict[str, Any]:
         """Request device info."""
-        return self._request("device/info", id=device_id) or None
+        return self._request("device/info", id=device_id)
+
+    def dump_state(self) -> dict[str, dict[str, Any]]:
+        """Return the known devices and sensors for persisting."""
+        return self._state
+
+    def load_state(self, state: dict[str, dict[str, Any]]) -> None:
+        """Restore previously persisted devices and sensors."""
+        self._state = state
 
     @property
     def hub_id(self) -> str | None:
@@ -357,8 +412,7 @@ class Session:
         """Request list of clients (Telldus devices) from server."""
         if isinstance(self._session, LocalAPISession):
             return self._session.discovery_info()
-        res = self._request("clients/list")
-        return res.get("client", []) if res else []
+        return self._request("clients/list").get("client", [])
 
     def device(self, device_id: str) -> Device:
         """Return a device object."""
