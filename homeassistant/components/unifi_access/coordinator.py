@@ -549,18 +549,60 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         if insights.data.metadata.direction:
             attrs["direction"] = insights.data.metadata.direction
         for door in door_entries:
-            if door.id:
-                if self._is_duplicate_access_event(
-                    insights.event_object_id,
-                    insights.data.event_type,
-                    insights.data.published,
-                    insights.data.result,
-                    insights.data.metadata.authentication.id or "",
-                    insights.data.metadata.actor.display_name,
-                    door.id,
-                ):
-                    continue
-                self._dispatch_door_event(door.id, "access", event_type, attrs)
+            if not door.id:
+                continue
+            if (door_id := self._resolve_insights_door_id(door.id, msg)) is None:
+                _LOGGER.debug(
+                    "Received access.logs.insights.add for unknown door %s", door.id
+                )
+                continue
+            if self._is_duplicate_access_event(
+                insights.event_object_id,
+                insights.data.event_type,
+                insights.data.published,
+                insights.data.result,
+                insights.data.metadata.authentication.id or "",
+                insights.data.metadata.actor.display_name,
+                door_id,
+            ):
+                continue
+            self._dispatch_door_event(door_id, "access", event_type, attrs)
+
+    def _resolve_insights_door_id(
+        self, metadata_door_id: str, msg: WebsocketMessage
+    ) -> str | None:
+        """Return the door for an insights door entry.
+
+        UAH-DOOR hubs send their own MAC as the door ID.
+        """
+        if self.data is None:
+            return None  # type: ignore[unreachable]
+        if metadata_door_id in self.data.doors:
+            return metadata_door_id
+        if metadata_door_id == msg.event_object_id:
+            return self._resolve_hub_door_id(msg)
+        return None
+
+    def _resolve_logs_door_id(self, log: LogAdd) -> str | None:
+        """Return the door for a logs.add event without a mapped device.
+
+        UAH-DOOR hubs send their own MAC as the door target.
+        """
+        if self.data is None:
+            return None  # type: ignore[unreachable]
+        for target in log.data.source.target:
+            if target.type == "door" and target.id in self.data.doors:
+                return target.id
+        return self._resolve_hub_door_id(log)
+
+    def _resolve_hub_door_id(self, msg: WebsocketMessage) -> str | None:
+        """Return the door of the hub that sent the message."""
+        doors = self.data.doors
+        if (door_id := self._device_to_door.get(msg.event_object_id)) in doors:
+            return door_id
+        if msg.door_id in doors:
+            return msg.door_id
+        return None
 
     async def _handle_logs_add(self, msg: WebsocketMessage) -> None:
         """Handle access log events (entry/exit via access.logs.add)."""
@@ -571,10 +613,12 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             return
         if device_target.id in self._device_to_door:
             door_id = self._device_to_door[device_target.id]
-        elif msg.door_id:
-            # UAH-DOOR devices: door_id is enriched by the library via MAC→door map
-            door_id = msg.door_id
+        elif (resolved_door_id := self._resolve_logs_door_id(log)) is not None:
+            door_id = resolved_door_id
         else:
+            _LOGGER.debug(
+                "Received access.logs.add for unknown device %s", device_target.id
+            )
             return
         event_type = (
             "access_granted" if source.event.result == "ACCESS" else "access_denied"
