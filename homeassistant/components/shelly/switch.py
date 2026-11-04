@@ -23,7 +23,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     DOMAIN,
-    INPUT_LOCK_CONFIG_KEY,
     MODEL_FRANKEVER_IRRIGATION_CONTROLLER,
     MODEL_LINKEDGO_ST802_THERMOSTAT,
     MODEL_LINKEDGO_ST1820_THERMOSTAT,
@@ -486,25 +485,23 @@ RPC_SWITCHES = {
         # on a device in cover profile the "switch" key resolves to the cover
         # component, which is handled by "cover_in_locked"
         removal_condition=lambda config, _status, key: (
-            get_rpc_key(key)[1] != "switch" or INPUT_LOCK_CONFIG_KEY not in config[key]
+            get_rpc_key(key)[1] != "switch" or "in_locked" not in config[key]
         ),
-        is_on=lambda config: bool(config[INPUT_LOCK_CONFIG_KEY]),
+        is_on=lambda config: bool(config["in_locked"]),
         method_on="switch_setconfig",
         method_off="switch_setconfig",
-        method_params_fn=lambda id, value: (id, {INPUT_LOCK_CONFIG_KEY: value}),
+        method_params_fn=lambda id, value: (id, {"in_locked": value}),
         entity_class=RpcConfigSwitch,
     ),
     "cover_in_locked": RpcSwitchDescription(
         key="cover",
         translation_key="input_lock",
         entity_category=EntityCategory.CONFIG,
-        removal_condition=lambda config, _status, key: (
-            INPUT_LOCK_CONFIG_KEY not in config[key]
-        ),
-        is_on=lambda config: bool(config[INPUT_LOCK_CONFIG_KEY]),
+        removal_condition=lambda config, _status, key: "in_locked" not in config[key],
+        is_on=lambda config: bool(config["in_locked"]),
         method_on="cover_setconfig",
         method_off="cover_setconfig",
-        method_params_fn=lambda id, value: (id, {INPUT_LOCK_CONFIG_KEY: value}),
+        method_params_fn=lambda id, value: (id, {"in_locked": value}),
         entity_class=RpcConfigSwitch,
     ),
     "camera_privacy": RpcSwitchDescription(
