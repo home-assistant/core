@@ -105,6 +105,8 @@ class GlancesFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         entry = self._get_reconfigure_entry()
         if user_input is not None:
+            if not user_input.get(CONF_PASSWORD):
+                user_input.pop(CONF_PASSWORD, None)
             self._async_abort_entries_match(
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )

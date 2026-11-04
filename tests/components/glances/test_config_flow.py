@@ -187,6 +187,34 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    "password_input",
+    [
+        pytest.param({}, id="omitted"),
+        pytest.param({"password": ""}, id="empty"),
+    ],
+)
+async def test_reconfigure_keeps_password(
+    hass: HomeAssistant, mock_api: MagicMock, password_input: dict[str, str]
+) -> None:
+    """Test reconfigure keeps the stored password when none is entered."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
+    entry.add_to_hass(hass)
+
+    user_input = {
+        key: value for key, value in RECONFIGURE_INPUT.items() if key != "password"
+    }
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={**user_input, **password_input}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {**RECONFIGURE_INPUT, "password": "password"}
+    assert mock_api.call_args.kwargs["password"] == "password"
+
+
+@pytest.mark.parametrize(
     ("error", "message"),
     [
         pytest.param(GlancesApiAuthorizationError, "invalid_auth", id="invalid_auth"),
