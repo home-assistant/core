@@ -113,6 +113,7 @@ from homeassistant.core import (
     ServiceResponse,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import write_utf8_file
 
@@ -1273,6 +1274,39 @@ async def test_send_message_config_entry_error(
     assert err.value.translation_placeholders == {"telegram_bot": "Mock Title"}
 
 
+async def test_send_message_config_entry_wrong_domain(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message with a config entry of another integration."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    other_entry = MockConfigEntry(domain="other", title="Other entry")
+    other_entry.add_to_hass(hass)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                CONF_CONFIG_ENTRY_ID: other_entry.entry_id,
+                ATTR_MESSAGE: "mock message",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "service_config_entry_wrong_domain"
+    assert err.value.translation_placeholders == {
+        "domain": DOMAIN,
+        "entry_title": "Other entry",
+    }
+
+
 async def test_delete_message(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
@@ -2053,6 +2087,43 @@ async def test_notify_entity_not_found(
     assert err.value.translation_placeholders == {
         ATTR_ENTITY_ID: "notify.non_existent_entity"
     }
+
+
+async def test_notify_entity_other_integration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message to a notify entity of another integration."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "notify",
+        "other",
+        "unique_id",
+        config_entry=other_entry,
+        suggested_object_id="other",
+    )
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.other",
+                ATTR_MESSAGE: "test_message",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "invalid_notify_entity"
+    assert err.value.translation_placeholders == {ATTR_ENTITY_ID: "notify.other"}
 
 
 @pytest.mark.parametrize(
