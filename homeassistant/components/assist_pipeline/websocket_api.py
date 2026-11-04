@@ -11,7 +11,7 @@ from typing import Any, Final
 import audioop  # pylint: disable=deprecated-module
 import probatio
 
-from homeassistant.components import conversation, stt, tts, websocket_api
+from homeassistant.components import conversation, stt, tts, wake_word, websocket_api
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_SECONDS, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import chat_session, entity_registry as er
@@ -97,6 +97,10 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                         probatio.Required("input"): {
                             probatio.Required("sample_rate"): int,
                             probatio.Optional("wake_word_phrase"): str,
+                            probatio.Optional("wake_word_detection"): {
+                                probatio.Required("wake_word_id"): str,
+                                probatio.Required("timestamp"): int,
+                            },
                         }
                     },
                     extra=probatio.ALLOW_EXTRA,
@@ -158,6 +162,12 @@ async def websocket_run(
             )
         elif start_stage == PipelineStage.STT:
             wake_word_phrase = msg["input"].get("wake_word_phrase")
+            if (detection := msg_input.get("wake_word_detection")) is not None:
+                input_args["wake_word_detection"] = wake_word.DetectionResult(
+                    wake_word_id=detection["wake_word_id"],
+                    wake_word_phrase=wake_word_phrase or detection["wake_word_id"],
+                    timestamp=detection["timestamp"],
+                )
 
         async def stt_stream() -> AsyncGenerator[bytes]:
             state = None
