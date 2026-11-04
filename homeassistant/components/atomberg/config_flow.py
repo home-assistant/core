@@ -8,7 +8,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN, LOGGER
@@ -28,22 +28,25 @@ class AtombergConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _async_validate(self, user_input: dict[str, Any]) -> dict[str, str]:
+    async def _async_validate(
+        self, user_input: dict[str, Any]
+    ) -> tuple[dict[str, str], set[str]]:
+        """Validate the credentials, returning errors and the account's device IDs."""
         client = AtombergClient(
             async_get_clientsession(self.hass),
             user_input[CONF_API_KEY],
             user_input[CONF_REFRESH_TOKEN],
         )
         try:
-            await client.async_get_devices()
+            devices = await client.async_get_devices()
         except AtombergAuthError:
-            return {"base": "invalid_auth"}
+            return {"base": "invalid_auth"}, set()
         except AtombergError:
-            return {"base": "cannot_connect"}
+            return {"base": "cannot_connect"}, set()
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception")
-            return {"base": "unknown"}
-        return {}
+            return {"base": "unknown"}, set()
+        return {}, {device.device_id for device in devices}
 
     @override
     async def async_step_user(
@@ -54,7 +57,7 @@ class AtombergConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_API_KEY])
             self._abort_if_unique_id_configured()
-            errors = await self._async_validate(user_input)
+            errors, _ = await self._async_validate(user_input)
             if not errors:
                 return self.async_create_entry(title="Atomberg", data=user_input)
         return self.async_show_form(
@@ -78,12 +81,30 @@ class AtombergConfigFlow(ConfigFlow, domain=DOMAIN):
         """Ask for new credentials."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_API_KEY])
-            self._abort_if_unique_id_mismatch(reason="wrong_account")
-            errors = await self._async_validate(user_input)
+            reauth_entry = self._get_reauth_entry()
+            errors, device_ids = await self._async_validate(user_input)
             if not errors:
+                # The API key can change for the same account, so identify the
+                # account by its devices instead of by the API key.
+                known_ids = {
+                    identifier
+                    for device in dr.async_entries_for_config_entry(
+                        dr.async_get(self.hass), reauth_entry.entry_id
+                    )
+                    for domain, identifier in device.identifiers
+                    if domain == DOMAIN
+                }
+                if known_ids and known_ids.isdisjoint(device_ids):
+                    return self.async_abort(reason="wrong_account")
+                other_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+                    DOMAIN, user_input[CONF_API_KEY]
+                )
+                if other_entry and other_entry.entry_id != reauth_entry.entry_id:
+                    return self.async_abort(reason="already_configured")
                 return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(), data_updates=user_input
+                    reauth_entry,
+                    unique_id=user_input[CONF_API_KEY],
+                    data_updates=user_input,
                 )
         return self.async_show_form(
             step_id="reauth_confirm",

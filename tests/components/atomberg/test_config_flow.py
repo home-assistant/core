@@ -2,9 +2,9 @@
 
 from unittest.mock import AsyncMock
 
-from atomberg_api import AtombergAuthError, AtombergConnectionError
+from atomberg_api import AtombergAuthError, AtombergConnectionError, AtombergDevice
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
 
 from homeassistant.components.atomberg.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,6 +12,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_integration
 from .conftest import API_KEY, REFRESH_TOKEN
 
 USER_INPUT = {CONF_API_KEY: API_KEY, CONF_REFRESH_TOKEN: REFRESH_TOKEN}
@@ -99,12 +100,38 @@ async def test_reauth(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -
     assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "new-token"
 
 
-@pytest.mark.usefixtures("mock_client", "mock_setup_entry")
-async def test_reauth_wrong_account(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+async def test_reauth_new_api_key_same_account(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test reauthentication with another account's key aborts."""
-    mock_config_entry.add_to_hass(hass)
+    """Test reauth accepts a new API key when the account's devices match."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new-key", CONF_REFRESH_TOKEN: "new-token"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_API_KEY: "new-key",
+        CONF_REFRESH_TOKEN: "new-token",
+    }
+    assert mock_config_entry.unique_id == "new-key"
+
+
+async def test_reauth_wrong_account(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reauth aborts when the new credentials show different devices."""
+    await setup_integration(hass, mock_config_entry)
+    other_devices = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    for index, device in enumerate(other_devices):
+        device["device_id"] = f"other{index}"
+    mock_client.async_get_devices.return_value = [
+        AtombergDevice.from_api(device) for device in other_devices
+    ]
     result = await mock_config_entry.start_reauth_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(
@@ -114,3 +141,26 @@ async def test_reauth_wrong_account(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
+    assert mock_config_entry.data[CONF_API_KEY] == API_KEY
+
+
+@pytest.mark.usefixtures("mock_client", "mock_setup_entry")
+async def test_reauth_api_key_used_by_other_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reauth aborts when the new API key belongs to another entry."""
+    mock_config_entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "taken-key", CONF_REFRESH_TOKEN: "t"},
+        unique_id="taken-key",
+    ).add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "taken-key", CONF_REFRESH_TOKEN: "new-token"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
