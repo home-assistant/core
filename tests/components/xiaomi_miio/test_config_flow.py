@@ -1125,13 +1125,13 @@ async def test_reconfigure(
     [
         pytest.param(DeviceException({}), "cannot_connect", id="cannot_connect"),
         pytest.param(_checksum_error(), "wrong_token", id="wrong_token"),
-        pytest.param(Exception, "unknown", id="unknown"),
+        pytest.param(Exception({}), "unknown", id="unknown"),
     ],
 )
 async def test_reconfigure_errors(
     hass: HomeAssistant,
     mock_reconfigure_entry: MockConfigEntry,
-    side_effect: Exception | type[Exception],
+    side_effect: Exception,
     error: str,
 ) -> None:
     """Test errors during reconfigure and recovery."""
