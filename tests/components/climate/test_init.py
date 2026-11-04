@@ -689,6 +689,71 @@ async def test_temperature_validation(
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25
 
 
+async def test_temperature_validation_display_rounding(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test that temperatures at the rounded limits shown in the UI are accepted."""
+
+    class MockClimateEntityTemp(MockClimateEntity):
+        """Mock climate class with a native unit different from the configured one."""
+
+        _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
+        _attr_native_target_temperature = 72
+        _attr_min_temp = 61
+        _attr_max_temp = 90
+        _attr_precision = PRECISION_WHOLE
+
+        def set_temperature(self, **kwargs: Any) -> None:
+            """Set new target temperature."""
+            self._attr_native_target_temperature = kwargs[ATTR_TEMPERATURE]
+
+    test_climate = MockClimateEntityTemp(
+        name="Test",
+        unique_id="unique_climate_test",
+    )
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_climate], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    # 61 °F is 16.1 °C and 90 °F is 32.2 °C, shown rounded to whole degrees
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ATTR_MIN_TEMP) == 16
+    assert state.attributes.get(ATTR_MAX_TEMP) == 32
+
+    # 16 °C is 60.8 °F, below the native minimum, and is clamped to it
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {"entity_id": "climate.test", ATTR_TEMPERATURE: 16},
+        blocking=True,
+    )
+    assert test_climate.native_target_temperature == 61
+
+    # 32.5 °C is 90.5 °F, within half a degree of the shown maximum
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {"entity_id": "climate.test", ATTR_TEMPERATURE: 32.5},
+        blocking=True,
+    )
+    assert test_climate.native_target_temperature == 90
+
+    # 15 °C is 59 °F, more than half a degree below the shown minimum
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {"entity_id": "climate.test", ATTR_TEMPERATURE: 15},
+            blocking=True,
+        )
+    assert exc.value.translation_key == "temp_out_of_range"
+    assert test_climate.native_target_temperature == 90
+
+
 async def test_target_temp_high_higher_than_low(
     hass: HomeAssistant, register_test_integration: MockConfigEntry
 ) -> None:
