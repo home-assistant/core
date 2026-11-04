@@ -1,6 +1,5 @@
 """Base Entity for all TelldusLive entities."""
 
-from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -10,6 +9,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     BATTERY_LOW,
@@ -105,7 +105,7 @@ class TelldusLiveEntity(Entity):
     def _last_updated(self):
         """Return the last update of a device."""
         return (
-            str(datetime.fromtimestamp(self.device.lastUpdated))
+            dt_util.utc_from_timestamp(self.device.lastUpdated).isoformat()
             if self.device.lastUpdated
             else None
         )
