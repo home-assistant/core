@@ -36,6 +36,7 @@ from pytest_homeassistant.typing import MqttMockHAClientGenerator
 
 from homeassistant.components.mqtt.const import (
     CONF_BROKER,
+    CONF_CERTIFICATE,
     CONF_CERTIFICATE_FILE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_CERT_FILE,
@@ -264,6 +265,7 @@ def _install_certificate(
 def _certificate_file_data(cert_dir: Path) -> dict[str, Any]:
     """Return the entry data to load the client certificate from files."""
     return {
+        CONF_CERTIFICATE: "auto",
         CONF_CLIENT_CERT_FILE: str(cert_dir / "client.crt"),
         CONF_CLIENT_KEY_FILE: str(cert_dir / "client.key"),
     }
@@ -295,13 +297,18 @@ async def _async_advance_one_day(
 @pytest.mark.parametrize(
     "data",
     [
-        pytest.param({}, id="no_client_certificate"),
+        pytest.param({CONF_CERTIFICATE: "auto"}, id="no_client_certificate"),
         pytest.param(
-            {CONF_CLIENT_CERT: "invalid", CONF_CLIENT_KEY: "invalid"},
+            {
+                CONF_CERTIFICATE: "auto",
+                CONF_CLIENT_CERT: "invalid",
+                CONF_CLIENT_KEY: "invalid",
+            },
             id="invalid_uploaded_certificate",
         ),
         pytest.param(
             {
+                CONF_CERTIFICATE: "auto",
                 CONF_CLIENT_CERT_FILE: "/ssl/mqtt/client.crt",
                 CONF_CLIENT_KEY_FILE: "/ssl/mqtt/client.key",
             },
@@ -329,6 +336,31 @@ async def test_no_loaded_client_certificate(
     assert issue_registry.async_get_issue(DOMAIN, ISSUE_CLIENT_CERTIFICATE) is None
 
 
+async def test_client_certificate_tls_disabled(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+) -> None:
+    """Test no issue is created for a client certificate that is not used."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        ISSUE_CLIENT_CERTIFICATE,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="client_certificate_expiring",
+        translation_placeholders={"broker": "mock-broker", "expiry": "2026-11-04"},
+    )
+    expiry = dt_util.utcnow() + timedelta(days=10)
+    await hass.async_add_executor_job(_install_certificate, tmp_path, expiry)
+    # Without a CA certificate TLS is disabled, so the client certificate is not used
+    data = _certificate_file_data(tmp_path)
+    data.pop(CONF_CERTIFICATE)
+    await _async_setup_entry(hass, mqtt_mock_entry, data)
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_CLIENT_CERTIFICATE) is None
+
+
 @pytest.mark.parametrize(
     ("valid_days", "severity"),
     [
@@ -349,7 +381,11 @@ async def test_uploaded_client_certificate_expiring(
     entry = await _async_setup_entry(
         hass,
         mqtt_mock_entry,
-        {CONF_CLIENT_CERT: certificate.decode(), CONF_CLIENT_KEY: key.decode()},
+        {
+            CONF_CERTIFICATE: "auto",
+            CONF_CLIENT_CERT: certificate.decode(),
+            CONF_CLIENT_KEY: key.decode(),
+        },
     )
 
     issue = issue_registry.async_get_issue(DOMAIN, ISSUE_CLIENT_CERTIFICATE)

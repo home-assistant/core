@@ -17,6 +17,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_BROKER,
+    CONF_CERTIFICATE,
     CONF_CERTIFICATE_FILE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_CERT_FILE,
@@ -106,6 +107,11 @@ async def async_setup_client_certificate_check(
     hass: HomeAssistant, entry: ConfigEntry, config: dict[str, Any]
 ) -> None:
     """Check the expiry of the loaded client certificate on setup and daily."""
+    # The client certificate is only used when TLS is enabled with a CA certificate
+    if not (config.get(CONF_CERTIFICATE_FILE) or config.get(CONF_CERTIFICATE)):
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_CLIENT_CERTIFICATE)
+        return
+
     loaded_expiry: datetime | None = None
     if client_cert_file := config.get(CONF_CLIENT_CERT_FILE):
         loaded_expiry = await hass.async_add_executor_job(
