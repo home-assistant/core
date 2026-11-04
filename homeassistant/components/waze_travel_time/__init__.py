@@ -5,7 +5,6 @@ import logging
 
 from pywaze.route_calculator import WazeRouteCalculator
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_REGION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -68,7 +67,9 @@ async def async_unload_entry(
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: WazeTravelTimeConfigEntry
+) -> None:
     """Migrate an old config entry."""
 
     if config_entry.version == 1:
