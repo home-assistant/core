@@ -195,6 +195,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         value_fn=_retrieve_kb_s_sent_state,
+        is_suitable=lambda info: info.addon_infos_supported,
     ),
     FritzConnectionSensorEntityDescription(
         key="kb_s_received",
@@ -203,6 +204,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         value_fn=_retrieve_kb_s_received_state,
+        is_suitable=lambda info: info.addon_infos_supported,
     ),
     FritzConnectionSensorEntityDescription(
         key="max_kb_s_sent",
@@ -225,6 +227,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         value_fn=_retrieve_gb_sent_state,
+        is_suitable=lambda info: info.addon_infos_supported,
     ),
     FritzConnectionSensorEntityDescription(
         key="gb_received",
@@ -233,6 +236,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         value_fn=_retrieve_gb_received_state,
+        is_suitable=lambda info: info.addon_infos_supported,
     ),
     FritzConnectionSensorEntityDescription(
         key="link_kb_s_sent",

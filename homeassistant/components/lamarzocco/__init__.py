@@ -170,17 +170,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                 settings.firmwares[FirmwareType.GATEWAY].build_version
             )
 
+            issue_id = f"unsupported_gateway_firmware_{entry.entry_id}"
             if gateway_version < version.parse("v5.0.9"):
                 # incompatible gateway firmware, create an issue
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
-                    "unsupported_gateway_firmware",
+                    issue_id,
                     is_fixable=False,
                     severity=ir.IssueSeverity.ERROR,
                     translation_key="unsupported_gateway_firmware",
-                    translation_placeholders={"gateway_version": str(gateway_version)},
+                    translation_placeholders={
+                        "gateway_version": str(gateway_version),
+                        "name": entry.title,
+                    },
+                    config_entry_id=entry.entry_id,
                 )
+            else:
+                ir.async_delete_issue(hass, DOMAIN, issue_id)
             # Update BLE Token if exists
             if settings.ble_auth_token:
                 hass.config_entries.async_update_entry(
