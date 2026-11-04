@@ -97,6 +97,7 @@ from .models import (
     ReceiveMessage,
     convert_outgoing_mqtt_payload,
 )
+from .repairs import async_setup_client_certificate_check
 from .services import async_setup_services
 from .subscription import (
     EntitySubscription,
@@ -422,6 +423,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await discovery.async_start(
             hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
         )
+
+    await async_setup_client_certificate_check(hass, entry, conf)
 
 
 @websocket_api.websocket_command(

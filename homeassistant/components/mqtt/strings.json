@@ -16,9 +16,13 @@
       "bad_will": "Invalid will topic",
       "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_read_certificate_file": "The custom CA certificate file cannot be read, check the file path",
+      "cannot_read_client_cert_file": "The client certificate file cannot be read, check the file path",
+      "cannot_read_client_key_file": "The private key file cannot be read, check the file path",
       "client_key_error": "Invalid private key file or invalid password supplied",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_inclusion": "The client certificate and private key must be configured together"
+      "invalid_inclusion": "The client certificate and private key must be configured together",
+      "upload_and_file_path": "Upload a certificate or private key file, or enter its file path, but not both"
     },
     "step": {
       "broker": {
@@ -41,9 +45,12 @@
           "other_settings": {
             "data": {
               "certificate": "Upload custom CA certificate file",
+              "certificate_file": "Custom CA certificate file path",
               "client_cert": "Upload client certificate file",
+              "client_cert_file": "Client certificate file path",
               "client_id": "Client ID (leave empty for a randomly generated one)",
               "client_key": "Upload private key file",
+              "client_key_file": "Private key file path",
               "client_key_password": "[%key:common::config_flow::data::password%]",
               "keepalive": "The time between sending keep alive messages",
               "set_ca_cert": "Broker certificate validation",
@@ -55,13 +62,16 @@
             },
             "data_description": {
               "certificate": "The custom CA certificate file to validate your MQTT broker's certificate.",
+              "certificate_file": "The path to a PEM encoded custom CA certificate file, for example `/ssl/mqtt/ca.crt`. Leave empty when uploading a custom CA certificate or using automatic broker validation.",
               "client_cert": "The client certificate to authenticate against your MQTT broker.",
+              "client_cert_file": "The path to a PEM encoded client certificate file, for example `/ssl/mqtt/client.crt`. Leave empty when uploading a client certificate.",
               "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
               "client_key": "The private key file that belongs to your client certificate.",
+              "client_key_file": "The path to the PEM encoded unencrypted private key file that belongs to your client certificate, for example `/ssl/mqtt/client.key`. Leave empty when uploading a private key file.",
               "client_key_password": "The password for the private key file (if set).",
               "keepalive": "A value less than 90 seconds is advised. Defaults to 60 seconds.",
-              "set_ca_cert": "When already set to **Custom**, a custom CA validation certificate is configured. Select **Auto** for automatic CA validation, or upload a custom CA certificate, to allow validating your MQTT broker's certificate.",
-              "set_client_cert": "When already selected, client certificate authentication is enabled. Upload a client certificate and key to enable.",
+              "set_ca_cert": "When already set to **Custom**, a custom CA validation certificate is configured. Select **Auto** for automatic CA validation, or upload a custom CA certificate or enter its file path, to allow validating your MQTT broker's certificate.",
+              "set_client_cert": "When already selected, client certificate authentication is enabled. Upload a client certificate and key, or enter their file paths, to enable.",
               "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
               "transport": "The transport to be used for the connection to your MQTT broker.",
               "ws_headers": "The WebSocket headers to pass through the WebSocket-based connection to your MQTT broker.",
@@ -1130,6 +1140,41 @@
     }
   },
   "issues": {
+    "ca_certificate_file_invalid": {
+      "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}. The installed CA certificate file `{ca_cert_file}` cannot be read, or does not contain a valid PEM encoded CA certificate. MQTT keeps using the certificates that were loaded, but might not start correctly after a restart. Install a valid CA certificate in `{ca_cert_file}`.",
+      "title": "Invalid MQTT CA certificate file installed"
+    },
+    "client_certificate_expiring": {
+      "description": "The client certificate that is used to connect to MQTT broker {broker} expires on {expiry}. Upload a renewed client certificate and private key by reconfiguring the MQTT integration, to make sure Home Assistant can keep connecting to your MQTT broker.",
+      "title": "MQTT client certificate expires soon"
+    },
+    "client_certificate_file_expiring": {
+      "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}, but no renewed certificate was found in this file. Replace the client certificate and private key files with renewed ones, to make sure Home Assistant can keep connecting to your MQTT broker. When a renewed certificate is found, you will be offered to reload MQTT.",
+      "title": "[%key:component::mqtt::issues::client_certificate_expiring::title%]"
+    },
+    "client_certificate_file_invalid": {
+      "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}. The installed client certificate file `{client_cert_file}` cannot be read, or does not contain a valid PEM encoded certificate. MQTT keeps using the certificate that was loaded, but might not start correctly after a restart. Install a valid renewed client certificate in `{client_cert_file}`.",
+      "title": "Invalid MQTT client certificate file installed"
+    },
+    "client_certificate_key_mismatch": {
+      "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}. The installed client certificate in `{client_cert_file}` does not belong to the installed private key in `{client_key_file}`. MQTT keeps using the certificate that was loaded, but might not start correctly after a restart. Install the private key that belongs to the client certificate in `{client_key_file}`.",
+      "title": "Installed MQTT client certificate and private key do not match"
+    },
+    "client_certificate_renewed": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The client certificate that is used to connect to MQTT broker {broker} expires on {expiry}, but a renewed certificate is available in `{client_cert_file}`. Select **Submit** to reload MQTT and use the renewed certificate.",
+            "title": "[%key:component::mqtt::issues::client_certificate_renewed::title%]"
+          }
+        }
+      },
+      "title": "Renewed MQTT client certificate available"
+    },
+    "client_key_file_invalid": {
+      "description": "The client certificate that is loaded from `{client_cert_file}` to connect to MQTT broker {broker} expires on {expiry}. The installed private key file `{client_key_file}` cannot be read, or does not contain a valid unencrypted PEM encoded private key. MQTT keeps using the certificate that was loaded, but might not start correctly after a restart. Install a valid private key in `{client_key_file}`.",
+      "title": "Invalid MQTT private key file installed"
+    },
     "invalid_platform_config": {
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/config/tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
       "title": "Invalid config found for MQTT {domain} item"
