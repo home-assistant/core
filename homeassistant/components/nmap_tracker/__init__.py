@@ -110,7 +110,9 @@ async def async_unload_entry(
     _async_untrack_devices(hass, entry)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: NmapTrackerConfigEntry
+) -> None:
     """Migrate config entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
@@ -139,7 +141,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 @callback
-def _async_untrack_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def _async_untrack_devices(hass: HomeAssistant, entry: NmapTrackerConfigEntry) -> None:
     """Remove tracking for devices owned by this config entry."""
     devices = hass.data[NMAP_TRACKER_DATA]
     remove_mac_addresses = [
@@ -162,7 +164,10 @@ class NmapDeviceScanner:
     """Scanner for devices using nmap."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, devices: NmapTrackedDevices
+        self,
+        hass: HomeAssistant,
+        entry: NmapTrackerConfigEntry,
+        devices: NmapTrackedDevices,
     ) -> None:
         """Initialize the scanner."""
         self.devices = devices

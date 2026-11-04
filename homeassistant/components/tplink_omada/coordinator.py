@@ -11,6 +11,7 @@ from tplink_omada_client import (
     OmadaControllerUpdateInfo,
     OmadaSiteClient,
     OmadaSwitchPortDetails,
+    OmadaVpnPolicy,
 )
 from tplink_omada_client.clients import OmadaNetworkClient, OmadaWirelessClient
 from tplink_omada_client.devices import (
@@ -43,6 +44,7 @@ POLL_CONTROLLER = 300
 POLL_CONTROLLER_UPDATE = 3600
 POLL_UPGRADE = 60
 POLL_KNOWN_CLIENTS = 3600
+POLL_VPN = 300
 
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
@@ -278,6 +280,24 @@ class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaNetworkClient]):
         return {
             client.mac: client async for client in self.omada_client.get_known_clients()
         }
+
+
+class OmadaVpnPoliciesCoordinator(OmadaCoordinator[OmadaVpnPolicy]):
+    """Coordinator for getting details about the site's VPN policies."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaSiteClient,
+    ) -> None:
+        """Initialize my coordinator."""
+        super().__init__(hass, config_entry, omada_client, "VpnPolicies", POLL_VPN)
+
+    @override
+    async def poll_update(self) -> dict[str, OmadaVpnPolicy]:
+        """Poll the site's current VPN policies."""
+        return {p.unique_id: p for p in await self.omada_client.get_vpn_policies()}
 
 
 class FirmwareUpdateStatus(NamedTuple):

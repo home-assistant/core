@@ -1,7 +1,12 @@
-write:
+ebusd_write:
   fields:
-    call:
+    name:
       required: true
-      example: '{"name": "Hc1MaxFlowTempDesired", "value": 21}'
+      example: "Hc1MaxFlowTempDesired"
       selector:
-        object:
+        text:
+    value:
+      required: true
+      example: "21"
+      selector:
+        text:

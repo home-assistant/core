@@ -386,7 +386,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         self.reauth_conf = entry_data
         placeholders = {
             **self.context["title_placeholders"],
-            CONF_HOST: entry_data[CONF_HOST],
+            "host": entry_data[CONF_HOST],
         }
         self.context["title_placeholders"] = placeholders
 

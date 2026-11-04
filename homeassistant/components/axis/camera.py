@@ -138,6 +138,10 @@ class AxisCamera(AxisEntity, MjpegCamera):
         if self.hub.config.video_source != DEFAULT_VIDEO_SOURCE:
             options_dict["camera"] = self.hub.config.video_source
 
+        # Companion devices reject media requests without this parameter
+        if self.hub.api.config.is_companion:
+            options_dict["Axis-Orig-Sw"] = "true"
+
         if not options_dict:
             return ""
         return f"?{urlencode(options_dict)}"

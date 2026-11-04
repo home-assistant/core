@@ -9,7 +9,6 @@ import feedparser
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -24,6 +23,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DOMAIN, USER_AGENT
+from .coordinator import FeedReaderConfigEntry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: FeedReaderConfigEntry,
     ) -> FeedReaderOptionsFlowHandler:
         """Get the options flow for this handler."""
         return FeedReaderOptionsFlowHandler()
