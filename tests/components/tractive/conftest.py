@@ -44,6 +44,10 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 minutes_night_sleep=300,
                 minutes_rest=122,
                 weight=23700,
+                bark_status="normal",
+                resting_heart_rate_status="elevated",
+                resting_respiratory_rate_status="normal",
+                scratch_status="infrequent",
             )
         },
     )

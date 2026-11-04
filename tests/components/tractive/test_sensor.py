@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,6 +14,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import init_integration
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -37,6 +39,10 @@ async def test_sensor(
             minutes_night_sleep=300,
             minutes_rest=122,
             weight=23700,
+            bark_status="normal",
+            resting_heart_rate_status="normal",
+            resting_respiratory_rate_status="elevated",
+            scratch_status="not_enough_data_today",
         )
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -79,6 +85,10 @@ async def test_sensor_device_assignment(
         "sensor.test_pet_day_sleep",
         "sensor.test_pet_night_sleep",
         "sensor.test_pet_weight",
+        "sensor.test_pet_bark_status",
+        "sensor.test_pet_resting_heart_rate_status",
+        "sensor.test_pet_resting_respiratory_rate_status",
+        "sensor.test_pet_scratch_status",
     ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
@@ -113,6 +123,7 @@ async def test_sensor_weight_update(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_without_health_data(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,
@@ -130,6 +141,10 @@ async def test_sensor_without_health_data(
         "sensor.test_pet_daily_goal",
         "sensor.test_pet_day_sleep",
         "sensor.test_pet_night_sleep",
+        "sensor.test_pet_bark_status",
+        "sensor.test_pet_resting_heart_rate_status",
+        "sensor.test_pet_resting_respiratory_rate_status",
+        "sensor.test_pet_scratch_status",
     ):
         assert hass.states.get(entity_id) is None
 
@@ -139,3 +154,24 @@ async def test_sensor_without_health_data(
         "sensor.tracker_device_id_123_status",
     ):
         assert hass.states.get(entity_id) is not None
+
+
+async def test_sensor_unknown_health_status(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a health status that is not in the options is reported as unknown."""
+    with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.test_pet_resting_heart_rate_status")
+    assert state is not None
+    assert state.state == "elevated"
+
+    mock_tractive_client.set_pet_status(resting_heart_rate_status="new_status")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_pet_resting_heart_rate_status")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN

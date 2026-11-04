@@ -59,6 +59,16 @@
       "activity_time": {
         "name": "Activity time"
       },
+      "bark_status": {
+        "name": "Bark status",
+        "state": {
+          "calculating_baseline": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::calculating_baseline%]",
+          "elevated": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::elevated%]",
+          "infrequent": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::infrequent%]",
+          "normal": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::normal%]",
+          "not_enough_data_today": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_enough_data_today%]"
+        }
+      },
       "daily_goal": {
         "name": "Daily goal"
       },
@@ -70,6 +80,36 @@
       },
       "rest_time": {
         "name": "Rest time"
+      },
+      "resting_heart_rate_status": {
+        "name": "Resting heart rate status",
+        "state": {
+          "calculating_baseline": "Calculating baseline",
+          "elevated": "Elevated",
+          "infrequent": "Infrequent",
+          "normal": "Normal",
+          "not_enough_data_today": "Not enough data today"
+        }
+      },
+      "resting_respiratory_rate_status": {
+        "name": "Resting respiratory rate status",
+        "state": {
+          "calculating_baseline": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::calculating_baseline%]",
+          "elevated": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::elevated%]",
+          "infrequent": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::infrequent%]",
+          "normal": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::normal%]",
+          "not_enough_data_today": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_enough_data_today%]"
+        }
+      },
+      "scratch_status": {
+        "name": "Scratch status",
+        "state": {
+          "calculating_baseline": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::calculating_baseline%]",
+          "elevated": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::elevated%]",
+          "infrequent": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::infrequent%]",
+          "normal": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::normal%]",
+          "not_enough_data_today": "[%key:component::tractive::entity::sensor::resting_heart_rate_status::state::not_enough_data_today%]"
+        }
       },
       "tracker_state": {
         "name": "Status",
