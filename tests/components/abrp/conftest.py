@@ -15,6 +15,7 @@ from aioabrp import (
     AbstractAuth,
     ChargingState,
     ConnectionEvent,
+    Location,
     MetricValue,
     Telemetry,
     TelemetryStream,
@@ -73,7 +74,7 @@ def build_vehicle_model_display(
     )
 
 
-def build_metric_value(value: float | ChargingState) -> MetricValue:
+def build_metric_value(value: float | ChargingState | Location) -> MetricValue:
     """Build a typed MetricValue (the unit of coordinator telemetry state)."""
     return MetricValue(value=value, time=None, provider=None)
 

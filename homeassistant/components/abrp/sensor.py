@@ -33,13 +33,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import AbrpConfigEntry, AbrpTelemetryCoordinator
+from .entity import AbrpVehicleEntity
 
 PARALLEL_UPDATES = 0
 
@@ -195,11 +193,6 @@ SENSORS: tuple[AbrpTelemetrySensorEntityDescription, ...] = (
 )
 
 
-def _telemetry_unique_id(entry: AbrpConfigEntry, vehicle_id: int, key: str) -> str:
-    """Build a telemetry sensor's ``unique_id`` — the one definition of the scheme."""
-    return f"{entry.unique_id}_{vehicle_id}_{key}"
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AbrpConfigEntry,
@@ -238,10 +231,9 @@ async def async_setup_entry(
     _add_new_sensors()
 
 
-class AbrpTelemetrySensor(CoordinatorEntity[AbrpTelemetryCoordinator], SensorEntity):
+class AbrpTelemetrySensor(AbrpVehicleEntity, SensorEntity):
     """One telemetry sensor (soc / power / voltage / charging_state) per vehicle."""
 
-    _attr_has_entity_name = True
     entity_description: AbrpTelemetrySensorEntityDescription
 
     def __init__(
@@ -252,21 +244,14 @@ class AbrpTelemetrySensor(CoordinatorEntity[AbrpTelemetryCoordinator], SensorEnt
         description: AbrpTelemetrySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, entry, vehicle_id, description.key)
         self.entity_description = description
-        self._vehicle_id = vehicle_id
-        scope = f"{entry.unique_id}_{vehicle_id}"
-        self._attr_unique_id = _telemetry_unique_id(entry, vehicle_id, description.key)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, scope)},
-        )
 
     @property
     @override
     def native_value(self) -> StateType:
         """Return this metric's latest reading."""
-        tlm = self.coordinator.data.get(self._vehicle_id)
-        if tlm is None:
+        if (tlm := self.telemetry) is None:
             return None
         return self.entity_description.value_fn(tlm)
 
@@ -281,7 +266,3 @@ class AbrpTelemetrySensor(CoordinatorEntity[AbrpTelemetryCoordinator], SensorEnt
         so it stops being reported rather than going stale indefinitely.
         """
         return not self.coordinator.stream_auth_failed and self.native_value is not None
-
-    @override
-    async def async_update(self) -> None:
-        """Make update_entity a no-op; values arrive through the stream."""
