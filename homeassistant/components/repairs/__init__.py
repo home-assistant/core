@@ -6,7 +6,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import issue_handler, websocket_api
-from .const import DOMAIN, REPAIRS, FlowType
+from .const import DATA_REPAIRS, DOMAIN, FlowType
 from .issue_handler import ConfirmRepairFlow, RepairsFlowManager
 from .models import RepairsFlow, RepairsFlowContext, RepairsFlowResult
 
@@ -26,7 +26,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 @callback
 def repairs_flow_manager(hass: HomeAssistant) -> RepairsFlowManager:
     """Return the repairs flow manager."""
-    if (domain_data := hass.data.get(REPAIRS)) is None:
+    if (domain_data := hass.data.get(DATA_REPAIRS)) is None:
         raise HomeAssistantError("repairs flow manager is not available")
 
     return domain_data.flow_manager
