@@ -8,16 +8,13 @@ from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
-from .const import DOMAIN
+from .const import CONF_PROFILE, DOMAIN
 from .critical import CRITICAL_ISSUE_PREFIX, async_acknowledge_critical_repository
+from .profiles import PROFILE_ISSUE_PREFIX, async_create_profile_suggestion, get_profile
 
 
 class RestartRequiredFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
-
-    def __init__(self, issue_id: str) -> None:
-        """Initialize the fix flow."""
-        self.issue_id = issue_id
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -79,6 +76,50 @@ class CriticalRepositoryFixFlow(RepairsFlow):
         )
 
 
+class DownloadProfileFixFlow(RepairsFlow):
+    """Switch to the download profile the issue suggests."""
+
+    def __init__(self, profile_id: str) -> None:
+        """Initialize the fix flow."""
+        self.profile = get_profile(profile_id)
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Name who runs the endpoints, the same as the options do."""
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=["use_profile", "ignore"],
+            description_placeholders={"operator": self.profile.operator},
+        )
+
+    async def async_step_use_profile(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Switch to the profile, the reload puts it to use."""
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            self.hass.config_entries.async_update_entry(
+                entry, options={**entry.options, CONF_PROFILE: self.profile.id}
+            )
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        return self.async_create_entry(title="", data={})
+
+    async def async_step_ignore(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Keep the profile and stop suggesting the other one.
+
+        Aborting keeps the issue, a completed fix flow would delete it and
+        the ignore with it. The issue can be gone by now, the catalog was
+        reached again while the menu was open. It is created again, the
+        ignore is only remembered on the issue.
+        """
+        if ir.async_get(self.hass).async_get_issue(DOMAIN, self.issue_id) is None:
+            async_create_profile_suggestion(self.hass, self.profile)
+        ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, ignore=True)
+        return self.async_abort(reason="issue_ignored")
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
@@ -88,7 +129,9 @@ async def async_create_fix_flow(
 ) -> RepairsFlow | None:
     """Create flow."""
     if issue_id.startswith("restart_required"):
-        return RestartRequiredFixFlow(issue_id)
+        return RestartRequiredFixFlow()
     if issue_id.startswith(CRITICAL_ISSUE_PREFIX) and data:
         return CriticalRepositoryFixFlow(str(data["repository"]), str(data["reason"]))
+    if issue_id.startswith(PROFILE_ISSUE_PREFIX) and data:
+        return DownloadProfileFixFlow(str(data["profile"]))
     return None
