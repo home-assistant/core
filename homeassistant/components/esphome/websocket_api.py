@@ -18,7 +18,7 @@ from .sendspin import (
     async_sendspin_entry_data,
     async_subscribe_sendspin_clients,
 )
-from .serial_proxy import build_url
+from .serial_proxy import build_port_url, build_url
 
 TYPE = "type"
 ENTRY_ID = "entry_id"
@@ -102,6 +102,7 @@ def get_device_capabilities(
         return
 
     home_id = capabilities.zwave_proxy.home_id
+    identities = entry.runtime_data.serial_proxy_identities
     connection.send_result(
         msg["id"],
         {
@@ -119,9 +120,17 @@ def get_device_capabilities(
                     "port_type": (
                         proxy.port_type.name if proxy.port_type is not None else None
                     ),
-                    "url": str(build_url(entry.entry_id, port_name=proxy.name)),
+                    "url": str(
+                        build_port_url(
+                            entry.entry_id,
+                            proxy.name,
+                            identities.get(instance),
+                        )
+                        # Nothing is plugged in, so the port is offline under any URL
+                        or build_url(entry.entry_id, port_name=proxy.name)
+                    ),
                 }
-                for proxy in capabilities.serial_proxies
+                for instance, proxy in enumerate(capabilities.serial_proxies)
             ],
             "sendspin": {"supported": bool(capabilities.sendspin.feature_flags)},
         },
