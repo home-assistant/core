@@ -1,12 +1,13 @@
 """Test the lg_soundbar media player."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import lg_bartalk as soundbar_client
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.lg_soundbar.media_player import LGDevice
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -17,6 +18,7 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     MediaPlayerState,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -395,19 +397,27 @@ async def test_power_resync_preserves_playback_state(
         "get_play",
     ],
 )
-async def test_failed_initial_request_closes_listener(
+async def test_failed_initial_request_retries_setup(
     hass: HomeAssistant,
     mock_soundbar_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     request_method: str,
 ) -> None:
-    """Test failed entity setup closes the client and preserves the error."""
-    error = OSError("Initial request failed")
-    getattr(mock_soundbar_client.return_value, request_method).side_effect = error
-    device = LGDevice("127.0.0.1", 9741, "uuid")
-    device.hass = hass
+    """Test a failed initial request closes the client and retries setup."""
+    client = mock_soundbar_client.return_value
+    getattr(client, request_method).side_effect = OSError("Initial request failed")
 
-    with pytest.raises(OSError) as exc_info:
-        await device.async_added_to_hass()
+    await setup_integration(hass, mock_config_entry)
 
-    assert exc_info.value is error
-    mock_soundbar_client.return_value.close.assert_called_once_with()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    client.close.assert_called_once_with()
+    assert hass.states.get(ENTITY_ID) is None
+
+    getattr(client, request_method).side_effect = None
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(ENTITY_ID) is not None

@@ -10,7 +10,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -68,19 +67,14 @@ def _offered_equivalent(function: str, offered: list[int]) -> str | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LGSoundbarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up media_player from a config entry created in the integrations UI."""
-    async_add_entities(
-        [
-            LGDevice(
-                config_entry.data[CONF_HOST],
-                config_entry.data[CONF_PORT],
-                config_entry.unique_id or config_entry.entry_id,
-            )
-        ]
-    )
+    async_add_entities([config_entry.runtime_data])
+
+
+type LGSoundbarConfigEntry = ConfigEntry[LGDevice]
 
 
 class LGDevice(MediaPlayerEntity):
@@ -134,13 +128,8 @@ class LGDevice(MediaPlayerEntity):
             identifiers={(DOMAIN, unique_id)}, name=host
         )
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register the callback after hass is ready for it."""
-        await self.hass.async_add_executor_job(self._connect)
-
-    def _connect(self) -> None:
-        """Perform the actual devices setup."""
+    def connect(self) -> None:
+        """Connect to the device and request its initial state."""
         self._device = soundbar_client.LGSoundbarClient(
             self._host, port=self._port, callback=self.handle_event
         )
@@ -152,11 +141,10 @@ class LGDevice(MediaPlayerEntity):
             self._device.close()
             raise
 
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Close the listener when the entity is removed."""
+    def close(self) -> None:
+        """Stop the listener and close the connection."""
         if self._device is not None:
-            await self.hass.async_add_executor_job(self._device.close)
+            self._device.close()
 
     def handle_event(self, response):
         """Handle responses from the speakers."""
@@ -208,7 +196,9 @@ class LGDevice(MediaPlayerEntity):
         elif response["msg"] == "PLAY_INFO":
             self._update_playinfo(data)
 
-        self.schedule_update_ha_state()
+        # Responses can arrive before the entity is added to Home Assistant
+        if self.hass is not None:
+            self.schedule_update_ha_state()
 
     def _update_equalisers(self, data: dict[str, Any]) -> None:
         """Update the equalisers."""
