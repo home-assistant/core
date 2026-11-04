@@ -195,6 +195,63 @@ async def test_migrate_settings_to_storage(
     assert (tmp_path / DOMAIN).exists() is not old_dir_removed
 
 
+def _move_concurrently(source: Path, target: Path) -> None:
+    """Simulate another entry moving the settings file first."""
+    target.write_text(source.read_text())
+    raise FileNotFoundError
+
+
+def _vanish(source: Path, target: Path) -> None:
+    """Simulate the settings file disappearing without being moved."""
+    raise FileNotFoundError
+
+
+@pytest.mark.usefixtures("mock_amazon_devices_client")
+@pytest.mark.parametrize(
+    ("replace_side_effect", "expected_state", "expected_minor_version"),
+    [
+        pytest.param(
+            _move_concurrently,
+            ConfigEntryState.LOADED,
+            4,
+            id="moved_by_other_entry",
+        ),
+        pytest.param(
+            _vanish,
+            ConfigEntryState.MIGRATION_ERROR,
+            3,
+            id="vanished",
+        ),
+    ],
+)
+async def test_migrate_settings_to_storage_race(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    tmp_path: Path,
+    replace_side_effect: Callable[[Path, Path], None],
+    expected_state: ConfigEntryState,
+    expected_minor_version: int,
+) -> None:
+    """Test the settings file disappearing while being moved."""
+    hass.config.config_dir = str(tmp_path)
+    old_file = tmp_path / OLD_SETTINGS_FILE
+    old_file.parent.mkdir()
+    old_file.write_text(OLD_SETTINGS)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        unique_id=TEST_USER_ID,
+        version=1,
+        minor_version=3,
+    )
+    with patch.object(Path, "replace", autospec=True, side_effect=replace_side_effect):
+        await setup_integration(hass, config_entry)
+
+    assert config_entry.state is expected_state
+    assert config_entry.minor_version == expected_minor_version
+
+
 async def test_migrate_future_version_returns_false(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
