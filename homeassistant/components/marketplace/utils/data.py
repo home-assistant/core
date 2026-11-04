@@ -182,6 +182,9 @@ class MarketplaceData:
 
         if data is None:
             return {}
+        # A corrupt file is renamed by the storage helper and loads as nothing,
+        # just like a missing one on a first setup. Taken as a first setup, the
+        # next save would make the empty state permanent.
         if not data and (
             corrupt_copy := await self.marketplace.hass.async_add_executor_job(
                 corrupt_copy_of_missing_file, path
@@ -189,7 +192,7 @@ class MarketplaceData:
         ):
             self._log_unreadable(
                 f"{path} could not be parsed and was moved to {corrupt_copy};"
-                " remove that copy to start without it"
+                " remove that copy to start without the stored data"
             )
             return None
         if not isinstance(data, dict):

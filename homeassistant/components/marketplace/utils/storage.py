@@ -61,10 +61,10 @@ def get_storage_for_key(hass: HomeAssistant, key: str) -> Store[Any]:
 
 
 def corrupt_copy_of_missing_file(path: str) -> str | None:
-    """Return the copy the storage helper moved a corrupt file to.
+    """Return the path of the renamed copy of a corrupt storage file, or None.
 
-    The helper moves it aside and loads nothing, which looks like a first setup
-    on this start and every start after it.
+    The storage helper renames a file with invalid JSON to <path>.corrupt.<time>
+    and loads nothing. A copy next to an existing file is stale and ignored.
     """
     if os.path.exists(path):
         return None
@@ -112,7 +112,7 @@ async def _async_adopt_legacy_data(
     """
     if (legacy_key := LEGACY_STORAGE_KEYS.get(key)) is None:
         return None
-    # Our own file was moved aside as corrupt, the legacy data is older than it
+    # Our own file was renamed as corrupt, adopting the older legacy data would hide that
     if await hass.async_add_executor_job(corrupt_copy_of_missing_file, store.path):
         return None
 

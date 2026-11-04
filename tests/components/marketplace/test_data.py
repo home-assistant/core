@@ -377,10 +377,10 @@ async def test_restore_file_moved_aside_as_corrupt(
     caplog: pytest.LogCaptureFixture,
     corrupt: str,
 ) -> None:
-    """Test a file the storage helper moved aside fails the restore.
+    """Test a storage file renamed as corrupt fails the restore.
 
-    The helper loads nothing for it, which would otherwise be taken as a first
-    setup on this start and every start after it.
+    The helper loads nothing for a renamed file, which would otherwise look
+    like a first setup, and the first save would make the loss permanent.
     """
     storage = config_dir / ".storage"
     storage.mkdir(exist_ok=True)
@@ -403,7 +403,7 @@ async def test_restore_ignores_a_stale_corrupt_copy(
     marketplace: MarketplaceManager,
     config_dir: Path,
 ) -> None:
-    """Test a corrupt copy only counts while the file it was moved from is missing."""
+    """Test a corrupt copy only counts while the original file is missing."""
     storage = config_dir / ".storage"
     storage.mkdir(exist_ok=True)
     for key in ("common", "repositories"):
