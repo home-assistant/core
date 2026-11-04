@@ -5,16 +5,11 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_LOCK,
-    SERVICE_OPEN,
-    SERVICE_UNLOCK,
-)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import LockState
-from .const import DOMAIN
+from .const import DOMAIN, LockService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,11 +48,11 @@ async def _async_reproduce_state(
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     if state.state in {LockState.LOCKED, LockState.LOCKING}:
-        service = SERVICE_LOCK
+        service = LockService.LOCK
     elif state.state in {LockState.UNLOCKED, LockState.UNLOCKING}:
-        service = SERVICE_UNLOCK
+        service = LockService.UNLOCK
     elif state.state in {LockState.OPEN, LockState.OPENING}:
-        service = SERVICE_OPEN
+        service = LockService.OPEN
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True

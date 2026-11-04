@@ -186,16 +186,14 @@ class VoIPDevices:
                 )
 
         # Update device with latest info
-        device = dev_reg.async_get_or_create_device(
+        device = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, voip_id)},
-                name=call_info.caller_endpoint.host,
-                manufacturer=manuf,
-                model=model,
-                sw_version=fw_version,
-                configuration_url=f"http://{call_info.caller_ip}",
-            ),
+            identifiers={(DOMAIN, voip_id)},
+            name=call_info.caller_endpoint.host,
+            manufacturer=manuf,
+            model=model,
+            sw_version=fw_version,
+            configuration_url=f"http://{call_info.caller_ip}",
         )
 
         if voip_device is not None:

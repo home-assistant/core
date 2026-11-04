@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import (
@@ -29,6 +30,7 @@ from .const import (
     HMIPC_NAME,
     HMIPC_PIN,
     PLATFORMS,
+    SIGNAL_ARMING_BLOCKED,
 )
 from .errors import HmipcConnectionError
 
@@ -128,6 +130,15 @@ class HomematicipHAP:
         self._get_state_task: asyncio.Task | None = None
         self.hmip_device_by_entity_id: dict[str, Any] = {}
         self.reset_connection_listener: Callable | None = None
+        self.arming_blocked = False
+
+    @callback
+    def async_set_arming_blocked(self, blocked: bool) -> None:
+        """Publish whether the last arming attempt was refused."""
+        self.arming_blocked = blocked
+        async_dispatcher_send(
+            self.hass, SIGNAL_ARMING_BLOCKED.format(self.config_entry.entry_id)
+        )
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
@@ -170,11 +181,11 @@ class HomematicipHAP:
             if home.label != self.config_entry.unique_id
             else f"Home-{home.label}"
         )
-        dr.async_get(self.hass).async_get_or_create_device(
+        dr.async_get(self.hass).async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, home.id)}, manufacturer="eQ-3", name=hapname
-            ),
+            identifiers={(DOMAIN, home.id)},
+            manufacturer="eQ-3",
+            name=hapname,
         )
 
     @callback

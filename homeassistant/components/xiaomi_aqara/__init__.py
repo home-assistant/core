@@ -106,14 +106,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) 
 
     assert entry.unique_id
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id)},
-            manufacturer="Xiaomi Aqara",
-            name=entry.title,
-            sw_version=entry.data[CONF_PROTOCOL],
-        ),
+        identifiers={(DOMAIN, entry.unique_id)},
+        manufacturer="Xiaomi Aqara",
+        name=entry.title,
+        sw_version=entry.data[CONF_PROTOCOL],
     )
 
     if entry.data[CONF_KEY] is not None:

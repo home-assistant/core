@@ -3,6 +3,7 @@
   "name": "Starling Bank",
   "categories": ["finance"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/starlingbank",
   "iot_class": "cloud_polling",
   "loggers": ["starlingbank"],

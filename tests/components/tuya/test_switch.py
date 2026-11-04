@@ -17,12 +17,18 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
+from . import (
+    TuyaNotificationHelper,
+    add_indexed_switches,
+    check_selective_state_update,
+    initialize_entry,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -309,3 +315,101 @@ async def test_hwsb_switch_with_quirk(
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [{"code": "switch", "value": False}]
     )
+
+
+@pytest.fixture
+def ggq_indexed_switch(mock_device: CustomerDevice) -> None:
+    """Add an indexed switch DP, as the fixture only exposes the single "switch"."""
+    add_indexed_switches(mock_device, 1)
+
+
+@pytest.mark.usefixtures("ggq_indexed_switch")
+@pytest.mark.parametrize("mock_device_code", ["ggq_7ytb3h8u"])
+async def test_ggq_deprecated_switch_enabled(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test enabled deprecated indexed switches are kept with a repair issue."""
+    unique_id = f"tuya.{mock_device.id}switch_1"
+    # Set up manually, as linking the entity requires the entry to be added first
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        unique_id,
+        config_entry=mock_config_entry,
+        suggested_object_id="giex_watering_timer_switch_1",
+    )
+    mock_manager.device_map = {mock_device.id: mock_device}
+    with patch(
+        "homeassistant.components.tuya.coordinator.Manager", return_value=mock_manager
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get("switch.giex_watering_timer_switch_1")
+    issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_entity_{unique_id}")
+    assert issue
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+
+@pytest.mark.usefixtures("ggq_indexed_switch")
+@pytest.mark.parametrize("mock_device_code", ["ggq_7ytb3h8u"])
+async def test_ggq_deprecated_switch_disabled(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabled deprecated indexed switches are removed."""
+    unique_id = f"tuya.{mock_device.id}switch_1"
+    entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        unique_id,
+        suggested_object_id="giex_watering_timer_switch_1",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    assert not entity_registry.async_get("switch.giex_watering_timer_switch_1")
+    assert not issue_registry.async_get_issue(DOMAIN, f"deprecated_entity_{unique_id}")
+
+
+@pytest.mark.usefixtures("ggq_indexed_switch")
+@pytest.mark.parametrize("mock_device_code", ["ggq_7ytb3h8u"])
+async def test_ggq_deprecated_switch_not_created(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test deprecated indexed switches are not created without a registry entry."""
+    unique_id = f"tuya.{mock_device.id}switch_1"
+    # A repair left over from a removed entity is cleared
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_entity_{unique_id}",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_entity_new_valve",
+        translation_placeholders={
+            "name": "GIEX Watering Timer Switch 1",
+            "entity": "switch.giex_watering_timer_switch_1",
+        },
+    )
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    assert not entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, unique_id)
+    assert not issue_registry.async_get_issue(DOMAIN, f"deprecated_entity_{unique_id}")

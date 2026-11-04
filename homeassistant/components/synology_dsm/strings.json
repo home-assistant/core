@@ -269,7 +269,7 @@
           "name": "Serial"
         }
       },
-      "name": "Reboot"
+      "name": "[%key:common::action::reboot%]"
     },
     "shutdown": {
       "description": "Shuts down the NAS. This action is deprecated and will be removed in a future release. Please use the corresponding button entity.",

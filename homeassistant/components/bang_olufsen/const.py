@@ -147,7 +147,6 @@ DOMAIN: Final[str] = "bang_olufsen"
 DEFAULT_MODEL: Final[str] = BeoModel.BEOSOUND_BALANCE
 
 # Configuration.
-CONF_SERIAL_NUMBER: Final = "serial_number"
 CONF_BEOLINK_JID: Final = "jid"
 
 # Models to choose from in manual configuration.

@@ -44,6 +44,7 @@ class UnifiHub:
         self.hass = hass
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
+        self.entry_data = config_entry.data
         self.connection = UnifiConnectionManager(
             hass,
             config_entry,
@@ -174,7 +175,7 @@ class UnifiHub:
     def async_update_device_registry(self) -> DeviceEntry:
         """Update device registry."""
         device_registry = dr.async_get(self.hass)
-        return device_registry.async_get_or_create_device(
+        return device_registry.async_get_or_create_from_info(
             config_entry_id=self.config.entry.entry_id, device_info=self.device_info
         )
 
@@ -182,11 +183,13 @@ class UnifiHub:
     async def async_config_entry_updated(
         hass: HomeAssistant, config_entry: UnifiConfigEntry
     ) -> None:
-        """Apply updated options to the hub.
-
-        Config flows reload the entry after they change its data.
-        """
+        """Reload when the data changed, otherwise apply updated options."""
         hub = config_entry.runtime_data
+        if config_entry.data != hub.entry_data:
+            # Updates arriving before the reload replaces the hub are handled
+            hub.entry_data = config_entry.data
+            hass.config_entries.async_schedule_reload(config_entry.entry_id)
+            return
         hub.config = UnifiConfig.from_config_entry(config_entry)
         async_dispatcher_send(hass, hub.signal_options_update)
 

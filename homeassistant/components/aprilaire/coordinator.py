@@ -94,7 +94,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
             and new_device_info is not None
             and old_device_info != new_device_info
         ):
-            dr.async_get(self.hass).async_get_or_create_device(
+            dr.async_get(self.hass).async_get_or_create_from_info(
                 config_entry_id=self.config_entry.entry_id, device_info=new_device_info
             )
 

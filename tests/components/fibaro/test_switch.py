@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_switch_setup(
@@ -35,7 +35,7 @@ async def test_switch_setup(
         # Act
         await init_integration(hass, mock_config_entry)
         # Assert
-        entry = entity_registry.async_get("switch.room_1_test_switch_9")
+        entry = entity_registry.async_get("switch.test_switch_room_1_test_switch")
         assert entry
         assert entry.unique_id == "hc2_111111.9"
         assert entry.original_name == "Room 1 Test switch"
@@ -59,7 +59,7 @@ async def test_switch_turn_on(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.room_1_test_switch_9"},
+            {ATTR_ENTITY_ID: "switch.test_switch_room_1_test_switch"},
             blocking=True,
         )
         # Assert
@@ -84,7 +84,7 @@ async def test_switch_turn_off(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.room_1_test_switch_9"},
+            {ATTR_ENTITY_ID: "switch.test_switch_room_1_test_switch"},
             blocking=True,
         )
         # Assert

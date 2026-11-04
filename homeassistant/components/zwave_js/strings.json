@@ -452,11 +452,20 @@
     "get_users_failed": {
       "message": "Failed to get users: {error}"
     },
+    "multicast_broadcast_requires_target": {
+      "message": "Include at least one device or entity when broadcasting with more than one Z-Wave network."
+    },
+    "multicast_different_networks": {
+      "message": "Multicast only works for devices in the same Z-Wave network."
+    },
     "no_available_credential_slots": {
       "message": "No available {credential_type} credential slots on this device"
     },
     "no_available_user_slots": {
       "message": "No available user slots on this device"
+    },
+    "no_nodes_found": {
+      "message": "No Z-Wave devices found for the given targets."
     },
     "set_credential_failed": {
       "message": "Failed to set credential: {error}"

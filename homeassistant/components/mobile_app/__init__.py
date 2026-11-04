@@ -12,13 +12,7 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    CONF_WEBHOOK_ID,
-    Platform,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
@@ -40,6 +34,8 @@ from . import (  # noqa: F401
 )
 from .const import (
     ATTR_DEVICE_NAME,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_OS_VERSION,
     CONF_CLOUDHOOK_URL,
     CONF_USER_ID,
@@ -203,15 +199,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_or_create_device(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
-            manufacturer=registration[ATTR_MANUFACTURER],
-            model=registration[ATTR_MODEL],
-            name=registration[ATTR_DEVICE_NAME],
-            sw_version=registration[ATTR_OS_VERSION],
-        ),
+        identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
+        manufacturer=registration[ATTR_MANUFACTURER],
+        model=registration[ATTR_MODEL],
+        name=registration[ATTR_DEVICE_NAME],
+        sw_version=registration[ATTR_OS_VERSION],
     )
 
     hass.data[DOMAIN][DATA_DEVICES][webhook_id] = device

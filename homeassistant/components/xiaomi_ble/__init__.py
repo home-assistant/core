@@ -12,7 +12,6 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -54,17 +53,15 @@ def process_service_info(
         address = service_info.device.address
         for device_key, event in update.events.items():
             sensor_device_info = update.devices[device_key.device_id]
-            device = device_registry.async_get_or_create_device(
+            device = device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
-                device_info=dr.DeviceInfo(
-                    connections={(CONNECTION_BLUETOOTH, address)},
-                    identifiers={(BLUETOOTH_DOMAIN, address)},
-                    manufacturer=sensor_device_info.manufacturer,
-                    model=sensor_device_info.model,
-                    name=sensor_device_info.name,
-                    sw_version=sensor_device_info.sw_version,
-                    hw_version=sensor_device_info.hw_version,
-                ),
+                connections={(CONNECTION_BLUETOOTH, address)},
+                identifiers={(BLUETOOTH_DOMAIN, address)},
+                manufacturer=sensor_device_info.manufacturer,
+                model=sensor_device_info.model,
+                name=sensor_device_info.name,
+                sw_version=sensor_device_info.sw_version,
+                hw_version=sensor_device_info.hw_version,
             )
             # event_class may be postfixed with a number, ie 'button_2'
             # but if there is only one button then it will be 'button'
@@ -120,7 +117,7 @@ def format_discovered_event_class(address: str) -> str:
     return f"{DOMAIN}_discovered_event_class_{address}"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: XiaomiBLEConfigEntry) -> None:
     """Set up Xiaomi BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
