@@ -1,5 +1,6 @@
 """Data update coordinator for Atomberg."""
 
+import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any, override
@@ -46,6 +47,9 @@ class AtombergCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         )
         self.client = client
         self.devices = {}
+        # Polls and commands must not run at the same time, otherwise a poll
+        # that started before a command could overwrite the state it applied.
+        self._state_lock = asyncio.Lock()
 
     @override
     async def _async_setup(self) -> None:
@@ -70,7 +74,8 @@ class AtombergCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         try:
-            states = await self.client.async_get_states()
+            async with self._state_lock:
+                states = await self.client.async_get_states()
         except AtombergAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
@@ -113,10 +118,13 @@ class AtombergCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         self, device_id: str, command: dict[str, Any], new_state: dict[str, Any]
     ) -> None:
         """Send a command and apply the expected state without polling again."""
-        with self._command_errors():
-            await self.client.async_send_command(device_id, command)
-        self.data = {
-            **self.data,
-            device_id: {**self.data[device_id], **new_state},
-        }
-        self.async_update_listeners()
+        async with self._state_lock:
+            with self._command_errors():
+                await self.client.async_send_command(device_id, command)
+            # Do not use async_set_updated_data: it would restart the refresh
+            # interval and commands could keep postponing the account-wide poll.
+            self.data = {
+                **self.data,
+                device_id: {**self.data[device_id], **new_state},
+            }
+            self.async_update_listeners()

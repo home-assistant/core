@@ -1,11 +1,16 @@
 """Tests for the Atomberg fan platform."""
 
+import asyncio
+from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, call
 
 from atomberg_api import AtombergAuthError, AtombergConnectionError, AtombergError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.atomberg.const import UPDATE_INTERVAL
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
@@ -224,3 +229,42 @@ async def test_command_error(
         )
 
     assert hass.states.get(ON_FAN).state == STATE_ON
+
+
+async def test_poll_in_flight_does_not_overwrite_command_state(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll that started before a command cannot overwrite its state."""
+    await setup_integration(hass, mock_config_entry)
+    stale_states = mock_client.async_get_states.return_value
+    poll_started = asyncio.Event()
+    release_poll = asyncio.Event()
+
+    async def slow_poll() -> dict[str, Any]:
+        poll_started.set()
+        await release_poll.wait()
+        return stale_states
+
+    mock_client.async_get_states.side_effect = slow_poll
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await poll_started.wait()
+
+    command = hass.async_create_task(
+        hass.services.async_call(
+            FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ON_FAN}, blocking=True
+        )
+    )
+    for _ in range(5):
+        await asyncio.sleep(0)
+    mock_client.async_send_command.assert_not_awaited()
+
+    release_poll.set()
+    await command
+    await hass.async_block_till_done()
+
+    mock_client.async_send_command.assert_awaited_once_with(ON_ID, {"power": False})
+    assert hass.states.get(ON_FAN).state == STATE_OFF
