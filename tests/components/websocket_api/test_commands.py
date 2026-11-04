@@ -1,6 +1,7 @@
 """Tests for WebSocket API commands."""
 
 import asyncio
+from collections.abc import Callable
 from copy import deepcopy
 import io
 import logging
@@ -2611,6 +2612,139 @@ async def test_render_template_returns_with_match_all(
     msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
+
+
+READABLE_LIGHT = "light.readable"
+OTHER_READABLE_LIGHT = "light.other_readable"
+UNREADABLE_LIGHT = "light.unreadable"
+
+
+def _restrict_to_readable_lights(user: MockUser) -> None:
+    user.groups = []
+    user.mock_policy(
+        {"entities": {"entity_ids": {READABLE_LIGHT: True, OTHER_READABLE_LIGHT: True}}}
+    )
+
+
+async def test_render_template_hides_unreadable_entities(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a template rendered for a restricted user only sees readable entities."""
+    _restrict_to_readable_lights(hass_admin_user)
+    hass.states.async_set(READABLE_LIGHT, "on")
+    hass.states.async_set(UNREADABLE_LIGHT, "on")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "render_template",
+            "template": (
+                "{{ states('light.readable') }} {{ states('light.unreadable') }}"
+                " {{ states.light | count }}"
+            ),
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == "on unknown 1"
+
+
+@pytest.mark.parametrize(
+    "set_up_user",
+    [
+        pytest.param(lambda user: None, id="admin"),
+        pytest.param(_restrict_to_readable_lights, id="restricted"),
+    ],
+)
+async def test_render_template_follows_permission_changes(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    set_up_user: Callable[[MockUser], None],
+) -> None:
+    """Test a subscribed template uses the permissions of the user at each render."""
+    set_up_user(hass_admin_user)
+    hass.states.async_set(READABLE_LIGHT, "on")
+    hass.states.async_set(OTHER_READABLE_LIGHT, "on")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "render_template",
+            "template": (
+                "{{ states('light.readable') }} {{ states('light.other_readable') }}"
+            ),
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == "on on"
+
+    hass_admin_user.groups = []
+    hass_admin_user.mock_policy(
+        {"entities": {"entity_ids": {OTHER_READABLE_LIGHT: True}}}
+    )
+    hass.states.async_set(READABLE_LIGHT, "off")
+    hass.states.async_set(OTHER_READABLE_LIGHT, "off")
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == "unknown off"
+
+
+async def test_render_template_user_with_read_access(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test a non-admin user that can read all entities sees all of them."""
+    hass.states.async_set(READABLE_LIGHT, "on")
+    hass.states.async_set(UNREADABLE_LIGHT, "on")
+    websocket_client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "render_template",
+            "template": "{{ states('light.unreadable') }} {{ states.light | count }}",
+        }
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == "on 2"
+
+
+async def test_render_template_error_hides_unreadable_entities(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test template errors do not include the state of unreadable entities."""
+    _restrict_to_readable_lights(hass_admin_user)
+    hass.states.async_set(UNREADABLE_LIGHT, "secret_state")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "render_template",
+            "template": "{{ states('light.unreadable') | int }}",
+            "report_errors": True,
+            "timeout": 3,
+        }
+    )
+    error = {
+        "error": (
+            "ValueError: Template error: int got invalid input 'unknown' when"
+            " rendering template '{{ states('light.unreadable') | int }}'"
+            " but no default was specified"
+        ),
+        "level": "ERROR",
+    }
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == error
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"] == error
 
 
 async def test_manifest_list(

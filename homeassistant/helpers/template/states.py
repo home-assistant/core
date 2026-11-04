@@ -26,6 +26,7 @@ from homeassistant.helpers.translation import (
 )
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
+from .context import entity_filter_cv
 from .render_info import render_info_cv
 
 _SENTINEL = sentinel("_SENTINEL")
@@ -143,6 +144,8 @@ class AllStates:
     def __len__(self) -> int:
         """Return number of states."""
         self._collect_all_lifecycle()
+        if (entity_filter := entity_filter_cv.get()) is not None:
+            return sum(map(entity_filter, self._hass.states.async_entity_ids()))
         return self._hass.states.async_entity_ids_count()
 
     def __call__(
@@ -282,6 +285,10 @@ class DomainStates:
     def __len__(self) -> int:
         """Return number of states."""
         self._collect_domain_lifecycle()
+        if (entity_filter := entity_filter_cv.get()) is not None:
+            return sum(
+                map(entity_filter, self._hass.states.async_entity_ids(self._domain))
+            )
         return self._hass.states.async_entity_ids_count(self._domain)
 
     @override
@@ -470,7 +477,13 @@ class TemplateStateFromEntityId(TemplateStateBase):
     @property
     @override
     def _state(self) -> State:  # type: ignore[override]
-        state = self._hass.states.get(self._entity_id)
+        # _get_readable_state inlined here for performance
+        if (
+            (state := self._hass.states.get(self._entity_id)) is not None
+            and (entity_filter := entity_filter_cv.get()) is not None
+            and not entity_filter(self._entity_id)
+        ):
+            state = None
         if not state:
             state = State(self._entity_id, STATE_UNKNOWN)
         return state
@@ -509,19 +522,44 @@ def _state_generator(
         container = states._states.values()  # noqa: SLF001
     else:
         container = states.async_all(domain)
+    if (entity_filter := entity_filter_cv.get()) is not None:
+        container = (state for state in container if entity_filter(state.entity_id))
     for state in container:
         yield _template_state_no_collect(hass, state)
 
 
+def _get_readable_state(hass: HomeAssistant, entity_id: str) -> State | None:
+    if (
+        (state := hass.states.get(entity_id)) is not None
+        and (entity_filter := entity_filter_cv.get()) is not None
+        and not entity_filter(entity_id)
+    ):
+        return None
+    return state
+
+
 def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
-    state = hass.states.get(entity_id)
+    # _get_readable_state inlined here for performance
+    if (
+        (state := hass.states.get(entity_id)) is not None
+        and (entity_filter := entity_filter_cv.get()) is not None
+        and not entity_filter(entity_id)
+    ):
+        state = None
     if state is None and not valid_entity_id(entity_id):
         raise TemplateError(f"Invalid entity ID '{entity_id}'")
     return _get_template_state_from_state(hass, entity_id, state)
 
 
 def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
-    return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
+    # _get_readable_state inlined here for performance
+    if (
+        (state := hass.states.get(entity_id)) is not None
+        and (entity_filter := entity_filter_cv.get()) is not None
+        and not entity_filter(entity_id)
+    ):
+        state = None
+    return _get_template_state_from_state(hass, entity_id, state)
 
 
 def _get_template_state_from_state(

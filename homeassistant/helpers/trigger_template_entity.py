@@ -131,7 +131,7 @@ class ValueTemplate(Template):
 
         try:
             render_result = render_with_context(
-                self.template, compiled, **variables
+                self.template, compiled, self._entity_filter(), **variables
             ).strip()
         except jinja2.TemplateError as ex:
             message = (
