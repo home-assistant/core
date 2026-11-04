@@ -1578,6 +1578,7 @@ async def test_camera_unhealthy_status_scenarios(
     [
         ("NACamera", "12:34:56:00:f1:62", "camera.hall", True),
         ("NOC", "12:34:56:10:b9:0e", "camera.front", True),
+        ("NDB", "12:34:56:10:f1:66", "camera.netatmo_doorbell", None),
     ],
 )
 async def test_camera_availability_lifecycle(
@@ -1631,11 +1632,13 @@ async def test_camera_availability_lifecycle(
             is expected_motion_detection
         )
 
+        netatmo_data = config_entry.runtime_data
+
+        # Simulate API failure to test entity availability state change
         mock_auth.return_value.async_post_api_request.side_effect = pyatmo.ApiError(
             "API failure"
         )
 
-        netatmo_data = config_entry.runtime_data
         netatmo_data.last_update_success = False
 
         # Mark all publishers failed, we need 3 times
@@ -1653,3 +1656,28 @@ async def test_camera_availability_lifecycle(
                 await hass.async_block_till_done()
 
         assert hass.states.get(camera_entity).state == "unavailable"
+
+        # Simulate API recovery to test entity availability state change
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        netatmo_data.last_update_success = True
+
+        # Mark all publishers ok, we need 3 times
+        for _ in range(3):
+            for publisher in netatmo_data.publisher.values():
+                publisher.last_update_success = True
+                netatmo_data.async_force_update(publisher.name)
+                await hass.async_block_till_done()
+
+        await advance_time(hass, freezer, **POLLING_INTERVAL)
+
+        for _ in range(3):
+            for publisher in netatmo_data.publisher.values():
+                await netatmo_data.async_fetch_data(publisher.name)
+                await hass.async_block_till_done()
+
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+        assert (
+            hass.states.get(camera_entity).attributes.get("motion_detection")
+            is expected_motion_detection
+        )
