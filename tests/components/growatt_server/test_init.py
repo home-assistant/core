@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import json
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import growattServer
@@ -310,6 +311,40 @@ async def test_classic_api_setup(
     )
     assert device_entry is not None
     assert device_entry == snapshot
+
+
+@pytest.mark.parametrize("device_type", ["sph", "min"])
+async def test_classic_api_skips_v1_only_device_types(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    device_type: str,
+) -> None:
+    """Test Classic API skips device types only the V1 API can fetch data for."""
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"},
+        {"deviceSn": "V1ONLY123", "deviceType": device_type},
+    ]
+
+    await setup_integration(hass, mock_config_entry_classic)
+
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+    assert "V1ONLY123" not in mock_config_entry_classic.runtime_data.devices
+
+    # The periodic device scan must not add the device either
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "V1ONLY123" not in mock_config_entry_classic.runtime_data.devices
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "V1ONLY123"), mock_config_entry_classic.entry_id
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(

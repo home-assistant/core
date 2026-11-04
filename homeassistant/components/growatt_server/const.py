@@ -55,8 +55,8 @@ BATT_MODE_LOAD_FIRST = 0
 BATT_MODE_BATTERY_FIRST = 1
 BATT_MODE_GRID_FIRST = 2
 
-# Supported device types for coordinator creation
-SUPPORTED_DEVICE_TYPES = ["inverter", "tlx", "storage", "mix", "min", "sph"]
+# Classic API device types the coordinator can fetch data for
+CLASSIC_DEVICE_TYPES = ["inverter", "tlx", "storage", "mix"]
 
 # Maps V1 API device type integers to coordinator device-type strings
 V1_DEVICE_TYPES: dict[int, str] = {5: "sph", 7: "min"}

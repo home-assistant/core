@@ -24,7 +24,7 @@ Error handling pattern for reauth:
 - All other errors → ConfigEntryError (setup) or UpdateFailed (coordinator)
 """
 
-from collections.abc import Mapping
+from collections.abc import Container, Mapping
 import datetime as dt
 from json import JSONDecodeError
 import logging
@@ -48,6 +48,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
+    CLASSIC_DEVICE_TYPES,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
@@ -57,7 +58,6 @@ from .const import (
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
-    SUPPORTED_DEVICE_TYPES,
     V1_DEVICE_TYPES,
 )
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
@@ -330,6 +330,7 @@ async def async_setup_entry(
     # Determine API version and get devices
     # Note: auth_type field is guaranteed to exist after migration
     api: growattServer.GrowattApi
+    supported_device_types: Container[str]
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]
@@ -338,8 +339,10 @@ async def async_setup_entry(
         devices, plant_id = await hass.async_add_executor_job(
             get_device_list_v1, api, config
         )
+        supported_device_types = V1_DEVICE_TYPES.values()
     elif config.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
         # Classic API (username/password with login)
+        supported_device_types = CLASSIC_DEVICE_TYPES
         username = config[CONF_USERNAME]
         password = config[CONF_PASSWORD]
 
@@ -384,7 +387,7 @@ async def async_setup_entry(
             hass, config_entry, device["deviceSn"], device["deviceType"], plant_id
         )
         for device in devices
-        if device["deviceType"] in SUPPORTED_DEVICE_TYPES
+        if device["deviceType"] in supported_device_types
     }
 
     # Perform the first refresh for the total coordinator
@@ -459,7 +462,7 @@ async def async_setup_entry(
             device_type = device["deviceType"]
             if device_sn in runtime_data.devices:
                 continue
-            if device_type not in SUPPORTED_DEVICE_TYPES:
+            if device_type not in supported_device_types:
                 _LOGGER.debug(
                     "New device %s with type %s is not supported, skipping",
                     device_sn,
