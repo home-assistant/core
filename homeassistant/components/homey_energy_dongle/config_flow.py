@@ -22,6 +22,7 @@ import probatio
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
+    SOURCE_ZEROCONF,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -89,6 +90,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered: dict[str, str | int] | None = None
     _telegram: str | None = None
     _detected_version: str | None = None
+    _meter_identified = False
 
     async def _async_read_telegram(self, data: Mapping[str, Any]) -> str | None:
         """Store one raw telegram. Return an error key on failure."""
@@ -138,14 +140,16 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             None,
         )
-        await self.async_set_unique_id(
-            None if identifier is None else str(identifier.value)
-        )
+        self._meter_identified = identifier is not None
+        if identifier is not None:
+            await self.async_set_unique_id(str(identifier.value))
+        elif self.source != SOURCE_ZEROCONF:
+            await self.async_set_unique_id(None)
         if self.source == SOURCE_RECONFIGURE:
             self._abort_if_unique_id_mismatch()
-        elif self.unique_id:
+        elif identifier is not None:
             self._abort_if_unique_id_configured(updates=dict(data))
-        if not self.unique_id:
+        if identifier is None:
             self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
         return None
 
@@ -160,10 +164,14 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             self._detected_version = None
         return None
 
-    def _async_create_entry(self, title: str, version: str) -> ConfigFlowResult:
+    async def _async_create_entry(self, title: str, version: str) -> ConfigFlowResult:
         """Create the entry from the discovered address and meter profile."""
         if TYPE_CHECKING:
             assert self._discovered is not None
+        if not self._meter_identified:
+            # The dongle-based discovery ID only makes the discovery ignorable;
+            # entries of meters without an identifier are matched on host.
+            await self.async_set_unique_id(None)
         return self.async_create_entry(
             title=title,
             data={**self._discovered, CONF_DSMR_VERSION: version},
@@ -183,7 +191,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             }
             if (error := await self._async_probe(self._discovered)) is None:
                 if self._detected_version is not None:
-                    return self._async_create_entry(
+                    return await self._async_create_entry(
                         "Homey Energy Dongle", self._detected_version
                     )
                 return await self.async_step_dsmr_version()
@@ -208,7 +216,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             version = user_input[CONF_DSMR_VERSION]
             if (error := await self._async_identify(self._discovered, version)) is None:
-                return self._async_create_entry("Homey Energy Dongle", version)
+                return await self._async_create_entry("Homey Energy Dongle", version)
             errors["base"] = error
 
         return self.async_show_form(
@@ -251,7 +259,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._detected_version is None:
             return await self.async_step_dsmr_version()
         if not onboarding.async_is_onboarded(self.hass):
-            return self._async_create_entry(name, self._detected_version)
+            return await self._async_create_entry(name, self._detected_version)
         return await self.async_step_zeroconf_confirm()
 
     @override
@@ -274,7 +282,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         name = self.context["title_placeholders"]["name"]
         if user_input is not None:
-            return self._async_create_entry(name, self._detected_version)
+            return await self._async_create_entry(name, self._detected_version)
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
@@ -296,7 +304,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             if (error := await self._async_probe(self._discovered)) is not None:
                 errors["base"] = error
             elif self._detected_version is not None:
-                return self._async_create_entry(name, self._detected_version)
+                return await self._async_create_entry(name, self._detected_version)
             else:
                 return await self.async_step_dsmr_version()
 

@@ -459,6 +459,30 @@ async def test_zeroconf_during_user_flow(
     assert result["step_id"] == "zeroconf_meter"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_without_equipment_identifier(
+    hass: HomeAssistant, telegrams: TelegramQueue, telegram_data: str
+) -> None:
+    """Test a discovered meter without identifier stays ignorable.
+
+    The entry itself has no unique ID, like a manually added one.
+    """
+    telegrams.put_nowait(_without_equipment_id(telegram_data))
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY
+    )
+    assert result["step_id"] == "zeroconf_confirm"
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    assert flow["context"]["unique_id"] == "dongle_37e4"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
+
+
 async def test_zeroconf_ignore_unreadable_dongle(
     hass: HomeAssistant, telegrams: TelegramQueue
 ) -> None:
