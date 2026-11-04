@@ -1,5 +1,6 @@
 """Config flow for the Lutron GRAFIK Eye integration."""
 
+import logging
 from typing import Any, override
 
 from grafikeye import GrafikEyeController
@@ -14,6 +15,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from .const import DEFAULT_PORT, DOMAIN
+
+LOGGER = logging.getLogger(__name__)
 
 
 class GrafikEyeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -51,6 +54,11 @@ class GrafikEyeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "connection_in_use"
             except GrafikEyeConnectionError:
                 errors["base"] = "cannot_connect"
+            except Exception:
+                LOGGER.exception(
+                    "Unexpected exception connecting to GRAFIK Eye Ethernet interface"
+                )
+                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title=f"GRAFIK Eye ({user_input[CONF_HOST]})",
@@ -63,8 +71,16 @@ class GrafikEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_HOST): str,
-                    probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    probatio.Required(
+                        CONF_HOST,
+                        default=user_input.get(CONF_HOST, "") if user_input else "",
+                    ): str,
+                    probatio.Required(
+                        CONF_PORT,
+                        default=user_input.get(CONF_PORT, DEFAULT_PORT)
+                        if user_input
+                        else DEFAULT_PORT,
+                    ): int,
                     probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),

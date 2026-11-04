@@ -18,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 USER_INPUT = {
     CONF_HOST: "192.168.1.100",
-    CONF_PORT: 23,
+    CONF_PORT: 2323,
     CONF_PASSWORD: "some_password",
 }
 
@@ -86,6 +86,10 @@ async def test_user_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+    assert result["data_schema"]({CONF_PASSWORD: "test"}) == {
+        **USER_INPUT,
+        CONF_PASSWORD: "test",
+    }
     mock_controller.return_value.disconnect.assert_awaited_once()
 
     # Retry after the connection error has been resolved.
@@ -129,7 +133,7 @@ async def test_user_different_port(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    user_input = {**USER_INPUT, CONF_PORT: 2323}
+    user_input = {**USER_INPUT, CONF_PORT: 10000}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
     )
