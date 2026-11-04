@@ -25,7 +25,12 @@ import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import assist_pipeline, assist_satellite, conversation
-from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
+from homeassistant.components.assist_pipeline import (
+    AudioSettings,
+    PipelineEvent,
+    PipelineEventType,
+    VadSensitivity,
+)
 from homeassistant.components.assist_pipeline.pipeline import KEY_ASSIST_PIPELINE  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
@@ -1108,6 +1113,47 @@ async def test_tts_partial_format_from_media_player(
 
         # Should be ANNOUNCEMENT format from media player
         assert kwargs.get("tts_audio_output") == tts_audio_output
+
+
+async def test_pipeline_audio_settings(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test audio settings from the device are passed to the pipeline."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+    ) as mock_pipeline_from_audio_stream:
+        await satellite.handle_pipeline_start(
+            conversation_id="",
+            flags=0,
+            audio_settings=VoiceAssistantAudioSettings(
+                noise_suppression_level=3, auto_gain=20, volume_multiplier=2.0
+            ),
+            wake_word_phrase=None,
+        )
+        await hass.async_block_till_done()
+
+    mock_pipeline_from_audio_stream.assert_called_once()
+    assert mock_pipeline_from_audio_stream.call_args.kwargs[
+        "audio_settings"
+    ] == AudioSettings(
+        noise_suppression_level=3,
+        auto_gain_dbfs=20,
+        volume_multiplier=2.0,
+        silence_seconds=VadSensitivity.to_seconds(VadSensitivity.DEFAULT),
+    )
 
 
 async def test_announce_message(

@@ -385,7 +385,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             # self.host is set by async_step_user and async_step_pick_device
             assert self.host is not None
-        placeholders: dict[str, str] = {CONF_HOST: self.host}
+        placeholders: dict[str, str] = {"host": self.host}
 
         if user_input:
             username = user_input[CONF_USERNAME]
