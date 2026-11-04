@@ -16,6 +16,11 @@ CONF_UID: Final = "uid"
 # asking without a bound hands back the charger's entire history.
 SESSION_HISTORY_WINDOW: Final = timedelta(days=7)
 
+# What the charger's own web interface allows for the two custom solar
+# power settings. Negative is power going out to the grid.
+SOLAR_CUSTOM_POWER_MINIMUM: Final = -100000
+SOLAR_CUSTOM_POWER_MAXIMUM: Final = 100000
+
 # The stream only makes the poll quicker, so there is no hurry, and no
 # point hammering a charger that is switched off.
 EVENT_STREAM_RETRY_MINIMUM: Final = timedelta(seconds=5)

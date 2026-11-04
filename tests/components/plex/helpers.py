@@ -4,12 +4,11 @@ from datetime import timedelta
 from typing import Any
 
 from plexwebsocket import SIGNAL_CONNECTION_STATE, STATE_CONNECTED
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 UPDATE_PAYLOAD = {
     "PlaySessionStateNotification": [

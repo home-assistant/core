@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "heating": {
+        "default": "mdi:radiator-off",
+        "state": {
+          "on": "mdi:radiator"
+        }
+      }
+    },
     "sensor": {
       "tilt_state": {
         "state": {
@@ -28,6 +36,9 @@
     },
     "dump_hap_config": {
       "service": "mdi:database-export"
+    },
+    "pull_latch": {
+      "service": "mdi:door-open"
     },
     "reset_energy_counter": {
       "service": "mdi:reload"

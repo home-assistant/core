@@ -16,6 +16,7 @@ from .const import DOMAIN
 from .error import UnknownMediaSource, Unresolvable
 from .models import (
     BrowseMediaSource,
+    MediaImage,
     MediaSourceItem,
     PlayMedia,
     RootBrowseMediaSource,
@@ -141,3 +142,22 @@ async def async_resolve_media(
         ) from err
 
     return await item.async_resolve()
+
+
+async def async_get_media_image(
+    hass: HomeAssistant, media_content_id: str
+) -> MediaImage | None:
+    """Return a single image of a media item if its source supports it.
+
+    Returns None if no image can be provided, in which case the media should
+    be resolved with async_resolve_media.
+    """
+    if DOMAIN not in hass.config.top_level_components:
+        return None
+
+    try:
+        item = await _get_media_item(hass, media_content_id, None)
+    except ValueError:
+        return None
+
+    return await item.async_get_image()

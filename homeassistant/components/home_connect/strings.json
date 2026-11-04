@@ -1580,6 +1580,9 @@
     "execute_command": {
       "message": "Error executing command {command}: {error}"
     },
+    "favorite_program_missing_base_program": {
+      "message": "The API cannot start a favorite program and the base program is missing for the selected favorite program"
+    },
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
     },

@@ -15,8 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AutomowerConfigEntry
-from .coordinator import AutomowerDataUpdateCoordinator
+from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)

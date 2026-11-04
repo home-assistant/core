@@ -1,4 +1,4 @@
-"""Support for Roborock image."""
+"""Define Roborock image entities."""
 
 from datetime import datetime
 import logging
@@ -17,6 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockB01Q10UpdateCoordinator,
@@ -171,7 +172,10 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     async def async_image(self) -> bytes | None:
         """Get the cached image."""
         if (map_content := self._map_content) is None:
-            raise HomeAssistantError("Map flag not found in coordinator maps")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_not_found",
+            )
         return map_content.image_content
 
 
@@ -223,42 +227,47 @@ class RoborockMapQ10(RoborockCoordinatedEntityB01Q10, ImageEntity):
 
 
 class RoborockMapQ7(RoborockCoordinatedEntityB01Q7, ImageEntity):
-    """A class to let you visualize the current map of a Q7 device."""
+    """A class to visualize the current map of a Q7 device."""
 
     _attr_content_type = "image/png"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "map"
 
     def __init__(self, coordinator: RoborockB01Q7UpdateCoordinator) -> None:
-        """Initialize the Roborock Q7 map."""
+        """Initialize a Roborock Q7 map image entity."""
         RoborockCoordinatedEntityB01Q7.__init__(
             self, f"map_{coordinator.duid_slug}", coordinator
         )
         ImageEntity.__init__(self, coordinator.hass)
         self._map_content_trait = coordinator.api.map_content
         self._cached_map: bytes | None = None
-        self._attr_image_last_updated = None
 
     @override
     async def async_added_to_hass(self) -> None:
-        """When entity is added to hass, fetch and cache the current map image."""
+        """Fetch the initial map and register for map updates."""
         await super().async_added_to_hass()
         await self.coordinator.async_refresh_q7_map()
-        image_content = self._map_content_trait.image_content
-        if image_content is not None:
-            self._cached_map = image_content
-            self._attr_image_last_updated = dt_util.utcnow()
-            self.async_write_ha_state()
+        self.async_on_remove(
+            self._map_content_trait.add_update_listener(self._handle_map_update)
+        )
+        self._handle_map_update()
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        image_content = self._map_content_trait.image_content
-        if image_content is not None and image_content != self._cached_map:
-            self._cached_map = image_content
-            self._attr_image_last_updated = dt_util.utcnow()
+        """Handle a coordinator update."""
+        self._handle_map_update()
         super()._handle_coordinator_update()
+
+    @callback
+    def _handle_map_update(self) -> None:
+        """Cache the newly fetched/pushed map if its content changed."""
+        image_content = self._map_content_trait.image_content
+        if image_content is None or image_content == self._cached_map:
+            return
+        self._cached_map = image_content
+        self._attr_image_last_updated = dt_util.utcnow()
+        self.async_write_ha_state()
 
     @override
     async def async_image(self) -> bytes | None:

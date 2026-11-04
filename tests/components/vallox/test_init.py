@@ -1,6 +1,7 @@
 """Tests for Vallox services."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from vallox_websocket_api import Profile, ValloxApiException
 
 from homeassistant.components.vallox.const import (
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import patch_set_fan_speed, patch_set_profile
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

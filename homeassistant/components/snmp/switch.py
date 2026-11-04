@@ -115,11 +115,11 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
             SNMP_VERSIONS
         ),
         probatio.Optional(CONF_USERNAME): cv.string,
-        probatio.Optional(CONF_AUTH_KEY): cv.string,
+        probatio.Optional(probatio.Secret(CONF_AUTH_KEY)): cv.string,
         probatio.Optional(
             CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL
         ): probatio.In(MAP_AUTH_PROTOCOLS),
-        probatio.Optional(CONF_PRIV_KEY): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PRIV_KEY)): cv.string,
         probatio.Optional(
             CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL
         ): probatio.In(MAP_PRIV_PROTOCOLS),

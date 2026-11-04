@@ -7,6 +7,7 @@ import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -469,9 +470,9 @@ async def async_attach_trigger(
         hass,
         event_trigger.TRIGGER_SCHEMA(
             {
-                event_trigger.CONF_PLATFORM: CONF_EVENT,
-                event_trigger.CONF_EVENT_TYPE: LUTRON_CASETA_BUTTON_EVENT,
-                event_trigger.CONF_EVENT_DATA: {
+                EventTriggerArgument.PLATFORM: CONF_EVENT,
+                EventTriggerArgument.EVENT_TYPE: LUTRON_CASETA_BUTTON_EVENT,
+                EventTriggerArgument.EVENT_DATA: {
                     CONF_DEVICE_ID: config[CONF_DEVICE_ID],
                     ATTR_ACTION: config[CONF_TYPE],
                     ATTR_BUTTON_TYPE: config[CONF_SUBTYPE],

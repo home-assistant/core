@@ -14,6 +14,8 @@
   "ap": [],
   "esp": [
     { "name": "esp_id", "value": "ABC123", "unit": "" },
+    { "name": "product_name", "value": "WattWächter Plus", "unit": "" },
+    { "name": "model_id", "value": "ww_plus", "unit": "" },
     { "name": "os_version", "value": "1.2.3", "unit": "" }
   ],
   "heap": [{ "name": "free_heap", "value": "120000", "unit": "bytes" }]

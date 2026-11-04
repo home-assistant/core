@@ -729,8 +729,7 @@ class HomeConnectProgramSensor(HomeConnectSensor):
     def update_native_value(self) -> None:
         """Update the program sensor's status."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
-        if event:
-            self._update_native_value(event.value)
+        self._update_native_value(event.value if event else None)
 
 
 class HomeConnectEventSensor(HomeConnectSensor):

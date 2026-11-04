@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
 from homeassistant.const import EntityStateAttribute
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, verify_event_loop_thread
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
@@ -273,6 +273,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         return self.areas.generate_id_from_name(name)
 
     @callback
+    @verify_event_loop_thread("area_registry.async_create")
     def async_create(
         self,
         name: str,
@@ -286,8 +287,6 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         temperature_entity_id: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
-
-        self.hass.verify_event_loop_thread("area_registry.async_create")
 
         if area := self.async_get_area_by_name(name):
             raise ValueError(
@@ -322,11 +321,11 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         return area
 
     @callback
+    @verify_event_loop_thread("area_registry.async_delete")
     def async_delete(self, area_id: str) -> None:
         """Delete area."""
         from . import entity_registry as er  # noqa: PLC0415  # Circular dependency
 
-        self.hass.verify_event_loop_thread("area_registry.async_delete")
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
         device_registry.async_clear_area_id(area_id)
@@ -378,6 +377,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         return updated
 
     @callback
+    @verify_event_loop_thread("area_registry.async_update")
     def _async_update(
         self,
         area_id: str,
@@ -390,6 +390,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         name: str | UndefinedType = UNDEFINED,
         picture: str | UndefinedType | None = UNDEFINED,
         temperature_entity_id: str | UndefinedType | None = UNDEFINED,
+        validate: bool = True,
     ) -> AreaEntry:
         """Update name of area."""
         old = self.areas[area_id]
@@ -408,10 +409,18 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             if value is not UNDEFINED and value != getattr(old, attr_name)
         }
 
-        if "humidity_entity_id" in new_values and humidity_entity_id is not None:
+        if (
+            validate
+            and "humidity_entity_id" in new_values
+            and humidity_entity_id is not None
+        ):
             _validate_humidity_entity(self.hass, new_values["humidity_entity_id"])
 
-        if "temperature_entity_id" in new_values and temperature_entity_id is not None:
+        if (
+            validate
+            and "temperature_entity_id" in new_values
+            and temperature_entity_id is not None
+        ):
             _validate_temperature_entity(self.hass, new_values["temperature_entity_id"])
 
         if name is not UNDEFINED and name != old.name:
@@ -422,17 +431,15 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
 
         new_values["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("area_registry.async_update")
         new = self.areas[area_id] = dataclasses.replace(old, **new_values)
 
         self.async_schedule_save()
         return new
 
     @callback
+    @verify_event_loop_thread("area_registry.async_reorder")
     def async_reorder(self, area_ids: list[str]) -> None:
         """Reorder areas."""
-        self.hass.verify_event_loop_thread("area_registry.async_reorder")
-
         if set(area_ids) != set(self.areas.data.keys()):
             raise ValueError(
                 "The area_ids list must contain all existing area IDs exactly once"
@@ -504,6 +511,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
     def _async_setup_cleanup(self) -> None:
         """Set up the area registry cleanup."""
         from . import (  # Circular dependencies  # noqa: PLC0415
+            entity_registry as er,
             floor_registry as fr,
             label_registry as lr,
         )
@@ -542,6 +550,48 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
             event_filter=_removed_from_registry_filter,
             listener=_handle_label_registry_update,
+        )
+
+        @callback
+        def _entity_renamed_filter(
+            event_data: er.EventEntityRegistryUpdatedData,
+        ) -> bool:
+            """Filter entity registry events for renamed entities."""
+            return event_data["action"] == "update" and "old_entity_id" in event_data
+
+        @callback
+        def _handle_entity_registry_update(
+            event: Event[er.EventEntityRegistryUpdatedData],
+        ) -> None:
+            """Update areas referencing an entity that was renamed."""
+            if TYPE_CHECKING:
+                assert event.data["action"] == "update"
+            old_entity_id = event.data["old_entity_id"]
+            new_entity_id = event.data["entity_id"]
+
+            for area in list(self.areas.values()):
+                humidity_match = area.humidity_entity_id == old_entity_id
+                temperature_match = area.temperature_entity_id == old_entity_id
+                if not humidity_match and not temperature_match:
+                    continue
+                # The renamed entity's state may not exist yet under its new id
+                self._async_update(
+                    area.id,
+                    humidity_entity_id=new_entity_id if humidity_match else UNDEFINED,
+                    temperature_entity_id=(
+                        new_entity_id if temperature_match else UNDEFINED
+                    ),
+                    validate=False,
+                )
+                self.hass.bus.async_fire_internal(
+                    EVENT_AREA_REGISTRY_UPDATED,
+                    EventAreaRegistryUpdatedData(action="update", area_id=area.id),
+                )
+
+        self.hass.bus.async_listen(
+            event_type=er.EVENT_ENTITY_REGISTRY_UPDATED,
+            event_filter=_entity_renamed_filter,
+            listener=_handle_entity_registry_update,
         )
 
 

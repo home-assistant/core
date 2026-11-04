@@ -11,7 +11,6 @@ import logging
 import operator
 import os
 from pathlib import Path
-import shutil
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, overload
 
@@ -31,7 +30,7 @@ from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.async_ import create_eager_task
-from .util.package import is_docker_env
+from .util.hass_dict import HassKey
 from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
 from .util.yaml.objects import NodeStrClass
 
@@ -39,6 +38,8 @@ _LOGGER = logging.getLogger(__name__)
 
 YAML_CONFIG_FILE = "configuration.yaml"
 VERSION_FILE = ".HA_VERSION"
+# The version that ran before this start, set only when it differs
+DATA_PREVIOUS_VERSION: HassKey[str] = HassKey("previous_version")
 CONFIG_DIR_NAME = ".homeassistant"
 
 AUTOMATION_CONFIG_PATH = "automations.yaml"
@@ -284,34 +285,30 @@ def load_yaml_config_file(
     return conf_dict
 
 
-def process_ha_config_upgrade(hass: HomeAssistant) -> None:
+def process_ha_config_upgrade(hass: HomeAssistant) -> str | None:
     """Upgrade configuration if necessary.
 
+    Returns the version that ran before, if it differs from the running one.
     This method needs to run in an executor.
     """
     version_path = hass.config.path(VERSION_FILE)
+    previous_version: str | None = None
 
     try:
         with open(version_path, encoding="utf8") as inp:
-            conf_version = inp.readline().strip()
+            conf_version = previous_version = inp.readline().strip()
     except FileNotFoundError:
         # Last version to not have this file
         conf_version = "0.7.7"
 
     if conf_version == __version__:
-        return
+        return None
 
     _LOGGER.info(
         "Upgrading configuration directory from %s to %s", conf_version, __version__
     )
 
     version_obj = AwesomeVersion(conf_version)
-
-    if version_obj < AwesomeVersion("0.50"):
-        # 0.50 introduced persistent deps dir.
-        lib_path = hass.config.path("deps")
-        if os.path.isdir(lib_path):
-            shutil.rmtree(lib_path)
 
     if version_obj < AwesomeVersion("0.92"):
         # 0.92 moved google/tts.py to google_translate/tts.py
@@ -329,15 +326,10 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
             except OSError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
 
-    if version_obj < AwesomeVersion("0.94") and is_docker_env():
-        # In 0.94 we no longer install packages inside the deps folder when
-        # running inside a Docker container.
-        lib_path = hass.config.path("deps")
-        if os.path.isdir(lib_path):
-            shutil.rmtree(lib_path)
-
     with open(version_path, "w", encoding="utf8") as outp:
         outp.write(__version__)
+
+    return previous_version
 
 
 @callback

@@ -4,6 +4,7 @@ from functools import partial
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -23,8 +24,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockMusicServiceItem, SoCoMockFactory
-
-from tests.typing import WebSocketGenerator
 
 
 def mock_browse_by_idstring(

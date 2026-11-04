@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from opensensemap_api.exceptions import OpenSenseMapError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opensensemap.const import CONF_STATION_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_STATION_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -139,6 +138,7 @@ async def test_import_flow_with_yaml_name(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My Station"
     assert result["data"] == {CONF_STATION_ID: TEST_STATION_ID}
+    assert result["result"].unique_id == TEST_STATION_ID
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

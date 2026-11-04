@@ -94,6 +94,7 @@ class ZoneEntity(AlarmControlPanelEntity, BaseCoordinatorEntity):
         self._zone = nasweb_zone
         self._attr_name = nasweb_zone.name
         self._attr_translation_placeholders = {"index": f"{nasweb_zone.index:2d}"}
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = (
             f"{DOMAIN}.{self._zone.webio_serial}.zone.{self._zone.index}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )

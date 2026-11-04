@@ -3,13 +3,12 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.ibeacon.const import CONF_ALLOW_NAMELESS_UUIDS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_bluetooth_adapters")
@@ -32,7 +31,7 @@ async def test_setup_user(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    with patch("homeassistant.components.ibeacon.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.ibeacon.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )

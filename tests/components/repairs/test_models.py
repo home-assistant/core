@@ -4,6 +4,16 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    Mock,
+    MockConfigEntry,
+    MockModule,
+    async_setup_component,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components.repairs import (
     DOMAIN,
@@ -23,17 +33,6 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.issue_registry as ir
 
 from .test_issue_handler import MockFixFlowContext
-
-from tests.common import (
-    AsyncMock,
-    Mock,
-    MockConfigEntry,
-    MockModule,
-    async_setup_component,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 
 @pytest.fixture(autouse=True)

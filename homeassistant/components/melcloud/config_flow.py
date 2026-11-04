@@ -25,7 +25,7 @@ USER_SCHEMA = probatio.Schema(
         probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="username")
         ),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -195,7 +195,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",

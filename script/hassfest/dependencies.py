@@ -5,10 +5,10 @@ from collections import deque
 import multiprocessing
 from pathlib import Path
 
+from hassfest.model import Config, Integration
+
 from homeassistant.const import Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
-
-from .model import Config, Integration
 
 # Duplicated from homeassistant.bootstrap to avoid importing bootstrap (and its
 # eager component pre-imports) into hassfest. Kept in sync via test_dependencies.

@@ -1,9 +1,9 @@
 """Init the tedee component."""
 
 from collections.abc import Awaitable, Callable
+from functools import partial
 from http import HTTPStatus
 import logging
-from typing import Any
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
@@ -33,7 +33,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> None:
     """Integration setup."""
 
     coordinator = TedeeApiCoordinator(hass, entry)
@@ -52,9 +52,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> boo
 
     entry.runtime_data = coordinator
 
-    async def unregister_webhook(_: Any) -> None:
-        await coordinator.async_unregister_webhook()
-        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+    webhook_name = "Tedee"
+    if entry.title != NAME:
+        webhook_name = f"{NAME} {entry.title}"
+
+    webhook_register(
+        hass,
+        DOMAIN,
+        webhook_name,
+        webhook_id,
+        get_webhook_handler(coordinator),
+        allowed_methods=[METH_POST],
+    )
+    entry.async_on_unload(partial(webhook_unregister, hass, webhook_id))
 
     async def register_webhook() -> None:
         instance_url = get_url(hass, allow_ip=True, allow_external=False)
@@ -65,29 +76,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> boo
             _LOGGER.warning("Failed to cleanup Tedee webhooks by host: %s", ex)
 
         webhook_url = webhook_generate_url(
-            hass, entry.data[CONF_WEBHOOK_ID], allow_external=False, allow_ip=True
+            hass, webhook_id, allow_external=False, allow_ip=True
         )
-        webhook_name = "Tedee"
-        if entry.title != NAME:
-            webhook_name = f"{NAME} {entry.title}"
-
-        webhook_register(
-            hass,
-            DOMAIN,
-            webhook_name,
-            entry.data[CONF_WEBHOOK_ID],
-            get_webhook_handler(coordinator),
-            allowed_methods=[METH_POST],
-        )
-        _LOGGER.debug("Registered Tedee webhook at hass: %s", webhook_url)
 
         try:
             await coordinator.async_register_webhook(webhook_url)
         except TedeeWebhookException:
             _LOGGER.exception("Failed to register Tedee webhook from bridge")
         else:
+            _LOGGER.debug("Registered Tedee webhook at bridge: %s", webhook_url)
+            entry.async_on_unload(coordinator.async_unregister_webhook)
             entry.async_on_unload(
-                hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+                hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STOP, coordinator.async_unregister_webhook
+                )
             )
 
     entry.async_create_background_task(
@@ -95,12 +97,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> boo
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def get_webhook_handler(
@@ -132,7 +132,7 @@ def get_webhook_handler(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TedeeConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     version = config_entry.version
@@ -145,4 +145,3 @@ async def async_migrate_entry(
         data = {**config_entry.data, CONF_WEBHOOK_ID: webhook_generate_id()}
         hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
         _LOGGER.debug("Migration to version 1.2 successful")
-    return True

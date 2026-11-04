@@ -1,7 +1,7 @@
 """Tests for rainbird calendar platform."""
 
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from typing import Any
 import urllib
@@ -9,6 +9,9 @@ from zoneinfo import ZoneInfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -17,12 +20,12 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import CONFIG_ENTRY_DATA_OLD_FORMAT, mock_response, mock_response_error
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMockResponse
-from tests.typing import ClientSessionGenerator
-
 TEST_ENTITY = "calendar.rain_bird_controller"
 type GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
+
+PGM_A_DESCRIPTION = (
+    "Zone 1: 25 min\nZone 2: 20 min\nZone 3: 7 min\nZone 4: 20 min\nZone 5: 10 min"
+)
 
 SCHEDULE_RESPONSES = [
     # Current controller status
@@ -125,7 +128,10 @@ def get_events_fixture(
         )
         assert response.status == HTTPStatus.OK
         results = await response.json()
-        return [{k: event[k] for k in ("summary", "start", "end")} for event in results]
+        return [
+            {k: event[k] for k in ("summary", "start", "end", "description")}
+            for event in results
+        ]
 
     return _fetch
 
@@ -141,24 +147,28 @@ async def test_get_events(hass: HomeAssistant, get_events: GetEventsFn) -> None:
             "summary": "PGM A",
             "start": {"dateTime": "2023-01-23T04:00:00-06:00"},
             "end": {"dateTime": "2023-01-23T05:22:00-06:00"},
+            "description": PGM_A_DESCRIPTION,
         },
         # Tuesday
         {
             "summary": "PGM A",
             "start": {"dateTime": "2023-01-24T04:00:00-06:00"},
             "end": {"dateTime": "2023-01-24T05:22:00-06:00"},
+            "description": PGM_A_DESCRIPTION,
         },
         # Monday
         {
             "summary": "PGM A",
             "start": {"dateTime": "2023-01-30T04:00:00-06:00"},
             "end": {"dateTime": "2023-01-30T05:22:00-06:00"},
+            "description": PGM_A_DESCRIPTION,
         },
         # Tuesday
         {
             "summary": "PGM A",
             "start": {"dateTime": "2023-01-31T04:00:00-06:00"},
             "end": {"dateTime": "2023-01-31T05:22:00-06:00"},
+            "description": PGM_A_DESCRIPTION,
         },
     ]
 
@@ -167,12 +177,12 @@ async def test_get_events(hass: HomeAssistant, get_events: GetEventsFn) -> None:
     ("freeze_time", "expected_state", "setup_config_entry"),
     [
         (
-            datetime.datetime(2023, 1, 23, 3, 50, tzinfo=ZoneInfo("America/Regina")),
+            dt.datetime(2023, 1, 23, 3, 50, tzinfo=ZoneInfo("America/Regina")),
             "off",
             None,
         ),
         (
-            datetime.datetime(2023, 1, 23, 4, 30, tzinfo=ZoneInfo("America/Regina")),
+            dt.datetime(2023, 1, 23, 4, 30, tzinfo=ZoneInfo("America/Regina")),
             "on",
             None,
         ),
@@ -182,7 +192,7 @@ async def test_event_state(
     hass: HomeAssistant,
     get_events: GetEventsFn,
     freezer: FrozenDateTimeFactory,
-    freeze_time: datetime.datetime,
+    freeze_time: dt.datetime,
     expected_state: str,
     entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
@@ -200,7 +210,7 @@ async def test_event_state(
         "start_time": "2023-01-23 04:00:00",
         "end_time": "2023-01-23 05:22:00",
         "all_day": False,
-        "description": "",
+        "description": PGM_A_DESCRIPTION,
         "location": "",
         "friendly_name": "Rain Bird Controller",
     }

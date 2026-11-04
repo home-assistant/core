@@ -105,6 +105,7 @@ def async_subscribe_receiver(
     return entity.async_subscribe_received_signal(signal_callback)
 
 
+# pylint: disable-next=home-assistant-enforce-class-module
 class InfraredConsumerEntity(Entity):
     """Base class for entities that track the availability of infrared entities.
 
@@ -155,7 +156,9 @@ class InfraredConsumerEntity(Entity):
         self._infrared_availability[infrared_entity_id] = (
             ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
-        self._attr_available = all(self._infrared_availability.values())
+        available = all(self._infrared_availability.values())
+        if available != self.available:
+            self._async_infrared_availability_changed(available)
 
         remove_listener = async_track_state_change_event(
             self.hass, [infrared_entity_id], state_changed

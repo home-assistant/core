@@ -18,6 +18,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     CONF_DEVICE_DETAILS,
@@ -37,14 +42,28 @@ def user_form_schema(user_input: dict[str, Any] | None) -> probatio.Schema:
     user_input = user_input or {}
     return probatio.Schema(
         {
-            probatio.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-            probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Optional(CONF_HOST, default=DEFAULT_HOST): TextSelector(),
+            probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): TextSelector(
+                TextSelectorConfig(autocomplete="username")
+            ),
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                TextSelectorConfig(
+                    type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                )
+            ),
         }
     )
 
 
-STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        )
+    }
+)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:

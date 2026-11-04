@@ -5,6 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client import OmadaControllerStatus, OmadaControllerUpdateInfo
 from tplink_omada_client.devices import OmadaListDevice
@@ -35,14 +42,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_array_fixture,
-    snapshot_platform,
-)
-from tests.typing import WebSocketGenerator
 
 POLL_INTERVAL = timedelta(seconds=POLL_DEVICES)
 CONTROLLER_POLL_INTERVAL = timedelta(seconds=POLL_CONTROLLER)

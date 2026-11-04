@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.eheimdigital.const import DOMAIN
 from homeassistant.config_entries import (
@@ -18,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import init_integration
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("192.0.2.1"),

@@ -2,13 +2,13 @@
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import dataclasses
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import override
+from typing import Any, override
 
 from pyportainer import (
     DockerContainerState,
@@ -32,7 +32,7 @@ from pyportainer.models.docker import (
     PortainerImageUpdateStatus,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
-from pyportainer.models.portainer import Endpoint
+from pyportainer.models.portainer import Endpoint, PortainerSystemVersion
 from pyportainer.models.stacks import Stack
 from pyportainer.watcher import PortainerImageWatcher
 from yarl import URL
@@ -40,7 +40,7 @@ from yarl import URL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -55,6 +55,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_DF_SCAN_INTERVAL = timedelta(minutes=30)
+# Portainer checks GitHub for the latest release on every version request
+DEFAULT_VERSION_SCAN_INTERVAL = timedelta(hours=6)
 
 
 @dataclass
@@ -171,6 +173,17 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 translation_key="timeout_connect",
             ) from err
 
+    def subentry_id_for_endpoint(self, endpoint_id: int) -> str | None:
+        """Return the subentry ID an endpoint belongs to, if any."""
+        return next(
+            (
+                subentry_id
+                for subentry_id, subentry in self.config_entry.subentries.items()
+                if subentry.unique_id == str(endpoint_id)
+            ),
+            None,
+        )
+
     @abstractmethod
     async def update_data(self) -> _DataT:
         """Update coordinator data."""
@@ -196,6 +209,27 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 translation_key="timeout_connect",
             ) from err
 
+    async def async_call_portainer(self, coroutine: Awaitable[Any]) -> None:
+        """Await a Portainer call, mapping library errors to HomeAssistantError."""
+        try:
+            await coroutine
+        except PortainerAuthenticationError as err:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except PortainerConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except PortainerTimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+            ) from err
+
 
 class PortainerCoordinator(
     PortainerBaseCoordinator[dict[int, PortainerCoordinatorData]]
@@ -204,6 +238,7 @@ class PortainerCoordinator(
 
     config_entry: PortainerConfigEntry
     docker_disk_space: PortainerDockerDiskSpaceCoordinator | None = None
+    system_version: PortainerSystemVersionCoordinator | None = None
     watcher: PortainerImageWatcher | None = None
     _update_interval = DEFAULT_SCAN_INTERVAL
 
@@ -246,6 +281,17 @@ class PortainerCoordinator(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
+
+        subentry_endpoint_ids = {
+            subentry.unique_id
+            for subentry in self.config_entry.subentries.values()
+            if subentry.unique_id
+        }
+        endpoints = [
+            endpoint
+            for endpoint in endpoints
+            if str(endpoint.id) in subentry_endpoint_ids
+        ]
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         timed_out_endpoints: set[int] = set()
@@ -467,6 +513,7 @@ class PortainerCoordinator(
             endpoint = mapped_endpoints[endpoint_id].endpoint
             device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
+                config_subentry_id=self.subentry_id_for_endpoint(endpoint_id),
                 identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{endpoint_id}")},
                 configuration_url=URL(
                     f"{self.config_entry.data[CONF_URL]}#!/{endpoint_id}/docker/dashboard"
@@ -481,6 +528,7 @@ class PortainerCoordinator(
             stack = mapped_endpoints[endpoint_id].stacks[stack_name].stack
             device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
+                config_subentry_id=self.subentry_id_for_endpoint(endpoint_id),
                 identifiers={
                     (
                         DOMAIN,
@@ -744,9 +792,15 @@ class PortainerCoordinator(
         ):
             return
 
+        if (new_state := CONTAINER_STATE_ACTIONS.get(event.action)) is not None:
+            container_data.container = dataclasses.replace(
+                container_data.container, state=new_state
+            )
+
         updated_containers = dict(endpoint_data.containers)
         updated_containers[container_name] = dataclasses.replace(
             container_data,
+            container=container_data.container,
             last_docker_event=ContainerDockerEvent(
                 action=(
                     f"health_status_{event.action.rsplit(': ', 1)[-1]}"
@@ -776,9 +830,17 @@ class PortainerDockerDiskSpaceCoordinator(
     async def update_data(self) -> dict[int, DockerSystemDF]:
         """Fetch Docker disk space data independently from Portainer API."""
         endpoints = await self.portainer.get_endpoints()
+        subentry_endpoint_ids = {
+            subentry.unique_id
+            for subentry in self.config_entry.subentries.values()
+            if subentry.unique_id
+        }
         results: dict[int, DockerSystemDF] = {}
         for endpoint in endpoints:
-            if endpoint.status == EndpointStatus.DOWN:
+            if (
+                endpoint.status == EndpointStatus.DOWN
+                or str(endpoint.id) not in subentry_endpoint_ids
+            ):
                 continue
             try:
                 results[endpoint.id] = await self.portainer.docker_system_df(
@@ -792,3 +854,17 @@ class PortainerDockerDiskSpaceCoordinator(
                 )
                 continue
         return results
+
+
+class PortainerSystemVersionCoordinator(
+    PortainerBaseCoordinator[PortainerSystemVersion]
+):
+    """Data Update Coordinator for the Portainer version."""
+
+    config_entry: PortainerConfigEntry
+    _update_interval = DEFAULT_VERSION_SCAN_INTERVAL
+
+    @override
+    async def update_data(self) -> PortainerSystemVersion:
+        """Fetch the Portainer version and the latest available release."""
+        return await self.portainer.portainer_system_version()

@@ -15,6 +15,7 @@ from pyecobee import (
     ExpiredTokenError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -22,8 +23,6 @@ from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Plat
 from homeassistant.core import HomeAssistant
 
 from . import GENERIC_THERMOSTAT_INFO
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _api_key_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -156,6 +155,7 @@ async def test_setup_fails_when_no_thermostats(hass: HomeAssistant) -> None:
 
     assert await _setup_with_mock(hass, entry, ecobee) is False
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "No ecobee devices found to set up"
 
 
 async def test_setup_triggers_reauth_on_mfa_required(hass: HomeAssistant) -> None:

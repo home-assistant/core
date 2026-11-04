@@ -178,7 +178,6 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_step_connect()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="confirm")
 
     async def _async_connect_receiver(self) -> denonavr.DenonAVR | None:

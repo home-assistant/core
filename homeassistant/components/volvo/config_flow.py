@@ -147,7 +147,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         schema = self.add_suggested_values_to_schema(
             probatio.Schema(
                 {
-                    probatio.Required(CONF_API_KEY): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.TEXT, autocomplete="password"
                         )

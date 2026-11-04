@@ -24,6 +24,7 @@ from pyheos import (
     const,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.heos import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -40,8 +41,6 @@ from homeassistant.helpers.service_info.ssdp import (
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import MockHeos
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="config_entry")

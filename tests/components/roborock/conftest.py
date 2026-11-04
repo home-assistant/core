@@ -11,6 +11,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roborock import (
     CleaningMode,
     CleanRoutes,
@@ -100,8 +101,6 @@ from .mock_data import (
     VALLEY_ELECTRICITY_TIMER,
 )
 
-from tests.common import MockConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -181,19 +180,8 @@ def create_b01_q7_trait() -> Mock:
     b01_trait.set_clean_path_preference = AsyncMock()
     b01_trait.set_water_level = AsyncMock()
     b01_trait.send = AsyncMock()
-
-    b01_trait.map = AsyncMock()
-    b01_trait.map.refresh = AsyncMock()
-    b01_trait.map.map_list = []
-    b01_trait.map.current_map_id = None
-
-    b01_trait.map_content = AsyncMock()
-    b01_trait.map_content.refresh = AsyncMock()
-    b01_trait.map_content.image_content = None
-    b01_trait.map_content.map_data = None
-
-    b01_trait.clean_segments = AsyncMock()
-
+    b01_trait.map_content.image_content = b"\x89PNG-q7"
+    attach_update_listeners(b01_trait.map_content)
     return b01_trait
 
 

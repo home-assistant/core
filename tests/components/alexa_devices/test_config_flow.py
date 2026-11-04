@@ -8,6 +8,7 @@ from aioamazondevices.exceptions import (
     CannotRetrieveData,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.alexa_devices.const import (
     CONF_LOGIN_DATA,
@@ -20,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import TEST_CODE, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

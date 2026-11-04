@@ -270,7 +270,7 @@ def _entity_base_schema(platform: Platform) -> probatio.Schema:
             probatio.Optional(CONF_DEVICE): probatio.Schema(
                 {
                     probatio.Required(CONF_ID): probatio.All(
-                        cv.string, _device_id, probatio.Length(min=1)
+                        cv.string, _device_id, probatio.NonEmpty()
                     ),
                     probatio.Optional(CONF_NAME): cv.string,
                 }
@@ -282,7 +282,7 @@ def _entity_base_schema(platform: Platform) -> probatio.Schema:
                 platform
             ),
             probatio.Optional(CONF_UNIQUE_ID): probatio.All(
-                cv.string, probatio.Length(min=1)
+                cv.string, probatio.NonEmpty()
             ),
         }
     )

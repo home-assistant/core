@@ -1,8 +1,10 @@
 {
   "domain": "edl21",
   "name": "EDL21",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["serial"],
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/edl21",
   "integration_type": "device",

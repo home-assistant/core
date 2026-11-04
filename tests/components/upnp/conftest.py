@@ -11,6 +11,7 @@ from async_upnp_client.aiohttp import AiohttpNotifyServer
 from async_upnp_client.client import UpnpDevice
 from async_upnp_client.profiles.igd import IgdDevice, IgdState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
@@ -32,8 +33,6 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 TEST_UDN = "uuid:device"
 TEST_ST = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"

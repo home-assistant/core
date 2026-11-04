@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.modbus.const import (
@@ -31,8 +32,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_fixture_path
 
 HUB_CONFIG = {
     DOMAIN: [

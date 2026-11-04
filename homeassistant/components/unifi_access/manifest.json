@@ -1,8 +1,10 @@
 {
   "domain": "unifi_access",
   "name": "UniFi Access",
+  "categories": ["security_safety.locks_access"],
   "codeowners": ["@imhotep", "@RaHehl"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["unifi_discovery"],
   "documentation": "https://www.home-assistant.io/integrations/unifi_access",
   "integration_type": "hub",

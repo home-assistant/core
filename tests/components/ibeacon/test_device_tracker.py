@@ -5,6 +5,12 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
+)
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -31,13 +37,6 @@ from . import (
     BLUECHARM_BEACON_SERVICE_INFO,
     BLUECHARM_BLE_DEVICE,
     bluetooth_service_info_replace as replace,
-)
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    inject_bluetooth_service_info_bleak,
-    patch_all_discovered_devices,
 )
 
 

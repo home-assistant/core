@@ -4,7 +4,14 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock, call
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from roborock import RoborockException
 from roborock.data import WorkStatusMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
@@ -18,6 +25,7 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.roborock import DOMAIN
+from homeassistant.components.roborock.const import A01_UPDATE_INTERVAL
 from homeassistant.components.roborock.services import (
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
@@ -53,9 +61,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice, seed_q7_map, set_trait_attributes
 from .mock_data import STATUS
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"
@@ -736,6 +741,7 @@ async def test_q7_state_changing_commands(
     expected_activity: str,
     q7_vacuum_api: Mock,
     fake_q7_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sending state-changing commands to the Q7 vacuum."""
     vacuum = hass.states.get(Q7_ENTITY_ID)
@@ -754,11 +760,9 @@ async def test_q7_state_changing_commands(
 
     # Verify the entity state was updated
     assert fake_q7_vacuum.b01_q7_properties is not None
-    # Force coordinator refresh to get updated state
-    coordinator = setup_entry.runtime_data.b01_q7[0]
-
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(A01_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     vacuum = hass.states.get(Q7_ENTITY_ID)
     assert vacuum
     assert vacuum.state == expected_activity
@@ -874,16 +878,16 @@ async def test_q7_activity_none_status(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     fake_q7_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that activity returns None when status is None."""
     assert fake_q7_vacuum.b01_q7_properties is not None
     # Set status to None
     fake_q7_vacuum.b01_q7_properties._props_data.status = None
 
-    # Force coordinator refresh to get updated state
-    coordinator = setup_entry.runtime_data.b01_q7[0]
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(A01_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify the entity state is unknown when status is None
     vacuum = hass.states.get(Q7_ENTITY_ID)
@@ -895,6 +899,7 @@ async def test_q7_working_sleep_is_paused(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     fake_q7_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a cleaning job that fell asleep is reported as paused."""
     assert fake_q7_vacuum.b01_q7_properties is not None
@@ -902,9 +907,9 @@ async def test_q7_working_sleep_is_paused(
         WorkStatusMapping.WORKING_SLEEP
     )
 
-    coordinator = setup_entry.runtime_data.b01_q7[0]
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(A01_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     vacuum = hass.states.get(Q7_ENTITY_ID)
     assert vacuum

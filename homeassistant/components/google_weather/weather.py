@@ -62,7 +62,7 @@ from .entity import GoogleWeatherBaseEntity
 PARALLEL_UPDATES = 0
 
 # Maps https://developers.google.com/maps/documentation/weather/weather-condition-icons
-# to https://developers.home-assistant.io/docs/core/entity/weather/#recommended-values-for-state-and-condition
+# to https://contributors.home-assistant.io/core/entities/weather/#conditions
 _CONDITION_MAP: dict[WeatherCondition.Type, str | None] = {
     WeatherCondition.Type.TYPE_UNSPECIFIED: None,
     WeatherCondition.Type.CLEAR: ATTR_CONDITION_SUNNY,

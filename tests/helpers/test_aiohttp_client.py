@@ -8,6 +8,14 @@ import aiohttp
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    extract_stack_to_frame,
+    mock_integration,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.mjpeg import (
     CONF_MJPEG_URL,
@@ -27,15 +35,6 @@ from homeassistant.helpers import aiohttp_client as client
 from homeassistant.util import ssl as ssl_util
 from homeassistant.util.color import RGBColor
 from homeassistant.util.ssl import SSLCipherList
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    extract_stack_to_frame,
-    mock_integration,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(name="camera_client")

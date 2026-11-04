@@ -219,7 +219,7 @@ class GazetteerFallback:
         frames resolved. A rebuild replaces the matcher rather than changing it, so
         the one handed back keeps describing what was acted on.
         """
-        matcher = await self._async_get_matcher()
+        matcher = await self.async_get_matcher()
         interpret = partial(
             matcher.interpret,
             text,
@@ -260,7 +260,7 @@ class GazetteerFallback:
         """Drop what a conversation was about, once it is over."""
         self._previous_targets.pop(conversation_id, None)
 
-    async def _async_get_matcher(self) -> GazetteerMatcher:
+    async def async_get_matcher(self) -> GazetteerMatcher:
         """Return the matcher, rebuilt from the registries if the home has changed."""
         if self._matcher is not None and self._built_home == self._wanted_home:
             return self._matcher

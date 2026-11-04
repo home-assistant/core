@@ -67,7 +67,6 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self._device.device_addr},
             )
 
-        self._set_confirm_only()
         placeholders = {
             "model": self._device.model,
             "device_id": self._device.device_id,
@@ -109,7 +108,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="cloud",
-            data_schema=probatio.Schema({probatio.Optional(CONF_ACCESS_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Optional(probatio.Secret(CONF_ACCESS_TOKEN)): str}
+            ),
             description_placeholders={
                 "url": "https://developer.getawair.com/onboard/login"
             },
@@ -223,7 +224,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_ACCESS_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): str}
+            ),
             errors=errors,
         )
 

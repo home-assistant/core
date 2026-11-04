@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from ipaddress import ip_address
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry
 from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
 from systembridgeconnector.models.fixtures.modules.disks import FIXTURE_DISKS
@@ -11,6 +12,7 @@ from systembridgeconnector.models.fixtures.modules.displays import FIXTURE_DISPL
 from systembridgeconnector.models.fixtures.modules.gpus import FIXTURE_GPUS
 from systembridgeconnector.models.fixtures.modules.media import FIXTURE_MEDIA
 from systembridgeconnector.models.fixtures.modules.memory import FIXTURE_MEMORY
+from systembridgeconnector.models.fixtures.modules.networks import FIXTURE_NETWORKS
 from systembridgeconnector.models.fixtures.modules.processes import FIXTURE_PROCESSES
 from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
 from systembridgeconnector.models.modules import Module, ModulesData
@@ -18,8 +20,6 @@ from systembridgeconnector.models.modules import Module, ModulesData
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 FIXTURE_TITLE = "TestSystem"
 
@@ -106,5 +106,6 @@ async def mock_data_listener(
         await callback(Module.GPUS, FIXTURE_GPUS)
         await callback(Module.MEDIA, FIXTURE_MEDIA)
         await callback(Module.MEMORY, FIXTURE_MEMORY)
+        await callback(Module.NETWORKS, FIXTURE_NETWORKS)
         await callback(Module.PROCESSES, FIXTURE_PROCESSES)
         await callback(Module.SYSTEM, FIXTURE_SYSTEM)

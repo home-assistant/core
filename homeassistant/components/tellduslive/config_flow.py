@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-import os
 from typing import Any, override
 
 import probatio
@@ -10,7 +9,6 @@ from tellduslive import Session, supports_local_api
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.util.json import load_json_object
 
 from .const import (
     APPLICATION_NAME,
@@ -21,7 +19,6 @@ from .const import (
     NOT_SO_PRIVATE_KEY,
     PUBLIC_KEY,
     SCAN_INTERVAL,
-    TELLDUS_CONFIG_FILE,
 )
 
 KEY_TOKEN = "token"
@@ -41,7 +38,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Init config flow."""
         self._hosts = [CLOUD_NAME]
         self._host = None
-        self._scan_interval = SCAN_INTERVAL
 
     def _get_auth_url(self) -> str | None:
         self._session = Session(
@@ -91,7 +87,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     title=host,
                     data={
                         CONF_HOST: host,
-                        KEY_SCAN_INTERVAL: self._scan_interval.total_seconds(),
+                        KEY_SCAN_INTERVAL: SCAN_INTERVAL.total_seconds(),
                         KEY_SESSION: session,
                     },
                 )
@@ -132,35 +128,3 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             self._hosts.append(discovery_info[0])
 
         return await self.async_step_user()
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import a config entry."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
-
-        self._scan_interval = import_data[KEY_SCAN_INTERVAL]
-        if import_data[CONF_HOST] != DOMAIN:
-            self._hosts.append(import_data[CONF_HOST])
-
-        if not await self.hass.async_add_executor_job(
-            os.path.isfile, self.hass.config.path(TELLDUS_CONFIG_FILE)
-        ):
-            return await self.async_step_user()
-
-        conf = await self.hass.async_add_executor_job(
-            load_json_object, self.hass.config.path(TELLDUS_CONFIG_FILE)
-        )
-        host = next(iter(conf))
-
-        if import_data[CONF_HOST] != host:
-            return await self.async_step_user()
-
-        host = CLOUD_NAME if host == "tellduslive" else host
-        return self.async_create_entry(
-            title=host,
-            data={
-                CONF_HOST: host,
-                KEY_SCAN_INTERVAL: self._scan_interval.total_seconds(),
-                KEY_SESSION: next(iter(conf.values())),
-            },
-        )

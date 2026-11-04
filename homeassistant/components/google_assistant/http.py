@@ -12,10 +12,12 @@ import jwt
 
 from homeassistant.components import webhook
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er, start
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util, json as json_util
 
@@ -26,10 +28,13 @@ from .const import (
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
     CONF_PRIVATE_KEY,
+    CONF_PROJECT_ID,
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
+    DATA_CONFIG,
     DOMAIN,
+    ENTITY_SETTINGS_VERSION,
     GOOGLE_ASSISTANT_API_ENDPOINT,
     HOMEGRAPH_SCOPE,
     HOMEGRAPH_TOKEN_URL,
@@ -37,9 +42,10 @@ from .const import (
     REQUEST_SYNC_BASE_URL,
     SOURCE_CLOUD,
     STORE_AGENT_USER_IDS,
+    STORE_ENTITY_SETTINGS_VERSION,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
-from .helpers import AbstractConfig
+from .helpers import AbstractConfig, async_get_entities
 from .smart_home import async_handle_message
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,7 +103,22 @@ class GoogleConfig(AbstractConfig):
 
         await super().async_initialize()
 
+        if self._store.entity_settings_version < ENTITY_SETTINGS_VERSION:
+            # Discovery needs the entity states
+            start.async_at_started(self.hass, self._async_migrate_entity_settings)
+
         self.async_enable_local_sdk()
+
+    async def _async_migrate_entity_settings(self, _: HomeAssistant) -> None:
+        """Migrate the entity settings to the current version."""
+        # v2: preserve the pre-migration name of exposed entities as an alias
+        for entity in async_get_entities(self.hass, self):
+            entity_id = entity.entity_id
+            if CONF_NAME in self.entity_config.get(entity_id, {}):
+                continue
+            if self.should_expose(entity_id):
+                er.async_preserve_compat_name_as_alias(self.hass, entity_id)
+        await self._store.async_set_entity_settings_version(ENTITY_SETTINGS_VERSION)
 
     @property
     @override
@@ -122,6 +143,33 @@ class GoogleConfig(AbstractConfig):
     def should_report_state(self):
         """Return if states should be proactively reported."""
         return self._config.get(CONF_REPORT_STATE)
+
+    async def async_reload_yaml(self) -> bool:
+        """Re-read and apply the YAML configuration."""
+        conf = await async_integration_yaml_config(self.hass, DOMAIN)
+        if conf is None:
+            return False
+        config = conf.get(DOMAIN, {})
+        # The config entry, request_sync service, sync button and Home Graph token
+        # are set up for these at startup
+        for key in (CONF_PROJECT_ID, CONF_SERVICE_ACCOUNT):
+            if config.get(key) != self._config.get(key):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="restart_required",
+                    translation_placeholders={"option": key},
+                )
+        self.hass.data[DATA_CONFIG] = self._config = config
+        self.async_update_report_state()
+        return True
+
+    @callback
+    def async_update_report_state(self) -> None:
+        """Enable or disable reporting state as configured."""
+        if self.should_report_state:
+            self.async_enable_report_state()
+        else:
+            self.async_disable_report_state()
 
     @override
     def get_local_user_id(self, webhook_id):
@@ -335,6 +383,7 @@ class GoogleConfigStore:
             # to be used for local requests
             data = {
                 STORE_AGENT_USER_IDS: {},
+                STORE_ENTITY_SETTINGS_VERSION: ENTITY_SETTINGS_VERSION,
             }
             should_save_data = True
 
@@ -355,6 +404,17 @@ class GoogleConfigStore:
     def agent_user_ids(self) -> dict[str, Any]:
         """Return a list of connected agent user_ids."""
         return self._data[STORE_AGENT_USER_IDS]
+
+    @property
+    def entity_settings_version(self) -> int:
+        """Return the entity settings version."""
+        version: int = self._data.get(STORE_ENTITY_SETTINGS_VERSION, 1)
+        return version
+
+    async def async_set_entity_settings_version(self, version: int) -> None:
+        """Set the entity settings version."""
+        self._data[STORE_ENTITY_SETTINGS_VERSION] = version
+        await self._store.async_save(self._data)
 
     @callback
     def add_agent_user_id(self, agent_user_id: str) -> None:

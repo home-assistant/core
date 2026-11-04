@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from synology_dsm.exceptions import SynologyDSMAPIErrorException
 from syrupy.assertion import SnapshotAssertion
 
@@ -27,8 +28,6 @@ from homeassistant.helpers.translation import LOCALE_EN, async_get_translations
 
 from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture

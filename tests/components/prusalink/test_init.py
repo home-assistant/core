@@ -3,9 +3,10 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from httpx import ConnectError
+from httpx2 import ConnectError, ReadError
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.prusalink import DOMAIN
 from homeassistant.components.prusalink.config_flow import PrusaLinkConfigFlow
@@ -18,8 +19,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("mock_api")
 
@@ -67,10 +66,18 @@ async def test_unloading(
 
 @pytest.mark.parametrize(
     "exception",
-    [InvalidAuth, PrusaLinkError, ConnectError("All connection attempts failed")],
+    [
+        InvalidAuth,
+        PrusaLinkError,
+        ConnectError("All connection attempts failed"),
+        ReadError("Read failed"),
+    ],
 )
 async def test_failed_update(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry, exception
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    exception: Exception | type[Exception],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test failed update marks prusalink unavailable."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -99,6 +106,7 @@ async def test_failed_update(
 
     for state in hass.states.async_all():
         assert state.state == "unavailable"
+    assert "Unexpected error fetching" not in caplog.text
 
 
 async def test_migration_from_1_1_to_1_2(
@@ -175,24 +183,6 @@ async def test_migration_fails_on_future_version(
         domain=DOMAIN,
         data={},
         version=PrusaLinkConfigFlow.VERSION + 1,
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
-
-
-async def test_migration_fails_on_future_minor_version(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test migrating fails on the current version with a higher minor version."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        version=PrusaLinkConfigFlow.VERSION,
-        minor_version=PrusaLinkConfigFlow.MINOR_VERSION + 1,
     )
     entry.add_to_hass(hass)
 

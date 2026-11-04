@@ -78,26 +78,34 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
         self._attr_volume_level = volume
         self.async_write_ha_state()
 
+    @property
+    def _is_playing(self) -> bool:
+        """Return if the car is playing media."""
+        return self.state == MediaPlayerState.PLAYING
+
+    def _async_set_playback_state(self, state: MediaPlayerState) -> None:
+        """Apply the playback state after a play or pause command."""
+        self._attr_state = state
+        self.async_write_ha_state()
+
     @override
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self.state != MediaPlayerState.PLAYING:
+        if not self._is_playing:
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
             await handle_vehicle_command(self.api.media_toggle_playback())
-            self._attr_state = MediaPlayerState.PLAYING
-            self.async_write_ha_state()
+            self._async_set_playback_state(MediaPlayerState.PLAYING)
 
     @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
 
-        if self.state == MediaPlayerState.PLAYING:
+        if self._is_playing:
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
             await handle_vehicle_command(self.api.media_toggle_playback())
-            self._attr_state = MediaPlayerState.PAUSED
-            self.async_write_ha_state()
+            self._async_set_playback_state(MediaPlayerState.PAUSED)
 
     @override
     async def async_media_next_track(self) -> None:
@@ -193,6 +201,7 @@ class TeslemetryStreamingMediaEntity(
         if not self.scoped:
             self._attr_supported_features = MediaPlayerEntityFeature(0)
         self._playback_state: MediaPlayerState | None = None
+        self._display_state: MediaPlayerState | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -204,6 +213,10 @@ class TeslemetryStreamingMediaEntity(
                 self._attr_state = MediaPlayerState(state.state)
             except ValueError:
                 self._attr_state = None
+            if self._attr_state is MediaPlayerState.OFF:
+                self._display_state = MediaPlayerState.OFF
+            if self._attr_state in (MediaPlayerState.PLAYING, MediaPlayerState.PAUSED):
+                self._playback_state = self._attr_state
             self._attr_volume_level = state.attributes.get(
                 MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
             )
@@ -216,8 +229,8 @@ class TeslemetryStreamingMediaEntity(
             self._attr_media_album_name = state.attributes.get(
                 MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME
             )
-            self._attr_media_playlist = state.attributes.get(
-                MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST
+            self._attr_media_channel = state.attributes.get(
+                MediaPlayerEntityStateAttribute.MEDIA_CHANNEL
             )
             self._attr_media_duration = state.attributes.get(
                 MediaPlayerEntityStateAttribute.MEDIA_DURATION
@@ -282,26 +295,41 @@ class TeslemetryStreamingMediaEntity(
             )
         )
 
+    @property
+    @override
+    def _is_playing(self) -> bool:
+        """Return if the car is playing media, even while the display is off."""
+        return self._playback_state == MediaPlayerState.PLAYING
+
+    @override
+    def _async_set_playback_state(self, state: MediaPlayerState) -> None:
+        """Apply the playback state after a play or pause command."""
+        self._playback_state = state
+        self._async_update_state()
+
+    def _async_update_state(self) -> None:
+        """Derive the state from the last display and playback values."""
+        if self._display_state is MediaPlayerState.OFF:
+            self._attr_state = MediaPlayerState.OFF
+        elif self._playback_state is not None:
+            self._attr_state = self._playback_state
+        elif self._display_state is not None:
+            self._attr_state = self._display_state
+        self.async_write_ha_state()
+
     def _async_handle_center_display(self, value: str | None) -> None:
         """Update entity attributes."""
         if value is None:
             return
-        display_state = DISPLAY_STATES.get(value)
-        if display_state is MediaPlayerState.OFF:
-            self._attr_state = MediaPlayerState.OFF
-        elif self._playback_state is not None:
-            self._attr_state = self._playback_state
-        elif display_state is not None:
-            self._attr_state = display_state
-        self.async_write_ha_state()
+        self._display_state = DISPLAY_STATES.get(value)
+        self._async_update_state()
 
     def _async_handle_media_playback_status(self, value: str | None) -> None:
         """Update entity attributes."""
         self._playback_state = (
             MediaPlayerState.OFF if value is None else STATES.get(value)
         )
-        self._attr_state = self._playback_state
-        self.async_write_ha_state()
+        self._async_update_state()
 
     def _async_handle_media_playback_source(self, value: str | None) -> None:
         """Update entity attributes."""

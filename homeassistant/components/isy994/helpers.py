@@ -324,7 +324,7 @@ def _generate_device_info(node: Node, via_device_id: str | None) -> DeviceInfo:
         suggested_area=node.folder,
     )
     if via_device_id is not None:
-        device_info["via_device_id"] = via_device_id
+        device_info.via_device_id = via_device_id
 
     return device_info
 

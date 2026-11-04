@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ScreenLogicConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ScreenLogicConfigEntry) -> None:
     """Set up Screenlogic from a config entry."""
 
     await _async_migrate_entries(hass, entry)
@@ -80,18 +80,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScreenLogicConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: ScreenLogicConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        coordinator = entry.runtime_data
-        await coordinator.gateway.async_disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    coordinator = entry.runtime_data
+    await coordinator.gateway.async_disconnect()
 
 
 async def async_update_listener(

@@ -9,6 +9,8 @@ from unittest.mock import MagicMock, mock_open, patch
 import wave
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import tts
 from homeassistant.components.media_player import ATTR_MEDIA_CONTENT_ID
@@ -18,9 +20,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import MockConfigEntry
 from tests.components.tts.common import retrieve_media
-from tests.typing import ClientSessionGenerator
 
 
 async def get_tts_audio(hass: HomeAssistant) -> bytes:

@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import BROADLINK_DATA
 from .entity import BroadlinkEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,9 +32,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink light."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    device = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
     lights = []
 
     if device.api.type in {"LB1", "LB2"}:

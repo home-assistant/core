@@ -67,7 +67,7 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_HOST, default=user_input.get(CONF_HOST)
                     ): TextSelector(TextSelectorConfig(autocomplete="off")),
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -118,7 +118,7 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
                     probatio.Required(CONF_HOST, default=host): TextSelector(
                         TextSelectorConfig(autocomplete="off")
                     ),
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -183,7 +183,7 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="zeroconf_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
@@ -237,7 +237,7 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }

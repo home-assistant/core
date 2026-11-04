@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api.models.websocket import (
     DeviceUpdate,
@@ -37,8 +38,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FRONT_DOOR_DOORBELL_ENTITY = "event.front_door_doorbell"
 FRONT_DOOR_ACCESS_ENTITY = "event.front_door_access"

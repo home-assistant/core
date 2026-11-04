@@ -14,6 +14,7 @@ from pyipp import (
     Printer,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.ipp.const import CONF_BASE_PATH, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -26,8 +27,6 @@ from . import (
     MOCK_ZEROCONF_IPP_SERVICE_INFO,
     MOCK_ZEROCONF_IPPS_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry, load_fixture
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -79,6 +78,12 @@ async def test_connection_error(
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_ipp_config_flow.printer.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_connection_error(
@@ -134,6 +139,12 @@ async def test_user_connection_upgrade_required(
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "connection_upgrade"}
+
+    mock_ipp_config_flow.printer.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_connection_upgrade_required(

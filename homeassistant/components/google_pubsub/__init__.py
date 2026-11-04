@@ -1,6 +1,6 @@
 """Support for Google Cloud Pub/Sub."""
 
-import datetime
+import datetime as dt
 import json
 import logging
 import os
@@ -87,6 +87,6 @@ class DateTimeJSONEncoder(json.JSONEncoder):
     @override
     def default(self, o):
         """Implement encoding logic."""
-        if isinstance(o, datetime.datetime):
+        if isinstance(o, dt.datetime):
             return o.isoformat()
         return super().default(o)
