@@ -27,6 +27,7 @@ from homeassistant.components.synology_dsm.const import (
     CONF_BACKUP_SHARE,
     CONF_DEVICE_TOKEN,
     CONF_SNAPSHOT_QUALITY,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
 from homeassistant.config_entries import (
@@ -670,6 +671,8 @@ async def test_reconfigure_legacy_entry_without_verify_ssl(hass: HomeAssistant) 
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    descriptions = {key.schema: key.description for key in result["data_schema"].schema}
+    assert descriptions[CONF_VERIFY_SSL] == {"suggested_value": DEFAULT_VERIFY_SSL}
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
