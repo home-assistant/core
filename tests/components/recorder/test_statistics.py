@@ -5115,6 +5115,79 @@ async def test_statistics_during_period_fills_current_hour_from_short_term(
     ]
 
 
+@pytest.mark.freeze_time("2024-03-15 14:17:00+00:00")
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_during_period_mean_only_skips_current_hour(
+    hass: HomeAssistant,
+) -> None:
+    """Do not synthesize the current hour when no sum-like type is requested."""
+    await hass.config.async_set_time_zone("UTC")
+    energy_id = "sensor.total_energy_import"
+    temperature_id = "sensor.temperature"
+    hour_13 = dt_util.parse_datetime("2024-03-15 13:00:00+00:00")
+    hour_14 = dt_util.parse_datetime("2024-03-15 14:00:00+00:00")
+    assert hour_13 and hour_14
+
+    async_import_statistics(
+        hass,
+        {
+            "has_sum": True,
+            "mean_type": StatisticMeanType.NONE,
+            "name": "Total imported energy",
+            "source": "recorder",
+            "statistic_id": energy_id,
+            "unit_class": "energy",
+            "unit_of_measurement": "kWh",
+        },
+        ({"start": hour_13, "last_reset": None, "state": 20.0, "sum": 20.0},),
+    )
+    async_import_statistics(
+        hass,
+        {
+            "has_sum": False,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "name": "Temperature",
+            "source": "recorder",
+            "statistic_id": temperature_id,
+            "unit_class": "temperature",
+            "unit_of_measurement": "°C",
+        },
+        ({"start": hour_13, "mean": 20.0, "min": 19.0, "max": 21.0},),
+    )
+    await async_wait_recording_done(hass)
+
+    metadata = get_metadata(hass, statistic_ids={energy_id, temperature_id})
+    with session_scope(hass=hass) as session:
+        session.add(
+            StatisticsShortTerm.from_stats(
+                metadata[energy_id][0],
+                {"start": hour_14, "last_reset": None, "state": 25.0, "sum": 25.0},
+            )
+        )
+        session.add(
+            StatisticsShortTerm.from_stats(
+                metadata[temperature_id][0],
+                {"start": hour_14, "mean": 22.0, "min": 22.0, "max": 22.0},
+            )
+        )
+    await async_wait_recording_done(hass)
+
+    stats = statistics_during_period(
+        hass,
+        hour_13,
+        period="hour",
+        statistic_ids={energy_id, temperature_id},
+        types={"mean", "min", "max"},
+    )
+    assert {
+        statistic_id: [row["start"] for row in rows]
+        for statistic_id, rows in stats.items()
+    } == {
+        energy_id: [process_timestamp(hour_13).timestamp()],
+        temperature_id: [process_timestamp(hour_13).timestamp()],
+    }
+
+
 @pytest.mark.parametrize(
     ("runs", "expected"),
     [
