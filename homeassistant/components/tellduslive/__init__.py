@@ -22,6 +22,7 @@ from .const import (
     DEFAULT_RETRY_MAX_DELAY,
     DIM,
     DOMAIN,
+    ERROR_AFTER_FAILURES,
     KEY_REQUEST_DELAY,
     KEY_RETRY_INITIAL_DELAY,
     KEY_RETRY_MAX_DELAY,
@@ -35,6 +36,7 @@ from .const import (
     TELLDUS_DISCOVERY_NEW,
     TURNON,
     UP,
+    TelldusLiveStatus,
 )
 
 APPLICATION_NAME = "Home Assistant"
@@ -121,6 +123,7 @@ class TelldusLiveClient:
         self._cancel_update: CALLBACK_TYPE | None = None
         self._stopped = False
         self._failures = 0
+        self._first_refresh_done = False
         self._hubs_registered = False
         self._restored = asyncio.Event()
 
@@ -153,6 +156,7 @@ class TelldusLiveClient:
     async def async_restore(self) -> None:
         """Create entities from the last stored snapshot without using the API."""
         try:
+            await self._async_forward("sensor")
             snapshot = await self._store.async_load()
             if not snapshot:
                 return
@@ -164,6 +168,31 @@ class TelldusLiveClient:
                     self._known_devices.add(device_id)
         finally:
             self._restored.set()
+
+    @property
+    def status(self) -> TelldusLiveStatus:
+        """Return the connection status."""
+        if not self._first_refresh_done:
+            return TelldusLiveStatus.STARTING
+        if self._failures == 0:
+            return TelldusLiveStatus.OK
+        if self._failures < ERROR_AFTER_FAILURES:
+            return TelldusLiveStatus.RETRYING
+        return TelldusLiveStatus.ERROR
+
+    @property
+    def requests_last_hour(self) -> int:
+        """Return the number of OK API responses during the last hour."""
+        return self._client.ok_responses_last_hour()
+
+    async def _async_forward(self, component: str) -> None:
+        """Set up a platform once."""
+        async with self._platforms_lock:
+            if component not in self.platforms:
+                await self._hass.config_entries.async_forward_entry_setups(
+                    self._config_entry, [component]
+                )
+                self.platforms.add(component)
 
     def _snapshot(self) -> dict[str, Any]:
         """Return the data to persist."""
@@ -217,12 +246,7 @@ class TelldusLiveClient:
             if not device.is_sensor:
                 await asyncio.sleep(self._request_delay)
             self._device_infos[device_id] = info or {}
-        async with self._platforms_lock:
-            if component not in self.platforms:
-                await self._hass.config_entries.async_forward_entry_setups(
-                    self._config_entry, [component]
-                )
-                self.platforms.add(component)
+        await self._async_forward(component)
         device_ids: list[Any] = []
         if device.is_sensor:
             device_ids.extend(
@@ -274,6 +298,8 @@ class TelldusLiveClient:
         else:
             self._failures = 0
         finally:
+            self._first_refresh_done = True
+            async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
             # An update still in flight at unload must not schedule another.
             if not self._stopped:
                 self._cancel_update = async_call_later(self._hass, delay, self.update)

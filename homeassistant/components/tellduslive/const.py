@@ -1,6 +1,7 @@
 """Consts used by TelldusLive."""
 
 from datetime import timedelta
+from enum import StrEnum
 
 APPLICATION_NAME = "Home Assistant"
 
@@ -80,3 +81,14 @@ DEFAULT_REQUEST_DELAY = 1
 
 STORAGE_VERSION = 1
 SNAPSHOT_SAVE_DELAY = 10
+
+ERROR_AFTER_FAILURES = 5
+
+
+class TelldusLiveStatus(StrEnum):
+    """Connection status of the integration."""
+
+    STARTING = "starting"
+    OK = "ok"
+    RETRYING = "retrying"
+    ERROR = "error"

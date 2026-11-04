@@ -1,6 +1,8 @@
 """Support for Tellstick Net/Telstick Live sensors."""
 
-from typing import override
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, override
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
@@ -13,6 +15,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     UV_INDEX,
+    EntityCategory,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -21,11 +24,17 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TelldusLiveConfigEntry
-from .const import DOMAIN, TELLDUS_DISCOVERY_NEW
+from . import TelldusLiveClient, TelldusLiveConfigEntry
+from .const import (
+    DOMAIN,
+    SIGNAL_UPDATE_ENTITY,
+    TELLDUS_DISCOVERY_NEW,
+    TelldusLiveStatus,
+)
 from .entity import TelldusLiveEntity
 
 SENSOR_TYPE_TEMPERATURE = "temp"
@@ -124,6 +133,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tellduslive sensors dynamically."""
+    client = config_entry.runtime_data.client
+    async_add_entities(
+        TelldusLiveDiagnosticSensor(config_entry.entry_id, client, description)
+        for description in DIAGNOSTIC_SENSORS
+    )
 
     async def async_discover_sensor(device_id):
         """Discover and add a discovered sensor."""
@@ -137,6 +151,73 @@ async def async_setup_entry(
             async_discover_sensor,
         )
     )
+
+
+@dataclass(frozen=True, kw_only=True)
+class TelldusLiveDiagnosticDescription(SensorEntityDescription):
+    """Describes a Telldus Live integration diagnostic sensor."""
+
+    value_fn: Callable[[TelldusLiveClient], Any]
+
+
+DIAGNOSTIC_SENSORS = (
+    TelldusLiveDiagnosticDescription(
+        key="status",
+        translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[status.value for status in TelldusLiveStatus],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda client: client.status.value,
+    ),
+    TelldusLiveDiagnosticDescription(
+        key="requests_per_hour",
+        translation_key="requests_per_hour",
+        native_unit_of_measurement="requests/h",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda client: client.requests_last_hour,
+    ),
+)
+
+
+class TelldusLiveDiagnosticSensor(SensorEntity):
+    """Integration status and API usage of a Telldus Live account."""
+
+    entity_description: TelldusLiveDiagnosticDescription
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        entry_id: str,
+        client: TelldusLiveClient,
+        description: TelldusLiveDiagnosticDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        self._client = client
+        self._attr_unique_id = f"{entry_id}-{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Telldus",
+            name="Telldus Live",
+        )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_ENTITY, self.async_write_ha_state
+            )
+        )
+
+    @property
+    @override
+    def native_value(self) -> Any:
+        """Return the value of the sensor."""
+        return self.entity_description.value_fn(self._client)
 
 
 class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):

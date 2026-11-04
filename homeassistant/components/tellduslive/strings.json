@@ -29,6 +29,18 @@
       "dew_point": {
         "name": "Dew point"
       },
+      "requests_per_hour": {
+        "name": "Requests per hour"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "starting": "Starting",
+          "ok": "OK",
+          "retrying": "Retrying",
+          "error": "Error"
+        }
+      },
       "uv": {
         "name": "UV"
       },

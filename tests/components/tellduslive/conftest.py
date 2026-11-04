@@ -60,6 +60,7 @@ def mock_tellduslive() -> Generator[MagicMock]:
     ]
     session.update.return_value = None
     session.dump_state.return_value = {}
+    session.ok_responses_last_hour.return_value = 0
     session.device_ids = [DEVICE_ID]
     session.devices = [device]
     session.device.return_value = device

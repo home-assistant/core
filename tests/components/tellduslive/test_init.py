@@ -277,3 +277,47 @@ async def test_command_rejected(
         await hass.services.async_call(
             "switch", "turn_on", {"entity_id": "switch.kitchen"}, blocking=True
         )
+
+
+async def test_status_lifecycle(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+) -> None:
+    """Test the status goes from starting to ok."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    client = mock_config_entry.runtime_data.client
+    assert client.status == "starting"
+
+    await mock_config_entry.runtime_data.setup_task
+    await hass.async_block_till_done()
+
+    assert client.status == "ok"
+
+
+@pytest.mark.parametrize(
+    ("failures", "expected"),
+    [(1, "retrying"), (4, "retrying"), (5, "error"), (9, "error")],
+)
+async def test_status_after_failures(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+    failures: int,
+    expected: str,
+) -> None:
+    """Test retrying turns into error after repeated failures and recovers."""
+    mock_tellduslive.update.side_effect = TelldusLiveError("down")
+    await _setup(hass, mock_config_entry)
+    client = mock_config_entry.runtime_data.client
+    client._failures = failures - 1
+
+    await client.update()
+
+    assert client.status == expected
+
+    mock_tellduslive.update.side_effect = None
+    await client.update()
+
+    assert client.status == "ok"
