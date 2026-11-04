@@ -1233,9 +1233,7 @@
       "name": "Atomberg",
       "integration_type": "hub",
       "categories": [
-        "climate.fans_ventilation",
-        "water.water_treatment",
-        "security_safety.locks_access"
+        "climate.fans_ventilation"
       ],
       "connectivity": [
         "cloud"

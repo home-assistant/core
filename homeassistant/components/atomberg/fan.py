@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from atomberg_api import COMMAND_POWER, COMMAND_SPEED, DEVICE_TYPE_FAN, AtombergDevice
+from atomberg_api import COMMAND_POWER, COMMAND_SPEED, AtombergDevice
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -27,8 +27,7 @@ async def async_setup_entry(
     """Set up Atomberg fans."""
     coordinator = entry.runtime_data
     async_add_entities(
-        AtombergFan(coordinator, device)
-        for device in coordinator.devices_of_type(DEVICE_TYPE_FAN)
+        AtombergFan(coordinator, device) for device in coordinator.devices.values()
     )
 
 

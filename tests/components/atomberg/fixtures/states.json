@@ -18,34 +18,5 @@
     "last_recorded_speed": 2,
     "sleep_mode": false,
     "led": false
-  },
-  {
-    "device_id": "a4cf12aa0001",
-    "is_online": true,
-    "mode": 1,
-    "fallback_mode": 0,
-    "tds_threshold": 150,
-    "idle_sleep": 1,
-    "sleep_mode": 0,
-    "start_utc": 0,
-    "stop_utc": 0,
-    "input_tds": 240,
-    "tank_tds": 35,
-    "choking_faults": {
-      "filter_choke": false,
-      "sv_fault": true
-    },
-    "system_faults": {
-      "healthy": false,
-      "codes": ["NO_WATER"]
-    },
-    "ts_epoch_seconds": 1793700000
-  },
-  {
-    "device_id": "a4cf12999999",
-    "is_online": true,
-    "battery": 80,
-    "n_unlocks": 42,
-    "esp_fw_version": "1.2.3"
   }
 ]

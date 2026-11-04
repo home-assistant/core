@@ -1,11 +1,7 @@
 {
   "domain": "atomberg",
   "name": "Atomberg",
-  "categories": [
-    "climate.fans_ventilation",
-    "water.water_treatment",
-    "security_safety.locks_access"
-  ],
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@ratulbmg"],
   "config_flow": true,
   "connectivity": ["cloud"],

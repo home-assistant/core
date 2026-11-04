@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from atomberg_api import AtombergAuthError, AtombergConnectionError
+from atomberg_api import AtombergAuthError, AtombergConnectionError, AtombergError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -35,7 +35,7 @@ async def test_devices_are_registered(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test fans, the water purifier and the lock are registered with their metadata."""
+    """Test fans are registered with their metadata."""
     await setup_integration(hass, mock_config_entry)
 
     def device(device_id: str) -> dr.DeviceEntry | None:
@@ -49,40 +49,18 @@ async def test_devices_are_registered(
     assert living_room.model == "Renesa+"
     assert living_room.model_id == "I1"
     assert device("a4cf12123456") is not None
-    assert device("a4cf12aa0001") is not None
-    assert device("a4cf12999999") is not None
 
 
 @pytest.mark.usefixtures("mock_client")
-@pytest.mark.parametrize(
-    ("entity_id", "present"),
-    [
-        ("fan.living_room", True),
-        ("light.living_room_led", True),
-        ("switch.living_room_sleep_mode", True),
-        ("select.living_room_timer", True),
-        ("fan.bedroom", True),
-        ("light.bedroom_led", False),
-        ("switch.bedroom_sleep_mode", False),
-        ("select.bedroom_timer", False),
-        ("fan.kitchen_water_purifier", False),
-        ("fan.front_door", False),
-        ("sensor.front_door_battery", True),
-        ("button.front_door_generate_guest_pin", True),
-        ("select.kitchen_water_purifier_purification_mode", True),
-        ("number.kitchen_water_purifier_tds_threshold", True),
-    ],
-)
-async def test_entities_follow_supported_commands(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    entity_id: str,
-    present: bool,
+async def test_only_fans_are_created(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test entities exist only for commands a device supports."""
+    """Test a fan entity exists for each fan and nothing else is created."""
     await setup_integration(hass, mock_config_entry)
 
-    assert (hass.states.get(entity_id) is not None) is present
+    assert hass.states.get("fan.living_room") is not None
+    assert hass.states.get("fan.bedroom") is not None
+    assert len(hass.states.async_entity_ids()) == 2
 
 
 @pytest.mark.parametrize(
@@ -117,3 +95,37 @@ async def test_offline_device_unavailable(
 
     assert hass.states.get(FULL_FAN).state == STATE_UNAVAILABLE
     assert hass.states.get("fan.bedroom").state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (AtombergConnectionError, ConfigEntryState.SETUP_RETRY),
+        (AtombergError, ConfigEntryState.SETUP_RETRY),
+        (AtombergAuthError, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_first_refresh_failures(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: type[Exception],
+    state: ConfigEntryState,
+) -> None:
+    """Test state polling errors during setup."""
+    mock_client.async_get_states.side_effect = exception
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is state
+
+
+async def test_device_list_generic_error(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test an unexpected device list error makes setup retry."""
+    mock_client.async_get_devices.side_effect = AtombergError("bad")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

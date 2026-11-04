@@ -36,108 +36,6 @@
       }
     }
   },
-  "entity": {
-    "binary_sensor": {
-      "filter_choked": {
-        "name": "Filter choked"
-      },
-      "no_water": {
-        "name": "No water"
-      },
-      "system_fault": {
-        "name": "System fault"
-      },
-      "tank_full": {
-        "name": "Tank full"
-      },
-      "valve_fault": {
-        "name": "Valve fault"
-      }
-    },
-    "button": {
-      "guest_pin": {
-        "name": "Generate guest PIN"
-      }
-    },
-    "light": {
-      "led": {
-        "name": "LED"
-      }
-    },
-    "number": {
-      "tds_threshold": {
-        "name": "TDS threshold"
-      }
-    },
-    "select": {
-      "fallback_mode": {
-        "name": "Fallback mode",
-        "state": {
-          "ro_only": "RO only",
-          "tastetune_100_150": "TasteTune 100-150 ppm",
-          "tastetune_50_100": "TasteTune 50-100 ppm",
-          "tastetune_75_125": "TasteTune 75-125 ppm"
-        }
-      },
-      "purification_mode": {
-        "name": "Purification mode",
-        "state": {
-          "adaptive": "Adaptive",
-          "ro_only": "RO only",
-          "tastetune_100_150": "TasteTune 100-150 ppm",
-          "tastetune_50_100": "TasteTune 50-100 ppm",
-          "tastetune_75_125": "TasteTune 75-125 ppm",
-          "vacation": "Vacation"
-        }
-      },
-      "timer": {
-        "name": "Timer",
-        "state": {
-          "1_hour": "1 hour",
-          "2_hours": "2 hours",
-          "3_hours": "3 hours",
-          "6_hours": "6 hours",
-          "off": "[%key:common::state::off%]"
-        }
-      }
-    },
-    "sensor": {
-      "firmware_version": {
-        "name": "Firmware version"
-      },
-      "input_tds": {
-        "name": "Input TDS"
-      },
-      "last_reported": {
-        "name": "Last reported"
-      },
-      "tank_tds": {
-        "name": "Tank TDS"
-      },
-      "unlock_count": {
-        "name": "Unlock count"
-      }
-    },
-    "switch": {
-      "idle_sleep": {
-        "name": "Idle display sleep"
-      },
-      "sleep_mode": {
-        "name": "Sleep mode"
-      },
-      "sleep_window": {
-        "name": "Sleep window"
-      }
-    },
-    "time": {
-      "sleep_window_end": {
-        "name": "Sleep window end"
-      },
-      "sleep_window_start": {
-        "name": "Sleep window start"
-      }
-    }
-  },
   "exceptions": {
     "command_failed": {
       "message": "Atomberg rejected the command: {error}"
@@ -147,9 +45,6 @@
     },
     "invalid_auth": {
       "message": "The Atomberg credentials are invalid."
-    },
-    "sleep_window_not_set": {
-      "message": "Set the sleep window start and end time first."
     },
     "update_error": {
       "message": "Error fetching data from the Atomberg cloud: {error}"

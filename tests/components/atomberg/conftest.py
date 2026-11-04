@@ -51,7 +51,7 @@ def mock_client_class() -> Generator[MagicMock]:
 
 @pytest.fixture
 def mock_client(mock_client_class: MagicMock) -> AsyncMock:
-    """Mock a client returning two fans, a water purifier and a lock."""
+    """Mock a client returning two fans."""
     client = mock_client_class.return_value
     client.async_get_devices.return_value = [
         AtombergDevice.from_api(device)
@@ -60,10 +60,5 @@ def mock_client(mock_client_class: MagicMock) -> AsyncMock:
     client.async_get_states.return_value = {
         state["device_id"]: state
         for state in load_json_array_fixture("states.json", DOMAIN)
-    }
-    client.async_get_guest_pin.return_value = {
-        "otp": "482915",
-        "validStartTime": 1793700000,
-        "validEndTime": 1793714400,
     }
     return client

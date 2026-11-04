@@ -9,17 +9,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_REFRESH_TOKEN
 from .coordinator import AtombergConfigEntry, AtombergCoordinator
 
-PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.FAN,
-    Platform.LIGHT,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SENSOR,
-    Platform.SWITCH,
-    Platform.TIME,
-]
+PLATFORMS: list[Platform] = [Platform.FAN]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AtombergConfigEntry) -> None:

@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, call
 
-from atomberg_api import AtombergConnectionError
+from atomberg_api import AtombergAuthError, AtombergConnectionError, AtombergError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -122,6 +122,76 @@ async def test_set_percentage_zero_turns_off(
     )
 
     mock_client.async_send_command.assert_awaited_once_with(ON_ID, {"power": False})
+
+
+async def test_turn_on_with_percentage_zero_turns_off(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test turning on at 0 percent turns the fan off."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ON_FAN, ATTR_PERCENTAGE: 0},
+        blocking=True,
+    )
+
+    mock_client.async_send_command.assert_awaited_once_with(ON_ID, {"power": False})
+
+
+async def test_turn_on_with_percentage(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test turning on at a speed powers on and sets the speed."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: OFF_FAN, ATTR_PERCENTAGE: 100},
+        blocking=True,
+    )
+
+    assert mock_client.async_send_command.await_args_list == [
+        call(OFF_ID, {"power": True}),
+        call(OFF_ID, {"speed": 6}),
+    ]
+
+
+async def test_unknown_speed_has_no_percentage(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a speed outside the known range gives an unknown percentage."""
+    mock_client.async_get_states.return_value[ON_ID]["last_recorded_speed"] = 9
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ON_FAN).attributes[ATTR_PERCENTAGE] is None
+
+
+@pytest.mark.parametrize(
+    ("exception", "message"),
+    [
+        (AtombergAuthError, "credentials are invalid"),
+        (AtombergError("odd"), "rejected the command: odd"),
+    ],
+)
+async def test_other_command_errors(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception | type[Exception],
+    message: str,
+) -> None:
+    """Test authentication and generic API errors become translated errors."""
+    await setup_integration(hass, mock_config_entry)
+    mock_client.async_send_command.side_effect = exception
+
+    with pytest.raises(HomeAssistantError, match=message):
+        await hass.services.async_call(
+            FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ON_FAN}, blocking=True
+        )
 
 
 async def test_command_error(
