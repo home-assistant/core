@@ -86,11 +86,17 @@ def _power(data: Telegram | MbusDevice, positive: str, negative: str) -> Decimal
 def _total(
     data: Telegram | MbusDevice, total: str, tariffs: tuple[str, ...]
 ) -> Decimal | None:
-    """Prefer the meter's total register, else sum the tariff registers."""
+    """Prefer the meter's total register, else sum the tariff registers.
+
+    A sum without one of the registers drops, and the statistics count a drop
+    as a meter reset, so a telegram missing one gives no value.
+    """
     if (value := _value(data, total)) is not None:
         return Decimal(value)
-    values = [v for ref in tariffs if (v := _value(data, ref)) is not None]
-    return sum(values) if values else None
+    values = [_value(data, ref) for ref in tariffs]
+    if None in values:
+        return None
+    return Decimal(sum(values))
 
 
 def _tariff(data: Telegram | MbusDevice, states: dict[str, str]) -> str | None:
@@ -187,6 +193,8 @@ SENSORS: tuple[HomeyEnergyDongleSensorEntityDescription, ...] = (
         value_fn=partial(_tariff, states={"0001": "high", "0002": "low"}),
         dsmr_versions=_TARIFF_HIGH_FIRST,
     ),
+    # Only meters without a total register sum their tariffs, and those profiles
+    # (DSMR 2.2, 4 and 5B) have exactly two.
     HomeyEnergyDongleSensorEntityDescription(
         key="total_energy_imported",
         translation_key="total_energy_imported",
@@ -197,7 +205,7 @@ SENSORS: tuple[HomeyEnergyDongleSensorEntityDescription, ...] = (
         value_fn=partial(
             _total,
             total="ELECTRICITY_IMPORTED_TOTAL",
-            tariffs=tuple(f"ELECTRICITY_USED_TARIFF_{t}" for t in TARIFFS),
+            tariffs=("ELECTRICITY_USED_TARIFF_1", "ELECTRICITY_USED_TARIFF_2"),
         ),
     ),
     HomeyEnergyDongleSensorEntityDescription(
@@ -210,7 +218,10 @@ SENSORS: tuple[HomeyEnergyDongleSensorEntityDescription, ...] = (
         value_fn=partial(
             _total,
             total="ELECTRICITY_EXPORTED_TOTAL",
-            tariffs=tuple(f"ELECTRICITY_DELIVERED_TARIFF_{t}" for t in TARIFFS),
+            tariffs=(
+                "ELECTRICITY_DELIVERED_TARIFF_1",
+                "ELECTRICITY_DELIVERED_TARIFF_2",
+            ),
         ),
     ),
     *(

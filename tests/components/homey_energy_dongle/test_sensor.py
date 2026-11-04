@@ -39,6 +39,7 @@ from .conftest import TelegramQueue
 POWER_ENTITY_ID = "sensor.electricity_meter_power"
 TARIFF_ENTITY_ID = "sensor.electricity_meter_active_tariff"
 GAS_ENTITY_ID = "sensor.gas_meter_meter_reading"
+IMPORTED_ENTITY_ID = "sensor.electricity_meter_total_energy_imported"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -79,6 +80,25 @@ async def test_new_mbus_device(hass: HomeAssistant, telegrams: TelegramQueue) ->
     await hass.async_block_till_done()
 
     assert hass.states.get(GAS_ENTITY_ID).state == "0.107"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_total_without_all_tariff_registers(
+    hass: HomeAssistant, telegrams: TelegramQueue, telegram: Telegram
+) -> None:
+    """Test a telegram missing a tariff register doesn't lower the summed total."""
+    assert hass.states.get(IMPORTED_ENTITY_ID).state == "6.825"
+    parser = TelegramParser(telegram_specifications.V5, apply_checksum_validation=False)
+
+    telegrams.put_nowait(
+        parser.parse(TELEGRAM_V5.replace("1-0:1.8.2(000002.399*kWh)\r\n", ""))
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(IMPORTED_ENTITY_ID).state == STATE_UNKNOWN
+
+    telegrams.put_nowait(telegram)
+    await hass.async_block_till_done()
+    assert hass.states.get(IMPORTED_ENTITY_ID).state == "6.825"
 
 
 @pytest.mark.usefixtures("init_integration")
