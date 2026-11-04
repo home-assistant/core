@@ -90,9 +90,10 @@ class NetatmoBaseEntity(Entity):
         await super().async_will_remove_from_hass()
 
         for publisher in self._publishers:
-            await self.data_handler.unsubscribe(
-                publisher[SIGNAL_NAME], self.async_update_callback
+            update_callback = publisher.get(
+                "update_callback", self.async_update_callback
             )
+            await self.data_handler.unsubscribe(publisher[SIGNAL_NAME], update_callback)
 
     @callback
     def async_update_callback(self) -> None:
