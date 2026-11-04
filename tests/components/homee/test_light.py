@@ -175,6 +175,18 @@ async def test_light_color_mode_attribute(
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 366
 
+    for mode in (0.0, 1.0):
+        color_mode_attribute.current_value = mode
+        mock_homee.nodes[0].add_on_changed_listener.call_args_list[0][0][0](
+            mock_homee.nodes[0]
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("light.test_light_light_1")
+        assert state is not None
+        assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
+        assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is None
+
 
 async def test_light_snapshot(
     hass: HomeAssistant,
