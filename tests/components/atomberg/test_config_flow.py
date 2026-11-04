@@ -221,3 +221,44 @@ async def test_reauth_api_key_used_by_other_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_same_api_key_with_changed_devices(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reauth with the same API key succeeds even if the devices changed."""
+    await setup_integration(hass, mock_config_entry)
+    other_devices = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    for index, device in enumerate(other_devices):
+        device["device_id"] = f"new{index}"
+    mock_client.async_get_devices.return_value = [
+        AtombergDevice.from_api(device) for device in other_devices
+    ]
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: API_KEY, CONF_REFRESH_TOKEN: "new-token"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "new-token"
+
+
+@pytest.mark.usefixtures("mock_client", "mock_setup_entry")
+async def test_reauth_changed_api_key_without_known_devices(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a changed API key cannot be verified without known devices."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "new-key", CONF_REFRESH_TOKEN: "new-token"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+    assert mock_config_entry.data[CONF_API_KEY] == API_KEY

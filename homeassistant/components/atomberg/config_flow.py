@@ -102,16 +102,20 @@ class AtombergConfigFlow(ConfigFlow, domain=DOMAIN):
             reauth_entry = self._get_reauth_entry()
             errors, device_ids = await self._async_validate(user_input)
             if not errors:
-                # The API key can change for the same account, so identify the
-                # account by its devices instead of by the API key.
-                known_ids = self._registered_device_ids(reauth_entry)
-                if known_ids and known_ids.isdisjoint(device_ids):
-                    return self.async_abort(reason="wrong_account")
                 other_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
                     DOMAIN, user_input[CONF_API_KEY]
                 )
                 if other_entry and other_entry.entry_id != reauth_entry.entry_id:
                     return self.async_abort(reason="already_configured")
+                # The same API key is the same account. A changed key is only
+                # accepted if the account shows a device we already know; with
+                # no known devices the account cannot be verified.
+                if user_input[CONF_API_KEY] != reauth_entry.data[
+                    CONF_API_KEY
+                ] and not self._registered_device_ids(reauth_entry).intersection(
+                    device_ids
+                ):
+                    return self.async_abort(reason="wrong_account")
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     unique_id=user_input[CONF_API_KEY],
