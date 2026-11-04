@@ -5,8 +5,6 @@ When an integration defines a typed config entry, such as
 everywhere it handles its own config entry, so ``entry.runtime_data`` stays
 typed. A plain ``ConfigEntry`` loses that.
 
-``config_flow.py`` is not checked for now.
-
 ``W7460`` (``home-assistant-use-typed-config-entry``)
 """
 
@@ -17,13 +15,12 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-from pylint_home_assistant.const import Module
 from pylint_home_assistant.helpers.config_entry import (
     is_config_entry,
     typed_config_entries,
 )
 from pylint_home_assistant.helpers.integration import get_integration_dir
-from pylint_home_assistant.helpers.module_info import parse_module
+from pylint_home_assistant.helpers.module_info import is_integration_module
 
 
 def _plain_config_entries(annotation: nodes.NodeNG) -> Iterator[nodes.NodeNG]:
@@ -85,8 +82,7 @@ class HassTypedConfigEntryChecker(BaseChecker):
     def visit_module(self, node: nodes.Module) -> None:
         """Look up the typed config entries of the integration."""
         self._typed_entries = ()
-        parsed = parse_module(node.name)
-        if parsed is None or parsed.module == Module.CONFIG_FLOW:
+        if not is_integration_module(node.name):
             return
         integration_dir: Path | None = get_integration_dir(node)
         if integration_dir is not None:

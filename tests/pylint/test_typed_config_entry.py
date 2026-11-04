@@ -86,19 +86,6 @@ async def test_something(entry: ConfigEntry) -> None:
             "tests.components.test_int.test_sensor",
             id="test_module",
         ),
-        pytest.param(
-            """
-from homeassistant.config_entries import ConfigEntry
-
-class MyConfigFlow:
-    @staticmethod
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        pass
-""",
-            _TYPED_ALIAS,
-            "homeassistant.components.test_int.config_flow",
-            id="config_flow_module",
-        ),
     ],
 )
 def test_no_warning(
