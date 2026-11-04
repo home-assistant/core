@@ -61,19 +61,26 @@ def _value(data: Telegram | MbusDevice, ref: str) -> Any:
     return None if obj is None else obj.value
 
 
-def _watts(data: Telegram | MbusDevice, ref: str) -> Decimal | None:
-    """Return a kilowatt register in watts; the field resolves to 1 W."""
-    if (value := _value(data, ref)) is None:
+def _register_watts(data: Telegram | MbusDevice, ref: str) -> Decimal | None:
+    """Return a power register in watts; Q3D meters report W, the others kW."""
+    if (obj := getattr(data, ref, None)) is None:
         return None
-    return (Decimal(value) * 1000).to_integral_value()
+    value = Decimal(obj.value)
+    return value if obj.unit == UnitOfPower.WATT else value * 1000
+
+
+def _watts(data: Telegram | MbusDevice, ref: str) -> Decimal | None:
+    """Return a power register in watts; the field resolves to 1 W."""
+    value = _register_watts(data, ref)
+    return None if value is None else value.to_integral_value()
 
 
 def _power(data: Telegram | MbusDevice, positive: str, negative: str) -> Decimal | None:
     """Return import minus export in watts, treating a missing side as zero."""
-    pos, neg = _value(data, positive), _value(data, negative)
+    pos, neg = _register_watts(data, positive), _register_watts(data, negative)
     if pos is None and neg is None:
         return None
-    return ((Decimal(pos or 0) - Decimal(neg or 0)) * 1000).to_integral_value()
+    return ((pos or Decimal(0)) - (neg or Decimal(0))).to_integral_value()
 
 
 def _total(

@@ -5,7 +5,8 @@ from unittest.mock import patch
 from dsmr_parser import telegram_specifications
 from dsmr_parser.objects import Telegram
 from dsmr_parser.parsers import TelegramParser
-from homey_energy_dongle_ws import ConnectionLostError
+from homey_energy_dongle_ws import ConnectionLostError, parse_telegram
+from homey_energy_dongle_ws.parser import TELEGRAM_SPECIFICATIONS
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -26,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import EQUIPMENT_IDENTIFIER, TELEGRAM_MBUS, TELEGRAM_V5
+from . import EQUIPMENT_IDENTIFIER, TELEGRAM_MBUS, TELEGRAM_Q3D, TELEGRAM_V5
 from .conftest import TelegramQueue
 
 POWER_ENTITY_ID = "sensor.electricity_meter_power"
@@ -174,6 +175,29 @@ async def test_belgian_demand(
         hass.states.get(average).attributes["unit_of_measurement"] == UnitOfPower.WATT
     )
     assert hass.states.get(month).attributes["unit_of_measurement"] == UnitOfPower.WATT
+
+
+async def test_power_reported_in_watts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    telegrams: TelegramQueue,
+) -> None:
+    """Test power registers a Q3D meter reports in W are not scaled again."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_DSMR_VERSION: "Q3D"},
+    )
+    telegrams.put_nowait(
+        parse_telegram(
+            TELEGRAM_Q3D, telegram_specification=TELEGRAM_SPECIFICATIONS["Q3D"]
+        )
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(POWER_ENTITY_ID).state == "2125"
+    assert hass.states.get("sensor.electricity_meter_power_phase_1").state == "748"
 
 
 @pytest.mark.parametrize(
