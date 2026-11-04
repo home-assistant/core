@@ -174,7 +174,7 @@ async def test_missing_state_data(
     state = hass.states.get("sensor.ha_device_device_mode")
 
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
 
     mock_api_client.get_state.return_value = default_state_response()
 

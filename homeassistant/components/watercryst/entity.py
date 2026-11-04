@@ -1,5 +1,7 @@
 """Common entity definitions."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -56,8 +58,20 @@ class WatercrystStateEntity(CoordinatorEntity[WatercrystStateCoordinator]):
         """Initialize a WatercrystStateEntity instance."""
         super().__init__(coordinator.state)
         self._attr_device_info = _build_device_info(config_entry, coordinator)
-        self._attr_unique_id = f"{config_entry.entry_id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.data.biocat_serial}_{entity_description.key}"
+        )
         self.entity_description = entity_description
+
+    @override
+    @property
+    def available(self) -> bool:
+        """Return whether the device is online and state data is available."""
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self.coordinator.data.online is True
+        )
 
 
 class WatercrystMeasurementsEntity(
@@ -76,5 +90,7 @@ class WatercrystMeasurementsEntity(
         """Initialize a WatercrystMeasurementsEntity instance."""
         super().__init__(coordinator.measurements)
         self._attr_device_info = _build_device_info(config_entry, coordinator)
-        self._attr_unique_id = f"{config_entry.entry_id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.data.biocat_serial}_{entity_description.key}"
+        )
         self.entity_description = entity_description

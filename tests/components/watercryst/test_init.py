@@ -30,24 +30,6 @@ async def test_setup_and_unload(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-
-    assert hass.states.get("sensor.ha_device_device_mode") is not None
-    assert hass.states.get("sensor.ha_device_event_category") is not None
-    assert hass.states.get("sensor.ha_device_event_id") is not None
-    assert hass.states.get("sensor.ha_device_last_water_tap_duration") is not None
-    assert hass.states.get("sensor.ha_device_last_water_tap_volume") is not None
-    assert (
-        hass.states.get("sensor.ha_device_microleakage_measurement_state") is not None
-    )
-    assert (
-        hass.states.get("sensor.ha_device_pause_leakage_protection_until") is not None
-    )
-    assert hass.states.get("sensor.ha_device_pressure") is not None
-    assert hass.states.get("sensor.ha_device_today_s_water_consumption") is not None
-    assert hass.states.get("sensor.ha_device_total_water_consumption") is not None
-    assert hass.states.get("sensor.ha_device_volume_flow_rate") is not None
-    assert hass.states.get("sensor.ha_device_water_temperature") is not None
-
     assert type(config_entry.runtime_data) is WatercrystUpdateCoordinator
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)

@@ -47,7 +47,7 @@ async def test_state_entity_initialization(
         entity_description=description,
     )
 
-    assert entity.unique_id == f"{CONFIG_ENTRY_ID}_pressure"
+    assert entity.unique_id == f"{BIOCAT_SERIAL}_pressure"
     assert entity.entity_description is description
     assert entity.device_info.identifiers == {(DOMAIN, CONFIG_ENTRY_ID)}
     assert entity.device_info.connections == {
@@ -91,7 +91,7 @@ async def test_state_entity_initialization_missing(
         entity_description=description,
     )
 
-    assert entity.unique_id == f"{CONFIG_ENTRY_ID}_pressure"
+    assert entity.unique_id == f"{BIOCAT_SERIAL}_pressure"
     assert entity.entity_description is description
     assert entity.device_info.identifiers == {(DOMAIN, CONFIG_ENTRY_ID)}
     assert entity.device_info.connections == set()

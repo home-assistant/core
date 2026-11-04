@@ -171,7 +171,7 @@ class WatercrystUpdateCoordinator(WatercrystBaseCoordinator[DeviceResponse]):
                 identifier=(DOMAIN, config_entry.entry_id),
                 config_entry_id=config_entry.entry_id,
             )
-            if device:
+            if device and self.last_update_success:
                 registry.async_update_device(
                     device.id,
                     sw_version=self.data.current_firmware_version,

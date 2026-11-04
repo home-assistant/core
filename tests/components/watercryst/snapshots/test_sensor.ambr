@@ -45,7 +45,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode_id',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_mode.id',
+    'unique_id': '2026123456789123_mode.id',
     'unit_of_measurement': None,
   })
 # ---
@@ -114,7 +114,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event_category',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_event.category',
+    'unique_id': '2026123456789123_event.category',
     'unit_of_measurement': None,
   })
 # ---
@@ -170,7 +170,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event_id',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_event.event_id',
+    'unique_id': '2026123456789123_event.event_id',
     'unit_of_measurement': None,
   })
 # ---
@@ -223,7 +223,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_water_tap_duration',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_last_water_tap_duration',
+    'unique_id': '2026123456789123_last_water_tap_duration',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -278,7 +278,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_water_tap_volume',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_last_water_tap_volume',
+    'unique_id': '2026123456789123_last_water_tap_volume',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
@@ -342,7 +342,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ml_state',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_ml_state',
+    'unique_id': '2026123456789123_ml_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -404,7 +404,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause_leakage_protection_until_utc',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_water_protection.pause_leakage_protection_until_utc',
+    'unique_id': '2026123456789123_water_protection.pause_leakage_protection_until_utc',
     'unit_of_measurement': None,
   })
 # ---
@@ -460,7 +460,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_pressure',
+    'unique_id': '2026123456789123_pressure',
     'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
   })
 # ---
@@ -518,7 +518,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'todays_consumption',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_todays_consumption',
+    'unique_id': '2026123456789123_todays_consumption',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
@@ -576,7 +576,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_consumption',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_total_consumption',
+    'unique_id': '2026123456789123_total_consumption',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
@@ -634,7 +634,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_flow_rate',
+    'unique_id': '2026123456789123_flow_rate',
     'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
@@ -692,7 +692,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_temp',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_water_temp',
+    'unique_id': '2026123456789123_water_temp',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -758,7 +758,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode_id',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_mode.id',
+    'unique_id': '2026123456789123_mode.id',
     'unit_of_measurement': None,
   })
 # ---
@@ -827,7 +827,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event_category',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_event.category',
+    'unique_id': '2026123456789123_event.category',
     'unit_of_measurement': None,
   })
 # ---
@@ -883,7 +883,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event_id',
-    'unique_id': '6D9GB5RKL9691HH3RT895JNH56_event.event_id',
+    'unique_id': '2026123456789123_event.event_id',
     'unit_of_measurement': None,
   })
 # ---
