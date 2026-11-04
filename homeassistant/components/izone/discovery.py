@@ -18,14 +18,13 @@ import logging
 import pizone
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EXCLUDE, CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, async_noop, callback
 from homeassistant.helpers import aiohttp_client, discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DATA_CONFIG, DISCOVERY_IDLE_SECONDS, DISCOVERY_SCAN_INTERVAL, DOMAIN
+from .const import DISCOVERY_IDLE_SECONDS, DISCOVERY_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,21 +59,11 @@ class DiscoveryServiceState:
 DATA_DISCOVERY_SERVICE: HassKey[DiscoveryServiceState] = HassKey("izone_discovery")
 
 
-def yaml_excluded_uids(hass: HomeAssistant) -> set[str]:
-    """Return controller UIDs listed in deprecated YAML ``exclude``."""
-    conf: ConfigType | None = hass.data.get(DATA_CONFIG)
-    if not conf:
-        return set()
-    return set(conf.get(CONF_EXCLUDE, ()))
-
-
 @callback
 def async_note_integration_discovery(
     hass: HomeAssistant, endpoint: pizone.ControllerEndpoint
 ) -> None:
     """Start a config flow when discovery reports an unclaimed endpoint."""
-    if endpoint.uid in yaml_excluded_uids(hass):
-        return
     discovery_flow.async_create_flow(
         hass,
         DOMAIN,

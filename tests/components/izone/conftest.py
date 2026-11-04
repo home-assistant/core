@@ -301,21 +301,11 @@ async def async_follow_user_handoff(
 
 
 async def async_load_yaml_exclude(hass: HomeAssistant, *uids: str) -> None:
-    """Load deprecated YAML exclude config through the integration setup path."""
-    with (
-        patch(
-            "homeassistant.components.izone.async_setup_entry",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.izone.discovery.async_ensure_discovery",
-            new=AsyncMock(return_value=Mock(spec=DiscoveryService)),
-        ),
-    ):
-        assert await async_setup_component(
-            hass, DOMAIN, {DOMAIN: {CONF_EXCLUDE: list(uids)}}
-        )
-        await hass.async_block_till_done()
+    """Load the unsupported YAML exclude config through the integration setup path."""
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {CONF_EXCLUDE: list(uids)}}
+    )
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
