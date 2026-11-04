@@ -245,16 +245,15 @@ class UnifiEntityLoader:
 
     @callback
     def _prune_entities_of_unlisted_devices(self) -> None:
-        """Remove device registry entries the controller no longer lists.
+        """Remove device registry entries of unlisted network devices.
 
-        Clients and network devices get alike device registry entries, keyed
-        by their MAC, so one sweep covers both. An entry is kept while its MAC
-        is a listed client, a client selected or blocked in the options, or a
-        listed network device. Network devices are matched against the device
-        list only and are not expected in the client lists. Removing an entry
-        removes the entities attached to it, which catches clients without a
-        tracker, such as those holding only a link speed sensor, and network
-        devices removed from the controller.
+        An entry is kept while its MAC is a listed network device. A network
+        device can also appear in clients_all, for example when it was added
+        as a client to reserve its IP, so the client lists and the clients
+        selected or blocked in the options are checked too. Client entries
+        share the registry, keyed by MAC, so the same check keeps those of
+        listed clients and removes those of unlisted ones. Removing an entry
+        removes the entities attached to it.
         """
         api = self.hub.api
         # A failed fetch leaves its list empty, so both lists have to be loaded

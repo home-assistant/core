@@ -852,7 +852,7 @@ async def test_pruning_unlisted_device_registry_entries(
     config_entry_factory: ConfigEntryFactoryType,
     unlisted_pruned: bool,
 ) -> None:
-    """Prune device registry entries of unlisted clients and network devices."""
+    """Prune device registry entries of unlisted network devices and clients."""
     entries: dict[str, dr.DeviceEntry] = {
         mac: device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
