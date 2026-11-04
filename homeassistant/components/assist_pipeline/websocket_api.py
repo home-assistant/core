@@ -14,7 +14,11 @@ import probatio
 from homeassistant.components import conversation, stt, tts, wake_word, websocket_api
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_SECONDS, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import chat_session, entity_registry as er
+from homeassistant.helpers import (
+    chat_session,
+    config_validation as cv,
+    entity_registry as er,
+)
 from homeassistant.util import language as language_util
 
 from .const import (
@@ -94,14 +98,16 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                 ),
                 PipelineStage.STT.value: probatio.Schema(
                     {
-                        probatio.Required("input"): {
-                            probatio.Required("sample_rate"): int,
-                            probatio.Optional("wake_word_phrase"): str,
-                            probatio.Optional("wake_word_detection"): {
-                                probatio.Required("wake_word_id"): str,
-                                probatio.Required("timestamp"): int,
+                        probatio.Required("input"): probatio.All(
+                            {
+                                probatio.Required("sample_rate"): int,
+                                probatio.Optional("wake_word_phrase"): str,
+                                probatio.Optional("wake_word_audio_ms"): probatio.All(
+                                    int, probatio.Range(min=1)
+                                ),
                             },
-                        }
+                            cv.key_dependency("wake_word_audio_ms", "wake_word_phrase"),
+                        )
                     },
                     extra=probatio.ALLOW_EXTRA,
                 ),
@@ -162,11 +168,12 @@ async def websocket_run(
             )
         elif start_stage == PipelineStage.STT:
             wake_word_phrase = msg["input"].get("wake_word_phrase")
-            if (detection := msg_input.get("wake_word_detection")) is not None:
+            if (wake_word_audio_ms := msg_input.get("wake_word_audio_ms")) is not None:
+                # The timestamp is the length of the wake word audio
                 input_args["wake_word_detection"] = wake_word.DetectionResult(
-                    wake_word_id=detection["wake_word_id"],
-                    wake_word_phrase=wake_word_phrase or detection["wake_word_id"],
-                    timestamp=detection["timestamp"],
+                    wake_word_id=wake_word_phrase,
+                    wake_word_phrase=wake_word_phrase,
+                    timestamp=wake_word_audio_ms,
                 )
 
         async def stt_stream() -> AsyncGenerator[bytes]:

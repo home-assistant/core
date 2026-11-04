@@ -2806,27 +2806,27 @@ async def test_intent_progress_event(
     assert events == expected_delta_events
 
 
-WAKE_WORD_DETECTION_RUN = {
+WAKE_WORD_AUDIO_RUN = {
     "type": "assist_pipeline/run",
     "start_stage": "stt",
     "end_stage": "stt",
     "input": {
         "sample_rate": SAMPLE_RATE,
         "wake_word_phrase": "okay nabu",
-        "wake_word_detection": {"wake_word_id": "okay_nabu", "timestamp": MS_PER_CHUNK},
+        "wake_word_audio_ms": MS_PER_CHUNK,
     },
 }
 
 
 @pytest.mark.usefixtures("init_components")
-async def test_stt_wake_word_detection(
+async def test_stt_wake_word_audio(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_stt_provider_entity: MockSTTProviderEntity,
 ) -> None:
     """Test a run whose audio starts with the wake word the client detected."""
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id(WAKE_WORD_DETECTION_RUN)
+    await client.send_json_auto_id(WAKE_WORD_AUDIO_RUN)
 
     msg = await client.receive_json()
     assert msg["success"]
@@ -2839,7 +2839,7 @@ async def test_stt_wake_word_detection(
     assert msg["event"]["type"] == "wake_word-end"
     assert msg["event"]["data"] == {
         "wake_word_output": {
-            "wake_word_id": "okay_nabu",
+            "wake_word_id": "okay nabu",
             "wake_word_phrase": "okay nabu",
             "timestamp": MS_PER_CHUNK,
         }
@@ -2864,12 +2864,12 @@ async def test_stt_wake_word_detection(
 
 
 @pytest.mark.usefixtures("init_components", "mock_stt_provider_entity")
-async def test_stt_wake_word_detection_duplicate(
+async def test_stt_wake_word_audio_duplicate(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test a client's wake word is rejected when another run just woke up."""
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id(WAKE_WORD_DETECTION_RUN)
+    await client.send_json_auto_id(WAKE_WORD_AUDIO_RUN)
 
     msg = await client.receive_json()
     assert msg["success"]
@@ -2893,7 +2893,7 @@ async def test_stt_wake_word_detection_duplicate(
     assert msg["event"]["type"] == "run-end"
 
     # Same wake word within the cooldown
-    await client.send_json_auto_id(WAKE_WORD_DETECTION_RUN)
+    await client.send_json_auto_id(WAKE_WORD_AUDIO_RUN)
 
     msg = await client.receive_json()
     assert msg["success"]
@@ -2906,3 +2906,42 @@ async def test_stt_wake_word_detection_duplicate(
 
     msg = await client.receive_json()
     assert msg["event"]["type"] == "run-end"
+
+
+@pytest.mark.parametrize(
+    "run_input",
+    [
+        pytest.param(
+            {"sample_rate": SAMPLE_RATE, "wake_word_audio_ms": MS_PER_CHUNK},
+            id="no_wake_word_phrase",
+        ),
+        pytest.param(
+            {
+                "sample_rate": SAMPLE_RATE,
+                "wake_word_phrase": "okay nabu",
+                "wake_word_audio_ms": 0,
+            },
+            id="no_wake_word_audio",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_stt_wake_word_audio_invalid(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    run_input: dict[str, Any],
+) -> None:
+    """Test wake word audio needs its phrase and a length."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/run",
+            "start_stage": "stt",
+            "end_stage": "stt",
+            "input": run_input,
+        }
+    )
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
