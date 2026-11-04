@@ -33,14 +33,12 @@ rules:
   action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
-  docs-installation-parameters: done
+  docs-installation-parameters: todo
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow:
-    status: exempt
-    comment: This integration does not use any form of authentication.
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold

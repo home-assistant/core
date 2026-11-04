@@ -8,6 +8,6 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["satel_integra"],
-  "quality_scale": "silver",
+  "quality_scale": "bronze",
   "requirements": ["satel-integra==1.6.0"]
 }
