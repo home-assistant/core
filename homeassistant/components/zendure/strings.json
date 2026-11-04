@@ -17,7 +17,7 @@
         "data_description": {
           "host": "The hostname or IP address of your Zendure device on your home network."
         },
-        "description": "Set up your Zendure device to integrate with Home Assistant. The device must first be added to HEMS in the Zendure app, which enables its local interface."
+        "description": "Set up your Zendure device to integrate with Home Assistant."
       }
     }
   },
