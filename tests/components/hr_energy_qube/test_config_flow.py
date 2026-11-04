@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from python_qube_heatpump import QubeDeviceInfo
 
 from homeassistant.components.hr_energy_qube.const import DOMAIN, MDNS_LOOKUP_TIMEOUT
@@ -17,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import DEVICE_INFO
+from . import DEVICE_INFO, async_shared_connections, setup_integration
 
 
 def patch_answering_hosts(*hosts: str):
@@ -213,6 +214,56 @@ async def test_second_qube_with_the_same_uuid(
     assert result["data"] == {CONF_HOST: "192.168.5.208", CONF_PORT: 502}
     assert result["result"].unique_id is None
     assert entry.data == {CONF_HOST: "192.168.5.100", CONF_PORT: 502}
+
+
+async def test_validation_reuses_the_entry_connection(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_qube_client_cls: MagicMock,
+    mock_qube_client: MagicMock,
+    mock_device_info: AsyncMock,
+) -> None:
+    """Test checking a loaded entry's host reuses its connection and keeps it open."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 502},
+        unique_id=DEVICE_INFO.uuid,
+    )
+    await setup_integration(hass, entry)
+    held = [(["tcp", "1.2.3.4", 502], {entry.entry_id: [1]})]
+    assert await async_shared_connections(hass_ws_client) == held
+
+    # A second Qube reporting the entry's uuid makes the flow check that the
+    # entry's heat pump still answers, over the connection the entry holds
+    seen: list[list[tuple[list[str | int], dict[str, list[int]]]]] = []
+
+    async def verify() -> bool:
+        seen.append(await async_shared_connections(hass_ws_client))
+        return True
+
+    mock_qube_client.async_verify_device.side_effect = verify
+    mock_device_info.return_value = DEVICE_INFO
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.hr_energy_qube.async_setup_entry", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.5.208"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
+    assert len(seen) == 2
+    assert seen[1] == held
+    # Setup and both checks build the client on a borrowed unit
+    assert len(mock_qube_client_cls.call_args_list) == 3
+    assert all(
+        call.kwargs["unit"] is not None for call in mock_qube_client_cls.call_args_list
+    )
+    assert await async_shared_connections(hass_ws_client) == held
 
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(

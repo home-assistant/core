@@ -13,21 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from . import setup_integration
-
-
-async def _async_shared_connections(
-    hass_ws_client: WebSocketGenerator,
-) -> list[tuple[list[str | int], dict[str, list[int]]]]:
-    """Return the endpoint and units of each shared Modbus connection."""
-    client = await hass_ws_client()
-    await client.send_json_auto_id({"type": "modbus/connections/list"})
-    response = await client.receive_json()
-    assert response["success"]
-    return [
-        (connection["endpoint"], connection["units"])
-        for connection in response["result"]["connections"]
-    ]
+from . import async_shared_connections, setup_integration
 
 
 @pytest.mark.usefixtures("mock_qube_client")
@@ -40,7 +26,7 @@ async def test_setup_and_unload_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert await _async_shared_connections(hass_ws_client) == [
+    assert await async_shared_connections(hass_ws_client) == [
         (["tcp", "1.2.3.4", 502], {mock_config_entry.entry_id: [1]})
     ]
 
@@ -48,7 +34,7 @@ async def test_setup_and_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert await _async_shared_connections(hass_ws_client) == []
+    assert await async_shared_connections(hass_ws_client) == []
 
 
 @pytest.mark.usefixtures("mock_qube_client")
