@@ -474,6 +474,9 @@ class TemplateStateFromEntityId(TemplateStateBase):
         """Initialize template state."""
         super().__init__(hass, collect, entity_id)
 
+    # State caches as_dict and other derived values per object
+    _cache = property(lambda self: {}, lambda self, value: None)
+
     @property
     @override
     def _state(self) -> State:  # type: ignore[override]

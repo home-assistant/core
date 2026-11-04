@@ -1,5 +1,6 @@
 """Test template trigger entity."""
 
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -366,10 +367,24 @@ async def test_manual_trigger_sensor_entity_with_none(
     assert entity.native_value is None
 
 
-async def test_value_template_entity_filter(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "create_template",
+    [
+        pytest.param(ValueTemplate, id="value_template"),
+        pytest.param(
+            lambda *args, **kwargs: ValueTemplate.from_template(
+                template.Template(*args, **kwargs)
+            ),
+            id="from_template",
+        ),
+    ],
+)
+async def test_value_template_entity_filter(
+    hass: HomeAssistant, create_template: Callable[..., ValueTemplate]
+) -> None:
     """Test a value template only reads the state of entities its filter allows."""
     hass.states.async_set("sensor.unreadable", "secret")
-    value_template = ValueTemplate(
+    value_template = create_template(
         "{{ value }} {{ states('sensor.unreadable') }}",
         hass,
         entity_filter_factory=lambda: lambda entity_id: False,

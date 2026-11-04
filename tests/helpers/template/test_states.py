@@ -326,12 +326,22 @@ async def test_unreadable_entities_are_hidden(
     )
 
 
+@pytest.mark.parametrize(
+    "template_str",
+    [
+        pytest.param("{{ this.state }}", id="state"),
+        pytest.param("{{ this.as_dict().state }}", id="as_dict"),
+    ],
+)
 @pytest.mark.usefixtures("people")
-async def test_unreadable_entity_from_entity_id(hass: HomeAssistant) -> None:
-    """Test a state looked up by entity ID is unknown if it cannot be read."""
+async def test_unreadable_entity_from_entity_id(
+    hass: HomeAssistant, template_str: str
+) -> None:
+    """Test a reused state looked up by entity ID is unknown if it cannot be read."""
     variables = {"this": template.TemplateStateFromEntityId(hass, UNREADABLE_PERSON)}
 
-    assert _restricted("{{ this.state }}", hass).async_render(variables) == "unknown"
+    assert template.Template(template_str, hass).async_render(variables) == "not_home"
+    assert _restricted(template_str, hass).async_render(variables) == "unknown"
 
 
 @pytest.mark.usefixtures("people")

@@ -110,7 +110,11 @@ class ValueTemplate(Template):
     @classmethod
     def from_template(cls, template: Template) -> ValueTemplate:
         """Create a ValueTemplate object from a Template object."""
-        return cls(template.template, template.hass)
+        return cls(
+            template.template,
+            template.hass,
+            entity_filter_factory=template._entity_filter_factory,  # noqa: SLF001
+        )
 
     @callback
     def async_render_as_value_template(
