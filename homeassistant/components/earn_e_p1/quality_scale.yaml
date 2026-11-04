@@ -5,9 +5,7 @@ rules:
     comment: This integration does not have custom actions.
   appropriate-polling:
     status: exempt
-    comment: >-
-      Push-based via UDP. The coordinator update_interval only acts as a
-      no-data watchdog and does no I/O.
+    comment: Integration uses local_push via UDP, no polling.
   brands: done
   common-modules: done
   config-flow-test-coverage: done

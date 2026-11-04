@@ -16,6 +16,7 @@ from homeassistant.components.homeassistant import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_DEVICE_DATA, MOCK_HOST, trigger_callback
@@ -25,7 +26,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 POWER_IMPORTED_ENTITY_ID = "sensor.earn_e_p1_meter_power_imported"
 POWER_IMPORTED_STATE = str(MOCK_DEVICE_DATA["power_delivered"])
 LOST_MESSAGE = (
-    f"Error fetching earn_e_p1 data: No data received from {MOCK_HOST} "
+    f"Error requesting earn_e_p1 data: No data received from {MOCK_HOST} "
     f"for {NO_DATA_TIMEOUT.total_seconds():.0f} seconds"
 )
 RECOVERED_MESSAGE = f"Device at {MOCK_HOST} is available"
@@ -253,14 +254,25 @@ async def test_wifi_rssi_disabled_by_default(
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
+@pytest.mark.parametrize(
+    "pref_disable_polling",
+    [
+        pytest.param(False, id="polling_enabled"),
+        pytest.param(True, id="polling_disabled"),
+    ],
+)
 async def test_sensor_unavailable_when_device_stops_sending(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_listener: MagicMock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    pref_disable_polling: bool,
 ) -> None:
     """Test sensors go unavailable without packets, logging once each way."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, pref_disable_polling=pref_disable_polling
+    )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -331,3 +343,43 @@ async def test_update_entity_keeps_fresh_sensor_available(
     )
 
     assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == POWER_IMPORTED_STATE
+
+
+async def test_update_entity_does_not_extend_timeout(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test manual refreshes neither postpone nor undo the no-data timeout."""
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    await _async_tick(hass, freezer, NO_DATA_TIMEOUT - timedelta(seconds=1))
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: POWER_IMPORTED_ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == POWER_IMPORTED_STATE
+
+    await _async_tick(hass, freezer, timedelta(seconds=2))
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # A manual refresh of a silent device must not bring back the stale data.
+    # Wait out the debouncer, which would otherwise swallow this refresh.
+    await _async_tick(
+        hass, freezer, timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN)
+    )
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: POWER_IMPORTED_ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(POWER_IMPORTED_ENTITY_ID).state == STATE_UNAVAILABLE
