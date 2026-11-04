@@ -215,6 +215,31 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         const.DOMAIN,
+        const.SERVICE_SET_VALUE,
+        _async_set_value,
+        schema=probatio.Schema(
+            probatio.All(
+                {
+                    **TARGET_VALIDATORS,
+                    probatio.Required(const.ATTR_COMMAND_CLASS): probatio.Coerce(int),
+                    probatio.Required(const.ATTR_PROPERTY): probatio.Any(
+                        probatio.Coerce(int), str
+                    ),
+                    probatio.Optional(const.ATTR_PROPERTY_KEY): probatio.Any(
+                        probatio.Coerce(int), str
+                    ),
+                    probatio.Optional(const.ATTR_ENDPOINT): probatio.Coerce(int),
+                    probatio.Required(const.ATTR_VALUE): VALUE_SCHEMA,
+                    probatio.Optional(const.ATTR_WAIT_FOR_RESULT): cv.boolean,
+                    probatio.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
+                },
+                probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+            ),
+        ),
+    )
+
+    hass.services.async_register(
+        const.DOMAIN,
         const.SERVICE_PING,
         _async_ping,
         schema=probatio.Schema(
@@ -637,6 +662,71 @@ async def _async_bulk_set_partial_config_parameters(call: ServiceCall) -> None:
     raise_exceptions_from_results(nodes_list, results)
 
 
+async def _async_set_value(call: ServiceCall) -> None:
+    """Set a value on a node."""
+    await _async_set_value_on_nodes(call, _async_get_nodes(call))
+
+
+async def _async_set_value_on_nodes(call: ServiceCall, nodes: set[ZwaveNode]) -> None:
+    """Set a value on the given nodes."""
+    command_class: CommandClass = call.data[const.ATTR_COMMAND_CLASS]
+    property_: int | str = call.data[const.ATTR_PROPERTY]
+    property_key: int | str | None = call.data.get(const.ATTR_PROPERTY_KEY)
+    endpoint: int | None = call.data.get(const.ATTR_ENDPOINT)
+    new_value = call.data[const.ATTR_VALUE]
+    wait_for_result = call.data.get(const.ATTR_WAIT_FOR_RESULT)
+    options = call.data.get(const.ATTR_OPTIONS)
+
+    coros = []
+    for node in nodes:
+        value_id = get_value_id_str(
+            node,
+            command_class,
+            property_,
+            endpoint=endpoint,
+            property_key=property_key,
+        )
+        # If value has a string type but the new value is not a string, we need to
+        # convert it to one. We use new variable `new_value_` to convert the data
+        # so we can preserve the original `new_value` for every node.
+        if (
+            value_id in node.values
+            and node.values[value_id].metadata.type == "string"
+            and not isinstance(new_value, str)
+        ):
+            new_value_ = str(new_value)
+        else:
+            new_value_ = new_value
+        coros.append(
+            node.async_set_value(
+                value_id,
+                new_value_,
+                options=options,
+                wait_for_result=wait_for_result,
+            )
+        )
+
+    results = await asyncio.gather(*coros, return_exceptions=True)
+    nodes_list = list(nodes)
+    # multiple set_values my fail so we will track the entire list
+    set_value_failed_nodes_list: list[ZwaveNode] = []
+    set_value_failed_error_list: list[SetValueFailed] = []
+    for node_, result in get_valid_responses_from_results(nodes_list, results):
+        if result and result.status not in SET_VALUE_SUCCESS:
+            # If we failed to set a value, add node to exception list
+            set_value_failed_nodes_list.append(node_)
+            set_value_failed_error_list.append(
+                SetValueFailed(f"{result.status} {result.message}")
+            )
+
+    # Add the exception to the results and the nodes to the node list. No-op if
+    # no set value commands failed
+    raise_exceptions_from_results(
+        (*nodes_list, *set_value_failed_nodes_list),
+        (*results, *set_value_failed_error_list),
+    )
+
+
 async def _async_ping(call: ServiceCall) -> None:
     """Ping node(s)."""
     _LOGGER.warning(
@@ -859,38 +949,6 @@ class ZWaveServices:
         # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
-            const.SERVICE_SET_VALUE,
-            self.async_set_value,
-            schema=probatio.Schema(
-                probatio.All(
-                    {
-                        **TARGET_VALIDATORS,
-                        probatio.Required(const.ATTR_COMMAND_CLASS): probatio.Coerce(
-                            int
-                        ),
-                        probatio.Required(const.ATTR_PROPERTY): probatio.Any(
-                            probatio.Coerce(int), str
-                        ),
-                        probatio.Optional(const.ATTR_PROPERTY_KEY): probatio.Any(
-                            probatio.Coerce(int), str
-                        ),
-                        probatio.Optional(const.ATTR_ENDPOINT): probatio.Coerce(int),
-                        probatio.Required(const.ATTR_VALUE): VALUE_SCHEMA,
-                        probatio.Optional(const.ATTR_WAIT_FOR_RESULT): cv.boolean,
-                        probatio.Optional(const.ATTR_OPTIONS): {
-                            cv.string: VALUE_SCHEMA
-                        },
-                    },
-                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
-                    get_nodes_from_service_data,
-                    has_at_least_one_node,
-                ),
-            ),
-        )
-
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        self._hass.services.async_register(
-            const.DOMAIN,
             const.SERVICE_MULTICAST_SET_VALUE,
             self.async_multicast_set_value,
             schema=probatio.Schema(
@@ -938,66 +996,6 @@ class ZWaveServices:
                 service.data[const.ATTR_REFRESH_ALL_VALUES],
             )
 
-    async def async_set_value(self, service: ServiceCall) -> None:
-        """Set a value on a node."""
-        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        command_class: CommandClass = service.data[const.ATTR_COMMAND_CLASS]
-        property_: int | str = service.data[const.ATTR_PROPERTY]
-        property_key: int | str | None = service.data.get(const.ATTR_PROPERTY_KEY)
-        endpoint: int | None = service.data.get(const.ATTR_ENDPOINT)
-        new_value = service.data[const.ATTR_VALUE]
-        wait_for_result = service.data.get(const.ATTR_WAIT_FOR_RESULT)
-        options = service.data.get(const.ATTR_OPTIONS)
-
-        coros = []
-        for node in nodes:
-            value_id = get_value_id_str(
-                node,
-                command_class,
-                property_,
-                endpoint=endpoint,
-                property_key=property_key,
-            )
-            # If value has a string type but the new value is not a string, we need to
-            # convert it to one. We use new variable `new_value_` to convert the data
-            # so we can preserve the original `new_value` for every node.
-            if (
-                value_id in node.values
-                and node.values[value_id].metadata.type == "string"
-                and not isinstance(new_value, str)
-            ):
-                new_value_ = str(new_value)
-            else:
-                new_value_ = new_value
-            coros.append(
-                node.async_set_value(
-                    value_id,
-                    new_value_,
-                    options=options,
-                    wait_for_result=wait_for_result,
-                )
-            )
-
-        results = await asyncio.gather(*coros, return_exceptions=True)
-        nodes_list = list(nodes)
-        # multiple set_values my fail so we will track the entire list
-        set_value_failed_nodes_list: list[ZwaveNode] = []
-        set_value_failed_error_list: list[SetValueFailed] = []
-        for node_, result in get_valid_responses_from_results(nodes_list, results):
-            if result and result.status not in SET_VALUE_SUCCESS:
-                # If we failed to set a value, add node to exception list
-                set_value_failed_nodes_list.append(node_)
-                set_value_failed_error_list.append(
-                    SetValueFailed(f"{result.status} {result.message}")
-                )
-
-        # Add the exception to the results and the nodes to the node list. No-op if
-        # no set value commands failed
-        raise_exceptions_from_results(
-            (*nodes_list, *set_value_failed_nodes_list),
-            (*results, *set_value_failed_error_list),
-        )
-
     async def async_multicast_set_value(self, service: ServiceCall) -> None:
         """Set a value via multicast to multiple nodes."""
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
@@ -1009,7 +1007,7 @@ class ZWaveServices:
                 "Passing the zwave_js.multicast_set_value service call to the "
                 "zwave_js.set_value service since only one node was targeted"
             )
-            await self.async_set_value(service)
+            await _async_set_value_on_nodes(service, nodes)
             return
 
         command_class: CommandClass = service.data[const.ATTR_COMMAND_CLASS]

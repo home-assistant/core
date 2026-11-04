@@ -189,3 +189,39 @@ async def test_sensor_cpu_temp_unknown_on_request_error(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "fc_data",
+    [
+        {
+            **MOCK_FB_SERVICES,
+            "WANCommonIFC1": {
+                **MOCK_FB_SERVICES["WANCommonIFC1"],
+                "GetAddonInfos": FritzConnectionException("Not available Action"),
+            },
+        }
+    ],
+)
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
+async def test_sensor_addon_infos_not_supported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test transmission rate and traffic sensors are not created when not supported."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    for entity_id in (
+        "sensor.mock_title_upload_throughput",
+        "sensor.mock_title_download_throughput",
+        "sensor.mock_title_gb_sent",
+        "sensor.mock_title_gb_received",
+    ):
+        assert not entity_registry.async_is_registered(entity_id)
+    assert "Error adding entity" not in caplog.text

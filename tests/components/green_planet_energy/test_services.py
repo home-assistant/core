@@ -10,10 +10,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.green_planet_energy.const import DOMAIN
 from homeassistant.components.green_planet_energy.services import (
-    ATTR_HOURS,
-    SERVICE_GET_PRICES,
+    GreenPlanetEnergyService,
+    GreenPlanetEnergyServiceArgument,
 )
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -23,8 +23,11 @@ async def _call_get_prices(hass: HomeAssistant, hours: float, entry_id: str) -> 
     """Call get_prices and return the service response."""
     return await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_PRICES,
-        {ATTR_CONFIG_ENTRY_ID: entry_id, ATTR_HOURS: hours},
+        GreenPlanetEnergyService.GET_PRICES,
+        {
+            CommonServiceArgument.CONFIG_ENTRY_ID: entry_id,
+            GreenPlanetEnergyServiceArgument.HOURS: hours,
+        },
         blocking=True,
         return_response=True,
     )
