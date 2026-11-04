@@ -1239,8 +1239,11 @@ class SonosSpeaker:
         speakers_set = {s for s in speakers if s.soco_snapshot}
         if missing_snapshots := set(speakers) - speakers_set:
             raise HomeAssistantError(
-                "Restore failed, speakers are missing snapshots:"
-                f" {[s.zone_name for s in missing_snapshots]}"
+                translation_domain=DOMAIN,
+                translation_key="restore_missing_snapshots",
+                translation_placeholders={
+                    "speakers": ", ".join(s.zone_name for s in missing_snapshots)
+                },
             )
 
         if with_group:

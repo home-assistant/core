@@ -10,6 +10,9 @@
       "drop": {
         "default": "mdi:package-down"
       },
+      "fall": {
+        "default": "mdi:human-handsdown"
+      },
       "feeding": {
         "default": "mdi:information"
       },

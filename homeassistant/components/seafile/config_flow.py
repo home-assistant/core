@@ -1,8 +1,9 @@
 """Config flow for the Seafile integration."""
 
+from collections.abc import Mapping
 from contextlib import suppress
 import hashlib
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 from uuid import uuid4
 
 from aioseafile import (
@@ -16,6 +17,8 @@ import probatio
 from yarl import URL
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -42,9 +45,12 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_BACKUP,
+    CONF_BACKUP_PATH,
     CONF_LIBRARIES,
     CONF_LIBRARY_ID,
     CONF_OTP,
+    DEFAULT_BACKUP_PATH,
     DOMAIN,
     SUBENTRY_TYPE_LIBRARY,
 )
@@ -66,6 +72,19 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     }
 )
 
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="username")
+        ),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+    }
+)
+
 STEP_OTP_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_OTP): TextSelector(
@@ -73,6 +92,30 @@ STEP_OTP_DATA_SCHEMA = probatio.Schema(
         ),
     }
 )
+
+
+BACKUP_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_BACKUP, default=False): bool,
+        probatio.Required(
+            CONF_BACKUP_PATH, default=DEFAULT_BACKUP_PATH
+        ): TextSelector(),
+    }
+)
+
+
+def _backup_data(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return the backup settings, with the folder as an absolute path."""
+    return {
+        CONF_BACKUP: user_input[CONF_BACKUP],
+        CONF_BACKUP_PATH: "/" + user_input[CONF_BACKUP_PATH].strip("/"),
+    }
+
+
+async def _async_logout(client: Seafile) -> None:
+    """Revoke the token of the client, ignoring errors."""
+    with suppress(SeafileError):
+        await client.logout_device()
 
 
 def _library_options(libraries: list[Library]) -> list[SelectOptionDict]:
@@ -134,17 +177,69 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             # The account's internal user ID, which never changes; it is a
             # random virtual ID, except for the account created at server setup.
             await self.async_set_unique_id(account.email)
+            if self.source == SOURCE_REAUTH:
+                self._abort_if_unique_id_mismatch()
+                entry = self._get_reauth_entry()
+                return (
+                    # The update listener reloads the entry when it is loaded.
+                    self.async_update_and_abort
+                    if entry.update_listeners
+                    else self.async_update_reload_and_abort
+                )(entry, data_updates={CONF_TOKEN: self._take_token()})
+            if self.source == SOURCE_RECONFIGURE:
+                self._abort_if_unique_id_mismatch()
+                return self._async_finish_reconfigure()
             self._abort_if_unique_id_configured()
             return await self.async_step_libraries()
         return None
+
+    @callback
+    def _async_finish_reconfigure(self) -> ConfigFlowResult:
+        """Store the new login and revoke the token it replaces."""
+        entry = self._get_reconfigure_entry()
+        # The old token is only sent to the server it belongs to. In the
+        # background, as that server may have moved and no longer respond.
+        self.hass.async_create_background_task(
+            _async_logout(
+                Seafile(
+                    entry.data[CONF_URL],
+                    entry.data[CONF_TOKEN],
+                    session=async_get_clientsession(
+                        self.hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
+                    ),
+                )
+            ),
+            "seafile_revoke_replaced_token",
+        )
+        return (
+            # The update listener reloads the entry when it is loaded.
+            self.async_update_and_abort
+            if entry.update_listeners
+            else self.async_update_reload_and_abort
+        )(
+            entry,
+            title=f"{self._user_input[CONF_USERNAME]} ({URL(self._user_input[CONF_URL]).host})",
+            data_updates={
+                CONF_URL: self._user_input[CONF_URL],
+                CONF_TOKEN: self._take_token(),
+                CONF_VERIFY_SSL: self._user_input[CONF_VERIFY_SSL],
+            },
+        )
+
+    def _take_token(self) -> str:
+        """Hand the token to the entry, so async_remove doesn't revoke it."""
+        token = self._token
+        if TYPE_CHECKING:
+            assert token is not None
+        self._token = None
+        return token
 
     async def _async_revoke_token(self, client: Seafile) -> None:
         """Don't leave a token that won't be used on the server."""
         if self._token is None:
             return
         self._token = None
-        with suppress(SeafileError):
-            await client.logout_device()
+        await _async_logout(client)
 
     @callback
     @override
@@ -172,6 +267,51 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a token that is no longer valid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Log in again to get a new token."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            entry = self._get_reauth_entry()
+            self._user_input = {
+                CONF_URL: entry.data[CONF_URL],
+                CONF_VERIFY_SSL: entry.data[CONF_VERIFY_SSL],
+                **user_input,
+            }
+            if result := await self._async_login(errors):
+                return result
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_REAUTH_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Log in again, to change the server, the login or the SSL check."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._user_input = user_input
+            if result := await self._async_login(errors):
+                return result
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or self._get_reconfigure_entry().data
+            ),
+            errors=errors,
+        )
+
     async def async_step_otp(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -190,10 +330,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
         """Let the user pick the libraries to add."""
         if user_input is not None:
             names = {library.id: library.name for library in self._libraries}
-            token = self._token
-            assert token is not None
-            # The entry owns the token now, so async_remove must not revoke it.
-            self._token = None
+            token = self._take_token()
             return self.async_create_entry(
                 title=f"{self._user_input[CONF_USERNAME]} ({URL(self._user_input[CONF_URL]).host})",
                 data={
@@ -204,7 +341,11 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
                 subentries=[
                     {
                         "subentry_type": SUBENTRY_TYPE_LIBRARY,
-                        "data": {CONF_LIBRARY_ID: library_id},
+                        "data": {
+                            CONF_LIBRARY_ID: library_id,
+                            CONF_BACKUP: False,
+                            CONF_BACKUP_PATH: DEFAULT_BACKUP_PATH,
+                        },
                         "title": names[library_id],
                         "unique_id": library_id,
                     }
@@ -235,7 +376,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class LibrarySubentryFlowHandler(ConfigSubentryFlow):
-    """Handle a subentry flow to add a library."""
+    """Handle a subentry flow to add or reconfigure a library."""
 
     def __init__(self) -> None:
         """Initialize the flow."""
@@ -244,7 +385,7 @@ class LibrarySubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Let the user pick a library."""
+        """Let the user pick a library and whether to store backups in it."""
         entry = self._get_entry()
         if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
@@ -253,7 +394,7 @@ class LibrarySubentryFlowHandler(ConfigSubentryFlow):
             library_id = user_input[CONF_LIBRARY_ID]
             return self.async_create_entry(
                 title=self._libraries[library_id].name,
-                data={CONF_LIBRARY_ID: library_id},
+                data={CONF_LIBRARY_ID: library_id, **_backup_data(user_input)},
                 unique_id=library_id,
             )
 
@@ -283,6 +424,25 @@ class LibrarySubentryFlowHandler(ConfigSubentryFlow):
                     probatio.Required(CONF_LIBRARY_ID): SelectSelector(
                         SelectSelectorConfig(options=options)
                     ),
+                    **BACKUP_SCHEMA.schema,
                 }
+            ),
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Change whether backups are stored in the library."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                data={**subentry.data, **_backup_data(user_input)},
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                BACKUP_SCHEMA, subentry.data
             ),
         )

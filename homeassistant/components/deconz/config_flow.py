@@ -184,19 +184,21 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.bridge_id = await deconz_get_bridge_id(
                         session, self.host, self.port, self.api_key
                     )
-                    await self.async_set_unique_id(self.bridge_id)
-
-                    self._abort_if_unique_id_configured(
-                        updates={
-                            CONF_HOST: self.host,
-                            CONF_PORT: self.port,
-                            CONF_API_KEY: self.api_key,
-                        },
-                        reload_on_update=False,
-                    )
 
             except TimeoutError:
                 return self.async_abort(reason="no_bridges")
+
+            else:
+                await self.async_set_unique_id(self.bridge_id)
+
+                self._abort_if_unique_id_configured(
+                    updates={
+                        CONF_HOST: self.host,
+                        CONF_PORT: self.port,
+                        CONF_API_KEY: self.api_key,
+                    },
+                    reload_on_update=False,
+                )
 
         return self.async_create_entry(
             title=self.bridge_id,
@@ -211,7 +213,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Trigger a reauthentication flow."""
-        self.context["title_placeholders"] = {CONF_HOST: entry_data[CONF_HOST]}
+        self.context["title_placeholders"] = {"host": entry_data[CONF_HOST]}
 
         self.host = entry_data[CONF_HOST]
         self.port = entry_data[CONF_PORT]
