@@ -523,6 +523,11 @@ async def test_options_flow_white_kelvin_range(
             "white_kelvin_order",
             id="equal",
         ),
+        pytest.param(
+            {CONF_WARM_WHITE_KELVIN: 3000.1, CONF_COLD_WHITE_KELVIN: 3000.4},
+            "white_kelvin_order",
+            id="equal_after_rounding",
+        ),
     ],
 )
 async def test_options_flow_white_kelvin_range_errors(

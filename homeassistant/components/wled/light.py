@@ -169,6 +169,19 @@ def _has_warm_and_cold_white(device: WLEDDevice, segment: int) -> bool:
     )
 
 
+def _mixes_white_leds(device: WLEDDevice, segment: int) -> bool:
+    """Return whether a segment's color temperature mixes warm and cold white LEDs.
+
+    Not when WLED calculates it from the RGB color, or when it only drives
+    white balance correction of RGB(W) LEDs.
+    """
+    if (led_config := device.led_config) is None or led_config.cct_from_rgb:
+        return False
+
+    outputs = device.segment_led_outputs(segment)
+    return bool(outputs) and all(output.has_cct for output in outputs)
+
+
 class WLEDSegmentLight(WLEDEntity, LightEntity):
     """Defines a WLED light based on a segment."""
 
@@ -197,7 +210,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
             f"{self.coordinator.data.info.mac_address}_{self._segment}"
         )
 
-        self._white_kelvin_range = coordinator.white_kelvin_range
+        self._white_kelvin_range = (
+            coordinator.white_kelvin_range
+            if _mixes_white_leds(coordinator.data, segment)
+            else None
+        )
         if self._white_kelvin_range is not None:
             (
                 self._attr_min_color_temp_kelvin,

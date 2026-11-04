@@ -208,8 +208,17 @@ class WLEDOptionsFlowHandler(OptionsFlowWithReload):
         """Manage WLED options."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            warm = user_input.get(CONF_WARM_WHITE_KELVIN)
-            cold = user_input.get(CONF_COLD_WHITE_KELVIN)
+            # The selector does not enforce its step, so compare the stored values
+            warm = (
+                round(user_input[CONF_WARM_WHITE_KELVIN])
+                if CONF_WARM_WHITE_KELVIN in user_input
+                else None
+            )
+            cold = (
+                round(user_input[CONF_COLD_WHITE_KELVIN])
+                if CONF_COLD_WHITE_KELVIN in user_input
+                else None
+            )
             if (warm is None) != (cold is None):
                 errors["base"] = "white_kelvin_incomplete"
             elif warm is not None and cold is not None and warm >= cold:
@@ -219,8 +228,8 @@ class WLEDOptionsFlowHandler(OptionsFlowWithReload):
                     CONF_KEEP_MAIN_LIGHT: user_input[CONF_KEEP_MAIN_LIGHT]
                 }
                 if warm is not None and cold is not None:
-                    options[CONF_WARM_WHITE_KELVIN] = int(warm)
-                    options[CONF_COLD_WHITE_KELVIN] = int(cold)
+                    options[CONF_WARM_WHITE_KELVIN] = warm
+                    options[CONF_COLD_WHITE_KELVIN] = cold
                 return self.async_create_entry(title="", data=options)
 
         schema = probatio.Schema(
