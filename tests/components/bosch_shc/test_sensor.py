@@ -15,7 +15,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from .conftest import setup_integration, thermostat_device, thermostat_gen2_device
+from .conftest import (
+    motion_detector2_device,
+    setup_integration,
+    thermostat_device,
+    thermostat_gen2_device,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -233,3 +238,44 @@ async def test_room_thermostat_no_floor_temperature_for_other_probe(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.room_thermostat_2_floor_temperature") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(temperature=21.5)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The Motion Detector II reports its temperature."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.motion_detector_temperature").state == "21.5"
+
+
+_MD2_PUSH_DEVICE = motion_detector2_device(temperature=21.5)
+
+
+@pytest.mark.parametrize(
+    "device_buckets", [{"motion_detectors2": [_MD2_PUSH_DEVICE]}], indirect=True
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_temperature_push_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A pushed device update refreshes the Motion Detector II temperature."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("sensor.motion_detector_temperature").state == "21.5"
+
+    service_callback = next(
+        iter(_MD2_PUSH_DEVICE.device_services[0].callbacks.values())
+    )
+    _MD2_PUSH_DEVICE.temperature = 19.0
+    await hass.async_add_executor_job(service_callback)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.motion_detector_temperature").state == "19.0"
