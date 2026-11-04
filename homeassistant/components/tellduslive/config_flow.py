@@ -144,7 +144,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    @override
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:

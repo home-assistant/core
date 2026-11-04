@@ -29,12 +29,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TelldusLiveClient, TelldusLiveConfigEntry
-from .const import (
-    DOMAIN,
-    SIGNAL_UPDATE_ENTITY,
-    TELLDUS_DISCOVERY_NEW,
-    TelldusLiveStatus,
-)
+from .const import DOMAIN, TELLDUS_DISCOVERY_NEW, TelldusLiveStatus
 from .entity import TelldusLiveEntity
 
 SENSOR_TYPE_TEMPERATURE = "temp"
@@ -145,7 +140,7 @@ async def async_setup_entry(
         for description in DIAGNOSTIC_SENSORS
     )
 
-    async def async_discover_sensor(device_id):
+    async def async_discover_sensor(device_id: Any) -> None:
         """Discover and add a discovered sensor."""
         client = config_entry.runtime_data.client
         async_add_entities([TelldusLiveSensor(client, device_id)])
@@ -153,7 +148,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            TELLDUS_DISCOVERY_NEW.format(sensor.DOMAIN, DOMAIN),
+            TELLDUS_DISCOVERY_NEW.format(sensor.DOMAIN, config_entry.entry_id),
             async_discover_sensor,
         )
     )
@@ -215,7 +210,7 @@ class TelldusLiveDiagnosticSensor(SensorEntity):
         """Call when entity is added to hass."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_ENTITY, self.async_write_ha_state
+                self.hass, self._client.signal_update, self.async_write_ha_state
             )
         )
 
@@ -229,7 +224,7 @@ class TelldusLiveDiagnosticSensor(SensorEntity):
 class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
     """Representation of a Telldus Live sensor."""
 
-    def __init__(self, client, device_id):
+    def __init__(self, client: TelldusLiveClient, device_id: Any) -> None:
         """Initialize TelldusLiveSensor."""
         super().__init__(client, device_id)
         if desc := SENSOR_TYPES.get(self._type):
@@ -239,23 +234,23 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
 
     @property
     @override
-    def device_id(self):
+    def device_id(self) -> str:
         """Return id of the device."""
         return self._id[0]
 
     @property
-    def _type(self):
+    def _type(self) -> str:
         """Return the type of the sensor."""
         return self._id[1]
 
     @property
-    def _value(self):
+    def _value(self) -> Any:
         """Return value of the sensor."""
         return self.device.value(*self._id[1:])
 
     @property
     @override
-    def native_value(self):
+    def native_value(self) -> Any:
         """Return the state of the sensor."""
         if not self.available:
             return None

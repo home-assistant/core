@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.tellduslive import async_remove_config_entry_device
 from homeassistant.components.tellduslive.api import (
     TelldusLiveError,
     TelldusLiveRateLimitError,
@@ -323,3 +324,34 @@ async def test_status_after_failures(
     await client.update()
 
     assert client.status == "ok"
+
+
+@pytest.mark.parametrize(
+    ("identifier", "removable"),
+    [
+        pytest.param(DEVICE_ID, False, id="active_device"),
+        pytest.param(HUB_ID, False, id="hub"),
+        pytest.param("gone", True, id="stale_device"),
+    ],
+)
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    identifier: str,
+    removable: bool,
+) -> None:
+    """Test only devices missing from the account can be removed."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_config_entry.runtime_data.setup_task
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, identifier)},
+    )
+
+    assert (
+        await async_remove_config_entry_device(hass, mock_config_entry, device)
+        is removable
+    )
