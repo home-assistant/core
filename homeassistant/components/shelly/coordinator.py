@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast, override
+from typing import Any, TypeGuard, cast, override
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
@@ -51,6 +51,7 @@ from .const import (
     DUAL_MODE_LIGHT_MODELS,
     ENTRY_RELOAD_COOLDOWN,
     EVENT_SHELLY_CLICK,
+    INPUT_LOCK_CONFIG_KEY,
     INPUTS_EVENTS_DICT,
     LOGGER,
     MAX_PUSH_UPDATE_FAILURES,
@@ -77,6 +78,7 @@ from .utils import (
     get_host,
     get_http_port,
     get_rpc_device_wakeup_period,
+    get_rpc_key,
     get_rpc_ws_url,
     get_shelly_model_name,
     is_rpc_ble_scanner_supported,
@@ -110,6 +112,29 @@ RPC_CONFIG_UPDATERS: dict[str, Callable[[RpcDevice], Coroutine[Any, Any, None]]]
     "plugs_ui": lambda device: device.update_plugs_ui_config(),
     "powerstrip_ui": lambda device: device.update_powerstrip_ui_config(),
 }
+
+# Config keys of multi instance components that only affect entity state, so a
+# config change limited to them is refreshed instead of reloading the entry
+RPC_COMPONENT_CONFIG_KEYS: dict[str, set[str]] = {
+    "switch": {INPUT_LOCK_CONFIG_KEY},
+    "cover": {INPUT_LOCK_CONFIG_KEY},
+}
+RPC_COMPONENT_CONFIG_UPDATERS: dict[
+    str, Callable[[RpcDevice, int], Coroutine[Any, Any, None]]
+] = {
+    "switch": lambda device, id_: device.update_switch_config(id_),
+    "cover": lambda device, id_: device.update_cover_config(id_),
+}
+
+
+def has_config_updater(component: str | None) -> TypeGuard[str]:
+    """Return if a config change of the component is refreshed without a reload."""
+    if component is None:
+        return False
+    if component in RPC_CONFIG_UPDATERS:
+        return True
+    has_id, component_type, _ = get_rpc_key(component)
+    return has_id and component_type in RPC_COMPONENT_CONFIG_UPDATERS
 
 
 class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
@@ -643,9 +668,21 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         return _unsubscribe
 
     async def _async_update_component_config(self, component: str) -> None:
-        """Fetch the changed component config and update entities."""
+        """Fetch the changed component config and update entities.
+
+        For a multi instance component, reload the entry if a config key that
+        does not only affect entity state changed.
+        """
+        _, component_type, component_id = get_rpc_key(component)
+        state_keys = RPC_COMPONENT_CONFIG_KEYS.get(component_type)
+        old_config = dict(self.device.config.get(component, {}))
         try:
-            await RPC_CONFIG_UPDATERS[component](self.device)
+            if state_keys is None:
+                await RPC_CONFIG_UPDATERS[component](self.device)
+            else:
+                await RPC_COMPONENT_CONFIG_UPDATERS[component_type](
+                    self.device, int(component_id)
+                )
         except (DeviceConnectionError, RpcCallError) as err:
             LOGGER.debug(
                 "Error updating %s config for %s: %s", component, self.name, err
@@ -654,7 +691,30 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
             return
+
+        if state_keys is not None:
+            new_config = self.device.config.get(component, {})
+            changed_keys = {
+                key
+                for key in old_config.keys() | new_config.keys()
+                if old_config.get(key) != new_config.get(key)
+            }
+            if changed_keys - state_keys:
+                self._async_schedule_reload()
+                return
+
         self.async_update_listeners()
+
+    @callback
+    def _async_schedule_reload(self) -> None:
+        """Schedule a debounced reload of the config entry."""
+        self.update_sleep_period()
+        LOGGER.info(
+            "Config for %s changed, reloading entry in %s seconds",
+            self.name,
+            ENTRY_RELOAD_COOLDOWN,
+        )
+        self._debounced_reload.async_schedule_call()
 
     @callback
     def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:
@@ -673,7 +733,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             for event_callback in self._event_listeners:
                 event_callback(event)
 
-            if event_type == "config_changed" and component in RPC_CONFIG_UPDATERS:
+            if event_type == "config_changed" and has_config_updater(component):
                 self.config_entry.async_create_background_task(
                     self.hass,
                     self._async_update_component_config(component),
@@ -683,13 +743,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 continue
 
             if event_type in ("component_added", "component_removed", "config_changed"):
-                self.update_sleep_period()
-                LOGGER.info(
-                    "Config for %s changed, reloading entry in %s seconds",
-                    self.name,
-                    ENTRY_RELOAD_COOLDOWN,
-                )
-                self._debounced_reload.async_schedule_call()
+                self._async_schedule_reload()
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
                 for event_callback in self._input_event_listeners:
                     event_callback(event)
