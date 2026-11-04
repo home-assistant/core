@@ -47,7 +47,7 @@ def is_feed_in(interval: ActualInterval | CurrentInterval | ForecastInterval) ->
     return interval.channel_type == ChannelType.FEEDIN
 
 
-class AmberUpdateCoordinator(DataUpdateCoordinator):
+class AmberUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator in charge of downloading site data for all sensors."""
 
     config_entry: AmberConfigEntry
