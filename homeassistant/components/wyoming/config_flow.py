@@ -68,14 +68,6 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if any(
-                other.entry_id != entry.entry_id
-                for other in self._iter_entries(
-                    user_input[CONF_HOST], user_input[CONF_PORT]
-                )
-            ):
-                return self.async_abort(reason="already_configured")
-
             service = await WyomingService.create(
                 user_input[CONF_HOST], user_input[CONF_PORT]
             )
@@ -83,9 +75,16 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             elif not service.get_name():
                 errors["base"] = "no_services"
-            elif entry.update_listeners:
-                return self.async_update_and_abort(entry, data_updates=user_input)
             else:
+                # Checked after the await to close a race with concurrent flows
+                self._async_abort_entries_match(
+                    {
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    }
+                )
+                if entry.update_listeners:
+                    return self.async_update_and_abort(entry, data_updates=user_input)
                 return self.async_update_reload_and_abort(
                     entry, data_updates=user_input
                 )

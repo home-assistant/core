@@ -485,9 +485,39 @@ async def test_reconfigure_already_configured(
     )
 
     result = await stt_config_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "1.1.1.1", "port": 4321}
-    )
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=STT_INFO,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.1.1.1", "port": 4321}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert stt_config_entry.data == {"host": "1.2.3.4", "port": 1234}
+
+
+async def test_reconfigure_already_configured_during_connect(
+    hass: HomeAssistant, stt_config_entry: MockConfigEntry
+) -> None:
+    """Test an entry claiming the endpoint during the connection check aborts."""
+
+    async def add_entry_and_load_info(*args: Any, **kwargs: Any) -> Info:
+        # Simulates a concurrent flow saving the same endpoint while we connect
+        MockConfigEntry(
+            domain=DOMAIN, data={"host": "1.1.1.1", "port": 4321}
+        ).add_to_hass(hass)
+        return STT_INFO
+
+    result = await stt_config_entry.start_reconfigure_flow(hass)
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        side_effect=add_entry_and_load_info,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.1.1.1", "port": 4321}
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
