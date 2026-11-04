@@ -5243,10 +5243,12 @@ async def _get_uploaded_file(hass: HomeAssistant, id: str) -> bytes:
     return await hass.async_add_executor_job(_proces_uploaded_file)
 
 
-def _validate_certificate_settings(other_settings: dict[str, Any]) -> str | None:
+def _validate_certificate_settings(
+    other_settings: dict[str, Any], file_paths: dict[str, str]
+) -> str | None:
     """Validate the uploaded certificates and certificate file paths."""
     if any(
-        other_settings.get(upload) and other_settings.get(file_path)
+        other_settings.get(upload) and file_path in file_paths
         for upload, file_path in (
             (CONF_CERTIFICATE, CONF_CERTIFICATE_FILE),
             (CONF_CLIENT_CERT, CONF_CLIENT_CERT_FILE),
@@ -5254,12 +5256,10 @@ def _validate_certificate_settings(other_settings: dict[str, Any]) -> str | None
         )
     ):
         return "upload_and_file_path"
-    if bool(
-        other_settings.get(CONF_CLIENT_CERT)
-        or other_settings.get(CONF_CLIENT_CERT_FILE)
-    ) != bool(
-        other_settings.get(CONF_CLIENT_KEY) or other_settings.get(CONF_CLIENT_KEY_FILE)
-    ):
+    # The client certificate and key must both be uploaded, or both be files
+    if bool(other_settings.get(CONF_CLIENT_CERT)) != bool(
+        other_settings.get(CONF_CLIENT_KEY)
+    ) or (CONF_CLIENT_CERT_FILE in file_paths) != (CONF_CLIENT_KEY_FILE in file_paths):
         return "invalid_inclusion"
     return None
 
@@ -5327,15 +5327,22 @@ async def async_validate_broker_settings(
         entry_config_update.pop(key, None)
 
     other_settings: dict[str, Any] = user_input[OTHER_SETTINGS]
-    if error := _validate_certificate_settings(other_settings):
+    set_ca_cert = other_settings[SET_CA_CERT]
+    set_client_cert = other_settings[SET_CLIENT_CERT]
+    # The form is pre-filled with the file paths, so ignore them when disabled
+    file_paths: dict[str, str] = {
+        key: file_path
+        for key, enabled in (
+            (CONF_CERTIFICATE_FILE, set_ca_cert == "custom"),
+            (CONF_CLIENT_CERT_FILE, set_client_cert),
+            (CONF_CLIENT_KEY_FILE, set_client_cert),
+        )
+        if enabled and (file_path := other_settings.get(key))
+    }
+    if error := _validate_certificate_settings(other_settings, file_paths):
         errors["base"] = error
         return False
 
-    file_paths: dict[str, str] = {
-        key: file_path
-        for key in (CONF_CERTIFICATE_FILE, CONF_CLIENT_CERT_FILE, CONF_CLIENT_KEY_FILE)
-        if (file_path := other_settings.get(key))
-    }
     entry_config_update |= file_paths
     certificate_file = file_paths.get(CONF_CERTIFICATE_FILE)
     client_cert_file = file_paths.get(CONF_CLIENT_CERT_FILE)
@@ -5343,8 +5350,7 @@ async def async_validate_broker_settings(
 
     # Get current CA certificate settings from config entry,
     # a CA certificate file takes precedence
-    set_ca_cert = other_settings[SET_CA_CERT]
-    if not certificate_file and set_ca_cert == "auto":
+    if set_ca_cert == "auto":
         entry_config_update[CONF_CERTIFICATE] = "auto"
     elif (
         not certificate_file
@@ -5358,7 +5364,6 @@ async def async_validate_broker_settings(
     # converted to PEM format
     new_client_certificate: str | None = other_settings.get(CONF_CLIENT_CERT)
     new_client_key: str | None = other_settings.get(CONF_CLIENT_KEY)
-    set_client_cert = other_settings[SET_CLIENT_CERT]
 
     if new_certificate := other_settings.get(CONF_CERTIFICATE):
         if not await _async_process_file_upload(

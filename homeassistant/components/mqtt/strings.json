@@ -21,7 +21,7 @@
       "cannot_read_client_key_file": "The private key file cannot be read, check the file path",
       "client_key_error": "Invalid private key file or invalid password supplied",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_inclusion": "The client certificate and private key must be configured together",
+      "invalid_inclusion": "The client certificate and private key must be configured together, both uploaded or both as a file path",
       "upload_and_file_path": "Upload a certificate or private key file, or enter its file path, but not both"
     },
     "step": {

@@ -2607,6 +2607,67 @@ async def test_reconfigure_with_certificate_files(
 
 @pytest.mark.usefixtures("mock_ssl_context")
 @pytest.mark.parametrize(
+    ("set_ca_cert", "expected_ca_settings"),
+    [
+        pytest.param("off", {}, id="ca_validation_off"),
+        pytest.param("auto", {mqtt.CONF_CERTIFICATE: "auto"}, id="ca_validation_auto"),
+    ],
+)
+async def test_reconfigure_ignores_file_paths_of_disabled_settings(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mock_certificate_files: dict[str, str],
+    set_ca_cert: str,
+    expected_ca_settings: dict[str, str],
+) -> None:
+    """Test pre-filled file paths are not used when their setting is disabled."""
+    mock_try_connection.return_value = True
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+        data={
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 8883,
+            CONF_PROTOCOL: "5",
+        }
+        | mock_certificate_files,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 8883,
+            CONF_PROTOCOL: "5",
+            OTHER_SETTINGS: {
+                SET_CA_CERT: set_ca_cert,
+                SET_CLIENT_CERT: False,
+                mqtt.CONF_TRANSPORT: "tcp",
+            }
+            | mock_certificate_files,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert (
+        config_entry.data
+        == {
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 8883,
+            CONF_PROTOCOL: "5",
+            mqtt.CONF_TRANSPORT: "tcp",
+        }
+        | expected_ca_settings
+    )
+
+
+@pytest.mark.usefixtures("mock_ssl_context")
+@pytest.mark.parametrize(
     ("uploads", "file_paths", "missing_file_paths", "error"),
     [
         pytest.param(
@@ -2636,6 +2697,20 @@ async def test_reconfigure_with_certificate_files(
             (),
             "invalid_inclusion",
             id="client_cert_file_path_without_key",
+        ),
+        pytest.param(
+            (mqtt.CONF_CLIENT_KEY,),
+            (CONF_CLIENT_CERT_FILE,),
+            (),
+            "invalid_inclusion",
+            id="client_cert_file_path_with_uploaded_key",
+        ),
+        pytest.param(
+            (mqtt.CONF_CLIENT_CERT,),
+            (CONF_CLIENT_KEY_FILE,),
+            (),
+            "invalid_inclusion",
+            id="uploaded_client_cert_with_key_file_path",
         ),
         pytest.param(
             (),

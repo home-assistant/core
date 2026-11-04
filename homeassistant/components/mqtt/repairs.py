@@ -20,12 +20,11 @@ from .const import (
     CONF_CERTIFICATE_FILE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_CERT_FILE,
-    CONF_CLIENT_KEY,
     CONF_CLIENT_KEY_FILE,
     DEFAULT_ENCODING,
     DOMAIN,
 )
-from .util import certificate_expiry, certificate_file_expiry, get_file_path
+from .util import certificate_expiry, certificate_file_expiry
 
 URL_MQTT_BROKER_CONFIGURATION = (
     "https://www.home-assistant.io/integrations/mqtt/#broker-configuration"
@@ -129,11 +128,7 @@ async def async_setup_client_certificate_check(
             assert client_cert_file is not None
         if (installed_expiry := certificate_file_expiry(client_cert_file)) is None:
             return "client_certificate_file_invalid", {}
-        client_key_file = config.get(CONF_CLIENT_KEY_FILE) or get_file_path(
-            CONF_CLIENT_KEY
-        )
-        if TYPE_CHECKING:
-            assert client_key_file is not None
+        client_key_file: str = config[CONF_CLIENT_KEY_FILE]
         try:
             with open(client_key_file, "rb") as file:
                 load_pem_private_key(file.read(), password=None)
