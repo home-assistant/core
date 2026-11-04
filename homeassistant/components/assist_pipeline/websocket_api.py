@@ -11,7 +11,7 @@ from typing import Any, Final
 import audioop  # pylint: disable=deprecated-module
 import probatio
 
-from homeassistant.components import conversation, stt, tts, wake_word, websocket_api
+from homeassistant.components import conversation, stt, tts, websocket_api
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_SECONDS, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -168,13 +168,7 @@ async def websocket_run(
             )
         elif start_stage == PipelineStage.STT:
             wake_word_phrase = msg["input"].get("wake_word_phrase")
-            if (wake_word_audio_ms := msg_input.get("wake_word_audio_ms")) is not None:
-                # The timestamp is the length of the wake word audio
-                input_args["wake_word_detection"] = wake_word.DetectionResult(
-                    wake_word_id=wake_word_phrase,
-                    wake_word_phrase=wake_word_phrase,
-                    timestamp=wake_word_audio_ms,
-                )
+            input_args["wake_word_audio_ms"] = msg_input.get("wake_word_audio_ms")
 
         async def stt_stream() -> AsyncGenerator[bytes]:
             state = None

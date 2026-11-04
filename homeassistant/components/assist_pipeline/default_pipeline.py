@@ -559,23 +559,28 @@ class _DefaultPipelineProcessor:
             yield chunk.audio
 
     @callback
-    def _accept_wake_word_detection(self, detection: wake_word.DetectionResult) -> bool:
-        """Accept the wake word detected on the satellite, unless it is a duplicate."""
+    def _accept_wake_word_audio(
+        self, wake_word_phrase: str, wake_word_audio_ms: int
+    ) -> bool:
+        """Accept the wake word at the start of the stream, unless a duplicate."""
         try:
-            self.host.accept_wake_word(detection.wake_word_phrase)
+            self.host.accept_wake_word(wake_word_phrase)
         except DuplicateWakeUpDetectedError:
             accepted = False
         else:
             accepted = True
 
-        wake_word_output = asdict(detection)
-        wake_word_output.pop("queued_audio", None)
         self.host.process_event(
             PipelineEvent(
                 PipelineEventType.WAKE_WORD_END
                 if accepted
                 else PipelineEventType.WAKE_WORD_REJECTED,
-                {"wake_word_output": wake_word_output},
+                {
+                    "wake_word_output": {
+                        "wake_word_phrase": wake_word_phrase,
+                        "wake_word_audio_ms": wake_word_audio_ms,
+                    }
+                },
             )
         )
         return accepted
@@ -1146,13 +1151,11 @@ class _DefaultPipelineProcessor:
 
         if (
             (stt_stream is not None)
-            and (request.wake_word_detection is not None)
-            and (request.wake_word_detection.timestamp is not None)
+            and (request.wake_word_audio_ms is not None)
             and (current_stage == PipelineStage.STT)
         ):
             stt_stream = _skip_audio(
-                stt_stream,
-                request.wake_word_detection.timestamp * BYTES_PER_CHUNK // MS_PER_CHUNK,
+                stt_stream, request.wake_word_audio_ms * BYTES_PER_CHUNK // MS_PER_CHUNK
             )
 
         if stt_stream is not None:
@@ -1182,14 +1185,16 @@ class _DefaultPipelineProcessor:
             assert stt_processed_stream is not None
 
             # Wake word detection accepts the wake word it detects
-            if self.host.start_stage == PipelineStage.STT:
-                if request.wake_word_detection is not None:
-                    if not self._accept_wake_word_detection(
-                        request.wake_word_detection
+            if (self.host.start_stage == PipelineStage.STT) and (
+                request.wake_word_phrase is not None
+            ):
+                if request.wake_word_audio_ms is not None:
+                    if not self._accept_wake_word_audio(
+                        request.wake_word_phrase, request.wake_word_audio_ms
                     ):
                         self.cleanup()
                         return
-                elif request.wake_word_phrase is not None:
+                else:
                     self.host.accept_wake_word(request.wake_word_phrase)
 
             stt_input_stream = stt_processed_stream

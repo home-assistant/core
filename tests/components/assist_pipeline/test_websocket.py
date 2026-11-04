@@ -2839,9 +2839,8 @@ async def test_stt_wake_word_audio(
     assert msg["event"]["type"] == "wake_word-end"
     assert msg["event"]["data"] == {
         "wake_word_output": {
-            "wake_word_id": "okay nabu",
             "wake_word_phrase": "okay nabu",
-            "timestamp": MS_PER_CHUNK,
+            "wake_word_audio_ms": MS_PER_CHUNK,
         }
     }
 
