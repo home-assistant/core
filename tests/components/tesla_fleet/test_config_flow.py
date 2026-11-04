@@ -1039,7 +1039,7 @@ async def test_reconfigure(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     access_token: str,
-    mock_private_key,
+    mock_private_key: Mock,
 ) -> None:
     """Test Tesla Fleet reconfiguration repeats registration with the same app."""
     await async_import_client_credential(
