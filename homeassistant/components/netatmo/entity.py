@@ -48,12 +48,15 @@ class NetatmoBaseEntity(Entity):
         """Entity created."""
         for publisher in self._publishers:
             signal_name = publisher[SIGNAL_NAME]
+            update_callback = publisher.get(
+                "update_callback", self.async_update_callback
+            )
 
             if "home_id" in publisher:
                 await self.data_handler.subscribe(
                     publisher["name"],
                     signal_name,
-                    self.async_update_callback,
+                    update_callback,
                     home_id=publisher["home_id"],
                 )
 
@@ -61,7 +64,7 @@ class NetatmoBaseEntity(Entity):
                 await self.data_handler.subscribe(
                     publisher["name"],
                     signal_name,
-                    self.async_update_callback,
+                    update_callback,
                     lat_ne=publisher["lat_ne"],
                     lon_ne=publisher["lon_ne"],
                     lat_sw=publisher["lat_sw"],
@@ -70,7 +73,7 @@ class NetatmoBaseEntity(Entity):
 
             else:
                 await self.data_handler.subscribe(
-                    publisher["name"], signal_name, self.async_update_callback
+                    publisher["name"], signal_name, update_callback
                 )
 
             if any(
