@@ -73,6 +73,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             )
 
         await super().async_added_to_hass()
+        self.coordinator.entity_ids.add(self.entity_id)
 
         if self.coordinator.data is not None:
             # The trigger already produced data; rendering it must win over
@@ -86,6 +87,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     async def async_will_remove_from_hass(self) -> None:
         """Clean up conditions when removing from Home Assistant."""
         await super().async_will_remove_from_hass()
+        self.coordinator.entity_ids.discard(self.entity_id)
         if self._cond_func:
             self._cond_func.async_unload()
 

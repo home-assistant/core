@@ -46,6 +46,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         self._trigger_variables: ScriptVariables | None = None
         self._rendered_trigger_variables: dict[str, Any] = {}
         self._blueprint_inputs: dict | None = None
+        self.entity_ids: set[str] = set()
         if config is not None:
             self._trigger_variables = config.get(CONF_TRIGGER_VARIABLES)
             self._run_variables = config.get(CONF_VARIABLES)
@@ -168,10 +169,23 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         variables.update(section.async_simple_render(variables))
         return variables
 
+    @callback
+    def _log_variables_error(self, err: TemplateError) -> None:
+        """Log a variables rendering error with the affected entities."""
+        self.logger.error(
+            "Error rendering variables for %s: %s",
+            ", ".join(sorted(self.entity_ids)),
+            err,
+        )
+
     async def _handle_triggered_with_script(
         self, run_variables: TemplateVarsType, context: Context | None = None
     ) -> None:
-        run_variables = self._render_run_variables(run_variables)
+        try:
+            run_variables = self._render_run_variables(run_variables)
+        except TemplateError as err:
+            self._log_variables_error(err)
+            return
 
         if not check_conditions(self._cond_func, run_variables):
             return
@@ -188,7 +202,11 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
     async def _handle_triggered(
         self, run_variables: TemplateVarsType, context: Context | None = None
     ) -> None:
-        run_variables = self._render_run_variables(run_variables)
+        try:
+            run_variables = self._render_run_variables(run_variables)
+        except TemplateError as err:
+            self._log_variables_error(err)
+            return
 
         if not check_conditions(self._cond_func, run_variables):
             return
