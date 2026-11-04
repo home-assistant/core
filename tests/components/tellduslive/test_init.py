@@ -220,6 +220,40 @@ async def test_snapshot_saved_after_refresh(
     }
 
 
+async def test_remove_entry_deletes_snapshot_for_good(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+) -> None:
+    """Test removing the entry within the save delay leaves no snapshot behind."""
+    key = f"{DOMAIN}.{mock_config_entry.entry_id}"
+    await _setup(hass, mock_config_entry)
+    assert key not in hass_storage
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    assert key not in hass_storage
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    assert key not in hass_storage
+
+
+async def test_unload_flushes_snapshot(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+) -> None:
+    """Test unloading within the save delay still keeps the snapshot."""
+    await _setup(hass, mock_config_entry)
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert f"{DOMAIN}.{mock_config_entry.entry_id}" in hass_storage
+
+
 @pytest.mark.parametrize(
     ("failures", "retry_after", "expected"),
     [

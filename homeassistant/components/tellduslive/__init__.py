@@ -100,7 +100,7 @@ async def async_unload_entry(
     data = config_entry.runtime_data
     if not data.setup_task.done():
         data.setup_task.cancel()
-    data.client.async_cancel_update()
+    await data.client.async_shutdown()
     await hass.config_entries.async_unload_platforms_or_raise(
         config_entry, data.client.platforms
     )
@@ -154,6 +154,8 @@ class TelldusLiveClient:
         self._hubs_registered = False
         self._hub_ids: set[str] = set()
         self._restored = asyncio.Event()
+        self._update_lock = asyncio.Lock()
+        self._snapshot_dirty = False
 
         self._hass = hass
         self._config_entry = config_entry
@@ -337,7 +339,9 @@ class TelldusLiveClient:
         for device_id in new_devices:
             await self._discover(device_id)
             self._known_devices.add(device_id)
-        self._store.async_delay_save(self._snapshot, SNAPSHOT_SAVE_DELAY)
+        if not self._stopped:
+            self._snapshot_dirty = True
+            self._store.async_delay_save(self._snapshot, SNAPSHOT_SAVE_DELAY)
 
     def _retry_delay(self, err: TelldusLiveError) -> float:
         """Return the backoff delay after a failed refresh."""
@@ -354,30 +358,35 @@ class TelldusLiveClient:
 
     async def update(self, *args: Any) -> None:
         """Poll the API, retrying with backoff when it fails."""
-        delay = self._interval
-        self._updating = True
-        try:
-            await self._async_fetch()
-        except TelldusLiveError as err:
-            self._failures += 1
-            self._backoff += 1
-            self._ok_streak = 0
-            delay = self._retry_delay(err)
-            _LOGGER.warning(
-                "Telldus Live request failed (%s), retrying in %s seconds", err, delay
-            )
-        else:
-            self._failures = 0
-            self._ok_streak += 1
-            if self._ok_streak >= RETRY_RESET_AFTER_OK:
-                self._backoff = 0
-        finally:
-            self._updating = False
-            self._first_refresh_done = True
-            async_dispatcher_send(self._hass, self.signal_update)
-            # An update still in flight at unload must not schedule another.
-            if not self._stopped:
-                self._cancel_update = async_call_later(self._hass, delay, self.update)
+        async with self._update_lock:
+            delay = self._interval
+            self._updating = True
+            try:
+                await self._async_fetch()
+            except TelldusLiveError as err:
+                self._failures += 1
+                self._backoff += 1
+                self._ok_streak = 0
+                delay = self._retry_delay(err)
+                _LOGGER.warning(
+                    "Telldus Live request failed (%s), retrying in %s seconds",
+                    err,
+                    delay,
+                )
+            else:
+                self._failures = 0
+                self._ok_streak += 1
+                if self._ok_streak >= RETRY_RESET_AFTER_OK:
+                    self._backoff = 0
+            finally:
+                self._updating = False
+                self._first_refresh_done = True
+                async_dispatcher_send(self._hass, self.signal_update)
+                # An update still in flight at unload must not schedule another.
+                if not self._stopped:
+                    self._cancel_update = async_call_later(
+                        self._hass, delay, self.update
+                    )
 
     @callback
     def async_cancel_update(self) -> None:
@@ -386,6 +395,14 @@ class TelldusLiveClient:
         if self._cancel_update is not None:
             self._cancel_update()
             self._cancel_update = None
+
+    async def async_shutdown(self) -> None:
+        """Stop polling, wait for a running refresh and flush the snapshot."""
+        self.async_cancel_update()
+        async with self._update_lock:
+            if self._snapshot_dirty:
+                await self._store.async_save(self._snapshot())
+                self._snapshot_dirty = False
 
     def device(self, device_id: str) -> Device:
         """Return device representation."""
