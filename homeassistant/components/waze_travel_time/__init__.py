@@ -22,7 +22,7 @@ from .const import (
     DOMAIN,
     SEMAPHORE_KEY,
 )
-from .coordinator import WazeTravelTimeCoordinator
+from .coordinator import WazeTravelTimeConfigEntry, WazeTravelTimeCoordinator
 from .helpers import default_base_coordinates_for_region
 from .services import async_setup_services
 
@@ -40,7 +40,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: WazeTravelTimeConfigEntry
+) -> None:
     """Load the saved entities."""
     if SEMAPHORE_KEY not in hass.data:
         hass.data[SEMAPHORE_KEY] = asyncio.Semaphore(1)
@@ -59,7 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: WazeTravelTimeConfigEntry
+) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
