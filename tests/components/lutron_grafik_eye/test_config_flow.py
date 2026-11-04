@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from grafikeye.exceptions import (
+from grafikeye import (
     GrafikEyeAuthenticationError,
     GrafikEyeConnectionError,
     GrafikEyeConnectionInUseError,

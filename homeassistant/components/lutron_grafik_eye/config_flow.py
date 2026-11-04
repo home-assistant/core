@@ -3,9 +3,9 @@
 import logging
 from typing import Any, override
 
-from grafikeye import GrafikEyeClient
-from grafikeye.exceptions import (
+from grafikeye import (
     GrafikEyeAuthenticationError,
+    GrafikEyeClient,
     GrafikEyeConnectionError,
     GrafikEyeConnectionInUseError,
 )

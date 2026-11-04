@@ -2,8 +2,11 @@
 
 import logging
 
-from grafikeye import GrafikEyeClient
-from grafikeye.exceptions import GrafikEyeAuthenticationError, GrafikEyeConnectionError
+from grafikeye import (
+    GrafikEyeAuthenticationError,
+    GrafikEyeClient,
+    GrafikEyeConnectionError,
+)
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, Platform
