@@ -97,9 +97,11 @@ async def test_repair_issue_on_setup(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
         DOMAIN, f"{issue_key}_{mock_config_entry.entry_id}"
     )
+    assert issue
+    assert issue.config_entry_id == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize(("error", "issue_key"), REPAIR_ISSUES)

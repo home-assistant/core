@@ -77,6 +77,7 @@ class HomeyEnergyDongleCoordinator(DataUpdateCoordinator[Telegram]):
             self.hass,
             DOMAIN,
             f"{key}_{self.config_entry.entry_id}",
+            config_entry_id=self.config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key=key,
