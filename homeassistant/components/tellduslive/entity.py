@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -43,6 +44,13 @@ class TelldusLiveEntity(Entity):
                 self.hass, SIGNAL_UPDATE_ENTITY, self.async_write_ha_state
             )
         )
+
+    def _command(self, success: bool) -> None:
+        """Raise if a command was not accepted by Telldus Live."""
+        if not success:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_failed"
+            )
 
     @property
     def device_id(self):
@@ -112,7 +120,7 @@ class TelldusLiveEntity(Entity):
     @override
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        device = self._client.device_info(self.device.device_id)
+        device = self._client.device_info(self.device.device_id) or {}
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device.device_id)},
             name=self.device.name,

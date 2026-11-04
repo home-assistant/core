@@ -8,6 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tellduslive.const import (
     DOMAIN,
+    KEY_REQUEST_DELAY,
     KEY_SCAN_INTERVAL,
     KEY_SESSION,
     TURNON,
@@ -26,6 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
             KEY_SCAN_INTERVAL: 60,
             KEY_SESSION: {"token": "token", "token_secret": "token_secret"},
         },
+        options={KEY_REQUEST_DELAY: 0},
     )
 
 
@@ -56,7 +58,8 @@ def mock_tellduslive() -> Generator[MagicMock]:
             "version": "17",
         }
     ]
-    session.update.return_value = True
+    session.update.return_value = None
+    session.dump_state.return_value = {}
     session.device_ids = [DEVICE_ID]
     session.devices = [device]
     session.device.return_value = device

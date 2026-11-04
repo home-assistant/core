@@ -189,3 +189,48 @@ async def test_discovery_already_configured(
 
     with pytest.raises(data_entry_flow.AbortFlow):
         await flow.async_step_discovery(["some-host", ""])
+
+
+@pytest.mark.parametrize(
+    ("user_input", "error"),
+    [
+        (
+            {
+                "scan_interval": 120,
+                "retry_initial_delay": 10,
+                "retry_max_delay": 600,
+                "request_delay": 2,
+            },
+            None,
+        ),
+        (
+            {
+                "scan_interval": 120,
+                "retry_initial_delay": 700,
+                "retry_max_delay": 600,
+                "request_delay": 2,
+            },
+            "retry_delay_order",
+        ),
+    ],
+)
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    user_input: dict[str, int],
+    error: str | None,
+) -> None:
+    """Test the options flow saves valid values and rejects invalid ones."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    with patch("homeassistant.components.tellduslive.async_setup_entry"):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result.get("errors", {}).get("base") == error
+    assert mock_config_entry.options.get("retry_max_delay") == (None if error else 600)

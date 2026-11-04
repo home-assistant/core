@@ -9,6 +9,8 @@ import requests_mock
 from homeassistant.components.tellduslive.api import (
     LocalAPISession,
     Session,
+    TelldusLiveError,
+    TelldusLiveRateLimitError,
     supports_local_api,
 )
 from homeassistant.components.tellduslive.const import (
@@ -88,7 +90,7 @@ def test_update_merges_devices_and_sensors(
     """Test unnamed devices and data-less sensors are skipped, sensors prefixed."""
     _mock_lists(mock_api)
 
-    assert cloud_session.update() is True
+    cloud_session.update()
 
     assert sorted(cloud_session.device_ids) == ["1", "_1"]
     assert cloud_session.device("1").is_sensor is False
@@ -103,7 +105,79 @@ def test_update_failed_request(
     _mock_lists(mock_api)
     mock_api.get(f"{CLOUD_URL}{failing}", status_code=500)
 
-    assert cloud_session.update() is False
+    with pytest.raises(TelldusLiveError):
+        cloud_session.update()
+
+
+@pytest.mark.parametrize(
+    ("failing", "succeeding", "expected"),
+    [
+        ("sensors/list", "devices/list", ["_1"]),
+        ("devices/list", "sensors/list", ["1"]),
+    ],
+)
+def test_update_failure_keeps_previous_part(
+    mock_api: requests_mock.Mocker,
+    cloud_session: Session,
+    failing: str,
+    succeeding: str,
+    expected: list[str],
+) -> None:
+    """Test the part of the state whose request failed is kept."""
+    _mock_lists(mock_api)
+    cloud_session.update()
+    mock_api.get(f"{CLOUD_URL}{failing}", status_code=500)
+    mock_api.get(f"{CLOUD_URL}{succeeding}", json={"device": [], "sensor": []})
+
+    with pytest.raises(TelldusLiveError):
+        cloud_session.update()
+
+    assert sorted(cloud_session.device_ids) == expected
+
+
+@pytest.mark.parametrize(
+    ("headers", "retry_after"),
+    [({"Retry-After": "120"}, 120.0), ({}, None), ({"Retry-After": "soon"}, None)],
+)
+def test_rate_limited(
+    mock_api: requests_mock.Mocker,
+    cloud_session: Session,
+    headers: dict[str, str],
+    retry_after: float | None,
+) -> None:
+    """Test a 429 raises a rate limit error with the Retry-After value."""
+    mock_api.get(f"{CLOUD_URL}devices/list", status_code=429, headers=headers)
+
+    with pytest.raises(TelldusLiveRateLimitError) as exc_info:
+        cloud_session._request("devices/list")
+
+    assert exc_info.value.retry_after == retry_after
+
+
+def test_execute_rate_limited(
+    mock_api: requests_mock.Mocker,
+    cloud_session: Session,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a rate limited command fails and is logged as a warning."""
+    mock_api.get(f"{CLOUD_URL}device/turnOn", status_code=429)
+
+    assert cloud_session.execute("device/turnOn", id="1") is False
+    assert "Rate limited by Telldus Live" in caplog.text
+
+
+def test_state_round_trip(
+    mock_api: requests_mock.Mocker, cloud_session: Session
+) -> None:
+    """Test dumping and loading the state restores devices without requests."""
+    _mock_lists(mock_api)
+    cloud_session.update()
+    restored = Session("public", "private", "token", "secret")
+
+    restored.load_state(cloud_session.dump_state())
+
+    assert sorted(restored.device_ids) == ["1", "_1"]
+    assert restored.device("_1").value("temp", 0) == "21.5"
 
 
 @pytest.mark.parametrize(
@@ -226,7 +300,8 @@ def test_get_clients_failure(
     """Test cloud client listing failure."""
     mock_api.get(f"{CLOUD_URL}clients/list", status_code=500)
 
-    assert cloud_session.get_clients() == []
+    with pytest.raises(TelldusLiveError):
+        cloud_session.get_clients()
 
 
 def test_cloud_authorize_url_failure(cloud_session: Session) -> None:

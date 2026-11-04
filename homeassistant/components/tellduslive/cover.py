@@ -48,17 +48,17 @@ class TelldusLiveCover(TelldusLiveEntity, CoverEntity):
     @override
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        self.device.down()
+        self._command(self.device.down())
         self.schedule_update_ha_state()
 
     @override
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self.device.up()
+        self._command(self.device.up())
         self.schedule_update_ha_state()
 
     @override
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        self.device.stop()
+        self._command(self.device.stop())
         self.schedule_update_ha_state()

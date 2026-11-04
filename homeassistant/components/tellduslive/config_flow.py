@@ -6,14 +6,31 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
 from .api import Session, supports_local_api
 from .const import (
     APPLICATION_NAME,
     CLOUD_NAME,
+    DEFAULT_REQUEST_DELAY,
+    DEFAULT_RETRY_INITIAL_DELAY,
+    DEFAULT_RETRY_MAX_DELAY,
     DOMAIN,
+    KEY_REQUEST_DELAY,
+    KEY_RETRY_INITIAL_DELAY,
+    KEY_RETRY_MAX_DELAY,
     KEY_SCAN_INTERVAL,
     KEY_SESSION,
     NOT_SO_PRIVATE_KEY,
@@ -33,6 +50,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _session: Session
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithReload:
+        """Return the options flow."""
+        return TelldusLiveOptionsFlow()
 
     def __init__(self) -> None:
         """Init config flow."""
@@ -128,3 +152,69 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             self._hosts.append(discovery_info[0])
 
         return await self.async_step_user()
+
+
+def _seconds_selector(minimum: int, maximum: int) -> NumberSelector:
+    return NumberSelector(
+        NumberSelectorConfig(
+            min=minimum,
+            max=maximum,
+            step=1,
+            unit_of_measurement="s",
+            mode=NumberSelectorMode.BOX,
+        )
+    )
+
+
+class TelldusLiveOptionsFlow(OptionsFlowWithReload):
+    """Handle the Telldus Live options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the polling and retry options."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if user_input[KEY_RETRY_INITIAL_DELAY] > user_input[KEY_RETRY_MAX_DELAY]:
+                errors["base"] = "retry_delay_order"
+            else:
+                return self.async_create_entry(
+                    data={key: int(value) for key, value in user_input.items()}
+                )
+
+        options = self.config_entry.options
+        defaults = {
+            KEY_SCAN_INTERVAL: int(
+                options.get(
+                    KEY_SCAN_INTERVAL, self.config_entry.data[KEY_SCAN_INTERVAL]
+                )
+            ),
+            KEY_RETRY_INITIAL_DELAY: options.get(
+                KEY_RETRY_INITIAL_DELAY, DEFAULT_RETRY_INITIAL_DELAY
+            ),
+            KEY_RETRY_MAX_DELAY: options.get(
+                KEY_RETRY_MAX_DELAY, DEFAULT_RETRY_MAX_DELAY
+            ),
+            KEY_REQUEST_DELAY: options.get(KEY_REQUEST_DELAY, DEFAULT_REQUEST_DELAY),
+        }
+        return self.async_show_form(
+            step_id="init",
+            errors=errors,
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(KEY_SCAN_INTERVAL): _seconds_selector(
+                            30, 3600
+                        ),
+                        probatio.Required(KEY_RETRY_INITIAL_DELAY): _seconds_selector(
+                            5, 3600
+                        ),
+                        probatio.Required(KEY_RETRY_MAX_DELAY): _seconds_selector(
+                            5, 86400
+                        ),
+                        probatio.Required(KEY_REQUEST_DELAY): _seconds_selector(0, 60),
+                    }
+                ),
+                user_input or defaults,
+            ),
+        )

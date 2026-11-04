@@ -76,11 +76,11 @@ class TelldusLiveLight(TelldusLiveEntity, LightEntity):
                 "Setting brightness to %d%%, because it was 0", fallback_brightness
             )
             brightness = int(fallback_brightness * 255 / 100)
-        self.device.dim(level=brightness)
+        self._command(self.device.dim(level=brightness))
         self.changed()
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        self.device.turn_off()
+        self._command(self.device.turn_off())
         self.changed()
