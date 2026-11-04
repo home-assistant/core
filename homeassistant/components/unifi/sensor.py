@@ -977,7 +977,7 @@ async def async_setup_entry(
         )
 
     add_sensors()
-    hub.entity_loader.async_add_entities_on_adoption(add_sensors)
+    hub.adoption.async_on_adoption(add_sensors)
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, hub.signal_options_update, add_sensors)
     )

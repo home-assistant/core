@@ -86,10 +86,15 @@ async def async_remove_config_entry_device(
         # This integration does not create child devices.
         return False
     hub = config_entry.runtime_data
-    return not any(
+    if any(
         identifier in hub.api.devices and async_device_supported_fn(hub, identifier)
         for _, identifier in device_entry.connections
-    )
+    ):
+        return False
+    for _, identifier in device_entry.connections:
+        hub.entity_loader.async_forget_objects(identifier)
+        hub.adoption.async_follow_if_unadopted(identifier)
+    return True
 
 
 class UnifiWirelessClients:

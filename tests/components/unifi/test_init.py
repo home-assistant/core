@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
 import pytest
-from pytest_homeassistant.common import flush_store
+from pytest_homeassistant.common import MockConfigEntry, flush_store
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import unifi
@@ -246,6 +246,20 @@ async def test_remove_config_entry_device_rejects_child_device(
 ADOPTED_MAC = "00:00:00:00:01:01"
 PENDING_MAC = "00:00:00:00:01:02"
 
+ADOPTED_DEVICE = {
+    "adopted": True,
+    "board_rev": 3,
+    "device_id": "mock-id",
+    "ip": "10.0.1.1",
+    "mac": ADOPTED_MAC,
+    "model": "US16P150",
+    "name": "Device 1",
+    "next_interval": 20,
+    "state": 1,
+    "type": "usw",
+    "version": "4.0.42.10433",
+}
+
 PENDING_DEVICE = {
     "adopted": False,
     "board_rev": 3,
@@ -254,6 +268,16 @@ PENDING_DEVICE = {
     "mac": PENDING_MAC,
     "model": "US16P150",
     "next_interval": 20,
+    "state": 2,
+    "type": "usw",
+    "version": "4.0.42.10433",
+}
+
+# The port table is only reported once the device is adopted
+ADOPTED_PENDING_DEVICE = {
+    **PENDING_DEVICE,
+    "adopted": True,
+    "name": "Device 2",
     "port_table": [
         {
             "media": "GE",
@@ -265,33 +289,20 @@ PENDING_DEVICE = {
             "up": True,
         }
     ],
-    "state": 2,
-    "type": "usw",
-    "version": "4.0.42.10433",
+    "state": 1,
 }
 
-
-@pytest.mark.parametrize(
-    "device_payload",
-    [
-        [
-            {
-                "adopted": True,
-                "board_rev": 3,
-                "device_id": "mock-id",
-                "ip": "10.0.1.1",
-                "mac": ADOPTED_MAC,
-                "model": "US16P150",
-                "name": "Device 1",
-                "next_interval": 20,
-                "state": 1,
-                "type": "usw",
-                "version": "4.0.42.10433",
-            },
-            PENDING_DEVICE,
-        ]
-    ],
+# Entities of a device loaded by default, disabled by the user in the test below
+DISABLED_ENTITIES = (
+    (Platform.UPDATE, f"device_update-{ADOPTED_MAC}"),
+    (Platform.DEVICE_TRACKER, ADOPTED_MAC),
+    (Platform.BUTTON, f"device_restart-{ADOPTED_MAC}"),
+    (Platform.SENSOR, f"device_uptime-{ADOPTED_MAC}"),
+    (Platform.SENSOR, f"device_state-{ADOPTED_MAC}"),
 )
+
+
+@pytest.mark.parametrize("device_payload", [[ADOPTED_DEVICE, PENDING_DEVICE]])
 async def test_device_pending_adoption(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -308,39 +319,36 @@ async def test_device_pending_adoption(
             (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
         )
 
-    def update_entity_id(mac: str) -> str | None:
-        return entity_registry.async_get_entity_id(
-            Platform.UPDATE, DOMAIN, f"device_update-{mac}"
-        )
-
-    def poe_entity_id(mac: str) -> str | None:
-        return entity_registry.async_get_entity_id(
-            Platform.SWITCH, DOMAIN, f"poe-{mac}_1"
-        )
+    def entity_ids(mac: str) -> list[str | None]:
+        return [
+            entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
+            for platform, unique_id in (
+                (Platform.UPDATE, f"device_update-{mac}"),
+                (Platform.SWITCH, f"poe-{mac}_1"),
+                (Platform.BUTTON, f"power_cycle-{mac}_1"),
+                (Platform.SENSOR, f"poe_power-{mac}_1"),
+            )
+        ]
 
     # Only the adopted device gets a device entry and entities
     assert device_entry(ADOPTED_MAC)
-    assert update_entity_id(ADOPTED_MAC)
+    assert entity_ids(ADOPTED_MAC)[0]
     assert not device_entry(PENDING_MAC)
-    assert not update_entity_id(PENDING_MAC)
-    assert not poe_entity_id(PENDING_MAC)
+    assert not any(entity_ids(PENDING_MAC))
 
     # Adopting the device creates its entities, including those of its ports
-    mock_websocket_message(
-        message=MessageKey.DEVICE,
-        data={**PENDING_DEVICE, "adopted": True, "name": "Device 2", "state": 1},
-    )
+    # that are first reported in the same update
+    mock_websocket_message(message=MessageKey.DEVICE, data=ADOPTED_PENDING_DEVICE)
     await hass.async_block_till_done()
 
     assert (pending_device_entry := device_entry(PENDING_MAC))
-    assert update_entity_id(PENDING_MAC)
-    assert poe_entity_id(PENDING_MAC)
+    assert all(entity_ids(PENDING_MAC))
 
     # Forgetting the device in the controller removes its loaded entities again
     mock_websocket_message(message=MessageKey.DEVICE, data=PENDING_DEVICE)
     await hass.async_block_till_done()
 
-    assert not update_entity_id(PENDING_MAC)
+    assert not entity_ids(PENDING_MAC)[0]
 
     # The device entry of a device that is not adopted can be removed from the UI
     assert await async_setup_component(hass, "config", {})
@@ -348,3 +356,79 @@ async def test_device_pending_adoption(
     response = await ws_client.remove_device(pending_device_entry.id)
     assert response["success"]
     assert not device_entry(PENDING_MAC)
+    assert not any(entity_ids(PENDING_MAC))
+
+    # Adopting the device again recreates everything, including the entities
+    # that are disabled by default and were never loaded
+    mock_websocket_message(message=MessageKey.DEVICE, data=ADOPTED_PENDING_DEVICE)
+    await hass.async_block_till_done()
+
+    assert device_entry(PENDING_MAC)
+    assert all(entity_ids(PENDING_MAC))
+
+    # A device adopted from the start that is forgotten and adopted again
+    mock_websocket_message(
+        message=MessageKey.DEVICE, data={**ADOPTED_DEVICE, "adopted": False}
+    )
+    await hass.async_block_till_done()
+
+    assert not entity_ids(ADOPTED_MAC)[0]
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=ADOPTED_DEVICE)
+    await hass.async_block_till_done()
+
+    assert entity_ids(ADOPTED_MAC)[0]
+
+
+@pytest.mark.parametrize("device_payload", [[ADOPTED_DEVICE]])
+async def test_device_without_loaded_entities_readopted(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_websocket_message: WebsocketMessageMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Verify a device is recreated after removal without any loaded entity."""
+    for platform, unique_id in DISABLED_ENTITIES:
+        entity_registry.async_get_or_create(
+            platform,
+            DOMAIN,
+            unique_id,
+            config_entry=config_entry,
+            disabled_by=er.RegistryEntryDisabler.USER,
+        )
+    await config_entry_factory()
+
+    def device_entry() -> dr.DeviceEntry | None:
+        return device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, ADOPTED_MAC), config_entry.entry_id
+        )
+
+    def update_entity_id() -> str | None:
+        return entity_registry.async_get_entity_id(
+            Platform.UPDATE, DOMAIN, f"device_update-{ADOPTED_MAC}"
+        )
+
+    assert (entry := device_entry())
+    assert hass.states.async_entity_ids(DOMAIN) == []
+
+    # Forgetting the device is not noticed by any entity
+    mock_websocket_message(
+        message=MessageKey.DEVICE, data={**ADOPTED_DEVICE, "adopted": False}
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(entry.id)
+    assert response["success"]
+    assert not device_entry()
+    assert not update_entity_id()
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=ADOPTED_DEVICE)
+    await hass.async_block_till_done()
+
+    assert device_entry()
+    assert update_entity_id()
