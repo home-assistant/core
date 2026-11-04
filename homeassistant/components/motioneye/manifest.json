@@ -5,6 +5,7 @@
   "categories": ["security_safety.cameras"],
   "codeowners": ["@dermotduffy"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/motioneye",
   "integration_type": "hub",

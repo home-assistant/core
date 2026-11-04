@@ -326,6 +326,17 @@
       }
     },
     "event": {
+      "alarm": {
+        "name": "Alarm",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "co": "Carbon monoxide",
+              "smoke": "Smoke"
+            }
+          }
+        }
+      },
       "doorbell": {
         "state_attributes": {
           "event_type": {
@@ -362,6 +373,21 @@
               "night": "Night",
               "panic": "Panic",
               "right": "Right"
+            }
+          }
+        }
+      },
+      "maintenance": {
+        "name": "Maintenance",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "battery_low": "Battery low",
+              "co_fault": "Carbon monoxide sensor fault",
+              "end_of_life": "End of life",
+              "needs_cleaning": "Needs cleaning",
+              "self_test": "Self-test",
+              "smoke_fault": "Smoke sensor fault"
             }
           }
         }

@@ -4,8 +4,7 @@ from dataclasses import dataclass
 from unittest.mock import patch
 
 from pysnooz import SnoozDeviceState, parse_snooz_advertisement, turn_off
-from pysnooz.device import DisconnectionReason, SnoozConnectionStatus
-from pysnooz.testing import MockSnoozDevice as ParentMockSnoozDevice
+from pysnooz.testing import MockSnoozDevice
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import (
     generate_ble_device,
@@ -65,36 +64,6 @@ class SnoozFixture:
 
     entry: MockConfigEntry
     device: MockSnoozDevice
-
-
-class MockSnoozDevice(ParentMockSnoozDevice):
-    """Used for testing integration with Bleak.
-
-    Adjusted for https://github.com/AustinBrunkhorst/pysnooz/pull/19
-    """
-
-    async def async_disconnect(self) -> None:
-        """Disconnect from the device."""
-        self._expected_disconnect = True
-        try:
-            self._cancel_current_command()
-            if (
-                self._reconnection_task is not None
-                and not self._reconnection_task.done()
-            ):
-                self._reconnection_task.cancel()
-
-            if self._connection_task is not None and not self._connection_task.done():
-                self._connection_task.cancel()
-
-            if self._api is not None:
-                await self._api.async_disconnect()
-
-            if self.connection_status is not SnoozConnectionStatus.DISCONNECTED:
-                self._machine.device_disconnected(reason=DisconnectionReason.USER)
-
-        finally:
-            self._expected_disconnect = False
 
 
 async def create_mock_snooz(

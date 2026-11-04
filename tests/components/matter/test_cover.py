@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import CoverEntityFeature, CoverState
 from homeassistant.components.matter.cover import STATE_WRITE_DEBOUNCE_COOLDOWN
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -53,14 +53,44 @@ async def test_covers(
 
 
 @pytest.mark.parametrize(
-    ("node_fixture", "entity_id"),
+    ("node_fixture", "entity_id", "service_suffix"),
     [
-        ("mock_window_covering_lift", "cover.mock_lift_window_covering"),
-        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
-        ("mock_window_covering_pa_lift_null_tilt", "cover.shelly_2pm_gen4"),
-        ("mock_window_covering_tilt", "cover.mock_tilt_window_covering"),
-        ("mock_window_covering_pa_tilt", "cover.mock_pa_tilt_window_covering"),
-        ("mock_window_covering_full", "cover.mock_full_window_covering"),
+        pytest.param(
+            "mock_window_covering_lift",
+            "cover.mock_lift_window_covering",
+            "",
+            id="lift",
+        ),
+        pytest.param(
+            "mock_window_covering_pa_lift",
+            "cover.longan_link_wncv_da01",
+            "",
+            id="pa-lift",
+        ),
+        pytest.param(
+            "mock_window_covering_pa_lift_null_tilt",
+            "cover.shelly_2pm_gen4",
+            "",
+            id="pa-lift-null-tilt",
+        ),
+        pytest.param(
+            "mock_window_covering_tilt",
+            "cover.mock_tilt_window_covering",
+            "_tilt",
+            id="tilt",
+        ),
+        pytest.param(
+            "mock_window_covering_pa_tilt",
+            "cover.mock_pa_tilt_window_covering",
+            "_tilt",
+            id="pa-tilt",
+        ),
+        pytest.param(
+            "mock_window_covering_full",
+            "cover.mock_full_window_covering",
+            "",
+            id="full",
+        ),
     ],
 )
 async def test_cover(
@@ -68,12 +98,13 @@ async def test_cover(
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_id: str,
+    service_suffix: str,
 ) -> None:
     """Test window covering commands that always are implemented."""
 
     await hass.services.async_call(
         "cover",
-        "close_cover",
+        f"close_cover{service_suffix}",
         {
             "entity_id": entity_id,
         },
@@ -90,7 +121,7 @@ async def test_cover(
 
     await hass.services.async_call(
         "cover",
-        "stop_cover",
+        f"stop_cover{service_suffix}",
         {
             "entity_id": entity_id,
         },
@@ -107,7 +138,7 @@ async def test_cover(
 
     await hass.services.async_call(
         "cover",
-        "open_cover",
+        f"open_cover{service_suffix}",
         {
             "entity_id": entity_id,
         },
@@ -559,7 +590,6 @@ async def test_cover_moving_status_with_unknown_target(
         "entity_id",
         "current_attribute_id",
         "target_attribute_id",
-        "resting_state",
     ),
     [
         pytest.param(
@@ -567,16 +597,13 @@ async def test_cover_moving_status_with_unknown_target(
             "cover.longan_link_wncv_da01",
             14,
             11,
-            CoverState.OPEN,
             id="lift",
         ),
-        # a tilt only cover has no lift position to derive open/closed from
         pytest.param(
             "mock_window_covering_pa_tilt",
             "cover.mock_pa_tilt_window_covering",
             15,
             12,
-            STATE_UNKNOWN,
             id="tilt",
         ),
         pytest.param(
@@ -584,7 +611,6 @@ async def test_cover_moving_status_with_unknown_target(
             "cover.mock_full_window_covering",
             14,
             11,
-            CoverState.OPEN,
             id="lift_and_tilt_lift",
         ),
         pytest.param(
@@ -592,7 +618,6 @@ async def test_cover_moving_status_with_unknown_target(
             "cover.mock_full_window_covering",
             15,
             12,
-            CoverState.OPEN,
             id="lift_and_tilt_tilt",
         ),
     ],
@@ -604,7 +629,6 @@ async def test_cover_target_position_subscription(
     entity_id: str,
     current_attribute_id: int,
     target_attribute_id: int,
-    resting_state: str,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a target position only report reaches the entity."""
@@ -635,7 +659,7 @@ async def test_cover_target_position_subscription(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == resting_state
+    assert state.state == CoverState.OPEN
 
 
 @pytest.mark.parametrize(
@@ -792,6 +816,8 @@ async def test_cover_tilt_only(
 
     state = hass.states.get(entity_id)
     assert state
+    # without any position attribute, the resting state is unknown
+    assert state.state == "unknown"
     assert (
         state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
         == 0
@@ -826,14 +852,22 @@ async def test_cover_position_aware_tilt(
     state = hass.states.get(entity_id)
     assert state
     mask = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
+        CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.STOP_TILT
         | CoverEntityFeature.SET_TILT_POSITION
     )
     assert state.attributes["supported_features"] & mask == mask
+    # tilt-only covers must not expose the lift button features
+    assert not state.attributes["supported_features"] & (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
 
-    for tilt_position in (0, 9999, 10000):
+    for tilt_position, expected_state in (
+        (0, CoverState.OPEN),
+        (9999, CoverState.OPEN),
+        (10000, CoverState.CLOSED),
+    ):
         set_node_attribute(matter_node, 1, 258, 15, tilt_position)
         set_node_attribute(matter_node, 1, 258, 10, 0b000000)
         await trigger_subscription_callback_debounced(hass, freezer, matter_client)
@@ -843,6 +877,169 @@ async def test_cover_position_aware_tilt(
         assert state.attributes["current_tilt_position"] == 100 - floor(
             tilt_position / 100
         )
+        assert state.state == expected_state
+
+    # a null tilt position means the current position is unknown per the spec
+    set_node_attribute(matter_node, 1, 258, 15, None)
+    set_node_attribute(matter_node, 1, 258, 10, 0b000000)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unknown"
+
+
+LIFT_BUTTONS = (
+    CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+)
+TILT_BUTTONS = (
+    CoverEntityFeature.OPEN_TILT
+    | CoverEntityFeature.CLOSE_TILT
+    | CoverEntityFeature.STOP_TILT
+)
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_pa_tilt", "cover.mock_pa_tilt_window_covering"),
+    ],
+)
+@pytest.mark.parametrize(
+    (
+        "initial_feature_map",
+        "feature_map",
+        "expected_features",
+        "unexpected_features",
+        "expected_state",
+    ),
+    [
+        pytest.param(
+            0b10011,
+            0b10010,
+            TILT_BUTTONS,
+            LIFT_BUTTONS,
+            CoverState.CLOSED,
+            id="tilt-only",
+        ),
+        # lift without PositionAwareLift has no lift position, so the
+        # closed state must not be derived from the tilt position
+        pytest.param(
+            0b10010,
+            0b10011,
+            LIFT_BUTTONS,
+            TILT_BUTTONS,
+            "unknown",
+            id="lift-and-pa-tilt",
+        ),
+        # non-conformant feature map falls back to the mandatory lift commands
+        pytest.param(0b10010, 0, LIFT_BUTTONS, TILT_BUTTONS, "unknown", id="empty"),
+    ],
+)
+async def test_cover_feature_map(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+    initial_feature_map: int,
+    feature_map: int,
+    expected_features: CoverEntityFeature,
+    unexpected_features: CoverEntityFeature,
+    expected_state: str,
+) -> None:
+    """Test tilt-only handling is selected from the WindowCovering FeatureMap."""
+    set_node_attribute(matter_node, 1, 258, 65532, initial_feature_map)
+    # fully closed tilt
+    for attribute_id in (12, 15):
+        await set_node_attribute_and_notify(
+            hass,
+            matter_client,
+            matter_node,
+            endpoint=1,
+            cluster_id=258,
+            attribute_id=attribute_id,
+            value=10000,
+        )
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # the FeatureMap change is reported on its own, like a device does
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=258,
+        attribute_id=65532,
+        value=feature_map,
+    )
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["supported_features"] & expected_features == (
+        expected_features
+    )
+    assert not state.attributes["supported_features"] & unexpected_features
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_full", "cover.mock_full_window_covering"),
+    ],
+)
+@pytest.mark.parametrize(
+    "lift_position",
+    [
+        pytest.param(None, id="null-lift"),
+        pytest.param(0, id="stale-open-lift"),
+    ],
+)
+async def test_cover_tilt_only_ignores_lift_position(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+    lift_position: int | None,
+) -> None:
+    """Test the lift axis reported by a non-conformant tilt-only cover is ignored."""
+    # fully closed tilt
+    for attribute_id, value in ((14, lift_position), (12, 10000), (15, 10000)):
+        await set_node_attribute_and_notify(
+            hass,
+            matter_client,
+            matter_node,
+            endpoint=1,
+            cluster_id=258,
+            attribute_id=attribute_id,
+            value=value,
+        )
+    # Tilt and PositionAwareTilt only, reported on its own like a device does
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=258,
+        attribute_id=65532,
+        value=0b10010,
+    )
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert "current_position" not in state.attributes
+    assert not state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
