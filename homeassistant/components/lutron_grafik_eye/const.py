@@ -4,6 +4,6 @@ from typing import Final
 
 DOMAIN: Final = "lutron_grafik_eye"
 
-MANUFACTURER: Final = "Motionblinds"
+MANUFACTURER: Final = "Lutron"
 
 DEFAULT_PORT: Final = 23
