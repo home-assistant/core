@@ -1158,6 +1158,73 @@ async def test_default_min_max_temp_use_native_unit(
 
 
 @pytest.mark.parametrize(
+    ("unit_system", "native_unit", "native_step", "expected_step"),
+    [
+        pytest.param(
+            METRIC_SYSTEM,
+            UnitOfTemperature.CELSIUS,
+            0.556,
+            0.556,
+            id="metric-native-celsius",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            1.0,
+            1 / 1.8,
+            id="metric-native-fahrenheit",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.CELSIUS,
+            1.0,
+            1.8,
+            id="us-customary-native-celsius",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.CELSIUS,
+            0.001,
+            0.0018,
+            id="us-customary-native-celsius-small-step",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.FAHRENHEIT,
+            1.0,
+            1.0,
+            id="us-customary-native-fahrenheit",
+        ),
+    ],
+)
+async def test_target_temp_step_converts_to_unit_system(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    unit_system: UnitSystem,
+    native_unit: UnitOfTemperature,
+    native_step: float,
+    expected_step: float,
+) -> None:
+    """Test the target temperature step is converted as an interval."""
+    hass.config.units = unit_system
+    entity = MockClimateEntity(name="Test", entity_id="climate.test")
+    entity._attr_native_temperature_unit = native_unit
+    entity._attr_target_temperature_step = native_step
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test")
+    assert state.attributes[
+        ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP
+    ] == pytest.approx(expected_step)
+    assert entity.target_temperature_step == native_step
+
+
+@pytest.mark.parametrize(
     ("unit_system", "native_unit", "service_temperature", "expected_temperature"),
     [
         pytest.param(

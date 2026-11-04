@@ -166,7 +166,11 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if target_temperature_step := self.target_temperature_step:
             data[ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP] = (
-                target_temperature_step
+                TemperatureDeltaConverter.convert(
+                    target_temperature_step,
+                    native_temperature_unit,
+                    hass.config.units.temperature_unit,
+                )
             )
 
         if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
