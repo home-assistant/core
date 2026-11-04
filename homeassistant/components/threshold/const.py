@@ -1,17 +1,11 @@
 """Constants for the Threshold integration."""
 
+from enum import StrEnum
 from typing import Final
 
 DOMAIN: Final = "threshold"
 
 DEFAULT_HYSTERESIS: Final = 0.0
-
-ATTR_HYSTERESIS: Final = "hysteresis"
-ATTR_LOWER: Final = "lower"
-ATTR_POSITION: Final = "position"
-ATTR_SENSOR_VALUE: Final = "sensor_value"
-ATTR_TYPE: Final = "type"
-ATTR_UPPER: Final = "upper"
 
 CONF_HYSTERESIS: Final = "hysteresis"
 CONF_LOWER: Final = "lower"
@@ -25,3 +19,15 @@ POSITION_UNKNOWN: Final = "unknown"
 TYPE_LOWER: Final = "lower"
 TYPE_RANGE: Final = "range"
 TYPE_UPPER: Final = "upper"
+
+
+class ThresholdEntityStateAttribute(StrEnum):
+    """State attributes for threshold entities."""
+
+    ENTITY_ID = "entity_id"
+    HYSTERESIS = "hysteresis"
+    LOWER = "lower"
+    POSITION = "position"
+    SENSOR_VALUE = "sensor_value"
+    TYPE = "type"
+    UPPER = "upper"

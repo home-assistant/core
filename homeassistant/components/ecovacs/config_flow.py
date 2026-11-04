@@ -371,7 +371,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 suggested_values=user_input,
             ),
-            description_placeholders={CONF_USERNAME: self._input[CONF_USERNAME]},
+            description_placeholders={"username": self._input[CONF_USERNAME]},
             errors=errors,
         )
 
@@ -397,7 +397,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 suggested_values=user_input,
             ),
-            description_placeholders={CONF_USERNAME: self._input[CONF_USERNAME]},
+            description_placeholders={"username": self._input[CONF_USERNAME]},
             errors=errors,
         )
 
