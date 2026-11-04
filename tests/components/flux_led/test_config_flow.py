@@ -986,3 +986,31 @@ async def test_reconfigure_host_already_configured(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == "192.168.1.5"
+
+
+async def test_reconfigure_mac_already_configured(hass: HomeAssistant) -> None:
+    """Test reconfiguring aborts when another entry already has the discovered MAC."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.6"},
+        unique_id=MAC_ADDRESS,
+    ).add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.5"},
+        unique_id=None,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == "192.168.1.5"
+    assert config_entry.unique_id is None

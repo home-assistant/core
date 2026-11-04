@@ -262,15 +262,15 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
             except FLUX_LED_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
-                # Some devices report a MAC address that is one off
-                if (
-                    (mac_address := device[ATTR_ID]) is not None
-                    and entry.unique_id
-                    and not mac_matches_by_one(
-                        dr.format_mac(mac_address), entry.unique_id
-                    )
-                ):
-                    return self.async_abort(reason="unique_id_mismatch")
+                if (mac_address := device[ATTR_ID]) is not None:
+                    mac = dr.format_mac(mac_address)
+                    if entry.unique_id:
+                        # Some devices report a MAC address that is one off
+                        if not mac_matches_by_one(mac, entry.unique_id):
+                            return self.async_abort(reason="unique_id_mismatch")
+                    # The reload would assign this MAC as unique_id to the entry
+                    elif mac in self._async_current_ids():
+                        return self.async_abort(reason="already_configured")
                 result = self.async_update_and_abort(entry, data_updates=user_input)
                 # The update listener only handles options, so reload explicitly
                 self.hass.config_entries.async_schedule_reload(entry.entry_id)
