@@ -370,6 +370,8 @@ class HKSVController:
         self._privacy_ready = True
         if self.camera_active and self._native_resolution is None:
             await self._discover_native()
+        if self._is_closed():
+            return
         await self.hds.start()
         if self._is_closed():
             await self.hds.stop()

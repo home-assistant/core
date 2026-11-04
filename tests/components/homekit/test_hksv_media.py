@@ -1514,3 +1514,65 @@ async def test_recording_fragments_keep_buffer_after_natural_reader_exit() -> No
         b"two",
     ]
     await process.stop()
+
+
+async def test_recording_fragments_drain_queued_tail_after_reader_exit() -> None:
+    """Drain fragments published while a subscriber is suspended at a yield."""
+    process = RecordingProcess([], 4, 3000)
+    reader = asyncio.StreamReader()
+    first = box(b"moof", b"one") + box(b"mdat", b"one")
+    tail = box(b"moof", b"two") + box(b"mdat", b"two")
+    initialization = box(b"ftyp") + box(b"moov")
+    reader.feed_data(initialization + first)
+    process._task = asyncio.create_task(process._read(reader))
+    await process._ready.wait()
+    stream = process.fragments()
+    assert await anext(stream) == initialization
+    reader.feed_data(tail)
+    reader.feed_eof()
+    await process._task
+    assert [fragment async for fragment in stream] == [first, tail]
+    assert not process._subscribers
+    await process.stop()
+
+
+async def test_recording_fragments_subscribe_after_eof() -> None:
+    """A subscriber arriving after EOF receives the snapshot and terminates."""
+    process = RecordingProcess([], 4, 3000)
+    reader = asyncio.StreamReader()
+    initialization = box(b"ftyp") + box(b"moov")
+    fragment = box(b"moof") + box(b"mdat")
+    reader.feed_data(initialization + fragment)
+    reader.feed_eof()
+    process._task = asyncio.create_task(process._read(reader))
+    await process._task
+    async with asyncio.timeout(1):
+        assert [item async for item in process.fragments()] == [
+            initialization,
+            fragment,
+        ]
+    await process.stop()
+
+
+@pytest.mark.parametrize("replacement", [False, True])
+async def test_recording_fragments_discard_queued_tail_on_stop_or_replacement(
+    replacement: bool,
+) -> None:
+    """A stopped or replaced reader cannot deliver its queued fragments."""
+    process = RecordingProcess([], 4, 3000)
+    reader = asyncio.StreamReader()
+    reader.feed_data(box(b"ftyp") + box(b"moov"))
+    process._task = asyncio.create_task(process._read(reader))
+    await process._ready.wait()
+    stream = process.fragments()
+    await anext(stream)
+    reader.feed_data(box(b"moof") + box(b"mdat"))
+    reader.feed_eof()
+    await process._task
+    if replacement:
+        process._task = asyncio.create_task(asyncio.Event().wait())
+    else:
+        await process.stop()
+    with pytest.raises(StopAsyncIteration):
+        await anext(stream)
+    await process.stop()

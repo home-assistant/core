@@ -241,13 +241,15 @@ class RecordingProcess:
         queue: asyncio.Queue[bytes | None] = asyncio.Queue(maxsize=8)
         self._subscribers[queue] = 0
         initialization, buffered = self.buffer.snapshot()
+        if task.done():
+            queue.put_nowait(None)
         try:
             yield initialization
             for fragment in buffered:
                 if self._stop_task is not None or self._task is not task:
                     return
                 yield fragment
-            if self._stop_task is not None or self._task is not task or task.done():
+            if self._stop_task is not None or self._task is not task:
                 return
             while (queued_fragment := await queue.get()) is not None:
                 if self._stop_task is not None or self._task is not task:

@@ -273,6 +273,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         )
 
         self._hksv: HKSVController | None = None
+        self._hksv_start_task: asyncio.Task[None] | None = None
         self._camera_stop_task: asyncio.Task[None] | None = None
         self._camera_stream_stop_tasks: list[asyncio.Task[None]] = []
         self._camera_stopping = False
@@ -428,7 +429,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                     job_type=HassJobType.Callback,
                 )
             )
-            self.hass.async_create_background_task(
+            self._hksv_start_task = self.hass.async_create_background_task(
                 self._hksv.start(), "homekit.hksv-start"
             )
         super().run()
@@ -1267,6 +1268,9 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
 
     async def _async_finish_stop(self) -> None:
         """Own cleanup independently of the caller's cancellation."""
+        if self._hksv_start_task:
+            self._hksv_start_task.cancel()
+            await asyncio.gather(self._hksv_start_task, return_exceptions=True)
         await super().stop()
         try:
             if self._hksv:

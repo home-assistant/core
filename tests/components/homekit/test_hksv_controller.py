@@ -524,6 +524,32 @@ async def test_restored_recording_waits_for_native_discovery() -> None:
     await controller.close()
 
 
+async def test_close_during_native_discovery_does_not_start_listener() -> None:
+    """Closing while discovery is pending must not reopen the listener."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def source() -> None:
+        return None
+
+    async def discover() -> None:
+        started.set()
+        await release.wait()
+
+    store = Store()
+    store.data = {"camera_active": 1}
+    controller = c.HKSVController(_driver(), source, "ffmpeg", store)
+    hds = controller.hds = HDS()
+    with patch.object(controller, "_discover_native", side_effect=discover):
+        startup = asyncio.create_task(controller.start())
+        await started.wait()
+        await controller.close()
+        release.set()
+        await startup
+    assert hds.closed
+    assert not hds.started
+
+
 async def test_final_fragment_is_counted_when_transport_closes_generator(
     caplog: pytest.LogCaptureFixture,
 ) -> None:

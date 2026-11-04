@@ -12,7 +12,7 @@ from homeassistant.components import camera, ffmpeg
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.camera import TurboJPEGSingleton
 from homeassistant.components.event import EventDeviceClass
-from homeassistant.components.homekit.accessories import HomeBridge
+from homeassistant.components.homekit.accessories import HomeBridge, HomeDriver
 from homeassistant.components.homekit.const import (
     AUDIO_CODEC_COPY,
     CHAR_MOTION_DETECTED,
@@ -1463,6 +1463,44 @@ async def test_camera_stop_joins_live_and_controller_cleanup_after_cancellation(
             await asyncio.gather(caller, return_exceptions=True)
             await acc.stop()
     acc.sessions.clear()
+
+
+async def test_camera_stop_joins_cancelled_hksv_startup(
+    hass: HomeAssistant, run_driver: HomeDriver
+) -> None:
+    """Accessory shutdown joins the startup lease before closing the controller."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    hass.states.async_set("camera.test", "idle")
+    acc = Camera(hass, run_driver, "Camera", "camera.test", 2, {})
+    started = asyncio.Event()
+    release = asyncio.Event()
+    lease_closed = asyncio.Event()
+
+    async def start() -> None:
+        try:
+            started.set()
+            await asyncio.Event().wait()
+        finally:
+            await release.wait()
+            lease_closed.set()
+
+    async def close() -> None:
+        assert lease_closed.is_set()
+
+    acc._hksv = SimpleNamespace(start=start, close=close)
+    acc.run()
+    await started.wait()
+    stopping = asyncio.create_task(acc.stop())
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+    assert not stopping.done()
+    stopping.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await stopping
+    stopping = asyncio.create_task(acc.stop())
+    release.set()
+    await stopping
+    assert lease_closed.is_set()
 
 
 @pytest.mark.parametrize(
