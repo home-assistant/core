@@ -872,6 +872,12 @@ async def test_reconfigure(
             InvalidAuthError, MockConnection(), "invalid_auth", id="invalid_auth"
         ),
         pytest.param(
+            [True, InvalidAuthError],
+            MockConnection(),
+            "invalid_auth",
+            id="ws_invalid_auth",
+        ),
+        pytest.param(
             CannotConnectError, MockConnection(), "cannot_connect", id="cannot_connect"
         ),
         pytest.param(
@@ -885,7 +891,7 @@ async def test_reconfigure(
 )
 async def test_reconfigure_errors(
     hass: HomeAssistant,
-    side_effect: type[Exception] | None,
+    side_effect: type[Exception] | list[bool | type[Exception]] | None,
     connection: MockConnection,
     error: str,
 ) -> None:
@@ -969,6 +975,49 @@ async def test_reconfigure_credentials(hass: HomeAssistant) -> None:
     )
     assert entry.data[CONF_USERNAME] == "new_user"
     assert entry.data[CONF_PASSWORD] == "new_password"
+
+
+@pytest.mark.parametrize(
+    "password",
+    [
+        pytest.param({}, id="omitted"),
+        pytest.param({CONF_PASSWORD: ""}, id="empty"),
+    ],
+)
+async def test_reconfigure_keeps_password(
+    hass: HomeAssistant, password: dict[str, str]
+) -> None:
+    """Test reconfigure keeps the stored password when none is submitted."""
+    entry = MockConfigEntry(domain=DOMAIN, data=REAUTH_ENTRY_DATA, unique_id=UUID)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        _patch_kodi_success(),
+        patch(
+            "homeassistant.components.kodi.config_flow.get_kodi_connection",
+            return_value=MockConnection(),
+        ) as mock_get_connection,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "2.2.2.2",
+                CONF_PORT: 8080,
+                CONF_SSL: False,
+                CONF_USERNAME: "user",
+                **password,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    mock_get_connection.assert_called_once_with(
+        "2.2.2.2", 8080, None, "user", "old_password", False, session=ANY
+    )
+    assert entry.data[CONF_PASSWORD] == "old_password"
 
 
 async def test_reconfigure_closes_ws_connection(hass: HomeAssistant) -> None:

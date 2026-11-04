@@ -83,6 +83,8 @@ async def validate_ws(hass: HomeAssistant, data):
         await kodi.ping()
     except CannotConnectError as error:
         raise WSCannotConnect from error
+    except InvalidAuthError as error:
+        raise InvalidAuth from error
     finally:
         await kwc.close()
 
@@ -295,6 +297,8 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
                 **user_input,
                 CONF_WS_PORT: user_input.get(CONF_WS_PORT) or None,
             }
+            if not data_updates.get(CONF_PASSWORD):
+                data_updates.pop(CONF_PASSWORD, None)
             data = {**reconfigure_entry.data, **data_updates}
             try:
                 await validate_http(self.hass, data)
