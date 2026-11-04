@@ -117,6 +117,24 @@ async def async_setup_entry(hass, entry, async_add_entities):
         pytest.param(
             """
 async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()], config_subentry_id=next(subentry_ids))
+    async_add_entities([SensorB()], config_subentry_id=next(subentry_ids))
+""",
+            INTEGRATION_MODULE,
+            id="keyword_argument_with_call",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()], should_update())
+    async_add_entities([SensorB()], should_update())
+""",
+            INTEGRATION_MODULE,
+            id="positional_argument_with_call",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([SensorA()], **kwargs)
     async_add_entities([SensorB()], **kwargs)
 """,

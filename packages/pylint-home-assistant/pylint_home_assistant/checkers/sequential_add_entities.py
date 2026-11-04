@@ -55,13 +55,16 @@ def _extra_arguments(call: nodes.Call) -> list[str] | None:
         keyword.arg is None for keyword in call.keywords
     ):
         return None
+    keywords = [keyword for keyword in call.keywords if keyword.arg != "new_entities"]
+    # Calls can return a different value each time, despite identical source
+    if any(
+        next(node.nodes_of_class(nodes.Call), None) is not None
+        for node in (*call.args[1:2], *keywords)
+    ):
+        return None
     # update_before_add can also be passed positionally
     arguments = [f"update_before_add={arg.as_string()}" for arg in call.args[1:2]]
-    arguments.extend(
-        keyword.as_string()
-        for keyword in call.keywords
-        if keyword.arg != "new_entities"
-    )
+    arguments.extend(keyword.as_string() for keyword in keywords)
     return sorted(arguments)
 
 
