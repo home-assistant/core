@@ -238,7 +238,8 @@ def _generate_certificate(not_valid_after: datetime) -> tuple[bytes, bytes]:
         .issuer_name(name)
         .public_key(key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(not_valid_after - timedelta(days=90))
+        # Renewed certificates must already be valid when they are installed
+        .not_valid_before(min(dt_util.utcnow(), not_valid_after - timedelta(days=90)))
         .not_valid_after(not_valid_after)
         .sign(key, hashes.SHA256())
     )
