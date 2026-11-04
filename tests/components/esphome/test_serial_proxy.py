@@ -353,11 +353,7 @@ async def test_device_capabilities_match_scan(
             "port_type": "USB_SERIAL",
             "url": _zbt2_port(entry_id).device,
         },
-        {
-            "name": "USB (Z-Wave)",
-            "port_type": "USB_SERIAL",
-            "url": str(serial_proxy.build_url(entry_id, port_name="USB (Z-Wave)")),
-        },
+        {"name": "USB (Z-Wave)", "port_type": "USB_SERIAL", "url": None},
     ]
 
 
