@@ -606,6 +606,8 @@ def micromodule_dimmer_device(
     supports_dimmer_configuration: bool = False,
     edge_phase_control_mode: DimmerConfigurationService.EdgePhaseControlMode
     | None = None,
+    min_brightness: int = 0,
+    max_brightness: int = 100,
 ) -> SHCMicromoduleDimmer:
     """Build a minimal device double for the micromodule_dimmers bucket."""
     device = create_autospec(SHCMicromoduleDimmer, instance=True, spec_set=True)
@@ -622,6 +624,11 @@ def micromodule_dimmer_device(
     device.brightness = brightness
     device.supports_dimmer_configuration = supports_dimmer_configuration
     device.edge_phase_control_mode = edge_phase_control_mode
+    device.dimmer_configuration = (
+        SimpleNamespace(min_brightness=min_brightness, max_brightness=max_brightness)
+        if supports_dimmer_configuration
+        else None
+    )
     return device
 
 
