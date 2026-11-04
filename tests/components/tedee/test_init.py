@@ -63,6 +63,8 @@ async def test_reload_config_entry(
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
     resp = await client.post(urlparse(webhook_url).path, json={})
     assert resp.status == HTTPStatus.OK
+    # The webhook component answers 200 even for unregistered webhooks
+    mock_tedee.parse_webhook_message.assert_called_once_with({})
 
 
 @pytest.mark.parametrize(
