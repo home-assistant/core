@@ -1,5 +1,6 @@
 """The Homey Energy Dongle integration."""
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -56,7 +57,9 @@ async def async_remove_config_entry_device(
     removed automatically.
     """
     uid = entry.unique_id or entry.entry_id
-    telegram = entry.runtime_data.data
+    telegram = (
+        entry.runtime_data.data if entry.state is ConfigEntryState.LOADED else None
+    )
     present = {
         entry.entry_id,
         electricity_serial(entry.unique_id, entry.entry_id),

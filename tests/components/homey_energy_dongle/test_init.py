@@ -161,6 +161,33 @@ async def test_remove_device(
 
 
 @pytest.mark.parametrize(
+    ("identifier", "removable"),
+    [
+        pytest.param(GAS_METER_IDENTIFIER, True, id="mbus_meter"),
+        pytest.param(EQUIPMENT_IDENTIFIER, False, id="electricity_meter"),
+    ],
+)
+async def test_remove_device_unloaded(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+    identifier: str,
+    removable: bool,
+) -> None:
+    """Test M-Bus meters can be removed while the entry is unloaded."""
+    await hass.config_entries.async_unload(init_integration.entry_id)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, identifier), init_integration.entry_id
+    )
+    assert device
+
+    assert (
+        await async_remove_config_entry_device(hass, init_integration, device)
+        is removable
+    )
+
+
+@pytest.mark.parametrize(
     ("telegram_data", "identifier", "serial_number"),
     [
         pytest.param(
