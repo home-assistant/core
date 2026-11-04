@@ -27,7 +27,14 @@ from .validators import check_conditions
 _LOGGER = logging.getLogger(__name__)
 
 
-class TriggerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class TriggerData(TypedDict):
+    """Data of a trigger update."""
+
+    run_variables: Mapping[str, Any]
+    context: Context | None
+
+
+class TriggerUpdateCoordinator(DataUpdateCoordinator[TriggerData]):
     """Data update coordinator for trigger based template entities."""
 
     REMOVE_TRIGGER = object()
