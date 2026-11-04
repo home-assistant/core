@@ -1,6 +1,5 @@
 """Test the London Air init."""
 
-from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock
 
 from pylondonair import LondonAirConnectionError, LondonAirData
@@ -14,24 +13,18 @@ from homeassistant.setup import async_setup_component
 
 
 async def test_load_unload_entry(
-    hass: HomeAssistant,
-    london_air_data: LondonAirData,
-    mock_london_air_client: AsyncMock,
-    setup_entry: Callable[[list[str]], Awaitable[MockConfigEntry]],
+    hass: HomeAssistant, setup_entry: MockConfigEntry
 ) -> None:
     """Test loading and unloading the config entry."""
-    mock_london_air_client.async_update.return_value = london_air_data
-
-    entry = await setup_entry(["Merton"])
-    assert entry.state is ConfigEntryState.LOADED
+    assert setup_entry.state is ConfigEntryState.LOADED
     state = hass.states.get("sensor.merton")
     assert state is not None
     assert state.state == "Low"
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_unload(setup_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert setup_entry.state is ConfigEntryState.NOT_LOADED
     assert hass.states.get("sensor.merton") is None
 
 

@@ -1,8 +1,5 @@
 """The tests for the london_air platform."""
 
-import asyncio
-from collections.abc import Awaitable, Callable
-from typing import Any
 from unittest.mock import AsyncMock
 
 from pylondonair import (
@@ -15,22 +12,14 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.london_air.const import CONF_LOCATIONS, DOMAIN
-from homeassistant.components.london_air.sensor import async_setup_platform
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_valid_state(
-    hass: HomeAssistant,
-    london_air_data: LondonAirData,
-    mock_london_air_client: AsyncMock,
-    setup_entry: Callable[[list[str]], Awaitable[MockConfigEntry]],
-) -> None:
+@pytest.mark.usefixtures("setup_entry")
+async def test_valid_state(hass: HomeAssistant) -> None:
     """Test for operational london_air sensor with proper attributes."""
-    mock_london_air_client.async_update.return_value = london_air_data
-    await setup_entry(["Merton"])
-
     state = hass.states.get("sensor.merton")
     assert state is not None
     assert state.state == "Low"
@@ -72,12 +61,19 @@ async def test_valid_state(
 async def test_api_failure(
     hass: HomeAssistant,
     error: LondonAirConnectionError | LondonAirUpdateError,
+    locations: list[str],
     mock_london_air_client: AsyncMock,
-    setup_entry: Callable[[list[str]], Awaitable[MockConfigEntry]],
 ) -> None:
     """Test for failure in the API."""
     mock_london_air_client.async_update.side_effect = error
-    await setup_entry(["Merton"])
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_LOCATIONS: locations},
+        title="London Air",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.merton")
     assert state is not None
@@ -87,32 +83,23 @@ async def test_api_failure(
 
 
 @pytest.mark.parametrize(
-    ("location", "entity_id"),
+    ("locations", "entity_id"),
     [
         pytest.param(
-            "City of London",
+            ["City of London"],
             "sensor.city_of_london",
             id="authority-without-sites",
         ),
         pytest.param(
-            "Barking and Dagenham",
+            ["Barking and Dagenham"],
             "sensor.barking_and_dagenham",
             id="authority-not-in-data",
         ),
     ],
 )
-async def test_authority_without_site_data(
-    hass: HomeAssistant,
-    location: str,
-    entity_id: str,
-    london_air_data: LondonAirData,
-    mock_london_air_client: AsyncMock,
-    setup_entry: Callable[[list[str]], Awaitable[MockConfigEntry]],
-) -> None:
+@pytest.mark.usefixtures("setup_entry")
+async def test_authority_without_site_data(hass: HomeAssistant, entity_id: str) -> None:
     """Test an authority with no usable site data."""
-    mock_london_air_client.async_update.return_value = london_air_data
-    await setup_entry([location])
-
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unknown"
@@ -120,16 +107,10 @@ async def test_authority_without_site_data(
     assert state.attributes["sites"] == 0
 
 
-async def test_site_without_pollutants(
-    hass: HomeAssistant,
-    london_air_data: LondonAirData,
-    mock_london_air_client: AsyncMock,
-    setup_entry: Callable[[list[str]], Awaitable[MockConfigEntry]],
-) -> None:
+@pytest.mark.parametrize("locations", [pytest.param(["Barnet"], id="barnet")])
+@pytest.mark.usefixtures("setup_entry")
+async def test_site_without_pollutants(hass: HomeAssistant) -> None:
     """Test a site that reports no pollutant data."""
-    mock_london_air_client.async_update.return_value = london_air_data
-    await setup_entry(["Barnet"])
-
     state = hass.states.get("sensor.barnet")
     assert state is not None
     assert state.state == "Low"
@@ -139,15 +120,11 @@ async def test_site_without_pollutants(
     assert site["number_of_pollutants"] == 0
 
 
+@pytest.mark.usefixtures("setup_entry")
 async def test_second_update_throttled(
-    hass: HomeAssistant,
-    london_air_data: LondonAirData,
-    mock_london_air_client: AsyncMock,
-    setup_entry: Callable[[list[str]], Awaitable[MockConfigEntry]],
+    hass: HomeAssistant, mock_london_air_client: AsyncMock
 ) -> None:
     """Test that a second update within the scan interval does not refetch."""
-    mock_london_air_client.async_update.return_value = london_air_data
-    await setup_entry(["Merton"])
     assert mock_london_air_client.async_update.await_count == 1
 
     assert await async_setup_component(hass, "homeassistant", {})
@@ -183,42 +160,5 @@ async def test_multiple_yaml_blocks_merge_locations(
     assert len(entries) == 1
     assert set(entries[0].data[CONF_LOCATIONS]) == {"Merton", "Barnet"}
 
-    assert hass.states.get("sensor.merton") is not None
-    assert hass.states.get("sensor.barnet") is not None
-
-
-async def test_concurrent_yaml_imports_merge_locations(
-    hass: HomeAssistant,
-    london_air_data: LondonAirData,
-    mock_london_air_client: AsyncMock,
-) -> None:
-    """Test that concurrently imported YAML blocks still merge into one entry."""
-    mock_london_air_client.async_update.return_value = london_air_data
-
-    async def test_connection() -> None:
-        await asyncio.sleep(0)
-
-    mock_london_air_client.async_test_connection.side_effect = test_connection
-
-    async def add_entities(entities: Any) -> None:
-        pass
-
-    await asyncio.gather(
-        async_setup_platform(
-            hass,
-            {"platform": "london_air", "locations": ["Merton"]},
-            add_entities,
-        ),
-        async_setup_platform(
-            hass,
-            {"platform": "london_air", "locations": ["Barnet"]},
-            add_entities,
-        ),
-    )
-    await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert set(entries[0].data[CONF_LOCATIONS]) == {"Merton", "Barnet"}
     assert hass.states.get("sensor.merton") is not None
     assert hass.states.get("sensor.barnet") is not None

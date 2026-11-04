@@ -46,18 +46,15 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial user step."""
         errors: dict[str, str] = {}
-        if user_input is not None:
-            if not user_input[CONF_LOCATIONS]:
-                errors[CONF_LOCATIONS] = "required"
-            else:
-                try:
-                    await self._async_test_connection()
-                except LondonAirConnectionError:
-                    errors["base"] = "cannot_connect"
-                else:
-                    return self.async_create_entry(
-                        title=INTEGRATION_TITLE, data=user_input
-                    )
+        if user_input is None:
+            try:
+                await self._async_test_connection()
+            except LondonAirConnectionError:
+                return self.async_abort(reason="cannot_connect")
+        elif not user_input[CONF_LOCATIONS]:
+            errors[CONF_LOCATIONS] = "required"
+        else:
+            return self.async_create_entry(title=INTEGRATION_TITLE, data=user_input)
 
         return self.async_show_form(
             step_id="user",

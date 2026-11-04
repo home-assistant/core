@@ -1,6 +1,6 @@
 """Fixtures for the London Air tests."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 from zoneinfo import ZoneInfo
@@ -133,11 +133,17 @@ def mock_london_air_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def locations() -> list[str]:
+    """Return the locations for the London Air config entry."""
+    return ["Merton"]
+
+
+@pytest.fixture
+def mock_config_entry(hass: HomeAssistant, locations: list[str]) -> MockConfigEntry:
     """Mock an existing London Air config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_LOCATIONS: ["Merton"]},
+        data={CONF_LOCATIONS: locations},
         title="London Air",
     )
     entry.add_to_hass(hass)
@@ -145,20 +151,20 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def setup_entry(
+async def setup_entry(
     hass: HomeAssistant,
-) -> Callable[[list[str]], Awaitable[MockConfigEntry]]:
-    """Return a helper that creates and sets up a London Air config entry."""
-
-    async def _setup_entry(locations: list[str]) -> MockConfigEntry:
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={CONF_LOCATIONS: locations},
-            title="London Air",
-        )
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        return entry
-
-    return _setup_entry
+    locations: list[str],
+    mock_london_air_client: AsyncMock,
+    london_air_data: LondonAirData,
+) -> MockConfigEntry:
+    """Create and set up a London Air config entry."""
+    mock_london_air_client.async_update.return_value = london_air_data
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_LOCATIONS: locations},
+        title="London Air",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
