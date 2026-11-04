@@ -3,7 +3,7 @@
 from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from ouman_eh_800_api import (
     ControllableEndpoint,
@@ -26,10 +26,8 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL_SECONDS, DOMAIN, OumanDevice
@@ -74,37 +72,19 @@ class OumanEh800Coordinator(DataUpdateCoordinator[OumanEh800Data]):
             address=config_entry.data[CONF_URL],
         )
 
-        entry_id = config_entry.entry_id
-        self._main_device_identifier = (DOMAIN, entry_id)
-        self._device_info: dict[OumanDevice, DeviceInfo] = {
-            OumanDevice.MAIN: DeviceInfo(
-                identifiers={self._main_device_identifier},
-                manufacturer="Ouman",
-                model="EH-800",
-                configuration_url=config_entry.data[CONF_URL],
-            ),
-            OumanDevice.L1: DeviceInfo(
-                identifiers={(DOMAIN, f"{entry_id}_{OumanDevice.L1}")},
-                translation_key="heating_circuit",
-                translation_placeholders={"circuit_number": "1"},
-            ),
-            OumanDevice.L2: DeviceInfo(
-                identifiers={(DOMAIN, f"{entry_id}_{OumanDevice.L2}")},
-                translation_key="heating_circuit",
-                translation_placeholders={"circuit_number": "2"},
-            ),
-        }
+        self.main_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            manufacturer="Ouman",
+            model="EH-800",
+            configuration_url=config_entry.data[CONF_URL],
+        )
+        self._circuit_device_info: dict[OumanDevice, ChildDeviceInfo] = {}
 
-    def device_info(self, device: OumanDevice) -> DeviceInfo:
+    def device_info(self, device: OumanDevice) -> DeviceInfo | ChildDeviceInfo:
         """Return the device info for a logical device."""
-        device_info = self._device_info[device]
-        if device is not OumanDevice.MAIN and device_info.via_device_id is UNDEFINED:
-            device_info.via_device_id = dr.async_get_device_id_by_identifier(
-                self.hass,
-                self._main_device_identifier,
-                config_entry_id=self.config_entry.entry_id,
-            )
-        return device_info
+        if device is OumanDevice.MAIN:
+            return self.main_device_info
+        return self._circuit_device_info[device]
 
     @override
     async def _async_setup(self) -> None:
@@ -154,21 +134,30 @@ class OumanEh800Coordinator(DataUpdateCoordinator[OumanEh800Data]):
         # Separate refresh on all endpoints to catch cascading changes.
         await self.async_request_refresh()
 
-    def sync_circuit_device_names(self) -> None:
-        """Set the device-reported circuit names for the L1/L2 sub-device names.
+    def set_up_circuit_devices(self, parent_device_id: str) -> None:
+        """Build child device infos for the active circuits.
 
-        Should be called after the data update so that platforms register
-        L1/L2 devices with the resolved names.
+        The devices are named after the reported circuit names, so this must
+        be called after the first data update and before the platforms are
+        set up.
         """
         for device, endpoint, circuit_number in (
             (OumanDevice.L1, L1BaseEndpoints.CIRCUIT_NAME, "1"),
             (OumanDevice.L2, L2BaseEndpoints.CIRCUIT_NAME, "2"),
         ):
-            if circuit_name := self.data.values.get(endpoint):
+            # An absent circuit name means the circuit is inactive.
+            if (circuit_name := self.data.values.get(endpoint)) is None:
+                continue
+            if TYPE_CHECKING:
                 assert isinstance(circuit_name, str)
-                device_info = self._device_info[device]
-                device_info.translation_key = "heating_circuit_with_name"
-                device_info.translation_placeholders = {
-                    "circuit_number": circuit_number,
-                    "circuit_name": circuit_name,
-                }
+            translation_key = "heating_circuit"
+            translation_placeholders = {"circuit_number": circuit_number}
+            if circuit_name:
+                translation_key = "heating_circuit_with_name"
+                translation_placeholders["circuit_name"] = circuit_name
+            self._circuit_device_info[device] = ChildDeviceInfo(
+                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{device}")},
+                parent_device_id=parent_device_id,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            )

@@ -184,7 +184,7 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
             ),
-            description_placeholders={CONF_URL: reauth_entry.data[CONF_URL]},
+            description_placeholders={"url": reauth_entry.data[CONF_URL]},
             errors=errors,
         )
 
@@ -305,7 +305,11 @@ class ConversationFlowHandler(LiteLLMSubentryFlowHandler):
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
                         ),
                     ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                 }
             ),
