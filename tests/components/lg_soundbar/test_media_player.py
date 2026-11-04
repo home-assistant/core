@@ -351,6 +351,26 @@ async def test_powered_on_report_refreshes_playback_info(
     client.get_play.assert_called_once_with()
 
 
+async def test_power_state_published_when_playback_refresh_fails(
+    hass: HomeAssistant,
+    mock_soundbar_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failed playback refresh still publishes the reported power state."""
+    await setup_integration(hass, mock_config_entry)
+    callback = find_update_callback(mock_soundbar_client)
+    send_power_status(callback, False)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
+
+    mock_soundbar_client.return_value.get_play.side_effect = OSError("Refresh failed")
+    with pytest.raises(OSError, match="Refresh failed"):
+        send_power_status(callback, True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
+
+
 async def test_unload_closes_listener(
     hass: HomeAssistant,
     mock_soundbar_client: MagicMock,

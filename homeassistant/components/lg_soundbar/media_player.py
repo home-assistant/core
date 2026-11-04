@@ -148,6 +148,16 @@ class LGDevice(MediaPlayerEntity):
 
     def handle_event(self, response):
         """Handle responses from the speakers."""
+        try:
+            self._process_response(response)
+        finally:
+            # Publish what was received even if a follow-up request failed
+            # Responses can arrive before the entity is added to Home Assistant
+            if self.hass is not None:
+                self.schedule_update_ha_state()
+
+    def _process_response(self, response):
+        """Apply a response from the speakers."""
         data = response.get("data") or {}
         if response["msg"] == "EQ_VIEW_INFO":
             self._update_equalisers(data)
@@ -188,10 +198,6 @@ class LGDevice(MediaPlayerEntity):
                 self._attr_name = data["s_user_name"]
         elif response["msg"] == "PLAY_INFO":
             self._update_playinfo(data)
-
-        # Responses can arrive before the entity is added to Home Assistant
-        if self.hass is not None:
-            self.schedule_update_ha_state()
 
     def _update_power(self, powered_on: bool) -> None:
         """Update the power state from a power status report."""
