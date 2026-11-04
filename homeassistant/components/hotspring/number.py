@@ -10,7 +10,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HotSpringConfigEntry, HotSpringDataUpdateCoordinator
@@ -52,30 +52,11 @@ async def async_setup_entry(
     entities: list[NumberEntity] = [
         HotSpringNumberEntity(coordinator, TARGET_TEMPERATURE_DESCRIPTION)
     ]
-    added_salt_output_level = coordinator.data.water_care.cartridge_installed
-    if added_salt_output_level:
+    if coordinator.data.water_care.cartridge_installed:
         entities.append(
             HotSpringSaltOutputLevelEntity(coordinator, SALT_OUTPUT_LEVEL_DESCRIPTION)
         )
     async_add_entities(entities)
-
-    @callback
-    def async_add_salt_output_level_entity() -> None:
-        """Add the salt output level entity once a cartridge is reported."""
-        nonlocal added_salt_output_level
-        if (
-            added_salt_output_level
-            or not coordinator.data.water_care.cartridge_installed
-        ):
-            return
-        added_salt_output_level = True
-        async_add_entities(
-            [HotSpringSaltOutputLevelEntity(coordinator, SALT_OUTPUT_LEVEL_DESCRIPTION)]
-        )
-
-    entry.async_on_unload(
-        coordinator.async_add_listener(async_add_salt_output_level_entity)
-    )
 
 
 class HotSpringNumberEntity(HotSpringEntity, NumberEntity):
@@ -157,16 +138,6 @@ class HotSpringSaltOutputLevelEntity(HotSpringEntity, NumberEntity):
         """Initialize the number entity."""
         super().__init__(coordinator, description.key)
         self.entity_description = description
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-        return (
-            super().available
-            and self.coordinator.data.connection_status.spa_connected
-            and self.coordinator.data.water_care.cartridge_installed
-        )
 
     @property
     @override
