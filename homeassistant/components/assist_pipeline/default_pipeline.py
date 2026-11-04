@@ -1154,8 +1154,10 @@ class _DefaultPipelineProcessor:
             and (request.wake_word_audio_ms is not None)
             and (current_stage == PipelineStage.STT)
         ):
+            # Whole chunks only, since the partial chunk at the end is dropped
             stt_stream = _skip_audio(
-                stt_stream, request.wake_word_audio_ms * BYTES_PER_CHUNK // MS_PER_CHUNK
+                stt_stream,
+                (request.wake_word_audio_ms // MS_PER_CHUNK) * BYTES_PER_CHUNK,
             )
 
         if stt_stream is not None:

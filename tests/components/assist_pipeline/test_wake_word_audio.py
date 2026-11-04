@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import assist_pipeline, stt, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
-from homeassistant.components.assist_pipeline.const import BYTES_PER_CHUNK, MS_PER_CHUNK
+from homeassistant.components.assist_pipeline.const import MS_PER_CHUNK
 from homeassistant.core import Context, HomeAssistant
 
 from .conftest import MockSTTProviderEntity, make_10ms_chunk
@@ -52,16 +52,27 @@ async def _async_run_pipeline(
     return events
 
 
+@pytest.mark.parametrize(
+    ("wake_word_audio_ms", "expected_stt_audio"),
+    [
+        pytest.param(2 * MS_PER_CHUNK, COMMAND, id="whole_chunks"),
+        # Rounded down to whole chunks, so the stream's last chunk isn't cut short
+        pytest.param(
+            MS_PER_CHUNK + (MS_PER_CHUNK // 2), WORD + COMMAND, id="within_chunk"
+        ),
+    ],
+)
 @pytest.mark.usefixtures("init_components")
 async def test_wake_word_audio(
     hass: HomeAssistant,
     mock_stt_provider_entity: MockSTTProviderEntity,
+    wake_word_audio_ms: int,
+    expected_stt_audio: bytes,
 ) -> None:
     """Test the wake word is accepted and its audio removed for speech-to-text."""
-    # Ends within a chunk
-    wake_word_audio_ms = MS_PER_CHUNK + (MS_PER_CHUNK // 2)
-    audio = [WAKE, WORD, COMMAND, bytes(BYTES_PER_CHUNK // 2)]
-    events = await _async_run_pipeline(hass, _audio_stream(*audio), wake_word_audio_ms)
+    events = await _async_run_pipeline(
+        hass, _audio_stream(WAKE, WORD, COMMAND), wake_word_audio_ms
+    )
 
     assert [event.type for event in events] == [
         PipelineEventType.RUN_START,
@@ -76,10 +87,7 @@ async def test_wake_word_audio(
             "wake_word_audio_ms": wake_word_audio_ms,
         }
     }
-    assert (
-        b"".join(mock_stt_provider_entity.received)
-        == b"".join(audio)[wake_word_audio_ms * BYTES_PER_CHUNK // MS_PER_CHUNK :]
-    )
+    assert b"".join(mock_stt_provider_entity.received) == expected_stt_audio
 
 
 @pytest.mark.parametrize(
