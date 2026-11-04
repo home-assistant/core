@@ -1,5 +1,6 @@
 """Test configuration for Shelly."""
 
+import asyncio
 from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
@@ -629,7 +630,7 @@ async def mock_block_device(model: str = MODEL_1):
 
         device = Mock(
             spec=BlockDevice,
-            blocks=MOCK_BLOCKS,
+            blocks=deepcopy(MOCK_BLOCKS),
             settings=MOCK_SETTINGS,
             shelly=MOCK_SHELLY_COAP,
             version="1.11.0",
@@ -753,7 +754,12 @@ async def mock_rpc_device():
                 current_pos, device.status[f"cover:{cover_id}"]["current_pos"]
             )
 
+        async def _initialize() -> None:
+            # Yield like the network I/O of a real device
+            await asyncio.sleep(0)
+
         device = _mock_rpc_device()
+        device.initialize = AsyncMock(side_effect=_initialize)
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=_disconnected)
         rpc_device_mock.return_value.mock_update = Mock(side_effect=_update)
@@ -946,9 +952,14 @@ def mock_ledstrip_rpc_device(
     monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock
 ) -> Mock:
     """Set up mock RPC device with LED strip component data."""
-    monkeypatch.setattr(mock_rpc_device, "config", MOCK_CONFIG | MOCK_LEDSTRIP_CONFIG)
-    monkeypatch.setattr(
-        mock_rpc_device, "status", MOCK_STATUS_RPC | MOCK_LEDSTRIP_STATUS
-    )
+    config = MOCK_CONFIG | MOCK_LEDSTRIP_CONFIG
+    status = MOCK_STATUS_RPC | MOCK_LEDSTRIP_STATUS
+    # A real LED strip device has no other lights, all light types count as one
+    # set of channels so keeping them would turn the LED strip into a sub-device
+    for key in ("light:0", "light:1", "light:2", "light:3", "rgb:0", "rgbw:0"):
+        del config[key]
+        del status[key]
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+    monkeypatch.setattr(mock_rpc_device, "status", status)
 
     return mock_rpc_device

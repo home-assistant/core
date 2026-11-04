@@ -35,6 +35,7 @@ from homeassistant.components.media_player import (
     ATTR_ENTITY_PICTURE_LOCAL,
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -112,6 +113,7 @@ def _build_mock_wiim_device(
     device.supports_http_api = False
     device.playing_status = PlayingStatus.STOPPED
     device.play_mode = "Network"
+    device.local_input_mode = "Network"
     device.loop_state = WiimLoopState(
         repeat=WiimRepeatMode.OFF,
         shuffle=False,
@@ -162,7 +164,7 @@ async def test_state_machine_updates_from_device_callbacks(
 
     mock_wiim_device.volume = 60
     mock_wiim_device.playing_status = PlayingStatus.PLAYING
-    mock_wiim_device.play_mode = "Bluetooth"
+    mock_wiim_device.local_input_mode = "Bluetooth"
     mock_wiim_device.output_mode = "optical"
     mock_wiim_device.loop_state = WiimLoopState(
         repeat=WiimRepeatMode.ALL,
@@ -357,7 +359,7 @@ async def test_transport_services_call_device(
             {ATTR_INPUT_SOURCE: "Bluetooth"},
             "async_set_play_mode",
             ("Bluetooth",),
-            {"play_mode": "Bluetooth"},
+            {"local_input_mode": "Bluetooth"},
             ATTR_INPUT_SOURCE,
             "Bluetooth",
         ),
@@ -616,7 +618,7 @@ async def test_follower_routes_commands_and_reads_leader_metadata(
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_TITLE] == "Leader Song"
     assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Leader Album"
-    assert state.attributes[ATTR_INPUT_SOURCE] == "Spotify"
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Network"
     assert state.attributes[ATTR_MEDIA_POSITION] == 90
 
 
@@ -633,6 +635,7 @@ async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
         ip_address="192.168.1.101",
         base_device=mock_wiim_device,
     )
+    follower_device.supported_input_modes = ("Network", "Line In")
 
     wiim_component.async_create_wiim_device.side_effect = [
         mock_wiim_device,
@@ -683,6 +686,8 @@ async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
 
     mock_wiim_device.playing_status = PlayingStatus.PLAYING
     mock_wiim_device.play_mode = "Spotify"
+    mock_wiim_device.local_input_mode = "Spotify"
+    follower_device.play_mode = "Spotify"
     mock_wiim_device.current_media = WiimMediaMetadata(
         title="Leader Signal Song",
         album="Leader Signal Album",
@@ -697,17 +702,18 @@ async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
     assert follower_state.state == MediaPlayerState.PLAYING
     assert follower_state.attributes[ATTR_MEDIA_TITLE] == "Leader Signal Song"
     assert follower_state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Leader Signal Album"
-    assert follower_state.attributes[ATTR_INPUT_SOURCE] == "Spotify"
+    assert follower_state.attributes[ATTR_INPUT_SOURCE] == "Network"
+    assert follower_state.attributes[ATTR_INPUT_SOURCE_LIST] == ["Network", "Line In"]
     assert follower_state.attributes[ATTR_MEDIA_POSITION] == 33
 
 
-async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
+async def test_follower_routes_repeat_shuffle_but_keeps_source_local(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: MagicMock,
     mock_wiim_controller: MagicMock,
 ) -> None:
-    """Test follower repeat, shuffle, and source changes are sent to the leader."""
+    """Route follower repeat and shuffle to the leader, but select input locally."""
     await setup_integration(hass, mock_config_entry)
     leader_device = AsyncMock(spec=WiimDevice)
     leader_device.udn = "uuid:leader-1234"
@@ -770,8 +776,23 @@ async def test_follower_routes_repeat_shuffle_and_source_commands_to_leader(
         {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID, ATTR_INPUT_SOURCE: "Bluetooth"},
         blocking=True,
     )
-    leader_device.async_set_play_mode.assert_awaited_once_with("Bluetooth")
-    mock_wiim_device.async_set_play_mode.assert_not_awaited()
+    mock_wiim_device.async_set_play_mode.assert_awaited_once_with("Bluetooth")
+    leader_device.async_set_play_mode.assert_not_awaited()
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Network"
+    assert leader_device.play_mode == "Network"
+
+    mock_wiim_controller.get_group_snapshot.return_value = WiimGroupSnapshot(
+        role=WiimGroupRole.STANDALONE,
+        leader_udn=mock_wiim_device.udn,
+        member_udns=(mock_wiim_device.udn,),
+    )
+    mock_wiim_device.local_input_mode = "Bluetooth"
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_INPUT_SOURCE] == "Bluetooth"
 
 
 async def test_play_media_services_call_device_commands(

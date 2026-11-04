@@ -22,7 +22,6 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -146,7 +145,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_mismatch(
                     description_placeholders={
                         "wrong_account": user.online_id,
-                        CONF_NAME: entry.title,
+                        "name": entry.title,
                     }
                 )
 

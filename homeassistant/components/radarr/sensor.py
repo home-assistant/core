@@ -8,40 +8,73 @@ from typing import Any, Generic, override
 from aiopyarr import Diskspace, RootFolder, SystemStatus
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import EntityCategory, UnitOfInformation
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import RadarrConfigEntry, RadarrDataUpdateCoordinator, T
 from .entity import RadarrEntity
 
 
-def get_space(data: list[Diskspace], name: str) -> str:
+def get_space(data: list[Diskspace], path: str) -> str:
     """Get space."""
     space = [
         mount.freeSpace / 1024 ** BYTE_SIZES.index(UnitOfInformation.GIGABYTES)
         for mount in data
-        if name in mount.path
+        if mount.path == path
     ]
     return f"{space[0]:.2f}"
+
+
+def get_folder_name(mount: RootFolder) -> str:
+    """Return the last part of a root folder path."""
+    return mount.path.rsplit("/")[-1].rsplit("\\")[-1]
 
 
 def get_modified_description(
     description: RadarrSensorEntityDescription[T], mount: RootFolder
 ) -> tuple[RadarrSensorEntityDescription[T], str]:
-    """Return modified description and folder name."""
-    name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
+    """Return modified description and folder path."""
+    name = get_folder_name(mount)
     desc = dataclasses.replace(
         description,
-        key=f"{description.key}_{name}",
+        key=f"root_folder_{mount.id}_{description.key}",
         name=f"{description.name} {name}".capitalize(),
     )
-    return desc, name
+    return desc, mount.path
+
+
+@callback
+def async_migrate_disk_space_unique_ids(
+    hass: HomeAssistant, entry: RadarrConfigEntry, mounts: list[RootFolder]
+) -> None:
+    """Migrate disk space sensors from folder name to root folder ID unique IDs."""
+    entity_registry = er.async_get(hass)
+    seen: set[str] = set()
+    for mount in mounts:
+        name = get_folder_name(mount)
+        # The folder name ID belonged to the first root folder with that name
+        if name in seen:
+            continue
+        seen.add(name)
+        old_unique_id = f"{entry.entry_id}_disk_space_{name}"
+        new_unique_id = f"{entry.entry_id}_root_folder_{mount.id}_disk_space"
+        if (
+            entity_id := entity_registry.async_get_entity_id(
+                SENSOR_DOMAIN, DOMAIN, old_unique_id
+            )
+        ) and not entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, new_unique_id
+        ):
+            entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -123,6 +156,7 @@ async def async_setup_entry(
         if coordinator_type != "disk_space":
             entities.append(RadarrSensor(coordinator, description))
         else:
+            async_migrate_disk_space_unique_ids(hass, entry, coordinator.data)
             entities.extend(
                 RadarrSensor(coordinator, *get_modified_description(description, mount))
                 for mount in coordinator.data

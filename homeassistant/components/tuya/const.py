@@ -718,6 +718,7 @@ class DPCode(StrEnum):
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
+    DROP_STATE = "drop_state"
     DUSTER_CLOTH = "duster_cloth"
     EC_CURRENT = "ec_current"
     ECO2 = "eco2"
@@ -893,6 +894,7 @@ class DPCode(StrEnum):
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
+    SPEED_CURRENT = "speed_current"
     SPEED_SET = "speed_set"
     SPRAY_MODE = "spray_mode"  # Spraying mode
     START = "start"  # Start

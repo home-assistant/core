@@ -9,7 +9,6 @@ from homeassistant.components import (
     cover,
     fan,
     humidifier,
-    input_number,
     media_player,
     vacuum,
     valve,
@@ -47,7 +46,10 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.components.image_processing import DOMAIN as IMAGE_PROCESSING_DOMAIN
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.input_number import (
+    DOMAIN as INPUT_NUMBER_DOMAIN,
+    InputNumberServiceArgument,
+)
 from homeassistant.components.light import LightEntityStateAttribute
 from homeassistant.components.lock import LockState
 from homeassistant.components.media_player import (
@@ -2022,7 +2024,7 @@ class AlexaRangeController(AlexaCapability):
             )
 
         # Input Number Value
-        if self.instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
+        if self.instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
             return float(self.entity.state)
 
         # Number Value
@@ -2112,10 +2114,16 @@ class AlexaRangeController(AlexaCapability):
             return self._resource.serialize_capability_resources()
 
         # Input Number Value
-        if self.instance == f"{INPUT_NUMBER_DOMAIN}.{input_number.ATTR_VALUE}":
-            min_value = float(self.entity.attributes[input_number.ATTR_MIN])
-            max_value = float(self.entity.attributes[input_number.ATTR_MAX])
-            precision = float(self.entity.attributes.get(input_number.ATTR_STEP, 1))
+        if self.instance == f"{INPUT_NUMBER_DOMAIN}.{InputNumberServiceArgument.VALUE}":
+            min_value = float(
+                self.entity.attributes[NumberEntityCapabilityAttribute.MIN]
+            )
+            max_value = float(
+                self.entity.attributes[NumberEntityCapabilityAttribute.MAX]
+            )
+            precision = float(
+                self.entity.attributes.get(NumberEntityCapabilityAttribute.STEP, 1)
+            )
             unit = self.entity.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
             self._resource = AlexaPresetResource(
@@ -2795,3 +2803,44 @@ class AlexaCameraStreamController(AlexaCapability):
                 "audioCodecs": ["AAC"],
             }
         ]
+
+
+class AlexaRTCSessionController(AlexaCapability):
+    """Implements Alexa.RTCSessionController.
+
+    Alexa sends a WebRTC SDP offer and expects a complete SDP answer in return.
+    This is what Echo Show devices use for the live view of a camera.
+
+    https://developer.amazon.com/docs/device-apis/alexa-rtcsessioncontroller.html
+    """
+
+    supported_locales = {
+        "ar-SA",
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-US",
+        "es-ES",
+        "es-US",
+        "fr-CA",
+        "fr-FR",
+        "hi-IN",
+        "it-IT",
+        "ja-JP",
+        "nl-NL",
+        "pt-BR",
+    }
+
+    @override
+    def name(self) -> str:
+        """Return the Alexa API name of this interface."""
+        return "Alexa.RTCSessionController"
+
+    @override
+    def configuration(self) -> dict[str, Any] | None:
+        """Return configuration object.
+
+        Two-way audio is not supported, so the session is half duplex.
+        """
+        return {"isFullDuplexAudioSupported": False}
