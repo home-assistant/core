@@ -1203,11 +1203,12 @@ could be grouped into a single call.
 Two or more `async_add_entities` (or `add_entities`) calls appearing as
 consecutive statements (uninterrupted by control flow such as
 `if`/`try`/`with`/`for`) should be combined into a single call that adds all
-entities at once. Calls with different keyword arguments, such as a
-different `config_subentry_id` when adding entities for multiple subentries,
-cannot be combined and are not flagged. Only calls to the callback passed to
-the platform setup function are checked. The rule applies to integration
-modules only.
+entities at once. Calls with different arguments besides the entities, such
+as a different `config_subentry_id` when adding entities for multiple
+subentries or a different `update_before_add`, cannot be combined and are not
+flagged. Only calls to the callback passed to the platform setup function
+(`async_setup_entry`, `async_setup_platform` or `setup_platform`) are checked.
+The rule applies to integration modules only.
 
 
 ## `home_assistant_has_entity_name` checker

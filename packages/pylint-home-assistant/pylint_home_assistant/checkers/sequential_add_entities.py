@@ -3,8 +3,9 @@
 Multiple sequential ``async_add_entities()`` calls should be grouped into a
 single call, so all entities are added to the platform in one go.
 
-Calls with different keyword arguments (for example a different
-``config_subentry_id``) cannot be grouped and are not flagged.
+Calls with different arguments besides the entities (for example a different
+``config_subentry_id`` or ``update_before_add``) cannot be grouped and are not
+flagged.
 """
 
 from astroid import nodes
@@ -14,6 +15,11 @@ from pylint.lint import PyLinter
 from pylint_home_assistant.helpers.module_info import is_integration_module
 
 ADD_ENTITIES_CALLBACK_NAMES = {"async_add_entities", "add_entities"}
+PLATFORM_SETUP_FUNCTIONS = {
+    "async_setup_entry",
+    "async_setup_platform",
+    "setup_platform",
+}
 
 
 def _get_add_entities_call(node: nodes.NodeNG) -> nodes.Call | None:
@@ -29,20 +35,34 @@ def _get_add_entities_call(node: nodes.NodeNG) -> nodes.Call | None:
         return None
 
     # Only the callback passed to the platform setup function, not a local helper
+    # or a parameter of a nested function shadowing it
     _, assignments = call.func.lookup(call.func.name)
     if not assignments or not all(
-        isinstance(assignment.parent, nodes.Arguments) for assignment in assignments
+        isinstance(assignment.parent, nodes.Arguments)
+        and isinstance(setup := assignment.parent.parent, nodes.FunctionDef)
+        and setup.name in PLATFORM_SETUP_FUNCTIONS
+        and isinstance(setup.parent, nodes.Module)
+        for assignment in assignments
     ):
         return None
 
     return call
 
 
-def _keywords(call: nodes.Call) -> list[str] | None:
-    """Return the keyword arguments of *call*, or None if they are unknown."""
-    if any(keyword.arg is None for keyword in call.keywords):
+def _extra_arguments(call: nodes.Call) -> list[str] | None:
+    """Return the arguments of *call* besides the entities, or None if unknown."""
+    if any(isinstance(arg, nodes.Starred) for arg in call.args) or any(
+        keyword.arg is None for keyword in call.keywords
+    ):
         return None
-    return sorted(keyword.as_string() for keyword in call.keywords)
+    # update_before_add can also be passed positionally
+    arguments = [f"update_before_add={arg.as_string()}" for arg in call.args[1:2]]
+    arguments.extend(
+        keyword.as_string()
+        for keyword in call.keywords
+        if keyword.arg != "new_entities"
+    )
+    return sorted(arguments)
 
 
 class SequentialAddEntitiesChecker(BaseChecker):
@@ -55,7 +75,7 @@ class SequentialAddEntitiesChecker(BaseChecker):
             "Sequential `%s` calls should be grouped into a single call",
             "home-assistant-sequential-add-entities",
             "Used when multiple async_add_entities() calls with the same "
-            "keyword arguments appear in sequence. Collect the entities and "
+            "arguments besides the entities appear in sequence. Collect the entities and "
             "call async_add_entities once.",
         ),
     }
@@ -78,21 +98,21 @@ class SequentialAddEntitiesChecker(BaseChecker):
 
     def _check_body(self, body: list[nodes.NodeNG]) -> None:
         """Check a list of statements for sequential async_add_entities calls."""
-        prev_keywords: list[str] | None = None
+        prev_arguments: list[str] | None = None
 
         for stmt in body:
             if (call := _get_add_entities_call(stmt)) is not None:
-                keywords = _keywords(call)
-                if keywords is not None and keywords == prev_keywords:
+                arguments = _extra_arguments(call)
+                if arguments is not None and arguments == prev_arguments:
                     self.add_message(
                         "home-assistant-sequential-add-entities",
                         node=stmt,
                         args=(call.func.name,),
                     )
-                prev_keywords = keywords
+                prev_arguments = arguments
                 continue
 
-            prev_keywords = None
+            prev_arguments = None
 
             # Recurse into control flow blocks (but not nested functions)
             if isinstance(stmt, nodes.If):

@@ -90,6 +90,33 @@ async def async_setup_entry(hass, entry, async_add_entities):
         pytest.param(
             """
 async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()], True)
+    async_add_entities([SensorB()], False)
+""",
+            INTEGRATION_MODULE,
+            id="different_positional_update_before_add",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()], True)
+    async_add_entities([SensorB()])
+""",
+            INTEGRATION_MODULE,
+            id="positional_update_before_add_and_omitted",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities(*args)
+    async_add_entities(*args)
+""",
+            INTEGRATION_MODULE,
+            id="unpacked_arguments",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([SensorA()], **kwargs)
     async_add_entities([SensorB()], **kwargs)
 """,
@@ -107,6 +134,25 @@ async def async_setup_entry(hass, entry, async_add_entities):
 """,
             INTEGRATION_MODULE,
             id="local_helper_function",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    def helper(add_entities):
+        add_entities([SensorA()])
+        add_entities([SensorB()])
+""",
+            INTEGRATION_MODULE,
+            id="nested_function_shadowing_parameter",
+        ),
+        pytest.param(
+            """
+def _add_sensors(async_add_entities):
+    async_add_entities([SensorA()])
+    async_add_entities([SensorB()])
+""",
+            INTEGRATION_MODULE,
+            id="not_platform_setup_function",
         ),
         pytest.param(
             """
@@ -165,6 +211,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
             [4],
             "async_add_entities",
             id="same_subentry",
+        ),
+        pytest.param(
+            """
+async def async_setup_entry(hass, entry, async_add_entities):
+    async_add_entities([SensorA()], True)
+    async_add_entities([SensorB()], update_before_add=True)
+""",
+            [4],
+            "async_add_entities",
+            id="same_update_before_add_positional_and_keyword",
         ),
         pytest.param(
             """
