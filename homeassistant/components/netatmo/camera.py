@@ -313,8 +313,9 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def async_home_update_callback(self) -> None:
         """Update the entity's state from a full HOME poll (/homedata)."""
 
-        self._override_connection = None
-        self._override_on = None
+        if super().available:
+            self._override_connection = None
+            self._override_on = None
 
         self.data_handler.events[self.device.entity_id] = self.process_events(
             self.device.events
