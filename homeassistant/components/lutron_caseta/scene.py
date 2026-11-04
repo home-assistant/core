@@ -5,18 +5,18 @@ from typing import Any, override
 from pylutron_caseta.smartbridge import Smartbridge
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
+from .models import LutronCasetaConfigEntry
 from .util import serial_to_unique_id
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronCasetaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta scene platform.

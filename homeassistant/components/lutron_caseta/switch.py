@@ -3,19 +3,18 @@
 from typing import Any, override
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import LutronCasetaEntity, LutronCasetaUpdatableEntity
-from .models import LutronCasetaData
+from .models import LutronCasetaConfigEntry, LutronCasetaData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronCasetaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta switch platform.
