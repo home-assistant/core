@@ -1,0 +1,14 @@
+{
+  "domain": "zendure",
+  "name": "Zendure",
+  "categories": ["energy.solar_batteries"],
+  "codeowners": ["@shinecodes-lala"],
+  "config_flow": true,
+  "connectivity": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/zendure",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["zendure"],
+  "quality_scale": "bronze",
+  "requirements": ["zendure==0.3.0"]
+}
