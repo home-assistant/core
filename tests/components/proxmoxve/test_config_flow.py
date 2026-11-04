@@ -330,6 +330,41 @@ async def test_form_exceptions_qemu(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_form_skips_node_with_guest_list_error(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_setup_entry: MagicMock,
+) -> None:
+    """Test that a guest-list error on one node doesn't stop discovery."""
+    failed_node = MagicMock()
+    failed_node.qemu.get.side_effect = ResourceException(
+        596, "Connection timed out", ""
+    )
+    healthy_node = mock_proxmox_client._node_mock
+    mock_proxmox_client.nodes.get.return_value = [
+        {"node": "pve-pi", "status": "online"},
+        {"node": "pve1", "status": "online"},
+    ]
+    mock_proxmox_client.nodes.side_effect = lambda node: (
+        failed_node if node == "pve-pi" else healthy_node
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_STEP
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_AUTH_STEP_PASSWORD
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert [node[CONF_NODE] for node in result["data"][CONF_NODES]] == ["pve1"]
+    failed_node.qemu.get.assert_called_once_with()
+    healthy_node.qemu.get.assert_called_once_with()
+
+
 async def test_form_no_nodes_exception(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
