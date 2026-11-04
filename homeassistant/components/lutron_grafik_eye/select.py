@@ -20,16 +20,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up Lutron GRAFIK Eye scene selectors."""
     controller = entry.runtime_data
-    scenes = await controller.get_active_scenes()
+    control_units = await controller.get_control_units()
 
     async_add_entities(
         GrafikEyeSceneSelect(
             entry_id=entry.entry_id,
             controller=controller,
-            control_unit_id=unit_id,
-            scene=scene,
+            control_unit_id=unit.id,
+            scene=unit.active_scene,
         )
-        for unit_id, scene in scenes.items()
+        for unit in control_units
     )
 
 
