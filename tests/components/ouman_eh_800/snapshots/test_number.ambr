@@ -1,5 +1,127 @@
 # serializer version: 1
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_big_temperature_drop-entry]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying outdoor temperature limit',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying outdoor temperature limit',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_outdoor_temperature_limit',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_autumn_drying_outdoor_temperature_limit',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Autumn drying outdoor temperature limit',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.0',
+  })
+# ---
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying setpoint',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying setpoint',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_setpoint',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_autumn_drying_setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Autumn drying setpoint',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.0',
+  })
+# ---
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_big_temperature_drop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -12,13 +134,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_big_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_big_temperature_drop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,7 +163,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_big_temperature_drop-state]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_big_temperature_drop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -53,14 +175,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_big_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_big_temperature_drop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16.0',
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_constant_temperature_setpoint-entry]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_constant_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -73,13 +195,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_constant_temperature_setpoint',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_constant_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -102,7 +224,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_constant_temperature_setpoint-state]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_constant_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -114,14 +236,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_constant_temperature_setpoint',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_constant_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_curve_0degc_temperature-entry]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -134,13 +256,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_0degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -163,7 +285,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_curve_0degc_temperature-state]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -175,14 +297,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_0degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '41.0',
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_curve_20degc_temperature-entry]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -195,13 +317,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_20degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -224,7 +346,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_curve_20degc_temperature-state]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -236,14 +358,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_20degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '58.0',
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_curve_20degc_temperature_2-entry]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -256,13 +378,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_20degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -285,7 +407,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_curve_20degc_temperature_2-state]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -297,14 +419,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_20degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '18.0',
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning-entry]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -317,13 +439,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -346,7 +468,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning-state]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -358,14 +480,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_temperature_drop-entry]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_temperature_drop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -378,13 +500,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_temperature_drop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -407,7 +529,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_temperature_drop-state]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_temperature_drop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -419,14 +541,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_temperature_drop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.0',
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_water_out_maximum_temperature-entry]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -439,13 +561,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_water_out_maximum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -468,7 +590,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_water_out_maximum_temperature-state]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -480,14 +602,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_water_out_maximum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75.0',
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_water_out_minimum_temperature-entry]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -500,13 +622,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_water_out_minimum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -529,7 +651,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.heating_circuit_1_patterilammitys_water_out_minimum_temperature-state]
+# name: test_entities[number-l1_constant_temp_relay_summer_stop][number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -541,7 +663,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_water_out_minimum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -561,9 +683,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -608,7 +730,129 @@
     'state': '600.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_big_temperature_drop-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying outdoor temperature limit',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying outdoor temperature limit',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_outdoor_temperature_limit',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_autumn_drying_outdoor_temperature_limit',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Autumn drying outdoor temperature limit',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.0',
+  })
+# ---
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying setpoint',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying setpoint',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_setpoint',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_autumn_drying_setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Autumn drying setpoint',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.0',
+  })
+# ---
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_big_temperature_drop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -621,13 +865,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_big_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_big_temperature_drop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -650,7 +894,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_big_temperature_drop-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_big_temperature_drop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -662,14 +906,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_big_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_big_temperature_drop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_curve_0degc_temperature-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -682,13 +926,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_0degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -711,7 +955,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_curve_0degc_temperature-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -723,14 +967,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_0degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '41.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_curve_10degc_temperature-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_10degc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -743,13 +987,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_10degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_10degc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -772,7 +1016,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_curve_10degc_temperature-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_10degc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -784,14 +1028,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_10degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_10degc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_curve_10degc_temperature_2-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_10degc_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -804,13 +1048,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_10degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_10degc_temperature_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -833,7 +1077,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_curve_10degc_temperature_2-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_10degc_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -845,14 +1089,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_10degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_10degc_temperature_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_curve_20degc_temperature-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -865,13 +1109,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_20degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -894,7 +1138,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_curve_20degc_temperature-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -906,14 +1150,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_20degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '58.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_curve_20degc_temperature_2-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -926,13 +1170,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_20degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -955,7 +1199,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_curve_20degc_temperature_2-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -967,14 +1211,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_20degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '18.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -987,13 +1231,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1016,7 +1260,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -1028,14 +1272,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_temperature_drop-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_temperature_drop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1048,13 +1292,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_temperature_drop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1077,7 +1321,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_temperature_drop-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_temperature_drop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -1089,14 +1333,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_temperature_drop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_water_out_maximum_temperature-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1109,13 +1353,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_water_out_maximum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1138,7 +1382,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_water_out_maximum_temperature-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1150,14 +1394,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_water_out_maximum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_water_out_minimum_temperature-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1170,13 +1414,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_water_out_minimum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1199,7 +1443,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_1_patterilammitys_water_out_minimum_temperature-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1211,14 +1455,75 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_water_out_minimum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_big_temperature_drop-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying setpoint',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying setpoint',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_setpoint',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l2_autumn_drying_setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Autumn drying setpoint',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.0',
+  })
+# ---
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_big_temperature_drop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1231,13 +1536,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_big_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_big_temperature_drop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1260,7 +1565,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_big_temperature_drop-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_big_temperature_drop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -1272,14 +1577,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_big_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_big_temperature_drop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_curve_0degc_temperature-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_0degc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1292,13 +1597,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_0degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_0degc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1321,7 +1626,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_curve_0degc_temperature-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_0degc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1333,14 +1638,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_0degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_0degc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '28.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_curve_10degc_temperature-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_10degc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1353,13 +1658,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_10degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_10degc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1382,7 +1687,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_curve_10degc_temperature-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_10degc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1394,14 +1699,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_10degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_10degc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '35.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_curve_10degc_temperature_2-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_10degc_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1414,13 +1719,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_10degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_10degc_temperature_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1443,7 +1748,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_curve_10degc_temperature_2-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_10degc_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1455,14 +1760,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_10degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_10degc_temperature_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_curve_20degc_temperature-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1475,13 +1780,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_20degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1504,7 +1809,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_curve_20degc_temperature-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1516,14 +1821,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_20degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_curve_20degc_temperature_2-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1536,13 +1841,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_20degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1565,7 +1870,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_curve_20degc_temperature_2-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1577,14 +1882,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_20degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_room_temperature_fine_tuning-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature_fine_tuning-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1597,13 +1902,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_room_temperature_fine_tuning',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature_fine_tuning',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1626,7 +1931,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_room_temperature_fine_tuning-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature_fine_tuning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -1638,14 +1943,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_room_temperature_fine_tuning',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature_fine_tuning',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_temperature_drop-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_temperature_drop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1658,13 +1963,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_temperature_drop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1687,7 +1992,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_temperature_drop-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_temperature_drop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -1699,14 +2004,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_temperature_drop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '6.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_water_out_maximum_temperature-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1719,13 +2024,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_water_out_maximum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1748,7 +2053,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_water_out_maximum_temperature-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1760,14 +2065,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_water_out_maximum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75.0',
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_water_out_minimum_temperature-entry]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1780,13 +2085,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_water_out_minimum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1809,7 +2114,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-no_room_sensors][number.heating_circuit_2_lattialammitys_water_out_minimum_temperature-state]
+# name: test_entities[number-no_room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1821,7 +2126,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_water_out_minimum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1841,9 +2146,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1888,6 +2193,67 @@
     'state': '600.0',
   })
 # ---
+# name: test_entities[number-relay_temp_difference][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying outdoor temperature limit',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying outdoor temperature limit',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_outdoor_temperature_limit',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_autumn_drying_outdoor_temperature_limit',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[number-relay_temp_difference][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Autumn drying outdoor temperature limit',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.0',
+  })
+# ---
 # name: test_entities[number-relay_temp_difference][number.ouman_eh_800_trend_sampling_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1901,9 +2267,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -1948,6 +2314,67 @@
     'state': '600.0',
   })
 # ---
+# name: test_entities[number-relay_temperature][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying outdoor temperature limit',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying outdoor temperature limit',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_outdoor_temperature_limit',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_autumn_drying_outdoor_temperature_limit',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[number-relay_temperature][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Autumn drying outdoor temperature limit',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.0',
+  })
+# ---
 # name: test_entities[number-relay_temperature][number.ouman_eh_800_trend_sampling_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1961,9 +2388,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2008,6 +2435,67 @@
     'state': '600.0',
   })
 # ---
+# name: test_entities[number-relay_time_program][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying outdoor temperature limit',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying outdoor temperature limit',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_outdoor_temperature_limit',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_autumn_drying_outdoor_temperature_limit',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[number-relay_time_program][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Autumn drying outdoor temperature limit',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.0',
+  })
+# ---
 # name: test_entities[number-relay_time_program][number.ouman_eh_800_trend_sampling_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2021,9 +2509,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2068,6 +2556,67 @@
     'state': '600.0',
   })
 # ---
+# name: test_entities[number-relay_valve_position][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying outdoor temperature limit',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying outdoor temperature limit',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_outdoor_temperature_limit',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_autumn_drying_outdoor_temperature_limit',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[number-relay_valve_position][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Autumn drying outdoor temperature limit',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.0',
+  })
+# ---
 # name: test_entities[number-relay_valve_position][number.ouman_eh_800_trend_sampling_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2081,9 +2630,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -2128,7 +2677,129 @@
     'state': '600.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_big_temperature_drop-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying outdoor temperature limit',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying outdoor temperature limit',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_outdoor_temperature_limit',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_autumn_drying_outdoor_temperature_limit',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[number-room_sensors][number.ouman_eh_800_autumn_drying_outdoor_temperature_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Autumn drying outdoor temperature limit',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ouman_eh_800_autumn_drying_outdoor_temperature_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.0',
+  })
+# ---
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying setpoint',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying setpoint',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_setpoint',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_autumn_drying_setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Autumn drying setpoint',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_autumn_drying_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_big_temperature_drop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2141,13 +2812,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_big_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_big_temperature_drop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2170,7 +2841,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_big_temperature_drop-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_big_temperature_drop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -2182,14 +2853,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_big_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_big_temperature_drop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_constant_temperature_setpoint-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_constant_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2202,13 +2873,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_constant_temperature_setpoint',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_constant_temperature_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2231,7 +2902,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_constant_temperature_setpoint-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_constant_temperature_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2243,14 +2914,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_constant_temperature_setpoint',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_constant_temperature_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_curve_0degc_temperature-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2263,13 +2934,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_0degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2292,7 +2963,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_curve_0degc_temperature-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2304,14 +2975,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_0degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_0degc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '41.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_curve_20degc_temperature-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2324,13 +2995,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_20degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2353,7 +3024,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_curve_20degc_temperature-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2365,14 +3036,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_20degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '58.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_curve_20degc_temperature_2-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2385,13 +3056,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_20degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2414,7 +3085,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_curve_20degc_temperature_2-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2426,14 +3097,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_curve_20degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_curve_20degc_temperature_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '18.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2446,13 +3117,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2475,7 +3146,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -2487,14 +3158,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_room_temperature_fine_tuning',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_room_temperature_fine_tuning',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_temperature_drop-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_temperature_drop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2507,13 +3178,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_temperature_drop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2536,7 +3207,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_temperature_drop-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_temperature_drop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -2548,14 +3219,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_temperature_drop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_water_out_maximum_temperature-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2568,13 +3239,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_water_out_maximum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2597,7 +3268,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_water_out_maximum_temperature-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2609,14 +3280,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_water_out_maximum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_water_out_minimum_temperature-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2629,13 +3300,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_water_out_minimum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2658,7 +3329,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_1_patterilammitys_water_out_minimum_temperature-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2670,14 +3341,75 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_1_patterilammitys_water_out_minimum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_big_temperature_drop-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Autumn drying setpoint',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
+    'original_icon': None,
+    'original_name': 'Autumn drying setpoint',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'autumn_drying_setpoint',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l2_autumn_drying_setpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Autumn drying setpoint',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_autumn_drying_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_big_temperature_drop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2690,13 +3422,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_big_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_big_temperature_drop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2719,7 +3451,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_big_temperature_drop-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_big_temperature_drop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -2731,14 +3463,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_big_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_big_temperature_drop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_curve_0degc_temperature-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_0degc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2751,13 +3483,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_0degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_0degc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2780,7 +3512,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_curve_0degc_temperature-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_0degc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2792,14 +3524,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_0degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_0degc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '28.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_curve_20degc_temperature-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2812,13 +3544,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_20degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2841,7 +3573,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_curve_20degc_temperature-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2853,14 +3585,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_20degc_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_curve_20degc_temperature_2-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2873,13 +3605,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_20degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2902,7 +3634,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_curve_20degc_temperature_2-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -2914,14 +3646,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_curve_20degc_temperature_2',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_curve_20degc_temperature_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_room_temperature_fine_tuning-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature_fine_tuning-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2934,13 +3666,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_room_temperature_fine_tuning',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature_fine_tuning',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2963,7 +3695,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_room_temperature_fine_tuning-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature_fine_tuning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -2975,14 +3707,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_room_temperature_fine_tuning',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_room_temperature_fine_tuning',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_temperature_drop-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_temperature_drop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2995,13 +3727,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_temperature_drop',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3024,7 +3756,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_temperature_drop-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_temperature_drop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
@@ -3036,14 +3768,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_temperature_drop',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_temperature_drop',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_water_out_maximum_temperature-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3056,13 +3788,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_water_out_maximum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3085,7 +3817,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_water_out_maximum_temperature-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_maximum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -3097,14 +3829,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_water_out_maximum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_maximum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75.0',
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_water_out_minimum_temperature-entry]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_minimum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3117,13 +3849,13 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_water_out_minimum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_minimum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3146,7 +3878,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[number-room_sensors][number.heating_circuit_2_lattialammitys_water_out_minimum_temperature-state]
+# name: test_entities[number-room_sensors][number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_minimum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -3158,7 +3890,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heating_circuit_2_lattialammitys_water_out_minimum_temperature',
+    'entity_id': 'number.ouman_eh_800_heating_circuit_2_lattialammitys_water_out_minimum_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3178,9 +3910,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,

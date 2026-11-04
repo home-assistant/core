@@ -1,1 +1,1 @@
-"""Tests for the Flow-it integration."""
+"""Tests for the AriaQ integration."""

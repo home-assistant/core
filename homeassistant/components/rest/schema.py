@@ -61,7 +61,7 @@ RESOURCE_SCHEMA = {
     probatio.Optional(CONF_PARAMS): probatio.Schema({cv.string: cv.template}),
     probatio.Optional(CONF_METHOD, default=DEFAULT_METHOD): probatio.In(METHODS),
     probatio.Optional(CONF_USERNAME): cv.string,
-    probatio.Optional(CONF_PASSWORD): cv.string,
+    probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
     probatio.Exclusive(CONF_PAYLOAD, CONF_PAYLOAD): cv.string,
     probatio.Exclusive(CONF_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.template,
     probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
@@ -100,10 +100,10 @@ COMBINED_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SCAN_INTERVAL): cv.time_period,
         **RESOURCE_SCHEMA,
         probatio.Optional(SENSOR_DOMAIN): probatio.All(
-            cv.ensure_list, [probatio.Schema(SENSOR_SCHEMA)]
+            probatio.EnsureList(), [probatio.Schema(SENSOR_SCHEMA)]
         ),
         probatio.Optional(BINARY_SENSOR_DOMAIN): probatio.All(
-            cv.ensure_list, [probatio.Schema(BINARY_SENSOR_SCHEMA)]
+            probatio.EnsureList(), [probatio.Schema(BINARY_SENSOR_SCHEMA)]
         ),
     }
 )
@@ -111,7 +111,7 @@ COMBINED_SCHEMA = probatio.Schema(
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             cv.remove_falsy,
             [COMBINED_SCHEMA],
         )

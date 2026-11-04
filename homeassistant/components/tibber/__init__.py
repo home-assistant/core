@@ -156,8 +156,6 @@ class TibberRuntimeData:
                 ssl=ssl_util.get_default_context(),
                 refresh_access_token=self._async_get_access_token,
             )
-        else:
-            await self._client.set_access_token(access_token)
         return self._client
 
     async def async_disconnect(self) -> None:
@@ -183,7 +181,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> None:
     """Set up a config entry."""
 
     # Added in 2026.1 to migrate existing users to OAuth2 (Tibber Data API).
@@ -243,15 +241,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     _migrate_data_api_registry_entries(hass, entry, coordinator, home_ids)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: TibberConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        await config_entry.runtime_data.async_disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    await config_entry.runtime_data.async_disconnect()

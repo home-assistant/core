@@ -3,6 +3,7 @@
   dict({
     'coordinator': dict({
       'last_update_success': True,
+      'open_api_quota_exceeded': False,
     }),
     'devices': list([
       dict({

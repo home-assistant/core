@@ -656,7 +656,8 @@
       'title': 'Mock Title',
       'unique_id': 'netatmo',
       'version': 1,
-      'webhook_registered': False,
+      'webhook_delivering': False,
+      'webhook_registered': True,
     }),
   })
 # ---

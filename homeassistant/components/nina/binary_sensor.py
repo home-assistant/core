@@ -11,16 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    ATTR_AFFECTED_AREAS,
-    ATTR_DESCRIPTION,
-    ATTR_EXPIRES,
-    ATTR_HEADLINE,
-    ATTR_RECOMMENDED_ACTIONS,
-    ATTR_SENDER,
-    ATTR_SENT,
-    ATTR_SEVERITY,
-    ATTR_START,
-    ATTR_WEB,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
     SERVICE_DATA_AFFECTED_AREAS,
@@ -99,22 +89,7 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         data = self._get_warning_data()
 
         return {
-            ATTR_HEADLINE: data.headline,  # Deprecated, remove in 2026.11
-            ATTR_DESCRIPTION: data.description,  # Deprecated, remove in 2026.11
-            ATTR_SENDER: data.sender,  # Deprecated, remove in 2026.11
-            ATTR_SEVERITY: data.severity or "Unknown",  # Deprecated, remove in 2026.11
-            # Deprecated, remove in 2026.11
-            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,
-            ATTR_AFFECTED_AREAS: data.affected_areas,  # Deprecated, remove in 2026.11
-            ATTR_WEB: data.more_info_url,  # Deprecated, remove in 2026.11
             ATTR_ID: data.id,
-            ATTR_SENT: data.sent.isoformat(),  # Deprecated, remove in 2026.11
-            ATTR_START: data.start.isoformat()
-            if data.start
-            else "",  # Deprecated, remove in 2026.11
-            ATTR_EXPIRES: data.expires.isoformat()
-            if data.expires
-            else "",  # Deprecated, remove in 2026.11
         }
 
     def get_details(self) -> dict[str, str] | None:

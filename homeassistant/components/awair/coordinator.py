@@ -49,6 +49,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator[dict[str, AwairResult]]):
     ) -> None:
         """Set up the AwairDataUpdateCoordinator class."""
         self.title = config_entry.title
+        self.host: str | None = config_entry.data.get(CONF_HOST)
 
         super().__init__(
             hass,
@@ -128,6 +129,5 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
                     self._device = devices[0]
                 result = await self._fetch_air_data(self._device)
             except AwairError as err:
-                LOGGER.error("Unexpected API error: %s", err)
                 raise UpdateFailed(err) from err
             return {result.device.uuid: result}

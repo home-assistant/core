@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .coordinator import BrotherConfigEntry, BrotherDataUpdateCoordinator
+from .coordinator import BrotherConfigEntry
 from .entity import BrotherPrinterEntity
 
 # Coordinator is used to centralize the data updates
@@ -45,11 +45,13 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="status",
         translation_key="status",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.status,
         entity_registry_enabled_default=False,
     ),
     BrotherSensorEntityDescription(
         key="printer_status",
+        name=None,
         translation_key="printer_status",
         device_class=SensorDeviceClass.ENUM,
         options=["idle", "other", "printing", "warmup"],
@@ -353,17 +355,6 @@ class BrotherPrinterSensor(BrotherPrinterEntity, SensorEntity):
     """Define a Brother Printer sensor."""
 
     entity_description: BrotherSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: BrotherDataUpdateCoordinator,
-        description: BrotherSensorEntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-
-        self._attr_unique_id = f"{coordinator.brother.serial.lower()}_{description.key}"
-        self.entity_description = description
 
     @property
     @override

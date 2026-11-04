@@ -1,9 +1,11 @@
 """Test the Z-Wave JS services."""
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.value import SetConfigParameterResult
 
@@ -40,7 +42,7 @@ from homeassistant.components.zwave_js.const import (
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -57,8 +59,6 @@ from .common import (
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
     SCHLAGE_BE469_LOCK_ENTITY,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_set_config_parameter(
@@ -478,7 +478,7 @@ async def test_set_config_parameter(
     client.async_send_command.reset_mock()
 
     # Test setting config parameter with no valid nodes raises Exception
-    with pytest.raises(probatio.MultipleInvalid):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -490,6 +490,8 @@ async def test_set_config_parameter(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
 
     client.async_send_command_no_wait.reset_mock()
     client.async_send_command.reset_mock()
@@ -833,6 +835,22 @@ async def test_bulk_set_config_parameters(
 
     client.async_send_command.reset_mock()
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_CONFIG_PARAMETER: 102,
+                ATTR_CONFIG_VALUE: 241,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+
 
 async def test_bulk_set_config_parameters_gather(
     hass: HomeAssistant,
@@ -1152,6 +1170,22 @@ async def test_set_value(
             },
             blocking=True,
         )
+
+    # Test setting a value with no valid nodes raises Exception
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_COMMAND_CLASS: 117,
+                ATTR_PROPERTY: "local",
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
 
 
 async def test_set_value_string(
@@ -1480,6 +1514,21 @@ async def test_multicast_set_value(
             blocking=True,
         )
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(probatio.MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MULTICAST_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_PROPERTY: "setpoint",
+                ATTR_PROPERTY_KEY: 1,
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+
     # Test that when a command is unsuccessful we raise an exception
     client.async_send_command.return_value = {
         "result": {"status": 2, "message": "test"}
@@ -1798,6 +1847,18 @@ async def test_ping(
             blocking=True,
         )
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PING,
+            {ATTR_ENTITY_ID: "sensor.fake"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+
     client.async_send_command.reset_mock()
     client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
     with pytest.raises(HomeAssistantError):
@@ -1976,6 +2037,24 @@ async def test_invoke_cc_api(
     client.async_send_command.reset_mock()
     client.async_send_command_no_wait.reset_mock()
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_INVOKE_CC_API,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_METHOD_NAME: "someMethod",
+                ATTR_PARAMETERS: [1, 2],
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
+
 
 async def test_refresh_notifications(
     hass: HomeAssistant,
@@ -2073,3 +2152,97 @@ async def test_refresh_notifications(
 
     client.async_send_command.reset_mock()
     client.async_send_command_no_wait.reset_mock()
+
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REFRESH_NOTIFICATIONS,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_NOTIFICATION_TYPE: 1,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
+
+
+@pytest.mark.parametrize("target", [ATTR_ENTITY_ID, ATTR_DEVICE_ID])
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param(
+            SERVICE_SET_CONFIG_PARAMETER,
+            {
+                ATTR_CONFIG_PARAMETER: 102,
+                ATTR_CONFIG_PARAMETER_BITMASK: 1,
+                ATTR_CONFIG_VALUE: 1,
+            },
+            id="set_config_parameter",
+        ),
+        pytest.param(
+            SERVICE_REFRESH_NOTIFICATIONS,
+            {ATTR_NOTIFICATION_TYPE: 1},
+            id="refresh_notifications",
+        ),
+        pytest.param(SERVICE_PING, {}, id="ping"),
+        pytest.param(
+            SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+            {ATTR_CONFIG_PARAMETER: 102, ATTR_CONFIG_VALUE: 241},
+            id="bulk_set_partial_config_parameters",
+        ),
+        pytest.param(
+            SERVICE_INVOKE_CC_API,
+            {
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_METHOD_NAME: "someMethod",
+                ATTR_PARAMETERS: [1, 2],
+            },
+            id="invoke_cc_api",
+        ),
+        pytest.param(
+            SERVICE_SET_VALUE,
+            {ATTR_COMMAND_CLASS: 117, ATTR_PROPERTY: "local", ATTR_VALUE: 2},
+            id="set_value",
+        ),
+        pytest.param(
+            SERVICE_MULTICAST_SET_VALUE,
+            {ATTR_COMMAND_CLASS: 117, ATTR_PROPERTY: "local", ATTR_VALUE: 2},
+            id="multicast_set_value",
+        ),
+    ],
+)
+async def test_service_driver_not_ready(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    multisensor_6: MagicMock,
+    integration: MockConfigEntry,
+    target: str,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test a service call fails with a runtime error while the driver is not ready."""
+    entity_entry = entity_registry.async_get(AIR_TEMPERATURE_SENSOR)
+    assert entity_entry
+    targets = {
+        ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+        ATTR_DEVICE_ID: entity_entry.device_id,
+    }
+
+    with (
+        patch.object(client, "driver", None),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {target: targets[target], **service_data},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "driver_not_ready"

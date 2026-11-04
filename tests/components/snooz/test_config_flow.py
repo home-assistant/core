@@ -3,10 +3,12 @@
 from asyncio import Event, sleep
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.snooz.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -18,8 +20,6 @@ from . import (
     TEST_PAIRING_TOKEN,
     TEST_SNOOZ_DISPLAY_NAME,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
@@ -105,11 +105,11 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["data_schema"]
     # ensure discovered devices are listed as options
-    assert result["data_schema"].schema["name"].container == [TEST_SNOOZ_DISPLAY_NAME]
+    assert result["data_schema"].schema["address"].container == {
+        TEST_ADDRESS: TEST_SNOOZ_DISPLAY_NAME
+    }
     mock_request_active_scan.assert_awaited_once_with(hass)
-    await _test_setup_entry(
-        hass, result["flow_id"], {CONF_NAME: TEST_SNOOZ_DISPLAY_NAME}
-    )
+    await _test_setup_entry(hass, result["flow_id"], {CONF_ADDRESS: TEST_ADDRESS})
 
 
 async def test_async_step_user_with_found_devices_waits_to_pair(
@@ -127,7 +127,7 @@ async def test_async_step_user_with_found_devices_waits_to_pair(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    await _test_pairs(hass, result["flow_id"], {CONF_NAME: TEST_SNOOZ_DISPLAY_NAME})
+    await _test_pairs(hass, result["flow_id"], {CONF_ADDRESS: TEST_ADDRESS})
 
 
 async def test_async_step_user_with_found_devices_retries_pairing(
@@ -145,7 +145,7 @@ async def test_async_step_user_with_found_devices_retries_pairing(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    user_input = {CONF_NAME: TEST_SNOOZ_DISPLAY_NAME}
+    user_input = {CONF_ADDRESS: TEST_ADDRESS}
 
     retry_id = await _test_pairs_timeout(hass, result["flow_id"], user_input)
     await _test_pairs(hass, retry_id, user_input)
@@ -167,14 +167,14 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_ADDRESS,
-        data={CONF_NAME: TEST_SNOOZ_DISPLAY_NAME, CONF_TOKEN: TEST_PAIRING_TOKEN},
+        data={CONF_ADDRESS: TEST_ADDRESS, CONF_TOKEN: TEST_PAIRING_TOKEN},
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.snooz.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.snooz.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_NAME: TEST_SNOOZ_DISPLAY_NAME},
+            user_input={CONF_ADDRESS: TEST_ADDRESS},
         )
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
@@ -187,7 +187,7 @@ async def test_async_step_user_with_found_devices_already_setup(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_ADDRESS,
-        data={CONF_NAME: TEST_SNOOZ_DISPLAY_NAME, CONF_TOKEN: TEST_PAIRING_TOKEN},
+        data={CONF_ADDRESS: TEST_ADDRESS, CONF_TOKEN: TEST_PAIRING_TOKEN},
     )
     entry.add_to_hass(hass)
 
@@ -208,7 +208,7 @@ async def test_async_step_bluetooth_devices_already_setup(hass: HomeAssistant) -
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_ADDRESS,
-        data={CONF_NAME: TEST_SNOOZ_DISPLAY_NAME, CONF_TOKEN: TEST_PAIRING_TOKEN},
+        data={CONF_ADDRESS: TEST_ADDRESS, CONF_TOKEN: TEST_PAIRING_TOKEN},
     )
     entry.add_to_hass(hass)
 
@@ -262,9 +262,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
         )
         assert result["type"] is FlowResultType.FORM
 
-    await _test_setup_entry(
-        hass, result["flow_id"], {CONF_NAME: TEST_SNOOZ_DISPLAY_NAME}
-    )
+    await _test_setup_entry(hass, result["flow_id"], {CONF_ADDRESS: TEST_ADDRESS})
 
     # Verify the original one was aborted
     assert not hass.config_entries.flow.async_progress()
@@ -291,11 +289,11 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     # Verify the ignored device is in the dropdown
-    assert result["data_schema"].schema["name"].container == [TEST_SNOOZ_DISPLAY_NAME]
+    assert result["data_schema"].schema["address"].container == {
+        TEST_ADDRESS: TEST_SNOOZ_DISPLAY_NAME
+    }
 
-    await _test_setup_entry(
-        hass, result["flow_id"], {CONF_NAME: TEST_SNOOZ_DISPLAY_NAME}
-    )
+    await _test_setup_entry(hass, result["flow_id"], {CONF_ADDRESS: TEST_ADDRESS})
 
 
 async def _test_pairs(
@@ -359,7 +357,7 @@ async def _test_pairs_timeout(
 async def _test_setup_entry(
     hass: HomeAssistant, flow_id: str, user_input: dict | None = None
 ) -> None:
-    with patch("homeassistant.components.snooz.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.snooz.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             flow_id,
             user_input=user_input or {},

@@ -14,6 +14,7 @@ from hass_nabucasa.llm import (
 from PIL import Image
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.components.cloud import DOMAIN
@@ -23,8 +24,6 @@ from homeassistant.components.cloud.ai_task import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

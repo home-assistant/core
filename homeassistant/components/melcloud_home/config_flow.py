@@ -30,7 +30,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.EMAIL, autocomplete="username")
         ),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD, autocomplete="current-password"
             )
@@ -41,6 +41,8 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MELCloud Home."""
+
+    MINOR_VERSION = 2
 
     async def _async_validate_credentials(
         self, email: str, password: str

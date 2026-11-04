@@ -2,7 +2,7 @@
 
 from typing import override
 
-from pyintelliclima.intelliclima_types import IntelliClimaC800, IntelliClimaECO
+from pyintelliclima import FanState, IntelliClimaC800, IntelliClimaECO2
 
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
@@ -15,7 +15,7 @@ from .const import DOMAIN
 from .coordinator import IntelliClimaCoordinator
 
 
-def eco_device_info(device: IntelliClimaECO) -> DeviceInfo:
+def eco_device_info(device: IntelliClimaECO2) -> DeviceInfo:
     """Return the device info shared by all entities of an ECOCOMFORT 2.0."""
     return DeviceInfo(
         identifiers={(DOMAIN, device.id)},
@@ -40,7 +40,7 @@ class IntelliClimaEntity(CoordinatorEntity[IntelliClimaCoordinator]):
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO | IntelliClimaC800,
+        device: IntelliClimaECO2 | IntelliClimaC800,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator=coordinator)
@@ -63,7 +63,7 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO,
+        device: IntelliClimaECO2,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator, device)
@@ -71,8 +71,16 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
         self._attr_device_info = eco_device_info(device)
 
     @property
-    def _device_data(self) -> IntelliClimaECO:
+    def _device_data(self) -> IntelliClimaECO2:
         return self.coordinator.data.ecocomfort2_devices[self._device_id]
+
+    @property
+    def _fan_state(self) -> FanState | None:
+        """Return the running state, or None if the device reports an undefined one."""
+        try:
+            return self._device_data.fan_state
+        except ValueError:
+            return None
 
     @property
     @override

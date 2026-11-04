@@ -40,6 +40,8 @@ class OPNsenseRuntimeData:
 class OPNsenseCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]):
     """Coordinator for OPNsense device tracker updates."""
 
+    config_entry: OPNsenseConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,

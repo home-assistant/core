@@ -20,7 +20,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -> None:
     """Set up Casper Glow from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(hass, address.upper(), True)
@@ -44,9 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -
 
     entry.async_on_unload(coordinator.async_start())
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CasperGlowConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

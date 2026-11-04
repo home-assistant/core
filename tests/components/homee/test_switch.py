@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyHomee.model_homeegram import HomeeGram
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from websockets import frames
 from websockets.exceptions import ConnectionClosed
@@ -23,8 +28,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import build_mock_node, setup_integration
-
-from tests.common import MockConfigEntry, load_json_array_fixture, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

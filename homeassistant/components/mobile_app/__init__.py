@@ -12,13 +12,7 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    CONF_WEBHOOK_ID,
-    Platform,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
@@ -40,6 +34,8 @@ from . import (  # noqa: F401
 )
 from .const import (
     ATTR_DEVICE_NAME,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_OS_VERSION,
     CONF_CLOUDHOOK_URL,
     CONF_USER_ID,
@@ -193,7 +189,7 @@ async def _async_setup_cloudhook(
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a mobile_app entry."""
     registration = entry.data
 
@@ -230,14 +226,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass_notify.async_reload(hass, DOMAIN)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a mobile app entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     webhook_id = entry.data[CONF_WEBHOOK_ID]
 
@@ -245,8 +237,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     del hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
     del hass.data[DOMAIN][DATA_DEVICES][webhook_id]
     await hass_notify.async_reload(hass, DOMAIN)
-
-    return True
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

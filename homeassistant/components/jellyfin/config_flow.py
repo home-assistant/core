@@ -21,13 +21,13 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_URL): str,
         probatio.Required(CONF_USERNAME): str,
-        probatio.Optional(CONF_PASSWORD, default=""): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD), default=""): str,
     }
 )
 
 REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_PASSWORD, default=""): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD), default=""): str,
     }
 )
 

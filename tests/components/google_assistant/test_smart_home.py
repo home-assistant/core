@@ -5,6 +5,11 @@ from types import SimpleNamespace
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    async_capture_events,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components.camera import CameraEntityFeature
@@ -24,13 +29,11 @@ from homeassistant.components.demo.media_player import AbstractDemoPlayer
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.demo.switch import DemoSwitch
-from homeassistant.components.google_assistant import (
+from homeassistant.components.google_assistant import const, smart_home as sh, trait
+from homeassistant.components.google_assistant.const import (
     EVENT_COMMAND_RECEIVED,
     EVENT_QUERY_RECEIVED,
     EVENT_SYNC_RECEIVED,
-    const,
-    smart_home as sh,
-    trait,
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -51,8 +54,6 @@ from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
-
-from tests.common import MockConfigEntry, MockEntityPlatform, async_capture_events
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -267,8 +268,20 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
     assert events[0].data == {"request_id": REQ_ID, "source": "cloud"}
 
 
-@pytest.mark.parametrize("area_on_device", [True, False])
-async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> None:
+@pytest.mark.parametrize(
+    ("area_on_device", "expected_name"),
+    [
+        pytest.param(True, "Test Device Demo Light", id="area_on_device"),
+        # The entity has an area of its own, so its name skips the device
+        pytest.param(False, "Demo Light", id="area_on_entity"),
+    ],
+)
+async def test_sync_in_area(
+    area_on_device: bool,
+    expected_name: str,
+    hass: HomeAssistant,
+    registries: SimpleNamespace,
+) -> None:
     """Test a sync message where room hint comes from area."""
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
@@ -334,7 +347,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
             "devices": [
                 {
                     "id": "light.demo_light",
-                    "name": {"name": "Test Device Demo Light"},
+                    "name": {"name": expected_name},
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
                         trait.TRAIT_ON_OFF,

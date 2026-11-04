@@ -1,8 +1,10 @@
 {
   "domain": "wiz",
   "name": "WiZ",
+  "categories": ["lighting.bulbs_lamps", "plugs_switches"],
   "codeowners": ["@sbidy", "@arturpragacz"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["network"],
   "dhcp": [
     {

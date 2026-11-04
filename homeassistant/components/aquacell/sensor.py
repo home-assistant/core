@@ -17,7 +17,9 @@ from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
+from .const import STALE_DATA_TIMEOUT
 from .coordinator import AquacellConfigEntry, AquacellCoordinator
 from .entity import AquacellEntity
 
@@ -29,6 +31,7 @@ class SoftenerSensorEntityDescription(SensorEntityDescription):
     """Describes Softener sensor entity."""
 
     value_fn: Callable[[Softener], StateType | datetime]
+    available_when_stale: bool = False
 
 
 SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
@@ -82,6 +85,7 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
         translation_key="last_update",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda softener: softener.diagnostics.last_update,
+        available_when_stale=True,
     ),
 )
 
@@ -115,6 +119,16 @@ class SoftenerSensor(AquacellEntity, SensorEntity):
         super().__init__(coordinator, softener_key, description.key)
 
         self.entity_description = description
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the softener reported to the cloud recently."""
+        return super().available and (
+            self.entity_description.available_when_stale
+            or dt_util.utcnow() - self.softener.diagnostics.last_update
+            < STALE_DATA_TIMEOUT
+        )
 
     @property
     @override

@@ -7,8 +7,9 @@ from typing import Any, Literal, NotRequired, TypedDict, override
 
 import probatio
 
-from homeassistant.core import HomeAssistant, callback, valid_entity_id
-from homeassistant.helpers import config_validation as cv, singleton, storage
+from homeassistant.const import Platform
+from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
+from homeassistant.helpers import entity_registry as er, singleton, storage
 
 from .const import DOMAIN
 
@@ -155,6 +156,19 @@ class SolarSourceType(TypedDict):
     name: NotRequired[str]
 
 
+class HomeSourceType(TypedDict):
+    """Dictionary holding the whole-home consumption meter.
+
+    It does not touch any other calculation,
+    and is intended to be used with a main panel sensor.
+    """
+
+    type: Literal["home"]
+    stat_energy_to: str
+    stat_rate: NotRequired[str]
+    name: NotRequired[str]
+
+
 class BatterySourceType(TypedDict):
     """Dictionary holding the source of battery storage."""
 
@@ -228,6 +242,7 @@ class WaterSourceType(TypedDict):
 type SourceType = (
     GridSourceType
     | SolarSourceType
+    | HomeSourceType
     | BatterySourceType
     | GasSourceType
     | WaterSourceType
@@ -393,7 +408,7 @@ GRID_POWER_SOURCE_SCHEMA = probatio.All(
             probatio.Optional("power_config"): POWER_CONFIG_SCHEMA,
         }
     ),
-    cv.has_at_least_one_key("stat_rate", "power_config"),
+    probatio.AtLeastOne("stat_rate", "power_config"),
 )
 
 
@@ -515,6 +530,14 @@ SOLAR_SOURCE_SCHEMA = probatio.Schema(
         probatio.Optional("name"): str,
     }
 )
+HOME_SOURCE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required("type"): "home",
+        probatio.Required("stat_energy_to"): str,
+        probatio.Optional("stat_rate"): str,
+        probatio.Optional("name"): str,
+    }
+)
 BATTERY_SOURCE_SCHEMA = probatio.Schema(
     {
         probatio.Required("type"): "battery",
@@ -571,7 +594,8 @@ WATER_SOURCE_SCHEMA = probatio.All(
 
 def check_type_limits(value: list[SourceType]) -> list[SourceType]:
     """Validate that we don't have too many of certain types."""
-    # Currently no type limits - multiple grid sources are allowed (like batteries)
+    if sum(1 for source in value if source["type"] == "home") > 1:
+        raise probatio.Invalid("Only one home source is allowed")
     return value
 
 
@@ -618,11 +642,12 @@ def _validate_grid_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
 ENERGY_SOURCE_SCHEMA = probatio.All(
     probatio.Schema(
         [
-            cv.key_value_schemas(
+            probatio.TaggedUnion(
                 "type",
                 {
                     "grid": GRID_SOURCE_SCHEMA,
                     "solar": SOLAR_SOURCE_SCHEMA,
+                    "home": HOME_SOURCE_SCHEMA,
                     "battery": BATTERY_SOURCE_SCHEMA,
                     "gas": GAS_SOURCE_SCHEMA,
                     "water": WATER_SOURCE_SCHEMA,
@@ -766,6 +791,46 @@ class EnergyManager:
     async def async_initialize(self) -> None:
         """Initialize the energy integration."""
         self.data = await self._store.async_load()
+        # The power sensors may have been renamed while energy was not loaded
+        self._async_refresh_power_stat_rates()
+        self._hass.bus.async_listen(
+            er.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._async_entity_registry_updated,
+            event_filter=self._async_filter_power_sensor_registry_updated,
+        )
+
+    @callback
+    def _async_filter_power_sensor_registry_updated(
+        self, event_data: er.EventEntityRegistryUpdatedData
+    ) -> bool:
+        """Filter for power sensors being created or getting a new entity_id."""
+        if event_data["action"] == "update":
+            if "entity_id" not in event_data["changes"]:
+                return False
+        elif event_data["action"] != "create":
+            return False
+        entry = er.async_get(self._hass).async_get(event_data["entity_id"])
+        return entry is not None and entry.platform == DOMAIN
+
+    @callback
+    def _async_entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Handle a power sensor being created or getting a new entity_id."""
+        self._async_refresh_power_stat_rates()
+
+    @callback
+    def _async_refresh_power_stat_rates(self) -> None:
+        """Point stat_rate of power transform configs at the actual entity_id."""
+        if self.data is None:
+            return
+        energy_sources = self._process_energy_sources(self.data["energy_sources"])
+        if energy_sources == self.data["energy_sources"]:
+            return
+        data = self.data.copy()
+        data["energy_sources"] = energy_sources
+        self.data = data
+        self._store.async_delay_save(lambda: data, 60)
 
     @staticmethod
     def default_preferences() -> EnergyPreferences:
@@ -805,20 +870,34 @@ class EnergyManager:
 
         await asyncio.gather(*(listener() for listener in self._update_listeners))
 
+    def _power_sensor_entity_id(self, source_type: str, config: PowerConfig) -> str:
+        """Return the entity_id of a power transform sensor.
+
+        The generated entity_id is only a suggestion, the sensor may have been
+        renamed or registered with another entity_id.
+        """
+        from .helpers import (  # noqa: PLC0415
+            generate_power_sensor_entity_id,
+            generate_power_sensor_unique_id,
+        )
+
+        unique_id = generate_power_sensor_unique_id(source_type, config)
+        if entity_id := er.async_get(self._hass).async_get_entity_id(
+            Platform.SENSOR, DOMAIN, unique_id
+        ):
+            return entity_id
+        return generate_power_sensor_entity_id(source_type, config)
+
     def _process_energy_sources(self, sources: list[SourceType]) -> list[SourceType]:
         """Process energy sources and set stat_rate for power configs."""
-        from .helpers import generate_power_sensor_entity_id  # noqa: PLC0415
-
         processed: list[SourceType] = []
         for source in sources:
             if source["type"] == "battery":
                 source = self._process_battery_power(
-                    source, generate_power_sensor_entity_id
+                    source, self._power_sensor_entity_id
                 )
             elif source["type"] == "grid":
-                source = self._process_grid_power(
-                    source, generate_power_sensor_entity_id
-                )
+                source = self._process_grid_power(source, self._power_sensor_entity_id)
             processed.append(source)
         return processed
 
@@ -837,7 +916,7 @@ class EnergyManager:
         if "stat_rate" in config:
             return {**source, "stat_rate": config["stat_rate"]}
 
-        # For inverted or two-sensor config, set stat_rate to the generated entity_id
+        # For inverted or two-sensor config, set stat_rate to the power sensor
         return {**source, "stat_rate": generate_entity_id("battery", config)}
 
     def _process_grid_power(
@@ -855,7 +934,7 @@ class EnergyManager:
         if "stat_rate" in config:
             return {**source, "stat_rate": config["stat_rate"]}
 
-        # For inverted or two-sensor config, set stat_rate to the generated entity_id
+        # For inverted or two-sensor config, set stat_rate to the power sensor
         return {**source, "stat_rate": generate_entity_id("grid", config)}
 
     @callback

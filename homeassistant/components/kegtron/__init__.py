@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 type KegtronConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: KegtronConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: KegtronConfigEntry) -> None:
     """Set up Kegtron BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -36,9 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: KegtronConfigEntry) -> b
     entry.async_on_unload(
         coordinator.async_start()
     )  # only start after all platforms have had a chance to subscribe
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: KegtronConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: KegtronConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
