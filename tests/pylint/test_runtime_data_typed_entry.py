@@ -62,6 +62,25 @@ def helper(entry: ConfigEntry, other: MyConfigEntry) -> None:
             MODULE,
             id="other_argument_typed",
         ),
+        pytest.param(
+            """
+def helper(entry: ConfigEntry) -> None:
+    entry.runtime_data: MyData
+""",
+            MODULE,
+            id="annotation_only",
+        ),
+        pytest.param(
+            """
+def helper(entry: MyConfigEntry) -> None:
+    def inner() -> None:
+        entry: ConfigEntry = get_entry()
+
+    entry.runtime_data = MyData()
+""",
+            MODULE,
+            id="untyped_declaration_in_nested_scope",
+        ),
     ],
 )
 def test_no_message(
@@ -127,6 +146,23 @@ def helper(hass) -> None:
     entry.runtime_data = MyData()
 """,
             id="annotated_local",
+        ),
+        pytest.param(
+            """
+def helper(hass) -> None:
+    entry: ConfigEntry
+    entry = hass.config_entries.async_get_entry("abc")
+    entry.runtime_data = MyData()
+""",
+            id="declared_local_assigned_later",
+        ),
+        pytest.param(
+            """
+def helper(hass, entry: ConfigEntry) -> None:
+    entry = hass.config_entries.async_get_entry(entry.entry_id)
+    entry.runtime_data = MyData()
+""",
+            id="reassigned_argument",
         ),
     ],
 )

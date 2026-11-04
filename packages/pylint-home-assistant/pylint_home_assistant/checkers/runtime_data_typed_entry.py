@@ -48,16 +48,21 @@ def _argument_annotation(arguments: nodes.Arguments, name: str) -> nodes.NodeNG 
 
 
 def _name_annotations(node: nodes.Name) -> list[nodes.NodeNG]:
-    """Return the annotations of the bindings *node* can refer to."""
-    _, assignments = node.lookup(node.name)
+    """Return the annotations declared for *node* in the scope it is bound in."""
+    scope, _ = node.lookup(node.name)
     annotations: list[nodes.NodeNG] = []
-    for assignment in assignments:
-        match assignment.parent:
-            case nodes.Arguments() as arguments:
-                if annotation := _argument_annotation(arguments, node.name):
-                    annotations.append(annotation)
-            case nodes.AnnAssign(annotation=annotation):
-                annotations.append(annotation)
+    # The declaration still applies when the name is reassigned later
+    if isinstance(scope, nodes.FunctionDef | nodes.Lambda) and (
+        annotation := _argument_annotation(scope.args, node.name)
+    ):
+        annotations.append(annotation)
+    annotations.extend(
+        ann_assign.annotation
+        for ann_assign in scope.nodes_of_class(nodes.AnnAssign)
+        if isinstance(ann_assign.target, nodes.AssignName)
+        and ann_assign.target.name == node.name
+        and ann_assign.target.scope() is scope
+    )
     return annotations
 
 
@@ -96,6 +101,9 @@ class RuntimeDataTypedEntryChecker(BaseChecker):
         if not self._enabled or node.attrname != "runtime_data":
             return
         if not isinstance(entry := node.expr, nodes.Name):
+            return
+        # entry.runtime_data: MyData declares a type without setting a value
+        if isinstance(node.parent, nodes.AnnAssign) and node.parent.value is None:
             return
 
         for annotation in _name_annotations(entry):
