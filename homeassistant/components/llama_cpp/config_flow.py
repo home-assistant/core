@@ -144,7 +144,7 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA,
-            description_placeholders={CONF_BASE_URL: reauth_entry.data[CONF_BASE_URL]},
+            description_placeholders={"base_url": reauth_entry.data[CONF_BASE_URL]},
             errors=errors,
         )
 
@@ -369,7 +369,11 @@ def llama_cpp_config_option_schema(
             ): TemplateSelector(),
             probatio.Optional(
                 CONF_LLM_HASS_API,
-            ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=hass_apis, multiple=True, mode=SelectSelectorMode.LIST
+                )
+            ),
         }
     )
     schema.update(

@@ -33,7 +33,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -126,7 +125,7 @@ def mock_handlers() -> Generator[None]:
             if user_input is None:
                 return self.async_show_form(
                     step_id="reauth_confirm",
-                    description_placeholders={CONF_NAME: "Custom title"},
+                    description_placeholders={"name": "Custom title"},
                 )
             return self.async_abort(reason="test")
 
@@ -8289,66 +8288,106 @@ def test_deprecated_connection_class_constants(
     )
 
 
-async def test_update_entry_and_reload_with_listener_logs(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test update and reload with config entry listener logs."""
+class _ListenerReloadFlow(config_entries.ConfigFlow):
+    """Test flow reloading an entry from reauth and reconfigure."""
+
+    VERSION = 1
+
+    async def async_step_reauth(self, data):
+        """Mock Reauth."""
+        await self.async_set_unique_id("1234")
+        self._abort_if_unique_id_configured(updates={"vendor": "data2"})
+
+    async def async_step_reconfigure(self, data):
+        """Mock Reconfigure."""
+        return self.async_update_reload_and_abort(
+            self._get_reconfigure_entry(), data={"vendor": "data3"}
+        )
+
+
+async def _setup_entry_with_update_listener(
+    hass: HomeAssistant, built_in: bool
+) -> tuple[MockConfigEntry, AsyncMock]:
+    """Set up a loaded entry with an update listener."""
     entry = MockConfigEntry(
         domain="comp",
         unique_id="1234",
         title="Test",
         data={"vendor": "data"},
-        options={"vendor": "options"},
     )
     entry.add_to_hass(hass)
     entry.add_update_listener(AsyncMock())
 
-    comp = MockModule(
-        "comp",
-        async_setup_entry=AsyncMock(return_value=None),
-        async_unload_entry=AsyncMock(return_value=None),
+    mock_setup_entry = AsyncMock(return_value=None)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=AsyncMock(return_value=None),
+        ),
+        built_in=built_in,
     )
-    mock_integration(hass, comp)
     mock_platform(hass, "comp.config_flow", None)
 
     await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    return entry, mock_setup_entry
 
-    class MockFlowHandler(config_entries.ConfigFlow):
-        """Define a mock flow handler."""
 
-        VERSION = 1
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE]
+)
+async def test_update_entry_and_reload_with_listener_core_integration(
+    hass: HomeAssistant, source: str
+) -> None:
+    """Test updating and reloading an entry with update listener raises for core."""
+    entry, _ = await _setup_entry_with_update_listener(hass, built_in=True)
 
-        async def async_step_reauth(self, data):
-            """Mock Reauth."""
-            self._abort_if_unique_id_configured(updates={"vendor": "data2"})
+    with (
+        mock_config_flow("comp", _ListenerReloadFlow),
+        pytest.raises(
+            RuntimeError,
+            match="has an update listener and should use it for scheduling a reload",
+        ),
+    ):
+        await hass.config_entries.flow.async_init(
+            "comp", context={"source": source, "entry_id": entry.entry_id}
+        )
 
-        async def async_step_reconfigure(self, data):
-            """Mock Reconfigure."""
-            return self.async_update_reload_and_abort(entry, data={"vendor": "data3"})
 
-    message = (
-        "Detected that integration 'comp' has an update listener and should use it"
-        " for scheduling a reload. This will stop working in Home Assistant 2026.12.0"
+@pytest.mark.parametrize(
+    ("source", "reason"),
+    [
+        (config_entries.SOURCE_REAUTH, "already_configured"),
+        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful"),
+    ],
+)
+async def test_update_entry_and_reload_with_listener_custom_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, source: str, reason: str
+) -> None:
+    """Test updating and reloading an entry with update listener logs for custom."""
+    entry, mock_setup_entry = await _setup_entry_with_update_listener(
+        hass, built_in=False
     )
 
     with (
-        mock_config_flow("comp", MockFlowHandler),
+        mock_config_flow("comp", _ListenerReloadFlow),
         patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
     ):
-        await entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_init(
+            "comp", context={"source": source, "entry_id": entry.entry_id}
+        )
     await hass.async_block_till_done()
 
-    assert message in caplog.text
-    caplog.clear()
-
-    with (
-        mock_config_flow("comp", MockFlowHandler),
-        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
-    ):
-        await entry.start_reconfigure_flow(hass)
-    await hass.async_block_till_done()
-
-    assert message in caplog.text
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert (
+        "Detected that custom integration 'comp' has an update listener and should"
+        " use it for scheduling a reload"
+    ) in caplog.text
+    assert len(mock_setup_entry.mock_calls) == 2
 
 
 @pytest.mark.parametrize(
@@ -9878,15 +9917,62 @@ async def test_non_awaited_async_forward_entry_setups(
     await hass.async_block_till_done()
     forward_event.set()
     await hass.async_block_till_done()
-    await task
 
-    assert (
-        "Detected code that calls async_forward_entry_setups for integration "
-        "test with title: Mock Title and entry_id: test2, during setup without "
+    message = (
+        "Detected code that calls async_forward_entry_setups during setup for "
+        "integration test with title: Mock Title and entry_id: test2, without "
         "awaiting async_forward_entry_setups, which can cause the setup lock "
-        "to be released before the setup is done. This will stop working in "
-        "Home Assistant 2025.1, please report this issue"
-    ) in caplog.text
+        "to be released before the setup is done"
+    )
+    with pytest.raises(HomeAssistantError, match=message):
+        await task
+
+
+async def test_concurrent_async_forward_entry_setups_after_setup(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test concurrent async_forward_entry_setups calls after setup."""
+    forward_event = asyncio.Event()
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        await forward_event.wait()
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(
+        hass, "test.switch", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test", entry_id="test2")
+    entry.add_to_manager(manager)
+
+    await manager.async_setup(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+    # The second forward finds the setup lock held by the first one
+    light_task = create_eager_task(
+        hass.config_entries.async_forward_entry_setups(entry, ["light"])
+    )
+    switch_task = create_eager_task(
+        hass.config_entries.async_forward_entry_setups(entry, ["switch"])
+    )
+    await hass.async_block_till_done()
+    forward_event.set()
+
+    await light_task
+    await switch_task
+    assert hass.config.components >= {"test.light", "test.switch"}
 
 
 async def test_config_entry_unloaded_during_platform_setup(
@@ -11550,6 +11636,52 @@ async def test_create_entry_existing_unique_id(
         "working in Home Assistant 2026.3, please create a bug report at https:"
     )
     assert (log_text in caplog.text) == expected_log
+
+
+class _ConfirmOnlyFlow(config_entries.ConfigFlow):
+    """Test flow calling the deprecated _set_confirm_only."""
+
+    VERSION = 1
+
+    async def async_step_user(self, user_input=None):
+        """Test user step."""
+        self._set_confirm_only()
+        return self.async_show_form(step_id="user")
+
+
+async def test_set_confirm_only_core_integration(hass: HomeAssistant) -> None:
+    """Test _set_confirm_only raises for core integrations."""
+    mock_integration(hass, MockModule("comp"))
+    mock_platform(hass, "comp.config_flow", None)
+
+    with (
+        mock_config_flow("comp", _ConfirmOnlyFlow),
+        pytest.raises(
+            RuntimeError,
+            match="calls _set_confirm_only, which is deprecated and has no effect",
+        ),
+    ):
+        await hass.config_entries.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+
+async def test_set_confirm_only_custom_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test _set_confirm_only is a silent no-op for custom integrations."""
+    mock_integration(hass, MockModule("comp"), built_in=False)
+    mock_platform(hass, "comp.config_flow", None)
+
+    with mock_config_flow("comp", _ConfirmOnlyFlow):
+        result = await hass.config_entries.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    assert "confirm_only" not in flow["context"]
+    assert "_set_confirm_only" not in caplog.text
 
 
 async def test_async_update_title_placeholders(hass: HomeAssistant) -> None:

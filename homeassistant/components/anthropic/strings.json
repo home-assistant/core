@@ -130,7 +130,7 @@
           },
           "data_description": {
             "chat_model": "The model to serve the responses.",
-            "llm_hass_api": "Allow the LLM to control Home Assistant.",
+            "llm_hass_api": "[%key:common::config_flow::data_description::llm_hass_api%]",
             "name": "The name of this configuration",
             "prompt": "Instruct how the LLM should respond. This can be a template.",
             "prompt_caching": "Optimize your API cost and response times based on your usage.",

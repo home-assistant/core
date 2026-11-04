@@ -29,6 +29,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bonnet": {
+        "name": "Hood"
+      },
+      "doors": {
+        "name": "Doors"
+      },
+      "lights": {
+        "name": "Lights"
+      },
+      "sunroof": {
+        "name": "Sunroof"
+      },
+      "trunk": {
+        "name": "Trunk"
+      },
+      "windows": {
+        "name": "Windows"
+      }
+    },
     "sensor": {
       "aux_heating_duration": {
         "name": "Auxiliary heating remaining duration"
@@ -60,7 +80,7 @@
         "state": {
           "charging": "Charging",
           "charging_interrupted": "Charging interrupted",
-          "connect_cable": "Connect cable",
+          "connect_cable": "Cable not connected",
           "conserving": "Conserving",
           "discharging": "Discharging",
           "ready_for_charging": "Ready for charging"
@@ -90,6 +110,28 @@
       "total_range": {
         "name": "Total range"
       }
+    },
+    "switch": {
+      "active_ventilation": {
+        "name": "Active ventilation"
+      },
+      "charging": {
+        "name": "Charging"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Failed to send the command to the vehicle."
+    },
+    "command_not_supported": {
+      "message": "The vehicle does not support this command."
+    },
+    "rate_limit_exceeded": {
+      "message": "The Škoda API rejected the command because the rate limit was reached or the vehicle's 12 V battery is low. Try again later."
+    },
+    "vehicle_not_responding": {
+      "message": "The vehicle did not respond in time. Try again later."
     }
   }
 }

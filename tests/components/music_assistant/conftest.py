@@ -20,6 +20,16 @@ MOCK_SERVER_ID = "1234"
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.music_assistant.async_setup_entry",
+        return_value=None,
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
 def mock_get_server_info() -> Generator[AsyncMock]:
     """Mock the function to get server info."""
     with patch(

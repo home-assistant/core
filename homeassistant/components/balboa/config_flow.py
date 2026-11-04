@@ -8,7 +8,7 @@ from pybalboa import SpaClient
 from pybalboa.exceptions import SpaConnectionError
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
@@ -84,7 +84,7 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
         if not error:
             self._host = discovery_info.ip
             self._model = info["title"]
-            self.context["title_placeholders"] = {CONF_MODEL: self._model}
+            self.context["title_placeholders"] = {"model": self._model}
             return await self.async_step_discovery_confirm()
         return self.async_abort(reason=error)
 
@@ -96,10 +96,9 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
             data = {CONF_HOST: self._host}
             return self.async_create_entry(title=self._model, data=data)
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders={CONF_HOST: self._host},
+            description_placeholders={"host": self._host},
         )
 
     @override

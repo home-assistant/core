@@ -8,7 +8,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_SPEAKER, DOMAIN
+from .const import ATTR_SPEAKER, DOMAIN, WyomingTextToSpeechOption
 from .coordinator import WyomingInfoCoordinator
 from .data import WyomingService
 from .devices import SatelliteDevice
@@ -30,6 +30,7 @@ SATELLITE_PLATFORMS = [
 __all__ = [
     "ATTR_SPEAKER",
     "DOMAIN",
+    "WyomingTextToSpeechOption",
 ]
 
 
@@ -45,7 +46,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> N
     service = await WyomingService.create(entry.data["host"], entry.data["port"])
 
     if service is None:
-        raise ConfigEntryNotReady("Unable to connect")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={
+                "host": entry.data["host"],
+                "port": str(entry.data["port"]),
+            },
+        )
 
     coordinator = WyomingInfoCoordinator(
         hass, entry, entry.data["host"], entry.data["port"]

@@ -77,7 +77,6 @@ class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_MODEL: discovery.discovery_info.name,
                 },
             )
-        self._set_confirm_only()
         assert self.unique_id
         return self.async_show_form(
             step_id="bluetooth_confirm",
