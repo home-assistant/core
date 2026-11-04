@@ -284,3 +284,51 @@ async def test_price_rolls_over_at_quarter_hour(
     assert hass.states.get("sensor.wws_next_price_ct_kwh").state == "0.34"
     assert mock_get_latest_prices.await_count == 1
     assert mock_get_latest_measurements.await_count == 1
+
+
+async def test_setup_entry_fetches_consumption_after_autumn_clock_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test yesterday's local-time measurement after the autumn clock change."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    # Freeze time after the clocks go back: 12:07 CET (UTC+1) on last sunday in October 2026.
+    freezer.move_to(datetime(2026, 10, 25, 11, 7, tzinfo=UTC))
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="WestfalenWIND Ökostrom smart",
+        data={"username": "test@example.com", "password": "test-password"},
+        unique_id="test@example.com",
+    )
+    mock_entry.add_to_hass(hass)
+
+    # Mock API response containing the expected measurement from the day before the clocks go back: 12:00-12:15 CEST (UTC+2).
+    measurement_start = datetime(2026, 10, 24, 10, 0, tzinfo=UTC)
+    measurement_end = datetime(2026, 10, 24, 10, 15, tzinfo=UTC)
+    measurements = [
+        {
+            "dt": measurement_start.isoformat(),
+            "measurement_kwh": 0.03,
+        }
+    ]
+    with (
+        patch(
+            "homeassistant.components.wws.DynamiT.async_get_latest_prices",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.wws.DynamiT._get_authenticated_json",
+            new_callable=AsyncMock,
+            return_value={"data": {"values": measurements}},
+        ) as mock_get_authenticated_json,
+    ):
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wws_consumption_kwh").state == "0.03"
+    # Assert that the API requests start and end parameters cover the expected measurement.
+    mock_get_authenticated_json.assert_awaited_once()
+    request_params = mock_get_authenticated_json.await_args.kwargs["params"]
+    assert datetime.fromisoformat(request_params["start"]) <= measurement_start
+    assert datetime.fromisoformat(request_params["end"]) >= measurement_end
