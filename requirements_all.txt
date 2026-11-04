@@ -16,7 +16,7 @@ Adax-local==0.3.0
 DoorBirdPy==3.0.13
 
 # homeassistant.components.homekit
-HAP-python==5.0.0
+HAP-python==5.1.0
 
 # homeassistant.components.tasmota
 HATasmota==0.10.2
@@ -1373,7 +1373,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.1.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.21.0
+homematicip==2.22.0
 
 # homeassistant.components.homevolt
 homevolt==0.7.0
