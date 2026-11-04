@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+from functools import partial
 from http import HTTPStatus
 from itertools import chain, repeat
 import logging
@@ -226,6 +227,47 @@ async def test_disabled_device_ignores_household_poll_activity(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     for service in _speaker_services(soco):
+        service.subscribe.assert_not_awaited()
+
+
+async def test_device_disabled_during_setup_does_not_subscribe(
+    hass: HomeAssistant,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    soco: MockSoCo,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a device disabled before speaker setup completes is not subscribed."""
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco.uid)},
+    )
+    speaker_info = soco.get_speaker_info.return_value
+
+    def _disable_during_setup(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        # Runs in the executor while the speaker is being created
+        hass.loop.call_soon_threadsafe(
+            partial(
+                device_registry.async_update_device,
+                device.id,
+                disabled_by=dr.DeviceEntryDisabler.USER,
+            )
+        )
+        return speaker_info
+
+    soco.get_speaker_info.side_effect = _disable_during_setup
+    await async_setup_sonos()
+
+    assert not config_entry.runtime_data.discovered[soco.uid].available
+    # ZoneGroupTopology is subscribed by discovery before the speaker is created
+    for service in (
+        soco.alarmClock,
+        soco.avTransport,
+        soco.contentDirectory,
+        soco.deviceProperties,
+        soco.renderingControl,
+    ):
         service.subscribe.assert_not_awaited()
 
 

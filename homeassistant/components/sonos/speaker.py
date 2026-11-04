@@ -384,6 +384,10 @@ class SonosSpeaker:
             self._subscription_lock = asyncio.Lock()
 
         async with self._subscription_lock:
+            # The device can be disabled while setup is still in progress
+            if self.device_disabled:
+                await self._async_offline()
+                return
             try:
                 await self._async_subscribe()
             except SonosSubscriptionsFailed:
