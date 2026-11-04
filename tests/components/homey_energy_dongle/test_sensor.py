@@ -88,6 +88,23 @@ async def test_mbus_device_missing(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_mbus_meter_replaced_on_same_channel(
+    hass: HomeAssistant, telegrams: TelegramQueue
+) -> None:
+    """Test a replacement meter on the same channel does not feed the old sensor."""
+    parser = TelegramParser(telegram_specifications.V5, apply_checksum_validation=False)
+    telegrams.put_nowait(
+        parser.parse(
+            TELEGRAM_V5.replace("3232323241424344313233343536373839", "3131313131")
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(GAS_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(f"{GAS_ENTITY_ID}_2").state == "0.107"
+
+
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("pushed", "state"),
     [

@@ -425,7 +425,7 @@ async def async_setup_entry(
                     _with_mbus_unit(description, device),
                     serial,
                     device_info,
-                    device.channel_id,
+                    uid,
                 )
             )
 
@@ -450,22 +450,31 @@ class HomeyEnergyDongleSensor(
         description: HomeyEnergyDongleSensorEntityDescription,
         serial: str,
         device_info: dr.DeviceInfo,
-        mbus_channel: int | None = None,
+        mbus_uid: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{serial}_{description.key}"
         self._attr_device_info = device_info
-        self._mbus_channel = mbus_channel
+        self._serial = serial
+        self._mbus_uid = mbus_uid
 
     @property
     @override
     def native_value(self) -> StateType | datetime | Decimal:
         """Return the value from the latest telegram."""
         data: Telegram | MbusDevice | None = self.coordinator.data
-        if self._mbus_channel is not None:
-            data = self.coordinator.data.get_mbus_device_by_channel(self._mbus_channel)
+        if self._mbus_uid is not None:
+            # A replacement meter can take over the channel of this one.
+            data = next(
+                (
+                    device
+                    for device in getattr(data, "MBUS_DEVICES", [])
+                    if mbus_serial(self._mbus_uid, device) == self._serial
+                ),
+                None,
+            )
         if data is None:
             return None
         value = self.entity_description.value_fn(data)
