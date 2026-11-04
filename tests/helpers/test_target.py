@@ -764,12 +764,23 @@ async def test_explain_target(hass: HomeAssistant) -> None:
         hass, target_selection
     ) == target.TargetExplanation(
         includes=[
-            target.TargetItemEntities(
+            target.TargetIncludeEntities(
                 "entity", "light.hidden_in_area", {"light.hidden_in_area"}
             ),
-            target.TargetItemEntities("device", "device-no-area-id", {"light.no_area"}),
-            target.TargetItemEntities(
-                "area", "test-area", {"light.in_area", "light.assigned_to_area"}
+            target.TargetIncludeEntities(
+                "device",
+                "device-no-area-id",
+                {"light.no_area"},
+                referenced_devices={"device-no-area-id"},
+            ),
+            # The areas and devices an item reaches, so the frontend can
+            # narrow it like it does the item's own row
+            target.TargetIncludeEntities(
+                "area",
+                "test-area",
+                {"light.in_area", "light.assigned_to_area"},
+                referenced_areas={"test-area"},
+                referenced_devices={"device-test-area"},
             ),
         ],
         excludes=[
@@ -811,7 +822,12 @@ async def test_explain_target_without_exclude(hass: HomeAssistant) -> None:
         hass, target.TargetSelection({ATTR_DEVICE_ID: "device-no-area-id"})
     ) == target.TargetExplanation(
         includes=[
-            target.TargetItemEntities("device", "device-no-area-id", {"light.no_area"})
+            target.TargetIncludeEntities(
+                "device",
+                "device-no-area-id",
+                {"light.no_area"},
+                referenced_devices={"device-no-area-id"},
+            )
         ],
         excludes=[],
     )
@@ -828,7 +844,7 @@ async def test_explain_target_all_entities(hass: HomeAssistant) -> None:
         ),
     )
     assert explanation.includes == [
-        target.TargetItemEntities(
+        target.TargetIncludeEntities(
             "entity",
             "all",
             {"light.bowl", "light.ceiling", "light.kitchen", "light.in_area"},

@@ -1001,7 +1001,14 @@ def handle_explain_target(
     connection.send_result(
         msg["id"],
         {
-            "includes": [_item(include) for include in explanation.includes],
+            "includes": [
+                {
+                    **_item(include),
+                    "referenced_areas": sorted(include.referenced_areas),
+                    "referenced_devices": sorted(include.referenced_devices),
+                }
+                for include in explanation.includes
+            ],
             "excludes": [
                 {
                     "type": exclude.type,

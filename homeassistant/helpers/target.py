@@ -429,6 +429,15 @@ class TargetItemEntities:
 
 
 @dataclasses.dataclass(slots=True)
+class TargetIncludeEntities(TargetItemEntities):
+    """An included item of a target selection and what it reaches."""
+
+    # The areas and devices the item reaches on its way to its entities.
+    referenced_areas: set[str] = dataclasses.field(default_factory=set)
+    referenced_devices: set[str] = dataclasses.field(default_factory=set)
+
+
+@dataclasses.dataclass(slots=True)
 class ExcludeEffect:
     """What a single item of an exclude block takes out of a target selection."""
 
@@ -442,7 +451,7 @@ class ExcludeEffect:
 class TargetExplanation:
     """What the items of a target selection resolve to and the exclude takes out."""
 
-    includes: list[TargetItemEntities]
+    includes: list[TargetIncludeEntities]
     excludes: list[ExcludeEffect]
 
 
@@ -472,19 +481,30 @@ def async_explain_target(
     is what the target selection resolves to. An exclude which takes nothing out
     of any item has no effect.
     """
-    includes: list[TargetItemEntities] = []
+    includes: list[TargetIncludeEntities] = []
     for item_type, item_id, selection in _iter_target_items(target_selection):
         if item_type == "entity" and item_id == ENTITY_MATCH_ALL:
-            entities = set(hass.states.async_entity_ids())
-        else:
-            selected = _async_extract_referenced_entity_ids(
-                hass,
-                selection,
-                expand_group,
-                primary_entities_only=primary_entities_only,
+            includes.append(
+                TargetIncludeEntities(
+                    item_type, item_id, set(hass.states.async_entity_ids())
+                )
             )
-            entities = selected.referenced | selected.indirectly_referenced
-        includes.append(TargetItemEntities(item_type, item_id, entities))
+            continue
+        selected = _async_extract_referenced_entity_ids(
+            hass,
+            selection,
+            expand_group,
+            primary_entities_only=primary_entities_only,
+        )
+        includes.append(
+            TargetIncludeEntities(
+                item_type,
+                item_id,
+                selected.referenced | selected.indirectly_referenced,
+                selected.referenced_areas,
+                selected.referenced_devices,
+            )
+        )
 
     if target_selection.exclude is None:
         return TargetExplanation(includes, [])

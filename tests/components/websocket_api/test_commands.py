@@ -4622,8 +4622,20 @@ async def test_explain_target(
     assert msg["success"]
     assert msg["result"] == {
         "includes": [
-            {"type": "entity", "id": other.entity_id, "entities": [other.entity_id]},
-            {"type": "area", "id": kitchen.id, "entities": [in_kitchen.entity_id]},
+            {
+                "type": "entity",
+                "id": other.entity_id,
+                "entities": [other.entity_id],
+                "referenced_areas": [],
+                "referenced_devices": [],
+            },
+            {
+                "type": "area",
+                "id": kitchen.id,
+                "entities": [in_kitchen.entity_id],
+                "referenced_areas": [kitchen.id],
+                "referenced_devices": [],
+            },
         ],
         "excludes": [
             {
@@ -4667,6 +4679,8 @@ async def test_explain_target_all_entities(
                 "type": "entity",
                 "id": "all",
                 "entities": ["light.hallway", "light.kitchen"],
+                "referenced_areas": [],
+                "referenced_devices": [],
             }
         ],
         "excludes": [
@@ -4719,8 +4733,20 @@ async def test_explain_target_filters_unreadable_entities(
     assert msg["success"]
     assert msg["result"] == {
         "includes": [
-            {"type": "entity", "id": "light.not_permitted", "entities": []},
-            {"type": "area", "id": kitchen.id, "entities": ["light.permitted"]},
+            {
+                "type": "entity",
+                "id": "light.not_permitted",
+                "entities": [],
+                "referenced_areas": [],
+                "referenced_devices": [],
+            },
+            {
+                "type": "area",
+                "id": kitchen.id,
+                "entities": ["light.permitted"],
+                "referenced_areas": [kitchen.id],
+                "referenced_devices": [],
+            },
         ],
         "excludes": [
             {"type": "entity", "id": "light.not_permitted", "removed": []},
