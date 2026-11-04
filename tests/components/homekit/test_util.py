@@ -557,3 +557,16 @@ async def test_lock_state_needs_accessory_mode(hass: HomeAssistant) -> None:
     """Test that locks are setup as accessories."""
     hass.states.async_set("lock.mine", "locked")
     assert state_needs_accessory_mode(hass.states.get("lock.mine")) is True
+
+
+@pytest.mark.parametrize("duration", [4, 8])
+def test_secure_video_prebuffer_yaml(duration: int) -> None:
+    """Accept supported durations and reject others in camera configuration."""
+    assert (
+        vec({"camera.test": {"secure_video_prebuffer": duration}})["camera.test"][
+            "secure_video_prebuffer"
+        ]
+        == duration
+    )
+    with pytest.raises(probatio.error.Invalid):
+        vec({"camera.test": {"secure_video_prebuffer": 6}})

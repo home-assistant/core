@@ -21,7 +21,8 @@ import logging
 import math
 from pathlib import Path
 import threading
-from unittest.mock import MagicMock, patch
+from types import SimpleNamespace
+from unittest.mock import MagicMock, Mock, patch
 
 import av
 from av.codec.codec import UnknownCodecError  # pylint: disable=no-name-in-module
@@ -49,6 +50,7 @@ from homeassistant.components.stream.worker import (
     StreamMuxer,
     StreamState,
     StreamWorkerError,
+    TimestampValidator,
     stream_worker,
 )
 from homeassistant.core import HomeAssistant
@@ -493,6 +495,7 @@ async def test_discard_old_packets(hass: HomeAssistant) -> None:
         TEST_SEQUENCE_LENGTH / VIDEO_FRAME_RATE / VIDEO_TIME_BASE
     )
 
+    spike_dts = packets[OUT_OF_ORDER_PACKET_INDEX - 1].dts
     decoded_stream = await async_decode_stream(hass, packets)
     segments = decoded_stream.segments
     complete_segments = decoded_stream.complete_segments
@@ -504,7 +507,17 @@ async def test_discard_old_packets(hass: HomeAssistant) -> None:
     assert all(segments[i].sequence == i for i in range(len(segments)))
     # Check segment durations
     assert all(s.duration == SEGMENT_DURATION for s in complete_segments)
-    assert len(decoded_stream.video_packets) == OUT_OF_ORDER_PACKET_INDEX
+    video_packets = decoded_stream.video_packets
+    assert len(video_packets) == OUT_OF_ORDER_PACKET_INDEX + 1
+    assert all(
+        captured is original
+        for captured, original in zip(
+            video_packets[:-1], packets[:OUT_OF_ORDER_PACKET_INDEX], strict=True
+        )
+    )
+    # The final packet catches up to the source DTS and is retained one tick later.
+    assert video_packets[-1] is packets[-1]
+    assert video_packets[-1].dts == spike_dts + 1
     assert len(decoded_stream.audio_packets) == 0
 
 
@@ -1217,3 +1230,227 @@ def test_add_stream_from_template_decoder_only_fallback() -> None:
         ((template,), {}),
         ((template,), {"opaque": True}),
     ]
+
+
+async def test_keyframe_fresh_request_does_not_return_cached_image(
+    hass: HomeAssistant,
+) -> None:
+    """A failed fresh decode returns no stale image, while default preserves cache."""
+    settings = StreamSettings(False, 1.5, 2, 3, 2)
+    converter = KeyFrameConverter(hass, settings, dynamic_stream_settings())
+    converter._image = b"old frame"
+    assert await converter.async_get_image() == b"old frame"
+    assert await converter.async_get_image(require_fresh=True) is None
+
+
+async def test_fresh_snapshots_wait_for_independent_keyframes(
+    hass: HomeAssistant,
+) -> None:
+    """Concurrent fresh requests do not both consume the same keyframe."""
+    converter = KeyFrameConverter(
+        hass, StreamSettings(False, 1.5, 2, 3, 2), dynamic_stream_settings()
+    )
+    frames = iter((b"one", b"two"))
+
+    def decode(_width, _height):
+        converter._image = next(frames)
+
+    with patch.object(converter, "_generate_image", side_effect=decode):
+        first = asyncio.create_task(
+            converter.async_get_image(wait_for_next_keyframe=True, require_fresh=True)
+        )
+        second = asyncio.create_task(
+            converter.async_get_image(wait_for_next_keyframe=True, require_fresh=True)
+        )
+        await asyncio.sleep(0)
+        converter._event.set()
+        assert await asyncio.wait_for(first, 2) == b"one"
+        await asyncio.sleep(0)
+        assert not second.done()
+        converter._event.set()
+        assert await asyncio.wait_for(second, 2) == b"two"
+
+
+async def test_keyframe_decoder_resets_on_new_source_generation(
+    hass: HomeAssistant,
+) -> None:
+    """A new source codec never reuses the prior decoder or cached frame."""
+    converter = KeyFrameConverter(
+        hass, StreamSettings(False, 1.5, 2, 3, 2), dynamic_stream_settings()
+    )
+    h264 = av.CodecContext.create("h264", "r")
+    hevc = av.CodecContext.create("hevc", "r")
+    converter.create_codec_context(h264)
+    previous = converter._codec_context
+    converter._image = b"old frame"
+    converter._packet = MagicMock()
+    converter.create_codec_context(hevc)
+    assert converter._codec_context is not previous
+    assert converter._codec_context.name == "hevc"
+    changed_hevc = av.CodecContext.create("hevc", "r")
+    changed_hevc.extradata = b"new codec parameters"
+    previous = converter._codec_context
+    converter.create_codec_context(changed_hevc)
+    assert converter._codec_context is not previous
+    assert converter._codec_context.extradata == b"new codec parameters"
+    assert converter._image == b"old frame"
+    assert await converter.async_get_image(require_fresh=True) is None
+    assert converter._packet is None
+
+
+async def test_keyframe_from_old_generation_is_discarded_without_blocking_worker(
+    hass: HomeAssistant,
+) -> None:
+    """A decoder switch can proceed while an older frame is being encoded."""
+    converter = KeyFrameConverter(
+        hass, StreamSettings(False, 1.5, 2, 3, 2), dynamic_stream_settings()
+    )
+    started, release = threading.Event(), threading.Event()
+    frame = MagicMock()
+    frame.to_ndarray.return_value = np.zeros((2, 2, 3), dtype=np.uint8)
+
+    def decode(_packet):
+        started.set()
+        assert release.wait(3)
+        return [frame]
+
+    old_context = MagicMock()
+    old_context.decode.side_effect = decode
+    converter._codec_context = old_context
+    converter._packet = MagicMock()
+    converter._turbojpeg = MagicMock()
+    converter._turbojpeg.encode.return_value = b"old frame"
+    task = hass.async_add_executor_job(converter._generate_image, None, None)
+    try:
+        assert await asyncio.to_thread(started.wait, 2)
+        async with asyncio.timeout(2):
+            await asyncio.to_thread(
+                converter.create_codec_context, av.CodecContext.create("h264", "r")
+            )
+        release.set()
+        await task
+        assert converter._image is None
+    finally:
+        release.set()
+        await task
+
+
+def test_video_equal_dts_preserves_packets_and_composition() -> None:
+    """Keep distinct video packets when source DTS repeats or catches up slowly."""
+    stream = MagicMock(type="video")
+    validator = TimestampValidator(90000, 48000)
+    packets = [
+        MagicMock(stream=stream, dts=dts, pts=pts)
+        for dts, pts in (
+            (100, 130),
+            (100, 130),
+            (100, 130),
+            (100, 130),
+            (101, 131),
+            (200, 230),
+        )
+    ]
+
+    assert all(validator.is_valid(packet) for packet in packets)
+    assert [packet.dts for packet in packets] == [100, 101, 102, 103, 104, 200]
+    assert [packet.pts - packet.dts for packet in packets] == [30] * 6
+
+
+def test_video_true_dts_regression_is_rejected() -> None:
+    """Compare incoming timestamps against source DTS rather than corrected DTS."""
+    stream = MagicMock(type="video")
+    validator = TimestampValidator(90000, 48000)
+    assert validator.is_valid(MagicMock(stream=stream, dts=100, pts=100))
+    assert validator.is_valid(MagicMock(stream=stream, dts=100, pts=100))
+    assert not validator.is_valid(MagicMock(stream=stream, dts=99, pts=99))
+    assert validator.is_valid(MagicMock(stream=stream, dts=101, pts=101))
+
+
+def test_equal_audio_dts_is_still_rejected() -> None:
+    """Audio retains its existing timestamp policy."""
+    stream = MagicMock(type="audio")
+    validator = TimestampValidator(90000, 48000)
+    assert validator.is_valid(MagicMock(stream=stream, dts=100, pts=100))
+    assert not validator.is_valid(MagicMock(stream=stream, dts=100, pts=100))
+
+
+def test_video_equal_dts_without_pts() -> None:
+    """Missing presentation timestamps are left missing."""
+    stream = MagicMock(type="video")
+    validator = TimestampValidator(90000, 48000)
+    assert validator.is_valid(MagicMock(stream=stream, dts=100, pts=None))
+    packet = MagicMock(stream=stream, dts=100, pts=None)
+    assert validator.is_valid(packet)
+    assert packet.dts == 101
+    assert packet.pts is None
+
+
+def test_equal_dts_keeps_h264_decoded_frames() -> None:
+    """Preserve a dependent H.264 picture and its following decoded frames."""
+    data = generate_h264_video(duration=2).getvalue()
+    with av.open(io.BytesIO(data)) as source:
+        expected_frames = [
+            frame.to_ndarray(format="yuv420p").tobytes()
+            for frame in source.decode(video=0)
+        ]
+
+    with av.open(io.BytesIO(data)) as source:
+        stream = source.streams.video[0]
+        packets = [packet for packet in source.demux(stream) if packet.size]
+        compressed = [bytes(packet) for packet in packets]
+        index = next(
+            i for i, packet in enumerate(packets) if i > 0 and not packet.is_keyframe
+        )
+        packet = packets[index]
+        assert packet.dts is not None
+        assert packet.pts is not None
+        previous_dts = packets[index - 1].dts
+        assert previous_dts is not None
+        packet.pts += previous_dts - packet.dts
+        packet.dts = previous_dts
+        validator = TimestampValidator(int(1 / stream.time_base), 1)
+        actual_frames = []
+        for packet in packets:
+            assert validator.is_valid(packet)
+            actual_frames.extend(
+                frame.to_ndarray(format="yuv420p").tobytes()
+                for frame in packet.decode()
+            )
+        actual_frames.extend(
+            frame.to_ndarray(format="yuv420p").tobytes()
+            for frame in stream.codec_context.decode(None)
+        )
+
+    assert [bytes(packet) for packet in packets] == compressed
+    assert actual_frames == expected_frames
+
+
+@pytest.mark.parametrize(
+    ("configured", "clock_requested", "expected"),
+    [
+        ({}, False, None),
+        ({}, True, "1"),
+        ({"use_wallclock_as_timestamps": "1"}, False, "1"),
+    ],
+)
+def test_output_clock_option_is_per_worker(
+    configured: dict[str, str], clock_requested: bool, expected: str | None
+) -> None:
+    """Only an explicit output requests receive timestamps, without mutating options."""
+
+    original = configured.copy()
+    state = SimpleNamespace(
+        outputs=[SimpleNamespace(requires_wallclock_timestamps=clock_requested)]
+    )
+    with (
+        patch(
+            "homeassistant.components.stream.worker.try_open_stream",
+            side_effect=RuntimeError,
+        ) as open_stream,
+        pytest.raises(RuntimeError),
+    ):
+        stream_worker("source", configured, Mock(), state, Mock(), threading.Event())
+    actual = open_stream.call_args.args[1]
+    assert actual.get("use_wallclock_as_timestamps") == expected
+    assert configured == original
+    assert actual is not configured

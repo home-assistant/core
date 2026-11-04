@@ -366,6 +366,11 @@ class Stream:
         endpoint_fmt: str = self.hass.data[DOMAIN][ATTR_ENDPOINTS][fmt]
         return endpoint_fmt.format(self.access_token)
 
+    @property
+    def is_running(self) -> bool:
+        """Return whether the source worker thread is running."""
+        return self._thread is not None and self._thread.is_alive()
+
     def outputs(self) -> Mapping[str, StreamOutput]:
         """Return a copy of the stream outputs."""
         # A copy is returned so the caller can iterate through the outputs
@@ -613,20 +618,26 @@ class Stream:
         width: int | None = None,
         height: int | None = None,
         wait_for_next_keyframe: bool = False,
+        *,
+        use_existing_stream: bool = False,
+        require_fresh: bool = False,
     ) -> bytes | None:
         """Fetch an image from the Stream and return it as a jpeg in bytes.
 
         Calls async_get_image from KeyFrameConverter. async_get_image should only be
         called directly from the main loop and not from an executor thread as it uses
-        hass.add_executor_job underneath the hood.
+        hass.add_executor_job underneath the hood. When use_existing_stream is true,
+        the caller owns an active stream provider and manages its lifetime.
         """
 
-        self.add_provider(HLS_PROVIDER)
-        await self.start()
+        if not use_existing_stream:
+            self.add_provider(HLS_PROVIDER)
+            await self.start()
         return await self._keyframe_converter.async_get_image(
             width=width,
             height=height,
             wait_for_next_keyframe=wait_for_next_keyframe,
+            require_fresh=require_fresh,
         )
 
     def get_diagnostics(self) -> dict[str, Any]:

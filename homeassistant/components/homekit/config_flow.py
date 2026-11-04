@@ -48,14 +48,32 @@ from .const import (
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
+    CONF_LINKED_MOTION_SENSOR,
+    CONF_MAX_FPS,
+    CONF_MAX_HEIGHT,
+    CONF_MAX_WIDTH,
+    CONF_SECURE_VIDEO,
+    CONF_SECURE_VIDEO_NATIVE,
+    CONF_SECURE_VIDEO_PREBUFFER,
+    CONF_SECURE_VIDEO_QUALITY,
+    CONF_SECURE_VIDEO_RECEIVE_TIMESTAMPS,
+    CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
     DEFAULT_CONFIG_FLOW_PORT,
     DEFAULT_HOMEKIT_MODE,
+    DEFAULT_MAX_FPS,
+    DEFAULT_MAX_HEIGHT,
+    DEFAULT_MAX_WIDTH,
+    DEFAULT_SECURE_VIDEO_PREBUFFER,
+    DEFAULT_SECURE_VIDEO_RECEIVE_TIMESTAMPS,
     DOMAIN,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODE_BRIDGE,
     HOMEKIT_MODES,
+    SECURE_VIDEO_PREBUFFER_OPTIONS,
+    SECURE_VIDEO_QUALITY_COMPATIBLE,
+    SECURE_VIDEO_QUALITY_OPTIONS,
     SHORT_BRIDGE_NAME,
     TYPE_HEATER_COOLER,
     TYPE_THERMOSTAT,
@@ -66,6 +84,7 @@ from .util import async_find_next_available_port, state_needs_accessory_mode
 
 CONF_CAMERA_AUDIO = "camera_audio"
 CONF_CAMERA_COPY = "camera_copy"
+CONF_CAMERA_SECURE_VIDEO = "camera_secure_video"
 CONF_INCLUDE_EXCLUDE_MODE = "include_exclude_mode"
 
 CLIMATE_TYPE_AUTOMATIC = "automatic"
@@ -403,6 +422,7 @@ class OptionsFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.hk_options: dict[str, Any] = {}
         self.included_cameras: list[str] = []
+        self._hksv_pending: list[str] = []
         self.included_climates: list[str] = []
         # Maps the displayed climate field label back to its entity id.
         self._climate_choices: dict[str, str] = {}
@@ -551,6 +571,25 @@ class OptionsFlowHandler(OptionsFlow):
 
         hk_options = self.hk_options
         all_entity_config: dict[str, dict[str, Any]]
+        errors: dict[str, str] = {}
+        if user_input is not None and any(
+            hk_options.get(CONF_ENTITY_CONFIG, {})
+            .get(entity_id, {})
+            .get(CONF_STREAM_SOURCE)
+            for entity_id in user_input.get(CONF_CAMERA_SECURE_VIDEO, [])
+        ):
+            errors[CONF_CAMERA_SECURE_VIDEO] = "secure_video_custom_source"
+            user_input = None
+
+        if user_input is not None and any(
+            config.get(CONF_MAX_WIDTH, DEFAULT_MAX_WIDTH) < 1920
+            or config.get(CONF_MAX_HEIGHT, DEFAULT_MAX_HEIGHT) < 1080
+            or config.get(CONF_MAX_FPS, DEFAULT_MAX_FPS) < 30
+            for entity_id in user_input.get(CONF_CAMERA_SECURE_VIDEO, [])
+            for config in (hk_options.get(CONF_ENTITY_CONFIG, {}).get(entity_id, {}),)
+        ):
+            errors[CONF_CAMERA_SECURE_VIDEO] = "secure_video_camera_limits"
+            user_input = None
 
         if user_input is not None:
             all_entity_config = hk_options[CONF_ENTITY_CONFIG]
@@ -567,13 +606,20 @@ class OptionsFlowHandler(OptionsFlow):
                 elif CONF_SUPPORT_AUDIO in entity_config:
                     del entity_config[CONF_SUPPORT_AUDIO]
 
+                if entity_id in user_input.get(CONF_CAMERA_SECURE_VIDEO, []):
+                    entity_config[CONF_SECURE_VIDEO] = True
+                else:
+                    entity_config.pop(CONF_SECURE_VIDEO, None)
+
                 if not entity_config:
                     all_entity_config.pop(entity_id)
 
-            return await self.async_step_climate()
+            self._hksv_pending = list(user_input.get(CONF_CAMERA_SECURE_VIDEO, []))
+            return await self.async_step_secure_video()
 
         cameras_with_audio = []
         cameras_with_copy = []
+        cameras_with_secure_video = []
         all_entity_config = hk_options.setdefault(CONF_ENTITY_CONFIG, {})
         for entity in self.included_cameras:
             entity_config = all_entity_config.get(entity, {})
@@ -581,6 +627,8 @@ class OptionsFlowHandler(OptionsFlow):
                 cameras_with_copy.append(entity)
             if entity_config.get(CONF_SUPPORT_AUDIO):
                 cameras_with_audio.append(entity)
+            if entity_config.get(CONF_SECURE_VIDEO):
+                cameras_with_secure_video.append(entity)
 
         data_schema = probatio.Schema(
             {
@@ -593,6 +641,13 @@ class OptionsFlowHandler(OptionsFlow):
                     )
                 ),
                 probatio.Optional(
+                    CONF_CAMERA_SECURE_VIDEO, default=cameras_with_secure_video
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        multiple=True, include_entities=self.included_cameras
+                    )
+                ),
+                probatio.Optional(
                     CONF_CAMERA_AUDIO, default=cameras_with_audio
                 ): selector.EntitySelector(
                     selector.EntitySelectorConfig(
@@ -602,7 +657,97 @@ class OptionsFlowHandler(OptionsFlow):
                 ),
             }
         )
-        return self.async_show_form(step_id="cameras", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="cameras", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_secure_video(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure the motion sensor for each secure-video camera."""
+        if user_input is not None:
+            entity_id = self._hksv_pending.pop(0)
+            self.hk_options[CONF_ENTITY_CONFIG][entity_id][
+                CONF_LINKED_MOTION_SENSOR
+            ] = user_input[CONF_LINKED_MOTION_SENSOR]
+            self.hk_options[CONF_ENTITY_CONFIG][entity_id][
+                CONF_SECURE_VIDEO_PREBUFFER
+            ] = user_input[CONF_SECURE_VIDEO_PREBUFFER]
+            if user_input.get(CONF_SECURE_VIDEO_NATIVE, True):
+                self.hk_options[CONF_ENTITY_CONFIG][entity_id].pop(
+                    CONF_SECURE_VIDEO_NATIVE, None
+                )
+            else:
+                self.hk_options[CONF_ENTITY_CONFIG][entity_id][
+                    CONF_SECURE_VIDEO_NATIVE
+                ] = False
+            if user_input.get(
+                CONF_SECURE_VIDEO_RECEIVE_TIMESTAMPS,
+                DEFAULT_SECURE_VIDEO_RECEIVE_TIMESTAMPS,
+            ):
+                self.hk_options[CONF_ENTITY_CONFIG][entity_id].pop(
+                    CONF_SECURE_VIDEO_RECEIVE_TIMESTAMPS, None
+                )
+            else:
+                self.hk_options[CONF_ENTITY_CONFIG][entity_id][
+                    CONF_SECURE_VIDEO_RECEIVE_TIMESTAMPS
+                ] = False
+            quality = user_input[CONF_SECURE_VIDEO_QUALITY]
+            if quality == SECURE_VIDEO_QUALITY_COMPATIBLE:
+                self.hk_options[CONF_ENTITY_CONFIG][entity_id].pop(
+                    CONF_SECURE_VIDEO_QUALITY, None
+                )
+            else:
+                self.hk_options[CONF_ENTITY_CONFIG][entity_id][
+                    CONF_SECURE_VIDEO_QUALITY
+                ] = quality
+        if not self._hksv_pending:
+            return await self.async_step_climate()
+        entity_id = self._hksv_pending[0]
+        config = self.hk_options[CONF_ENTITY_CONFIG][entity_id]
+        default = config.get(CONF_LINKED_MOTION_SENSOR, probatio.UNDEFINED)
+        schema = probatio.Schema(
+            {
+                probatio.Required(
+                    CONF_LINKED_MOTION_SENSOR, default=default
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=["binary_sensor", "event"])
+                ),
+                probatio.Required(
+                    CONF_SECURE_VIDEO_PREBUFFER,
+                    default=config.get(
+                        CONF_SECURE_VIDEO_PREBUFFER, DEFAULT_SECURE_VIDEO_PREBUFFER
+                    ),
+                ): probatio.In(SECURE_VIDEO_PREBUFFER_OPTIONS),
+                probatio.Required(
+                    CONF_SECURE_VIDEO_NATIVE,
+                    default=config.get(CONF_SECURE_VIDEO_NATIVE, True),
+                ): bool,
+                probatio.Optional(
+                    CONF_SECURE_VIDEO_RECEIVE_TIMESTAMPS,
+                    default=config.get(
+                        CONF_SECURE_VIDEO_RECEIVE_TIMESTAMPS,
+                        DEFAULT_SECURE_VIDEO_RECEIVE_TIMESTAMPS,
+                    ),
+                ): bool,
+                probatio.Required(
+                    CONF_SECURE_VIDEO_QUALITY,
+                    default=config.get(
+                        CONF_SECURE_VIDEO_QUALITY, SECURE_VIDEO_QUALITY_COMPATIBLE
+                    ),
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=list(SECURE_VIDEO_QUALITY_OPTIONS),
+                        translation_key="secure_video_quality",
+                    )
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="secure_video",
+            data_schema=schema,
+            description_placeholders={"camera": entity_id},
+        )
 
     async def async_step_accessory(
         self, user_input: dict[str, Any] | None = None

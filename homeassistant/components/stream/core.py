@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 import datetime as dt
 from enum import IntEnum
 import logging
+import threading
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import web
@@ -271,6 +272,8 @@ class IdleTimer:
 class StreamOutput:
     """Represents a stream output."""
 
+    requires_wallclock_timestamps = False
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -450,6 +453,7 @@ class KeyFrameConverter:
         self._turbojpeg = TurboJPEGSingleton.instance()
         self._lock = asyncio.Lock()
         self._codec_context: VideoCodecContext | None = None
+        self._decoder_lock = threading.Lock()
         self._stream_settings = stream_settings
         self._dynamic_stream_settings = dynamic_stream_settings
 
@@ -458,7 +462,8 @@ class KeyFrameConverter:
 
         This is called from the worker thread.
         """
-        self._packet = packet
+        with self._decoder_lock:
+            self._packet = packet
         self._hass.loop.call_soon_threadsafe(self._event.set)
 
     def create_codec_context(self, codec_context: VideoCodecContext) -> None:
@@ -467,19 +472,27 @@ class KeyFrameConverter:
         This is run by the worker thread and will only be called once per worker.
         """
 
-        if self._codec_context:
-            return
+        with self._decoder_lock:
+            if (
+                self._codec_context
+                and self._codec_context.name == codec_context.name
+                and self._codec_context.extradata == codec_context.extradata
+            ):
+                return
 
         # Keep import here so that we can import stream integration without
-        # installing reqs
+        # installing reqs.
         from av import CodecContext  # noqa: PLC0415
 
-        self._codec_context = cast(
+        context = cast(
             "VideoCodecContext", CodecContext.create(codec_context.name, "r")
         )
-        self._codec_context.extradata = codec_context.extradata
-        self._codec_context.skip_frame = "NONKEY"
-        self._codec_context.thread_type = "NONE"
+        context.extradata = codec_context.extradata
+        context.skip_frame = "NONKEY"
+        context.thread_type = "NONE"
+        with self._decoder_lock:
+            self._codec_context = context
+            self._packet = None
 
     @staticmethod
     def transform_image(image: np.ndarray, orientation: int) -> np.ndarray:
@@ -494,22 +507,23 @@ class KeyFrameConverter:
         at a time per instance.
         """
 
-        if not (self._turbojpeg and self._packet and self._codec_context):
-            return
-        packet = self._packet
-        self._packet = None
+        with self._decoder_lock:
+            if not (self._turbojpeg and self._packet and self._codec_context):
+                return
+            packet = self._packet
+            context = self._codec_context
+            self._packet = None
         for _ in range(2):  # Retry once if codec context needs to be flushed
             try:
-                # decode packet (flush afterwards)
-                frames = self._codec_context.decode(packet)
+                frames = context.decode(packet)
                 for _i in range(2):
                     if frames:
                         break
-                    frames = self._codec_context.decode(None)
+                    frames = context.decode(None)
                 break
             except EOFError:
                 _LOGGER.debug("Codec context needs flushing")
-                self._codec_context.flush_buffers()
+                context.flush_buffers()
         else:
             _LOGGER.debug("Unable to decode keyframe")
             return
@@ -524,20 +538,30 @@ class KeyFrameConverter:
                 frame.to_ndarray(format="bgr24"),
                 self._dynamic_stream_settings.orientation,
             )
-            self._image = bytes(self._turbojpeg.encode(bgr_array))
+            image = bytes(self._turbojpeg.encode(bgr_array))
+            with self._decoder_lock:
+                if self._codec_context is context:
+                    self._image = image
 
     async def async_get_image(
         self,
         width: int | None = None,
         height: int | None = None,
         wait_for_next_keyframe: bool = False,
+        *,
+        require_fresh: bool = False,
     ) -> bytes | None:
         """Fetch an image from the Stream and return it as a jpeg in bytes."""
 
         # Use a lock to ensure only one thread is working on the keyframe at a time
-        if wait_for_next_keyframe:
+        if wait_for_next_keyframe and not require_fresh:
             self._event.clear()
             await self._event.wait()
         async with self._lock:
+            if require_fresh:
+                if wait_for_next_keyframe:
+                    self._event.clear()
+                    await self._event.wait()
+                self._image = None
             await self._hass.async_add_executor_job(self._generate_image, width, height)
-        return self._image
+            return self._image

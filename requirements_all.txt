@@ -16,7 +16,7 @@ Adax-local==0.3.0
 DoorBirdPy==3.0.13
 
 # homeassistant.components.homekit
-HAP-python==5.0.0
+HAP-python==5.1.0
 
 # homeassistant.components.tasmota
 HATasmota==0.10.2
@@ -2470,6 +2470,9 @@ pylgnetcast==0.3.9
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.1
+
+# homeassistant.components.homekit
+pylibsrtp==1.0.0
 
 # homeassistant.components.liebherr
 pyliebherrhomeapi==0.5.1

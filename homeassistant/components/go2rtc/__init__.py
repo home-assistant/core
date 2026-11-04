@@ -6,6 +6,7 @@ from secrets import token_hex
 import shutil
 from tempfile import mkdtemp
 from typing import override
+from urllib.parse import quote
 
 from aiohttp import ClientSession, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
@@ -128,6 +129,7 @@ type Go2RtcConfigEntry = ConfigEntry[WebRTCProvider]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up WebRTC."""
     url: str | None = None
+    managed = False
     username: str | None = None
     password: str | None = None
 
@@ -190,6 +192,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
 
         url = HA_MANAGED_URL
+        managed = True
     elif username and password:
         session = async_create_clientsession(
             hass, headers={"Authorization": encode_basic_auth(username, password)}
@@ -197,7 +200,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         session = async_get_clientsession(hass)
 
-    hass.data[_DATA_GO2RTC] = Go2RtcConfig(url, session)
+    hass.data[_DATA_GO2RTC] = Go2RtcConfig(url, session, managed)
     discovery_flow.async_create_flow(
         hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
     )
@@ -269,7 +272,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> No
 
     ir.async_delete_issue(hass, DOMAIN, "unsupported_version")
 
-    provider = entry.runtime_data = WebRTCProvider(hass, url, session, client)
+    provider = entry.runtime_data = WebRTCProvider(
+        hass, url, session, client, managed=config.managed
+    )
     await provider.initialize()
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
 
@@ -301,12 +306,15 @@ class WebRTCProvider(CameraWebRTCProvider):
         url: str,
         session: ClientSession,
         rest_client: Go2RtcRestClient,
+        *,
+        managed: bool = False,
     ) -> None:
         """Initialize the WebRTC provider."""
         self._hass = hass
         self._url = url
         self._session = session
         self._rest_client = rest_client
+        self._managed = managed
         self._sessions: dict[str, _SessionInfo] = {}
         self._supported_schemes: set[str] = set()
 
@@ -384,6 +392,19 @@ class WebRTCProvider(CameraWebRTCProvider):
         """Close the session."""
         if session_info := self._sessions.pop(session_id, None):
             self._hass.async_create_task(session_info.ws_client.close())
+
+    @override
+    async def async_get_stream_source(self, camera: Camera) -> str | None:
+        """Share the managed go2rtc source when no orientation is applied."""
+        if not self._managed:
+            return None
+        settings = await get_dynamic_camera_stream_settings(
+            self._hass, camera.entity_id
+        )
+        if settings.orientation is not Orientation.NO_TRANSFORM:
+            return None
+        await self._update_stream_source(camera)
+        return f"rtsp://127.0.0.1:18554/{quote(get_camera_identifier(camera), safe='')}"
 
     @override
     async def async_get_image(
@@ -527,3 +548,4 @@ class Go2RtcConfig:
 
     url: str
     session: ClientSession
+    managed: bool

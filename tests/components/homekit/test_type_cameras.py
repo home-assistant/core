@@ -1,6 +1,7 @@
 """Test different accessory types: Camera."""
 
 import asyncio
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID
@@ -11,7 +12,7 @@ from homeassistant.components import camera, ffmpeg
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.camera import TurboJPEGSingleton
 from homeassistant.components.event import EventDeviceClass
-from homeassistant.components.homekit.accessories import HomeBridge
+from homeassistant.components.homekit.accessories import HomeBridge, HomeDriver
 from homeassistant.components.homekit.const import (
     AUDIO_CODEC_COPY,
     CHAR_MOTION_DETECTED,
@@ -32,6 +33,7 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.type_cameras import Camera
 from homeassistant.components.homekit.type_switches import Switch
+from homeassistant.components.stream import Orientation
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     STATE_OFF,
@@ -41,6 +43,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -130,11 +133,11 @@ async def _async_stop_stream(
 def _mock_reader():
     """Mock ffmpeg reader."""
 
-    async def _readline(*args, **kwargs):
-        await asyncio.sleep(0.1)
+    async def _read(*args, **kwargs):
+        return b""
 
     async def _get_reader(*args, **kwargs):
-        return AsyncMock(readline=_readline)
+        return AsyncMock(read=_read)
 
     return _get_reader
 
@@ -144,6 +147,7 @@ def _get_exits_after_startup_mock_ffmpeg():
     ffmpeg = MagicMock()
     type(ffmpeg.process).pid = PropertyMock(return_value=PID_THAT_WILL_NEVER_BE_ALIVE)
     ffmpeg.open = AsyncMock(return_value=True)
+    ffmpeg.process.stdin.drain = AsyncMock()
     ffmpeg.close = AsyncMock(return_value=True)
     ffmpeg.kill = AsyncMock(return_value=True)
     ffmpeg.get_reader = _mock_reader()
@@ -153,7 +157,9 @@ def _get_exits_after_startup_mock_ffmpeg():
 def _get_working_mock_ffmpeg():
     """Return a working ffmpeg."""
     ffmpeg = MagicMock()
+    ffmpeg.process.wait = AsyncMock()
     ffmpeg.open = AsyncMock(return_value=True)
+    ffmpeg.process.stdin.drain = AsyncMock()
     ffmpeg.close = AsyncMock(return_value=True)
     ffmpeg.kill = AsyncMock(return_value=True)
     ffmpeg.get_reader = _mock_reader()
@@ -1036,6 +1042,7 @@ async def test_camera_with_linked_motion_event(hass: HomeAssistant, run_driver) 
     )
     await hass.async_block_till_done()
     assert broker.mock_calls
+    acc.async_stop()
 
 
 async def test_camera_with_a_missing_linked_motion_sensor(
@@ -1363,3 +1370,296 @@ async def test_camera_with_a_missing_linked_doorbell_sensor(
 
     assert not acc.get_service(SERV_DOORBELL)
     assert not acc.get_service(SERV_STATELESS_PROGRAMMABLE_SWITCH)
+
+
+async def test_explicit_camera_source_rejected_for_shared_ingest(
+    hass: HomeAssistant, run_driver
+) -> None:
+    """Explicit source cannot bypass the shared-camera ingestion path."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    hass.states.async_set("camera.test", "idle")
+    acc = Camera(
+        hass, run_driver, "Camera", "camera.test", 2, {CONF_STREAM_SOURCE: "/dev/null"}
+    )
+    with pytest.raises(ValueError, match="Explicit stream_source"):
+        await acc._async_get_hksv_source()
+
+
+async def test_non_hksv_still_camera_snapshot(hass: HomeAssistant, run_driver) -> None:
+    """A still-only camera does not need a shared stream for snapshots."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    hass.states.async_set("camera.still", "idle")
+    accessory = Camera(hass, run_driver, "Camera", "camera.still", 2, {})
+    with patch(
+        "homeassistant.components.homekit.type_cameras.camera.async_get_image",
+        new_callable=AsyncMock,
+    ) as get_image:
+        get_image.return_value.content = b"jpeg"
+        assert (
+            await accessory.async_get_snapshot(
+                {"image-width": 640, "image-height": 360}
+            )
+            == b"jpeg"
+        )
+    get_image.assert_awaited_once_with(hass, "camera.still", width=640, height=360)
+
+
+async def test_secure_video_initial_motion_reaches_controller(
+    hass: HomeAssistant, run_driver
+) -> None:
+    """An already active motion sensor initializes the recording controller."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    hass.states.async_set("camera.test", "idle")
+    hass.states.async_set("binary_sensor.motion", STATE_ON)
+    with patch(
+        "homeassistant.components.homekit.hksv_controller.HKSVController.motion",
+        autospec=True,
+    ) as motion:
+        acc = Camera(
+            hass,
+            run_driver,
+            "Camera",
+            "camera.test",
+            2,
+            {CONF_LINKED_MOTION_SENSOR: "binary_sensor.motion", "secure_video": True},
+        )
+        motion.assert_called_once_with(acc._hksv, True)
+        await acc.stop()
+
+
+async def test_camera_stop_joins_live_and_controller_cleanup_after_cancellation(
+    hass: HomeAssistant, run_driver
+) -> None:
+    """A cancelled caller cannot interrupt owned accessory cleanup."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    hass.states.async_set("camera.test", "idle")
+    acc = Camera(hass, run_driver, "Camera", "camera.test", 2, {})
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def stop_stream(_session: dict[str, Any]) -> None:
+        started.set()
+        await release.wait()
+
+    controller = SimpleNamespace(close=AsyncMock())
+    acc._hksv = controller
+    acc.sessions["test"] = {"id": "test"}
+    with patch.object(acc, "stop_stream", side_effect=stop_stream):
+        caller = asyncio.create_task(acc.stop())
+        try:
+            async with asyncio.timeout(1):
+                await started.wait()
+            caller.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await caller
+            second_caller = asyncio.create_task(acc.stop())
+            await asyncio.sleep(0)
+            assert not second_caller.done()
+            release.set()
+            await second_caller
+            controller.close.assert_awaited_once()
+        finally:
+            release.set()
+            await asyncio.gather(caller, return_exceptions=True)
+            await acc.stop()
+    acc.sessions.clear()
+
+
+async def test_camera_stop_joins_cancelled_hksv_startup(
+    hass: HomeAssistant, run_driver: HomeDriver
+) -> None:
+    """Accessory shutdown joins the startup lease before closing the controller."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    hass.states.async_set("camera.test", "idle")
+    acc = Camera(hass, run_driver, "Camera", "camera.test", 2, {})
+    started = asyncio.Event()
+    release = asyncio.Event()
+    lease_closed = asyncio.Event()
+
+    async def start() -> None:
+        try:
+            started.set()
+            await asyncio.Event().wait()
+        finally:
+            await release.wait()
+            lease_closed.set()
+
+    async def close() -> None:
+        assert lease_closed.is_set()
+
+    acc._hksv = SimpleNamespace(start=start, close=close)
+    acc.run()
+    await started.wait()
+    stopping = asyncio.create_task(acc.stop())
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+    assert not stopping.done()
+    stopping.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await stopping
+    stopping = asyncio.create_task(acc.stop())
+    release.set()
+    await stopping
+    assert lease_closed.is_set()
+
+
+@pytest.mark.parametrize(
+    ("orientation", "expected_filter"),
+    [
+        (Orientation.MIRROR, "hflip"),
+        (Orientation.ROTATE_180, "hflip,vflip"),
+        (Orientation.FLIP, "vflip"),
+        (Orientation.ROTATE_LEFT_AND_FLIP, "transpose=clock,hflip"),
+        (Orientation.ROTATE_LEFT, "transpose=cclock"),
+        (Orientation.ROTATE_RIGHT_AND_FLIP, "transpose=clock,vflip"),
+        (Orientation.ROTATE_RIGHT, "transpose=clock"),
+    ],
+)
+async def test_secure_video_live_applies_camera_orientation(
+    hass: HomeAssistant, run_driver, orientation: Orientation, expected_filter: str
+) -> None:
+    """The live encoder transforms shared video before resizing it."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    hass.states.async_set("camera.test", "idle")
+    acc = Camera(hass, run_driver, "Camera", "camera.test", 2, {"video_codec": "copy"})
+    observed = SimpleNamespace(
+        video_codec="h264",
+        h264_profile_idc=100,
+        width=1280,
+        height=720,
+        observation_seconds=3,
+    )
+    acc._hksv = SimpleNamespace(
+        preserve_source=True, observe_live_source=AsyncMock(return_value=observed)
+    )
+    selection = {
+        "v_profile_id": b"\x02",
+        "v_level": b"\x02",
+        "width": 1280,
+        "height": 720,
+        "fps": 15,
+        "v_max_bitrate": 1500,
+    }
+    shared = SimpleNamespace(orientation=orientation)
+    with patch(
+        "homeassistant.components.homekit.type_cameras._HARDWARE_PROBE.select",
+        AsyncMock(return_value=None),
+    ):
+        source, codec, options, _ = await acc._live_video_parameters(selection, shared)
+    assert codec == "libx264"
+    assert "-noautorotate" in source
+    assert f"{expected_filter},scale=" in options
+
+
+async def test_secure_video_live_without_orientation_keeps_copy(
+    hass: HomeAssistant, run_driver
+) -> None:
+    """Compatible untransformed video retains its copy path."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    hass.states.async_set("camera.test", "idle")
+    acc = Camera(hass, run_driver, "Camera", "camera.test", 2, {"video_codec": "copy"})
+    observed = SimpleNamespace(
+        video_codec="h264",
+        h264_profile_idc=100,
+        width=1280,
+        height=720,
+        observation_seconds=3,
+    )
+    acc._hksv = SimpleNamespace(
+        preserve_source=True, observe_live_source=AsyncMock(return_value=observed)
+    )
+    selection = {
+        "v_profile_id": b"\x02",
+        "v_level": b"\x02",
+        "width": 1280,
+        "height": 720,
+        "fps": 15,
+        "v_max_bitrate": 1500,
+    }
+    shared = SimpleNamespace(orientation=Orientation.NO_TRANSFORM)
+    source, codec, options, _ = await acc._live_video_parameters(selection, shared)
+    assert codec == "copy"
+    assert "-noautorotate" not in source
+    assert "h264_mp4toannexb" in options
+
+
+async def test_live_orientation_change_during_observation(
+    hass: HomeAssistant, run_driver
+) -> None:
+    """Recheck orientation after waiting for a source observation."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    hass.states.async_set("camera.test", "idle")
+    acc = Camera(hass, run_driver, "Camera", "camera.test", 2, {"video_codec": "copy"})
+    shared = SimpleNamespace(orientation=Orientation.NO_TRANSFORM)
+    observed = SimpleNamespace(
+        video_codec="h264",
+        h264_profile_idc=100,
+        width=1280,
+        height=720,
+        observation_seconds=3,
+    )
+
+    async def observe(_shared: object) -> SimpleNamespace:
+        shared.orientation = Orientation.ROTATE_LEFT
+        return observed
+
+    acc._hksv = SimpleNamespace(preserve_source=True, observe_live_source=observe)
+    selection = {
+        "v_profile_id": b"\x02",
+        "v_level": b"\x02",
+        "width": 1280,
+        "height": 720,
+        "fps": 15,
+        "v_max_bitrate": 1500,
+    }
+    with patch(
+        "homeassistant.components.homekit.type_cameras._HARDWARE_PROBE.select",
+        AsyncMock(return_value=None),
+    ):
+        source, codec, options, _ = await acc._live_video_parameters(selection, shared)
+    assert codec == "libx264"
+    assert "-noautorotate" in source
+    assert "transpose=cclock,scale=" in options
+
+
+async def test_secure_video_reconciles_camera_preference_orientation(
+    hass: HomeAssistant, run_driver, entity_registry: er.EntityRegistry
+) -> None:
+    """An orientation preference change notifies only its active camera."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    registry = entity_registry
+    camera_entry = registry.async_get_or_create("camera", "demo", "test")
+    other_entry = registry.async_get_or_create("camera", "demo", "other")
+    hass.states.async_set(camera_entry.entity_id, "idle")
+    prefs = camera.CameraPreferences(hass)
+    await prefs.async_load()
+    settings = await prefs.get_dynamic_stream_settings(camera_entry.entity_id)
+    acc = Camera(hass, run_driver, "Camera", camera_entry.entity_id, 2, {})
+    orientations = []
+    controller = SimpleNamespace(
+        start=AsyncMock(),
+        close=AsyncMock(),
+        source_orientation_changed=MagicMock(
+            side_effect=lambda: orientations.append(settings.orientation)
+        ),
+    )
+    acc._hksv = controller
+    acc.run()
+    await prefs.async_update(camera_entry.entity_id, orientation=Orientation.MIRROR)
+    await hass.async_block_till_done()
+    assert orientations == [Orientation.MIRROR]
+    await prefs.async_update(camera_entry.entity_id, orientation=Orientation.FLIP)
+    await hass.async_block_till_done()
+    assert orientations == [Orientation.MIRROR, Orientation.FLIP]
+    registry.async_update_entity(camera_entry.entity_id, name="Renamed camera")
+    registry.async_update_entity_options(
+        camera_entry.entity_id, "other", {"value": True}
+    )
+    await prefs.async_update(camera_entry.entity_id, orientation=Orientation.FLIP)
+    await prefs.async_update(other_entry.entity_id, orientation=Orientation.MIRROR)
+    await hass.async_block_till_done()
+    assert orientations == [Orientation.MIRROR, Orientation.FLIP]
+    await acc.stop()
+    await prefs.async_update(camera_entry.entity_id, orientation=Orientation.ROTATE_180)
+    await hass.async_block_till_done()
+    assert orientations == [Orientation.MIRROR, Orientation.FLIP]

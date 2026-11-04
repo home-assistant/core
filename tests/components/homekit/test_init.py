@@ -1,10 +1,13 @@
 """Test HomeKit initialization."""
 
+import asyncio
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.homekit import HomeKit
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
     ATTR_VALUE,
@@ -133,3 +136,32 @@ async def test_bridge_with_triggers(
     assert (
         "requires additional inputs which are not supported by HomeKit" in caplog.text
     )
+
+
+async def test_accessory_shutdown_awaits_async_cleanup() -> None:
+    """Accessory cleanup completes before its identifiers are deallocated."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def stop() -> None:
+        started.set()
+        await release.wait()
+
+    iid_manager = Mock()
+    service = SimpleNamespace(characteristics=[object()])
+    accessory = SimpleNamespace(
+        stop=stop, async_stop=Mock(), iid_manager=iid_manager, services=[service]
+    )
+    homekit = object.__new__(HomeKit)
+    homekit.driver = Mock()
+    task = asyncio.create_task(homekit._async_shutdown_accessory(accessory))
+    try:
+        async with asyncio.timeout(1):
+            await started.wait()
+        iid_manager.remove_obj.assert_not_called()
+        release.set()
+        await task
+        assert iid_manager.remove_obj.call_count == 2
+    finally:
+        release.set()
+        await asyncio.gather(task, return_exceptions=True)
