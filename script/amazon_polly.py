@@ -43,9 +43,16 @@ def get_all_voices(client: boto3.client) -> list[AmazonPollyVoice]:
     return [AmazonPollyVoice.validate(voice) for voice in response["Voices"]]
 
 
-supported_regions = set(
-    boto3.session.Session().get_available_regions(service_name="polly")
-)
+session = boto3.session.Session()
+region_names = {
+    region_id: region.get("description", region_id)
+    for partition in session._loader.load_data("endpoints")["partitions"]  # noqa: SLF001
+    for region_id, region in partition["regions"].items()
+}
+supported_regions = {
+    region_id: region_names.get(region_id, region_id)
+    for region_id in session.get_available_regions(service_name="polly")
+}
 
 polly_client = boto3.client(service_name="polly", region_name="us-east-1")
 voices = get_all_voices(polly_client)
@@ -61,7 +68,7 @@ Path("homeassistant/generated/amazon_polly.py").write_text(
         },
         annotations={
             "SUPPORTED_VOICES": "Final[set[str]]",
-            "SUPPORTED_REGIONS": "Final[set[str]]",
+            "SUPPORTED_REGIONS": "Final[dict[str, str]]",
             "SUPPORTED_ENGINES": "Final[set[str]]",
         },
         generator="script.amazon_polly",
