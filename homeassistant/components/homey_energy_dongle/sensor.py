@@ -23,7 +23,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -439,8 +439,25 @@ async def async_setup_entry(
         if entities:
             async_add_entities(entities)
 
+    @callback
+    def _async_forget_removed_meter(
+        event: Event[dr.EventDeviceRegistryUpdatedData],
+    ) -> None:
+        """Let a deleted M-Bus meter be added again when it reappears."""
+        if event.data["action"] == "remove":
+            added_meters.difference_update(
+                identifier
+                for domain, identifier in event.data["device"]["identifiers"]
+                if domain == DOMAIN
+            )
+
     _async_add_new_entities()
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
+    entry.async_on_unload(
+        hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED, _async_forget_removed_meter
+        )
+    )
 
 
 class HomeyEnergyDongleSensor(

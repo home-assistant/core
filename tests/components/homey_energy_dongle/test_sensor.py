@@ -24,7 +24,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import EQUIPMENT_IDENTIFIER, TELEGRAM_MBUS, TELEGRAM_Q3D, TELEGRAM_V5
@@ -86,6 +86,30 @@ async def test_mbus_device_missing(
     await hass.async_block_till_done()
 
     assert hass.states.get(GAS_ENTITY_ID).state == STATE_UNKNOWN
+
+
+async def test_mbus_meter_recreated_after_removal(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+    telegrams: TelegramQueue,
+    telegram: Telegram,
+) -> None:
+    """Test a deleted M-Bus meter gets its device and sensor back when it returns."""
+    telegrams.put_nowait(Telegram())
+    await hass.async_block_till_done()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3232323241424344313233343536373839"), init_integration.entry_id
+    )
+    assert device
+    device_registry.async_remove_device(device.id)
+    await hass.async_block_till_done()
+    assert hass.states.get(GAS_ENTITY_ID) is None
+
+    telegrams.put_nowait(telegram)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(GAS_ENTITY_ID).state == "0.107"
 
 
 @pytest.mark.usefixtures("init_integration")
