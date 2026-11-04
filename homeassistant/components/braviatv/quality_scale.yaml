@@ -53,11 +53,7 @@ rules:
   devices: done
   diagnostics: done
   discovery: done
-  discovery-update-info:
-    status: todo
-    comment: |
-      The SSDP step uses the UPnP UDN as unique ID while entries use the CID or MAC,
-      so the host is never updated when the IP address changes.
+  discovery-update-info: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
