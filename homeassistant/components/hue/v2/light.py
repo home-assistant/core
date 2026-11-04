@@ -469,6 +469,7 @@ class HueGradientWriter:
         self._pending_transition: float | None = None
         self._written_points: list[tuple[float, float]] | None = None
         self._flush_task: asyncio.Task[None] | None = None
+        self._lock = asyncio.Lock()
 
     async def async_set_state(
         self,
@@ -503,37 +504,39 @@ class HueGradientWriter:
     async def _async_flush(self) -> None:
         """Send the pending state to the bridge after the coalescing window."""
         await asyncio.sleep(GRADIENT_COALESCE_DELAY)
-        # take the pending state before the request so writes arriving while it
-        # is in flight start a new flush instead of getting lost
-        on, self._pending_on = self._pending_on, None
-        points, self._pending_points = self._pending_points, {}
-        brightness, self._pending_brightness = self._pending_brightness, None
-        transition, self._pending_transition = self._pending_transition, None
-        self._flush_task = None
-        gradient_points = None
-        gradient_mode = None
-        if points:
-            gradient = self._resource.gradient
-            # the resource only reflects a write once the bridge reports it back,
-            # so until then the last written points are the baseline for the rest
-            if (baseline := self._written_points) is None:
-                baseline = [
-                    gradient_point_color(self._resource, index)
-                    for index in range(gradient.points_capable)
+        # requests go out one at a time so each builds on the result of the last
+        async with self._lock:
+            # take the pending state before the request so writes arriving while
+            # it is in flight start a new flush instead of getting lost
+            on, self._pending_on = self._pending_on, None
+            points, self._pending_points = self._pending_points, {}
+            brightness, self._pending_brightness = self._pending_brightness, None
+            transition, self._pending_transition = self._pending_transition, None
+            self._flush_task = None
+            gradient_points = None
+            gradient_mode = None
+            if points:
+                gradient = self._resource.gradient
+                # the resource only reflects a write once the bridge reports it
+                # back, so until then the last written points are the baseline
+                if (baseline := self._written_points) is None:
+                    baseline = [
+                        gradient_point_color(self._resource, index)
+                        for index in range(gradient.points_capable)
+                    ]
+                gradient_points = [
+                    points.get(index, color) for index, color in enumerate(baseline)
                 ]
-            gradient_points = [
-                points.get(index, color) for index, color in enumerate(baseline)
-            ]
-            # the bridge resets the mode to interpolated when it is omitted
-            gradient_mode = gradient.mode
-        await self._bridge.async_request_call(
-            self._controller.set_state,
-            id=self._resource.id,
-            on=on,
-            brightness=brightness,
-            transition_time=transition,
-            gradient_points=gradient_points,
-            gradient_mode=gradient_mode,
-        )
-        if gradient_points is not None:
-            self._written_points = gradient_points
+                # the bridge resets the mode to interpolated when it is omitted
+                gradient_mode = gradient.mode
+            await self._bridge.async_request_call(
+                self._controller.set_state,
+                id=self._resource.id,
+                on=on,
+                brightness=brightness,
+                transition_time=transition,
+                gradient_points=gradient_points,
+                gradient_mode=gradient_mode,
+            )
+            if gradient_points is not None:
+                self._written_points = gradient_points

@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.components.hue.v2.light import GRADIENT_COALESCE_DELAY
 from homeassistant.components.light import ColorMode
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -640,6 +641,59 @@ async def test_gradient_segments_sequential_writes(
     expected_points[2] = (0.123, 0.456)
     assert len(mock_bridge_v2.mock_requests) == 3
     assert mock_bridge_v2.mock_requests[2]["json"]["gradient"] == gradient_json(
+        expected_points
+    )
+
+
+async def test_gradient_segments_write_in_flight(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test a write made while another one is in flight builds on that write."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    request_started = asyncio.Event()
+    release_request = asyncio.Event()
+    original_request_call = mock_bridge_v2.async_request_call
+
+    async def held_request_call(task: Any, *args: Any, **kwargs: Any) -> None:
+        if not request_started.is_set():
+            request_started.set()
+            await release_request.wait()
+        await original_request_call(task, *args, **kwargs)
+
+    with patch.object(
+        mock_bridge_v2, "async_request_call", side_effect=held_request_call
+    ):
+        first = hass.async_create_task(
+            hass.services.async_call(
+                "light",
+                "turn_on",
+                {"entity_id": GRADIENT_SEGMENT_ENTITY_IDS[0], "xy_color": (0.1, 0.2)},
+                blocking=True,
+            )
+        )
+        await request_started.wait()
+        second = hass.async_create_task(
+            hass.services.async_call(
+                "light",
+                "turn_on",
+                {"entity_id": GRADIENT_SEGMENT_ENTITY_IDS[1], "xy_color": (0.3, 0.4)},
+                blocking=True,
+            )
+        )
+        # let the second write pass its coalescing window while the first is held
+        await asyncio.sleep(GRADIENT_COALESCE_DELAY * 3)
+        release_request.set()
+        await asyncio.gather(first, second)
+
+    # the second request carries the colors of both writes
+    expected_points = list(GRADIENT_POINTS)
+    expected_points[0] = (0.1, 0.2)
+    expected_points[1] = (0.3, 0.4)
+    assert len(mock_bridge_v2.mock_requests) == 2
+    assert mock_bridge_v2.mock_requests[1]["json"]["gradient"] == gradient_json(
         expected_points
     )
 
