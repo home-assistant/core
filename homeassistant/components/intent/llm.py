@@ -168,19 +168,34 @@ def async_get_tools(
         and (handler.platforms is None or handler.platforms & exposed_domains)
     ]
 
-    tools: list[Tool] = [
-        IntentTool(
+    tools: list[Tool] = []
+    for handler in handlers:
+        tool = IntentTool(
             f"{DOMAIN}__{handler.intent_type}",
             handler,
             title=INTENT_TITLES[handler.intent_type],
             integration=DOMAIN,
             annotations=INTENT_ANNOTATIONS[handler.intent_type],
         )
-        for handler in handlers
-    ]
+        if handler.intent_type == intent.INTENT_START_TIMER:
+            # Delayed commands go through the schedule command tool, which asks
+            # the LLM for a standalone command.
+            tool.parameters = probatio.Schema(
+                {
+                    key: value
+                    for key, value in tool.parameters.schema.items()
+                    if key != "conversation_command"
+                }
+            )
+        tools.append(tool)
+
     # The command runs later on the same conversation agent, so a caller
     # without one (MCP, AI tasks) cannot schedule commands.
-    if llm_context.assistant == CONVERSATION_DOMAIN and llm_context.agent_id:
+    can_schedule = (
+        llm_context.assistant == CONVERSATION_DOMAIN
+        and llm_context.agent_id is not None
+    )
+    if can_schedule:
         tools.append(ScheduleCommandTool())
     if not tools:
         return None
@@ -221,5 +236,10 @@ def async_get_tools(
 
     prompt_parts = [DEVICE_CONTROL_TOOL_USAGE_PROMPT, area_prompt]
     if not supports_timers:
-        prompt_parts.append("This device is not able to start timers.")
+        timer_prompt = "This device is not able to start timers."
+        if can_schedule:
+            timer_prompt += (
+                f" It can still run a command later with {ScheduleCommandTool.name}."
+            )
+        prompt_parts.append(timer_prompt)
     return LLMTools(tools=tools, prompt="\n".join(prompt_parts))

@@ -258,3 +258,22 @@ async def test_schedule_command_runs_on_same_agent(hass: HomeAssistant) -> None:
     command_context = mock_converse.call_args.kwargs["context"]
     assert command_context.user_id == request_context.user_id
     assert command_context.parent_id == request_context.id
+
+
+async def test_prompt_offers_schedule_command_without_timers(
+    hass: HomeAssistant,
+) -> None:
+    """Test the prompt points a device without timers to scheduled commands."""
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="en",
+        assistant="conversation",
+        device_id=None,
+        agent_id=LLM_AGENT_ID,
+    )
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
+    assert (
+        "This device is not able to start timers. It can still run a command"
+        " later with intent__schedule_command."
+    ) in result.prompt
