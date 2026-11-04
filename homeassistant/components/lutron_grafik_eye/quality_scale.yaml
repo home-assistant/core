@@ -8,7 +8,7 @@ rules:
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
-  dependency-transparency: done # TODO: Publish grafikeye to PyPI and pin its version in homeassistant/components/lutron_grafik_eye/manifest.json.
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: The integration does not provide custom actions.

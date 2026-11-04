@@ -1250,6 +1250,9 @@ gpiozero==1.6.2
 # homeassistant.components.gpsd
 gps3==0.33.3
 
+# homeassistant.components.lutron_grafik_eye
+grafikeye==0.1.0
+
 # homeassistant.components.grandstream_home
 grandstream-home-api==0.1.7
 
