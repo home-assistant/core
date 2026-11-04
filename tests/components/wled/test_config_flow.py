@@ -7,7 +7,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from wled import WLEDConnectionError, WLEDError, WLEDUnsupportedVersionError
 
-from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, DOMAIN
+from homeassistant.components.wled.const import (
+    CONF_COLD_WHITE_KELVIN,
+    CONF_KEEP_MAIN_LIGHT,
+    CONF_WARM_WHITE_KELVIN,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -471,3 +476,105 @@ async def test_options_flow(
     assert result2.get("data") == {
         CONF_KEEP_MAIN_LIGHT: True,
     }
+
+
+@pytest.mark.usefixtures("mock_wled")
+async def test_options_flow_white_kelvin_range(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test setting the color temperature of the warm and cold white LEDs."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_KEEP_MAIN_LIGHT: False,
+            CONF_WARM_WHITE_KELVIN: 3000.0,
+            CONF_COLD_WHITE_KELVIN: 6500.0,
+        },
+    )
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("data") == {
+        CONF_KEEP_MAIN_LIGHT: False,
+        CONF_WARM_WHITE_KELVIN: 3000,
+        CONF_COLD_WHITE_KELVIN: 6500,
+    }
+
+
+@pytest.mark.usefixtures("mock_wled")
+@pytest.mark.parametrize(
+    ("white_kelvin", "error"),
+    [
+        pytest.param(
+            {CONF_WARM_WHITE_KELVIN: 3000.0}, "white_kelvin_incomplete", id="warm_only"
+        ),
+        pytest.param(
+            {CONF_COLD_WHITE_KELVIN: 6500.0}, "white_kelvin_incomplete", id="cold_only"
+        ),
+        pytest.param(
+            {CONF_WARM_WHITE_KELVIN: 6500.0, CONF_COLD_WHITE_KELVIN: 3000.0},
+            "white_kelvin_order",
+            id="reversed",
+        ),
+        pytest.param(
+            {CONF_WARM_WHITE_KELVIN: 4000.0, CONF_COLD_WHITE_KELVIN: 4000.0},
+            "white_kelvin_order",
+            id="equal",
+        ),
+    ],
+)
+async def test_options_flow_white_kelvin_range_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    white_kelvin: dict[str, float],
+    error: str,
+) -> None:
+    """Test an incomplete or reversed white range is rejected, then recovers."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_KEEP_MAIN_LIGHT: False, **white_kelvin},
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": error}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_KEEP_MAIN_LIGHT: False,
+            CONF_WARM_WHITE_KELVIN: 3000.0,
+            CONF_COLD_WHITE_KELVIN: 6500.0,
+        },
+    )
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_wled")
+async def test_options_flow_clear_white_kelvin_range(hass: HomeAssistant) -> None:
+    """Test leaving both white color temperatures empty removes the range."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.123"},
+        unique_id="aabbccddeeff",
+        minor_version=2,
+        options={
+            CONF_KEEP_MAIN_LIGHT: False,
+            CONF_WARM_WHITE_KELVIN: 3000,
+            CONF_COLD_WHITE_KELVIN: 6500,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_KEEP_MAIN_LIGHT: False}
+    )
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("data") == {CONF_KEEP_MAIN_LIGHT: False}

@@ -19,14 +19,35 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_HOST, CONF_MAC, UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT, DOMAIN
+from .const import (
+    CONF_COLD_WHITE_KELVIN,
+    CONF_KEEP_MAIN_LIGHT,
+    CONF_WARM_WHITE_KELVIN,
+    DEFAULT_KEEP_MAIN_LIGHT,
+    DOMAIN,
+)
 from .coordinator import WLEDConfigEntry, normalize_mac_address
+
+KELVIN_SELECTOR = NumberSelector(
+    NumberSelectorConfig(
+        mode=NumberSelectorMode.BOX,
+        min=1000,
+        max=10000,
+        step=100,
+        unit_of_measurement=UnitOfTemperature.KELVIN,
+    )
+)
 
 
 def _normalize_host(host: str) -> str:
@@ -185,19 +206,39 @@ class WLEDOptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage WLED options."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            warm = user_input.get(CONF_WARM_WHITE_KELVIN)
+            cold = user_input.get(CONF_COLD_WHITE_KELVIN)
+            if (warm is None) != (cold is None):
+                errors["base"] = "white_kelvin_incomplete"
+            elif warm is not None and cold is not None and warm >= cold:
+                errors["base"] = "white_kelvin_order"
+            else:
+                options: dict[str, Any] = {
+                    CONF_KEEP_MAIN_LIGHT: user_input[CONF_KEEP_MAIN_LIGHT]
+                }
+                if warm is not None and cold is not None:
+                    options[CONF_WARM_WHITE_KELVIN] = int(warm)
+                    options[CONF_COLD_WHITE_KELVIN] = int(cold)
+                return self.async_create_entry(title="", data=options)
 
+        schema = probatio.Schema(
+            {
+                probatio.Optional(
+                    CONF_KEEP_MAIN_LIGHT,
+                    default=self.config_entry.options.get(
+                        CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT
+                    ),
+                ): bool,
+                probatio.Optional(CONF_WARM_WHITE_KELVIN): KELVIN_SELECTOR,
+                probatio.Optional(CONF_COLD_WHITE_KELVIN): KELVIN_SELECTOR,
+            }
+        )
         return self.async_show_form(
             step_id="init",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Optional(
-                        CONF_KEEP_MAIN_LIGHT,
-                        default=self.config_entry.options.get(
-                            CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT
-                        ),
-                    ): bool,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                schema, user_input or self.config_entry.options
             ),
+            errors=errors,
         )

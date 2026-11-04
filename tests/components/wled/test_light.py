@@ -32,7 +32,9 @@ from homeassistant.components.light import (
     ColorMode,
 )
 from homeassistant.components.wled.const import (
+    CONF_COLD_WHITE_KELVIN,
     CONF_KEEP_MAIN_LIGHT,
+    CONF_WARM_WHITE_KELVIN,
     DOMAIN,
     SCAN_INTERVAL,
 )
@@ -407,6 +409,54 @@ async def test_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(
         cct=130,
+        color_primary=(0, 0, 0, 255),
+        on=True,
+        segment_id=0,
+    )
+
+
+@pytest.mark.parametrize(
+    ("kelvin", "cct"),
+    [
+        pytest.param(4000, 118, id="mired_midpoint"),
+        pytest.param(3000, 0, id="warm_white"),
+        pytest.param(6500, 255, id="cold_white"),
+    ],
+)
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_cct_light_white_kelvin_range(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    kelvin: int,
+    cct: int,
+) -> None:
+    """Test the configured white LED range drives the color temperature mapping."""
+    hass.config_entries.async_update_entry(
+        init_integration,
+        options={
+            CONF_KEEP_MAIN_LIGHT: False,
+            CONF_WARM_WHITE_KELVIN: 3000,
+            CONF_COLD_WHITE_KELVIN: 6500,
+        },
+    )
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN) == 3000
+    assert state.attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN) == 6500
+    # The fixture's CCT of 53 is 3378 K when mixed in mireds between 3000 and 6500 K
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == 3378
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.wled_cct_light", ATTR_COLOR_TEMP_KELVIN: kelvin},
+        blocking=True,
+    )
+    mock_wled.segment.assert_called_with(
+        cct=cct,
         color_primary=(0, 0, 0, 255),
         on=True,
         segment_id=0,
