@@ -355,13 +355,14 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                 **entity_variables,
             }
         else:
-            self._rendered_entity_variables = coordinator_variables
+            self._rendered_entity_variables = dict(coordinator_variables)
         variables = self._template_variables(self._rendered_entity_variables)
 
         if not check_conditions(self._cond_func, variables):
             return
 
-        self.async_set_context(self.coordinator.data["context"])
+        # Triggers without a context pass None, which must clear the previous one
+        self.async_set_context(self.coordinator.data["context"])  # type: ignore[arg-type]
         if self._render_availability_template(variables):
             self._render_templates(variables)
 

@@ -1,8 +1,8 @@
 """Data update coordinator for trigger based template entities."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import TYPE_CHECKING, Any, TypedDict, cast, override
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
@@ -203,7 +203,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator[TriggerData]):
 
     @callback
     def _execute_update(
-        self, run_variables: TemplateVarsType, context: Context | None = None
+        self, run_variables: Mapping[str, Any], context: Context | None = None
     ) -> None:
         self.async_set_updated_data(
             {"run_variables": run_variables, "context": context}
