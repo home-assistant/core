@@ -25,7 +25,7 @@ from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceIn
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER, MODEL_NAMES
 from .models import SnoozConfigEntry, SnoozConfigurationData
 
 
@@ -60,6 +60,9 @@ class SnoozFan(FanEntity, RestoreEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, data.device.address)},
             connections={(CONNECTION_BLUETOOTH, data.device.address)},
+            manufacturer=MANUFACTURER,
+            model=MODEL_NAMES.get(data.device.model),
+            sw_version=str(data.device.firmware_version.value),
         )
 
     @callback
