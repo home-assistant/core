@@ -32,12 +32,8 @@ PARALLEL_UPDATES = 0
 
 
 def _fwiq_reading(value: float | None) -> StateType:
-    """Map FreshWater IQ sentinels and non-finite readings to unknown.
-
-    ``-1`` is the FreshWater IQ sentinel reported by the device; legitimate
-    zero readings and other negative readings are preserved.
-    """
-    if not isinstance(value, (int, float)) or not math.isfinite(value) or value == -1:
+    """Reject non-finite readings not normalized by python-hotspring 4.0.1."""
+    if value is None or not math.isfinite(value):
         return None
     return value
 
@@ -67,7 +63,7 @@ SENSORS: tuple[HotSpringSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         suggested_display_precision=0,
-        value_fn=lambda spa: _fwiq_reading(spa.freshwater_iq.orp),
+        value_fn=lambda spa: spa.freshwater_iq.orp,
         exists_fn=lambda spa: spa.freshwater_iq.installed,
     ),
     HotSpringSensorEntityDescription(

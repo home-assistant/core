@@ -90,15 +90,20 @@ async def test_freshwater_iq_sensors_absent_without_iq(
         pytest.param("ph", 0.0, "0.0", id="valid_zero_ph"),
         pytest.param("chlorine", 0.0, "0.0", id="valid_zero_chlorine"),
         pytest.param("sensor_life_percentage", 0.0, "0.0", id="valid_zero_sensor_life"),
-        pytest.param("ph", -1.0, STATE_UNKNOWN, id="sentinel_ph"),
-        pytest.param("chlorine", -1.0, STATE_UNKNOWN, id="sentinel_chlorine"),
-        pytest.param("orp", -1, STATE_UNKNOWN, id="sentinel_orp"),
+        pytest.param("ph", None, STATE_UNKNOWN, id="unknown_ph"),
+        pytest.param("chlorine", None, STATE_UNKNOWN, id="unknown_chlorine"),
+        pytest.param("orp", None, STATE_UNKNOWN, id="unknown_orp"),
         pytest.param(
-            "sensor_life_percentage", -1.0, STATE_UNKNOWN, id="sentinel_sensor_life"
+            "sensor_life_percentage", None, STATE_UNKNOWN, id="unknown_sensor_life"
         ),
-        pytest.param("ph", math.nan, STATE_UNKNOWN, id="nonfinite_nan_ph"),
-        pytest.param("chlorine", math.inf, STATE_UNKNOWN, id="nonfinite_inf_chlorine"),
-        pytest.param("orp", -59, "-59", id="negative_orp_preserved"),
+        pytest.param("ph", math.inf, STATE_UNKNOWN, id="nonfinite_ph"),
+        pytest.param("chlorine", math.inf, STATE_UNKNOWN, id="nonfinite_chlorine"),
+        pytest.param(
+            "sensor_life_percentage",
+            math.inf,
+            STATE_UNKNOWN,
+            id="nonfinite_sensor_life",
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_hotspring")
@@ -107,10 +112,10 @@ async def test_freshwater_iq_reading_validity(
     mock_config_entry: MockConfigEntry,
     device_fixture: Spa,
     attribute: str,
-    value: float,
+    value: float | None,
     expected_state: str,
 ) -> None:
-    """Test valid zero readings are kept and sentinels and non-finite values are unknown."""
+    """Test library readings are exposed and missing measurements are unknown."""
     _enable_freshwater_iq(device_fixture)
     setattr(device_fixture.freshwater_iq, attribute, value)
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
