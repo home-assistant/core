@@ -633,6 +633,79 @@ async def test_reconfigure_without_equipment_identifier(
     assert entry.data[CONF_HOST] == "192.168.1.99"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("unique_id", "old_version", "new_version"),
+    [
+        pytest.param(EQUIPMENT_IDENTIFIER, "5", "5EONHU", id="to_unidentified"),
+        pytest.param(None, "5EONHU", "5", id="from_unidentified"),
+    ],
+)
+async def test_reconfigure_profile_without_identifier(
+    hass: HomeAssistant,
+    telegrams: TelegramQueue,
+    telegram_data: str,
+    unique_id: str | None,
+    old_version: str,
+    new_version: str,
+) -> None:
+    """Test switching to or from a profile without identifier keeps the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=unique_id,
+        data={
+            CONF_HOST: "192.168.1.88",
+            CONF_PORT: 80,
+            CONF_WS_PATH: "/ws",
+            CONF_DSMR_VERSION: old_version,
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    telegrams.put_nowait(telegram_data)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.88", CONF_DSMR_VERSION: new_version},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_DSMR_VERSION] == new_version
+    assert entry.unique_id == unique_id
+
+
+async def test_reconfigure_identifies_meter_of_other_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    telegrams: TelegramQueue,
+    telegram_data: str,
+) -> None:
+    """Test an unidentified entry can't switch to a meter another entry reads."""
+    mock_config_entry.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.99",
+            CONF_PORT: 80,
+            CONF_WS_PATH: "/ws",
+            CONF_DSMR_VERSION: "5EONHU",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    telegrams.put_nowait(telegram_data)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.99", CONF_DSMR_VERSION: "5"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_DSMR_VERSION] == "5EONHU"
+
+
 async def test_reconfigure_without_equipment_identifier_host_in_use(
     hass: HomeAssistant, telegrams: TelegramQueue, telegram_data: str
 ) -> None:

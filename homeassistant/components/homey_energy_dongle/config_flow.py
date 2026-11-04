@@ -141,15 +141,19 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             None,
         )
         self._meter_identified = identifier is not None
-        if identifier is not None:
-            await self.async_set_unique_id(str(identifier.value))
-        elif self.source != SOURCE_ZEROCONF:
-            await self.async_set_unique_id(None)
-        if self.source == SOURCE_RECONFIGURE:
-            self._abort_if_unique_id_mismatch()
-        elif identifier is not None:
-            self._abort_if_unique_id_configured(updates=dict(data))
         if identifier is None:
+            if self.source != SOURCE_ZEROCONF:
+                await self.async_set_unique_id(None)
+            self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
+            return None
+        await self.async_set_unique_id(str(identifier.value))
+        if self.source != SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_configured(updates=dict(data))
+        elif self._get_reconfigure_entry().unique_id:
+            self._abort_if_unique_id_mismatch()
+        else:
+            # The entry's profile had no identifier, so there is none to compare.
+            self._abort_if_unique_id_configured()
             self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
         return None
 
