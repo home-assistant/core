@@ -63,7 +63,7 @@
     'device_id': <DeviceEntry connections=[('bluetooth', 'AA:BB:CC:DD:EE:FF')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'binary_sensor.123456789012_problem',
     'has_entity_name': True,
     'hidden_by': None,
