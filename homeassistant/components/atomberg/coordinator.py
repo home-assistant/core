@@ -92,9 +92,8 @@ class AtombergCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             if device_id in states
         }
 
-    @staticmethod
     @contextmanager
-    def _command_errors() -> Generator[None]:
+    def _command_errors(self) -> Generator[None]:
         try:
             yield
         except AtombergConnectionError as err:
@@ -104,6 +103,8 @@ class AtombergCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 translation_placeholders={"error": str(err)},
             ) from err
         except AtombergAuthError as err:
+            # Ask for new credentials now instead of waiting for the next poll.
+            self.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
@@ -121,6 +122,10 @@ class AtombergCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         async with self._state_lock:
             with self._command_errors():
                 await self.client.async_send_command(device_id, command)
+            # The device can be gone from the cache if a poll that ran while
+            # this command waited for the lock no longer reported it.
+            if device_id not in self.data:
+                return
             # Do not use async_set_updated_data: it would restart the refresh
             # interval and commands could keep postponing the account-wide poll.
             self.data = {

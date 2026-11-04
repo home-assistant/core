@@ -10,7 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.atomberg.const import UPDATE_INTERVAL
+from homeassistant.components.atomberg.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
@@ -22,6 +22,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -215,6 +216,9 @@ async def test_other_command_errors(
             FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ON_FAN}, blocking=True
         )
 
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert bool(flows) is (exception is AtombergAuthError)
+
 
 async def test_command_error(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
@@ -268,3 +272,44 @@ async def test_poll_in_flight_does_not_overwrite_command_state(
 
     mock_client.async_send_command.assert_awaited_once_with(ON_ID, {"power": False})
     assert hass.states.get(ON_FAN).state == STATE_OFF
+
+
+async def test_command_succeeds_when_device_left_the_cache(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a command that waited on a poll dropping the fan is not reported as failed."""
+    await setup_integration(hass, mock_config_entry)
+    states_without_fan = {
+        key: value
+        for key, value in mock_client.async_get_states.return_value.items()
+        if key != ON_ID
+    }
+    poll_started = asyncio.Event()
+    release_poll = asyncio.Event()
+
+    async def slow_poll() -> dict[str, Any]:
+        poll_started.set()
+        await release_poll.wait()
+        return states_without_fan
+
+    mock_client.async_get_states.side_effect = slow_poll
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await poll_started.wait()
+
+    command = hass.async_create_task(
+        hass.services.async_call(
+            FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ON_FAN}, blocking=True
+        )
+    )
+    for _ in range(5):
+        await asyncio.sleep(0)
+    release_poll.set()
+    await command
+    await hass.async_block_till_done()
+
+    mock_client.async_send_command.assert_awaited_once_with(ON_ID, {"power": False})
+    assert hass.states.get(ON_FAN).state == STATE_UNAVAILABLE

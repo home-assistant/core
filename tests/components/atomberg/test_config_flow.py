@@ -6,7 +6,11 @@ from atomberg_api import AtombergAuthError, AtombergConnectionError, AtombergDev
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
 
-from homeassistant.components.atomberg.const import CONF_REFRESH_TOKEN, DOMAIN
+from homeassistant.components.atomberg.const import (
+    CONF_DEVICE_IDS,
+    CONF_REFRESH_TOKEN,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -32,7 +36,10 @@ async def test_full_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Atomberg"
-    assert result["data"] == USER_INPUT
+    assert result["data"] == {
+        **USER_INPUT,
+        CONF_DEVICE_IDS: ["a4cf12123456", "a4cf12abcdef"],
+    }
     assert result["result"].unique_id == API_KEY
 
 
@@ -174,6 +181,7 @@ async def test_reauth_new_api_key_same_account(
     assert mock_config_entry.data == {
         CONF_API_KEY: "new-key",
         CONF_REFRESH_TOKEN: "new-token",
+        CONF_DEVICE_IDS: ["a4cf12123456", "a4cf12abcdef"],
     }
     assert mock_config_entry.unique_id == "new-key"
 
@@ -262,3 +270,57 @@ async def test_reauth_changed_api_key_without_known_devices(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
     assert mock_config_entry.data[CONF_API_KEY] == API_KEY
+
+
+@pytest.mark.usefixtures("mock_client", "mock_setup_entry")
+async def test_duplicate_account_when_setup_never_completed(
+    hass: HomeAssistant,
+) -> None:
+    """Test a rotated key is detected from the saved IDs, without registered devices."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "old-key",
+            CONF_REFRESH_TOKEN: "old-token",
+            CONF_DEVICE_IDS: ["a4cf12abcdef"],
+        },
+        unique_id="old-key",
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "rotated-key", CONF_REFRESH_TOKEN: "rotated-token"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.usefixtures("mock_client", "mock_setup_entry")
+async def test_reauth_changed_key_uses_saved_device_ids(hass: HomeAssistant) -> None:
+    """Test reauth with a rotated key works for an entry that never registered devices."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "old-key",
+            CONF_REFRESH_TOKEN: "old-token",
+            CONF_DEVICE_IDS: ["a4cf12abcdef"],
+        },
+        unique_id="old-key",
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "rotated-key", CONF_REFRESH_TOKEN: "rotated-token"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_API_KEY] == "rotated-key"
+    assert entry.unique_id == "rotated-key"
