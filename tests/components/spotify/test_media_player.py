@@ -246,6 +246,7 @@ async def test_playlist_item_schema_error_does_not_block_setup(
     playlist_items = playlist_data.pop("tracks")
     for playlist_item in playlist_items["items"]:
         playlist_item["item"] = playlist_item.pop("track")
+    playlist_items["items"][0]["added_at"] = "invalid"
     playlist_data[items_key] = playlist_items
     playlist_json = json.dumps(playlist_data)
 
