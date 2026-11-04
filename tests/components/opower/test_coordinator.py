@@ -967,3 +967,101 @@ async def test_coordinator_uses_hourly_reads_when_daily_are_empty(
     assert rows[-1]["sum"] == pytest.approx(9.0)
     for previous, current in pairwise(rows):
         assert current["sum"] == pytest.approx(previous["sum"] + current["state"])
+
+
+@pytest.mark.parametrize("hourly_start_day", [1, 2])
+async def test_coordinator_keeps_hourly_statistics_when_older_reads_are_coarser(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+    hourly_start_day: int,
+) -> None:
+    """Test that day reads before the hourly reads don't corrupt hourly statistics.
+
+    The hourly reads only cover the last two months while the bill and daily
+    reads start where the billing period containing the last statistic minus 30
+    days starts, which can be earlier. The statistics that already exist there
+    are hourly, so anchoring the running sum on a day read and writing the day
+    reads after it drops most of a day from the sum and leaves negative hours.
+    """
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    account = mock_opower_api.async_get_accounts.return_value[0]
+    mock_opower_api.async_get_accounts.return_value = [account]
+
+    statistic_id = "opower:pge_elec_111111_energy_consumption"
+    # 08:00 UTC is local midnight for the utility's timezone in January.
+    days = [dt_util.as_utc(datetime(2023, 1, day, 8)) for day in range(1, 6)]
+
+    def bill_reads() -> list[CostRead]:
+        return [
+            CostRead(
+                start_time=days[0],
+                end_time=dt_util.as_utc(datetime(2023, 2, 1, 8)),
+                consumption=120.0,
+                provided_cost=24.0,
+            )
+        ]
+
+    def daily_reads() -> list[CostRead]:
+        return [
+            CostRead(
+                start_time=start, end_time=end, consumption=30.0, provided_cost=6.0
+            )
+            for start, end in pairwise(days)
+        ]
+
+    def hourly_reads(first_day: int) -> list[CostRead]:
+        return [
+            CostRead(
+                start_time=day + timedelta(hours=hour),
+                end_time=day + timedelta(hours=hour + 1),
+                consumption=1.5,
+                provided_cost=0.3,
+            )
+            for day in days[first_day:-1]
+            for hour in range(3)
+        ]
+
+    def mock_reads(first_hourly_day: int) -> None:
+        async def reads(acc, aggregate_type, start, end):
+            return {
+                AggregateType.BILL: bill_reads(),
+                AggregateType.DAY: daily_reads(),
+                AggregateType.HOUR: hourly_reads(first_hourly_day),
+            }[aggregate_type]
+
+        mock_opower_api.async_get_cost_reads.side_effect = reads
+
+    async def stats() -> list[dict[str, Any]]:
+        period_stats = await hass.async_add_executor_job(
+            statistics_during_period,
+            hass,
+            days[0],
+            None,
+            {statistic_id},
+            "hour",
+            None,
+            {"start", "state", "sum"},
+        )
+        return period_stats[statistic_id]
+
+    # The initial import has hourly reads for all the days.
+    mock_reads(0)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    before = await stats()
+    assert len(before) == len(hourly_reads(0))
+
+    # A later update has hourly reads from a later day only, but the daily reads
+    # still start on the first day.
+    mock_reads(hourly_start_day)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    after = await stats()
+    assert after == before
+    # Every sum must still be the previous sum plus that hour's state. A day read
+    # written at local midnight breaks this because it carries its own sum.
+    for previous, current in pairwise(after):
+        assert current["sum"] == pytest.approx(previous["sum"] + current["state"])

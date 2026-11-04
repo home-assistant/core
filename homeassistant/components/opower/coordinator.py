@@ -619,6 +619,24 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             # overwrite and the daily reads are the best available data.
             _LOGGER.debug("No hourly cost reads. Skipping update")
             return []
+        if (
+            start_time is not None
+            and hourly_cost_reads[0].start_time.timestamp() <= start_time
+        ):
+            # The bill and daily reads start where the billing period containing
+            # start_time - 30 days starts, which can be before the hourly reads
+            # since those only cover the last two months. The statistics that
+            # already exist before the hourly reads are hourly too. The running
+            # sum is anchored on the statistic at the first read, so anchoring on
+            # a day read would only count its first hour and drop the rest of
+            # that day from the sum, and the day reads that follow would replace
+            # hourly statistics with day ones. Start at the hourly reads instead.
+            first_hourly_start_time = hourly_cost_reads[0].start_time
+            cost_reads = [
+                cost_read
+                for cost_read in cost_reads
+                if cost_read.start_time >= first_hourly_start_time
+            ]
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
         _LOGGER.debug("Got %s cost reads", len(cost_reads))
         return cost_reads
