@@ -317,7 +317,7 @@ async def test_reconfigure_flow_unmigrated_entry_already_configured(
     """Test reconfiguring an entry without account ID to a configured account."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_USERNAME: "other-user", CONF_PASSWORD: "pass"},
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "old-pass"},
         minor_version=2,
     )
     entry.add_to_hass(hass)
@@ -331,4 +331,29 @@ async def test_reconfigure_flow_unmigrated_entry_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.unique_id is None
-    assert entry.data == {CONF_USERNAME: "other-user", CONF_PASSWORD: "pass"}
+    assert entry.data == {CONF_USERNAME: "user", CONF_PASSWORD: "old-pass"}
+
+
+async def test_reconfigure_flow_unmigrated_entry_wrong_account(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfiguring an entry without account ID to a different username."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch("pyvesync.vesync.VeSync.login") as mock_login:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "other-username", CONF_PASSWORD: "other-password"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    mock_login.assert_not_called()
+    assert entry.unique_id is None
+    assert entry.data == {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}

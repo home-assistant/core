@@ -140,6 +140,12 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
+            # Without an account ID, the stored username identifies the account
+            if (
+                not reconfigure_entry.unique_id
+                and user_input[CONF_USERNAME] != reconfigure_entry.data[CONF_USERNAME]
+            ):
+                return self.async_abort(reason="unique_id_mismatch")
             account_id = await self._async_try_login(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
@@ -147,7 +153,6 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             else:
                 await self.async_set_unique_id(account_id)
-                # Entries awaiting the minor version 3 migration have no unique ID
                 if reconfigure_entry.unique_id:
                     self._abort_if_unique_id_mismatch()
                 else:
