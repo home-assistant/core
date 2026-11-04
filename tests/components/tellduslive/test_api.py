@@ -344,7 +344,7 @@ def test_local_session_refreshes_token_on_init(mock_api: requests_mock.Mocker) -
 
     assert session.access_token == "new"
     assert session.is_authorized is True
-    assert session._session.headers["Authorization"] == "Bearer old"
+    assert session._session.headers["Authorization"] == "Bearer new"
 
 
 def test_local_authorize_flow(mock_api: requests_mock.Mocker) -> None:

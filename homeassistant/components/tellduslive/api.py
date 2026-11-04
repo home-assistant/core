@@ -168,6 +168,7 @@ class LocalAPISession(requests.Session):
             response.raise_for_status()
             result = response.json()
             self.access_token = result.get("token")
+            self.headers.update({"Authorization": f"Bearer {self.access_token}"})
             self.token_timestamp = datetime.now()
             _LOGGER.debug(
                 "Token expires %s", datetime.fromtimestamp(result.get("expires"))
@@ -385,6 +386,8 @@ class Session:
                 continue
             try:
                 items = request()
+            except TelldusLiveRateLimitError:
+                raise
             except TelldusLiveError as err:
                 errors.append(err)
                 new_state.update(
