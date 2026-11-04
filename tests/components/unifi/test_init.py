@@ -412,7 +412,12 @@ async def test_device_without_loaded_entities_readopted(
         )
 
     assert (entry := device_entry())
-    assert hass.states.async_entity_ids(DOMAIN) == []
+    assert all(
+        hass.states.get(entity.entity_id) is None
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+    )
 
     # Forgetting the device is not noticed by any entity
     mock_websocket_message(
