@@ -501,7 +501,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         ir.async_create_issue(
             self.hass,
             DOMAIN,
-            issue_id=f"return_to_grid_migration_{utility_account_id}",
+            issue_id=f"return_to_grid_migration_{self.config_entry.entry_id}_{utility_account_id}",
             config_entry_id=self.config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,

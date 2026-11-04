@@ -2627,6 +2627,15 @@
       ],
       "supported_by": "splunk"
     },
+    "croma_infrared": {
+      "name": "Croma Infrared",
+      "integration_type": "device",
+      "categories": [
+        "media_entertainment.tv_streaming"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "crownstone": {
       "name": "Crownstone",
       "integration_type": "hub",
@@ -4507,7 +4516,7 @@
           "connectivity": [
             "network"
           ],
-          "name": "Flic"
+          "name": "Flic (legacy)"
         },
         "flic_button": {
           "integration_type": "device",
@@ -5277,6 +5286,12 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "glinet": {
+      "name": "GL.iNet",
+      "iot_standards": [
+        "matter"
+      ]
     },
     "globalcache": {
       "name": "Global Cach\u00e9",

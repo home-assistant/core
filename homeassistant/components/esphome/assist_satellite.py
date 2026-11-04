@@ -26,8 +26,9 @@ from aioesphomeapi import (
 import probatio
 from probatio.humanize import humanize_error
 
-from homeassistant.components import assist_satellite, stt, tts, wake_word
+from homeassistant.components import assist_satellite, stt, tts
 from homeassistant.components.assist_pipeline import (
+    AudioSettings,
     PipelineEvent,
     PipelineEventType,
     PipelineNotFound,
@@ -612,7 +613,7 @@ class EsphomeAssistSatellite(
         # May be changed when STT_START event arrives.
         self._active_audio_channel = 0
 
-        wake_word_detection: wake_word.DetectionResult | None = None
+        wake_word_audio_ms: int | None = None
         if wake_word_audio is not None:
             # The audio from before the detection arrives before STT_START
             if self._has_multi_channel_audio and self._stt_prefers_unprocessed_audio():
@@ -622,11 +623,8 @@ class EsphomeAssistSatellite(
                 if self._active_audio_channel == 1
                 else wake_word_audio.audio_bytes
             )
-            wake_word_detection = wake_word.DetectionResult(
-                wake_word_id=wake_word_audio.wake_word_id,
-                wake_word_phrase=wake_word_phrase or wake_word_audio.wake_word_id,
-                timestamp=audio_bytes // _AUDIO_BYTES_PER_MS,
-            )
+            wake_word_phrase = wake_word_phrase or wake_word_audio.wake_word_id
+            wake_word_audio_ms = audio_bytes // _AUDIO_BYTES_PER_MS
 
         _LOGGER.debug(
             "Running pipeline %s from %s to %s",
@@ -641,7 +639,12 @@ class EsphomeAssistSatellite(
                 start_stage=start_stage,
                 end_stage=end_stage,
                 wake_word_phrase=wake_word_phrase,
-                wake_word_detection=wake_word_detection,
+                wake_word_audio_ms=wake_word_audio_ms,
+                audio_settings=AudioSettings(
+                    noise_suppression_level=audio_settings.noise_suppression_level,
+                    auto_gain_dbfs=audio_settings.auto_gain,
+                    volume_multiplier=audio_settings.volume_multiplier,
+                ),
             ),
             "esphome_assist_satellite_pipeline",
         )

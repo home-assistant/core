@@ -333,7 +333,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         return self.async_show_form(
             step_id="verify_radio",
             description_placeholders={
-                CONF_NAME: self._radio_mgr.radio_type.description,
+                "name": self._radio_mgr.radio_type.description,
                 "docs_recommended_adapters_url": (
                     "https://www.home-assistant.io/integrations/zha/#recommended-zigbee-radio-adapters-and-modules"
                 ),
@@ -894,7 +894,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
-                CONF_NAME: self.context.get("title_placeholders", {}).get(
+                "name": self.context.get("title_placeholders", {}).get(
                     CONF_NAME, self._radio_mgr.device_path or ""
                 )
             },
@@ -925,7 +925,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         self._radio_mgr.device_path = dev_path
         self.context["title_placeholders"] = {
-            CONF_NAME: description
+            "name": description
             or usb.human_readable_device_name(
                 dev_path,
                 serial_number,
@@ -993,7 +993,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             device_path=device_path,
         )
 
-        self.context["title_placeholders"] = {CONF_NAME: title}
+        self.context["title_placeholders"] = {"name": title}
         self._radio_mgr.device_path = device_path
         self._radio_mgr.radio_type = radio_type
         self._radio_mgr.device_settings = DEVICE_SCHEMA(
@@ -1029,7 +1029,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self._radio_mgr.radio_type = radio_type
         self._radio_mgr.device_path = device_path
         self._radio_mgr.device_settings = device_settings
-        self.context["title_placeholders"] = {CONF_NAME: name}
+        self.context["title_placeholders"] = {"name": name}
 
         return await self.async_step_confirm()
 

@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, AsyncIterable
 
 import pytest
 
-from homeassistant.components import assist_pipeline, stt, tts, wake_word
+from homeassistant.components import assist_pipeline, stt, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_pipeline.const import BYTES_PER_CHUNK, MS_PER_CHUNK
 from homeassistant.core import Context, HomeAssistant
@@ -24,7 +24,7 @@ async def _audio_stream(*chunks: bytes) -> AsyncGenerator[bytes]:
 async def _async_run_pipeline(
     hass: HomeAssistant,
     audio_stream: AsyncIterable[bytes],
-    timestamp: int,
+    wake_word_audio_ms: int,
     end_stage: assist_pipeline.PipelineStage = assist_pipeline.PipelineStage.STT,
     start_stage: assist_pipeline.PipelineStage = assist_pipeline.PipelineStage.STT,
     wake_word_phrase: str = "okay nabu",
@@ -44,11 +44,7 @@ async def _async_run_pipeline(
         ),
         stt_stream=audio_stream,
         wake_word_phrase=wake_word_phrase,
-        wake_word_detection=wake_word.DetectionResult(
-            wake_word_id="okay_nabu",
-            wake_word_phrase=wake_word_phrase,
-            timestamp=timestamp,
-        ),
+        wake_word_audio_ms=wake_word_audio_ms,
         audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
         start_stage=start_stage,
         end_stage=end_stage,
@@ -63,9 +59,9 @@ async def test_wake_word_audio(
 ) -> None:
     """Test the wake word is accepted and its audio removed for speech-to-text."""
     # Ends within a chunk
-    timestamp = MS_PER_CHUNK + (MS_PER_CHUNK // 2)
+    wake_word_audio_ms = MS_PER_CHUNK + (MS_PER_CHUNK // 2)
     audio = [WAKE, WORD, COMMAND, bytes(BYTES_PER_CHUNK // 2)]
-    events = await _async_run_pipeline(hass, _audio_stream(*audio), timestamp)
+    events = await _async_run_pipeline(hass, _audio_stream(*audio), wake_word_audio_ms)
 
     assert [event.type for event in events] == [
         PipelineEventType.RUN_START,
@@ -76,14 +72,13 @@ async def test_wake_word_audio(
     ]
     assert events[1].data == {
         "wake_word_output": {
-            "wake_word_id": "okay_nabu",
             "wake_word_phrase": "okay nabu",
-            "timestamp": timestamp,
+            "wake_word_audio_ms": wake_word_audio_ms,
         }
     }
     assert (
         b"".join(mock_stt_provider_entity.received)
-        == b"".join(audio)[timestamp * BYTES_PER_CHUNK // MS_PER_CHUNK :]
+        == b"".join(audio)[wake_word_audio_ms * BYTES_PER_CHUNK // MS_PER_CHUNK :]
     )
 
 
@@ -114,9 +109,8 @@ async def test_wake_word_audio_duplicate(
     ]
     assert second_events[1].data == {
         "wake_word_output": {
-            "wake_word_id": "okay_nabu",
             "wake_word_phrase": "okay nabu",
-            "timestamp": MS_PER_CHUNK,
+            "wake_word_audio_ms": MS_PER_CHUNK,
         }
     }
     # The text-to-speech stream prepared for the rejected run is removed

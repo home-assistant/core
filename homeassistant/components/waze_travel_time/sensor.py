@@ -7,7 +7,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -15,12 +14,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import WazeTravelTimeCoordinator
+from .coordinator import WazeTravelTimeConfigEntry, WazeTravelTimeCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WazeTravelTimeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Waze travel time sensor entry."""

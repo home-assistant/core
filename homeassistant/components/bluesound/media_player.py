@@ -270,14 +270,10 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
     @override
     def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
-        mute = False
-
-        if self._status is not None:
-            mute = self._status.mute
         if self.is_grouped:
-            mute = self._sync_status.mute_volume is not None
+            return self._sync_status.mute_volume is not None
 
-        return mute
+        return self._status.mute
 
     @property
     def id(self) -> str | None:
@@ -401,11 +397,7 @@ class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
     @override
     def shuffle(self) -> bool:
         """Return true if shuffle is active."""
-        shuffle = False
-        if self._status is not None:
-            shuffle = self._status.shuffle
-
-        return shuffle
+        return self._status.shuffle
 
     @property
     @override
