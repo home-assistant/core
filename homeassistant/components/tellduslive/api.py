@@ -164,7 +164,10 @@ class LocalAPISession(requests.Session):
     def refresh_access_token(self) -> bool | None:
         """Refresh the API token."""
         try:
-            response = self.get(TELLDUS_LOCAL_REFRESH_TOKEN_URL.format(host=self._host))
+            response = self.get(
+                TELLDUS_LOCAL_REFRESH_TOKEN_URL.format(host=self._host),
+                timeout=REQUEST_TIMEOUT,
+            )
             response.raise_for_status()
             result = response.json()
             self.access_token = result.get("token")
