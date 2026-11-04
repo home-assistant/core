@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from tesla_powerwall import MetersAggregatesResponse
 from tesla_powerwall.error import MissingAttributeError
 
@@ -27,8 +28,6 @@ from .mocks import (
     _mock_powerwall_restricted,
     _mock_powerwall_with_fixtures,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

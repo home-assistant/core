@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pyvlx import PyVLXException
 
 from homeassistant.components.velux import DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="127.0.0.1",

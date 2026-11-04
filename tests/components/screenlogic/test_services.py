@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.device_const.system import COLOR_MODE
 
@@ -33,8 +34,6 @@ from . import (
     MOCK_DEVICE_AREA,
     stub_async_connect,
 )
-
-from tests.common import MockConfigEntry
 
 NON_SL_CONFIG_ENTRY_ID = "test"
 

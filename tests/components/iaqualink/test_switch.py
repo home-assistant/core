@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
-import httpx
+import httpx2
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
@@ -13,6 +13,7 @@ from iaqualink.exception import (
 from iaqualink.systems.iaqua.device import IaquaAuxSwitch
 from iaqualink.systems.iaqua.system import IaquaSystem
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -33,8 +34,6 @@ from .conftest import (
     get_aqualink_system,
     setup_entry,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup(
@@ -170,7 +169,7 @@ async def test_switch_actions(
             id="timeout",
         ),
         pytest.param(
-            httpx.HTTPError("boom"),
+            httpx2.HTTPError("boom"),
             HomeAssistantError,
             "Aqualink error: boom",
             id="http",

@@ -1,24 +1,30 @@
 """Test the UniFi Protect event platform."""
 
-import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from syrupy.assertion import SnapshotAssertion
 from uiprotect import EventChange, ProtectEvent, ProtectEventChannel
 from uiprotect.data import (
     Camera,
     Event,
     EventType,
+    Light,
     ModelType,
+    Sensor,
     SmartDetectAudioType,
     SmartDetectObjectType,
     WSAction,
 )
+from uiprotect.data.public_devices import SensorFeatureCapability
+from uiprotect.data.types import SensorAlarmType
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import (
@@ -28,10 +34,12 @@ from homeassistant.components.unifiprotect.const import (
     DEFAULT_ATTRIBUTION,
     DOMAIN,
     EVENT_TYPE_PACKAGE_DETECTED,
+    VEHICLE_EVENT_DELAY_SECONDS,
 )
 from homeassistant.components.unifiprotect.event import (
     _MAX_TRACKED_EVENTS,
     EVENT_DESCRIPTIONS,
+    SENSOR_EVENT_DESCRIPTIONS,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, Platform
 from homeassistant.core import Event as HAEvent, HomeAssistant, callback
@@ -44,24 +52,15 @@ from .utils import (
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    make_public_bootstrap,
     make_public_camera,
+    make_public_sensor,
     public_device_ws_message,
+    registered_keys,
     remove_entities,
     setup_public_camera,
+    setup_public_sensor,
 )
-
-# Short delay for testing
-TEST_VEHICLE_EVENT_DELAY = 0.05
-
-
-@pytest.fixture(autouse=True)
-def short_vehicle_delay():
-    """Use a short delay for vehicle event tests."""
-    with patch(
-        "homeassistant.components.unifiprotect.event.VEHICLE_EVENT_DELAY_SECONDS",
-        TEST_VEHICLE_EVENT_DELAY,
-    ):
-        yield
 
 
 async def test_camera_remove(
@@ -887,6 +886,7 @@ async def test_vehicle_detection_basic(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test basic vehicle detection event with thumbnails."""
 
@@ -939,7 +939,8 @@ async def test_vehicle_detection_basic(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -961,6 +962,7 @@ async def test_vehicle_detection_with_lpr_ufp6(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test vehicle detection with license plate recognition (UFP 6.0+ format)."""
 
@@ -1022,7 +1024,8 @@ async def test_vehicle_detection_with_lpr_ufp6(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -1045,6 +1048,7 @@ async def test_vehicle_detection_with_lpr_legacy(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test vehicle detection with license plate recognition (legacy format)."""
 
@@ -1098,7 +1102,8 @@ async def test_vehicle_detection_with_lpr_legacy(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -1118,6 +1123,7 @@ async def test_vehicle_detection_multiple_thumbnails(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test vehicle detection with multiple thumbnails - should pick best LPR."""
 
@@ -1199,7 +1205,8 @@ async def test_vehicle_detection_multiple_thumbnails(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event with highest confidence LPR
@@ -1219,6 +1226,7 @@ async def test_vehicle_detection_no_thumbnails(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test vehicle detection event without thumbnails - should not fire."""
 
@@ -1262,7 +1270,8 @@ async def test_vehicle_detection_no_thumbnails(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer to expire
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should NOT have received any events (no vehicle thumbnails)
@@ -1277,6 +1286,7 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that timer resets when new thumbnails arrive for same event."""
 
@@ -1331,7 +1341,8 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     await hass.async_block_till_done()
 
     # Wait briefly (timer hasn't expired yet)
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY / 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS / 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # No event yet (timer hasn't expired)
@@ -1369,7 +1380,8 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     assert len(events) == 0
 
     # Wait for timer to expire
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Now should have the event with the better LPR
@@ -1388,6 +1400,7 @@ async def test_vehicle_detection_new_event_cancels_timer(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that new event cancels timer for previous event."""
 
@@ -1446,7 +1459,8 @@ async def test_vehicle_detection_new_event_cancels_timer(
     await hass.async_block_till_done()
 
     # Wait briefly (timer hasn't expired yet)
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY / 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS / 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # No event yet
@@ -1490,7 +1504,8 @@ async def test_vehicle_detection_new_event_cancels_timer(
     await hass.async_block_till_done()
 
     # Wait for second event's timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have two events - first fired immediately when second arrived
@@ -1509,12 +1524,133 @@ async def test_vehicle_detection_new_event_cancels_timer(
     unsub()
 
 
+def _vehicle_event(
+    ufp: MockUFPFixture,
+    camera_id: str,
+    *,
+    event_id: str,
+    event_type: EventType,
+    start: datetime,
+) -> Event:
+    """Build an open vehicle event without thumbnails, as Protect starts one."""
+    return Event(
+        model=ModelType.EVENT,
+        id=event_id,
+        type=event_type,
+        start=start,
+        end=None,
+        score=100,
+        smart_detect_types=[
+            SmartDetectObjectType.LICENSE_PLATE,
+            SmartDetectObjectType.VEHICLE,
+        ],
+        smart_detect_event_ids=[],
+        camera_id=camera_id,
+        api=ufp.api,
+        metadata={"detected_thumbnails": []},
+    )
+
+
+def _process_vehicle_event(ufp: MockUFPFixture, event: Event) -> None:
+    """Apply event to the bootstrap like a websocket frame and signal it."""
+    ufp.api.bootstrap.process_event(event)
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
+    ufp.ws_msg(mock_msg)
+
+
+@pytest.mark.parametrize(
+    ("end_order", "expected_event_id"),
+    [
+        pytest.param(("zone_event", "line_event"), "line_event", id="zone_ends_first"),
+        pytest.param(("line_event", "zone_event"), "zone_event", id="line_ends_first"),
+    ],
+)
+async def test_vehicle_detection_line_crossing_in_zone(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+    end_order: tuple[str, str],
+    expected_event_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A vehicle crossing a line inside a zone fires once with its plate."""
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture_event(event: HAEvent) -> None:
+        events.append(event)
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[3]
+    )
+    unsub = async_track_state_change_event(hass, entity_id, _capture_event)
+
+    zone = _vehicle_event(
+        ufp,
+        doorbell.id,
+        event_id="zone_event",
+        event_type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=15),
+    )
+    line = _vehicle_event(
+        ufp,
+        doorbell.id,
+        event_id="line_event",
+        event_type=EventType.SMART_DETECT_LINE,
+        start=fixed_now - timedelta(seconds=10),
+    )
+    protect_events = {zone.id: zone, line.id: line}
+    for protect_event in (zone, line):
+        _process_vehicle_event(ufp, protect_event)
+
+    for event_id in end_order:
+        protect_events[event_id].update_from_dict({"end": fixed_now})
+        _process_vehicle_event(ufp, protect_events[event_id])
+
+    # Protect writes the thumbnails only once an event has ended.
+    for protect_event in (zone, line):
+        protect_event.update_from_dict(
+            {
+                "metadata": {
+                    "detected_thumbnails": [
+                        {
+                            "type": "vehicle",
+                            "confidence": 90,
+                            "clock_best_wall": fixed_now,
+                            "cropped_id": f"{protect_event.id}_thumb",
+                            "name": "7ABC123",
+                        }
+                    ]
+                }
+            }
+        )
+        _process_vehicle_event(ufp, protect_event)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    state = events[0].data["new_state"]
+    assert state
+    assert state.attributes[ATTR_EVENT_ID] == expected_event_id
+    assert state.attributes["license_plate"] == "7ABC123"
+
+    unsub()
+
+
 async def test_vehicle_detection_timer_cleanup_on_remove(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that pending timer is cancelled when entity is removed."""
 
@@ -1566,7 +1702,8 @@ async def test_vehicle_detection_timer_cleanup_on_remove(
     await hass.async_block_till_done()
 
     # Wait past when timer would have fired
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Entity should be gone and no event should have fired
@@ -1580,6 +1717,7 @@ async def test_vehicle_detection_refire_on_lpr_data(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that event refires when LPR data arrives after initial detection."""
 
@@ -1632,7 +1770,8 @@ async def test_vehicle_detection_refire_on_lpr_data(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer to expire - first event should fire without LPR
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received first event without LPR
@@ -1671,7 +1810,8 @@ async def test_vehicle_detection_refire_on_lpr_data(
     ufp.ws_msg(mock_msg)
 
     # Wait for the new timer to expire
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received second event WITH LPR data
@@ -1691,6 +1831,7 @@ async def test_vehicle_detection_no_refire_same_data(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that event does NOT refire when same data arrives again."""
 
@@ -1748,7 +1889,8 @@ async def test_vehicle_detection_no_refire_same_data(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer to expire
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received one event
@@ -1760,7 +1902,8 @@ async def test_vehicle_detection_no_refire_same_data(
 
     # Send the same event again with identical data
     ufp.ws_msg(mock_msg)
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should NOT have received another event (same data)
@@ -2173,6 +2316,84 @@ async def test_detection_event_removed_change_ignored(
     assert events == []
 
 
+def _send_private_camera(ufp: MockUFPFixture, camera: Camera) -> None:
+    ufp.api.bootstrap.cameras = {camera.id: camera}
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = camera
+    ufp.ws_msg(mock_msg)
+
+
+def _send_public_camera(ufp: MockUFPFixture, camera: Camera) -> None:
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(public_device_ws_message(make_public_camera(camera)))
+
+
+@pytest.mark.parametrize(
+    ("learns_first", "learns_last"),
+    [
+        pytest.param(_send_private_camera, _send_public_camera, id="private_first"),
+        pytest.param(_send_public_camera, _send_private_camera, id="public_first"),
+    ],
+)
+async def test_doorbell_ring_follows_readopted_camera(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+    learns_first: Callable[[MockUFPFixture, Camera], None],
+    learns_last: Callable[[MockUFPFixture, Camera], None],
+) -> None:
+    """Hybrid ring events follow a camera re-adopted under a new id."""
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[0]
+    )
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    def _ring(event_id: str, device_id: str) -> None:
+        ufp.events_msg(
+            ProtectEvent(
+                id=event_id,
+                type=EventType.RING,
+                channel=ProtectEventChannel.DETECTION,
+                device_id=device_id,
+                device_mac=doorbell.mac,
+                start=fixed_now - timedelta(seconds=1),
+                end=fixed_now,
+            ),
+            EventChange.STARTED,
+        )
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    readopted = doorbell.model_copy(update={"id": "readopted-doorbell"})
+
+    # Only one side knows the new id yet.
+    learns_first(ufp, readopted)
+    await hass.async_block_till_done()
+    _ring("ring-1", readopted.id)
+    await hass.async_block_till_done()
+
+    # Once both do, the old id is dropped.
+    learns_last(ufp, readopted)
+    await hass.async_block_till_done()
+    _ring("ring-2", readopted.id)
+    _ring("ring-3", doorbell.id)
+    await hass.async_block_till_done()
+    unsub()
+
+    assert [event.data["new_state"].attributes[ATTR_EVENT_ID] for event in events] == [
+        "ring-1",
+        "ring-2",
+    ]
+
+
 async def test_doorbell_ring_dedup_across_dispatches(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
@@ -2215,8 +2436,8 @@ async def test_doorbell_ring_dedup_across_dispatches(
     assert len(events) == 1
 
 
-def test_detection_event_types_have_translations() -> None:
-    """Every category detection event type has a strings.json state label.
+def test_event_types_have_translations() -> None:
+    """Every detection and sensor event type has a strings.json state label.
 
     Guards against a uiprotect enum addition slugging into ``event_types`` (and
     firing) without a matching translation label.
@@ -2228,10 +2449,17 @@ def test_detection_event_types_have_translations() -> None:
         ).read_text()
     )
     event_states = strings["entity"]["event"]
-    for key in ("motion_detection", "smart_detection", "sound_detection"):
-        description = next(d for d in EVENT_DESCRIPTIONS if d.key == key)
+    event_types = {
+        description.key: description.event_types or ()
+        for description in EVENT_DESCRIPTIONS
+        if description.key in ("motion_detection", "smart_detection", "sound_detection")
+    } | {
+        description.key: description.event_types or ()
+        for description in SENSOR_EVENT_DESCRIPTIONS
+    }
+    for key, types in event_types.items():
         labels = event_states[key]["state_attributes"]["event_type"]["state"]
-        missing = [t for t in description.event_types or () if t not in labels]
+        missing = [t for t in types if t not in labels]
         assert not missing, f"{key} missing event_type labels: {missing}"
 
 
@@ -2430,16 +2658,6 @@ async def test_event_entities_unavailable_on_events_ws_disconnect(
     assert hass.states.get(motion_id).state != STATE_UNAVAILABLE
 
 
-def _event_keys(entity_registry: EntityRegistry, mac: str) -> set[str]:
-    """Return the description keys of a device's event entities."""
-    prefix = f"{mac}_"
-    return {
-        entry.unique_id.removeprefix(prefix)
-        for entry in entity_registry.entities.values()
-        if entry.domain == Platform.EVENT and entry.unique_id.startswith(prefix)
-    }
-
-
 async def test_smart_detection_events_need_advertised_types(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -2452,7 +2670,7 @@ async def test_smart_detection_events_need_advertised_types(
 
     await init_entry(hass, ufp, [doorbell])
 
-    keys = _event_keys(entity_registry, doorbell.mac)
+    keys = registered_keys(entity_registry, Platform.EVENT, doorbell.mac)
     assert "motion_detection" in keys
     assert not keys & {"smart_detection", "package"}
 
@@ -2491,7 +2709,7 @@ async def test_public_only_event_entities(
 
     await setup_public_only()
 
-    assert _event_keys(entity_registry, doorbell.mac) == expected
+    assert registered_keys(entity_registry, Platform.EVENT, doorbell.mac) == expected
 
 
 async def test_public_only_skips_private_event_classes(
@@ -2508,7 +2726,9 @@ async def test_public_only_skips_private_event_classes(
 
     await setup_public_only()
 
-    assert "vehicle" not in _event_keys(entity_registry, doorbell.mac)
+    assert "vehicle" not in registered_keys(
+        entity_registry, Platform.EVENT, doorbell.mac
+    )
 
 
 async def test_public_only_event_fires(
@@ -2568,4 +2788,460 @@ async def test_public_only_event_camera_added_after_setup(
     ufp_public_only.devices_ws_subscription(msg)
     await hass.async_block_till_done()
 
-    assert "motion_detection" in _event_keys(entity_registry, camera.mac)
+    assert "motion_detection" in registered_keys(
+        entity_registry, Platform.EVENT, camera.mac
+    )
+
+
+_SENSOR_EVENT_KEYS = {"alarm", "maintenance"}
+_SMOKE = {SensorFeatureCapability.SMOKE}
+
+
+def _sensor_event_entity_id(
+    entity_registry: EntityRegistry, sensor: Sensor, key: str
+) -> str:
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.EVENT, DOMAIN, f"{sensor.mac}_{key}"
+    )
+    assert entity_id
+    return entity_id
+
+
+def _sensor_event(
+    sensor: Sensor,
+    event_type: EventType,
+    start: datetime,
+    *,
+    alarm_type: SensorAlarmType | None = None,
+    end: datetime | None = None,
+) -> ProtectEvent:
+    return ProtectEvent(
+        id="sensor-1",
+        type=event_type,
+        channel=ProtectEventChannel.SENSOR,
+        device_id=sensor.id,
+        device_mac=sensor.mac,
+        start=start,
+        end=end,
+        alarm_type=alarm_type,
+    )
+
+
+async def test_sensor_event_entities(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor: Sensor,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot the event entities of a smoke detector."""
+    setup_public_sensor(ufp, capabilities=_SMOKE)
+    # Keep the fixture ids so the snapshot can pin the unique ids.
+    await init_entry(hass, ufp, [sensor], regenerate_ids=False)
+
+    assert registered_keys(entity_registry, Platform.EVENT, sensor.mac) == (
+        _SENSOR_EVENT_KEYS
+    )
+    for key in sorted(_SENSOR_EVENT_KEYS):
+        entity_id = _sensor_event_entity_id(entity_registry, sensor, key)
+        assert entity_registry.async_get(entity_id) == snapshot(name=entity_id)
+        assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state")
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        pytest.param({SensorFeatureCapability.OPEN}, id="no_smoke"),
+        pytest.param(set(), id="no_flags"),
+    ],
+)
+async def test_sensor_event_entities_need_smoke_capability(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor: Sensor,
+    capabilities: set[SensorFeatureCapability],
+) -> None:
+    """A sensor without the smoke capability gets no sensor event entities."""
+    setup_public_sensor(ufp, capabilities=capabilities)
+    await init_entry(hass, ufp, [sensor])
+
+    assert not registered_keys(entity_registry, Platform.EVENT, sensor.mac)
+
+
+@pytest.mark.parametrize(
+    ("capabilities", "expected"),
+    [
+        pytest.param(_SMOKE, _SENSOR_EVENT_KEYS, id="smoke"),
+        pytest.param({SensorFeatureCapability.OPEN}, set(), id="no_smoke"),
+        pytest.param(set(), set(), id="no_flags"),
+    ],
+)
+async def test_sensor_adopted_before_public_mirror(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor: Sensor,
+    capabilities: set[SensorFeatureCapability],
+    expected: set[str],
+) -> None:
+    """A sensor adopted before its public object is unavailable until it arrives.
+
+    Entities the flags rule out are removed on the next setup.
+    """
+    public_bootstrap = make_public_bootstrap(sensors={})
+    public_bootstrap.nvr = ufp.api.public_bootstrap.nvr
+    ufp.api.public_bootstrap = public_bootstrap
+    await init_entry(hass, ufp, [])
+    sensor._api = ufp.api.bootstrap.api
+    await adopt_devices(hass, ufp, [sensor], fully_adopt=True)
+
+    assert registered_keys(entity_registry, Platform.EVENT, sensor.mac) == (
+        _SENSOR_EVENT_KEYS
+    )
+    entity_id = _sensor_event_entity_id(entity_registry, sensor, "alarm")
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes["event_types"] == ["smoke", "co"]
+
+    public = make_public_sensor(sensor, capabilities=capabilities)
+    public_bootstrap.sensors[sensor.id] = public
+    msg = public_device_ws_message(public)
+    msg.action = WSAction.ADD
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert registered_keys(entity_registry, Platform.EVENT, sensor.mac) == expected
+
+
+@pytest.mark.parametrize(
+    ("capabilities", "expected"),
+    [
+        pytest.param(_SMOKE, _SENSOR_EVENT_KEYS, id="smoke"),
+        pytest.param({SensorFeatureCapability.OPEN}, set(), id="no_smoke"),
+    ],
+)
+async def test_sensor_adopted_after_public_mirror(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor: Sensor,
+    capabilities: set[SensorFeatureCapability],
+    expected: set[str],
+) -> None:
+    """A sensor adopted after its public object gets the entities its flags imply."""
+    setup_public_sensor(ufp, capabilities=capabilities)
+    await init_entry(hass, ufp, [])
+    sensor._api = ufp.api.bootstrap.api
+    await adopt_devices(hass, ufp, [sensor], fully_adopt=True)
+
+    assert registered_keys(entity_registry, Platform.EVENT, sensor.mac) == expected
+
+
+@pytest.mark.parametrize(
+    ("event_type", "alarm_type", "key", "expected"),
+    [
+        pytest.param(
+            EventType.SENSOR_ALARM, SensorAlarmType.SMOKE, "alarm", "smoke", id="smoke"
+        ),
+        pytest.param(
+            EventType.SENSOR_ALARM, SensorAlarmType.CO, "alarm", "co", id="co"
+        ),
+        pytest.param(
+            EventType.SENSOR_SMOKE_TEST,
+            None,
+            "maintenance",
+            "self_test",
+            id="self_test",
+        ),
+        pytest.param(
+            EventType.SENSOR_SMOKE_BATTERY_LOW,
+            None,
+            "maintenance",
+            "battery_low",
+            id="battery_low",
+        ),
+        pytest.param(
+            EventType.SENSOR_SMOKE_NEEDS_CLEANING,
+            None,
+            "maintenance",
+            "needs_cleaning",
+            id="needs_cleaning",
+        ),
+        pytest.param(
+            EventType.SENSOR_SMOKE_FAULT,
+            None,
+            "maintenance",
+            "smoke_fault",
+            id="smoke_fault",
+        ),
+        pytest.param(
+            EventType.SENSOR_CO_FAULT,
+            None,
+            "maintenance",
+            "co_fault",
+            id="co_fault",
+        ),
+        pytest.param(
+            EventType.SENSOR_SMOKE_END_OF_LIFE,
+            None,
+            "maintenance",
+            "end_of_life",
+            id="end_of_life",
+        ),
+    ],
+)
+async def test_sensor_event_fires(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor: Sensor,
+    fixed_now: datetime,
+    event_type: EventType,
+    alarm_type: SensorAlarmType | None,
+    key: str,
+    expected: str,
+) -> None:
+    """A public sensor event fires its mapped type once per event."""
+    setup_public_sensor(ufp, capabilities=_SMOKE)
+    await init_entry(hass, ufp, [sensor])
+    entity_id = _sensor_event_entity_id(entity_registry, sensor, key)
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    event = _sensor_event(
+        sensor, event_type, fixed_now - timedelta(seconds=1), alarm_type=alarm_type
+    )
+    ufp.events_msg(event, EventChange.STARTED)
+    ufp.events_msg(event.model_copy(update={"end": fixed_now}), EventChange.ENDED)
+    await hass.async_block_till_done()
+    unsub()
+
+    assert len(events) == 1
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["event_type"] == expected
+    assert state.attributes[ATTR_EVENT_ID] == "sensor-1"
+
+
+@pytest.mark.parametrize(
+    "alarm_type",
+    [
+        pytest.param(SensorAlarmType.GLASS_BREAK, id="glass_break"),
+        pytest.param(SensorAlarmType.UNKNOWN, id="unknown"),
+        pytest.param(None, id="missing"),
+    ],
+)
+async def test_sensor_alarm_ignores_other_types(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor: Sensor,
+    fixed_now: datetime,
+    alarm_type: SensorAlarmType | None,
+) -> None:
+    """An alarm without a smoke or CO type does not fire."""
+    setup_public_sensor(ufp, capabilities=_SMOKE)
+    await init_entry(hass, ufp, [sensor])
+    entity_id = _sensor_event_entity_id(entity_registry, sensor, "alarm")
+
+    ufp.events_msg(
+        _sensor_event(sensor, EventType.SENSOR_ALARM, fixed_now, alarm_type=alarm_type),
+        EventChange.STARTED,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["event_type"] is None
+
+
+async def test_sensor_alarm_late_type(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor: Sensor,
+    fixed_now: datetime,
+) -> None:
+    """An alarm whose type arrives on a later update fires on that update."""
+    setup_public_sensor(ufp, capabilities=_SMOKE)
+    await init_entry(hass, ufp, [sensor])
+    entity_id = _sensor_event_entity_id(entity_registry, sensor, "alarm")
+
+    event = _sensor_event(sensor, EventType.SENSOR_ALARM, fixed_now)
+    ufp.events_msg(event, EventChange.STARTED)
+    ufp.events_msg(
+        event.model_copy(update={"alarm_type": SensorAlarmType.SMOKE}),
+        EventChange.UPDATED,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["event_type"] == "smoke"
+
+
+@pytest.mark.parametrize(
+    "started_update",
+    [
+        pytest.param({}, id="born_closed"),
+        pytest.param({"alarm_type": None, "end": None}, id="type_on_end"),
+    ],
+)
+async def test_sensor_alarm_first_seen_ended(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor: Sensor,
+    fixed_now: datetime,
+    started_update: dict[str, Any],
+) -> None:
+    """An alarm still fires once when its type or start arrives with the end."""
+    setup_public_sensor(ufp, capabilities=_SMOKE)
+    await init_entry(hass, ufp, [sensor])
+    entity_id = _sensor_event_entity_id(entity_registry, sensor, "alarm")
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    # uiprotect dispatches an event that opens and closes at once as STARTED
+    # and ENDED, both carrying the end.
+    ended = _sensor_event(
+        sensor,
+        EventType.SENSOR_ALARM,
+        fixed_now - timedelta(seconds=5),
+        alarm_type=SensorAlarmType.SMOKE,
+        end=fixed_now,
+    )
+    ufp.events_msg(ended.model_copy(update=started_update), EventChange.STARTED)
+    ufp.events_msg(ended, EventChange.ENDED)
+    await hass.async_block_till_done()
+    unsub()
+
+    assert len(events) == 1
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["event_type"] == "smoke"
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        pytest.param({SensorFeatureCapability.OPEN}, id="no_smoke"),
+        pytest.param(set(), id="no_flags"),
+    ],
+)
+async def test_unsupported_sensor_event_entities_removed(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor: Sensor,
+    capabilities: set[SensorFeatureCapability],
+) -> None:
+    """Setup removes event entities of sensors without the smoke capability."""
+    for key in _SENSOR_EVENT_KEYS:
+        entity_registry.async_get_or_create(
+            Platform.EVENT, DOMAIN, f"{sensor.mac}_{key}", config_entry=ufp.entry
+        )
+    setup_public_sensor(ufp, capabilities=capabilities)
+    await init_entry(hass, ufp, [sensor], regenerate_ids=False)
+
+    assert not registered_keys(entity_registry, Platform.EVENT, sensor.mac)
+
+
+async def test_sensor_without_public_mirror_at_setup(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor: Sensor,
+) -> None:
+    """A sensor not yet mirrored publicly at setup waits for its feature flags."""
+    public_bootstrap = make_public_bootstrap(sensors={})
+    public_bootstrap.nvr = ufp.api.public_bootstrap.nvr
+    ufp.api.public_bootstrap = public_bootstrap
+    await init_entry(hass, ufp, [sensor])
+
+    assert registered_keys(entity_registry, Platform.EVENT, sensor.mac) == (
+        _SENSOR_EVENT_KEYS
+    )
+    state = hass.states.get(_sensor_event_entity_id(entity_registry, sensor, "alarm"))
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_adopted_light_gets_no_sensor_events(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+) -> None:
+    """Only adopted sensors get the sensor event entities."""
+    await init_entry(hass, ufp, [])
+    light._api = ufp.api.bootstrap.api
+    await adopt_devices(hass, ufp, [light], fully_adopt=True)
+
+    assert not registered_keys(entity_registry, Platform.EVENT, light.mac)
+
+
+@pytest.mark.parametrize(
+    ("capabilities", "expected"),
+    [
+        pytest.param(_SMOKE, _SENSOR_EVENT_KEYS, id="smoke"),
+        pytest.param({SensorFeatureCapability.OPEN}, set(), id="no_smoke"),
+    ],
+)
+@pytest.mark.usefixtures("hass")
+async def test_public_only_sensor_event_entities(
+    entity_registry: EntityRegistry,
+    sensor: Sensor,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    capabilities: set[SensorFeatureCapability],
+    expected: set[str],
+) -> None:
+    """A public-only entry builds the sensor event entities at setup."""
+    public = make_public_sensor(sensor, capabilities=capabilities)
+    ufp_public_only.api.public_bootstrap.sensors[sensor.id] = public
+    await setup_public_only()
+
+    assert registered_keys(entity_registry, Platform.EVENT, sensor.mac) == expected
+
+
+async def test_public_only_sensor_added_after_setup(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    sensor: Sensor,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A sensor added later gets its event entities from its public add frame."""
+    await setup_public_only()
+    assert_entity_counts(hass, Platform.EVENT, 0, 0)
+
+    public = make_public_sensor(sensor, capabilities=_SMOKE)
+    ufp_public_only.api.public_bootstrap.sensors[sensor.id] = public
+    msg = public_device_ws_message(public)
+    msg.action = WSAction.ADD
+    ufp_public_only.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert registered_keys(entity_registry, Platform.EVENT, sensor.mac) == (
+        _SENSOR_EVENT_KEYS
+    )

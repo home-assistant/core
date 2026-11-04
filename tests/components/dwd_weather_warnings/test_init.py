@@ -3,6 +3,8 @@
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.dwd_weather_warnings.const import (
     API_ATTR_WARNING_COLOR,
     API_ATTR_WARNING_DESCRIPTION,
@@ -31,8 +33,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 def _warning(level: int, end_time: datetime) -> dict[str, object]:

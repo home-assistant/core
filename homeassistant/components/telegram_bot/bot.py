@@ -3,6 +3,7 @@
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable, Sequence
+import errno
 import io
 import logging
 import os
@@ -10,7 +11,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, cast
 
-import httpx
+import httpx2
 from telegram import (
     Bot,
     CallbackQuery,
@@ -49,6 +50,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.os_error import os_write_error
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 from homeassistant.util.json import JsonValueType
 
@@ -90,7 +92,6 @@ from .const import (
     ATTR_RESIZE_KEYBOARD,
     ATTR_STICKER_ID,
     ATTR_TEXT,
-    ATTR_TIMEOUT,
     ATTR_TITLE,
     ATTR_URL,
     ATTR_USER_ID,
@@ -417,15 +418,12 @@ class TelegramNotificationService:
             ATTR_DISABLE_WEB_PREV: None,
             ATTR_REPLY_TO_MSGID: None,
             ATTR_REPLYMARKUP: None,
-            ATTR_TIMEOUT: None,
             ATTR_MESSAGE_TAG: None,
             ATTR_MESSAGE_THREAD_ID: None,
         }
         if data is not None:
             if ATTR_PARSER in data:
                 params[ATTR_PARSER] = data[ATTR_PARSER]
-            if ATTR_TIMEOUT in data:
-                params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
             if ATTR_DISABLE_NOTIF in data:
                 params[ATTR_DISABLE_NOTIF] = data[ATTR_DISABLE_NOTIF]
             if ATTR_DISABLE_WEB_PREV in data:
@@ -552,7 +550,6 @@ class TelegramNotificationService:
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
         )
@@ -585,15 +582,20 @@ class TelegramNotificationService:
             )
             _LOGGER.debug("downloaded: %s", entry.get(ATTR_URL) or entry.get(ATTR_FILE))
 
-            caption: str | None = entry.get(ATTR_CAPTION)
+            # The parse mode of the media group itself only applies to a caption
+            # of the whole group, so each caption needs its own
+            caption_kwargs: dict[str, Any] = {
+                "caption": entry.get(ATTR_CAPTION),
+                "parse_mode": params[ATTR_PARSER],
+            }
             if entry[ATTR_MEDIA_TYPE] == InputMediaType.AUDIO:
-                media.append(InputMediaAudio(file_content, caption=caption))
+                media.append(InputMediaAudio(file_content, **caption_kwargs))
             elif entry[ATTR_MEDIA_TYPE] == InputMediaType.DOCUMENT:
-                media.append(InputMediaDocument(file_content, caption=caption))
+                media.append(InputMediaDocument(file_content, **caption_kwargs))
             elif entry[ATTR_MEDIA_TYPE] == InputMediaType.PHOTO:
-                media.append(InputMediaPhoto(file_content, caption=caption))
+                media.append(InputMediaPhoto(file_content, **caption_kwargs))
             else:
-                media.append(InputMediaVideo(file_content, caption=caption))
+                media.append(InputMediaVideo(file_content, **caption_kwargs))
 
         return await self._send_msg_formatted(
             self.bot.send_media_group,
@@ -604,7 +606,6 @@ class TelegramNotificationService:
             protect_content=kwargs.get(ATTR_PROTECT_CONTENT, False),
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-            parse_mode=params[ATTR_PARSER],
             context=context,
         )
 
@@ -697,7 +698,6 @@ class TelegramNotificationService:
             message_id=message_id,
             inline_message_id=inline_message_id,
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -732,7 +732,6 @@ class TelegramNotificationService:
                 parse_mode=params[ATTR_PARSER],
                 disable_web_page_preview=params[ATTR_DISABLE_WEB_PREV],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 context=context,
             )
         if type_edit == SERVICE_EDIT_CAPTION:
@@ -744,7 +743,6 @@ class TelegramNotificationService:
                 inline_message_id=inline_message_id,
                 caption=kwargs.get(ATTR_CAPTION),
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 context=context,
             )
@@ -756,7 +754,6 @@ class TelegramNotificationService:
             message_id=message_id,
             inline_message_id=inline_message_id,
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -782,7 +779,6 @@ class TelegramNotificationService:
             callback_query_id,
             text=message,
             show_alert=show_alert,
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -835,7 +831,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
@@ -850,7 +845,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
@@ -865,7 +859,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
@@ -881,7 +874,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
@@ -897,7 +889,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
@@ -912,7 +903,6 @@ class TelegramNotificationService:
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             parse_mode=params[ATTR_PARSER],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
@@ -936,7 +926,6 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
@@ -961,7 +950,6 @@ class TelegramNotificationService:
             longitude=longitude,
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-            read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
         )
@@ -989,7 +977,6 @@ class TelegramNotificationService:
             open_period=openperiod,
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-            read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
         )
@@ -1031,7 +1018,6 @@ class TelegramNotificationService:
             message_id,
             reaction=reaction,
             is_big=is_big,
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -1061,7 +1047,6 @@ class TelegramNotificationService:
             text=message,
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             parse_mode=params[ATTR_PARSER],
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -1118,30 +1103,33 @@ class TelegramNotificationService:
         if not file.file_path:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="action_failed",
-                translation_placeholders={
-                    "error": "No file path returned from Telegram"
-                },
+                translation_key="no_file_path",
             )
         if not file_name:
             file_name = os.path.basename(file.file_path)
 
         custom_path = os.path.join(directory_path, file_name)
-        await self.hass.async_add_executor_job(
-            self._prepare_download_directory, directory_path
-        )
+        try:
+            await self.hass.async_add_executor_job(
+                self._prepare_download_directory, directory_path
+            )
+        except OSError as err:
+            raise os_write_error(err, directory_path) from err
         _LOGGER.debug("Download file %s to %s", file_id, custom_path)
         try:
             file_content = await file.download_as_bytearray()
-            await self.hass.async_add_executor_job(
-                Path(custom_path).write_bytes, file_content
-            )
         except (RuntimeError, OSError, TelegramError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="action_failed",
                 translation_placeholders={"error": str(exc)},
             ) from exc
+        try:
+            await self.hass.async_add_executor_job(
+                Path(custom_path).write_bytes, file_content
+            )
+        except OSError as err:
+            raise os_write_error(err, custom_path) from err
         return {ATTR_FILE_PATH: custom_path}
 
     @staticmethod
@@ -1164,7 +1152,7 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
 
     proxy_url: str | None = p_config.get(CONF_PROXY_URL)
     if proxy_url is not None:
-        proxy = httpx.Proxy(proxy_url)
+        proxy = httpx2.Proxy(proxy_url)
         request = HTTPXRequest(
             connection_pool_size=8,
             proxy=proxy,
@@ -1210,9 +1198,9 @@ async def load_data(
         if authentication == HTTP_BEARER_AUTHENTICATION:
             headers = {"Authorization": f"Bearer {password}"}
         elif authentication == HTTP_DIGEST_AUTHENTICATION:
-            params["auth"] = httpx.DigestAuth(username, password)
+            params["auth"] = httpx2.DigestAuth(username, password)
         elif authentication == HTTP_BASIC_AUTHENTICATION:
-            params["auth"] = httpx.BasicAuth(username, password)
+            params["auth"] = httpx2.BasicAuth(username, password)
 
         retry_num = 0
         async with get_async_client(hass, verify_ssl) as client:
@@ -1221,7 +1209,7 @@ async def load_data(
                     response = await client.get(
                         url, headers=headers, timeout=DEFAULT_TIMEOUT_SECONDS, **params
                     )
-                except (httpx.HTTPError, httpx.InvalidURL) as err:
+                except (httpx2.HTTPError, httpx2.InvalidURL) as err:
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="failed_to_load_url",
@@ -1247,10 +1235,17 @@ async def load_data(
                 if retry_num < num_retries:
                     # Add a sleep to allow other async operations to proceed
                     await asyncio.sleep(_RETRY_DELAY)
+
+            # A 200 with data returns early, so a final 200 means an empty body
+            if response.status_code == 200:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_load_url_empty",
+                )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="failed_to_load_url",
-                translation_placeholders={"error": str(response.status_code)},
+                translation_key="failed_to_load_url_status",
+                translation_placeholders={"status_code": str(response.status_code)},
             )
     elif filepath is not None:
         if hass.config.is_allowed_path(filepath):
@@ -1297,6 +1292,14 @@ def _validate_credentials_input(
         )
 
 
+# OS errors are not translatable, so the common causes get their own message
+READ_ERROR_TRANSLATION_KEYS: dict[int | None, str] = {
+    errno.ENOENT: "file_not_found",
+    errno.EACCES: "file_permission_denied",
+    errno.EPERM: "file_permission_denied",
+}
+
+
 def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     """Read a file and return it as a BytesIO object."""
     try:
@@ -1307,6 +1310,8 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     except OSError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="failed_to_load_file",
-            translation_placeholders={"error": str(err)},
+            translation_key=READ_ERROR_TRANSLATION_KEYS.get(
+                err.errno, "failed_to_load_file"
+            ),
+            translation_placeholders={"file_path": file_path},
         ) from err

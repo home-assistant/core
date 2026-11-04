@@ -128,7 +128,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Schema(
                     {
                         probatio.Required(CONF_URL): str,
-                        probatio.Required(CONF_API_KEY): str,
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                         probatio.Required(
                             SYNC_MODE, default=SYNC_MODE_MANUAL
                         ): SelectSelector(
@@ -211,7 +211,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Schema(
                     {
                         probatio.Required(CONF_URL): str,
-                        probatio.Required(CONF_API_KEY): str,
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                     }
                 ),
                 user_input or reconfig_entry.data,

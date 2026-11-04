@@ -8,6 +8,7 @@ from homematicip.auth import Auth
 from homematicip.base.enums import WeatherCondition, WeatherDayTime
 from homematicip.connection.rest_connection import RestConnection
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homematicip_cloud import (
     DOMAIN,
@@ -26,7 +27,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeFactory
 
-from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 

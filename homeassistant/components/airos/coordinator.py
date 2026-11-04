@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, TypeVar, override
+from typing import Any, override
 
 from aiohttp import ClientSession
 from airos.airos6 import AirOS6, AirOS6Data
@@ -31,8 +31,6 @@ type AirOSUpdateData = dict[str, Any]
 
 type AirOSConfigEntry = ConfigEntry[AirOSRuntimeData]
 
-T = TypeVar("T", bound=AirOSDataDetect | AirOSUpdateData)
-
 
 @dataclass
 class AirOSRuntimeData:
@@ -44,7 +42,7 @@ class AirOSRuntimeData:
     owns_session: bool = False
 
 
-async def async_fetch_airos_data(
+async def async_fetch_airos_data[T: AirOSDataDetect | AirOSUpdateData](
     airos_device: AirOSDeviceDetect,
     update_method: Callable[[], Awaitable[T]],
 ) -> T:
@@ -53,7 +51,6 @@ async def async_fetch_airos_data(
         await airos_device.login()
         return await update_method()
     except AirOSConnectionAuthenticationError as err:
-        _LOGGER.exception("Error authenticating with airOS device")
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
@@ -62,13 +59,11 @@ async def async_fetch_airos_data(
         AirOSDeviceConnectionError,
         TimeoutError,
     ) as err:
-        _LOGGER.error("Error connecting to airOS device: %s", err)
         raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err
     except AirOSDataMissingError as err:
-        _LOGGER.error("Expected data not returned by airOS device: %s", err)
         raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="error_data_missing",

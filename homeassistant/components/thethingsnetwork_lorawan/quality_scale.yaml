@@ -1,0 +1,99 @@
+rules:
+  action-setup:
+    status: exempt
+    comment: No actions are registered.
+  appropriate-polling:
+    status: done
+    comment: The library polls the device list every 30 seconds; device readings arrive through event streams.
+  brands:
+    status: done
+    comment: https://github.com/home-assistant/brands/pull/11326
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No actions are registered.
+  docs-conditions:
+    status: exempt
+    comment: No conditions are registered.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: No triggers are registered.
+  entity-event-setup:
+    status: exempt
+    comment: Device integrations own devices and entities.
+  entity-unique-id:
+    status: exempt
+    comment: Device integrations own devices and entities.
+  has-entity-name:
+    status: exempt
+    comment: Device integrations own devices and entities.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  reconfiguration-flow: todo
+  diagnostics: todo
+  repair-issues: todo
+  action-exceptions:
+    status: exempt
+    comment: No entity actions or service actions are registered.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: Device integrations own devices and entities.
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates:
+    status: exempt
+    comment: Device integrations own devices and entities.
+  reauthentication-flow: done
+  test-coverage: done
+  devices:
+    status: exempt
+    comment: Device integrations own devices and entities.
+  discovery: todo
+  discovery-update-info: todo
+  docs-data-update: done
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Device integrations own devices and entities.
+  entity-category:
+    status: exempt
+    comment: The connection integration has no entities or actions.
+  entity-device-class:
+    status: exempt
+    comment: Device integrations own devices and entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The connection integration has no entities or actions.
+  entity-translations:
+    status: exempt
+    comment: Device integrations own devices and entities.
+  exception-translations:
+    status: exempt
+    comment: The connection integration has no entities or actions.
+  icon-translations:
+    status: exempt
+    comment: The connection integration has no entities or actions.
+  stale-devices:
+    status: exempt
+    comment: Device integrations own devices and entities.
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: The library uses gRPC channels.
+  strict-typing: done

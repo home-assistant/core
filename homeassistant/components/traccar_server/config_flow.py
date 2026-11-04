@@ -58,7 +58,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_PORT, default="8082"): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
-        probatio.Required(CONF_API_TOKEN): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_TOKEN)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         probatio.Optional(CONF_SSL, default=False): BooleanSelector(
@@ -205,15 +205,15 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_TOKEN): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_API_TOKEN)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
             ),
             errors=errors,
             description_placeholders={
-                CONF_HOST: reauth_entry.data[CONF_HOST],
-                CONF_PORT: reauth_entry.data[CONF_PORT],
+                "host": reauth_entry.data[CONF_HOST],
+                "port": reauth_entry.data[CONF_PORT],
             },
         )
 

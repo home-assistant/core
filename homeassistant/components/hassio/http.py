@@ -2,7 +2,6 @@
 
 from http import HTTPStatus
 import logging
-import os
 import re
 from typing import TYPE_CHECKING
 from urllib.parse import quote, unquote
@@ -11,7 +10,6 @@ import aiohttp
 from aiohttp import web
 from aiohttp.client import ClientTimeout
 from aiohttp.hdrs import (
-    AUTHORIZATION,
     CONTENT_ENCODING,
     CONTENT_LENGTH,
     CONTENT_TYPE,
@@ -27,6 +25,7 @@ from homeassistant.components.http import (
 )
 
 from .const import X_HASS_SOURCE
+from .handler import SupervisorConnection
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,10 +119,9 @@ class HassIOView(HomeAssistantView):
     url = "/api/hassio/{path:.+}"
     requires_auth = False
 
-    def __init__(self, host: str, websession: aiohttp.ClientSession) -> None:
+    def __init__(self, connection: SupervisorConnection) -> None:
         """Initialize a Hass.io base view."""
-        self._host = host
-        self._websession = websession
+        self._connection = connection
 
     async def _handle(self, request: web.Request, path: str) -> web.StreamResponse:
         """Return a client request with proxy origin for Hass.io supervisor.
@@ -160,9 +158,7 @@ class HassIOView(HomeAssistantView):
                 return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
             if authorized:
-                headers[AUTHORIZATION] = (
-                    f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
-                )
+                headers.update(self._connection.auth_headers)
 
             if request.method == "POST":
                 headers[CONTENT_TYPE] = request.content_type
@@ -178,29 +174,28 @@ class HassIOView(HomeAssistantView):
                 headers[RANGE] = request.headers[RANGE]
 
         try:
-            client = await self._websession.request(
+            async with self._connection.session.request(
                 method=request.method,
-                url=f"http://{self._host}/{quote(path)}",
+                url=f"{self._connection.base_url}/{quote(path)}",
                 params=request.query,
                 data=request.content if request.method != "GET" else None,
                 headers=headers,
                 timeout=_get_timeout(path),
-            )
+            ) as client:
+                # Stream response
+                response = web.StreamResponse(
+                    status=client.status, headers=_response_header(client)
+                )
+                response.content_type = client.content_type
 
-            # Stream response
-            response = web.StreamResponse(
-                status=client.status, headers=_response_header(client)
-            )
-            response.content_type = client.content_type
-
-            if should_compress(response.content_type, path):
-                response.enable_compression()
-            await response.prepare(request)
-            # In testing iter_chunked, iter_any, and iter_chunks:
-            # iter_chunks was the best performing option since
-            # it does not have to do as much re-assembly
-            async for data, _ in client.content.iter_chunks():
-                await response.write(data)
+                if should_compress(response.content_type, path):
+                    response.enable_compression()
+                await response.prepare(request)
+                # In testing iter_chunked, iter_any, and iter_chunks:
+                # iter_chunks was the best performing option since
+                # it does not have to do as much re-assembly
+                async for data, _ in client.content.iter_chunks():
+                    await response.write(data)
 
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on api %s request %s", path, err)

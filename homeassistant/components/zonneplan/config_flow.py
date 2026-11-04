@@ -10,6 +10,7 @@ from pyzonneplan import (
     Zonneplan,
     ZonneplanConnectionError,
     ZonneplanInvalidOtpError,
+    ZonneplanRateLimitError,
     ZonneplanTimeoutError,
 )
 
@@ -67,6 +68,8 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}
         except ZonneplanTimeoutError:
             return {"base": "timeout_connect"}
+        except ZonneplanRateLimitError:
+            return {"base": "rate_limited"}
         except Exception:
             LOGGER.exception("Unexpected exception")
             return {"base": "unknown"}
@@ -104,6 +107,8 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except ZonneplanTimeoutError:
                 errors["base"] = "timeout_connect"
+            except ZonneplanRateLimitError:
+                errors["base"] = "rate_limited"
             except Exception:
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -136,7 +141,7 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="otp",
             data_schema=STEP_OTP_DATA_SCHEMA,
             errors=errors,
-            description_placeholders={CONF_EMAIL: self._challenge.email},
+            description_placeholders={"email": self._challenge.email},
         )
 
     async def async_step_reauth(
@@ -163,7 +168,7 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input or {CONF_EMAIL: email},
             ),
             errors=errors,
-            description_placeholders={CONF_EMAIL: email},
+            description_placeholders={"email": email},
         )
 
     async def async_step_reconfigure(
@@ -190,5 +195,5 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input or {CONF_EMAIL: email},
             ),
             errors=errors,
-            description_placeholders={CONF_EMAIL: email},
+            description_placeholders={"email": email},
         )

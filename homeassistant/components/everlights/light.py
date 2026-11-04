@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    {probatio.Required(CONF_HOSTS): probatio.All(cv.ensure_list, [cv.string])}
+    {probatio.Required(CONF_HOSTS): probatio.All(probatio.EnsureList(), [cv.string])}
 )
 
 

@@ -1,8 +1,10 @@
 {
   "domain": "crownstone",
   "name": "Crownstone",
+  "categories": ["plugs_switches"],
   "codeowners": ["@Crownstone", "@RicArch97"],
   "config_flow": true,
+  "connectivity": ["cloud", "serial"],
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/crownstone",
   "iot_class": "cloud_push",

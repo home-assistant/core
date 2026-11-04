@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 from aiortm import AioRTMError, AuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.remember_the_milk.const import (
     CONF_LIST_ID,
@@ -24,8 +25,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .const import CREATE_ENTRY_DATA, PROFILE
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 LIST_ID = 42
 NEW_LIST_ID = 100

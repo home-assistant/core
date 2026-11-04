@@ -4,13 +4,12 @@ import asyncio
 
 from aiohttp import ClientError
 from nextdns.const import API_ENDPOINT
+from pytest_homeassistant.common import get_system_health_info
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.nextdns.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_system_health_info
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_nextdns_system_health(

@@ -69,7 +69,7 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
     )
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_preset_modes = [PRESET_NONE, HEATER_BIO_MODE, HEATER_SMART_MODE]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_preset_mode = PRESET_NONE
     _attr_translation_key = "heater"
     _attr_name = None
@@ -113,14 +113,14 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
         if self._device.temperature_unit == HeaterUnit.CELSIUS:
             self._attr_min_temp = 18
             self._attr_max_temp = 32
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         elif self._device.temperature_unit == HeaterUnit.FAHRENHEIT:
             self._attr_min_temp = 64
             self._attr_max_temp = 90
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
-        self._attr_current_temperature = self._device.current_temperature
-        self._attr_target_temperature = self._device.target_temperature
+        self._attr_native_current_temperature = self._device.current_temperature
+        self._attr_native_target_temperature = self._device.target_temperature
 
         if self._device.is_heating:
             self._attr_hvac_action = HVACAction.HEATING

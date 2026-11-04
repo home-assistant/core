@@ -1,6 +1,6 @@
 {
   "services": {
-    "write": {
+    "ebusd_write": {
       "service": "mdi:pencil"
     }
   }

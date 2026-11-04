@@ -1,0 +1,62 @@
+# serializer version: 1
+# name: test_all_entities[select.documents_history-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'keep_all',
+        'keep_none',
+        'limited',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='library' title='Documents'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('seafile', 'documents-subentry-id')]>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.documents_history',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'History',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'History',
+    'platform': 'seafile',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'history',
+    'unique_id': 'documents-subentry-id_history',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[select.documents_history-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Documents History',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'keep_all',
+        'keep_none',
+        'limited',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.documents_history',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'keep_all',
+  })
+# ---

@@ -5,6 +5,11 @@ import subprocess
 import sys
 
 import pytest
+from pytest_homeassistant.components.recorder.common import (
+    db_event_to_native,
+    db_state_attributes_to_native,
+    db_state_to_native,
+)
 from sqlalchemy.dialects import mysql
 from sqlalchemy.dialects.mysql.mariadb import MariaDBDialect
 from sqlalchemy.engine.interfaces import Dialect
@@ -30,12 +35,6 @@ from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
-
-from .common import (
-    db_event_to_native,
-    db_state_attributes_to_native,
-    db_state_to_native,
-)
 
 
 def test_from_event_to_db_event() -> None:
