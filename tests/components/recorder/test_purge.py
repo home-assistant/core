@@ -184,7 +184,7 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
     assert recorder_mock.states_manager.oldest_ts != oldest_ts
 
     with session_scope(hass=hass) as session:
-        states = session.query(States)
+        states = session.query(States).order_by(States.last_updated_ts)
         state_attributes = session.query(StateAttributes)
         assert states.count() == 3
         assert state_attributes.count() == 2
@@ -221,7 +221,7 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
 
     # make sure the new states link to the kept state
     with session_scope(hass=hass) as session:
-        states = session.query(States)
+        states = session.query(States).order_by(States.state_id)
         assert states.count() == 7
         assert states[1].old_state_id == states[0].state_id
         assert states[6].old_state_id == states[5].state_id
