@@ -178,10 +178,18 @@ async def test_user_flow_errors(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("version", "unique_id"),
+    [
+        pytest.param("5", EQUIPMENT_IDENTIFIER, id="dsmr5"),
+        pytest.param("5B", EQUIPMENT_IDENTIFIER, id="belgium"),
+        pytest.param("Q3D", "00000000", id="q3d"),
+    ],
+)
 async def test_user_flow_unknown_version(
-    hass: HomeAssistant, telegrams: TelegramQueue
+    hass: HomeAssistant, telegrams: TelegramQueue, version: str, unique_id: str
 ) -> None:
-    """Test an unrecognized telegram asks for the meter profile."""
+    """Test an unrecognized telegram asks for the profile, which names the identifier."""
     telegrams.put_nowait(_unknown_telegram())
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -193,11 +201,11 @@ async def test_user_flow_unknown_version(
     assert result["step_id"] == "dsmr_version"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_DSMR_VERSION: "5"}
+        result["flow_id"], user_input={CONF_DSMR_VERSION: version}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_DSMR_VERSION] == "5"
-    assert result["result"].unique_id == EQUIPMENT_IDENTIFIER
+    assert result["data"][CONF_DSMR_VERSION] == version
+    assert result["result"].unique_id == unique_id
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

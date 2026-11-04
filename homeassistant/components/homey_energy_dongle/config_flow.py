@@ -56,6 +56,13 @@ _DSMR_VERSION_LABELS = {
     "4": "DSMR 4",
     "2.2": "DSMR 2.2",
 }
+# dsmr-parser names the meter's identifier differently per profile.
+_IDENTIFIER_FIELDS = (
+    "EQUIPMENT_IDENTIFIER",
+    "BELGIUM_EQUIPMENT_IDENTIFIER",
+    "LUXEMBOURG_EQUIPMENT_IDENTIFIER",
+    "Q3D_EQUIPMENT_IDENTIFIER",
+)
 _VERSION_FIELD = {
     probatio.Required(CONF_DSMR_VERSION): SelectSelector(
         SelectSelectorConfig(
@@ -110,7 +117,8 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> str | None:
         """Parse the cached telegram with ``version`` and set the unique id.
 
-        Swedish meters don't send an identifier, so those are matched on host.
+        Swedish and Hungarian meters don't send an identifier, so those are
+        matched on host.
         """
         if TYPE_CHECKING:
             assert self._telegram is not None
@@ -121,7 +129,14 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except TelegramParseError:
             return "invalid_dsmr_version"
-        identifier = getattr(telegram, "EQUIPMENT_IDENTIFIER", None)
+        identifier = next(
+            (
+                obj
+                for field in _IDENTIFIER_FIELDS
+                if (obj := getattr(telegram, field, None)) is not None
+            ),
+            None,
+        )
         await self.async_set_unique_id(
             None if identifier is None else str(identifier.value)
         )
