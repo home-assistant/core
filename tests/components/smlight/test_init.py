@@ -286,11 +286,73 @@ async def test_device_legacy_firmware(
     assert LEGACY_VERSION in device_entry.sw_version
 
     issue = issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="unsupported_firmware"
+        domain=DOMAIN, issue_id=f"unsupported_firmware_{entry.entry_id}"
     )
     assert issue is not None
     assert issue.domain == DOMAIN
-    assert issue.issue_id == "unsupported_firmware"
+    assert issue.translation_key == "unsupported_firmware"
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.translation_placeholders == {"name": entry.title}
+
+
+async def test_legacy_firmware_issue_per_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    issue_registry: IssueRegistry,
+) -> None:
+    """Test each entry gets its own legacy firmware issue, removed with the entry."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        legacy_api=2, sw_version="v0.9.9", MAC="AA:BB:CC:DD:EE:FF"
+    )
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Other SLZB",
+        data=mock_config_entry.data,
+        unique_id="aa:bb:cc:dd:ee:00",
+    )
+    other_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
+
+    for entry in (mock_config_entry, other_entry):
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"unsupported_firmware_{entry.entry_id}"
+        )
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
+        assert issue.translation_placeholders == {"name": entry.title}
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert {
+        issue_id for domain, issue_id in issue_registry.issues if domain == DOMAIN
+    } == {f"unsupported_firmware_{other_entry.entry_id}"}
+
+
+async def test_legacy_firmware_issue_deleted_after_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    issue_registry: IssueRegistry,
+) -> None:
+    """Test the legacy firmware issue is deleted once the firmware is updated."""
+    default_get_info = mock_smlight_client.get_info.side_effect
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        legacy_api=2, sw_version="v0.9.9", MAC="AA:BB:CC:DD:EE:FF"
+    )
+    await setup_integration(hass, mock_config_entry)
+    issue_id = f"unsupported_firmware_{mock_config_entry.entry_id}"
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    mock_smlight_client.get_info.side_effect = default_get_info
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (DOMAIN, issue_id) not in issue_registry.issues
 
 
 async def test_async_execute_command_auth_failed(
