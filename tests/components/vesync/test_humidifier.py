@@ -5,6 +5,8 @@ import logging
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.humidifier import (
@@ -39,9 +41,6 @@ from .common import (
     ENTITY_HUMIDIFIER_MIST_LEVEL,
     mock_devices_response,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 NoException = nullcontext()
 

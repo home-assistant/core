@@ -104,7 +104,7 @@ class CountryFixFlow(RepairsFlow):
                 }
             ),
             description_placeholders={
-                CONF_COUNTRY: self.country,
+                "country": self.country,
                 "title": self.entry.title,
             },
         )
@@ -172,8 +172,8 @@ class HolidayFixFlow(RepairsFlow):
             step_id="fix_remove_holiday",
             data_schema=new_schema,
             description_placeholders={
-                CONF_COUNTRY: self.country or "-",
-                CONF_REMOVE_HOLIDAYS: self.named_holiday,
+                "country": self.country or "-",
+                "remove_holidays": self.named_holiday,
                 "title": self.entry.title,
             },
             errors=errors,

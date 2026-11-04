@@ -190,7 +190,7 @@ class KnxUiWeather(_KnxWeather, KnxUiEntity):
         knx_conf = config.knx
         self._device = XknxWeather(
             knx_module.xknx,
-            name=config.entity.xknx_name,
+            name=config.entity.name,
             sync_state=knx_conf.sync_state,
             group_address_temperature=state_and_passive(knx_conf.ga_temperature),
             group_address_brightness_south=state_and_passive(

@@ -164,7 +164,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: FirmataConfigEntry
-) -> bool:
+) -> None:
     """Set up a Firmata board for a config entry."""
     _LOGGER.debug(
         "Setting up Firmata id %s, name %s, config %s",
@@ -210,23 +210,21 @@ async def async_setup_entry(
             if conf in config_entry.data
         ],
     )
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: FirmataConfigEntry
-) -> bool:
+) -> None:
     """Shutdown and close a Firmata board for a config entry."""
     _LOGGER.debug("Closing Firmata board %s", config_entry.data[CONF_NAME])
-    results: list[bool] = []
-    if platforms := [
-        platform
-        for conf, platform in CONF_PLATFORM_MAP.items()
-        if conf in config_entry.data
-    ]:
-        results.append(
-            await hass.config_entries.async_unload_platforms(config_entry, platforms)
-        )
-    results.append(await config_entry.runtime_data.async_reset())
-
-    return False not in results
+    try:
+        if platforms := [
+            platform
+            for conf, platform in CONF_PLATFORM_MAP.items()
+            if conf in config_entry.data
+        ]:
+            await hass.config_entries.async_unload_platforms_or_raise(
+                config_entry, platforms
+            )
+    finally:
+        await config_entry.runtime_data.async_reset()

@@ -112,7 +112,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
         if self._attr_device_info:
-            self._attr_device_info["manufacturer"] = "Hitachi"
+            self._attr_device_info.manufacturer = "Hitachi"
 
     @property
     @override

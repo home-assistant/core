@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from jsonrpc_base.jsonrpc import TransportError
 from pykodi.kodi import KodiHTTPConnection, KodiWSConnection
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.kodi.const import CONF_WS_PORT, DOMAIN
 from homeassistant.const import (
@@ -19,8 +20,6 @@ from homeassistant.const import (
 )
 
 from .util import UUID
-
-from tests.common import MockConfigEntry
 
 APPLICATION_PROPERTIES: dict[str, Any] = {
     "version": {"major": 21, "minor": 2},

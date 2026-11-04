@@ -8,7 +8,11 @@ from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager, async_get_image
+from homeassistant.components.ffmpeg import (
+    FFmpegManager,
+    async_get_image,
+    get_ffmpeg_manager,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
@@ -93,7 +97,7 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
         super().__init__(router, node)
         Camera.__init__(self)
 
-        self._ffmpeg: FFmpegManager = hass.data[DATA_FFMPEG]
+        self._ffmpeg: FFmpegManager = get_ffmpeg_manager(hass)
         self._input: str = node["props"]["Stream"]
 
         self._command_motion_detection = self.get_command_id(

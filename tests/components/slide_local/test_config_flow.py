@@ -10,6 +10,7 @@ from goslideapi.goslideapi import (
     DigestAuthCalcError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.slide_local.const import CONF_INVERT_POSITION, DOMAIN
 from homeassistant.config_entries import SOURCE_HOMEKIT, SOURCE_USER, SOURCE_ZEROCONF
@@ -20,8 +21,6 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import get_data, setup_platform
 from .const import HOST
-
-from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.2"),

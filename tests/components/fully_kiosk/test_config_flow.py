@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 from aiohttp.client_exceptions import ClientConnectorError
 from fullykiosk import FullyKioskError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_MQTT, SOURCE_USER
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_user_flow(

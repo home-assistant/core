@@ -76,7 +76,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OwnTracksConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OwnTracksConfigEntry) -> None:
     """Set up OwnTracks entry."""
     config = hass.data[DATA_OWNTRACKS_CONFIG]
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
@@ -116,13 +116,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OwnTracksConfigEntry) ->
 
     entry.async_on_unload(async_dispatcher_connect(hass, DOMAIN, async_handle_message))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OwnTracksConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OwnTracksConfigEntry) -> None:
     """Unload an OwnTracks config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: OwnTracksConfigEntry) -> None:

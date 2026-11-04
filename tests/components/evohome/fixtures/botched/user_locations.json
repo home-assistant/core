@@ -340,6 +340,15 @@
             ]
           }
         ]
+      },
+      {
+        "gatewayInfo": {
+          "gatewayId": "4400000",
+          "mac": "00D02DEE0044",
+          "crc": "1234",
+          "isWiFi": false
+        },
+        "temperatureControlSystems": []
       }
     ]
   }

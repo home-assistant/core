@@ -6,6 +6,8 @@ from typing import Any
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import fan, template
@@ -47,9 +49,7 @@ from .conftest import (
     setup_restore_template_entity,
 )
 
-from tests.common import MockConfigEntry
 from tests.components.fan import common
-from tests.typing import WebSocketGenerator
 
 TEST_INPUT_BOOLEAN = "input_boolean.state"
 TEST_STATE_ENTITY_ID = "sensor.test_sensor"

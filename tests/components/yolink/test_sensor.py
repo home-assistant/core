@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yolink.client import YoLinkClient
 from yolink.const import (
     ATTR_DEVICE_MULTI_CAPS_LEAK_SENSOR,
@@ -35,8 +36,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 def _mock_device(

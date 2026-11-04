@@ -79,7 +79,10 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 [channel async for channel in self.twitch.get_users(logins=chunk)]
             )
         if not (user := await first(self.twitch.get_users())):
-            raise UpdateFailed("Logged in user not found")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="user_not_found",
+            )
         self.current_user = user
         self.users.append(self.current_user)  # Add current_user to users list.
 

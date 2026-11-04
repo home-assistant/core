@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import (
@@ -18,8 +19,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import ENTITY_ID, UNIQUE_ID, setup_lgnetcast
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.fixture(autouse=True)

@@ -308,14 +308,15 @@ class _TranslationCache:
         mismatches: set[str] = set()
 
         for key, value in updated_resources.items():
-            if key not in cached_resources:
-                continue
             try:
                 tuples = list(string.Formatter().parse(value))
             except ValueError:
                 _LOGGER.error(
                     ("Error while parsing localized (%s) string %s"), language, key
                 )
+                mismatches.add(key)
+                continue
+            if key not in cached_resources:
                 continue
             updated_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
 

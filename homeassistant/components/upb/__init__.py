@@ -40,7 +40,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: UpbConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: UpbConfigEntry) -> None:
     """Set up a new config_entry for UPB PIM."""
 
     url = config_entry.data[CONF_DEVICE]
@@ -73,20 +73,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: UpbConfigEntry) -
         element = upb.links[link]
         element.add_callback(_element_changed)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, config_entry: UpbConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: UpbConfigEntry) -> None:
     """Unload the config_entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        config_entry.runtime_data.disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    config_entry.runtime_data.disconnect()
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate entry."""
 
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
@@ -112,5 +106,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
     _LOGGER.debug("Migration successful")
-
-    return True

@@ -445,7 +445,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         except (
             AioImapException,
             UpdateFailed,
-            TimeoutError,
+            OSError,
         ) as ex:
             await self._cleanup()
             self.async_set_update_error(ex)
@@ -525,7 +525,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
             except (
                 UpdateFailed,
                 AioImapException,
-                TimeoutError,
+                OSError,
             ) as ex:
                 await self._cleanup()
                 self.async_set_update_error(ex)

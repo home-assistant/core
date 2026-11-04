@@ -5,6 +5,13 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    MockConfigEntry,
+    async_fire_time_changed,
+    patch,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from watergate_local_api import WatergateApiException
 from watergate_local_api.models import AutoShutOffState
@@ -20,14 +27,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import (
-    AsyncMock,
-    MockConfigEntry,
-    async_fire_time_changed,
-    patch,
-    snapshot_platform,
-)
 
 VOLUME_ENTITY_ID = "number.sonic_auto_shut_off_volume_threshold"
 DURATION_ENTITY_ID = "number.sonic_auto_shut_off_duration_threshold"

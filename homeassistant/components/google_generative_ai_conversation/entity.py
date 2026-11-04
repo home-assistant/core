@@ -5,7 +5,7 @@ import base64
 import codecs
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 from dataclasses import dataclass, replace
-import datetime
+import datetime as dt
 import mimetypes
 from pathlib import Path
 import re
@@ -111,6 +111,12 @@ def _gemini_version(name: str) -> tuple[int, int] | None:
     return None
 
 
+def supports_speech_metadata(model: str) -> bool:
+    """Return whether a TTS model accepts per-turn speech metadata like style."""
+    version = _gemini_version(model.removeprefix("models/"))
+    return version is not None and version >= (3, 8)
+
+
 def supports_custom_sampling(model: str) -> bool:
     """Keep sampling for older models and omit it for newer Gemini models."""
     name = model.removeprefix("models/")
@@ -125,6 +131,12 @@ def supports_custom_sampling(model: str) -> bool:
     # Preserve sampling behavior for the established older Robotics family.
     stem = "gemini-robotics-er-1.6"
     return name == stem or name.startswith(f"{stem}-")
+
+
+def supports_voice_library(model: str) -> bool:
+    """Return whether a TTS model can use the voices from the voices API."""
+    version = _gemini_version(model.removeprefix("models/"))
+    return version is not None and version >= (3, 8)
 
 
 def _is_thinking_model(model: str) -> bool:
@@ -332,7 +344,7 @@ def _escape_decode(value: Any) -> Any:
 
 def _validate_tool_results(value: Any) -> Any:
     """Recursively convert non-json-serializable types."""
-    if isinstance(value, (datetime.time, datetime.date)):
+    if isinstance(value, (dt.time, dt.date)):
         return value.isoformat()
     if isinstance(value, list):
         return [_validate_tool_results(item) for item in value]

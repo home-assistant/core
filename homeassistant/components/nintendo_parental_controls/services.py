@@ -14,7 +14,7 @@ from pynintendoparental.exceptions import (
 )
 from pynintendoparental.player import Player
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PIN
+from homeassistant.const import CONF_PIN, CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
@@ -43,7 +43,7 @@ from .sensor import NintendoParentalControlsSensor
 _LOGGER = logging.getLogger(__name__)
 
 
-class NintendoParentalServices(StrEnum):
+class NintendoParentalService(StrEnum):
     """Store keys for Nintendo Parental services."""
 
     ADD_BONUS_TIME = "add_bonus_time"
@@ -60,11 +60,11 @@ def async_setup_services(
     """Set up the Nintendo Parental services."""
     hass.services.async_register(
         domain=DOMAIN,
-        service=NintendoParentalServices.ADD_BONUS_TIME,
+        service=NintendoParentalService.ADD_BONUS_TIME,
         service_func=async_add_bonus_time,
         schema=probatio.Schema(
             {
-                probatio.Required(ATTR_DEVICE_ID): cv.string,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
                 probatio.Required(ATTR_BONUS_TIME): probatio.All(
                     int, probatio.Range(min=5, max=30)
                 ),
@@ -73,35 +73,35 @@ def async_setup_services(
     )
     hass.services.async_register(
         domain=DOMAIN,
-        service=NintendoParentalServices.PLAYER_USAGE_REPORT,
+        service=NintendoParentalService.PLAYER_USAGE_REPORT,
         service_func=async_get_player_usage,
         supports_response=SupportsResponse.ONLY,
         schema=probatio.Schema(
             {
-                probatio.Required(ATTR_DEVICE_ID): cv.string,
-                probatio.Required(ATTR_ENTITY_ID): cv.string,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
+                probatio.Required(CommonServiceArgument.ENTITY_ID): cv.string,
             }
         ),
     )
     hass.services.async_register(
         domain=DOMAIN,
-        service=NintendoParentalServices.DEVICE_USAGE_REPORT,
+        service=NintendoParentalService.DEVICE_USAGE_REPORT,
         service_func=async_get_device_usage_report,
         supports_response=SupportsResponse.ONLY,
         schema=probatio.Schema(
             {
-                probatio.Required(ATTR_DEVICE_ID): cv.string,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
             }
         ),
     )
     service.async_register_admin_service(
         hass,
         DOMAIN,
-        NintendoParentalServices.UPDATE_DAILY_RESTRICTIONS,
+        NintendoParentalService.UPDATE_DAILY_RESTRICTIONS,
         async_set_per_day_controls,
         probatio.Schema(
             {
-                probatio.Required(ATTR_DEVICE_ID): cv.string,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
                 probatio.Required(ATTR_DAY_OF_WEEK): probatio.In(DAYS_OF_WEEK),
                 probatio.Inclusive(ATTR_BEDTIME_START, "bedtime"): cv.time,
                 probatio.Inclusive(ATTR_BEDTIME_END, "bedtime"): cv.time,
@@ -114,11 +114,11 @@ def async_setup_services(
     service.async_register_admin_service(
         hass,
         DOMAIN,
-        NintendoParentalServices.UPDATE_PIN_CODE,
+        NintendoParentalService.UPDATE_PIN_CODE,
         async_update_pin_code,
         probatio.Schema(
             {
-                probatio.Required(ATTR_DEVICE_ID): cv.string,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
                 probatio.Required(probatio.Secret(CONF_PIN)): cv.string,
             }
         ),
@@ -183,7 +183,7 @@ def _build_player_app_report(player: Player) -> list[dict[str, JsonValueType]]:
 async def async_add_bonus_time(call: ServiceCall) -> None:
     """Add bonus time to a device."""
     data = call.data
-    device_id: str = data[ATTR_DEVICE_ID]
+    device_id: str = data[CommonServiceArgument.DEVICE_ID]
     bonus_time: int = data[ATTR_BONUS_TIME]
     device = _get_nintendo_device(call.hass, device_id)
     return await device.add_extra_time(bonus_time)
@@ -192,7 +192,7 @@ async def async_add_bonus_time(call: ServiceCall) -> None:
 async def async_update_pin_code(call: ServiceCall) -> None:
     """Update the PIN code for a device."""
     data = call.data
-    device_id: str = data[ATTR_DEVICE_ID]
+    device_id: str = data[CommonServiceArgument.DEVICE_ID]
     new_pin: str = data[CONF_PIN]
     if not new_pin.isdigit() or len(new_pin) < 4 or len(new_pin) > 8:
         raise ServiceValidationError(
@@ -206,8 +206,8 @@ async def async_update_pin_code(call: ServiceCall) -> None:
 async def async_get_player_usage(call: ServiceCall) -> dict:
     """Get player usage."""
     data = call.data
-    device_id: str = data[ATTR_DEVICE_ID]
-    entity_id: str = data[ATTR_ENTITY_ID]
+    device_id: str = data[CommonServiceArgument.DEVICE_ID]
+    entity_id: str = data[CommonServiceArgument.ENTITY_ID]
     device = _get_nintendo_device(call.hass, device_id)
     player = _get_nintendo_player(call.hass, device, entity_id)
     return {"apps": _build_player_app_report(player)}
@@ -216,7 +216,7 @@ async def async_get_player_usage(call: ServiceCall) -> dict:
 async def async_get_device_usage_report(call: ServiceCall) -> dict:
     """Return the device usage report."""
     data = call.data
-    device_id: str = data[ATTR_DEVICE_ID]
+    device_id: str = data[CommonServiceArgument.DEVICE_ID]
     device = _get_nintendo_device(call.hass, device_id)
     return {
         player.nickname: _build_player_app_report(player) for player in device.players
@@ -226,7 +226,7 @@ async def async_get_device_usage_report(call: ServiceCall) -> dict:
 async def async_set_per_day_controls(call: ServiceCall) -> None:
     """Set per-day restrictions for a given device."""
     data = call.data
-    device_id: str = data[ATTR_DEVICE_ID]
+    device_id: str = data[CommonServiceArgument.DEVICE_ID]
     device = _get_nintendo_device(call.hass, device_id)
     restriction_enabled = data.get(ATTR_MAX_PLAY_TIME) is not None
     bedtime_enabled = (

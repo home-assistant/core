@@ -6,6 +6,11 @@ from unittest.mock import MagicMock
 from earn_e_p1 import PacketType
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.earn_e_p1.coordinator import NO_DATA_TIMEOUT
@@ -20,8 +25,6 @@ from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COO
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_DEVICE_DATA, MOCK_HOST, trigger_callback
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 POWER_IMPORTED_ENTITY_ID = "sensor.earn_e_p1_meter_power_imported"
 POWER_IMPORTED_STATE = str(MOCK_DEVICE_DATA["power_delivered"])

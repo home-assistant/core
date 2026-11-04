@@ -1,13 +1,8 @@
 """Constant values for Trend integration."""
 
-DOMAIN = "trend"
+from enum import StrEnum
 
-ATTR_ATTRIBUTE = "attribute"
-ATTR_GRADIENT = "gradient"
-ATTR_INVERT = "invert"
-ATTR_MIN_GRADIENT = "min_gradient"
-ATTR_SAMPLE_DURATION = "sample_duration"
-ATTR_SAMPLE_COUNT = "sample_count"
+DOMAIN = "trend"
 
 CONF_INVERT = "invert"
 CONF_MAX_SAMPLES = "max_samples"
@@ -19,3 +14,14 @@ DEFAULT_MAX_SAMPLES = 2
 DEFAULT_MIN_SAMPLES = 2
 DEFAULT_MIN_GRADIENT = 0.0
 DEFAULT_SAMPLE_DURATION = 0
+
+
+class TrendEntityStateAttribute(StrEnum):
+    """State attributes for trend entities."""
+
+    ENTITY_ID = "entity_id"
+    GRADIENT = "gradient"
+    INVERT = "invert"
+    MIN_GRADIENT = "min_gradient"
+    SAMPLE_COUNT = "sample_count"
+    SAMPLE_DURATION = "sample_duration"

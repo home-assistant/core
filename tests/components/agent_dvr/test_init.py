@@ -3,14 +3,13 @@
 from unittest.mock import AsyncMock, patch
 
 from agent import AgentError
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.agent_dvr.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import CONF_DATA, create_entry, init_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def _create_mocked_agent(available: bool = True):

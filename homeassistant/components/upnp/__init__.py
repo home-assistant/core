@@ -34,7 +34,7 @@ NOTIFICATION_TITLE = "UPnP/IGD Setup"
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> None:
     """Set up UPnP/IGD device from a config entry."""
     LOGGER.debug("Setting up config entry: %s", entry.entry_id)
 
@@ -69,7 +69,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
         async with asyncio.timeout(10):
             await device_discovered_event.wait()
     except TimeoutError as err:
-        raise ConfigEntryNotReady(f"Device not discovered: {usn}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_not_discovered",
+            translation_placeholders={"usn": usn},
+        ) from err
     finally:
         cancel_discovered_callback()
 
@@ -83,7 +87,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
         device = await async_create_device(hass, location, force_poll)
     except UpnpConnectionError as err:
         raise ConfigEntryNotReady(
-            f"Error connecting to device at location: {location}, err: {err}"
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"location": location},
         ) from err
 
     # Try to subscribe, if configured.
@@ -184,10 +190,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
     # Setup platforms, creating sensors/binary_sensors.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> None:
     """Unload a UPnP/IGD device from a config entry."""
     LOGGER.debug("Unloading config entry: %s", entry.entry_id)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

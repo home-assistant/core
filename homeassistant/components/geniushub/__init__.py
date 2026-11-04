@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) -> None:
     """Create a Genius Hub system."""
     if CONF_TOKEN in entry.data and CONF_MAC in entry.data:
         entity_registry = er.async_get(hass)
@@ -96,8 +96,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 class GeniusBroker:

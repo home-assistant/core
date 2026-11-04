@@ -10,6 +10,7 @@ from aioairzone.exceptions import (
     InvalidSystem,
     SystemOutOfRange,
 )
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.airzone.config_flow import short_mac
@@ -31,8 +32,6 @@ from .util import (
     USER_INPUT,
 )
 
-from tests.common import MockConfigEntry
-
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="airzone",
     ip="192.168.1.100",
@@ -50,7 +49,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
@@ -106,7 +105,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
@@ -224,7 +223,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.validate",
@@ -259,7 +258,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
@@ -347,7 +346,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
@@ -410,7 +409,7 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",

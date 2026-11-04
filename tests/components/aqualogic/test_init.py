@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aqualogic import AquaLogicProcessor
 from homeassistant.components.aqualogic.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(

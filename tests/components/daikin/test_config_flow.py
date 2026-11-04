@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from aiohttp import ClientError, web_exceptions
 from pydaikin.exceptions import DaikinException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -14,8 +15,6 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 MAC = "AABBCCDDEEFF"
 HOST = "127.0.0.1"
@@ -25,7 +24,7 @@ HOST = "127.0.0.1"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.daikin.async_setup_entry", return_value=True
+        "homeassistant.components.daikin.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

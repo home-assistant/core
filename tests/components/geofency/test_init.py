@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components import zone
@@ -22,8 +23,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
-
-from tests.typing import ClientSessionGenerator
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811

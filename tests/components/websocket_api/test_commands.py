@@ -11,6 +11,22 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockModule,
+    MockUser,
+    async_mock_service,
+    mock_device_registry,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import loader
@@ -59,23 +75,6 @@ from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockModule,
-    MockUser,
-    async_mock_service,
-    mock_device_registry,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",
@@ -4382,6 +4381,34 @@ async def test_extract_from_target(
         devices={device1.id, area_device.id},
         areas={kitchen_area.id, label_area.id},
     )
+
+    # Test excluding from mixed targets
+    msg = await call_command(
+        {
+            "entity_id": ["light.direct"],
+            "device_id": [device1.id],
+            "area_id": [kitchen_area.id],
+            "label_id": [label1.label_id],
+            "exclude": {
+                "entity_id": [device1_entity2.entity_id],
+                "area_id": [kitchen_area.id],
+            },
+        },
+    )
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={
+            "light.direct",
+            device1_entity1.entity_id,
+            label_entity.entity_id,
+        },
+        devices={device1.id},
+        areas={label_area.id},
+    )
+
+    # A target which only has an exclude block is accepted while editing
+    msg = await call_command({"exclude": {"entity_id": ["light.direct"]}})
+    _assert_extract_from_target_command_result(msg)
 
 
 async def test_extract_from_target_expand_group(

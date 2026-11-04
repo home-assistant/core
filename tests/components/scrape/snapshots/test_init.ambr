@@ -3,7 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='entity' title='Current version'>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -37,9 +37,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='entity' title='Current version'>,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('scrape', '01JZQ1G63X2DX66GZ9ZTFY9PEH')]>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,

@@ -66,7 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle migration of a previous version config entry."""
     if entry.version == 1:
         # There is no usable data in version 1 anymore.
@@ -93,10 +93,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 entry, unique_id=str(entry.unique_id), minor_version=minor_version
             )
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> None:
     """Set up Toon from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
@@ -164,14 +162,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> bool
             EVENT_HOMEASSISTANT_STARTED, coordinator.register_webhook
         )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> None:
     """Unload Toon config entry."""
 
     # Remove webhooks registration
     await entry.runtime_data.unregister_webhook()
 
     # Unload entities for this entry/device.
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
