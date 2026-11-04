@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'detected_model': 'color',
+    'device': dict({
+      'available': True,
+      'capabilities': dict({
+        'fw_ver': '18',
+        'model': 'color',
+        'support': 'get_prop set_default set_power toggle set_bright start_cf stop_cf set_scene cron_add cron_get cron_del set_ct_abx set_rgb',
+      }),
+      'is_nightlight_supported': True,
+      'model': 'color',
+      'music_mode': False,
+      'properties': dict({
+        'active_mode': '0',
+        'bg_bright': '80',
+        'bg_ct': '5000',
+        'bg_flowing': '0',
+        'bg_hue': '200',
+        'bg_lmode': '1',
+        'bg_power': 'on',
+        'bg_rgb': '65280',
+        'bg_sat': '70',
+        'bright': '50',
+        'color_mode': '1',
+        'ct': '4000',
+        'current_brightness': '30',
+        'flowing': '0',
+        'hue': '100',
+        'main_power': 'on',
+        'nl_br': '23',
+        'power': 'on',
+        'rgb': '16711680',
+        'sat': '35',
+      }),
+      'type': 'Color',
+    }),
+    'options': dict({
+      'model': '',
+      'nightlight_switch': False,
+      'save_on_change': False,
+      'transition': 350,
+      'use_music_mode': False,
+    }),
+  })
+# ---

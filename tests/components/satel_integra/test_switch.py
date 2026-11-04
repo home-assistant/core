@@ -11,6 +11,14 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
+from satel_integra import (
+    SatelCommandRejectedError,
+    SatelCommandResult,
+    SatelNoResponseError,
+    SatelResultCode,
+)
+from satel_integra.commands import SatelWriteCommand
+from satel_integra.exceptions import SatelCommandExpiredError, SatelNotConnectedError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.satel_integra.const import DOMAIN
@@ -29,7 +37,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -141,7 +149,9 @@ async def test_switch_change_state(
     )
 
     assert hass.states.get("switch.switchable_output").state == STATE_ON
-    mock_satel.set_output.assert_awaited_once_with(MOCK_CODE, 1, True)
+    mock_satel.set_output.assert_awaited_once_with(
+        MOCK_CODE, 1, True, wait_for_result=True
+    )
 
     mock_satel.set_output.reset_mock()
 
@@ -154,7 +164,111 @@ async def test_switch_change_state(
     )
 
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
-    mock_satel.set_output.assert_awaited_once_with(MOCK_CODE, 1, False)
+    mock_satel.set_output.assert_awaited_once_with(
+        MOCK_CODE, 1, False, wait_for_result=True
+    )
+
+
+@pytest.mark.parametrize(
+    ("result_code", "translation_key"),
+    [
+        (
+            SatelResultCode.USER_CODE_NOT_FOUND,
+            "command_invalid_access_code",
+        ),
+        (SatelResultCode.NO_ACCESS, "command_no_access"),
+    ],
+)
+async def test_switch_command_validation_error(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+    result_code: SatelResultCode,
+    translation_key: str,
+) -> None:
+    """Test switch actions report validation errors."""
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    mock_satel.set_output.side_effect = SatelCommandRejectedError(
+        SatelWriteCommand.OUTPUTS_ON,
+        SatelCommandResult(result_code),
+    )
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.switchable_output"},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == translation_key
+    state = hass.states.get("switch.switchable_output")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            SatelCommandRejectedError(
+                SatelWriteCommand.OUTPUTS_ON,
+                SatelCommandResult(0x8A),
+            ),
+            "command_rejected",
+            {"result_code": "0x8A"},
+            id="rejected",
+        ),
+        pytest.param(
+            SatelNoResponseError(),
+            "command_outcome_unknown",
+            None,
+            id="outcome-unknown",
+        ),
+        pytest.param(
+            SatelCommandExpiredError(),
+            "command_not_sent",
+            None,
+            id="expired",
+        ),
+        pytest.param(
+            SatelNotConnectedError(),
+            "command_not_sent",
+            None,
+            id="not-connected",
+        ),
+    ],
+)
+async def test_switch_command_error(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+    exception: Exception,
+    translation_key: str,
+    translation_placeholders: dict[str, str] | None,
+) -> None:
+    """Test switch actions report command errors."""
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    mock_satel.set_output.side_effect = exception
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.switchable_output"},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == translation_key
+    assert type(err.value) is HomeAssistantError
+    assert err.value.translation_placeholders == translation_placeholders
+    state = hass.states.get("switch.switchable_output")
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 async def test_switch_last_reported(

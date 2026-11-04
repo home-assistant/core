@@ -88,6 +88,9 @@
     "delete_error": {
       "message": "Failed to delete from OneDrive: {paths}"
     },
+    "duplicate_drive": {
+      "message": "This drive is already set up as {title}. Remove one of the two entries."
+    },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
     },
@@ -121,11 +124,11 @@
   },
   "issues": {
     "drive_almost_full": {
-      "description": "Your OneDrive is near your quota limit. If you go over this limit your drive will be temporarily frozen and your backups will start failing. Please free up some space or upgrade your OneDrive plan. Currently using {used} GiB of {total} GiB.",
+      "description": "\"{name}\" is near your quota limit. If you go over this limit your drive will be temporarily frozen and your backups will start failing. Please free up some space or upgrade your OneDrive plan. Currently using {used} GiB of {total} GiB.",
       "title": "OneDrive near data cap"
     },
     "drive_full": {
-      "description": "Your OneDrive has exceeded your quota limit. This means your next backup will fail. Please free up some space or upgrade your OneDrive plan. Currently using {used} GiB of {total} GiB.",
+      "description": "\"{name}\" has exceeded your quota limit. This means your next backup will fail. Please free up some space or upgrade your OneDrive plan. Currently using {used} GiB of {total} GiB.",
       "title": "OneDrive data cap exceeded"
     }
   },

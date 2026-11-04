@@ -13,7 +13,11 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -55,6 +59,7 @@ async def async_setup_scanner(
             hass,
             DOMAIN,
             "yaml_import_cannot_connect",
+            breaks_in_ha_version="2027.1.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.ERROR,
@@ -67,6 +72,7 @@ async def async_setup_scanner(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.1.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
@@ -114,7 +120,10 @@ class UniFiScannerEntity(
         super().__init__(coordinator)
         self._mac = mac
         device = coordinator.data.get(mac, {})
-        self._attr_name = device.get("hostname") or mac
+        self._attr_device_info = dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            name=device.get("hostname") or mac,
+        )
 
     @property
     @override

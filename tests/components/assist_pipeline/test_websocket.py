@@ -579,6 +579,39 @@ async def test_text_pipeline_timeout(
     assert msg["result"] == {"events": events}
 
 
+async def test_intent_busy(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+) -> None:
+    """Test text-only pipeline run while another turn of the conversation runs."""
+    client = await hass_ws_client(hass)
+
+    with (
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        conversation.async_get_chat_log(hass, session),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "intent",
+                "end_stage": "intent",
+                "input": {"text": "Are the lights on?"},
+                "conversation_id": "koala",
+            }
+        )
+
+        msg = await client.receive_json()
+        assert msg["success"]
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "run-start"
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "intent-start"
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "error"
+        assert msg["event"]["data"]["code"] == "intent-busy"
+
+
 @pytest.mark.usefixtures("init_components")
 async def test_intent_unauthorized(
     hass: HomeAssistant,

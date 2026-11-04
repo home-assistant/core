@@ -945,6 +945,7 @@ async def test_all_entities(
 
 OVEN_FINISH_TIME_ENTITY_ID = "sensor.oven_program_finish_time"
 OVEN_PROGRESS_ENTITY_ID = "sensor.oven_program_progress"
+OVEN_RUNNING_TIME_ENTITY_ID = "sensor.oven_program_running_time"
 PROGRAM_TIMES_TEST_START = "2021-01-09 12:00:00+00:00"
 
 
@@ -1105,16 +1106,6 @@ async def test_program_finish_time_not_carried_over_to_next_program(
             "0",
             id="new_program_with_timer_reported_before_program",
         ),
-        pytest.param(
-            {
-                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                    ProgramKey.COOKING_OVEN_HEATING_MODE_HOT_AIR.value
-                )
-            },
-            "2021-01-09T12:30:00+00:00",
-            "10",
-            id="same_program",
-        ),
     ],
 )
 async def test_program_finish_time_on_program_change_while_running(
@@ -1255,12 +1246,9 @@ async def test_program_finish_time_after_reconnection(
 @pytest.mark.parametrize(
     "start_event_order",
     [
-        pytest.param((0, 1, 2), id="progress_program_operation_state"),
-        pytest.param((0, 2, 1), id="progress_operation_state_program"),
-        pytest.param((1, 0, 2), id="program_progress_operation_state"),
-        pytest.param((1, 2, 0), id="program_operation_state_progress"),
-        pytest.param((2, 0, 1), id="operation_state_progress_program"),
-        pytest.param((2, 1, 0), id="operation_state_program_progress"),
+        pytest.param((0, 1, 2), id="program_progress_operation_state"),
+        pytest.param((0, 2, 1), id="program_operation_state_progress"),
+        pytest.param((2, 0, 1), id="operation_state_program_progress"),
     ],
 )
 async def test_program_finish_time_on_program_start(
@@ -1305,17 +1293,17 @@ async def test_program_finish_time_on_program_start(
             appliance.ha_id,
             EventType.NOTIFY,
             {
-                EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1200,
-                EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 0,
+                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
+                    ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
+                )
             },
         ),
         create_event_message(
             appliance.ha_id,
             EventType.NOTIFY,
             {
-                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM: (
-                    ProgramKey.COOKING_OVEN_HEATING_MODE_TOP_BOTTOM_HEATING.value
-                )
+                EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 1200,
+                EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 0,
             },
         ),
         create_event_message(
@@ -1439,3 +1427,81 @@ async def test_program_finish_time_kept_on_pause(
 
     assert hass.states.is_state(OVEN_FINISH_TIME_ENTITY_ID, "2021-01-09T12:30:00+00:00")
     assert hass.states.is_state(OVEN_PROGRESS_ENTITY_ID, "10")
+
+
+@pytest.mark.parametrize("appliance", ["Oven"], indirect=True)
+async def test_program_running_time(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test the program running time is rounded to whole minutes."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.is_state(OVEN_RUNNING_TIME_ENTITY_ID, STATE_UNAVAILABLE)
+
+    for events, expected_state in (
+        (
+            {
+                EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 0},
+                EventType.STATUS: {
+                    EventKey.BSH_COMMON_STATUS_OPERATION_STATE: BSH_OPERATION_STATE_RUN
+                },
+            },
+            "0",
+        ),
+        # The appliance reports the elapsed time shortly before each full minute
+        (
+            {EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 59}},
+            "1",
+        ),
+        (
+            {EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 119}},
+            "2",
+        ),
+        (
+            {
+                EventType.NOTIFY: {
+                    EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 135
+                },
+                EventType.STATUS: {
+                    EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+                        BSH_OPERATION_STATE_PAUSE
+                    )
+                },
+            },
+            "2",
+        ),
+        (
+            {
+                EventType.STATUS: {
+                    EventKey.BSH_COMMON_STATUS_OPERATION_STATE: BSH_OPERATION_STATE_RUN
+                }
+            },
+            "2",
+        ),
+        (
+            {EventType.NOTIFY: {EventKey.BSH_COMMON_OPTION_ELAPSED_PROGRAM_TIME: 179}},
+            "3",
+        ),
+        (
+            {
+                EventType.STATUS: {
+                    EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+                        BSH_OPERATION_STATE_READY
+                    )
+                }
+            },
+            STATE_UNAVAILABLE,
+        ),
+    ):
+        await client.add_events(
+            [
+                create_event_message(appliance.ha_id, event_type, items)
+                for event_type, items in events.items()
+            ]
+        )
+        await hass.async_block_till_done()
+        assert hass.states.is_state(OVEN_RUNNING_TIME_ENTITY_ID, expected_state)

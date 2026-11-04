@@ -723,11 +723,13 @@ class SonosDiscoveryManager:
             )
             await self.async_poll_manual_hosts()
 
-        self.entry.async_on_unload(
-            await ssdp.async_register_callback(
-                self.hass, self._async_ssdp_discovered_player, {"st": UPNP_ST}
+        # Search responses carry "st" and advertisements carry "nt"
+        for match_dict in ({"st": UPNP_ST}, {"nt": UPNP_ST}):
+            self.entry.async_on_unload(
+                await ssdp.async_register_callback(
+                    self.hass, self._async_ssdp_discovered_player, match_dict
+                )
             )
-        )
 
         self.entry.async_on_unload(
             async_track_time_interval(
