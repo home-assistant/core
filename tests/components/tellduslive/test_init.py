@@ -260,9 +260,9 @@ async def test_unload_flushes_snapshot(
         (1, None, 30),
         (2, None, 60),
         (3, None, 120),
-        (10, None, 900),
+        (10, None, 300),
         (1, 300, 300),
-        (10, 300, 900),
+        (10, 300, 300),
     ],
 )
 async def test_retry_delay(
