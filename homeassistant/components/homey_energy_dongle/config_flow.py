@@ -97,7 +97,8 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             async with (
                 asyncio.timeout(TELEGRAM_TIMEOUT),
-                aclosing(create_client(data).stream_telegrams()) as telegrams,
+                create_client(data) as client,
+                aclosing(client.stream_telegrams()) as telegrams,
             ):
                 self._telegram = await anext(telegrams)
         except LocalApiDisabledError:

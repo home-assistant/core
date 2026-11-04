@@ -64,6 +64,7 @@ def mock_client() -> Generator[MagicMock]:
         "homeassistant.components.homey_energy_dongle.coordinator.EnergyDongleClient",
         autospec=True,
     ) as client:
+        client.return_value.__aenter__.return_value = client.return_value
         yield client
 
 

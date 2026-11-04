@@ -76,9 +76,12 @@ DISCOVERY = ZeroconfServiceInfo(
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow(
-    hass: HomeAssistant, telegrams: TelegramQueue, telegram_data: str
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    telegrams: TelegramQueue,
+    telegram_data: str,
 ) -> None:
-    """Test manual setup detects DSMR 5 and uses the meter's identifier."""
+    """Test manual setup detects DSMR 5, uses the meter's identifier and disconnects."""
     telegrams.put_nowait(telegram_data)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -98,6 +101,8 @@ async def test_user_flow(
         CONF_DSMR_VERSION: "5",
     }
     assert result["result"].unique_id == EQUIPMENT_IDENTIFIER
+    # The dongle allows two connections, so the probe must release its own.
+    mock_client.return_value.__aexit__.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
