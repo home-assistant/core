@@ -7,7 +7,7 @@ APPLICATION_NAME = "Home Assistant"
 
 DOMAIN = "tellduslive"
 
-SIGNAL_UPDATE_ENTITY = "tellduslive_update"
+SIGNAL_UPDATE_ENTITY = "tellduslive_update_{}"
 
 KEY_SESSION = "session"
 KEY_SCAN_INTERVAL = "scan_interval"

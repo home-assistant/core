@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 
-from .api import Session, TelldusLiveError, TelldusLiveRateLimitError
+from .api import Device, Session, TelldusLiveError, TelldusLiveRateLimitError
 from .const import (
     DEFAULT_REQUEST_DELAY,
     DEFAULT_RETRY_INITIAL_DELAY,
@@ -97,6 +97,21 @@ async def async_unload_entry(
     )
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: TelldusLiveConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Allow removing only devices that are no longer served by the account."""
+    return not config_entry.runtime_data.client.is_in_use(
+        {
+            identifier
+            for domain, identifier in device_entry.identifiers
+            if domain == DOMAIN
+        }
+    )
+
+
 async def async_remove_entry(
     hass: HomeAssistant, config_entry: TelldusLiveConfigEntry
 ) -> None:
@@ -125,6 +140,7 @@ class TelldusLiveClient:
         self._failures = 0
         self._first_refresh_done = False
         self._hubs_registered = False
+        self._hub_ids: set[str] = set()
         self._restored = asyncio.Event()
 
         self._hass = hass
@@ -170,6 +186,11 @@ class TelldusLiveClient:
             self._restored.set()
 
     @property
+    def signal_update(self) -> str:
+        """Return the dispatcher signal sent after each refresh."""
+        return SIGNAL_UPDATE_ENTITY.format(self._config_entry.entry_id)
+
+    @property
     def status(self) -> TelldusLiveStatus:
         """Return the connection status."""
         if not self._first_refresh_done:
@@ -204,6 +225,7 @@ class TelldusLiveClient:
     def _async_register_hubs(self, hubs: list[dict[str, Any]]) -> None:
         """Add the hubs associated with the current client to device_registry."""
         dev_reg = dr.async_get(self._hass)
+        self._hub_ids.update(hub["id"] for hub in hubs)
         for hub in hubs:
             _LOGGER.debug("Connected hub %s", hub["name"])
             dev_reg.async_get_or_create(
@@ -215,12 +237,23 @@ class TelldusLiveClient:
                 sw_version=hub["version"],
             )
 
-    def device_info(self, device_id):
+    def is_in_use(self, identifiers: set[str]) -> bool:
+        """Return true if any identifier is a known device, hub or this service."""
+        return bool(
+            identifiers
+            & {
+                self._config_entry.entry_id,
+                *self._hub_ids,
+                *map(str, self._client.device_ids),
+            }
+        )
+
+    def device_info(self, device_id: str) -> dict[str, Any] | None:
         """Return device info."""
         return self._device_infos.get(device_id)
 
     @staticmethod
-    def identify_device(device):
+    def identify_device(device: Device) -> str:
         """Find out what type of HA component to create."""
         if device.is_sensor:
             return "sensor"
@@ -256,7 +289,9 @@ class TelldusLiveClient:
             device_ids.append(device_id)
         for _id in device_ids:
             async_dispatcher_send(
-                self._hass, TELLDUS_DISCOVERY_NEW.format(component, DOMAIN), _id
+                self._hass,
+                TELLDUS_DISCOVERY_NEW.format(component, self._config_entry.entry_id),
+                _id,
             )
 
     async def _async_fetch(self) -> None:
@@ -268,7 +303,7 @@ class TelldusLiveClient:
         try:
             await self._hass.async_add_executor_job(self._client.update)
         finally:
-            async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
+            async_dispatcher_send(self._hass, self.signal_update)
         new_devices = {
             dev.device_id for dev in self._client.devices
         } - self._known_devices
@@ -299,7 +334,7 @@ class TelldusLiveClient:
             self._failures = 0
         finally:
             self._first_refresh_done = True
-            async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
+            async_dispatcher_send(self._hass, self.signal_update)
             # An update still in flight at unload must not schedule another.
             if not self._stopped:
                 self._cancel_update = async_call_later(self._hass, delay, self.update)
@@ -312,10 +347,10 @@ class TelldusLiveClient:
             self._cancel_update()
             self._cancel_update = None
 
-    def device(self, device_id):
+    def device(self, device_id: str) -> Device:
         """Return device representation."""
         return self._client.device(device_id)
 
-    def is_available(self, device_id):
+    def is_available(self, device_id: str) -> bool:
         """Return device availability."""
         return device_id in self._client.device_ids
