@@ -33,5 +33,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "authentication_error": {
+      "message": "Authentication error initializing the WeatherKit integration"
+    }
   }
 }

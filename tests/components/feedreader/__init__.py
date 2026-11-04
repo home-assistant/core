@@ -3,11 +3,11 @@
 from typing import Any
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.feedreader.const import CONF_MAX_ENTRIES, DOMAIN
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 def create_mock_entry(

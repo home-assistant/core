@@ -19,12 +19,18 @@ class SupportedModels(StrEnum):
     BOT = "bot"
     BULB = "bulb"
     CEILING_LIGHT = "ceiling_light"
+    CEILING_LIGHT_PRO = "ceiling_light_pro"
     CURTAIN = "curtain"
-    HYGROMETER = "hygrometer"
-    HYGROMETER_CO2 = "hygrometer_co2"
+    CURTAIN_3 = "curtain_3"
+    METER = "meter"
+    METER_PLUS = "meter_plus"
+    METER_PRO = "meter_pro"
+    METER_PRO_CO2 = "meter_pro_co2"
+    INDOOR_OUTDOOR_THERMO_HYGROMETER = "indoor_outdoor_thermo_hygrometer"
     LIGHT_STRIP = "light_strip"
     CONTACT = "contact"
-    PLUG = "plug"
+    PLUG_MINI_US = "plug_mini_us"
+    PLUG_MINI_JP = "plug_mini_jp"
     MOTION = "motion"
     PRESENCE_SENSOR = "presence_sensor"
     HUMIDIFIER = "humidifier"
@@ -39,6 +45,7 @@ class SupportedModels(StrEnum):
     ROLLER_SHADE = "roller_shade"
     HUBMINI_MATTER = "hubmini_matter"
     CIRCULATOR_FAN = "circulator_fan"
+    CIRCULATOR_FAN_PRO = "circulator_fan_pro"
     K20_VACUUM = "k20_vacuum"
     S10_VACUUM = "s10_vacuum"
     K10_VACUUM = "k10_vacuum"
@@ -83,10 +90,13 @@ class SupportedModels(StrEnum):
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.BOT: SupportedModels.BOT,
     SwitchbotModel.CURTAIN: SupportedModels.CURTAIN,
-    SwitchbotModel.PLUG_MINI: SupportedModels.PLUG,
+    SwitchbotModel.CURTAIN_3: SupportedModels.CURTAIN_3,
+    SwitchbotModel.PLUG_MINI_US: SupportedModels.PLUG_MINI_US,
+    SwitchbotModel.PLUG_MINI_JP: SupportedModels.PLUG_MINI_JP,
     SwitchbotModel.COLOR_BULB: SupportedModels.BULB,
     SwitchbotModel.LIGHT_STRIP: SupportedModels.LIGHT_STRIP,
     SwitchbotModel.CEILING_LIGHT: SupportedModels.CEILING_LIGHT,
+    SwitchbotModel.CEILING_LIGHT_PRO: SupportedModels.CEILING_LIGHT_PRO,
     SwitchbotModel.HUMIDIFIER: SupportedModels.HUMIDIFIER,
     SwitchbotModel.LOCK: SupportedModels.LOCK,
     SwitchbotModel.LOCK_PRO: SupportedModels.LOCK_PRO,
@@ -96,6 +106,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.RELAY_SWITCH_1: SupportedModels.RELAY_SWITCH_1,
     SwitchbotModel.ROLLER_SHADE: SupportedModels.ROLLER_SHADE,
     SwitchbotModel.CIRCULATOR_FAN: SupportedModels.CIRCULATOR_FAN,
+    SwitchbotModel.CIRCULATOR_FAN_PRO: SupportedModels.CIRCULATOR_FAN_PRO,
     SwitchbotModel.K20_VACUUM: SupportedModels.K20_VACUUM,
     SwitchbotModel.S10_VACUUM: SupportedModels.S10_VACUUM,
     SwitchbotModel.S20_VACUUM: SupportedModels.S20_VACUUM,
@@ -125,7 +136,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.ART_FRAME: SupportedModels.ART_FRAME,
     SwitchbotModel.KEYPAD_VISION: SupportedModels.KEYPAD_VISION,
     SwitchbotModel.KEYPAD_VISION_PRO: SupportedModels.KEYPAD_VISION_PRO,
-    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
+    SwitchbotModel.METER_PRO_CO2: SupportedModels.METER_PRO_CO2,
     SwitchbotModel.LOCK_VISION_PRO: SupportedModels.LOCK_VISION_PRO,
     SwitchbotModel.LOCK_VISION: SupportedModels.LOCK_VISION,
     SwitchbotModel.LOCK_PRO_WIFI: SupportedModels.LOCK_PRO_WIFI,
@@ -139,10 +150,13 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
-    SwitchbotModel.METER: SupportedModels.HYGROMETER,
-    SwitchbotModel.IO_METER: SupportedModels.HYGROMETER,
-    SwitchbotModel.METER_PRO: SupportedModels.HYGROMETER,
-    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
+    SwitchbotModel.METER: SupportedModels.METER,
+    SwitchbotModel.METER_PLUS: SupportedModels.METER_PLUS,
+    SwitchbotModel.METER_PRO: SupportedModels.METER_PRO,
+    SwitchbotModel.METER_PRO_CO2: SupportedModels.METER_PRO_CO2,
+    SwitchbotModel.INDOOR_OUTDOOR_THERMO_HYGROMETER: (
+        SupportedModels.INDOOR_OUTDOOR_THERMO_HYGROMETER
+    ),
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
     SwitchbotModel.PRESENCE_SENSOR: SupportedModels.PRESENCE_SENSOR,
@@ -188,6 +202,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.LOCK_VISION,
     SwitchbotModel.LOCK_PRO_WIFI,
     SwitchbotModel.CANDLE_WARMER_LAMP,
+    SwitchbotModel.CIRCULATOR_FAN_PRO,
     SwitchbotModel.RGBIC_NEON_ROPE_LIGHT,
     SwitchbotModel.RGBIC_NEON_WIRE_ROPE_LIGHT,
 }
@@ -226,12 +241,41 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.LOCK_VISION: switchbot.SwitchbotLock,
     SwitchbotModel.LOCK_PRO_WIFI: switchbot.SwitchbotLock,
     SwitchbotModel.CANDLE_WARMER_LAMP: switchbot.SwitchbotCandleWarmerLamp,
+    SwitchbotModel.CIRCULATOR_FAN_PRO: switchbot.SwitchbotCirculatorFanPro,
     SwitchbotModel.RGBIC_NEON_ROPE_LIGHT: switchbot.SwitchbotRgbicNeonLight,
     SwitchbotModel.RGBIC_NEON_WIRE_ROPE_LIGHT: switchbot.SwitchbotRgbicNeonLight,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
     str(v): k for k, v in SUPPORTED_MODEL_TYPES.items()
+}
+
+# Legacy migration inputs; new entries use the product-specific types.
+DEPRECATED_SENSOR_TYPE_HYGROMETER = "hygrometer"
+DEPRECATED_SENSOR_TYPE_HYGROMETER_CO2 = "hygrometer_co2"
+DEPRECATED_SENSOR_TYPE_PLUG = "plug"
+
+DEPRECATED_MODEL_TYPE_MIGRATIONS: dict[str, dict[SwitchbotModel, SupportedModels]] = {
+    DEPRECATED_SENSOR_TYPE_HYGROMETER: {
+        SwitchbotModel.METER: SupportedModels.METER,
+        SwitchbotModel.METER_PLUS: SupportedModels.METER_PLUS,
+        SwitchbotModel.METER_PRO: SupportedModels.METER_PRO,
+        SwitchbotModel.INDOOR_OUTDOOR_THERMO_HYGROMETER: (
+            SupportedModels.INDOOR_OUTDOOR_THERMO_HYGROMETER
+        ),
+    },
+    SupportedModels.CURTAIN: {
+        SwitchbotModel.CURTAIN: SupportedModels.CURTAIN,
+        SwitchbotModel.CURTAIN_3: SupportedModels.CURTAIN_3,
+    },
+    SupportedModels.CEILING_LIGHT: {
+        SwitchbotModel.CEILING_LIGHT: SupportedModels.CEILING_LIGHT,
+        SwitchbotModel.CEILING_LIGHT_PRO: SupportedModels.CEILING_LIGHT_PRO,
+    },
+    DEPRECATED_SENSOR_TYPE_PLUG: {
+        SwitchbotModel.PLUG_MINI_US: SupportedModels.PLUG_MINI_US,
+        SwitchbotModel.PLUG_MINI_JP: SupportedModels.PLUG_MINI_JP,
+    },
 }
 
 # Deprecated sensor type values used before pySwitchbot 2.0.0.

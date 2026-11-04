@@ -43,9 +43,11 @@ from homeassistant.helpers.storage import Store
 from .const import DOMAIN, LOGGER, SILABS_MULTIPROTOCOL_ADDON_SLUG
 from .util import (
     ApplicationType,
+    FlasherType,
     WaitingAddonManager,
     async_firmware_flashing_context,
     async_flash_silabs_firmware,
+    async_get_flasher_cls,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -296,8 +298,8 @@ class OptionsFlowHandler(OptionsFlow, ABC):
 
     @property
     @abstractmethod
-    def _flasher_cls(self) -> type:
-        """Return the hardware-specific flasher class."""
+    def _flasher_type(self) -> FlasherType:
+        """Return the hardware-specific flasher type."""
 
     @property
     def flow_manager(self) -> OptionsFlowManager:
@@ -757,7 +759,9 @@ class OptionsFlowHandler(OptionsFlow, ABC):
                         hass=self.hass,
                         device=device,
                         fw_data=fw_data,
-                        flasher_cls=self._flasher_cls,
+                        flasher_cls=await async_get_flasher_cls(
+                            self.hass, self._flasher_type
+                        ),
                         expected_installed_firmware_type=ApplicationType.EZSP,
                         progress_callback=lambda offset, total: (
                             self.async_update_progress(offset / total)
@@ -827,6 +831,7 @@ async def check_multi_pan_addon(hass: HomeAssistant) -> None:
     try:
         addon_info: AddonInfo = await multipan_manager.async_get_addon_info()
     except AddonError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(err)
         raise HomeAssistantError from err
 

@@ -11,8 +11,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import MikrotikConfigEntry, mikrotik_config_entry_errors
+from .coordinator import MikrotikConfigEntry
 from .entity import MikrotikDeviceEntity
+from .utils import mikrotik_config_entry_errors
 
 PARALLEL_UPDATES = 0
 
@@ -47,6 +48,7 @@ async def async_setup_entry(
         for switch_desc in SENSORS
         for interface in coordinator.api.interfaces
         if interface.get("type") == switch_desc.key
+        or (switch_desc.key == "wlan" and interface.get("type") == "wifi")
     ]
 
     async_add_entities(switch_list)

@@ -6,7 +6,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import BleBoxConfigEntry
+from .coordinator import BleBoxConfigEntry
 
 TO_REDACT = {CONF_PASSWORD, CONF_USERNAME}
 

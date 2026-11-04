@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import override
+from typing import Any, override
 
 from iammeter.client import IamMeter
 import probatio
@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_DEVICE_NAME): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 
@@ -124,7 +124,7 @@ async def async_setup_platform(
         _LOGGER.error("Device is not ready")
         raise PlatformNotReady from err
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str, Any]:
         try:
             async with timeout(PLATFORM_TIMEOUT):
                 return await hass.async_add_executor_job(api.client.get_data)
@@ -158,7 +158,10 @@ async def async_setup_platform(
         )
 
 
-class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
+class IammeterSensor(
+    update_coordinator.CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]],
+    SensorEntity,
+):
     """Representation of a Sensor."""
 
     entity_description: IammeterSensorEntityDescription
@@ -167,7 +170,7 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
         description: IammeterSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""

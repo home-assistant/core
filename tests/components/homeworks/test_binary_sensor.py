@@ -4,14 +4,13 @@ from unittest.mock import ANY, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyhomeworks.pyhomeworks import HW_KEYPAD_LED_CHANGED
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.homeworks import KEYPAD_LEDSTATE_POLL_COOLDOWN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_binary_sensor_attributes_state_update(

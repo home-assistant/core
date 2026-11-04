@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 from .coordinator import create_device
@@ -28,9 +27,9 @@ DEFAULT_PORT = 80
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(CONF_SSL, default=False): bool,
         probatio.Required(CONF_VERIFY_SSL, default=True): bool,
     }

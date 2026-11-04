@@ -14,6 +14,7 @@ import probatio
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -51,9 +52,11 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Required(CONF_NAME): cv.string,
-        probatio.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_PORT): probatio.Port(),
         probatio.Required(CONF_ZONES): probatio.Schema({cv.positive_int: ZONE_SCHEMA}),
-        probatio.Required(CONF_SOURCES): probatio.All(cv.ensure_list, [SOURCE_SCHEMA]),
+        probatio.Required(CONF_SOURCES): probatio.All(
+            probatio.EnsureList(), [SOURCE_SCHEMA]
+        ),
     }
 )
 
@@ -101,6 +104,7 @@ async def async_setup_platform(
 class RussoundRNETDevice(MediaPlayerEntity):
     """Representation of a Russound RNET device."""
 
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET

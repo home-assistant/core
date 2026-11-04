@@ -13,7 +13,10 @@ from .const import DOMAIN
 from .controller import SmartTubController
 
 DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_EMAIL): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_EMAIL): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
 
 
@@ -75,7 +78,7 @@ class SmartTubConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_EMAIL,
                         default=self._get_reauth_entry().data.get(CONF_EMAIL),
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             )
             return self.async_show_form(

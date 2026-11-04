@@ -1,6 +1,7 @@
 {
   "domain": "moon",
   "name": "Moon",
+  "categories": ["weather_alerts"],
   "codeowners": ["@fabaff", "@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/moon",

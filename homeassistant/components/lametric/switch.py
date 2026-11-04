@@ -15,6 +15,8 @@ from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class LaMetricSwitchEntityDescription(SwitchEntityDescription):
@@ -34,9 +36,22 @@ SWITCHES = [
         available_fn=lambda device: bool(
             device.bluetooth and device.bluetooth.available
         ),
-        has_fn=lambda device: bool(device.bluetooth),
+        has_fn=lambda device: bool(device.bluetooth and device.bluetooth.available),
         is_on_fn=lambda device: bool(device.bluetooth and device.bluetooth.active),
         set_fn=lambda api, active: api.bluetooth(active=active),
+    ),
+    LaMetricSwitchEntityDescription(
+        key="screensaver",
+        translation_key="screensaver",
+        entity_category=EntityCategory.CONFIG,
+        # Like its schedule, the SKY is not known to support the screensaver.
+        has_fn=lambda device: (
+            device.model != "sa5" and device.display.screensaver is not None
+        ),
+        is_on_fn=lambda device: bool(
+            device.display.screensaver and device.display.screensaver.enabled
+        ),
+        set_fn=lambda api, enabled: api.display(screensaver_enabled=enabled),
     ),
 ]
 

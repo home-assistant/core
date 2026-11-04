@@ -4,12 +4,11 @@ from unittest.mock import patch
 
 from peco import AlertResults, OutageResults
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.peco.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_ENTRY_DATA = {"county": "TOTAL"}
 COUNTY_ENTRY_DATA = {"county": "BUCKS"}

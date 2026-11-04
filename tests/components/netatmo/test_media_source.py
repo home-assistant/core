@@ -4,6 +4,7 @@ import ast
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import selected_platforms
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_async_browse_media(

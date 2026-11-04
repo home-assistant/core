@@ -5,6 +5,8 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
+from imeon_inverter_api.inverter import Inverter
+
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -12,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_INVERTER_MODE, INVERTER_MODE_OPTIONS
-from .coordinator import Inverter, InverterCoordinator
+from .coordinator import InverterCoordinator
 from .entity import InverterEntity
 
 type InverterConfigEntry = ConfigEntry[InverterCoordinator]

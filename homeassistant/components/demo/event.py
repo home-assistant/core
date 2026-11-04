@@ -40,7 +40,9 @@ class DemoEvent(EventEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.hass.bus.async_listen("demo_button_pressed", self._async_handle_event)
+        self.async_on_remove(
+            self.hass.bus.async_listen("demo_button_pressed", self._async_handle_event)
+        )
 
     @callback
     def _async_handle_event(self, _: Event) -> None:

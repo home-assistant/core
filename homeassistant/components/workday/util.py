@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from holidays import PUBLIC, DateLike, HolidayBase, country_holidays
 
-from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -15,7 +14,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 if TYPE_CHECKING:
     from . import WorkdayConfigEntry
-from .const import CONF_REMOVE_HOLIDAYS, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 
 async def async_validate_country_and_province(
@@ -68,7 +67,7 @@ async def async_validate_country_and_province(
             severity=IssueSeverity.ERROR,
             translation_key="bad_province",
             translation_placeholders={
-                CONF_COUNTRY: country,
+                "country": country,
                 "title": entry.title,
             },
             data={"entry_id": entry.entry_id, "country": country},
@@ -217,14 +216,15 @@ def add_remove_custom_holidays(
                         hass,
                         DOMAIN,
                         f"bad_date_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
+                        config_entry_id=entry.entry_id,
                         is_fixable=True,
                         is_persistent=False,
                         severity=IssueSeverity.WARNING,
                         translation_key="bad_date_holiday",
                         translation_placeholders={
-                            CONF_COUNTRY: country or "-",
+                            "country": country or "-",
                             "title": entry.title,
-                            CONF_REMOVE_HOLIDAYS: remove_holiday,
+                            "remove_holidays": remove_holiday,
                         },
                         data={
                             "entry_id": entry.entry_id,
@@ -237,14 +237,15 @@ def add_remove_custom_holidays(
                     hass,
                     DOMAIN,
                     f"bad_named_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
+                    config_entry_id=entry.entry_id,
                     is_fixable=True,
                     is_persistent=False,
                     severity=IssueSeverity.WARNING,
                     translation_key="bad_named_holiday",
                     translation_placeholders={
-                        CONF_COUNTRY: country or "-",
+                        "country": country or "-",
                         "title": entry.title,
-                        CONF_REMOVE_HOLIDAYS: remove_holiday,
+                        "remove_holidays": remove_holiday,
                     },
                     data={
                         "entry_id": entry.entry_id,

@@ -1,0 +1,6 @@
+calendar:
+  - platform: group
+    name: Friends
+    entities:
+      - calendar.work
+      - calendar.home

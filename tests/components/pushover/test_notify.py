@@ -5,14 +5,13 @@ from unittest.mock import MagicMock, patch
 
 from pushover_complete import BadAPIRequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pushover import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from . import MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 RECEIPT_A = "receipt_aaa111"
 RECEIPT_B = "receipt_bbb222"

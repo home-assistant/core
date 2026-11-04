@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock, patch
 
 from aioptdevices.interface import PTDevicesResponse, PTDevicesResponseData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.ptdevices.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -18,7 +17,7 @@ def mock_ptdevices_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.ptdevices.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
