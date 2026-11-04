@@ -219,6 +219,12 @@ def people(hass: HomeAssistant) -> None:
             "{{ states('person.secret') }}", "not_home", "unknown", id="states_call"
         ),
         pytest.param(
+            "{{ states('Person.Secret') }}",
+            "not_home",
+            "unknown",
+            id="states_call_mixed_case",
+        ),
+        pytest.param(
             "{{ 'person.secret' | states }}", "not_home", "unknown", id="states_filter"
         ),
         pytest.param(
@@ -246,6 +252,12 @@ def people(hass: HomeAssistant) -> None:
             "52.52",
             "None",
             id="state_attr",
+        ),
+        pytest.param(
+            "{{ state_attr('PERSON.SECRET', 'latitude') }}",
+            "52.52",
+            "None",
+            id="state_attr_mixed_case",
         ),
         pytest.param(
             "{{ state_translated('person.secret') }}",
@@ -291,6 +303,12 @@ def people(hass: HomeAssistant) -> None:
         ),
         pytest.param(
             "{{ entity_name('person.secret') }}", "Secret", "None", id="entity_name"
+        ),
+        pytest.param(
+            "{{ entity_name('PERSON.SECRET') }}",
+            "Secret",
+            "None",
+            id="entity_name_mixed_case",
         ),
     ],
 )

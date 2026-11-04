@@ -481,7 +481,7 @@ class TemplateStateFromEntityId(TemplateStateBase):
         if (
             (state := self._hass.states.get(self._entity_id)) is not None
             and (entity_filter := entity_filter_cv.get()) is not None
-            and not entity_filter(self._entity_id)
+            and not entity_filter(state.entity_id)
         ):
             state = None
         if not state:
@@ -532,7 +532,7 @@ def _get_readable_state(hass: HomeAssistant, entity_id: str) -> State | None:
     if (
         (state := hass.states.get(entity_id)) is not None
         and (entity_filter := entity_filter_cv.get()) is not None
-        and not entity_filter(entity_id)
+        and not entity_filter(state.entity_id)
     ):
         return None
     return state
@@ -543,7 +543,7 @@ def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | 
     if (
         (state := hass.states.get(entity_id)) is not None
         and (entity_filter := entity_filter_cv.get()) is not None
-        and not entity_filter(entity_id)
+        and not entity_filter(state.entity_id)
     ):
         state = None
     if state is None and not valid_entity_id(entity_id):
@@ -556,7 +556,7 @@ def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     if (
         (state := hass.states.get(entity_id)) is not None
         and (entity_filter := entity_filter_cv.get()) is not None
-        and not entity_filter(entity_id)
+        and not entity_filter(state.entity_id)
     ):
         state = None
     return _get_template_state_from_state(hass, entity_id, state)

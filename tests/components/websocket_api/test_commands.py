@@ -2640,15 +2640,15 @@ async def test_render_template_hides_unreadable_entities(
         {
             "type": "render_template",
             "template": (
-                "{{ states('light.readable') }} {{ states('light.unreadable') }}"
-                " {{ states.light | count }}"
+                "{{ states('light.readable') }} {{ states('Light.Readable') }}"
+                " {{ states('light.unreadable') }} {{ states.light | count }}"
             ),
         }
     )
     msg = await websocket_client.receive_json()
     assert msg["success"]
     msg = await websocket_client.receive_json()
-    assert msg["event"]["result"] == "on unknown 1"
+    assert msg["event"]["result"] == "on on unknown 1"
 
 
 @pytest.mark.parametrize(
