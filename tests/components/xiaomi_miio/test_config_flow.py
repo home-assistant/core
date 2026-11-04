@@ -1181,7 +1181,7 @@ async def test_reconfigure_unique_id_mismatch(
 
 
 async def test_reconfigure_entry_without_unique_id(hass: HomeAssistant) -> None:
-    """Test reconfiguring an entry set up with a manual model stores the ID."""
+    """Test reconfiguring an entry set up with a manual model keeps its ID."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id=None,
@@ -1205,7 +1205,7 @@ async def test_reconfigure_entry_without_unique_id(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data[CONF_HOST] == TEST_HOST2
-    assert config_entry.unique_id == TEST_MAC
+    assert config_entry.unique_id is None
 
 
 async def test_reconfigure_entry_without_unique_id_already_configured(

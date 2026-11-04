@@ -350,13 +350,12 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 mac = format_mac(connect_device_class.device_info.mac_address)
                 await self.async_set_unique_id(mac)
-                # Entries set up with a manually selected model have no unique ID
+                # Entries set up with a manually selected model have no unique ID;
+                # keep it that way, as entity and device IDs are derived from it
                 if entry.unique_id is None:
                     self._abort_if_unique_id_configured()
-                    return self.async_update_reload_and_abort(
-                        entry, unique_id=mac, data_updates=user_input
-                    )
-                self._abort_if_unique_id_mismatch()
+                else:
+                    self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     entry, data_updates=user_input
                 )
