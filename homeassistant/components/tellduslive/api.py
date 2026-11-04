@@ -3,10 +3,12 @@
 Derived from the public domain ``tellduslive`` package (0.10.12).
 """
 
+from collections import deque
 from collections.abc import Iterator
 from datetime import datetime, timedelta
 import logging
 import socket
+import time
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urljoin
 
@@ -39,6 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_APPLICATION_NAME = "tellduslive"
 HTTP_TOO_MANY_REQUESTS = 429
 TOKEN_REFRESH_AGE = timedelta(hours=12)
+RESPONSE_WINDOW = 3600
 
 
 class TelldusLiveError(OSError):
@@ -267,6 +270,8 @@ class Session:
             raise ValueError("Missing configuration")
 
         self._state: dict[str, dict[str, Any]] = {}
+        self._ok_responses: deque[float] = deque()
+        self._sensors_empty = False
         self._session: LocalAPISession | LiveAPISession
         if host:
             self._session = LocalAPISession(host, application, token)
@@ -329,7 +334,15 @@ class Session:
         _LOGGER.debug("Response %s %s", response.status_code, result)
         if "error" in result:
             raise TelldusLiveError(str(result["error"]))
+        self._ok_responses.append(time.monotonic())
         return result
+
+    def ok_responses_last_hour(self) -> int:
+        """Return the number of OK API responses during the last 60 minutes."""
+        cutoff = time.monotonic() - RESPONSE_WINDOW
+        while self._ok_responses and self._ok_responses[0] < cutoff:
+            self._ok_responses.popleft()
+        return len(self._ok_responses)
 
     def execute(self, method: str, **params: Any) -> bool:
         """Make a request and return whether it was successful."""
@@ -368,6 +381,8 @@ class Session:
             (False, self._request_devices),
             (True, self._request_sensors),
         ):
+            if is_sensor and self._sensors_empty:
+                continue
             try:
                 items = request()
             except TelldusLiveError as err:
@@ -380,6 +395,11 @@ class Session:
                     }
                 )
                 continue
+            if is_sensor and not items:
+                _LOGGER.info(
+                    "No sensors found, not polling sensors until Home Assistant restarts"
+                )
+                self._sensors_empty = True
             new_state.update(
                 {
                     "_" * is_sensor + str(item["id"]): item

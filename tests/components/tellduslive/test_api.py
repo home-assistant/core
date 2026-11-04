@@ -1,6 +1,7 @@
 """Tests for the Telldus Live API client."""
 
 from datetime import datetime, timedelta
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -421,3 +422,74 @@ def test_local_discovery_timeout() -> None:
         sock_cls.return_value.recvfrom.side_effect = TimeoutError
 
         assert session.get_clients() == []
+
+
+@pytest.mark.parametrize(
+    "response",
+    [{"status_code": 429}, {"status_code": 500}, {"json": {"error": "boom"}}],
+)
+def test_failed_responses_not_counted(
+    mock_api: requests_mock.Mocker, cloud_session: Session, response: dict
+) -> None:
+    """Test only OK responses are counted."""
+    mock_api.get(f"{CLOUD_URL}clients/list", **response)
+
+    with pytest.raises(TelldusLiveError):
+        cloud_session.get_clients()
+
+    assert cloud_session.ok_responses_last_hour() == 0
+
+
+def test_ok_responses_window(
+    mock_api: requests_mock.Mocker, cloud_session: Session
+) -> None:
+    """Test OK responses are counted for 60 minutes."""
+    mock_api.get(f"{CLOUD_URL}clients/list", json={"client": []})
+    with patch("homeassistant.components.tellduslive.api.time.monotonic") as mono:
+        mono.return_value = 1000.0
+        cloud_session.get_clients()
+        mono.return_value = 2000.0
+        cloud_session.get_clients()
+        assert cloud_session.ok_responses_last_hour() == 2
+
+        mono.return_value = 4700.0
+        assert cloud_session.ok_responses_last_hour() == 1
+
+        mono.return_value = 5601.0
+        assert cloud_session.ok_responses_last_hour() == 0
+
+
+def test_empty_sensor_list_not_polled_again(
+    mock_api: requests_mock.Mocker,
+    cloud_session: Session,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sensors are not requested again once the account has none."""
+    caplog.set_level(logging.INFO)
+    mock_api.get(f"{CLOUD_URL}devices/list", json=DEVICES)
+    sensors = mock_api.get(f"{CLOUD_URL}sensors/list", json={"sensor": []})
+
+    cloud_session.update()
+    cloud_session.update()
+
+    assert sensors.call_count == 1
+    assert caplog.text.count("No sensors found") == 1
+    assert sorted(cloud_session.device_ids) == ["1"]
+
+    new_session = Session("public", "private", "token", "secret")
+    new_session.update()
+    assert sensors.call_count == 2
+
+
+def test_failed_sensor_request_is_retried(
+    mock_api: requests_mock.Mocker, cloud_session: Session
+) -> None:
+    """Test a failed sensors request is not treated as an empty list."""
+    mock_api.get(f"{CLOUD_URL}devices/list", json=DEVICES)
+    sensors = mock_api.get(f"{CLOUD_URL}sensors/list", status_code=500)
+
+    for _ in range(2):
+        with pytest.raises(TelldusLiveError):
+            cloud_session.update()
+
+    assert sensors.call_count == 2
