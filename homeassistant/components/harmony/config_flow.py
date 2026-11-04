@@ -15,7 +15,6 @@ from homeassistant.components.remote import (
     DEFAULT_DELAY_SECS,
 )
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -30,6 +29,7 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from .const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
+from .data import HarmonyConfigEntry
 from .util import (
     find_best_name_for_remote,
     find_unique_id_for_remote,
@@ -195,7 +195,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HarmonyConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()

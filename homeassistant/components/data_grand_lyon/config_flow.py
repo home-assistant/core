@@ -16,7 +16,6 @@ from data_grand_lyon_ha import (
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -42,6 +41,7 @@ from .const import (
     SUBENTRY_TYPE_STOP,
     SUBENTRY_TYPE_VELOV_STATION,
 )
+from .coordinator import DataGrandLyonConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: DataGrandLyonConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentry types supported by this integration."""
         return {

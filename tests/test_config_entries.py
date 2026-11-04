@@ -1686,6 +1686,7 @@ async def _test_reauth_issue(
         active=True,
         breaks_in_ha_version=None,
         config_entry_id=entry.entry_id,
+        config_subentry_id=None,
         created=ANY,
         data={"flow_id": flows[0]["flow_id"]},
         dismissed_version=None,

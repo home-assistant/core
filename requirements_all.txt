@@ -16,7 +16,7 @@ Adax-local==0.3.0
 DoorBirdPy==3.0.13
 
 # homeassistant.components.homekit
-HAP-python==5.0.0
+HAP-python==5.1.0
 
 # homeassistant.components.tasmota
 HATasmota==0.10.2
@@ -1373,7 +1373,7 @@ homekit-audio-proxy==1.2.1
 homelink-integration-api==0.1.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.21.0
+homematicip==2.22.0
 
 # homeassistant.components.homevolt
 homevolt==0.7.0
@@ -2834,7 +2834,7 @@ python-hotspring==4.0.1
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==1.3.12
+python-izone==2.0.0
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.1.1
@@ -2883,7 +2883,7 @@ python-picnic-api2==2.0.1
 python-pooldose==0.9.10
 
 # homeassistant.components.hr_energy_qube
-python-qube-heatpump==1.17.0
+python-qube-heatpump==1.18.0
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -3511,7 +3511,7 @@ voip-utils==0.5.1
 volkszaehler==0.4.0
 
 # homeassistant.components.volvo
-volvocarsapi==0.4.4
+volvocarsapi==0.5.0
 
 # homeassistant.components.verisure
 vsure==2.10.0
@@ -3646,7 +3646,7 @@ zeroconf==0.152.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha-quirks==2.4.0
+zha-quirks==2.4.1
 
 # homeassistant.components.zha
 zha==2.4.2

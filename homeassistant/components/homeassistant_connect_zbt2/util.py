@@ -2,13 +2,16 @@
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
+
+from . import HomeAssistantConnectZBT2ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_usb_service_info(config_entry: ConfigEntry) -> UsbServiceInfo:
+def get_usb_service_info(
+    config_entry: HomeAssistantConnectZBT2ConfigEntry,
+) -> UsbServiceInfo:
     """Return UsbServiceInfo."""
     return UsbServiceInfo(
         device=config_entry.data["device"],
