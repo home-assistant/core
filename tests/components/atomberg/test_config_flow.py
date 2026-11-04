@@ -100,6 +100,25 @@ async def test_reauth(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -
     assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "new-token"
 
 
+async def test_duplicate_account_after_api_key_rotation(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the same account cannot be added again with a rotated API key."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "rotated-key", CONF_REFRESH_TOKEN: "rotated-token"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
