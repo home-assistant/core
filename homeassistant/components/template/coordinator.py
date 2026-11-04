@@ -8,6 +8,7 @@ from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
     CONF_ACTIONS,
     CONF_CONDITIONS,
+    CONF_NAME,
     CONF_PATH,
     CONF_TRIGGERS,
     CONF_VARIABLES,
@@ -172,10 +173,13 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
     @callback
     def _log_variables_error(self, err: TemplateError) -> None:
         """Log a variables rendering error with the affected entities."""
+        entities = sorted(self.entity_ids) or [
+            entity_config[CONF_NAME].template
+            for platform_domain in PLATFORMS
+            for entity_config in self.config.get(platform_domain, [])
+        ]
         self.logger.error(
-            "Error rendering variables for %s: %s",
-            ", ".join(sorted(self.entity_ids)),
-            err,
+            "Error rendering variables for %s: %s", ", ".join(entities), err
         )
 
     async def _handle_triggered_with_script(

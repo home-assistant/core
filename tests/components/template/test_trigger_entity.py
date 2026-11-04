@@ -349,6 +349,35 @@ async def test_variables_error_logs_entities(
     assert hass.states.get("sensor.test").state == STATE_UNKNOWN
 
 
+async def test_variables_error_logs_names_without_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test variables errors are logged with the entity names if none were added."""
+    entity_registry.async_get_or_create(
+        "sensor", DOMAIN, "test", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "variables": {"a": "{{ 'x' * 1.5 }}"},
+                    "triggers": {"trigger": "event", "event_type": "my_event"},
+                    "sensor": {"unique_id": "test", "name": "test", "state": "{{ a }}"},
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+
+    assert "Error rendering variables for test: " in caplog.text
+
+
 async def test_variables_error_logs_entities_after_entity_id_change(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
