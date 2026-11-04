@@ -94,7 +94,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )
 
+    cloud_user_issue_id = f"cloud_user_{entry.entry_id}"
     if protect.is_public_only:
+        # An entry switched to API-key-only no longer signs in as the cloud user
+        ir.async_delete_issue(hass, DOMAIN, cloud_user_issue_id)
         await _async_setup_public_only_entry(hass, entry, data_service)
         return
 
@@ -134,7 +137,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
             translation_key="api_key_required",
         )
 
-    cloud_user_issue_id = f"cloud_user_{entry.entry_id}"
     if auth_user and auth_user.cloud_account:
         ir.async_create_issue(
             hass,

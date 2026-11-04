@@ -374,6 +374,33 @@ async def test_setup_cloud_account_resolved(
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
+async def test_setup_public_only_deletes_cloud_user_issue(
+    hass: HomeAssistant,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test switching an entry to API-key-only deletes its cloud account issue."""
+    entry = ufp_public_only.entry
+    issue_id = f"cloud_user_{entry.entry_id}"
+    # Raised while the entry still signed in with the cloud account
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        config_entry_id=entry.entry_id,
+        is_fixable=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="cloud_user",
+        data={"entry_id": entry.entry_id},
+    )
+
+    await setup_public_only()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
 async def test_setup_failed_update(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     """Test setup of unifiprotect entry with failed update."""
 
