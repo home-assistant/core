@@ -100,6 +100,44 @@ async def test_reauth(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -
     assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "new-token"
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AtombergAuthError, "invalid_auth"),
+        (AtombergConnectionError, "cannot_connect"),
+        (RuntimeError, "unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_errors_then_recovery(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: type[Exception],
+    error: str,
+) -> None:
+    """Test reauth shows each error and can then finish successfully."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    new_input = {CONF_API_KEY: API_KEY, CONF_REFRESH_TOKEN: "new-token"}
+
+    mock_client.async_get_devices.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], new_input
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    mock_client.async_get_devices.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], new_input
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "new-token"
+
+
 async def test_reauth_new_api_key_same_account(
     hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
