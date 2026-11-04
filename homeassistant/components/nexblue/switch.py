@@ -3,16 +3,15 @@
 import time
 from typing import Any, override
 
-from nexblue_api import NexBlueError
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from nexblue_api import NexBlueError
 
-from .const import DOMAIN
+from .const import ACTIVE_CHARGING_STATES, DOMAIN
 from .coordinator import (
     FINAL_COMMAND_REFRESH_DELAY,
     NexBlueConfigEntry,
@@ -20,13 +19,6 @@ from .coordinator import (
 )
 
 PARALLEL_UPDATES = 1
-ACTIVE_CHARGING_STATES = frozenset(
-    {
-        2,  # Charging
-        5,  # Waiting for available power
-        7,  # Waiting for car response
-    }
-)
 
 
 async def async_setup_entry(
