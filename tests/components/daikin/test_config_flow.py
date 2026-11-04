@@ -387,3 +387,27 @@ async def test_reconfigure_host_based_unique_id_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == HOST
+
+
+@pytest.mark.usefixtures("mock_daikin")
+async def test_reconfigure_host_based_unique_id_mac_already_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfiguring a host based entry to a device owned by another entry aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=HOST, data={CONF_HOST: HOST, KEY_MAC: HOST}
+    )
+    entry.add_to_hass(hass)
+    # The other entry stores a stale host, so only the MAC identifies the device
+    MockConfigEntry(
+        domain=DOMAIN, unique_id=MAC, data={CONF_HOST: "daikin.local", KEY_MAC: MAC}
+    ).add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.2"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == HOST
