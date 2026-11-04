@@ -117,9 +117,15 @@
       "message": "Error communicating with iZone controller: {error}"
     }
   },
+  "issues": {
+    "deprecated_airflow_action": {
+      "description": "The `{action}` action is deprecated and will be removed in Home Assistant 2027.6. Use the **Damper minimum** and **Damper maximum** number entities of each zone with the `number.set_value` action instead, and update any automations or scripts that use `{action}`.",
+      "title": "The `{action}` action is being removed"
+    }
+  },
   "services": {
     "airflow_max": {
-      "description": "Sets the airflow maximum percent for a zone.",
+      "description": "Sets the airflow maximum percent for a zone. Deprecated, use the zone's Damper maximum number entity instead.",
       "fields": {
         "airflow": {
           "description": "[%key:component::izone::services::airflow_min::fields::airflow::description%]",
@@ -129,7 +135,7 @@
       "name": "Set maximum airflow"
     },
     "airflow_min": {
-      "description": "Sets the airflow minimum percent for a zone.",
+      "description": "Sets the airflow minimum percent for a zone. Deprecated, use the zone's Damper minimum number entity instead.",
       "fields": {
         "airflow": {
           "description": "Airflow percent.",

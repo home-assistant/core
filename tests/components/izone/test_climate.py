@@ -39,6 +39,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
+import homeassistant.helpers.issue_registry as ir
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
@@ -924,6 +925,36 @@ async def test_command_connection_error_recovers_on_coordinator_refresh(
 
     assert hass.states.get(CONTROLLER_ENTITY).state == HVACMode.COOL
     assert hass.states.get(ZONE_ENTITY).state == HVACMode.HEAT_COOL
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("service", "setter"),
+    [
+        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, "set_airflow_min", id="min"),
+        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, "set_airflow_max", id="max"),
+    ],
+)
+async def test_deprecated_airflow_action_still_works_and_raises_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_zones: list[Mock],
+    service: str,
+    setter: str,
+) -> None:
+    """Deprecated airflow actions still set the limit and raise a repair issue."""
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: ZONE_ENTITY, ATTR_AIRFLOW: 40},
+        blocking=True,
+    )
+
+    getattr(mock_zones[0], setter).assert_awaited_once_with(40)
+    issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_action_{service}")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_placeholders == {"action": f"{DOMAIN}.{service}"}
 
 
 @pytest.mark.usefixtures("init_integration")
