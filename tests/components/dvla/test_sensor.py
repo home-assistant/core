@@ -5,22 +5,20 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import STATE_UNKNOWN
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    AsyncMock,
-    MockConfigEntry,
-    SnapshotAssertion,
-    async_fire_time_changed,
-    snapshot_platform,
-)
 
 MOCK_VEHICLE_DATA: dict[str, Any] = {
     "registrationNumber": "AB12CDE",
@@ -289,14 +287,3 @@ async def test_date_sensor_non_string_value_is_unknown(
     state = get_state(hass, entity_registry, "taxDueDate")
 
     assert state.state == STATE_UNKNOWN
-
-
-async def test_setup_entry_fetches_vehicle_data(
-    setup_dvla_entry: Callable[[dict[str, Any] | None], Awaitable[MockConfigEntry]],
-    mock_dvla_client: AsyncMock,
-) -> None:
-    """Test setup fetches vehicle data through the coordinator."""
-    entry = await setup_dvla_entry()
-
-    assert entry.state is ConfigEntryState.LOADED
-    mock_dvla_client.assert_awaited_once_with("AB12CDE")

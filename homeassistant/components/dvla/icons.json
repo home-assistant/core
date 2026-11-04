@@ -31,9 +31,6 @@
       "mot_status": {
         "default": "mdi:car-wrench"
       },
-      "real_driving_emissions": {
-        "default": "mdi:gas-station-outline"
-      },
       "revenue_weight": {
         "default": "mdi:weight-kilogram"
       },

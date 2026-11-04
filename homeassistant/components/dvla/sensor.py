@@ -168,10 +168,6 @@ SENSOR_DESCRIPTIONS: tuple[DVLASensorEntityDescription, ...] = (
         translation_key="month_of_first_registration",
     ),
     DVLASensorEntityDescription(
-        key="realDrivingEmissions",
-        translation_key="real_driving_emissions",
-    ),
-    DVLASensorEntityDescription(
         key="euroStatus",
         translation_key="euro_status",
     ),

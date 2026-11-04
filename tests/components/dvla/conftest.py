@@ -5,11 +5,10 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_REG_NUMBER = "AB12CDE"
 
@@ -19,11 +18,14 @@ MOCK_VEHICLE_DATA: dict[str, Any] = {
     "taxDueDate": "2026-03-01",
     "engineCapacity": 1998,
     "co2Emissions": 150,
+    "fuelType": "PETROL",
     "markedForExport": False,
     "make": "FORD",
     "motStatus": "Valid",
     "motExpiryDate": "2026-11-30",
     "monthOfFirstRegistration": "2024-05",
+    "typeApproval": "M1",
+    "wheelplan": "2 AXLE RIGID BODY",
     "yearOfManufacture": 2020,
 }
 
@@ -34,6 +36,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=MOCK_REG_NUMBER,
+        unique_id=MOCK_REG_NUMBER,
         data={CONF_REG_NUMBER: MOCK_REG_NUMBER},
     )
 
