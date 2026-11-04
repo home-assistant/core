@@ -4,6 +4,8 @@ from http import HTTPStatus
 from unittest.mock import Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.exceptions import NetworkSettingsInconsistent
@@ -28,9 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 SKYCONNECT_DEVICE = (
     "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0"
@@ -238,6 +237,23 @@ async def test_multipan_firmware_retry_on_probe_ezsp(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     # No repair is created
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
+    )
+    assert issue is None
+
+
+async def test_no_warn_on_ziggurat_firmware(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test that OpenThread RCP firmware with Ziggurat is not reported as wrong."""
+    with patch(
+        "homeassistant.components.zha.repairs.wrong_silabs_firmware.probe_silabs_firmware_type",
+        return_value=ApplicationType.SPINEL_ZIGGURAT,
+    ):
+        assert not await warn_on_wrong_silabs_firmware(hass, device=SKYCONNECT_DEVICE)
+
     issue = issue_registry.async_get_issue(
         domain=DOMAIN,
         issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,

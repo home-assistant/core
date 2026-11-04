@@ -1,9 +1,10 @@
 """The Rituals Perfume Genie data update coordinators."""
 
+from collections.abc import Coroutine
 from dataclasses import dataclass, replace
 from datetime import datetime
 import logging
-from typing import override
+from typing import Any, override
 
 from ritualsgenie import (
     RitualsGenie,
@@ -21,6 +22,7 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -36,6 +38,10 @@ _LOGGER = logging.getLogger(__name__)
 # The fill level is fetched separately, and far less often.
 HOURLY_SENSORS = (Sensor.BATTERY, Sensor.PERFUME, Sensor.WIFI)
 
+# A diffuser added later on has its entities added in a batch; this is how
+# long its first update waits for them, to know which sensors to fetch.
+ADDED_FIRST_UPDATE_DELAY = 1
+
 type RitualsConfigEntry = ConfigEntry[RitualsRuntimeData]
 
 
@@ -50,12 +56,23 @@ class RitualsRuntimeData:
 def _update_failed(err: RitualsGenieError) -> Exception:
     """Return the exception a coordinator raises for a library error."""
     if isinstance(err, RitualsGenieAuthenticationError):
-        return ConfigEntryAuthFailed(err)
+        return ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        )
 
     if isinstance(err, RitualsGenieRateLimitError):
-        return UpdateFailed(str(err), retry_after=err.retry_after)
+        return UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="rate_limited",
+            retry_after=err.retry_after,
+        )
 
-    return UpdateFailed(str(err))
+    # The coordinator logs this message, so the error of the library is kept.
+    return UpdateFailed(
+        translation_domain=DOMAIN,
+        translation_key="update_failed",
+        translation_placeholders={"error": str(err)},
+    )
 
 
 class RitualsHubsCoordinator(DataUpdateCoordinator[dict[str, RitualsGenieHub]]):
@@ -160,8 +177,14 @@ class RitualsSensorsCoordinator(DataUpdateCoordinator[RitualsGenieSensors | None
         config_entry: RitualsConfigEntry,
         hubs: RitualsHubsCoordinator,
         hublot: str,
+        *,
+        added: bool = False,
     ) -> None:
-        """Initialize the coordinator."""
+        """Initialize the coordinator.
+
+        For a diffuser added to the account after setup, the first update
+        waits for its entities, see `async_entity_added`.
+        """
         self.hubs = hubs
         self.hublot = hublot
         self._fill_updated: datetime | None = None
@@ -173,11 +196,36 @@ class RitualsSensorsCoordinator(DataUpdateCoordinator[RitualsGenieSensors | None
             update_interval=SENSORS_UPDATE_INTERVAL,
         )
 
+        self._first_update: Debouncer[Coroutine[Any, Any, None]] | None = None
+        if added:
+            self._first_update = Debouncer(
+                hass,
+                _LOGGER,
+                cooldown=ADDED_FIRST_UPDATE_DELAY,
+                immediate=False,
+                function=self.async_refresh,
+            )
+            config_entry.async_on_unload(self._first_update.async_shutdown)
+
+    @callback
+    def async_entity_added(self) -> None:
+        """Do the first update of a diffuser added later, once it is listened to.
+
+        Its entities come with the settings they had, if the diffuser was on
+        the account before, so only they tell which sensors to fetch.
+        """
+        if self._first_update is not None and self.data is None:
+            self._first_update.async_schedule_call()
+
     @override
     async def _async_update_data(self) -> RitualsGenieSensors | None:
         """Fetch the sensor readings from Rituals."""
         if (hub := self.hubs.data.get(self.hublot)) is None:
-            raise UpdateFailed(f"Diffuser {self.hublot} is no longer on the account")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="diffuser_not_found",
+                translation_placeholders={"hublot": self.hublot},
+            )
 
         client = self.hubs.client
         previous = self.data

@@ -26,7 +26,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
@@ -281,7 +280,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             ),
             description_placeholders={
-                CONF_NAME: reauth_entry.title,
+                "name": reauth_entry.title,
                 "habiticans": HABITICANS_URL,
             },
             errors=errors,

@@ -16,6 +16,12 @@ from pyenphase import (
 )
 from pyenphase.auth import EnvoyLegacyAuth
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 import respx
 
 from homeassistant.components.enphase_envoy import DOMAIN
@@ -42,6 +48,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -50,9 +57,6 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from . import TOKEN_SIGNING_KEY, setup_integration
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_with_pre_v7_firmware(
@@ -186,6 +190,7 @@ async def test_almost_expired_token_with_manual_token(
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test coordinator with token within warning time in config and manual token option on."""
     caplog.set_level(logging.DEBUG)
@@ -214,9 +219,16 @@ async def test_almost_expired_token_with_manual_token(
         "domain": DOMAIN,
         "issue_id": f"{TOKEN_REPAIR_ID}_1234",
     }
+    issue = issue_registry.async_get_issue(DOMAIN, f"{TOKEN_REPAIR_ID}_1234")
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == "116"
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, f"{TOKEN_REPAIR_ID}_1234") is None
 
 
 @pytest.mark.parametrize(
@@ -1015,7 +1027,7 @@ async def test_coordinator_background_tasks_session_is_closed_not_loaded(
         ),
         patch(
             "homeassistant.components.enphase_envoy.async_unload_entry",
-            return_value=False,
+            side_effect=ConfigEntryError,
         ) as mock_unload,
     ):
         await hass.config_entries.async_unload(config_entry.entry_id)

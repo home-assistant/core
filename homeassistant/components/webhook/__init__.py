@@ -36,6 +36,17 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 type HandlerType = Callable[[HomeAssistant, str, Request], Awaitable[Response | None]]
 
+__all__ = [
+    "DOMAIN",
+    "SUPPORTED_METHODS",
+    "async_generate_id",
+    "async_generate_path",
+    "async_generate_url",
+    "async_handle_webhook",
+    "async_register",
+    "async_unregister",
+]
+
 
 @dataclass(frozen=True, slots=True)
 class WebhookData:

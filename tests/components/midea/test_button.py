@@ -8,6 +8,7 @@ from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.e1 import DeviceAttributes as E1Attributes
 from midealocal.exceptions import ValueWrongType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -19,8 +20,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DummyDevice, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 def _e1_device(*, model: str = "7600024L") -> DummyDevice:

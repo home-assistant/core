@@ -3,12 +3,14 @@
 from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
+from aiohttp import ClientConnectionError
 from freebox_api.exceptions import (
     AuthorizationError,
     HttpRequestError,
     InvalidTokenError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -18,8 +20,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import MOCK_HOST, MOCK_PORT
-
-from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.0.254"),
@@ -75,7 +75,7 @@ async def internal_test_link(hass: HomeAssistant) -> None:
     """Test linking internal, common to both router modes."""
     with patch(
         "homeassistant.components.freebox.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -149,7 +149,7 @@ async def test_link_bridge_mode_error(
     mock_router_bridge_mode_error.return_value.lan.get_hosts_list.side_effect = None
     with patch(
         "homeassistant.components.freebox.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -188,6 +188,8 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     [
         (AuthorizationError, "register_failed"),
         (HttpRequestError, "cannot_connect"),
+        (ClientConnectionError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (InvalidTokenError, "unknown"),
     ],
 )
@@ -223,7 +225,7 @@ async def test_on_link_failed(
 
     with patch(
         "homeassistant.components.freebox.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -263,7 +265,7 @@ async def test_on_link_failed_forgets_registration_on_invalid_token(
 
     with patch(
         "homeassistant.components.freebox.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -306,7 +308,7 @@ async def test_on_link_failed_keeps_registration_on_other_authorization_error(
 
     with patch(
         "homeassistant.components.freebox.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY

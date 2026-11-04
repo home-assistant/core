@@ -4,8 +4,10 @@ import asyncio
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component
 
 from homeassistant.components.template import DOMAIN, trigger_entity
+from homeassistant.components.template.const import TemplateService
 from homeassistant.components.template.coordinator import TriggerUpdateCoordinator
 from homeassistant.components.template.helpers import DATA_COORDINATORS
 from homeassistant.const import (
@@ -13,20 +15,17 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import condition, template
+from homeassistant.helpers import condition, config_validation as cv, template
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
 
 from .conftest import async_trigger
-
-from tests.common import assert_setup_component
 
 _ICON_TEMPLATE = 'mdi:o{{ "n" if value=="on" else "ff" }}'
 _PICTURE_TEMPLATE = '/local/picture_o{{ "n" if value=="on" else "ff" }}'
@@ -83,6 +82,58 @@ async def test_template_state(hass: HomeAssistant) -> None:
     assert entity.state == "False"
     assert entity.icon == "mdi:off"
     assert entity.entity_picture == "/local/picture_off"
+
+
+async def test_validator_error_recovery(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Invalid results clear the attribute without preventing later updates."""
+    config = {
+        CONF_ICON: template.Template("{{ icon }}", hass),
+        CONF_STATE: template.Template("{{ value }}", hass),
+    }
+    coordinator = TriggerUpdateCoordinator(hass, {})
+    entity = TestEntity(hass, coordinator, config)
+    entity.entity_id = "test.entity"
+    entity.setup_template(CONF_ICON, "_attr_icon", cv.icon)
+
+    coordinator._execute_update({"icon": "mdi:home", "value": "first"})
+    entity._handle_coordinator_update()
+    assert entity._attr_icon == "mdi:home"
+
+    coordinator._execute_update({"icon": "invalid", "value": "second"})
+    entity._handle_coordinator_update()
+    assert entity._attr_icon is None
+    assert hass.states.get("test.entity").state == "second"
+    assert "Error validating template result 'invalid'" in caplog.text
+    assert "for attribute '_attr_icon' in entity test.entity" in caplog.text
+
+    coordinator._execute_update({"icon": "mdi:lightbulb", "value": "third"})
+    entity._handle_coordinator_update()
+    assert entity._attr_icon == "mdi:lightbulb"
+    assert hass.states.get("test.entity").state == "third"
+
+
+async def test_validator_error_callback(hass: HomeAssistant) -> None:
+    """Pass None to the update callback on validation failure and recover."""
+    config = {
+        CONF_ICON: template.Template("{{ icon }}", hass),
+        CONF_STATE: template.Template("on", hass),
+    }
+    coordinator = TriggerUpdateCoordinator(hass, {})
+    entity = TestEntity(hass, coordinator, config)
+    entity.entity_id = "test.entity"
+    on_update = Mock()
+    entity.setup_template(CONF_ICON, "_attr_icon", cv.icon, on_update)
+
+    coordinator._execute_update({"icon": "invalid"})
+    entity._handle_coordinator_update()
+    on_update.assert_called_once_with(None)
+
+    on_update.reset_mock()
+    coordinator._execute_update({"icon": "mdi:home"})
+    entity._handle_coordinator_update()
+    on_update.assert_called_once_with("mdi:home")
 
 
 async def test_bad_template_state(hass: HomeAssistant) -> None:
@@ -194,6 +245,313 @@ async def test_script_variables_from_coordinator(
     assert state.attributes["a"] == 1
     assert state.attributes["b"] == 2
     assert state.attributes["c"] == 1
+
+
+async def test_trigger_variables(
+    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test trigger variables are available to triggers, actions and entities."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "trigger_variables": {
+                        "event_prefix": "my",
+                        "a": "defined_in_trigger_variables",
+                        "b": "defined_in_trigger_variables",
+                    },
+                    "variables": {
+                        "b": "overridden_in_variables",
+                        "c": "{{ a }}_in_variables",
+                    },
+                    "triggers": {
+                        "trigger": "event",
+                        "event_type": "{{ event_prefix }}_event",
+                    },
+                    "actions": [
+                        {
+                            "action": "test.automation",
+                            "data": {"a": "{{ a }}", "b": "{{ b }}", "c": "{{ c }}"},
+                        }
+                    ],
+                    "sensor": {
+                        "name": "test",
+                        "state": "{{ trigger.event.event_type }}",
+                        "attributes": {"a": "{{ a }}", "b": "{{ b }}", "c": "{{ c }}"},
+                    },
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["a"] == "defined_in_trigger_variables"
+    assert calls[0].data["b"] == "overridden_in_variables"
+    assert calls[0].data["c"] == "defined_in_trigger_variables_in_variables"
+
+    state = hass.states.get("sensor.test")
+    assert state
+    assert state.state == "my_event"
+    assert state.attributes["a"] == "defined_in_trigger_variables"
+    assert state.attributes["b"] == "overridden_in_variables"
+    assert state.attributes["c"] == "defined_in_trigger_variables_in_variables"
+    assert "Error rendering trigger variables" not in caplog.text
+
+
+async def test_trigger_variables_passed_to_entity_actions(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test trigger variables are passed to entity action scripts."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "trigger_variables": {"a": "trigger_variable", "b": "{{ a }}_b"},
+                    "variables": {"b": "overridden_in_variables"},
+                    "triggers": {"trigger": "event", "event_type": "my_event"},
+                    "switch": {
+                        "name": "test",
+                        "state": "{{ true }}",
+                        "turn_on": {
+                            "action": "test.automation",
+                            "data": {"a": "{{ a }}", "b": "{{ b }}"},
+                        },
+                        "turn_off": [],
+                    },
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    # Trigger variables are available before the trigger fires.
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.test"}, blocking=True
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {"a": "trigger_variable", "b": "trigger_variable_b"}
+
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.test"}, blocking=True
+    )
+    assert len(calls) == 2
+    assert calls[1].data == {"a": "trigger_variable", "b": "overridden_in_variables"}
+
+
+async def test_entity_action_variables_override_trigger_variables(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test variables passed to an entity action override trigger variables."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "trigger_variables": {"brightness": 1},
+                    "variables": {"brightness": 2},
+                    "triggers": {"trigger": "event", "event_type": "my_event"},
+                    "light": {
+                        "name": "test",
+                        "state": "{{ true }}",
+                        "level": "{{ 100 }}",
+                        "turn_on": [],
+                        "turn_off": [],
+                        "set_level": {
+                            "action": "test.automation",
+                            "data": {"brightness": "{{ brightness }}"},
+                        },
+                    },
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.test", "brightness": 200},
+        blocking=True,
+    )
+    assert len(calls) == 1
+    assert calls[0].data["brightness"] == 200
+
+    # The variables section is rendered once the trigger fires.
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.test", "brightness": 150},
+        blocking=True,
+    )
+    assert len(calls) == 2
+    assert calls[1].data["brightness"] == 150
+
+
+@pytest.mark.parametrize(
+    "trigger_variables",
+    [
+        pytest.param({}, id="without_trigger_variables"),
+        pytest.param(
+            {"trigger": {"id": "trigger_variable"}}, id="with_trigger_variables"
+        ),
+    ],
+)
+async def test_variables_cannot_shadow_trigger_data(
+    hass: HomeAssistant, trigger_variables: dict
+) -> None:
+    """Test variables that collide with trigger data do not affect later variables."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "trigger_variables": trigger_variables,
+                    "variables": {
+                        "trigger": {"id": "shadow"},
+                        "observed": "{{ trigger.id }}",
+                    },
+                    "triggers": {
+                        "trigger": "event",
+                        "event_type": "my_event",
+                        "id": "real",
+                    },
+                    "sensor": {"name": "test", "state": "{{ observed }}"},
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test").state == "real"
+
+
+@pytest.mark.parametrize(
+    ("variables", "expected"),
+    [
+        pytest.param(
+            {"base": "{{ base + 1 }}", "observed": "{{ base }}"},
+            "11",
+            id="override_references_trigger_variable",
+        ),
+        pytest.param(
+            {"observed": "{{ base }}", "base": 20},
+            "10",
+            id="earlier_variable_references_overridden_trigger_variable",
+        ),
+    ],
+)
+async def test_variables_reference_trigger_variables(
+    hass: HomeAssistant,
+    variables: dict,
+    expected: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test variables can reference trigger variables they override."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "trigger_variables": {"base": 10},
+                    "variables": variables,
+                    "triggers": {"trigger": "event", "event_type": "my_event"},
+                    "sensor": {"name": "test", "state": "{{ observed }}"},
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test").state == expected
+    assert "TemplateError" not in caplog.text
+
+
+async def test_trigger_variables_rendered_on_reload(hass: HomeAssistant) -> None:
+    """Test trigger variables are rendered when the configuration is reloaded."""
+
+    def _config(event_prefix: str) -> dict:
+        return {
+            "template": {
+                "trigger_variables": {"event_prefix": event_prefix},
+                "triggers": {
+                    "trigger": "event",
+                    "event_type": "{{ event_prefix }}_event",
+                },
+                "sensor": {"name": "test", "state": "{{ event_prefix }}"},
+            }
+        }
+
+    assert await async_setup_component(hass, DOMAIN, _config("first"))
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("first_event")
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test").state == "first"
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=_config("second"),
+    ):
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    listeners = hass.bus.async_listeners()
+    assert listeners.get("first_event", 0) == 0
+    assert listeners.get("second_event", 0) == 1
+
+    hass.bus.async_fire("second_event")
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.test").state == "second"
+
+
+async def test_bad_trigger_variables(
+    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test trigger variables accessing hass are rejected."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "trigger_variables": {"a": "{{ states('sensor.foo') }}"},
+                    "triggers": {"trigger": "event", "event_type": "my_event"},
+                    "actions": [{"action": "test.automation"}],
+                    "sensor": {"name": "test", "state": "{{ 'on' }}"},
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert "Error rendering trigger variables" in caplog.text
+    assert "Use of 'states' is not supported in limited templates" in caplog.text
+
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+    state = hass.states.get("sensor.test")
+    assert state
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_default_entity_id(hass: HomeAssistant) -> None:
@@ -363,7 +721,7 @@ async def test_reload_stops_script_and_unsubscribes_triggers(
         autospec=True,
         return_value={"template": []},
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     # Script should be stopped and unloaded

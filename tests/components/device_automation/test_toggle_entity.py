@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from probatio import Invalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import toggle_entity
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_if_fires_on_state_change(

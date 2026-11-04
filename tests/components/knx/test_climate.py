@@ -1,6 +1,7 @@
 """Test KNX climate."""
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.knx.const import CONF_SYNC_STATE, ClimateConf
@@ -12,8 +13,6 @@ from homeassistant.setup import async_setup_component
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import async_capture_events
 
 RAW_FLOAT_MINUS_1_0 = (0x87, 0x9C)
 RAW_FLOAT_20_0 = (0x07, 0xD0)

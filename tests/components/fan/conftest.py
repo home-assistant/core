@@ -3,11 +3,10 @@
 from collections.abc import Generator
 
 import pytest
+from pytest_homeassistant.common import mock_config_flow, mock_platform
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant
-
-from tests.common import mock_config_flow, mock_platform
 
 
 class MockFlow(ConfigFlow):

@@ -9,8 +9,11 @@ from astral.sun import elevation as astral_elevation
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, mock_component
+from pytest_homeassistant.components.common import assert_trigger_options_supported
 
 from homeassistant.components import automation, sun
+from homeassistant.components.sun.const import SunEntityStateAttribute
 from homeassistant.components.sun.trigger import _next_polar_transition
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -29,9 +32,6 @@ from homeassistant.helpers.sun import (
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed, mock_component
-from tests.components.common import assert_trigger_options_supported
 
 _TEST_DATETIME = datetime(2015, 9, 15, 1, tzinfo=dt_util.UTC)
 _SUN_ENTITY_ID = "sun.sun"
@@ -341,6 +341,18 @@ async def test_dawn_defaults_to_civil(
         assert service_calls[0].data["type"] == "civil"
 
 
+_OFFSET_CASES = [
+    pytest.param({"offset": {"hours": -1}}, -1, id="before"),
+    pytest.param({"offset": {"hours": 1}}, 1, id="after"),
+    pytest.param(
+        {"offset": {"hours": 1}, "offset_type": "before"}, -1, id="legacy_before"
+    ),
+    pytest.param(
+        {"offset": {"hours": 1}, "offset_type": "after"}, 1, id="legacy_after"
+    ),
+]
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "astral_event"),
     [
@@ -350,17 +362,13 @@ async def test_dawn_defaults_to_civil(
         ("sun.solar_midnight", "midnight"),
     ],
 )
-@pytest.mark.parametrize(
-    ("offset_type", "sign"),
-    [("before", -1), ("after", 1)],
-    ids=["before", "after"],
-)
+@pytest.mark.parametrize(("offset_options", "sign"), _OFFSET_CASES)
 async def test_event_trigger_offset(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     trigger_key: str,
     astral_event: str,
-    offset_type: str,
+    offset_options: dict[str, Any],
     sign: int,
 ) -> None:
     """Test the solar event triggers apply a before/after time offset."""
@@ -370,7 +378,7 @@ async def test_event_trigger_offset(
             hass,
             {
                 "platform": trigger_key,
-                "options": {"offset": {"hours": 1}, "offset_type": offset_type},
+                "options": offset_options,
             },
             {},
         )
@@ -387,16 +395,12 @@ async def test_event_trigger_offset(
 
 
 @pytest.mark.parametrize("trigger_key", ["sun.dawn", "sun.dusk"])
-@pytest.mark.parametrize(
-    ("offset_type", "sign"),
-    [("before", -1), ("after", 1)],
-    ids=["before", "after"],
-)
+@pytest.mark.parametrize(("offset_options", "sign"), _OFFSET_CASES)
 async def test_dawn_dusk_trigger_offset(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     trigger_key: str,
-    offset_type: str,
+    offset_options: dict[str, Any],
     sign: int,
 ) -> None:
     """Test the dawn and dusk triggers apply a before/after time offset."""
@@ -407,7 +411,7 @@ async def test_dawn_dusk_trigger_offset(
             hass,
             {
                 "platform": trigger_key,
-                "options": {"offset": {"hours": 1}, "offset_type": offset_type},
+                "options": offset_options,
             },
             {},
         )
@@ -731,11 +735,7 @@ async def test_golden_hour_defaults_to_any(
         ("sun.golden_hour_ended", "evening", "dusk", 4),
     ],
 )
-@pytest.mark.parametrize(
-    ("offset_type", "sign"),
-    [("before", -1), ("after", 1)],
-    ids=["before", "after"],
-)
+@pytest.mark.parametrize(("offset_options", "sign"), _OFFSET_CASES)
 async def test_golden_blue_hour_trigger_offset(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -743,7 +743,7 @@ async def test_golden_blue_hour_trigger_offset(
     period: str,
     event: str,
     depression: int,
-    offset_type: str,
+    offset_options: dict[str, Any],
     sign: int,
 ) -> None:
     """Test the golden/blue hour triggers apply a before/after time offset."""
@@ -753,11 +753,7 @@ async def test_golden_blue_hour_trigger_offset(
             hass,
             {
                 "platform": trigger_key,
-                "options": {
-                    "period": period,
-                    "offset": {"hours": 1},
-                    "offset_type": offset_type,
-                },
+                "options": {"period": period, **offset_options},
             },
             {},
         )
@@ -866,7 +862,7 @@ async def test_midnight_sun_trigger_offset_catches_pending_crossing(
             hass,
             {
                 "platform": "sun.midnight_sun_started",
-                "options": {"offset": {"days": 3}, "offset_type": "after"},
+                "options": {"offset": {"days": 3}},
             },
             {},
         )
@@ -936,11 +932,15 @@ async def test_elevation_changed_trigger(
         {},
     )
 
-    hass.states.async_set(_SUN_ENTITY_ID, "above_horizon", {"elevation": 5.0})
+    hass.states.async_set(
+        _SUN_ENTITY_ID, "above_horizon", {SunEntityStateAttribute.ELEVATION: 5.0}
+    )
     await hass.async_block_till_done()
     calls_before = len(service_calls)
 
-    hass.states.async_set(_SUN_ENTITY_ID, "above_horizon", {"elevation": 6.0})
+    hass.states.async_set(
+        _SUN_ENTITY_ID, "above_horizon", {SunEntityStateAttribute.ELEVATION: 6.0}
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == calls_before + 1
 
@@ -958,17 +958,23 @@ async def test_elevation_crossed_threshold_trigger(
         {},
     )
 
-    hass.states.async_set(_SUN_ENTITY_ID, "above_horizon", {"elevation": 5.0})
+    hass.states.async_set(
+        _SUN_ENTITY_ID, "above_horizon", {SunEntityStateAttribute.ELEVATION: 5.0}
+    )
     await hass.async_block_till_done()
     calls_before = len(service_calls)
 
     # Crossing from below to above the threshold fires once.
-    hass.states.async_set(_SUN_ENTITY_ID, "above_horizon", {"elevation": 15.0})
+    hass.states.async_set(
+        _SUN_ENTITY_ID, "above_horizon", {SunEntityStateAttribute.ELEVATION: 15.0}
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == calls_before + 1
 
     # Staying above the threshold does not fire again.
-    hass.states.async_set(_SUN_ENTITY_ID, "above_horizon", {"elevation": 20.0})
+    hass.states.async_set(
+        _SUN_ENTITY_ID, "above_horizon", {SunEntityStateAttribute.ELEVATION: 20.0}
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == calls_before + 1
 

@@ -58,8 +58,10 @@ from ..utils.logger import LOGGER
 from ..utils.path import entry_in_directory, is_safe, resolve_in_directory
 from ..utils.tree import tree_entry_filename, tree_entry_is_directory
 from ..utils.url import (
+    RemoteFile,
     github_archive,
     github_commit_archive,
+    github_listed_release_asset,
     github_raw_file,
     github_release_asset,
     ref_version,
@@ -198,7 +200,7 @@ def _check_archive_size(archive: zipfile.ZipFile) -> None:
 class FileInformation:
     """FileInformation."""
 
-    def __init__(self, url: str, path: str, name: str) -> None:
+    def __init__(self, url: RemoteFile, path: str, name: str) -> None:
         """Initialize the file information."""
         self.download_url = url
         self.path = path
@@ -280,6 +282,17 @@ class RepositoryArchive:
             archive.extractall(local, extractable)
 
 
+def valid_integration_categories(value: Any) -> list[str]:
+    """Return the integration categories, or none when they are not valid.
+
+    The catalog only lists known categories. A broken value loses just the
+    categories, not the whole repository.
+    """
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        return []
+    return list(value)
+
+
 @attr.s(auto_attribs=True)
 class RepositoryData:
     """RepositoryData class."""
@@ -302,6 +315,8 @@ class RepositoryData:
     has_issues: bool = True
     # "0" until the repository is known on GitHub
     id: str = "0"
+    # The categories in the manifest of an integration, like `energy.ev_charging`
+    integration_categories: list[str] = attr.field(factory=list)
     installed_commit: str | None = None
     installed_version: str | None = None
     installed: bool = False
@@ -749,7 +764,7 @@ class Repository:
                 MarketplaceError(
                     translation_domain=DOMAIN,
                     translation_key="file_not_downloaded",
-                    translation_placeholders={"file": content["url"]},
+                    translation_placeholders={"file": str(content["url"])},
                 )
             )
             return
@@ -1128,7 +1143,7 @@ class Repository:
         )
 
     def async_dispatch_changed(self, action: str) -> None:
-        """Tell the panel the repository changed."""
+        """Tell the panel and the entities the repository changed."""
         self.marketplace.async_dispatch(
             MarketplaceSignal.REPOSITORY,
             {
@@ -1137,6 +1152,7 @@ class Repository:
                 "repository_id": self.data.id,
             },
         )
+        self.marketplace.coordinators[self.data.category].async_update_listeners()
 
     @contextmanager
     def _install_failure_names_the_version(self, version: str | None) -> Iterator[None]:
@@ -1664,7 +1680,14 @@ class Repository:
                 if ref == release.tag_name:
                     files.extend(
                         FileInformation(
-                            asset.browser_download_url, asset.name, asset.name
+                            github_listed_release_asset(
+                                repository=self.data.full_name,
+                                version=release.tag_name,
+                                filename=asset.name,
+                                url=asset.browser_download_url,
+                            ),
+                            asset.name,
+                            asset.name,
                         )
                         for asset in release.assets or []
                     )
@@ -1731,7 +1754,12 @@ class Repository:
 
         return [
             FileInformation(
-                url=asset.get("browser_download_url"),
+                url=github_listed_release_asset(
+                    repository=self.data.full_name,
+                    version=release.data.get("tag_name", version),
+                    filename=asset.get("name"),
+                    url=asset.get("browser_download_url"),
+                ),
                 path=asset.get("name"),
                 name=asset.get("name"),
             )
@@ -1898,7 +1926,9 @@ class Repository:
             return None
 
         result = await self.marketplace.async_download_file(
-            f"https://raw.githubusercontent.com/{self.data.full_name}/{target_version}/{filename}",
+            github_raw_file(
+                repository=self.data.full_name, ref=target_version, path=filename
+            ),
             nolog=True,
         )
 
@@ -1928,7 +1958,9 @@ class Repository:
         """Get the hacs.json file of the repository."""
         self.logger.debug("%s Getting hacs.json for version=%s", self.string, version)
         result = await self.marketplace.async_download_file(
-            f"https://raw.githubusercontent.com/{self.data.full_name}/{version}/hacs.json",
+            github_raw_file(
+                repository=self.data.full_name, ref=version, path="hacs.json"
+            ),
             nolog=True,
             handle_rate_limit=True,
         )

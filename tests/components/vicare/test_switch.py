@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareNotSupportedFeatureError,
@@ -24,8 +25,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 VENTILATION_FIXTURES: list[Fixture] = [
     Fixture({"type:ventilation"}, "vicare/ViAir300F.json"),

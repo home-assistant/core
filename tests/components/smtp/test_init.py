@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiosmtplib import SMTPAuthenticationError, SMTPException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.smtp.const import (
@@ -28,8 +29,6 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("smtp", "aiosmtplib")

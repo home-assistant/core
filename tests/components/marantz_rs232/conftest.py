@@ -11,14 +11,13 @@ from marantz_rs232 import (
     V2007Source,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.marantz_rs232.const import DOMAIN
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_DEVICE
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from samsung_exlink import SamsungTVError
 from serialx import SerialException
 
@@ -10,8 +11,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockSamsungTV
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

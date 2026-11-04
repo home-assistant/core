@@ -5,6 +5,7 @@ from unittest.mock import ANY, MagicMock, call, patch
 
 from aio_geojson_usgs_earthquakes import UsgsEarthquakeHazardsProgramFeed
 from freezegun import freeze_time
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -36,8 +37,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {
     geo_location.DOMAIN: [

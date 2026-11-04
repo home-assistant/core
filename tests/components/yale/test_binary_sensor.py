@@ -3,6 +3,7 @@
 import datetime as dt
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -25,8 +26,6 @@ from .mocks import (
     _mock_doorsense_enabled_yale_lock_detail,
     _mock_lock_from_fixture,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_doorsense(hass: HomeAssistant) -> None:

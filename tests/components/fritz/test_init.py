@@ -5,6 +5,7 @@ from unittest.mock import patch
 from xml.etree.ElementTree import ParseError
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import core
 from homeassistant.components.device_tracker import (
@@ -22,8 +23,6 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_USER_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup(

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import adax_local
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.adax.const import (
@@ -17,8 +18,6 @@ from homeassistant.components.adax.const import (
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_DATA = {
     ACCOUNT_ID: 12345,
@@ -49,7 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.adax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -101,7 +100,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.adax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -174,7 +173,7 @@ async def test_local_create_entry(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.adax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.adax.config_flow.adax_local.AdaxConfig",
@@ -289,7 +288,7 @@ async def test_local_connection_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.adax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.adax.config_flow.adax_local.AdaxConfig",

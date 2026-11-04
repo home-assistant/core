@@ -241,6 +241,9 @@ class HistoryStats:
                 )
                 break
 
+            # Changes in the second after the floored end must not add time
+            state_change_timestamp = min(state_change_timestamp, end_timestamp)
+
             if not previous_state_matches and current_state_matches:
                 # We are entering a matching state.
                 # This marks the start of a new candidate block that may later

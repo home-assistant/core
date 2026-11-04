@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.plugins import MockConfigEntry
+
 from homeassistant.components.envertech_evt800.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
@@ -9,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_USER_INPUT
-
-from tests.conftest import MockConfigEntry
 
 
 async def test_full_flow(

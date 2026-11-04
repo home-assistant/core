@@ -12,6 +12,11 @@ from aionatureremo import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nature_remo.const import DOMAIN, UPDATE_INTERVAL
@@ -21,12 +26,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import async_poll
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_array_fixture,
-    snapshot_platform,
-)
 
 
 async def test_all_entities(

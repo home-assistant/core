@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RitualsConfigEntry, RitualsHubsCoordinator
-from .entity import DiffuserEntity, rituals_action
+from .entity import DiffuserEntity, async_add_diffusers, rituals_action
 
 PARALLEL_UPDATES = 1
 
@@ -60,12 +60,16 @@ async def async_setup_entry(
     """Set up the diffuser switch."""
     hubs = config_entry.runtime_data.hubs
 
-    async_add_entities(
-        RitualsSwitchEntity(hubs, hublot, description)
-        for hublot, hub in hubs.data.items()
-        for description in ENTITY_DESCRIPTIONS
-        if description.has_fn(hub)
-    )
+    @callback
+    def add_diffusers(hublots: list[str]) -> None:
+        async_add_entities(
+            RitualsSwitchEntity(hubs, hublot, description)
+            for hublot in hublots
+            for description in ENTITY_DESCRIPTIONS
+            if description.has_fn(hubs.data[hublot])
+        )
+
+    async_add_diffusers(config_entry, add_diffusers)
 
 
 class RitualsSwitchEntity(DiffuserEntity, SwitchEntity):

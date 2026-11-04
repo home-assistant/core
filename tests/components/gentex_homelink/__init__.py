@@ -4,10 +4,9 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import jwt
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_UNIQUE_ID = "06ebba97-100b-4c09-9917-e85d40b7898a"
 TEST_ACCESS_JWT = jwt.encode({"sub": TEST_UNIQUE_ID}, key="secret")

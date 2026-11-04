@@ -118,7 +118,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
     NWSSensorEntityDescription(
         key="barometricPressure",
         name="Barometric Pressure",
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.PA,
         unit_convert=UnitOfPressure.INHG,
@@ -126,7 +126,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
     NWSSensorEntityDescription(
         key="seaLevelPressure",
         name="Sea Level Pressure",
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.PA,
         unit_convert=UnitOfPressure.INHG,

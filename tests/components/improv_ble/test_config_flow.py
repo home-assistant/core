@@ -13,6 +13,12 @@ from improv_ble_client import (
     errors as improv_ble_errors,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info_bleak,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import improv_ble
@@ -31,13 +37,6 @@ from . import (
     IMPROV_BLE_DISCOVERY_INFO,
     NOT_IMPROV_BLE_DISCOVERY_INFO,
     PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
-)
-
-from tests.common import MockConfigEntry, async_capture_events
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_bluetooth_service_info_bleak,
 )
 
 IMPROV_BLE = "homeassistant.components.improv_ble"

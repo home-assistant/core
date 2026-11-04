@@ -4,6 +4,7 @@ from dataclasses import replace
 from unittest.mock import patch
 
 from lorawan_connection import AddedEvent, RemovedEvent, UpdatedEvent
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -11,8 +12,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import RegisterBackend
 from .helpers import DESCRIPTOR
-
-from tests.common import MockConfigEntry
 
 
 async def test_registry_lifecycle(

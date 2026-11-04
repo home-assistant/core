@@ -15,6 +15,7 @@ from lorawan_connection import (
     UplinkEvent,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lorawan import DeviceManager
 from homeassistant.components.lorawan.connection import (
@@ -30,8 +31,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import RegisterBackend
 from .helpers import DESCRIPTOR, ExampleCoordinator, ExampleDevices
-
-from tests.common import MockConfigEntry
 
 
 async def test_multiple_connections_reconnect(

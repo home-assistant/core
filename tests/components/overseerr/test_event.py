@@ -5,6 +5,13 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from python_overseerr import OverseerrConnectionError
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,14 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import call_webhook, setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time("2023-10-21")

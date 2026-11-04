@@ -4,6 +4,12 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_cloud_connection_status,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from switchbot_api import (
     Device,
     PowerState,
@@ -34,13 +40,7 @@ from homeassistant.core_config import async_process_ha_core_config
 
 from . import configure_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_mock_cloud_connection_status,
-)
 from tests.components.cloud import mock_cloud
-from tests.typing import ClientSessionGenerator
 
 CLOUDHOOK_URL = "https://hooks.nabu.casa/ABCD"
 

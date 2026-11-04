@@ -147,13 +147,14 @@ async def test_set_number_value_to_float(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "3"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: "number.genie_perfume_amount", ATTR_VALUE: 1.5},
             blocking=True,
         )
+    assert exc_info.value.translation_key == "perfume_amount_not_whole"
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,

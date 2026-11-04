@@ -12,6 +12,12 @@ from aioshelly.const import (
 )
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
+from pytest_homeassistant.common import (
+    async_load_json_object_fixture,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -74,13 +80,6 @@ from . import (
     register_entity,
 )
 from .conftest import MOCK_STATUS_COAP
-
-from tests.common import (
-    async_load_json_object_fixture,
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
 
 SENSOR_BLOCK_ID = 3
 DEVICE_BLOCK_ID = 4
@@ -857,7 +856,7 @@ async def test_device_not_calibrated(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test to create an issue when the device is not calibrated."""
-    await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
+    entry = await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
 
     # Make device online
     mock_block_device.mock_online()
@@ -873,9 +872,12 @@ async def test_device_not_calibrated(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id=f"not_calibrated_{MOCK_MAC}"
+    assert (
+        issue := issue_registry.async_get_issue(
+            domain=DOMAIN, issue_id=f"not_calibrated_{MOCK_MAC}"
+        )
     )
+    assert issue.config_entry_id == entry.entry_id
 
     # The device has been calibrated
     monkeypatch.setattr(
