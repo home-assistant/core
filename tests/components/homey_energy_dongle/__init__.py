@@ -42,6 +42,22 @@ TELEGRAM_V5 = (
     "!EFF0\r\n"
 )
 
+# EasyMeter Q3D telegram, which reports power in W instead of kW.
+TELEGRAM_Q3D = (
+    "/ESY5Q3DB1024 V3.04\r\n"
+    "\r\n"
+    "1-0:0.0.0*255(0272031312565)\r\n"
+    "1-0:1.8.0*255(00052185.7825309*kWh)\r\n"
+    "1-0:2.8.0*255(00019949.3221493*kWh)\r\n"
+    "1-0:21.7.0*255(000747.85*W)\r\n"
+    "1-0:41.7.0*255(000737.28*W)\r\n"
+    "1-0:61.7.0*255(000639.73*W)\r\n"
+    "1-0:1.7.0*255(002124.86*W)\r\n"
+    "1-0:96.5.5*255(80)\r\n"
+    "0-0:96.1.255*255(1ESY1313002565)\r\n"
+    "!\r\n"
+)
+
 # Meter total register instead of tariffs, no power registers, a gas meter
 # reporting energy, an unsupported heat/cool meter, a water meter without
 # identifier and a heat meter without reading.

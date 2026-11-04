@@ -8,7 +8,16 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import HomeyEnergyDongleConfigEntry
 
-TO_REDACT = {"unique_id", "EQUIPMENT_IDENTIFIER", "MBUS_EQUIPMENT_IDENTIFIER"}
+TO_REDACT = {
+    "unique_id",
+    "EQUIPMENT_IDENTIFIER",
+    "BELGIUM_EQUIPMENT_IDENTIFIER",
+    "LUXEMBOURG_EQUIPMENT_IDENTIFIER",
+    "Q3D_EQUIPMENT_IDENTIFIER",
+    "Q3D_EQUIPMENT_SERIALNUMBER",
+    "EQUIPMENT_IDENTIFIER_GAS",
+    "MBUS_EQUIPMENT_IDENTIFIER",
+}
 
 
 async def async_get_config_entry_diagnostics(
