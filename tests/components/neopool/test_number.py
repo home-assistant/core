@@ -278,6 +278,30 @@ async def test_heating_setpoint_writes_via_high_level_api(
     )
 
 
+async def test_intelligent_setpoint_writes_via_high_level_api(
+    hass: HomeAssistant,
+    mock_config_entry_number: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Writing the intelligent setpoint delegates to async_set_setpoint(INTELLIGENT)."""
+    mock_neopool_client.async_set_setpoint = AsyncMock(
+        return_value={"MBF_PAR_INTELLIGENT_TEMP": 28}
+    )
+
+    await setup_integration(hass, mock_config_entry_number)
+    entity_id = _number_entity_id(
+        hass, mock_config_entry_number, "mbf_par_intelligent_temp"
+    )
+    mock_neopool_client.async_set_setpoint.reset_mock()
+
+    await _write(hass, freezer, entity_id, 28.0)
+
+    mock_neopool_client.async_set_setpoint.assert_awaited_once_with(
+        SetpointKind.INTELLIGENT, 28
+    )
+
+
 @pytest.mark.parametrize(
     ("suffix", "data_key", "value", "kind", "expected_raw"),
     [

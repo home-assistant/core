@@ -34,5 +34,5 @@ def mocked_livisi_setup_entry():
     """Create mock for LIVISI setup entry."""
     return patch(
         "homeassistant.components.livisi.async_setup_entry",
-        return_value=True,
+        return_value=None,
     )

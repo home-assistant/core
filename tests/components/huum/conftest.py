@@ -36,6 +36,7 @@ def mock_huum_client() -> Generator[AsyncMock]:
             config=3,
             light=1,
             humidity=5,
+            maximum_target_humidity=20,
             sauna_config=SaunaConfig(
                 child_lock="OFF",
                 max_heating_time=3,
@@ -53,7 +54,7 @@ def mock_huum_client() -> Generator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.huum.async_setup_entry", return_value=True
+        "homeassistant.components.huum.async_setup_entry", return_value=None
     ) as setup_entry_mock:
         yield setup_entry_mock
 

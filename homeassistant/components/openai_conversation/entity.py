@@ -737,7 +737,8 @@ class OpenAIBaseLLMEntity(Entity):
                     ir.async_create_issue(
                         self.hass,
                         DOMAIN,
-                        "organization_verification_required",
+                        f"organization_verification_required_{self.entry.entry_id}",
+                        config_entry_id=self.entry.entry_id,
                         is_fixable=False,
                         is_persistent=False,
                         learn_more_url="https://help.openai.com/en/articles/10910291-api-organization-verification",

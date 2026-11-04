@@ -97,7 +97,7 @@ async def fixture_knx_setup(hass: HomeAssistant):
     with (
         patch("homeassistant.components.knx.async_setup", return_value=True),
         patch(
-            "homeassistant.components.knx.async_setup_entry", return_value=True
+            "homeassistant.components.knx.async_setup_entry", return_value=None
         ) as mock_async_setup_entry,
     ):
         yield mock_async_setup_entry

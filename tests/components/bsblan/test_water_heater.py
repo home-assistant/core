@@ -26,7 +26,12 @@ from homeassistant.components.water_heater import (
     STATE_OFF,
     STATE_PERFORMANCE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -529,3 +534,50 @@ async def test_turn_off_error(
         )
     assert exc.value.translation_domain == DOMAIN
     assert exc.value.translation_key == "set_operation_mode_error"
+
+
+async def test_set_temperature_rereads_only_hot_water(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a write re-reads only the hot water state."""
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+    mock_bsblan.hot_water_state.reset_mock()
+    mock_bsblan.state.reset_mock()
+
+    await hass.services.async_call(
+        domain=WATER_HEATER_DOMAIN,
+        service=SERVICE_SET_TEMPERATURE,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 50},
+        blocking=True,
+    )
+
+    mock_bsblan.hot_water_state.assert_called_once()
+    mock_bsblan.state.assert_not_called()
+
+
+async def test_set_temperature_ignores_failed_reread(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failed hot water re-read after a write leaves it to the next poll."""
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+    mock_bsblan.hot_water_state.side_effect = BSBLANError("Test error")
+    mock_bsblan.state.reset_mock()
+
+    await hass.services.async_call(
+        domain=WATER_HEATER_DOMAIN,
+        service=SERVICE_SET_TEMPERATURE,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 50},
+        blocking=True,
+    )
+
+    mock_bsblan.set_hot_water.assert_called_once()
+    mock_bsblan.state.assert_not_called()
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE

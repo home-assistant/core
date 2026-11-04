@@ -61,16 +61,17 @@ async def async_setup_entry(
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
 
-    async_add_entities(
+    entities: list[SofarSensor | SofarTotalSensor] = [
         SofarSensor(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
         if description.component in served and not _is_battery_pack(description)
-    )
-    async_add_entities(
+    ]
+    entities.extend(
         SofarTotalSensor(runtime_data, description)
         for description in TOTAL_SENSOR_DESCRIPTIONS
         if description.component in served
     )
+    async_add_entities(entities)
 
     @callback
     def _async_add_wired_packs() -> None:
@@ -285,6 +286,21 @@ def _part_value_fn(
 ) -> Callable[[SofarInverter], StateType]:
     """Bind a measurement to one numbered string or pack."""
     return lambda device: value_fn(device, number)
+
+
+def _discharge_cutoff_soc(depth: int | None) -> int | None:
+    """Return the charge left once the battery has discharged by depth."""
+    return None if depth is None else 100 - depth
+
+
+def _off_grid_recovery_soc(device: SofarInverter) -> int | None:
+    """Return the charge at which off-grid discharge resumes."""
+    config = device.battery_config
+    if (cutoff := _discharge_cutoff_soc(config.bat_config_end_of_discharge)) is None:
+        return None
+    if (buffer := config.bat_config_eps_buffer) is None:
+        return None
+    return cutoff + buffer
 
 
 SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
@@ -1411,6 +1427,48 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.battery_config.bat_config_voltage_float,
+    ),
+    SofarSensorDescription(
+        key="on_grid_discharge_cutoff_soc",
+        component="battery_config",
+        translation_key="on_grid_discharge_cutoff_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: _discharge_cutoff_soc(
+            device.battery_config.bat_config_depth_of_discharge
+        ),
+    ),
+    SofarSensorDescription(
+        key="off_grid_discharge_cutoff_soc",
+        component="battery_config",
+        translation_key="off_grid_discharge_cutoff_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: _discharge_cutoff_soc(
+            device.battery_config.bat_config_end_of_discharge
+        ),
+    ),
+    SofarSensorDescription(
+        key="off_grid_recovery_soc",
+        component="battery_config",
+        translation_key="off_grid_recovery_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=_off_grid_recovery_soc,
+    ),
+    SofarSensorDescription(
+        key="bat_config_charge_cutoff_soc",
+        component="battery_charge_cutoff",
+        translation_key="bat_config_charge_cutoff_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: (
+            device.battery_charge_cutoff.bat_config_charge_cutoff_soc
+        ),
     ),
     SofarSensorDescription(
         key="sync_rtc_result",

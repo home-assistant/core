@@ -16,6 +16,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    CONF_EXCLUDE,
+    ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
 from homeassistant.core import (
@@ -36,7 +38,6 @@ from . import (
     group,
     label_registry as lr,
 )
-from .deprecation import deprecated_class
 from .event import async_track_state_change_event
 from .typing import ConfigType
 
@@ -68,7 +69,14 @@ def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
 class TargetSelection:
     """Class to represent target selection."""
 
-    __slots__ = ("area_ids", "device_ids", "entity_ids", "floor_ids", "label_ids")
+    __slots__ = (
+        "area_ids",
+        "device_ids",
+        "entity_ids",
+        "exclude",
+        "floor_ids",
+        "label_ids",
+    )
 
     def __init__(self, config: ConfigType) -> None:
         """Extract ids from the config."""
@@ -94,9 +102,21 @@ class TargetSelection:
             set(probatio.EnsureList()(label_ids)) if _has_match(label_ids) else set()
         )
 
+        # Entities matched by the exclude block are removed from the resolved
+        # target. Config validation prevents nesting exclude blocks.
+        self.exclude: TargetSelection | None = None
+        if exclude_config := config.get(CONF_EXCLUDE):
+            exclude = TargetSelection(exclude_config)
+            if exclude.has_any_target:
+                self.exclude = exclude
+
     @property
     def has_any_target(self) -> bool:
-        """Determine if any target is present."""
+        """Determine if any target is present.
+
+        The exclude block is not taken into account, a target consisting of
+        only an exclude block doesn't target anything.
+        """
         return bool(
             self.entity_ids
             or self.device_ids
@@ -104,16 +124,6 @@ class TargetSelection:
             or self.floor_ids
             or self.label_ids
         )
-
-
-@deprecated_class("TargetSelection", breaks_in_ha_version="2026.12.0")
-class TargetSelectorData(TargetSelection):
-    """Class to represent target selector data."""
-
-    @property
-    def has_any_selector(self) -> bool:
-        """Determine if any selectors are present."""
-        return super().has_any_target
 
 
 @dataclasses.dataclass(slots=True)
@@ -209,7 +219,74 @@ def async_extract_referenced_entity_ids(
     Label targeting via labeled devices or areas follows the same filtering
     rules as other indirect device/area expansion paths: filtered when
     `primary_entities_only` is True, and included when it is False.
+
+    If the target selection has an exclude block, the entities, devices and
+    areas it resolves to are removed from the result, regardless of whether
+    they were referenced directly or indirectly.
     """
+    selected = _async_extract_referenced_entity_ids(
+        hass,
+        target_selection,
+        expand_group,
+        primary_entities_only=primary_entities_only,
+    )
+
+    if target_selection.exclude is None or not target_selection.has_any_target:
+        return selected
+
+    excluded = _async_extract_excluded(hass, target_selection.exclude, expand_group)
+    excluded_entity_ids = excluded.referenced | excluded.indirectly_referenced
+    selected.referenced -= excluded_entity_ids
+    selected.indirectly_referenced -= excluded_entity_ids
+    selected.referenced_devices -= excluded.referenced_devices
+    selected.referenced_areas -= excluded.referenced_areas
+    return selected
+
+
+def async_extract_excluded_entity_ids(
+    hass: HomeAssistant, target_selection: TargetSelection, expand_group: bool = True
+) -> set[str]:
+    """Extract the entity IDs excluded by the exclude block of a target selection.
+
+    This is only needed by callers which don't resolve the target selection with
+    async_extract_referenced_entity_ids, for example when all entities are
+    targeted with `entity_id: all`.
+    """
+    if target_selection.exclude is None:
+        return set()
+    excluded = _async_extract_excluded(hass, target_selection.exclude, expand_group)
+    return excluded.referenced | excluded.indirectly_referenced
+
+
+def _async_extract_excluded(
+    hass: HomeAssistant, exclude: TargetSelection, expand_group: bool
+) -> SelectedEntities:
+    """Resolve the exclude block of a target selection."""
+    # All entities are resolved, so excluding an area also excludes its hidden,
+    # config and diagnostic entities when those are part of the targeted entities.
+    # Group entities, nested ones included, are kept alongside their members as
+    # they are still candidates when targeting all entities, an area, a device,
+    # a floor or a label.
+    return _async_extract_referenced_entity_ids(
+        hass,
+        exclude,
+        expand_group=expand_group,
+        primary_entities_only=False,
+        include_hidden=True,
+        include_groups=True,
+    )
+
+
+def _async_extract_referenced_entity_ids(
+    hass: HomeAssistant,
+    target_selection: TargetSelection,
+    expand_group: bool,
+    *,
+    primary_entities_only: bool,
+    include_hidden: bool = False,
+    include_groups: bool = False,
+) -> SelectedEntities:
+    """Extract referenced entity IDs from a target selection, ignoring excludes."""
     selected = SelectedEntities()
 
     if not target_selection.has_any_target:
@@ -217,7 +294,9 @@ def async_extract_referenced_entity_ids(
 
     entity_ids: set[str] | list[str] = target_selection.entity_ids
     if expand_group:
-        entity_ids = group.expand_entity_ids(hass, entity_ids)
+        entity_ids = group.expand_entity_ids(
+            hass, entity_ids, include_groups=include_groups
+        )
 
     selected.referenced.update(entity_ids)
 
@@ -252,7 +331,7 @@ def async_extract_referenced_entity_ids(
                 selected.missing_labels.add(label_id)
 
             for entity_entry in entities.get_entries_for_label(label_id):
-                if entity_entry.hidden_by is None:
+                if include_hidden or entity_entry.hidden_by is None:
                     selected.indirectly_referenced.add(entity_entry.entity_id)
 
             # Labeled devices expand like directly targeted devices, children included.
@@ -277,7 +356,7 @@ def async_extract_referenced_entity_ids(
 
     def _include_entry(entry: er.RegistryEntry) -> bool:
         """Return True if the entry should be included in indirect expansion."""
-        if entry.hidden_by is not None:
+        if not include_hidden and entry.hidden_by is not None:
             return False
         return not primary_entities_only or entry.entity_category is None
 
@@ -318,6 +397,120 @@ def async_extract_referenced_entity_ids(
     )
 
     return selected
+
+
+_TARGET_ITEM_TYPES: tuple[tuple[str, str], ...] = (
+    ("entity", ATTR_ENTITY_ID),
+    ("device", ATTR_DEVICE_ID),
+    ("area", ATTR_AREA_ID),
+    ("floor", ATTR_FLOOR_ID),
+    ("label", ATTR_LABEL_ID),
+)
+
+
+@dataclasses.dataclass(slots=True)
+class TargetItemEntities:
+    """A single item of a target selection and the entities it resolves to."""
+
+    type: str
+    id: str
+    entities: set[str]
+
+
+@dataclasses.dataclass(slots=True)
+class TargetIncludeEntities(TargetItemEntities):
+    """An included item of a target selection and what it reaches."""
+
+    # The areas and devices the item reaches on its way to its entities.
+    referenced_areas: set[str] = dataclasses.field(default_factory=set)
+    referenced_devices: set[str] = dataclasses.field(default_factory=set)
+
+
+@dataclasses.dataclass(slots=True)
+class ExcludeEffect:
+    """What a single item of an exclude block takes out of a target selection."""
+
+    type: str
+    id: str
+    # The entities it takes out of each included item.
+    removed: list[TargetItemEntities] = dataclasses.field(default_factory=list)
+
+
+@dataclasses.dataclass(slots=True)
+class TargetExplanation:
+    """What the items of a target selection resolve to and the exclude takes out."""
+
+    includes: list[TargetIncludeEntities]
+    excludes: list[ExcludeEffect]
+
+
+def _iter_target_items(
+    target_selection: TargetSelection,
+) -> list[tuple[str, str, TargetSelection]]:
+    """Return each item of a target selection as a target selection of its own."""
+    return [
+        (item_type, item_id, TargetSelection({attr: [item_id]}))
+        for item_type, attr in _TARGET_ITEM_TYPES
+        for item_id in sorted(getattr(target_selection, f"{item_type}_ids"))
+    ]
+
+
+@callback
+def async_explain_target(
+    hass: HomeAssistant,
+    target_selection: TargetSelection,
+    expand_group: bool = True,
+    *,
+    primary_entities_only: bool = True,
+) -> TargetExplanation:
+    """Explain what each targeted item resolves to and what each exclude takes out.
+
+    Items are resolved the same way as async_extract_referenced_entity_ids
+    resolves the whole target selection, so the union of what is reported here
+    is what the target selection resolves to. An exclude which takes nothing out
+    of any item has no effect.
+    """
+    includes: list[TargetIncludeEntities] = []
+    for item_type, item_id, selection in _iter_target_items(target_selection):
+        if item_type == "entity" and item_id == ENTITY_MATCH_ALL:
+            includes.append(
+                TargetIncludeEntities(
+                    item_type, item_id, set(hass.states.async_entity_ids())
+                )
+            )
+            continue
+        selected = _async_extract_referenced_entity_ids(
+            hass,
+            selection,
+            expand_group,
+            primary_entities_only=primary_entities_only,
+        )
+        includes.append(
+            TargetIncludeEntities(
+                item_type,
+                item_id,
+                selected.referenced | selected.indirectly_referenced,
+                selected.referenced_areas,
+                selected.referenced_devices,
+            )
+        )
+
+    if target_selection.exclude is None:
+        return TargetExplanation(includes, [])
+
+    excludes: list[ExcludeEffect] = []
+    for item_type, item_id, selection in _iter_target_items(target_selection.exclude):
+        excluded = _async_extract_excluded(hass, selection, expand_group)
+        excluded_entity_ids = excluded.referenced | excluded.indirectly_referenced
+        effect = ExcludeEffect(item_type, item_id)
+        for include in includes:
+            if removed := include.entities & excluded_entity_ids:
+                effect.removed.append(
+                    TargetItemEntities(include.type, include.id, removed)
+                )
+        excludes.append(effect)
+
+    return TargetExplanation(includes, excludes)
 
 
 class TargetEntityChangeTracker(abc.ABC):

@@ -4,6 +4,7 @@ import asyncio
 from base64 import b64encode
 from collections import defaultdict
 from collections.abc import Iterable
+from contextlib import suppress
 from datetime import timedelta
 from itertools import product
 import logging
@@ -238,16 +239,22 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             code_list = self._extract_codes(commands, subdevice)
         except ValueError as err:
-            _LOGGER.error("Failed to call %s: %s", service, err)
-            raise
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_command",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
-        rf_flags = {0xB2, 0xD7}
+        # 0xB1 is what an RM4 Pro returns for a learned 433 MHz code.
+        rf_flags = {0xB1, 0xB2, 0xB4, 0xD7}
         if not hasattr(device.api, "sweep_frequency") and any(
-            c[0] in rf_flags for codes in code_list for c in codes
+            c and c[0] in rf_flags for codes in code_list for c in codes
         ):
-            err_msg = f"{self.entity_id} doesn't support sending RF commands"
-            _LOGGER.error("Failed to call %s: %s", service, err_msg)
-            raise ValueError(err_msg)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="rf_not_supported",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
 
         at_least_one_sent = False
         try:
@@ -306,9 +313,11 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 learn_command = self._async_learn_rf_command
 
             else:
-                err_msg = f"{self.entity_id} doesn't support learning RF commands"
-                _LOGGER.error("Failed to call %s: %s", service, err_msg)
-                raise ValueError(err_msg)
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="rf_not_supported",
+                    translation_placeholders={"entity_id": self.entity_id},
+                )
 
             should_store = False
             failed_commands: list[str] = []
@@ -434,11 +443,17 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     _LOGGER.debug("Radiofrequency detected: %s MHz", frequency)
                     break
             else:
-                await device.async_request(device.api.cancel_sweep_frequency)
                 raise TimeoutError(
                     "No radiofrequency found within "
                     f"{LEARNING_TIMEOUT.total_seconds()} seconds"
                 )
+
+        except BroadlinkException, OSError, asyncio.CancelledError:
+            # Leave the device out of sweep mode so later learning still works,
+            # also when the action is cancelled while polling.
+            with suppress(BroadlinkException, OSError):
+                await device.async_request(device.api.cancel_sweep_frequency)
+            raise
 
         finally:
             persistent_notification.async_dismiss(
@@ -448,7 +463,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         await asyncio.sleep(1)
 
         try:
-            await device.async_request(device.api.find_rf_packet)
+            await device.async_request(device.api.find_rf_packet, frequency)
 
         except (BroadlinkException, OSError) as err:
             _LOGGER.debug("Failed to enter learning mode: %s", err)

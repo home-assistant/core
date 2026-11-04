@@ -1,8 +1,16 @@
 """The tests for Climate device triggers."""
 
+from datetime import timedelta
+from typing import Any
+
+from freezegun.api import FrozenDateTimeFactory
 from probatio import Invalid, to_field_list
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_device_automations,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -250,6 +258,79 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 3
     assert service_calls[2].data["some"] == "current_humidity_changed"
+
+
+@pytest.mark.parametrize(
+    ("trigger", "attributes"),
+    [
+        pytest.param(
+            {"type": "hvac_mode_changed", "to": HVACMode.AUTO},
+            {const.ATTR_CURRENT_TEMPERATURE: 18},
+            id="hvac_mode_changed",
+        ),
+        pytest.param(
+            {"type": "current_temperature_changed", "above": 20},
+            {const.ATTR_CURRENT_TEMPERATURE: 23},
+            id="current_temperature_changed",
+        ),
+    ],
+)
+async def test_if_fires_on_state_change_with_for(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+    freezer: FrozenDateTimeFactory,
+    trigger: dict[str, Any],
+    attributes: dict[str, Any],
+) -> None:
+    """Test triggers firing only after the state matched for the given duration."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        entry.entity_id, HVACMode.COOL, {const.ATTR_CURRENT_TEMPERATURE: 18}
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "entity_id": entry.id,
+                        "for": {"seconds": 5},
+                        **trigger,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "{{ trigger.for }}"},
+                    },
+                },
+            ]
+        },
+    )
+
+    hass.states.async_set(entry.entity_id, HVACMode.AUTO, attributes)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "0:00:05"
 
 
 async def test_if_fires_on_state_change_legacy(

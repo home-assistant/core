@@ -18,7 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Electra Air Conditioner."""
+    """Handle a config flow for Electra Air Conditioner.
+
+    DHCP discovery is handled by the default `ConfigFlow.async_step_dhcp`, which
+    starts the regular user flow: a discovered device cannot be attributed to an
+    account, because entries are created per Electra account and its devices are
+    only known through the cloud API.
+    """
 
     VERSION = 1
 
@@ -84,10 +90,8 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         self._phone_number = user_input[CONF_PHONE_NUMBER]
         self._imei = generate_imei()
 
-        # Check if already configured
-        if self.unique_id is None:
-            await self.async_set_unique_id(self._phone_number)
-            self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(self._phone_number)
+        self._abort_if_unique_id_configured()
 
         assert isinstance(self._api, ElectraAPI)
 

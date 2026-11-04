@@ -49,7 +49,7 @@ async def test_user_form(
         ) as mock_setup,
         patch(
             "homeassistant.components.sonos.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -71,7 +71,7 @@ async def test_user_form_already_created(hass: HomeAssistant) -> None:
     config = {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: "192.168.4.2"}}}
     with patch(
         "homeassistant.components.sonos.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
@@ -104,7 +104,7 @@ async def test_zeroconf_form(
         ) as mock_setup,
         patch(
             "homeassistant.components.sonos.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -166,7 +166,7 @@ async def test_ssdp_discovery(hass: HomeAssistant, soco) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.sonos.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -220,7 +220,7 @@ async def test_zeroconf_sonos_v1(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.sonos.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

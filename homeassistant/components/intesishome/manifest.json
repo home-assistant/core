@@ -3,6 +3,7 @@
   "name": "IntesisHome",
   "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@jnimmo"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/intesishome",
   "iot_class": "cloud_polling",
   "loggers": ["pyintesishome"],

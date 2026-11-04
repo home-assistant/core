@@ -2,9 +2,11 @@
 
 from typing import override
 
+from starline import StarlineDevice
+
 from homeassistant.helpers.entity import Entity
 
-from .account import StarlineAccount, StarlineDevice
+from .account import StarlineAccount
 
 
 class StarlineEntity(Entity):

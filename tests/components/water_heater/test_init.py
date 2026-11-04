@@ -145,12 +145,11 @@ async def test_operation_mode_validation(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.WATER_HEATER]
         )
-        return True
 
     async def async_setup_entry_water_heater_platform(
         hass: HomeAssistant,

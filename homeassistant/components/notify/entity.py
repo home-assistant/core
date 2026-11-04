@@ -12,7 +12,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
-from .const import ATTR_TITLE, NotifyEntityFeature
+from .const import NotifyEntityFeature, NotifyServiceArgument
 
 
 class NotifyEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -84,7 +84,7 @@ class NotifyEntity(RestoreEntity):
             and self.supported_features
             and self.supported_features & NotifyEntityFeature.TITLE
         ):
-            kwargs[ATTR_TITLE] = title
+            kwargs[NotifyServiceArgument.TITLE] = title
         await self.hass.async_add_executor_job(
             partial(self.send_message, message, **kwargs)
         )

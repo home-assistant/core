@@ -37,7 +37,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.jellyfin.async_setup_entry", return_value=True
+        "homeassistant.components.jellyfin.async_setup_entry", return_value=None
     ) as setup_mock:
         yield setup_mock
 

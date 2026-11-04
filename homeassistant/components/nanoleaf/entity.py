@@ -4,7 +4,13 @@ from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
-from aionanoleaf2 import AuthError, InvalidEffect, NanoleafError, NoAuthToken
+from aionanoleaf2 import (
+    AuthError,
+    InvalidEffect,
+    InvalidEmersion,
+    NanoleafError,
+    NoAuthToken,
+)
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -42,7 +48,7 @@ def async_handle_nanoleaf_errors[EntityT: NanoleafEntity, **P](
     async def wrapper(self: EntityT, /, *args: P.args, **kwargs: P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
-        except InvalidEffect as err:
+        except (InvalidEffect, InvalidEmersion) as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="effect_not_supported",

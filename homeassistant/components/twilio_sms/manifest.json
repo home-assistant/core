@@ -3,6 +3,7 @@
   "name": "Twilio SMS",
   "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "dependencies": ["twilio"],
   "documentation": "https://www.home-assistant.io/integrations/twilio_sms",
   "iot_class": "cloud_push",

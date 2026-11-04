@@ -228,6 +228,7 @@ class SonosDiscoveryManager:
                 self.hass,
                 DOMAIN,
                 f"{UPNP_ISSUE_ID}_{ip_address}",
+                config_entry_id=self.entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="upnp_disabled",
@@ -306,6 +307,9 @@ class SonosDiscoveryManager:
 
         async def async_subscription_failed(now: dt.datetime) -> None:
             """Fallback logic if the subscription callback never arrives."""
+            # The timer outlives an unload, and the issue can't link to a removed entry
+            if self._stop_event.is_set():
+                return
             addr, port = sub.event_listener.address
             listener_address = f"{addr}:{port}"
             if advertise_ip := soco_config.EVENT_ADVERTISE_IP:
@@ -314,6 +318,7 @@ class SonosDiscoveryManager:
                 self.hass,
                 DOMAIN,
                 SUB_FAIL_ISSUE_ID,
+                config_entry_id=self.entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="subscriptions_failed",
@@ -718,11 +723,13 @@ class SonosDiscoveryManager:
             )
             await self.async_poll_manual_hosts()
 
-        self.entry.async_on_unload(
-            await ssdp.async_register_callback(
-                self.hass, self._async_ssdp_discovered_player, {"st": UPNP_ST}
+        # Search responses carry "st" and advertisements carry "nt"
+        for match_dict in ({"st": UPNP_ST}, {"nt": UPNP_ST}):
+            self.entry.async_on_unload(
+                await ssdp.async_register_callback(
+                    self.hass, self._async_ssdp_discovered_player, match_dict
+                )
             )
-        )
 
         self.entry.async_on_unload(
             async_track_time_interval(

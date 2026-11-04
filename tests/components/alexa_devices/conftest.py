@@ -17,7 +17,14 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import (
     TEST_DEVICE_1,
+    TEST_DEVICE_1_SENSORS,
     TEST_DEVICE_1_SN,
+    TEST_DEVICE_2_SENSORS,
+    TEST_DEVICE_2_SN,
+    TEST_DEVICE_AQM_SENSORS,
+    TEST_DEVICE_AQM_SN,
+    TEST_DEVICE_GLOW_SENSORS,
+    TEST_DEVICE_GLOW_SN,
     TEST_PASSWORD,
     TEST_USER_ID,
     TEST_USERNAME,
@@ -30,7 +37,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.alexa_devices.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -57,6 +64,12 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.get_devices_data.return_value = {
             TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
+        client.sensors = {
+            TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1_SENSORS),
+            TEST_DEVICE_2_SN: deepcopy(TEST_DEVICE_2_SENSORS),
+            TEST_DEVICE_AQM_SN: deepcopy(TEST_DEVICE_AQM_SENSORS),
+            TEST_DEVICE_GLOW_SN: deepcopy(TEST_DEVICE_GLOW_SENSORS),
+        }
         client.get_default_device = AsyncMock(return_value=deepcopy(TEST_DEVICE_1))
         client.routines = ["Test Routine"]
         client.sync_history_state = AsyncMock(
@@ -67,6 +80,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.on_media_state_event = MagicMock()
         client.on_todo_event = MagicMock()
         client.on_dnd_event = MagicMock()
+        client.on_sensor_event = MagicMock()
         dnd_event_handler: list[Callable[[dict[str, bool]], Awaitable[None]]] = []
         client.on_dnd_event.append.side_effect = dnd_event_handler.append
 

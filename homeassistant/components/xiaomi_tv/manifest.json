@@ -3,6 +3,7 @@
   "name": "Xiaomi TV",
   "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@simse"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_tv",
   "iot_class": "assumed_state",
   "loggers": ["pymitv"],

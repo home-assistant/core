@@ -9,21 +9,14 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import ATTR_POSITION, ATTR_TILT_POSITION, CoverEntityFeature
-from .const import DOMAIN
+from . import ATTR_POSITION, CoverEntityFeature
+from .const import DOMAIN, CoverService, CoverServiceArgument
 
 CMD_ACTION_TYPES = {"open", "close", "stop", "open_tilt", "close_tilt"}
 POSITION_ACTION_TYPES = {"set_position", "set_tilt_position"}
@@ -134,21 +127,21 @@ async def async_call_action_from_config(
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "open":
-        service = SERVICE_OPEN_COVER
+        service = CoverService.OPEN
     elif config[CONF_TYPE] == "close":
-        service = SERVICE_CLOSE_COVER
+        service = CoverService.CLOSE
     elif config[CONF_TYPE] == "stop":
-        service = SERVICE_STOP_COVER
+        service = CoverService.STOP
     elif config[CONF_TYPE] == "open_tilt":
-        service = SERVICE_OPEN_COVER_TILT
+        service = CoverService.OPEN_TILT
     elif config[CONF_TYPE] == "close_tilt":
-        service = SERVICE_CLOSE_COVER_TILT
+        service = CoverService.CLOSE_TILT
     elif config[CONF_TYPE] == "set_position":
-        service = SERVICE_SET_COVER_POSITION
-        service_data[ATTR_POSITION] = config["position"]
+        service = CoverService.SET_POSITION
+        service_data[CoverServiceArgument.POSITION] = config["position"]
     elif config[CONF_TYPE] == "set_tilt_position":
-        service = SERVICE_SET_COVER_TILT_POSITION
-        service_data[ATTR_TILT_POSITION] = config["position"]
+        service = CoverService.SET_TILT_POSITION
+        service_data[CoverServiceArgument.TILT_POSITION] = config["position"]
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context
