@@ -69,7 +69,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> None
         async with asyncio.timeout(10):
             await device_discovered_event.wait()
     except TimeoutError as err:
-        raise ConfigEntryNotReady(f"Device not discovered: {usn}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_not_discovered",
+            translation_placeholders={"usn": usn},
+        ) from err
     finally:
         cancel_discovered_callback()
 
@@ -83,7 +87,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> None
         device = await async_create_device(hass, location, force_poll)
     except UpnpConnectionError as err:
         raise ConfigEntryNotReady(
-            f"Error connecting to device at location: {location}, err: {err}"
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"location": location},
         ) from err
 
     # Try to subscribe, if configured.
@@ -148,15 +154,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> None
         )
     if not device_entry:
         # No device found, create new device entry.
-        device_entry = dev_registry.async_get_or_create_device(
+        device_entry = dev_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                connections=set(connections),
-                identifiers=set(identifiers),
-                name=device.name,
-                manufacturer=device.manufacturer,
-                model=device.model_name,
-            ),
+            connections=set(connections),
+            identifiers=set(identifiers),
+            name=device.name,
+            manufacturer=device.manufacturer,
+            model=device.model_name,
         )
         LOGGER.debug(
             "Created device using UDN '%s', device_entry: %s", device.udn, device_entry

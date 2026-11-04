@@ -47,6 +47,7 @@ def repository_summary(
         "id": repository.data.id,
         "installed": repository.data.installed,
         "installed_version": repository.display_installed_version,
+        "integration_categories": repository.data.integration_categories,
         "last_updated": repository.data.last_updated,
         "local_path": repository.content.path.local,
         "name": repository.display_name,

@@ -14,7 +14,7 @@ from .const import MOCK_INSTALLATION_ID
 
 
 class _TestEnum(VictronEnum):
-    UNKNOWN = (99, "unknown_id", "Unknown")
+    UNKNOWN = (99, "unknown_id", "Unknown", "Unknown test value")
 
 
 async def test_victron_binary_sensor(

@@ -148,7 +148,7 @@ MOCK_DEVICE_STATE = DeviceState(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.liebherr.async_setup_entry", return_value=True
+        "homeassistant.components.liebherr.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

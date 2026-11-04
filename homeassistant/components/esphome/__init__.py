@@ -9,7 +9,7 @@ from aioesphomeapi import (
     SerialProxyIdentityFlag,
     SerialProxyIdentitySource,
 )
-from serialx import SerialPortInfo, udev_serial_by_id_stem
+from serialx import SerialPortInfo, is_non_unique_serial, udev_serial_by_id_stem
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import async_remove_scanner
@@ -142,9 +142,13 @@ def _async_scan_serial_ports(
                     port_usb_interface_num=port_info.interface_num,
                 )
             else:
-                # Otherwise, we match on just the `udev_id`, which is like
-                # `/dev/serial/by-id/`.
+                # Otherwise, we match on `udev_id`, which is like `/dev/serial/by-id/`
                 filters = serial_proxy.SerialProxyFilters(port_udev_id=port_udev_id)
+
+                # Identical devices without a unique serial number share a `udev_id`
+                # so they are told apart by the port they are on
+                if is_non_unique_serial(port_info.serial_number):
+                    filters["port_name"] = proxy.name
 
             url = str(serial_proxy.build_url(entry_id=entry.entry_id, **filters))
             device = usb_serial_device_from_port(

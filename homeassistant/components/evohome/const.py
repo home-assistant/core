@@ -20,8 +20,14 @@ CONF_LOCATION_IDX: Final = "location_idx"
 SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
 SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
 
+# Schedules are weekly, so are re-fetched only to pick up any changes made elsewhere
+SCHEDULE_MAX_AGE: Final = timedelta(hours=1)
+
 # Support for the refresh_system service is being deprecated
 REFRESH_BREAKS_IN_HA_VERSION: Final = "2027.1.0"
+
+NEXT_SP_FROM: Final = "next_sp_from"
+THIS_SP_FROM: Final = "this_sp_from"
 
 
 @unique

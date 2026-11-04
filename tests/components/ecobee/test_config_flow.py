@@ -36,7 +36,7 @@ def _mfa_challenge() -> MfaChallenge:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent the actual integration from being set up."""
     with patch(
-        "homeassistant.components.ecobee.async_setup_entry", return_value=True
+        "homeassistant.components.ecobee.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 

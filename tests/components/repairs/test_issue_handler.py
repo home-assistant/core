@@ -40,16 +40,11 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
 class MockFixFlowContext(RepairsFlow):
     """Mock for context tests."""
 
-    def __init__(self) -> None:
-        """Initialize a MockFlowFixContext."""
-        # Test issue_id setter
-        self.issue_id = "fake_issue"
-        assert self.issue_id == "fake_issue"
-
     async def async_step_init(self, user_input: dict | None) -> RepairsFlowResult:
         """Initial step of a repairs flow."""
-        assert user_input and user_input["issue_id"] == self.issue_id
-        return self.async_show_form()
+        # check that legacy behavior intact
+        assert user_input and user_input.get("issue_id") == self.issue_id
+        return self.async_show_form(step_id="init")
 
 
 @pytest.mark.parametrize(
@@ -58,8 +53,10 @@ class MockFixFlowContext(RepairsFlow):
         ["fake_integration"],
     ],
 )
-async def test_flow_fix_via_data(hass: HomeAssistant) -> None:
-    """Test that a repairs flow's issue_id can be set via data."""
+async def test_flow_fix_via_data_deprecation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that a repairs flow's issue_id can be set via data but logs a deprecation."""
 
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -72,10 +69,15 @@ async def test_flow_fix_via_data(hass: HomeAssistant) -> None:
         translation_key="fake_key",
     )
 
-    assert (repairs := repairs_flow_manager(hass))
+    repairs = repairs_flow_manager(hass)
 
     result = await repairs.async_init(
         "fake_integration", data={"issue_id": "context_issue"}
+    )
+    assert any(
+        "initiates a repair flow by passing `issue_id` via `data` rather than `context`"
+        in msg
+        for msg in caplog.messages
     )
     assert result["type"] == "form"
     result = repairs.async_get(result["flow_id"])
@@ -93,7 +95,7 @@ async def test_flow_fix_missing_context(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(hass, DOMAIN, {})
 
-    assert (repairs := repairs_flow_manager(hass))
+    repairs = repairs_flow_manager(hass)
 
     with pytest.raises(KeyError) as exc:
         await repairs.async_init("fake_integration")

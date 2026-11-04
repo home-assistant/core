@@ -21,7 +21,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.launch_library.async_setup_entry", return_value=True
+        "homeassistant.components.launch_library.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

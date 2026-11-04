@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
-from teslemetry_stream.const import EnergyTotalsEvent
+from teslemetry_stream.const import EnergyTotalsEvent, WallConnectorTotalsEvent
 from teslemetry_stream.stream import recursive_match
 
 from homeassistant.components.teslemetry.const import TOKEN_URL
@@ -20,11 +20,15 @@ from .const import (
     METADATA,
     METADATA_ENERGY,
     METADATA_LEGACY,
+    METADATA_OLD_FIRMWARE,
+    POWERWALL_COMPONENTS,
+    POWERWALL_STATUS,
     PRODUCTS,
     PRODUCTS_ENERGY,
     SITE_INFO,
     VEHICLE_DATA,
     WAKE_UP_ONLINE,
+    WALL_CONNECTOR_TOTALS,
 )
 
 
@@ -32,7 +36,7 @@ from .const import (
 def mock_setup_entry():
     """Mock Teslemetry async_setup_entry method."""
     with patch(
-        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
+        "homeassistant.components.teslemetry.async_setup_entry", return_value=None
     ) as mock_async_setup_entry:
         yield mock_async_setup_entry
 
@@ -89,6 +93,16 @@ def mock_legacy():
     """Mock Tesla Fleet Api products method."""
     with patch(
         "tesla_fleet_api.teslemetry.Teslemetry.metadata", return_value=METADATA_LEGACY
+    ) as mock_products:
+        yield mock_products
+
+
+@pytest.fixture
+def mock_old_firmware():
+    """Mock a non-polling vehicle whose firmware predates ChargeLimitSoc streaming."""
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=METADATA_OLD_FIRMWARE,
     ) as mock_products:
         yield mock_products
 
@@ -316,6 +330,43 @@ def mock_energy_totals_stream() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_wall_connector_totals_stream() -> Generator[MagicMock]:
+    """Capture the callback the integration registers for wall_connector_totals events."""
+    with patch(
+        "teslemetry_stream.TeslemetryStreamEnergySite.listen_WallConnectorTotals",
+    ) as mock_listen:
+        callbacks: list = []
+
+        def side_effect(callback):
+            callbacks.append(callback)
+            return MagicMock()
+
+        def send(
+            totals: dict[str, float] | None = None,
+            *,
+            date: str = ENERGY_TOTALS_DATE,
+            created_at: str = "2024-09-18T08:50:00.000Z",
+            is_cache: bool = False,
+        ) -> None:
+            """Deliver a wire event through the library's own parsing."""
+            event = WallConnectorTotalsEvent.from_dict(
+                {
+                    "id": 123456,
+                    "date": date,
+                    "createdAt": created_at,
+                    "isCache": is_cache,
+                    "totals": WALL_CONNECTOR_TOTALS if totals is None else totals,
+                }
+            )
+            for callback in callbacks:
+                callback(event)
+
+        mock_listen.side_effect = side_effect
+        mock_listen.send = send
+        yield mock_listen
+
+
+@pytest.fixture
 def mock_energy_tariff_stream() -> Generator[MagicMock]:
     """Capture the callback the integration registers for tariff events."""
     with patch(
@@ -378,3 +429,23 @@ def mock_powerwall_connect() -> Generator[AsyncMock]:
         "aiopowerwall.PowerwallClient.connect", return_value="GATEWAY-DIN"
     ) as mock_connect:
         yield mock_connect
+
+
+@pytest.fixture(autouse=True)
+def mock_powerwall_status() -> Generator[AsyncMock]:
+    """Mock the local Powerwall gateway status."""
+    with patch(
+        "aiopowerwall.PowerwallClient.get_status",
+        side_effect=lambda: deepcopy(POWERWALL_STATUS),
+    ) as mock_status:
+        yield mock_status
+
+
+@pytest.fixture(autouse=True)
+def mock_powerwall_components() -> Generator[AsyncMock]:
+    """Mock the local Powerwall gateway components."""
+    with patch(
+        "aiopowerwall.PowerwallClient.get_components",
+        side_effect=lambda: deepcopy(POWERWALL_COMPONENTS),
+    ) as mock_components:
+        yield mock_components

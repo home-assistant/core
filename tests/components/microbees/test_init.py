@@ -15,7 +15,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 async def test_migrate_entry_minor_version_1_2(hass: HomeAssistant) -> None:
     """Test migrating a 1.1 config entry to 1.2."""
     with patch(
-        "homeassistant.components.microbees.async_setup_entry", return_value=True
+        "homeassistant.components.microbees.async_setup_entry", return_value=None
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,

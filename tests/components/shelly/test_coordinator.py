@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioshelly.const import MODEL_2PM_G3, MODEL_BULB, MODEL_BUTTON1
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -445,6 +445,101 @@ async def test_rpc_reload_on_cfg_change(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("component", "update_method"),
+    [
+        ("plugs_ui", "update_plugs_ui_config"),
+        ("powerstrip_ui", "update_powerstrip_ui_config"),
+    ],
+)
+async def test_rpc_no_reload_on_ui_cfg_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    component: str,
+    update_method: str,
+) -> None:
+    """Test RPC UI config change fetches the config without reloading the entry."""
+    entity_id = "switch.test_name_test_switch_0"
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+    await init_integration(hass, 2)
+
+    # A reload would turn the switch into a light
+    monkeypatch.setitem(
+        mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
+    )
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": component,
+                    "event": "config_changed",
+                    "restart_required": False,
+                    "ts": 1668522399.2,
+                    "cfg_rev": 16,
+                },
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    getattr(mock_rpc_device, update_method).assert_awaited_once()
+
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id)
+
+
+@pytest.mark.parametrize(
+    ("exception", "reauth_flows"),
+    [
+        (DeviceConnectionError, 0),
+        (RpcCallError(999), 0),
+        (InvalidAuthError, 1),
+    ],
+)
+async def test_rpc_ui_cfg_change_update_error(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    exception: Exception,
+    reauth_flows: int,
+) -> None:
+    """Test RPC UI config change when fetching the updated config fails."""
+    monkeypatch.setattr(
+        mock_rpc_device, "update_powerstrip_ui_config", AsyncMock(side_effect=exception)
+    )
+    entry = await init_integration(hass, 2)
+
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "powerstrip_ui",
+                    "event": "config_changed",
+                    "restart_required": False,
+                    "ts": 1668522399.2,
+                    "cfg_rev": 16,
+                },
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(hass.config_entries.flow.async_progress()) == reauth_flows
 
 
 async def test_rpc_reload_with_invalid_auth(
@@ -994,6 +1089,29 @@ async def test_rpc_polling_disconnected(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_rpc_polling_not_initialized(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC polling is skipped while the device is re-initializing."""
+    entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
+    await init_integration(hass, 2)
+
+    # The websocket is connected but initialization has not completed yet
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "-63"
+
+    await mock_polling_rpc_update(hass, freezer)
+
+    mock_rpc_device.poll.assert_not_called()
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_rpc_update_entry_fw_ver(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -1274,7 +1392,7 @@ async def test_sub_device_area_from_main_device(
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test Shelly sub-device area is set to main device area when created."""
+    """Test Shelly sub-devices inherit the main device area."""
     device_fixture = await async_load_json_object_fixture(hass, "2pm_gen3.json", DOMAIN)
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
@@ -1296,7 +1414,6 @@ async def test_sub_device_area_from_main_device(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # verify sub-devices have the same area as main device
     for relay_index in range(2):
         entity_id = f"switch.living_room_test_name_output_{relay_index}"
         assert hass.states.get(entity_id) is not None
@@ -1304,8 +1421,9 @@ async def test_sub_device_area_from_main_device(
         assert entry
 
         device_entry = device_registry.async_get(entry.device_id)
-        assert device_entry
-        assert device_entry.area_id == "living_room"
+        assert isinstance(device_entry, dr.ChildDeviceEntry)
+        assert device_entry.area_id is None
+        assert dr.async_get_effective_area_id(hass, device_entry) == "living_room"
 
 
 @pytest.mark.parametrize("restart_required", [True, False])

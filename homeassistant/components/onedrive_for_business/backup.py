@@ -30,8 +30,8 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.json import json_loads_object
 
-from . import OneDriveConfigEntry
 from .const import CONF_FOLDER_ID, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .coordinator import OneDriveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 MAX_CHUNK_SIZE = 60 * 1024 * 1024  # largest chunk possible, must be <= 60 MiB

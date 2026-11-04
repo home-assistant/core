@@ -566,6 +566,24 @@ def test_color_temperature_to_rgbww() -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("temperature", "min_kelvin", "max_kelvin"),
+    [
+        pytest.param(2000, 2000, 2000, id="equal_min_max"),
+        pytest.param(6535, 6500, 6501, id="same_mired"),
+        pytest.param(9000, 6500, 6501, id="same_mired_clamped"),
+    ],
+)
+@pytest.mark.parametrize("brightness", [0, 128, 255])
+def test_color_temperature_to_rgbww_zero_mired_range(
+    temperature: int, brightness: int, min_kelvin: int, max_kelvin: int
+) -> None:
+    """Test a kelvin range spanning a single mired puts brightness on warm white."""
+    assert color_util.color_temperature_to_rgbww(
+        temperature, brightness, min_kelvin, max_kelvin
+    ) == (0, 0, 0, 0, brightness)
+
+
 def test_rgbww_to_color_temperature() -> None:
     """Test rgbww conversion to color temp.
 

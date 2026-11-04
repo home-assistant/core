@@ -172,17 +172,15 @@ class DeconzHub:
         configuration_url = f"http://{self.config.host}:{self.config.port}"
         if self.config_entry.source == SOURCE_HASSIO:
             configuration_url = HASSIO_CONFIGURATION_URL
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                configuration_url=configuration_url,
-                entry_type=dr.DeviceEntryType.SERVICE,
-                identifiers={(DOMAIN, self.api.config.bridge_id)},
-                manufacturer="dresden elektronik",
-                model=self.api.config.model_id,
-                name=self.api.config.name,
-                sw_version=self.api.config.software_version,
-            ),
+            configuration_url=configuration_url,
+            entry_type=dr.DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self.api.config.bridge_id)},
+            manufacturer="dresden elektronik",
+            model=self.api.config.model_id,
+            name=self.api.config.name,
+            sw_version=self.api.config.software_version,
         )
 
     @staticmethod

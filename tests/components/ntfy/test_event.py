@@ -27,12 +27,69 @@ from pytest_homeassistant.components.repairs import (
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.ntfy.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.components.ntfy.const import CONF_TOPIC, DOMAIN, SUBENTRY_TYPE_TOPIC
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
+from homeassistant.const import (
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
+
+TOPIC_PROTECTED_ISSUE_ID = "topic_protected_123456789_ABCDEF"
+OTHER_TOPIC_PROTECTED_ISSUE_ID = "topic_protected_987654321_GHIJKL"
+
+
+@pytest.fixture
+def other_config_entry() -> MockConfigEntry:
+    """Mock a second ntfy config entry subscribing to the same topic."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="ntfy.example.com",
+        data={
+            CONF_URL: "https://ntfy.example.com/",
+            CONF_USERNAME: None,
+            CONF_TOKEN: "token",
+            CONF_VERIFY_SSL: True,
+        },
+        entry_id="987654321",
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_TOPIC: "mytopic"},
+                subentry_id="GHIJKL",
+                subentry_type=SUBENTRY_TYPE_TOPIC,
+                title="mytopic",
+                unique_id="mytopic",
+            )
+        ],
+    )
+
+
+async def _setup_protected_topic_on_two_entries(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    other_config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Set up two config entries failing to subscribe to the same topic."""
+    mock_aiontfy.subscribe.side_effect = NtfyForbiddenError(403, 403, "forbidden")
+    config_entry.add_to_hass(hass)
+    other_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, "repairs", {})
+    # Sets up both entries
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(autouse=True)
@@ -203,19 +260,24 @@ async def test_event_topic_protected(
     assert (state := hass.states.get("event.mytopic"))
     assert state.state == STATE_UNAVAILABLE
 
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="topic_protected_mytopic"
+    assert (
+        issue := issue_registry.async_get_issue(
+            domain=DOMAIN, issue_id=TOPIC_PROTECTED_ISSUE_ID
+        )
     )
+    assert issue.config_entry_id == config_entry.entry_id
+    assert issue.translation_placeholders == {"topic": "mytopic", "name": "ntfy.sh"}
 
     # The repair flow disables the entity also if it was renamed after the issue
     entity_registry.async_update_entity("event.mytopic", new_entity_id=entity_id)
     await hass.async_block_till_done()
 
     client = await hass_client()
-    result = await start_repair_fix_flow(client, DOMAIN, "topic_protected_mytopic")
+    result = await start_repair_fix_flow(client, DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
 
     flow_id = result["flow_id"]
     assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {"topic": "mytopic", "name": "ntfy.sh"}
 
     result = await process_repair_fix_flow(client, flow_id)
     assert result["type"] == "create_entry"
@@ -223,3 +285,131 @@ async def test_event_topic_protected(
     assert (entity := entity_registry.async_get(entity_id))
     assert entity.disabled
     assert entity.disabled_by is er.RegistryEntryDisabler.USER
+
+
+async def test_event_topic_protected_per_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    other_config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the same protected topic on two config entries gets separate issues."""
+    await _setup_protected_topic_on_two_entries(
+        hass, config_entry, other_config_entry, mock_aiontfy, freezer
+    )
+
+    assert (issue := issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID))
+    assert issue.config_entry_id == config_entry.entry_id
+    assert issue.translation_placeholders == {"topic": "mytopic", "name": "ntfy.sh"}
+    assert (
+        other_issue := issue_registry.async_get_issue(
+            DOMAIN, OTHER_TOPIC_PROTECTED_ISSUE_ID
+        )
+    )
+    assert other_issue.config_entry_id == other_config_entry.entry_id
+    assert other_issue.translation_placeholders == {
+        "topic": "mytopic",
+        "name": "ntfy.example.com",
+    }
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
+    assert issue_registry.async_get_issue(DOMAIN, OTHER_TOPIC_PROTECTED_ISSUE_ID)
+
+
+async def test_event_topic_protected_fix_flow_per_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    other_config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the fix flow only disables the entity of the entry owning the issue."""
+    await _setup_protected_topic_on_two_entries(
+        hass, config_entry, other_config_entry, mock_aiontfy, freezer
+    )
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, OTHER_TOPIC_PROTECTED_ISSUE_ID)
+    assert result["description_placeholders"] == {
+        "topic": "mytopic",
+        "name": "ntfy.example.com",
+    }
+    result = await process_repair_fix_flow(client, result["flow_id"])
+    assert result["type"] == "create_entry"
+    await hass.async_block_till_done()
+
+    assert (entity := entity_registry.async_get("event.mytopic"))
+    assert entity.config_entry_id == config_entry.entry_id
+    assert not entity.disabled
+    assert (other_entity := entity_registry.async_get("event.mytopic_2"))
+    assert other_entity.config_entry_id == other_config_entry.entry_id
+    assert other_entity.disabled_by is er.RegistryEntryDisabler.USER
+
+    assert issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
+    assert not issue_registry.async_get_issue(DOMAIN, OTHER_TOPIC_PROTECTED_ISSUE_ID)
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_event_topic_protected_issue_deleted_on_subscribe(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the protected topic issue is deleted once subscribing succeeds."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        TOPIC_PROTECTED_ISSUE_ID,
+        is_fixable=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="topic_protected",
+        translation_placeholders={"topic": "mytopic", "name": "ntfy.sh"},
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
+
+
+async def test_event_topic_protected_issue_deleted_on_remove(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the protected topic issue is deleted when the topic is removed."""
+    mock_aiontfy.subscribe.side_effect = NtfyForbiddenError(403, 403, "forbidden")
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
+
+    assert hass.config_entries.async_remove_subentry(config_entry, "ABCDEF")
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)

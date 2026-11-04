@@ -21,10 +21,10 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, DeconzConfigEntry
+from . import DeconzConfigEntry
+from .const import CONF_GESTURE, DOMAIN
 from .deconz_event import (
     CONF_DECONZ_EVENT,
-    CONF_GESTURE,
     DeconzAlarmEvent,
     DeconzEvent,
     DeconzPresenceEvent,

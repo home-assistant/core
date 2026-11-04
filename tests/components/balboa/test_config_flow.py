@@ -36,7 +36,7 @@ async def test_form(hass: HomeAssistant, client: MagicMock) -> None:
         ),
         patch(
             "homeassistant.components.balboa.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -76,7 +76,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, client: MagicMock) -> No
         ),
         patch(
             "homeassistant.components.balboa.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -114,7 +114,7 @@ async def test_form_spa_not_configured(hass: HomeAssistant, client: MagicMock) -
         ),
         patch(
             "homeassistant.components.balboa.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -152,7 +152,7 @@ async def test_unknown_error(hass: HomeAssistant, client: MagicMock) -> None:
         ),
         patch(
             "homeassistant.components.balboa.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -182,7 +182,7 @@ async def test_already_configured(hass: HomeAssistant, client: MagicMock) -> Non
         ),
         patch(
             "homeassistant.components.balboa.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -210,7 +210,7 @@ async def test_options_flow(hass: HomeAssistant, client: MagicMock) -> None:
 
     with patch(
         "homeassistant.components.balboa.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
