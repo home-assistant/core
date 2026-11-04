@@ -5,8 +5,6 @@ from dataclasses import dataclass
 from functools import partial
 import logging
 
-from tellduslive import DIM, TURNON, UP, Session
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -15,7 +13,9 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
+from .api import Session
 from .const import (
+    DIM,
     DOMAIN,
     KEY_SCAN_INTERVAL,
     KEY_SESSION,
@@ -23,6 +23,8 @@ from .const import (
     PUBLIC_KEY,
     SIGNAL_UPDATE_ENTITY,
     TELLDUS_DISCOVERY_NEW,
+    TURNON,
+    UP,
 )
 
 APPLICATION_NAME = "Home Assistant"

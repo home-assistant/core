@@ -4,15 +4,19 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from tellduslive import BATTERY_LOW, BATTERY_OK, BATTERY_UNKNOWN
-
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, SIGNAL_UPDATE_ENTITY
+from .const import (
+    BATTERY_LOW,
+    BATTERY_OK,
+    BATTERY_UNKNOWN,
+    DOMAIN,
+    SIGNAL_UPDATE_ENTITY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/tellduslive",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["tellduslive==0.10.12"]
+  "requirements": ["requests-oauthlib==2.0.0"]
 }
