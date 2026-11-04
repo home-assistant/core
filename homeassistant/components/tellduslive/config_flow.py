@@ -5,11 +5,11 @@ import logging
 from typing import Any, override
 
 import probatio
-from tellduslive import Session, supports_local_api
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
+from .api import Session, supports_local_api
 from .const import (
     APPLICATION_NAME,
     CLOUD_NAME,
