@@ -425,3 +425,64 @@ async def test_reconfigure_unique_id_mismatch(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data == MOCK_CONFIG
+
+
+async def test_reconfigure_pairing(
+    hass: HomeAssistant,
+    mock_tv_pairable: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reconfiguring an unpaired entry to a TV that requires pairing."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_NAME,
+        unique_id=MOCK_SYSTEM_UNPAIRED["serialnumber"],
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_API_VERSION: "6"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    mock_tv_pairable.pairRequest.assert_called()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "1234"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == MOCK_CONFIG_PAIRED | {CONF_HOST: "2.2.2.2"}
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_reconfigure_paired_skips_pairing(
+    hass: HomeAssistant,
+    mock_tv_pairable: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reconfiguring a paired entry keeps its credentials without pairing."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_PAIRED,
+        title=MOCK_NAME,
+        unique_id=MOCK_SYSTEM_UNPAIRED["serialnumber"],
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_API_VERSION: "6"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == MOCK_CONFIG_PAIRED | {CONF_HOST: "2.2.2.2"}
+    mock_tv_pairable.pairRequest.assert_not_called()

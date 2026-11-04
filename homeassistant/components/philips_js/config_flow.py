@@ -120,12 +120,22 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._async_create_current()
 
     async def _async_create_current(self) -> ConfigFlowResult:
-        system = self._current[CONF_SYSTEM]
+        if self.source == SOURCE_RECONFIGURE:
+            reconfigure_entry = self._get_reconfigure_entry()
+            # A loaded entry is reloaded by its update listener
+            if reconfigure_entry.update_listeners:
+                return self.async_update_and_abort(
+                    reconfigure_entry, data_updates=self._current
+                )
+            return self.async_update_reload_and_abort(
+                reconfigure_entry, data_updates=self._current
+            )
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data_updates=self._current
             )
 
+        system = self._current[CONF_SYSTEM]
         return self.async_create_entry(
             title=f"{system['name']} ({system['serialnumber']})",
             data=self._current,
@@ -202,14 +212,9 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors := await self._async_prepare_user_input(user_input)
         ):
             self._abort_if_unique_id_mismatch()
-            # A loaded entry is reloaded by its update listener
-            if reconfigure_entry.update_listeners:
-                return self.async_update_and_abort(
-                    reconfigure_entry, data_updates=self._current
-                )
-            return self.async_update_reload_and_abort(
-                reconfigure_entry, data_updates=self._current
-            )
+            if CONF_USERNAME in reconfigure_entry.data:
+                return await self._async_create_current()
+            return await self._async_attempt_add()
 
         schema = self.add_suggested_values_to_schema(
             USER_SCHEMA,
