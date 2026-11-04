@@ -562,7 +562,10 @@ async def test_browse_media_not_found(
     response = await client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["message"] == "Media not found: foo / foo/bar"
+    assert (
+        response["error"]["message"]
+        == "Media foo / foo/bar was not found on BRAVIA TV-Model"
+    )
 
 
 @pytest.mark.parametrize(
