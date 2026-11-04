@@ -48,7 +48,7 @@ def _base_schema(
             CONF_USERNAME, default=nut_config.get(CONF_USERNAME, probatio.UNDEFINED)
         ): str,
         probatio.Optional(
-            CONF_PASSWORD,
+            probatio.Secret(CONF_PASSWORD),
             default=PASSWORD_NOT_CHANGED
             if use_password_not_changed
             else probatio.UNDEFINED,
@@ -340,8 +340,8 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         reauth_data = reauth_entry.data
         description_placeholders: dict[str, str] = {
-            CONF_HOST: reauth_data[CONF_HOST],
-            CONF_PORT: reauth_data[CONF_PORT],
+            "host": reauth_data[CONF_HOST],
+            "port": reauth_data[CONF_PORT],
         }
 
         if user_input is not None:

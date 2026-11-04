@@ -4,6 +4,8 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from switchbot import LockStatus, SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -30,9 +32,6 @@ from . import (
     LOCK_VISION_SERVICE_INFO,
     WOLOCKPRO_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.parametrize(
@@ -73,7 +72,7 @@ async def test_lock_services(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_id = "lock.test_name"
 
@@ -126,7 +125,7 @@ async def test_lock_services_with_night_latch_enabled(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_id = "lock.test_name"
 
@@ -155,7 +154,7 @@ async def test_lock_ultra_max_entities(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("lock.test_name") is not None
     assert hass.states.get("binary_sensor.test_name") is not None
@@ -201,7 +200,7 @@ async def test_exception_handling_lock_service(
         **{mock_method: AsyncMock(side_effect=exception)},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -228,7 +227,7 @@ async def test_lock_ultra_half_lock_state_shows_locked(
         get_lock_status=MagicMock(return_value=LockStatus.HALF_LOCKED),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         lock_state = hass.states.get("lock.test_name")
         assert lock_state is not None
@@ -260,7 +259,7 @@ async def test_lock_ultra_half_locked_binary_sensor(
         get_lock_status=MagicMock(return_value=lock_status),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         sensor_state = hass.states.get("binary_sensor.test_name_half_locked")
         assert sensor_state is not None
@@ -282,7 +281,7 @@ async def test_non_lock_ultra_no_half_locked_binary_sensor(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get("binary_sensor.test_name_half_locked") is None
 
@@ -303,7 +302,7 @@ async def test_lock_ultra_half_locked_binary_sensor_unknown(
         get_lock_status=MagicMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         sensor_state = hass.states.get("binary_sensor.test_name_half_locked")
         assert sensor_state is not None

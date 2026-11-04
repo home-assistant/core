@@ -1,6 +1,6 @@
 """HTTP client for fetching remote calendar data."""
 
-from httpx import AsyncClient, Auth, BasicAuth, Response, Timeout
+from httpx2 import AsyncClient, Auth, BasicAuth, Response, Timeout
 
 
 async def get_calendar(

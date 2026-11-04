@@ -1,8 +1,10 @@
 {
   "domain": "peblar",
   "name": "Peblar",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@frenck"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/peblar",
   "integration_type": "device",
   "iot_class": "local_polling",

@@ -60,7 +60,7 @@
       "message": "Action execute for {entity} failed."
     },
     "clear_cache_failed": {
-      "message": "Could not clear the Velbus cache: {error}"
+      "message": "Cannot clear the Velbus cache at {path}."
     },
     "connection_failed": {
       "message": "Could not connect to Velbus."

@@ -9,7 +9,7 @@ from .coordinator import AdaxCloudCoordinator, AdaxConfigEntry, AdaxLocalCoordin
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AdaxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AdaxConfigEntry) -> None:
     """Set up Adax from a config entry."""
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
         local_coordinator = AdaxLocalCoordinator(hass, entry)
@@ -21,17 +21,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdaxConfigEntry) -> bool
     await entry.runtime_data.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AdaxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AdaxConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: AdaxConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     # convert title and unique_id to string
     if config_entry.version == 1:
@@ -41,5 +40,3 @@ async def async_migrate_entry(
                 unique_id=str(config_entry.unique_id),
                 title=str(config_entry.title),
             )
-
-    return True

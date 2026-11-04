@@ -3,7 +3,13 @@
 from collections.abc import Callable
 from typing import override
 
-from aiohasupervisor.models import CIFSMountResponse, HostInfo, NFSMountResponse, OSInfo
+from aiohasupervisor.models import (
+    CIFSMountResponse,
+    DiskMountResponse,
+    HostInfo,
+    NFSMountResponse,
+    OSInfo,
+)
 from aiohasupervisor.models.base import ContainerStats
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -66,7 +72,7 @@ class HassioStatsEntity(CoordinatorEntity[HassioStatsDataUpdateCoordinator]):
         await super().async_added_to_hass()
         self.async_on_remove(
             self.coordinator.async_enable_container_updates(
-                self._container_id, self.entity_id, {CONTAINER_STATS}
+                self._container_id, self, {CONTAINER_STATS}
             )
         )
         # Stats are only fetched for containers with subscribed entities.
@@ -118,9 +124,7 @@ class HassioAddonEntity(CoordinatorEntity[HassioAddOnDataUpdateCoordinator]):
         """Subscribe to addon info updates."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.coordinator.async_enable_addon_info_updates(
-                self._addon_slug, self.entity_id
-            )
+            self.coordinator.async_enable_addon_info_updates(self._addon_slug, self)
         )
 
 
@@ -219,7 +223,7 @@ class HassioMountEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
         self,
         coordinator: HassioMainDataUpdateCoordinator,
         entity_description: EntityDescription,
-        mount: CIFSMountResponse | NFSMountResponse,
+        mount: CIFSMountResponse | DiskMountResponse | NFSMountResponse,
     ) -> None:
         """Initialize base entity."""
         super().__init__(coordinator)

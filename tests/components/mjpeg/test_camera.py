@@ -1,8 +1,10 @@
 """Test the MJPEG IP Camera camera platform."""
 
 import aiohttp
-import httpx
+import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 import respx
 
 from homeassistant.components.camera import async_get_image
@@ -20,9 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 ENTITY_CAMERA = "camera.my_mjpeg_camera"
 
@@ -88,9 +87,9 @@ def mock_digest_config_entry() -> MockConfigEntry:
     [
         pytest.param(TimeoutError, "timeout_getting_image", id="timeout"),
         pytest.param(
-            httpx.TimeoutException, "timeout_getting_image", id="httpx_timeout"
+            httpx2.TimeoutException, "timeout_getting_image", id="httpx_timeout"
         ),
-        pytest.param(httpx.HTTPError, "error_getting_image", id="http_error"),
+        pytest.param(httpx2.HTTPError, "error_getting_image", id="http_error"),
     ],
 )
 async def test_digest_camera_image_error(

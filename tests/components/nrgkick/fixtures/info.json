@@ -1,40 +1,49 @@
 {
   "general": {
-    "device_name": "NRGkick Test",
     "serial_number": "TEST123456",
     "model_type": "NRGkick Gen2 SIM",
-    "rated_current": 32.0,
-    "json_api_version": "v1"
+    "device_name": "NRGkick Test",
+    "rated_current": 32.0
   },
   "connector": {
-    "type": "TYPE2",
-    "serial_number": "CONN123",
+    "phase_count": 3,
     "max_current": 32.0,
-    "phase_count": 3
+    "type": 3,
+    "serial": "CONN123"
   },
-  "cellular": { "mode": 3, "rssi": -85, "operator": "Test operator" },
+  "grid": {
+    "voltage": 230,
+    "frequency": 50.0,
+    "phases": 7
+  },
+  "network": {
+    "ip_address": "192.168.1.100",
+    "mac_address": "AA:BB:CC:DD:EE:FF",
+    "ssid": "TestNetwork",
+    "rssi": -45
+  },
+  "cellular": {
+    "imei": "123456789012345",
+    "imsi": "001010123456789",
+    "operator": "Test operator",
+    "rssi": -85,
+    "mode": 3
+  },
   "gps": {
     "latitude": 47.0748,
     "longitude": 15.4376,
     "altitude": 353.0,
     "accuracy": 1.5
   },
-  "grid": {
-    "voltage": 230,
-    "frequency": 50.0,
-    "phases": "L1, L2, L3"
-  },
-  "network": {
-    "ip_address": "192.168.1.100",
-    "mac_address": "AA:BB:CC:DD:EE:FF",
-    "wifi_ssid": "TestNetwork",
-    "wifi_rssi": -45
-  },
-  "hardware": {
-    "smartmodule_version": "4.0.0.0",
-    "bluetooth_version": "1.2.3"
-  },
-  "software": {
-    "firmware_version": "2.1.0"
+  "versions": {
+    "sw_sm": "4.1.0.0",
+    "hw_sm": "1.0.0.0",
+    "sw_ma": "1.0.0",
+    "hw_ma": "1.0.0",
+    "sw_to": "1.0.0",
+    "hw_to": "1.0.0",
+    "sw_st": "1.0.0",
+    "hw_st": "1.0.0",
+    "sw_cm": "1.0.0"
   }
 }

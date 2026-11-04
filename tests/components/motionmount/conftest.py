@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.motionmount.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 
 from . import HOST, MAC, PORT, ZEROCONF_MAC, ZEROCONF_NAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -39,7 +38,7 @@ def mock_config_entry_with_pin() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.motionmount.async_setup_entry", return_value=True
+        "homeassistant.components.motionmount.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

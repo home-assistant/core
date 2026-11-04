@@ -17,7 +17,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -32,7 +31,6 @@ from homeassistant.helpers.network import is_internal_request
 from .const import (
     COMMON_PLAYERS,
     CONF_SERVER_IDENTIFIER,
-    DISPATCHERS,
     DOMAIN,
     NAME_FORMAT,
     PLEX_NEW_MP_SIGNAL,
@@ -41,7 +39,7 @@ from .const import (
     PLEX_UPDATE_SENSOR_SIGNAL,
     TRANSIENT_DEVICE_MODELS,
 )
-from .helpers import get_plex_data, get_plex_server
+from .helpers import PlexConfigEntry
 from .media_browser import browse_media
 from .services import process_plex_payload
 
@@ -66,30 +64,34 @@ def needs_session[_PlexMediaPlayerT: PlexMediaPlayer, **_P, _R](
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PlexConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plex media_player from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
+    plexserver = config_entry.runtime_data.server
     registry = er.async_get(hass)
 
     @callback
     def async_new_media_players(new_entities):
-        _async_add_entities(hass, registry, async_add_entities, server_id, new_entities)
+        _async_add_entities(
+            registry, async_add_entities, server_id, plexserver, new_entities
+        )
 
     unsub = async_dispatcher_connect(
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
     )
-    get_plex_data(hass)[DISPATCHERS][server_id].append(unsub)
+    config_entry.runtime_data.dispatchers.append(unsub)
     _LOGGER.debug("New entity listener created")
 
 
 @callback
-def _async_add_entities(hass, registry, async_add_entities, server_id, new_entities):
+def _async_add_entities(
+    registry, async_add_entities, server_id, plexserver, new_entities
+):
     """Set up Plex media_player entities."""
     _LOGGER.debug("New entities: %s", new_entities)
     entities = []
-    plexserver = get_plex_server(hass, server_id)
     for entity_params in new_entities:
         plex_mp = PlexMediaPlayer(plexserver, **entity_params)
         entities.append(plex_mp)

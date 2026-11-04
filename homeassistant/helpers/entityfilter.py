@@ -274,7 +274,7 @@ def _generate_filter_from_sets_and_pattern_lists(
             domain = split_entity_id(entity_id)[0]
             if domain in exclude_d or bool(exclude_eg and exclude_eg.match(entity_id)):
                 return entity_id in include_e
-            return entity_id not in exclude_e
+            return entity_id in include_e or entity_id not in exclude_e
 
         return entity_filter_4b
 

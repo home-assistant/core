@@ -87,8 +87,10 @@ rules:
     status: exempt
     comment: This integration has no repairs beyond the deprecated YAML import issue.
   stale-devices:
-    status: todo
-    comment: Clients that stop connecting are not removed automatically.
+    status: done
+    comment: |
+      The router does not report departed clients, so a client device can be
+      removed manually while the client is not connected.
 
   # Platinum
   async-dependency:

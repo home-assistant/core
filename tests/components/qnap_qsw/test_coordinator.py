@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aioqsw.exceptions import APIError, QswError
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.qnap_qsw.const import DOMAIN
 from homeassistant.components.qnap_qsw.coordinator import (
@@ -27,8 +28,6 @@ from .util import (
     USERS_LOGIN_MOCK,
     USERS_VERIFICATION_MOCK,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_coordinator_client_connector_error(

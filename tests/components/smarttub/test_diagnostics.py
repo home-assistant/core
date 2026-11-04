@@ -3,14 +3,13 @@
 from datetime import UTC, datetime
 from unittest.mock import create_autospec
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 import smarttub
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
@@ -31,6 +30,7 @@ async def test_entry_diagnostics(
     mock_error.created_at = datetime(2021, 1, 1, tzinfo=UTC)
     mock_error.updated_at = datetime(2021, 1, 2, tzinfo=UTC)
     spa.get_errors.return_value = [mock_error]
+    spa_state.error_code = mock_error.code
 
     # raw fields not otherwise parsed by the smarttub library, to verify they're redacted
     spa_state.properties["sensors"] = [

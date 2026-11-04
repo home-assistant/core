@@ -8,7 +8,7 @@ import probatio
 from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -126,6 +126,7 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="unique_id_mismatch")
                 return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reauth_confirm" if self.source == SOURCE_REAUTH else "reconfigure",
             data_schema=self.add_suggested_values_to_schema(
@@ -137,8 +138,8 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             ),
             description_placeholders={
-                CONF_NAME: reauth_entry.title,
-                CONF_EMAIL: reauth_entry.data[CONF_EMAIL],
+                "name": reauth_entry.title,
+                "email": reauth_entry.data[CONF_EMAIL],
             },
             errors=errors,
         )

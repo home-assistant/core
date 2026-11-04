@@ -5,12 +5,14 @@ from unittest.mock import AsyncMock, MagicMock
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
     ExpiredAccessTokenError,
+    HourlyReadingsUnavailableError,
     InteractionRequiredError,
     InvalidGrantError,
     SelfAssertedError,
     SmartMeterUnavailableError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.anglian_water.const import DOMAIN
 from homeassistant.components.recorder import Recorder
@@ -20,7 +22,27 @@ from homeassistant.helpers import issue_registry as ir
 
 from .const import CONSENT_REQUIRED_ISSUE_ID
 
-from tests.common import MockConfigEntry
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_setup_hourly_readings_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test setup fails with a translated error when hourly readings are unavailable."""
+    mock_anglian_water_client.update.side_effect = HourlyReadingsUnavailableError(
+        status=500, response="mock"
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_domain == DOMAIN
+    assert (
+        mock_config_entry.error_reason_translation_key == "hourly_readings_unavailable"
+    )
 
 
 async def test_setup_unload_entry(
@@ -105,7 +127,9 @@ async def test_setup_consent_required(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
-    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is not None
+    issue = issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
 
     # Test that the issue is deleted once consent is granted
     mock_anglian_water_authenticator.send_refresh_request.side_effect = None
@@ -113,6 +137,27 @@ async def test_setup_consent_required(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is None
+
+
+@pytest.mark.usefixtures("recorder_mock", "mock_anglian_water_client")
+async def test_consent_required_issue_removed_with_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: MagicMock,
+) -> None:
+    """Test the consent required issue is removed with the config entry."""
+    mock_anglian_water_authenticator.send_refresh_request.side_effect = (
+        ConsentRequiredError
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is not None
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
     assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is None
 
 

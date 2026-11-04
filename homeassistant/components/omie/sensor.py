@@ -38,7 +38,6 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
     """OMIE price sensor."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
     _attr_attribution = _ATTRIBUTION
 
     def __init__(

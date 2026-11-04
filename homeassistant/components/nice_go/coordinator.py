@@ -95,6 +95,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 self.hass,
                 DOMAIN,
                 f"firmware_update_required_{device_id}",
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="firmware_update_required",
@@ -181,9 +182,11 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                     self.refresh_token, async_get_clientsession(self.hass)
                 )
         except AuthFailedError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("Authentication failed")
             raise ConfigEntryAuthFailed from e
         except ApiError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("API error")
             raise UpdateFailed from e
 
@@ -195,9 +198,11 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 self.email, self.password, async_get_clientsession(self.hass)
             )
         except AuthFailedError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("Authentication failed")
             raise ConfigEntryAuthFailed from e
         except ApiError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("API error")
             raise UpdateFailed from e
 

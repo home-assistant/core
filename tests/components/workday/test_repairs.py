@@ -1,6 +1,14 @@
 """Test repairs for unifiprotect."""
 
+from typing import Any
+
 import pytest
+from pytest_homeassistant.common import ANY
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.workday.const import CONF_REMOVE_HOLIDAYS, DOMAIN
 from homeassistant.const import CONF_COUNTRY
@@ -13,12 +21,9 @@ from . import (
     TEST_CONFIG_INCORRECT_PROVINCE,
     TEST_CONFIG_REMOVE_DATE,
     TEST_CONFIG_REMOVE_NAMED,
+    TEST_CONFIG_WITH_PROVINCE,
     init_integration,
 )
-
-from tests.common import ANY
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_bad_country(
@@ -43,11 +48,11 @@ async def test_bad_country(
     assert len(msg["result"]["issues"]) > 0
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "bad_country":
+        if i["issue_id"] == "bad_country-1":
             issue = i
     assert issue is not None
 
-    data = await start_repair_fix_flow(client, DOMAIN, "bad_country")
+    data = await start_repair_fix_flow(client, DOMAIN, "bad_country-1")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {"title": entry.title}
@@ -69,7 +74,7 @@ async def test_bad_country(
     assert msg["success"]
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "bad_country":
+        if i["issue_id"] == "bad_country-1":
             issue = i
     assert not issue
 
@@ -96,11 +101,11 @@ async def test_bad_country_none(
     assert len(msg["result"]["issues"]) > 0
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "bad_country":
+        if i["issue_id"] == "bad_country-1":
             issue = i
     assert issue is not None
 
-    data = await start_repair_fix_flow(client, DOMAIN, "bad_country")
+    data = await start_repair_fix_flow(client, DOMAIN, "bad_country-1")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {"title": entry.title}
@@ -122,7 +127,7 @@ async def test_bad_country_none(
     assert msg["success"]
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "bad_country":
+        if i["issue_id"] == "bad_country-1":
             issue = i
     assert not issue
 
@@ -149,11 +154,11 @@ async def test_bad_country_no_province(
     assert len(msg["result"]["issues"]) > 0
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "bad_country":
+        if i["issue_id"] == "bad_country-1":
             issue = i
     assert issue is not None
 
-    data = await start_repair_fix_flow(client, DOMAIN, "bad_country")
+    data = await start_repair_fix_flow(client, DOMAIN, "bad_country-1")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {"title": entry.title}
@@ -173,7 +178,7 @@ async def test_bad_country_no_province(
     assert msg["success"]
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "bad_country":
+        if i["issue_id"] == "bad_country-1":
             issue = i
     assert not issue
 
@@ -200,11 +205,11 @@ async def test_bad_province(
     assert len(msg["result"]["issues"]) > 0
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "bad_province":
+        if i["issue_id"] == "bad_province-1":
             issue = i
     assert issue is not None
 
-    data = await start_repair_fix_flow(client, DOMAIN, "bad_province")
+    data = await start_repair_fix_flow(client, DOMAIN, "bad_province-1")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {
@@ -227,7 +232,7 @@ async def test_bad_province(
     assert msg["success"]
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "bad_province":
+        if i["issue_id"] == "bad_province-1":
             issue = i
     assert not issue
 
@@ -254,11 +259,11 @@ async def test_bad_province_none(
     assert len(msg["result"]["issues"]) > 0
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "bad_province":
+        if i["issue_id"] == "bad_province-1":
             issue = i
     assert issue is not None
 
-    data = await start_repair_fix_flow(client, DOMAIN, "bad_province")
+    data = await start_repair_fix_flow(client, DOMAIN, "bad_province-1")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {
@@ -281,7 +286,7 @@ async def test_bad_province_none(
     assert msg["success"]
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "bad_province":
+        if i["issue_id"] == "bad_province-1":
             issue = i
     assert not issue
 
@@ -498,3 +503,59 @@ async def test_other_fixable_issues(
 
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("config", "issue_prefix"),
+    [
+        pytest.param(TEST_CONFIG_INCORRECT_COUNTRY, "bad_country", id="country"),
+        pytest.param(TEST_CONFIG_INCORRECT_PROVINCE, "bad_province", id="province"),
+    ],
+)
+async def test_bad_country_province_issue_per_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config: dict[str, Any],
+    issue_prefix: str,
+) -> None:
+    """Test each entry gets its own linked bad country/province issue."""
+    entry_1 = await init_integration(hass, config, entry_id="1")
+    entry_2 = await init_integration(hass, config, entry_id="2")
+
+    issue_1 = issue_registry.async_get_issue(DOMAIN, f"{issue_prefix}-1")
+    issue_2 = issue_registry.async_get_issue(DOMAIN, f"{issue_prefix}-2")
+    assert issue_1 is not None
+    assert issue_1.config_entry_id == entry_1.entry_id
+    assert issue_1.translation_key == issue_prefix
+    assert issue_2 is not None
+    assert issue_2.config_entry_id == entry_2.entry_id
+
+    await hass.config_entries.async_remove(entry_1.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, f"{issue_prefix}-1") is None
+    assert issue_registry.async_get_issue(DOMAIN, f"{issue_prefix}-2") is not None
+
+
+@pytest.mark.parametrize(
+    ("config", "issue_prefix"),
+    [
+        pytest.param(TEST_CONFIG_INCORRECT_COUNTRY, "bad_country", id="country"),
+        pytest.param(TEST_CONFIG_INCORRECT_PROVINCE, "bad_province", id="province"),
+    ],
+)
+async def test_bad_country_province_issue_deleted_when_fixed(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config: dict[str, Any],
+    issue_prefix: str,
+) -> None:
+    """Test the issue is deleted once the entry is fixed outside the repair flow."""
+    entry = await init_integration(hass, config)
+    assert issue_registry.async_get_issue(DOMAIN, f"{issue_prefix}-1") is not None
+
+    hass.config_entries.async_update_entry(entry, options=TEST_CONFIG_WITH_PROVINCE)
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, f"{issue_prefix}-1") is None

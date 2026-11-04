@@ -27,7 +27,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: DeconzConfigEntry
-) -> bool:
+) -> None:
     """Set up a deCONZ bridge for a config entry.
 
     Load config, group, light and sensor data for server information.
@@ -60,12 +60,10 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.shutdown)
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: DeconzConfigEntry
-) -> bool:
+) -> None:
     """Unload deCONZ config entry."""
     hub = config_entry.runtime_data
     async_unload_events(hub)
@@ -81,7 +79,7 @@ async def async_unload_entry(
         new_master_hub = next(iter(other_loaded_entries)).runtime_data
         await async_update_master_hub(hass, new_master_hub.config_entry, master=True)
 
-    return await hub.async_reset()
+    await hub.async_reset()
 
 
 async def async_update_master_hub(

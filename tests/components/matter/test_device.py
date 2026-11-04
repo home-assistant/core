@@ -36,6 +36,23 @@ from .common import snapshot_matter_devices
         # compose parent's device.
         "silabs_refrigerator",
         "mock_air_purifier",
+        # Real devices with several outputs of the same device type, and single-outlet
+        # plugs whose Electrical Sensor endpoint lists its outlet (Power Topology SET).
+        "aqara_light_switch_h2_us_4099",
+        "aqara_light_switch_h2_us_4100",
+        "aqara_light_switch_h2_us_4101",
+        "cync_keypad_dimmer",
+        "dewenwils_3_zone_transformer",
+        "ductech_smartwings_levitate",
+        "lifx_switch_115",
+        "lifx_switch_89",
+        "nanoleaf_nl77k1",
+        "tapo_smart_outdoor_plug_in_dimmer",
+        "tapo_smart_wi_fi_outlet",
+        "tapo_smart_wi_fi_plug_265",
+        "tapo_smart_wi_fi_power_strip",
+        "tp_link_smart_outdoor_plug",
+        "uascent_smart_switch",
     ],
 )
 async def test_multi_endpoint_device_topology(

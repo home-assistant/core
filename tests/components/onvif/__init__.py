@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from onvif.exceptions import ONVIFError
 from onvif_parsers.model import EventEntity
+from pytest_homeassistant.common import MockConfigEntry
 from zeep.exceptions import Fault
 
 from homeassistant import config_entries
@@ -25,8 +26,6 @@ from homeassistant.components.onvif.models import (
 )
 from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 URN = "urn:uuid:123456789"
 NAME = "TestCamera"

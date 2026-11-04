@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from steamloop import AuthenticationError, SteamloopConnectionError
 
 from homeassistant.components.trane.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import MOCK_ENTRY_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload(

@@ -2,12 +2,12 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.gree.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_simple(hass: HomeAssistant) -> None:
@@ -18,11 +18,11 @@ async def test_setup_simple(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.gree.climate.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as climate_setup,
         patch(
             "homeassistant.components.gree.switch.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as switch_setup,
     ):
         assert await async_setup_component(hass, DOMAIN, {})

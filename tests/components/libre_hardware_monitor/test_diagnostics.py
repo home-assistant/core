@@ -2,13 +2,14 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
+from . import init_integration
 
 
 async def test_diagnostics(
@@ -19,9 +20,7 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    mock_auth_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_auth_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await init_integration(hass, mock_auth_config_entry)
     assert (
         await get_diagnostics_for_config_entry(
             hass, hass_client, mock_auth_config_entry

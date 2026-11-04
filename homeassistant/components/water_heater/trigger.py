@@ -29,7 +29,7 @@ _OPERATION_MODE_CHANGED_TRIGGER_SCHEMA = (
         {
             probatio.Required(CONF_OPTIONS): {
                 probatio.Required(CONF_OPERATION_MODE): probatio.All(
-                    probatio.EnsureList(), probatio.Length(min=1), [str]
+                    probatio.EnsureList(), probatio.NonEmpty(), [str]
                 ),
             },
         }
