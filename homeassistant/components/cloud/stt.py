@@ -21,12 +21,12 @@ from homeassistant.components.stt import (
     SpeechResultState,
     SpeechToTextEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_when_setup
 
+from . import CloudConfigEntry
 from .assist_pipeline import async_migrate_cloud_pipeline_engine
 from .client import CloudClient
 from .const import (
@@ -49,7 +49,7 @@ STT_V2_AUDIO_PROCESSING = SpeechAudioProcessing(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: CloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud speech platform via config entry."""

@@ -99,6 +99,9 @@ LLM_PLATFORMS = [
     Platform.CONVERSATION,
 ]
 
+# The platforms that were set up for the entry
+type CloudConfigEntry = ConfigEntry[list[Platform]]
+
 
 SIGNAL_CLOUD_CONNECTION_STATE: SignalType[CloudConnectionState] = SignalType(
     "CLOUD_CONNECTION_STATE"
@@ -558,7 +561,7 @@ def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> Non
     cloud.client.prefs.async_listen_updates(on_prefs_updated)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: CloudConfigEntry) -> None:
     """Set up a config entry."""
     platforms = PLATFORMS.copy()
     if (cloud := hass.data[DATA_CLOUD]).is_logged_in:
@@ -567,16 +570,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             platforms += LLM_PLATFORMS
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
-    entry.runtime_data = {"platforms": platforms}
+    entry.runtime_data = platforms
     stt_tts_entities_added = hass.data[DATA_PLATFORMS_SETUP]["stt_tts_entities_added"]
     stt_tts_entities_added.set()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: CloudConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms_or_raise(
-        entry, entry.runtime_data["platforms"]
-    )
+    await hass.config_entries.async_unload_platforms_or_raise(entry, entry.runtime_data)
 
 
 async def _setup_log_handler(hass: HomeAssistant) -> FixedSizeQueueLogHandler:
