@@ -145,6 +145,11 @@ async def test_lights(
         entity_registry.async_get(GRADIENT_SEGMENT_ENTITY_IDS[4]).unique_id
         == f"{GRADIENT_LIGHT_ID}_segment_5"
     )
+    assert entity_registry.async_get(GRADIENT_LIGHT_ENTITY_ID).hidden_by is None
+    assert (
+        entity_registry.async_get(GRADIENT_SEGMENT_ENTITY_IDS[0]).hidden_by
+        == er.RegistryEntryHider.INTEGRATION
+    )
 
 
 async def test_light_turn_on_service(
