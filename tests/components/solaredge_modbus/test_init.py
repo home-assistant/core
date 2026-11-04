@@ -477,7 +477,7 @@ async def test_single_late_answer_is_retried(
     ):
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert missed  # the read really did fail
 
@@ -503,7 +503,7 @@ async def test_dead_link_fails_the_refresh(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.runtime_data.readings.last_update_success is False
 
@@ -537,7 +537,7 @@ async def test_another_inverter_on_the_address_fails_the_refresh(
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.runtime_data.readings.last_update_success is False
 
@@ -558,7 +558,7 @@ async def test_silent_control_block_leaves_the_others_alone(
     mock_modbus_unit.fail_read(SITE_CONTROL_REGISTER, ServerDeviceFailureError())
     freezer.tick(SETTINGS_SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("number.solaredge_se10000h_backup_reserve")
     assert state is not None
@@ -659,7 +659,7 @@ async def _tick_attachment_check(
     with patch.object(SolarEdge, "async_probe", counting_probe):
         freezer.tick(ATTACHMENT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return probes
 
@@ -753,6 +753,10 @@ async def test_replaced_meter_is_picked_up(
             for index in range(16)
         }
     )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # The swap is seen without probing, so the only probe here is the reload's.
     assert await _tick_attachment_check(hass, freezer) == 1
@@ -1029,7 +1033,7 @@ async def test_retry_that_finds_nothing_keeps_the_first_poll(
     ):
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     # The identity block answered the first attempt and the refresh stands;
     # only the sub-systems that stayed silent are reported as failed.
@@ -1079,7 +1083,7 @@ async def test_a_block_that_stays_silent_stops_being_asked(
         for _ in range(2):
             freezer.tick(ATTACHMENT_SCAN_INTERVAL)
             async_fire_time_changed(hass)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
     assert asked[0] == frozenset(), "the first check still looks for it"
     assert "power_control" in asked[1], "a block still silent is not asked again"
@@ -1113,12 +1117,12 @@ async def test_a_block_that_blips_once_keeps_being_asked(
         )
         freezer.tick(ATTACHMENT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, None)
         freezer.tick(ATTACHMENT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "power_control" not in asked[1], "a blip settled a block that answered"
 
@@ -1161,7 +1165,7 @@ async def test_a_block_discovery_depends_on_keeps_being_asked(
         for _ in range(2):
             freezer.tick(ATTACHMENT_SCAN_INTERVAL)
             async_fire_time_changed(hass)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
     assert subsystem not in asked[1], "a block discovery depends on was settled"
 

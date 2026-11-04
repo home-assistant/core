@@ -45,9 +45,9 @@ def hvac_modes() -> list[HVACMode]:
 
 
 @pytest.fixture
-def has_receiver() -> bool:
+def has_receiver(device_type: LGDeviceType) -> bool:
     """Return whether the config entry has an infrared receiver configured."""
-    return True
+    return device_type != LGDeviceType.HOME_THEATER
 
 
 @pytest.fixture
@@ -58,6 +58,7 @@ def extra_entry_data(
     return {
         LGDeviceType.TV: {},
         LGDeviceType.AC: {CONF_HVAC_MODES: hvac_modes},
+        LGDeviceType.HOME_THEATER: {},
     }[device_type]
 
 
@@ -107,12 +108,28 @@ def mock_lg_tv_code_to_command() -> Generator[None]:
 
 
 @pytest.fixture
+def mock_lg_home_theater_code_to_command() -> Generator[None]:
+    """Patch LGHomeTheaterCode.to_command to return the LGHomeTheaterCode directly.
+
+    This allows tests to assert on the high-level code enum value
+    rather than the raw timings.
+    """
+    with patch(
+        "infrared_protocols.codes.lg.home_theater.LGHomeTheaterCode.to_command",
+        autospec=True,
+        side_effect=lambda self, **kwargs: self,
+    ):
+        yield
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
     mock_lg_tv_code_to_command: None,
+    mock_lg_home_theater_code_to_command: None,
     platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the LG Infrared integration for testing."""

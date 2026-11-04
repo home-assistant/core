@@ -544,7 +544,7 @@ async def test_supported_features(
 
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
-            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_COOL,
             options=[],
         )
     )
@@ -561,7 +561,7 @@ async def test_supported_features(
                             timestamp=0,
                             level="",
                             handling="",
-                            value=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+                            value=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_COOL.value,
                         )
                     ]
                 ),

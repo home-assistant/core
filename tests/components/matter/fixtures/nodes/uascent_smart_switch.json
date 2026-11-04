@@ -1,0 +1,385 @@
+{
+  "node_id": 1091,
+  "date_commissioned": "2023-10-14T23:30:12.991386",
+  "last_interview": "2023-10-14T23:30:12.991389",
+  "interview_version": 4,
+  "available": true,
+  "is_bridge": false,
+  "attributes": {
+    "0/49/4": true,
+    "0/49/1": [
+      {
+        "networkID": "TXlXaUZp",
+        "connected": true
+      }
+    ],
+    "0/49/3": 20,
+    "0/49/65532": 1,
+    "0/49/5": null,
+    "0/49/65531": [0, 1, 2, 3, 4, 5, 6, 7, 65528, 65529, 65531, 65532, 65533],
+    "0/49/65533": 1,
+    "0/49/65529": [0, 2, 4, 6, 8],
+    "0/49/65528": [1, 5, 7],
+    "0/49/6": null,
+    "0/49/7": null,
+    "0/49/0": 1,
+    "0/49/2": 10,
+    "0/40/65531": [
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 65528, 65529, 65531, 65532, 65533
+    ],
+    "0/40/2": 5120,
+    "0/40/19": {
+      "caseSessionsPerFabric": 3,
+      "subscriptionsPerFabric": 3
+    },
+    "0/40/0": 1,
+    "0/40/1": "Uascent",
+    "0/40/3": "Smart Switch",
+    "0/40/4": 1072,
+    "0/40/65533": 1,
+    "0/40/65529": [],
+    "0/40/5": "",
+    "0/40/10": "1.6",
+    "0/40/6": "**REDACTED**",
+    "0/40/8": "1.0",
+    "0/40/9": 1,
+    "0/40/65532": 0,
+    "0/40/7": 0,
+    "0/40/65528": [],
+    "0/54/65529": [],
+    "0/54/65528": [],
+    "0/54/4": -85,
+    "0/54/65533": 1,
+    "0/54/65532": 0,
+    "0/54/3": 10,
+    "0/54/0": "AAAAAgAA",
+    "0/54/65531": [0, 1, 2, 3, 4, 65528, 65529, 65531, 65532, 65533],
+    "0/54/1": 4,
+    "0/54/2": 3,
+    "0/31/4": 3,
+    "0/31/65532": 0,
+    "0/31/65529": [],
+    "0/31/2": 4,
+    "0/31/65531": [0, 1, 2, 3, 4, 65528, 65529, 65531, 65532, 65533],
+    "0/31/3": 3,
+    "0/31/1": [],
+    "0/31/65533": 1,
+    "0/31/65528": [],
+    "0/31/0": [
+      {
+        "privilege": 0,
+        "authMode": 0,
+        "subjects": null,
+        "targets": null,
+        "fabricIndex": 1
+      },
+      {
+        "privilege": 0,
+        "authMode": 0,
+        "subjects": null,
+        "targets": null,
+        "fabricIndex": 2
+      },
+      {
+        "privilege": 5,
+        "authMode": 2,
+        "subjects": [112233],
+        "targets": null,
+        "fabricIndex": 4
+      },
+      {
+        "privilege": 0,
+        "authMode": 0,
+        "subjects": null,
+        "targets": null,
+        "fabricIndex": 5
+      },
+      {
+        "privilege": 0,
+        "authMode": 0,
+        "subjects": null,
+        "targets": null,
+        "fabricIndex": 6
+      }
+    ],
+    "0/62/65529": [0, 2, 4, 6, 7, 9, 10, 11],
+    "0/62/1": [
+      {
+        "rootPublicKey": "BAiEQ2wYqDdQUYABAUeB6K7ELAf+5SqDf0ba1DKKMedrzDRA/US0qmX+gZbGhKNdn+ziWoTdlEJYKTdRltpi+r4=",
+        "vendorID": 4937,
+        "fabricID": 1,
+        "nodeID": 3793776737,
+        "label": "Home",
+        "fabricIndex": 1
+      },
+      {
+        "rootPublicKey": "BOF2O3k8hSK4HMz+oDlYV5mM84KBiuoYDht6JUYa7qVyfX2Wg7r83BZ7/0T0zGvZdhNtV0JpjNeCSq9aHMazO9E=",
+        "vendorID": 4996,
+        "fabricID": 2,
+        "nodeID": 2947695055,
+        "label": "",
+        "fabricIndex": 2
+      },
+      {
+        "rootPublicKey": "BHRJUAxgqZrX8+nElbuafQKFrkQrqT8me5YTflp79CxnDscwLq4tFI/JFilbREE6u5EAZVPbsGCYhc+KWyNB3Tg=",
+        "vendorID": 4939,
+        "fabricID": 2,
+        "nodeID": 25,
+        "label": "",
+        "fabricIndex": 4
+      },
+      {
+        "rootPublicKey": "BBDRjuZqNbsVHKaYE5W7KxLQsAcFQ29WXeBWNsiq5KUQzDYyX3xbBChryRSAgxTxkdGYE9p4qISpzKC/nk7AQNs=",
+        "vendorID": 4362,
+        "fabricID": 11408789976561167703,
+        "nodeID": 14857232922078574342,
+        "label": "SmartThings Hub 5696",
+        "fabricIndex": 5
+      },
+      {
+        "rootPublicKey": "BFs332VJwg3I1yKmuKy2YKinZM57r2xsIk9+6ENJaErX2An/ZQAz0VJ9zx+6rGqcOti0HtrJCfe1x2D9VCyJI3U=",
+        "vendorID": 24582,
+        "fabricID": 13990008155982016004,
+        "nodeID": 3780495087,
+        "label": "",
+        "fabricIndex": 6
+      }
+    ],
+    "0/62/65532": 0,
+    "0/62/65533": 1,
+    "0/62/3": 5,
+    "0/62/65531": [0, 1, 2, 3, 4, 5, 65528, 65529, 65531, 65532, 65533],
+    "0/62/0": [
+      {
+        "noc": "",
+        "icac": null,
+        "fabricIndex": 1
+      },
+      {
+        "noc": "",
+        "icac": null,
+        "fabricIndex": 2
+      },
+      {
+        "noc": "FTABAQEkAgE3AyQTAhgmBIAigScmBYAlTTo3BiQVAiQRGRgkBwEkCAEwCUEE1npyUJg0yz7b1irrEStgceXkNyZu23mNK7zvmq8eYJOSc7/p+bngnFItJiOgBAdZYaqFCw8dpDoaASJrdcolMjcKNQEoARgkAgE2AwQCBAEYMAQUdtwueCQA4fBGil34zUza50RNrCcwBRTJyXNPRrGmlJNRyuXuP9n4nmZNwxgwC0Dd4mnK34Q4XFiItWtjOVNuzoAKbjSsoWC6Cc7WT02QaTPly0us9iPsYSoqklgyhKLOz+p9gYsDdaodmCUIwap4GA==",
+        "icac": "FTABAQEkAgE3AyQUARgmBIAigScmBYAlTTo3BiQTAhgkBwEkCAEwCUEE/E8315qU9Rh2kROrFz8CZn5vEcKCo17T3fsTNcRwoShEJS6YugITaTo+gWzZK6dHx152b/MOtVudxV5gb/7McjcKNQEpARgkAmAwBBTJyXNPRrGmlJNRyuXuP9n4nmZNwzAFFKEViqurc+K5xh74yX4TwYcOdwSuGDALQPZgRupkcq9FntYjYupxzLBCmRO4OxlTx1Vlu76PQ5cGEOL8m7uKyG3ew9Gdt6RdcH+vhs1Nc9bJgoaMtJ6webgY",
+        "fabricIndex": 4
+      },
+      {
+        "noc": "",
+        "icac": null,
+        "fabricIndex": 5
+      },
+      {
+        "noc": "",
+        "icac": null,
+        "fabricIndex": 6
+      }
+    ],
+    "0/62/4": [
+      "FTABAQAkAgE3AycU/BYiw7U9rM0kFQEYJgQiFMcrJAUANwYnFPwWIsO1PazNJBUBGCQHASQIATAJQQQIhENsGKg3UFGAAQFHgeiuxCwH/uUqg39G2tQyijHna8w0QP1EtKpl/oGWxoSjXZ/s4lqE3ZRCWCk3UZbaYvq+Nwo1ASkBGCQCYDAEFOSkfD3zgsmhifayjuFczFwh3uFTMAUU5KR8PfOCyaGJ9rKO4VzMXCHe4VMYMAtAWAgN8llFdeiUNM/USeEO2oYZ8Gbt7R2CuphG/5R+KX/Ka5NA2aTtxcCz3BxeJwn4BOiCtGeJZ9N67JpQO/FJ6hg=",
+      "FTABAQAkAgE3AycU4KNcEmhGvCIkFQIYJgQrFMcrJAUANwYnFOCjXBJoRrwiJBUCGCQHASQIATAJQQThdjt5PIUiuBzM/qA5WFeZjPOCgYrqGA4beiVGGu6lcn19loO6/NwWe/9E9Mxr2XYTbVdCaYzXgkqvWhzGszvRNwo1ASkBGCQCYDAEFAdV1/Kuf6SyVTp3CwgsR9cEgeigMAUUB1XX8q5/pLJVOncLCCxH1wSB6KAYMAtAuIMW/FrgqhGjXNrYdDFXBFMWaRkdXgg4HdKmYm+4sdlFT9384QuyKIBw2uINLbAySr0cGkPXyPgObGkjyS7KVRg=",
+      "FTABAQEkAgE3AyQUARgmBIAigScmBYAlTTo3BiQUARgkBwEkCAEwCUEEdElQDGCpmtfz6cSVu5p9AoWuRCupPyZ7lhN+Wnv0LGcOxzAuri0Uj8kWKVtEQTq7kQBlU9uwYJiFz4pbI0HdODcKNQEpARgkAmAwBBShFYqrq3PiucYe+Ml+E8GHDncErjAFFKEViqurc+K5xh74yX4TwYcOdwSuGDALQFjrnGHvn5v59ihbeOcbPwmu3jGYxAw8s7zAeFZSXlZ7sLJclMRoSM2aAPHEmVhn7xISICcEikFQK849J3u8HhEY",
+      "FTABEQDi4iOCz4sKXWFUchqtFoiBJAIBNwMnFP9ayBGRaUfXGCYEFKqzKiYFJAsbNDcGJxT/WsgRkWlH1xgkBwEkCAEwCUEEENGO5mo1uxUcppgTlbsrEtCwBwVDb1Zd4FY2yKrkpRDMNjJffFsEKGvJFICDFPGR0ZgT2niohKnMoL+eTsBA2zcKNQEpARgwBBTzd2uYA9TNTFUmnvAb1QvrIRUmBSQCYTAFFPN3a5gD1M1MVSae8BvVC+shFSYFGDALQM975ksJZB7DINww3yal2HOjBvj3Wn7P/ovlvVVjngoPboEm3JaSaNEnnM1xzxEszBeCiMfYE2fQqii0kqXKBJAY",
+      "FTABAQEkAgE3AyyEAlVTLAcGR29vZ2xlLAELTWF0dGVyIFJvb3QnFAEAAAD+////GCYEf9JDKSYFf5Rb5TcGLIQCVVMsBwZHb29nbGUsAQtNYXR0ZXIgUm9vdCcUAQAAAP7///8YJAcBJAgBMAlBBFs332VJwg3I1yKmuKy2YKinZM57r2xsIk9+6ENJaErX2An/ZQAz0VJ9zx+6rGqcOti0HtrJCfe1x2D9VCyJI3U3CjUBKQEkAgEYJAJgMAQUcsIB91cZE7NIygDKe0X0d0ZoyX4wBRRywgH3VxkTs0jKAMp7RfR3RmjJfhgwC0BlFksWat/xjBVhCozpG9cD6cH2d7cRzhM1BRUt8NoVERZ1rFWRzueGhRzdnv2tKWZ0vryyo6Mgm83nswnbVSxvGA=="
+    ],
+    "0/62/65528": [1, 3, 5, 8],
+    "0/62/5": 4,
+    "0/62/2": 5,
+    "0/4/65529": [0, 1, 2, 3, 4, 5],
+    "0/4/65531": [0, 65528, 65529, 65531, 65532, 65533],
+    "0/4/65528": [0, 1, 2, 3],
+    "0/4/65532": 1,
+    "0/4/0": 128,
+    "0/4/65533": 3,
+    "0/63/65528": [2, 5],
+    "0/63/65532": 0,
+    "0/63/65529": [0, 1, 3, 4],
+    "0/63/1": [],
+    "0/63/0": [],
+    "0/63/3": 3,
+    "0/63/65533": 1,
+    "0/63/2": 3,
+    "0/63/65531": [0, 1, 2, 3, 65528, 65529, 65531, 65532, 65533],
+    "0/60/65528": [],
+    "0/60/65532": 0,
+    "0/60/1": null,
+    "0/60/2": null,
+    "0/60/65529": [0, 1, 2],
+    "0/60/65531": [0, 1, 2, 65528, 65529, 65531, 65532, 65533],
+    "0/60/0": 0,
+    "0/60/65533": 1,
+    "0/48/65531": [0, 1, 2, 3, 4, 65528, 65529, 65531, 65532, 65533],
+    "0/48/2": 0,
+    "0/48/1": {
+      "failSafeExpiryLengthSeconds": 60,
+      "maxCumulativeFailsafeSeconds": 900
+    },
+    "0/48/65528": [1, 3, 5],
+    "0/48/65532": 0,
+    "0/48/65529": [0, 2, 4],
+    "0/48/65533": 1,
+    "0/48/4": true,
+    "0/48/3": 0,
+    "0/48/0": 0,
+    "0/51/65528": [],
+    "0/51/65529": [0],
+    "0/51/8": false,
+    "0/51/0": [
+      {
+        "name": "wlan0",
+        "isOperational": true,
+        "offPremiseServicesReachableIPv4": null,
+        "offPremiseServicesReachableIPv6": null,
+        "hardwareAddress": "OHPq4qTM",
+        "IPv4Addresses": ["wKgCDA=="],
+        "IPv6Addresses": ["/oAAAAAAAAA6c+r//uKkzA=="],
+        "type": 1
+      }
+    ],
+    "0/51/65533": 1,
+    "0/51/65532": 0,
+    "0/51/1": 14,
+    "0/51/65531": [0, 1, 8, 65528, 65529, 65531, 65532, 65533],
+    "0/29/65531": [0, 1, 2, 3, 65528, 65529, 65531, 65532, 65533],
+    "0/29/0": [
+      {
+        "deviceType": 22,
+        "revision": 1
+      }
+    ],
+    "0/29/65528": [],
+    "0/29/65533": 1,
+    "0/29/3": [1, 2],
+    "0/29/65529": [],
+    "0/29/2": [41],
+    "0/29/65532": 0,
+    "0/29/1": [4, 29, 31, 40, 42, 48, 49, 51, 54, 60, 62, 63],
+    "0/42/65532": 0,
+    "0/42/65529": [0],
+    "0/42/65528": [],
+    "0/42/0": [
+      {
+        "providerNodeID": 7854063761901661730,
+        "endpoint": 0,
+        "fabricIndex": 1
+      }
+    ],
+    "0/42/65533": 1,
+    "0/42/1": true,
+    "0/42/3": null,
+    "0/42/2": 1,
+    "0/42/65531": [0, 1, 2, 3, 65528, 65529, 65531, 65532, 65533],
+    "2/30/65529": [],
+    "2/30/65528": [],
+    "2/30/65532": 1,
+    "2/30/0": [],
+    "2/30/65533": 1,
+    "2/30/65531": [0, 65528, 65529, 65531, 65532, 65533],
+    "2/4/0": 128,
+    "2/4/65533": 4,
+    "2/4/65532": 1,
+    "2/4/65528": [0, 1, 2, 3],
+    "2/4/65529": [0, 1, 2, 3, 4, 5],
+    "2/4/65531": [0, 65528, 65529, 65531, 65532, 65533],
+    "2/5/65529": [],
+    "2/5/65528": [],
+    "2/5/0": 0,
+    "2/5/2": 0,
+    "2/5/3": false,
+    "2/5/65532": 0,
+    "2/5/65531": [0, 1, 2, 3, 4, 65528, 65529, 65531, 65532, 65533],
+    "2/5/4": 0,
+    "2/5/1": 0,
+    "2/5/65533": 4,
+    "2/6/65531": [
+      0, 16384, 16385, 16386, 16387, 65528, 65529, 65531, 65532, 65533
+    ],
+    "2/6/65532": 1,
+    "2/6/65529": [0, 1, 2, 64, 65, 66],
+    "2/6/16385": 0,
+    "2/6/65533": 4,
+    "2/6/16386": 0,
+    "2/6/16384": true,
+    "2/6/65528": [],
+    "2/6/0": true,
+    "2/6/16387": 0,
+    "2/29/1": [3, 4, 5, 6, 29, 30],
+    "2/29/65533": 1,
+    "2/29/65528": [],
+    "2/29/2": [3, 6],
+    "2/29/65531": [0, 1, 2, 3, 65528, 65529, 65531, 65532, 65533],
+    "2/29/3": [],
+    "2/29/0": [
+      {
+        "deviceType": 259,
+        "revision": 1
+      }
+    ],
+    "2/29/65532": 0,
+    "2/29/65529": [],
+    "2/3/1": 0,
+    "2/3/65531": [0, 1, 65528, 65529, 65531, 65532, 65533],
+    "2/3/65529": [],
+    "2/3/0": 1,
+    "2/3/65528": [],
+    "2/3/65533": 4,
+    "2/3/65532": 0,
+    "1/4/0": 128,
+    "1/4/65532": 1,
+    "1/4/65531": [0, 65528, 65529, 65531, 65532, 65533],
+    "1/4/65528": [0, 1, 2, 3],
+    "1/4/65529": [0, 1, 2, 3, 4, 5],
+    "1/4/65533": 4,
+    "1/6/16387": 0,
+    "1/6/65528": [],
+    "1/6/65531": [
+      0, 16384, 16385, 16386, 16387, 65528, 65529, 65531, 65532, 65533
+    ],
+    "1/6/65532": 1,
+    "1/6/65533": 4,
+    "1/6/16385": 0,
+    "1/6/0": false,
+    "1/6/16386": 0,
+    "1/6/16384": true,
+    "1/6/65529": [0, 1, 2, 64, 65, 66],
+    "1/3/0": 1,
+    "1/3/65533": 4,
+    "1/3/1": 0,
+    "1/3/65528": [],
+    "1/3/65531": [0, 1, 65528, 65529, 65531, 65532, 65533],
+    "1/3/65532": 0,
+    "1/3/65529": [0, 64],
+    "1/30/65532": 1,
+    "1/30/65529": [],
+    "1/30/0": [],
+    "1/30/65531": [0, 65528, 65529, 65531, 65532, 65533],
+    "1/30/65533": 1,
+    "1/30/65528": [],
+    "1/5/0": 0,
+    "1/5/65528": [0, 1, 2, 3, 4, 6],
+    "1/5/1": 0,
+    "1/5/3": false,
+    "1/5/2": 0,
+    "1/5/65533": 4,
+    "1/5/65532": 0,
+    "1/5/65529": [0, 1, 2, 3, 4, 5, 6],
+    "1/5/65531": [0, 1, 2, 3, 4, 65528, 65529, 65531, 65532, 65533],
+    "1/5/4": 0,
+    "1/29/1": [3, 4, 5, 6, 29, 30],
+    "1/29/0": [
+      {
+        "deviceType": 259,
+        "revision": 1
+      }
+    ],
+    "1/29/3": [],
+    "1/29/2": [3, 6],
+    "1/29/65533": 1,
+    "1/29/65531": [0, 1, 2, 3, 65528, 65529, 65531, 65532, 65533],
+    "1/29/65529": [],
+    "1/29/65532": 0,
+    "1/29/65528": []
+  },
+  "attribute_subscriptions": []
+}

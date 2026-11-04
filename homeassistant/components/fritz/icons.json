@@ -1,9 +1,6 @@
 {
   "entity": {
     "button": {
-      "cleanup": {
-        "default": "mdi:broom"
-      },
       "wake_on_lan": {
         "default": "mdi:lan-pending"
       }

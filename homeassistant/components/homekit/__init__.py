@@ -38,10 +38,6 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SW_VERSION,
     CONF_DEVICES,
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -92,7 +88,11 @@ from .accessories import (
 )
 from .aidmanager import AccessoryAidStorage
 from .const import (
+    ATTR_HW_VERSION,
     ATTR_INTEGRATION,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
@@ -788,18 +788,16 @@ class HomeKit:
         identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
         self._async_purge_old_bridges(dev_reg, identifier, connection)
         accessory_type = type(self.driver.accessory).__name__
-        dev_reg.async_get_or_create_device(
+        dev_reg.async_get_or_create(
             config_entry_id=self._entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={
-                    identifier  # type: ignore[arg-type]
-                },  # this needs to be migrated as a 2 item tuple at some point
-                connections={connection},
-                manufacturer=MANUFACTURER,
-                name=accessory_friendly_name(self._entry_title, self.driver.accessory),
-                model=accessory_type,
-                entry_type=dr.DeviceEntryType.SERVICE,
-            ),
+            identifiers={
+                identifier  # type: ignore[arg-type]
+            },  # this needs to be migrated as a 2 item tuple at some point
+            connections={connection},
+            manufacturer=MANUFACTURER,
+            name=accessory_friendly_name(self._entry_title, self.driver.accessory),
+            model=accessory_type,
+            entry_type=dr.DeviceEntryType.SERVICE,
         )
 
     @callback

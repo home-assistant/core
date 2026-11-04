@@ -33,6 +33,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.sensor.recorder import compile_statistics  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
     UnitOfEnergy,
@@ -147,6 +148,46 @@ async def test_cost_sensor_attributes(
     assert entry.entity_category is None
     assert entry.disabled_by is None
     assert entry.hidden_by == er.RegistryEntryHider.INTEGRATION
+
+
+async def test_cost_sensor_names(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test cost sensors are named after their energy sensor."""
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "grid",
+            "stat_energy_from": "sensor.grid_import",
+            "stat_energy_to": "sensor.grid_export",
+            "stat_cost": None,
+            "stat_compensation": None,
+            "entity_energy_price": None,
+            "number_energy_price": 0.3,
+            "entity_energy_price_export": None,
+            "number_energy_price_export": 0.1,
+            "cost_adjustment_day": 0,
+        }
+    )
+    hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
+    hass.states.async_set(
+        "sensor.grid_import", 100, {ATTR_FRIENDLY_NAME: "Meter import"}
+    )
+    await setup_integration(hass)
+
+    assert (
+        hass.states.get("sensor.grid_import_cost").attributes[ATTR_FRIENDLY_NAME]
+        == "Meter import cost"
+    )
+    # The export sensor has no state yet, so its entity ID names it
+    assert (
+        hass.states.get("sensor.grid_export_compensation").attributes[
+            ATTR_FRIENDLY_NAME
+        ]
+        == "Grid export compensation"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1712,6 +1753,85 @@ async def test_cost_sensor_readded_starts_over(
     assert hass.states.get("sensor.energy_consumption_cost").state == "0.0"
 
 
+@pytest.mark.parametrize(
+    ("source_type", "first_unit", "second_unit", "readings"),
+    [
+        pytest.param(
+            "grid",
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfEnergy.WATT_HOUR,
+            ("110000", "112000"),
+            id="kwh_to_wh",
+        ),
+        pytest.param(
+            "water",
+            UnitOfVolume.CUBIC_METERS,
+            UnitOfVolume.LITERS,
+            ("110000", "112000"),
+            id="m3_to_l",
+        ),
+        # Can't be converted, start over from the first reading in the new unit
+        pytest.param(
+            "gas",
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfVolume.CUBIC_METERS,
+            ("50", "52"),
+            id="kwh_to_m3",
+        ),
+    ],
+)
+async def test_cost_sensor_meter_unit_change(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    source_type: str,
+    first_unit: str,
+    second_unit: str,
+    readings: tuple[str, str],
+) -> None:
+    """Test a meter changing its unit is not priced as usage."""
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": source_type,
+            "stat_energy_from": "sensor.meter",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 2,
+            "cost_adjustment_day": 0,
+        }
+    )
+    hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
+    attributes = {ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING}
+    hass.states.async_set(
+        "sensor.meter", "100", {**attributes, ATTR_UNIT_OF_MEASUREMENT: first_unit}
+    )
+    await setup_integration(hass)
+    hass.states.async_set(
+        "sensor.meter", "110", {**attributes, ATTR_UNIT_OF_MEASUREMENT: first_unit}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.meter_cost").state == "20.0"
+
+    # Same reading in the new unit
+    hass.states.async_set(
+        "sensor.meter",
+        readings[0],
+        {**attributes, ATTR_UNIT_OF_MEASUREMENT: second_unit},
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.meter_cost").state == "20.0"
+
+    # 2 kWh or m³ used
+    hass.states.async_set(
+        "sensor.meter",
+        readings[1],
+        {**attributes, ATTR_UNIT_OF_MEASUREMENT: second_unit},
+    )
+    await hass.async_block_till_done()
+    assert float(hass.states.get("sensor.meter_cost").state) == pytest.approx(24.0)
+
+
 async def test_needs_power_sensor_standard(hass: HomeAssistant) -> None:
     """Test _needs_power_sensor returns False for standard stat_rate."""
     assert SensorManager._needs_power_sensor({"stat_rate": "sensor.power"}) is False
@@ -1973,6 +2093,7 @@ async def test_power_sensor_grid_combined(
     # 500 - 200 = 300 (net import)
     assert float(state.state) == 300.0
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Grid power"
 
 
 async def test_power_sensor_device_assignment(
@@ -2286,6 +2407,7 @@ async def test_power_sensor_battery_combined(
     assert state is not None
     # 150 - 50 = 100 (net discharging)
     assert float(state.state) == 100.0
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Battery power"
 
     # Test net charging scenario
     hass.states.async_set("sensor.battery_discharge", "30.0")
@@ -2923,7 +3045,7 @@ async def test_power_sensor_naming_fallback(
     state = hass.states.get("sensor.battery_power_inverted")
     assert state is not None
     # Name should be based on entity_id since not in registry
-    assert state.attributes["friendly_name"] == "Battery Power Inverted"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Battery power inverted"
 
 
 async def test_power_sensor_no_device_assignment(
@@ -3122,7 +3244,7 @@ async def test_power_sensor_naming_with_registry_name(
     # Verify sensor was created with registry name
     state = hass.states.get("sensor.battery_power_inverted")
     assert state is not None
-    assert state.attributes["friendly_name"] == "My Battery Power Inverted"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "My Battery Power inverted"
 
 
 async def test_missing_price_entity(
@@ -3213,7 +3335,7 @@ def _make_cost_sensor() -> EnergyCostSensor:
             flow_type="flow_from",
             stat_energy_key="stat_energy_from",
             total_money_key="stat_cost",
-            name_suffix="Cost",
+            translation_key="cost",
             entity_id_suffix="cost",
         ),
         {
@@ -3254,6 +3376,68 @@ async def test_add_finished_resolved_on_abort(
     sensor.add_to_platform_abort()
 
     assert sensor.add_finished.done()
+
+
+@pytest.mark.parametrize(
+    ("source", "source_without_sensor", "unique_id", "entity_id"),
+    [
+        pytest.param(
+            FIXED_PRICE_GRID_SOURCE,
+            {**FIXED_PRICE_GRID_SOURCE, "number_energy_price": None},
+            "sensor.energy_consumption_grid_cost",
+            "sensor.energy_consumption_cost",
+            id="cost",
+        ),
+        pytest.param(
+            {
+                "type": "battery",
+                "stat_energy_from": "sensor.battery_energy_from",
+                "stat_energy_to": "sensor.battery_energy_to",
+                "power_config": {"stat_rate_inverted": "sensor.battery_power"},
+            },
+            {
+                "type": "battery",
+                "stat_energy_from": "sensor.battery_energy_from",
+                "stat_energy_to": "sensor.battery_energy_to",
+                "stat_rate": "sensor.battery_power",
+            },
+            "energy_power_battery_inverted_sensor_battery_power",
+            "sensor.battery_power_inverted",
+            id="power",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_disabled_sensor_removed_from_config(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    source: data.SourceType,
+    source_without_sensor: data.SourceType,
+    unique_id: str,
+    entity_id: str,
+) -> None:
+    """Test removing a sensor the platform rejected because it is disabled."""
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        unique_id,
+        suggested_object_id=entity_id.removeprefix("sensor."),
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    await manager.async_update({"energy_sources": [source]})
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+
+    await manager.async_update({"energy_sources": [source_without_sensor]})
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+    assert entity_registry.async_get(entity_id).disabled_by is (
+        er.RegistryEntryDisabler.USER
+    )
 
 
 @pytest.mark.parametrize(

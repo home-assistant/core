@@ -141,7 +141,7 @@ async def test_migration_from_v1(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -279,7 +279,7 @@ async def test_migration_from_v1_with_multiple_keys(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -383,7 +383,7 @@ async def test_migration_from_v1_with_same_keys(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -594,7 +594,7 @@ async def test_migration_from_v1_disabled(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -758,7 +758,7 @@ async def test_migration_from_v2_1(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -905,7 +905,7 @@ async def test_migration_from_v2_2(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -1093,10 +1093,13 @@ async def test_migrate_entry_from_v2_3(
         mock_config_entry.entry_id,
         config_entry=mock_config_entry,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=entity_disabled_by,
         device_id=conversation_device.id,
         suggested_object_id="chatgpt",
     )
+    conversation_entity = attr.evolve(
+        conversation_entity, disabled_by=entity_disabled_by
+    )
+    entity_registry.entities[conversation_entity.entity_id] = conversation_entity
 
     # Verify initial state
     assert mock_config_entry.version == 2
@@ -1109,7 +1112,7 @@ async def test_migrate_entry_from_v2_3(
     # Run setup to trigger migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         assert result is setup_result
@@ -1178,7 +1181,7 @@ async def test_migration_from_v2_4(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -1281,7 +1284,7 @@ async def test_migration_from_v2_5(
     # Run migration
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -1426,7 +1429,7 @@ async def test_migration_from_v2_6(
 
     with patch(
         "homeassistant.components.openai_conversation.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TelegramBotConfigEntry
+from .bot import TelegramBotConfigEntry
 from .const import ATTR_TITLE, CONF_CHAT_ID, DOMAIN
 from .entity import TelegramBotEntity
 

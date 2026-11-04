@@ -65,6 +65,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Test Ghost",
+        entry_id="01JGHOST000000000000000000",
         data={
             CONF_API_URL: API_URL,
             CONF_ADMIN_API_KEY: API_KEY,
@@ -106,6 +107,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setup entry."""
     with patch(
         "homeassistant.components.ghost.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup

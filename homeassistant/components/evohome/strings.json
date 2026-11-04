@@ -1,5 +1,8 @@
 {
   "exceptions": {
+    "api_call_failed": {
+      "message": "The request to the vendor's API failed: {error}"
+    },
     "controller_only_service": {
       "message": "Only Evohome controllers support the `{service}` action"
     },

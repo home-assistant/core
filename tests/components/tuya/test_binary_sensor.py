@@ -125,3 +125,34 @@ async def test_bitmap(
     assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == tankfull
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == defrost
     assert hass.states.get("binary_sensor.dehumidifier_wet").state == wet
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["hps_gyrbdy2q"],
+)
+@pytest.mark.parametrize(
+    ("drop_value", "expected_state"),
+    [("normal", "off"), ("drop", "on")],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "no_quirk")
+async def test_drop_state_update(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    drop_value: str,
+    expected_state: str,
+) -> None:
+    """Test drop_state transitions: normal -> off, drop -> on."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    entity_id = "binary_sensor.60gren_ti_die_dao_zigbee_fall"
+    assert hass.states.get(entity_id).state == "off"
+
+    await notification_helper.async_send_device_update(
+        mock_device, {"drop_state": drop_value}
+    )
+
+    assert hass.states.get(entity_id).state == expected_state

@@ -28,6 +28,23 @@
         'theme',
       ]),
       'disabled_reason': None,
+      'download_profile': dict({
+        'endpoints': dict({
+          'api': list([
+            'https://api.github.com',
+          ]),
+          'catalog': list([
+            'https://data-v2.hacs.xyz',
+          ]),
+          'github': list([
+            'https://github.com',
+          ]),
+          'raw': list([
+            'https://raw.githubusercontent.com',
+          ]),
+        }),
+        'id': 'default',
+      }),
       'github_connected': True,
       'ignored_repositories': list([
       ]),
@@ -129,6 +146,8 @@
           'installed': True,
           'installed_commit': None,
           'installed_version': '1.0.0',
+          'integration_categories': list([
+          ]),
           'last_commit': None,
           'last_updated': '2020-01-20T09:34:52Z',
           'last_version': '2.0.0',
@@ -191,6 +210,8 @@
           'installed': True,
           'installed_commit': None,
           'installed_version': '1.0.0',
+          'integration_categories': list([
+          ]),
           'last_commit': None,
           'last_updated': '2020-01-20T09:34:52Z',
           'last_version': '2.0.0',

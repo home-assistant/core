@@ -124,7 +124,39 @@ async def test_user_flow_with_credentials(
     mock_setup_entry.assert_called_once()
 
 
-@pytest.mark.parametrize("url", ["http://", ""])
+@pytest.mark.parametrize(
+    ("host", "expected_host"),
+    [
+        ("192.168.1.100", "192.168.1.100"),
+        ("192.168.1.100:80", "192.168.1.100:80"),
+        ("192.168.1.100/", "192.168.1.100"),
+        ("http://192.168.1.100", "192.168.1.100"),
+        ("http://192.168.1.100:80", "192.168.1.100:80"),
+        ("http://192.168.1.100:8080/path", "192.168.1.100:8080"),
+        ("https://nrgkick.local/", "nrgkick.local"),
+        ("https://nrgkick.local:443/", "nrgkick.local:443"),
+        ("http://[fe80::1]:8080", "[fe80::1]:8080"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_host_input(
+    hass: HomeAssistant, mock_nrgkick_api: AsyncMock, host: str, expected_host: str
+) -> None:
+    """Test the host input is reduced to the host and an explicitly given port."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: host}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_HOST: expected_host}
+    assert result["result"].unique_id == "TEST123456"
+
+
+@pytest.mark.parametrize("url", ["http://", "", "http://[::1", "http://."])
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_invalid_host_input(
     hass: HomeAssistant, mock_nrgkick_api: AsyncMock, url: str
@@ -566,6 +598,7 @@ async def test_zeroconf_json_api_disabled_with_credentials(
         CONF_USERNAME: "user",
         CONF_PASSWORD: "pass",
     }
+    assert result["result"].unique_id == "TEST123456"
 
 
 @pytest.mark.parametrize(

@@ -35,7 +35,7 @@ def mock_client() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Stub out the entry setup, for config flow tests."""
     with patch(
-        "homeassistant.components.hase_iq.async_setup_entry", return_value=True
+        "homeassistant.components.hase_iq.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

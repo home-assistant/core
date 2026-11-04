@@ -6,6 +6,7 @@ from typing import cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.issue_registry import async_refresh_issues
 from homeassistant.helpers.typing import ConfigType
 
 from .config import ScriptConfig, ValidationStatus
@@ -131,17 +132,27 @@ async def async_process_config(
     # Find scripts and configurations which have matches
     script_matches, config_matches = find_matches(scripts, script_configs)
 
-    # Remove scripts which have changed config or no longer exist
-    tasks = [
-        script.async_remove()
-        for idx, script in enumerate(scripts)
-        if idx not in script_matches
+    removed_scripts = [
+        script for idx, script in enumerate(scripts) if idx not in script_matches
     ]
-    await asyncio.gather(*tasks)
+    # Repair issues of removed scripts are kept if the new scripts re-create them,
+    # which preserves the user's ignore flag
+    broken_scripts = [
+        script
+        for script in removed_scripts
+        if isinstance(script, UnavailableScriptEntity)
+    ]
+    with async_refresh_issues(
+        hass, DOMAIN, issue_ids=[script.repair_issue_id for script in broken_scripts]
+    ):
+        # Remove scripts which have changed config or no longer exist
+        await asyncio.gather(*(script.async_remove() for script in removed_scripts))
 
-    # Create scripts which have changed config or have been added
-    updated_script_configs = [
-        config for idx, config in enumerate(script_configs) if idx not in config_matches
-    ]
-    entities = await _create_script_entities(hass, updated_script_configs)
-    await component.async_add_entities(entities)
+        # Create scripts which have changed config or have been added
+        updated_script_configs = [
+            config
+            for idx, config in enumerate(script_configs)
+            if idx not in config_matches
+        ]
+        entities = await _create_script_entities(hass, updated_script_configs)
+        await component.async_add_entities(entities)

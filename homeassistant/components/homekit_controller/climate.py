@@ -45,8 +45,8 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .const import KNOWN_DEVICES
 from .entity import HomeKitEntity
 
 _LOGGER = logging.getLogger(__name__)

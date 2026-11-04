@@ -18,7 +18,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PATH,
     CONF_PORT,
@@ -141,8 +140,8 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             description_placeholders={
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
-                CONF_NAME: reauth_entry.title,
+                "username": reauth_entry.data[CONF_USERNAME],
+                "name": reauth_entry.title,
             },
             step_id="reauth_confirm",
             data_schema=probatio.Schema(

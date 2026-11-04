@@ -4,8 +4,9 @@
     'attributes': dict({
       'brightness': 26,
       'color_mode': 'rgb',
-      'effect': '1 Rainbow',
+      'effect': 'off',
       'effect_list': list([
+        'off',
         '1 Rainbow',
         '2 Flare',
       ]),

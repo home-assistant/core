@@ -26,7 +26,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry for config flow tests."""
     with patch(
         "homeassistant.components.fuelprices_dk.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 

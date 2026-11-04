@@ -1,10 +1,13 @@
 """Ecovacs switch module."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from deebot_client.capabilities import CapabilitySetEnable
+from deebot_client.capabilities import CapabilitySet
+from deebot_client.command import CommandWithMessageHandling
 from deebot_client.events import EnableEvent
+from deebot_client.events.auto_empty import AutoEmptyEvent
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -23,9 +26,13 @@ from .util import get_supported_entities
 @dataclass(kw_only=True, frozen=True)
 class EcovacsSwitchEntityDescription(
     SwitchEntityDescription,
-    EcovacsCapabilityEntityDescription[CapabilitySetEnable],
+    EcovacsCapabilityEntityDescription,
 ):
     """Ecovacs switch entity description."""
+
+    set_fn: Callable[[CapabilitySet, bool], CommandWithMessageHandling] = (
+        lambda cap, enabled: cap.set(enabled)
+    )
 
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSwitchEntityDescription, ...] = (
@@ -106,6 +113,14 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSwitchEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
+    EcovacsSwitchEntityDescription(
+        capability_fn=lambda c: c.station.auto_empty if c.station else None,
+        # Passing no frequency keeps the one set with the auto_empty select
+        set_fn=lambda cap, enabled: cap.set(enabled, None),
+        key="auto_empty",
+        translation_key="auto_empty",
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 
@@ -124,7 +139,7 @@ async def async_setup_entry(
 
 
 class EcovacsSwitchEntity(
-    EcovacsDescriptionEntity[CapabilitySetEnable],
+    EcovacsDescriptionEntity[CapabilitySet[EnableEvent | AutoEmptyEvent, ...]],
     SwitchEntity,
 ):
     """Ecovacs switch entity."""
@@ -138,7 +153,7 @@ class EcovacsSwitchEntity(
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
 
-        async def on_event(event: EnableEvent) -> None:
+        async def on_event(event: EnableEvent | AutoEmptyEvent) -> None:
             self._attr_is_on = event.enabled
             self.async_write_ha_state()
 
@@ -147,9 +162,13 @@ class EcovacsSwitchEntity(
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self._device.execute_command(self._capability.set(True))
+        await self._device.execute_command(
+            self.entity_description.set_fn(self._capability, True)
+        )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._device.execute_command(self._capability.set(False))
+        await self._device.execute_command(
+            self.entity_description.set_fn(self._capability, False)
+        )

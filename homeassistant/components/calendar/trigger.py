@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import TYPE_CHECKING, Any, Self, cast, override
 
 import probatio
 
@@ -64,19 +64,41 @@ _SINGLE_ENTITY_EVENT_TRIGGER_SCHEMA = probatio.Schema(
     },
 )
 
+
+def _apply_offset_type(options: dict[str, Any]) -> dict[str, Any]:
+    if options.pop(CONF_OFFSET_TYPE, None) == OFFSET_TYPE_BEFORE:
+        options[CONF_OFFSET] = -options[CONF_OFFSET]
+    return options
+
+
 _EVENT_TRIGGER_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_OPTIONS, default={}): {
-            probatio.Required(CONF_OFFSET, default=dt.timedelta(0)): cv.time_period,
-            probatio.Required(
-                CONF_OFFSET_TYPE, default=OFFSET_TYPE_BEFORE
-            ): probatio.In({OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}),
-        },
+        probatio.Required(CONF_OPTIONS, default={}): probatio.All(
+            {
+                probatio.Required(CONF_OFFSET, default=dt.timedelta(0)): cv.time_period,
+                # Older configs set a positive offset with an offset type,
+                # which is folded into the sign of the offset.
+                probatio.Optional(CONF_OFFSET_TYPE): probatio.In(
+                    {OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}
+                ),
+            },
+            _apply_offset_type,
+        ),
         probatio.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
 
 # mypy: disallow-any-generics
+
+
+def _add_elapsed_time(value: dt.datetime, delta: dt.timedelta) -> dt.datetime:
+    """Add an elapsed timedelta via UTC.
+
+    Adding a timedelta directly to a ZoneInfo datetime performs wall-clock
+    arithmetic and resets fold=0 (PEP 495), which skips or repeats hours across
+    DST transitions.
+    """
+    return dt_util.as_local(dt_util.as_utc(value) + delta)
 
 
 @dataclass
@@ -87,36 +109,54 @@ class QueuedCalendarEvent:
     event: CalendarEvent
     entity_id: str
 
+    @property
+    def trigger_time_utc(self) -> dt.datetime:
+        """Return the trigger time in UTC for fold-safe timeline comparisons."""
+        return dt_util.as_utc(self.trigger_time)
+
 
 @dataclass
 class Timespan:
-    """A time range part of start/end dates, used for considering active events."""
+    """A half-open local time interval [start, end) for scanning active events.
+
+    Bounds are kept in the local timezone so calendar entity queries anchor
+    floating all-day (date) events to local midnight. Interval arithmetic and
+    comparisons convert to UTC because same-timezone ZoneInfo comparisons and
+    timedelta math ignore fold across DST transitions (PEP 495).
+    """
 
     start: dt.datetime
-    """The start datetime of the interval."""
+    """The start datetime of the interval in local time."""
 
     end: dt.datetime
-    """The end datetime (exclusive) of the interval."""
+    """The end datetime (exclusive) of the interval in local time."""
+
+    @classmethod
+    def from_duration(cls, start: dt.datetime, duration: dt.timedelta) -> Self:
+        """Create a time span of the specified elapsed duration."""
+        return cls(start, _add_elapsed_time(start, duration))
 
     def with_offset(self, offset: dt.timedelta) -> Timespan:
-        """Return a new interval shifted by the specified offset."""
-        return Timespan(self.start + offset, self.end + offset)
+        """Return a new interval shifted by the specified elapsed offset."""
+        return Timespan(
+            _add_elapsed_time(self.start, offset),
+            _add_elapsed_time(self.end, offset),
+        )
 
     def __contains__(self, trigger: dt.datetime) -> bool:
-        """Return true if the trigger time is within the time span."""
-        return self.start <= trigger < self.end
+        """Return true if the trigger instant falls within the time span."""
+        return (
+            dt_util.as_utc(self.start)
+            <= dt_util.as_utc(trigger)
+            < dt_util.as_utc(self.end)
+        )
 
     def next_upcoming(self, now: dt.datetime, interval: dt.timedelta) -> Timespan:
-        """Return a subsequent time span following the current time span.
-
-        This effectively gives us a cursor like interface for advancing through
-        time using the interval as a hint. The returned span may have a
-        different interval than the one specified. For example, time span may
-        be longer during a daylight saving time transition, or may extend due to
-        drift if the current interval is old. The returned time span is
-        adjacent and non-overlapping.
-        """
-        return Timespan(self.end, max(self.end, now) + interval)
+        """Return an adjacent, non-overlapping time span following this one."""
+        # Refresh timers drift slightly past self.end (e.g. fetch latency or
+        # event loop delay); use max() to catch up rather than falling behind.
+        next_end_utc = max(dt_util.as_utc(self.end), dt_util.as_utc(now)) + interval
+        return Timespan(self.end, dt_util.as_local(next_end_utc))
 
     @override
     def __str__(self) -> str:
@@ -146,7 +186,7 @@ def event_fetcher(hass: HomeAssistant, entity_ids: set[str]) -> EventFetcher:
     async def async_get_events(timespan: Timespan) -> list[tuple[str, CalendarEvent]]:
         """Return events active in the specified time span."""
         # Expand by one second to make the end time exclusive
-        end_time = timespan.end + dt.timedelta(seconds=1)
+        end_time = _add_elapsed_time(timespan.end, dt.timedelta(seconds=1))
 
         events: list[tuple[str, CalendarEvent]] = []
         for entity_id in entity_ids:
@@ -185,7 +225,11 @@ def queued_event_fetcher(
             trigger_time = get_trigger_time(event)
             if trigger_time not in offset_timespan:
                 continue
-            results.append(QueuedCalendarEvent(trigger_time + offset, event, entity_id))
+            results.append(
+                QueuedCalendarEvent(
+                    _add_elapsed_time(trigger_time, offset), event, entity_id
+                )
+            )
 
         _LOGGER.debug(
             "Scan events @ %s%s found %s eligible of %s active",
@@ -194,7 +238,7 @@ def queued_event_fetcher(
             len(results),
             len(active_events),
         )
-        results.sort(key=lambda x: x.trigger_time)
+        results.sort(key=lambda x: x.trigger_time_utc)
         return results
 
     return async_get_events
@@ -223,8 +267,7 @@ class CalendarEventListener:
         self._unsub_event: CALLBACK_TYPE | None = None
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._fetcher = fetcher
-        now = dt_util.now()
-        self._timespan = Timespan(now, now + UPDATE_INTERVAL)
+        self._timespan = Timespan.from_duration(dt_util.now(), UPDATE_INTERVAL)
         self._events: list[QueuedCalendarEvent] = []
 
     async def async_attach(self) -> None:
@@ -273,7 +316,8 @@ class CalendarEventListener:
 
     def _dispatch_events(self, now: dt.datetime) -> None:
         """Dispatch all events that are eligible to fire."""
-        while self._events and self._events[0].trigger_time <= now:
+        now_utc = dt_util.as_utc(now)
+        while self._events and self._events[0].trigger_time_utc <= now_utc:
             queued_event = self._events.pop(0)
             _LOGGER.debug("Dispatching event: %s", queued_event.event)
             payload = {
@@ -466,11 +510,6 @@ class EventTrigger(Trigger):
         """Attach a trigger."""
 
         offset = self._options[CONF_OFFSET]
-        offset_type = self._options[CONF_OFFSET_TYPE]
-
-        if offset_type == OFFSET_TYPE_BEFORE:
-            offset = -offset
-
         target_selection = TargetSelection(self._target)
         if not target_selection.has_any_target:
             raise HomeAssistantError(f"No target defined in {self._target}")

@@ -117,6 +117,24 @@ def test_color_xy_to_RGB() -> None:
     assert color_util.color_xy_to_RGB(0, 0, GAMUT) == (9, 85, 255)
 
 
+@pytest.mark.parametrize(
+    ("x", "expected"),
+    [
+        pytest.param(1.0, (255, 0, 60), id="x_1"),
+        pytest.param(0.5, (255, 0, 227), id="x_0.5"),
+        pytest.param(0.3, (181, 0, 255), id="x_0.3"),
+    ],
+)
+@pytest.mark.parametrize("y", [5e-324, 1e-320, 5e-309])
+def test_color_xy_brightness_to_RGB_tiny_y(
+    x: float, y: float, expected: tuple[int, int, int]
+) -> None:
+    """Test a tiny nonzero y is handled like y == 0 instead of producing NaN."""
+    assert color_util.color_xy_brightness_to_RGB(x, y, 255) == expected
+    assert color_util.color_xy_brightness_to_RGB(x, 0, 255) == expected
+    assert color_util.color_xy_to_hs(x, y) == color_util.color_xy_to_hs(x, 0)
+
+
 def test_color_RGB_to_hsv() -> None:
     """Test color_RGB_to_hsv."""
     assert color_util.color_RGB_to_hsv(0, 0, 0) == (0, 0, 0)
@@ -154,6 +172,23 @@ def test_color_hsb_to_RGB() -> None:
     assert color_util.color_hsb_to_RGB(120, 1.0, 1.0) == (0, 255, 0)
 
     assert color_util.color_hsb_to_RGB(0, 1.0, 1.0) == (255, 0, 0)
+
+
+@pytest.mark.parametrize(
+    ("hue", "saturation", "brightness", "expected"),
+    [
+        pytest.param(360, 1.0, 1.0, (255, 0, 0), id="red"),
+        pytest.param(360, 0.5, 1.0, (255, 127, 127), id="half_saturation"),
+        pytest.param(360, 1.0, 0.5, (127, 0, 0), id="half_brightness"),
+        pytest.param(720, 1.0, 1.0, (255, 0, 0), id="two_turns"),
+    ],
+)
+def test_color_hsb_to_RGB_full_turn(
+    hue: float, saturation: float, brightness: float, expected: tuple[int, int, int]
+) -> None:
+    """Test color_hsb_to_RGB treats a full turn of hue like hue 0."""
+    assert color_util.color_hsb_to_RGB(hue, saturation, brightness) == expected
+    assert color_util.color_hsb_to_RGB(0, saturation, brightness) == expected
 
 
 def test_color_xy_to_hs() -> None:
@@ -529,6 +564,24 @@ def test_color_temperature_to_rgbww() -> None:
         255,
         0,
     )
+
+
+@pytest.mark.parametrize(
+    ("temperature", "min_kelvin", "max_kelvin"),
+    [
+        pytest.param(2000, 2000, 2000, id="equal_min_max"),
+        pytest.param(6535, 6500, 6501, id="same_mired"),
+        pytest.param(9000, 6500, 6501, id="same_mired_clamped"),
+    ],
+)
+@pytest.mark.parametrize("brightness", [0, 128, 255])
+def test_color_temperature_to_rgbww_zero_mired_range(
+    temperature: int, brightness: int, min_kelvin: int, max_kelvin: int
+) -> None:
+    """Test a kelvin range spanning a single mired puts brightness on warm white."""
+    assert color_util.color_temperature_to_rgbww(
+        temperature, brightness, min_kelvin, max_kelvin
+    ) == (0, 0, 0, 0, brightness)
 
 
 def test_rgbww_to_color_temperature() -> None:

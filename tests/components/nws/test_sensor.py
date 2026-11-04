@@ -5,8 +5,14 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nws.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.nws.sensor import SENSOR_TYPES
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNKNOWN,
+    UnitOfPressure,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
@@ -56,6 +62,7 @@ async def test_imperial_metric(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -69,6 +76,58 @@ async def test_imperial_metric(
             f"Failed for {description.key}"
         )
         assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+
+
+@pytest.mark.parametrize(
+    ("units", "expected_unit"),
+    [
+        (US_CUSTOMARY_SYSTEM, UnitOfPressure.INHG),
+        (METRIC_SYSTEM, UnitOfPressure.PA),
+    ],
+)
+async def test_pressure_sensors_use_atmospheric_pressure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    units,
+    expected_unit,
+    mock_simple_nws,
+    no_weather,
+) -> None:
+    """Test the pressure sensors report the atmospheric pressure device class."""
+    pressure_descriptions = [
+        description
+        for description in SENSOR_TYPES
+        if description.key in ("barometricPressure", "seaLevelPressure")
+    ]
+    assert len(pressure_descriptions) == 2
+    for description in pressure_descriptions:
+        entity_registry.async_get_or_create(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            f"35_-75_{description.key}",
+            suggested_object_id=f"abc_{description.name}",
+            disabled_by=None,
+        )
+
+    hass.config.units = units
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=NWS_CONFIG,
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    for description in pressure_descriptions:
+        assert description.name
+        state = hass.states.get(f"sensor.abc_{slugify(description.name)}")
+        assert state
+        assert (
+            state.attributes[ATTR_DEVICE_CLASS]
+            == SensorDeviceClass.ATMOSPHERIC_PRESSURE
+        )
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == expected_unit
 
 
 @pytest.mark.parametrize("values", [NONE_OBSERVATION, None])
@@ -95,6 +154,7 @@ async def test_none_values(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=NWS_CONFIG,
+        version=2,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

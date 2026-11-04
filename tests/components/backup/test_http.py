@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncIterator
+import inspect
 from io import BytesIO, StringIO
 import json
 from pathlib import Path
@@ -30,6 +31,7 @@ from .common import (
     TEST_BACKUP_ABC123,
     TEST_BACKUP_PATH_ABC123,
     aiter_from_iter,
+    mock_download_from_file,
     setup_backup_integration,
 )
 
@@ -149,6 +151,38 @@ async def test_downloading_remote_encrypted_backup_with_error(
     assert resp.status == status
 
 
+@pytest.mark.parametrize(
+    "password",
+    [
+        pytest.param("hunter2", id="correct_password"),
+        pytest.param("wrong", id="wrong_password"),
+    ],
+)
+async def test_downloading_remote_encrypted_backup_closes_stream(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    password: str,
+) -> None:
+    """Test the download stream is closed when the decrypted download is done."""
+    mock_agents = await setup_backup_integration(
+        hass, remote_agents=["test.test"], backups={"test.test": [PROTECTED_BACKUP]}
+    )
+    streams = mock_download_from_file(
+        mock_agents["test.test"],
+        get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN),
+    )
+
+    client = await hass_client()
+    resp = await client.get(
+        f"/api/backup/download/c0cb53bd?agent_id=test.test&password={password}"
+    )
+    assert resp.status == 200
+    await resp.read()
+
+    assert len(streams) == 1
+    assert inspect.getasyncgenstate(streams[0]) == inspect.AGEN_CLOSED
+
+
 async def _test_downloading_encrypted_backup(
     hass_client: ClientSessionGenerator,
     agent_id: str,
@@ -229,26 +263,6 @@ async def test_downloading_backup_not_found(
 
     resp = await client.get("/api/backup/download/abc1234?agent_id=backup.local")
     assert resp.status == 404
-
-
-async def test_downloading_backup_not_found_get_backup_returns_none(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test downloading a backup file that does not exist."""
-    mock_agents = await setup_backup_integration(hass, remote_agents=["test.test"])
-    mock_agents["test.test"].async_get_backup.return_value = None
-    mock_agents["test.test"].async_get_backup.side_effect = None
-
-    client = await hass_client()
-
-    resp = await client.get("/api/backup/download/abc123?agent_id=test.test")
-    assert resp.status == 404
-    assert (
-        "Detected that integration 'test' returns None from"
-        " BackupAgent.async_get_backup." in caplog.text
-    )
 
 
 async def test_downloading_as_non_admin(
