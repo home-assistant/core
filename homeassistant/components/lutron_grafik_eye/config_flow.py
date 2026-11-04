@@ -16,7 +16,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from .const import DEFAULT_PORT, DOMAIN
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class GrafikEyeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -55,7 +55,7 @@ class GrafikEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             except GrafikEyeConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:
-                LOGGER.exception(
+                _LOGGER.exception(
                     "Unexpected exception connecting to GRAFIK Eye Ethernet interface"
                 )
                 errors["base"] = "unknown"
