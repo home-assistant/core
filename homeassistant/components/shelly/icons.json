@@ -28,6 +28,9 @@
     "select": {
       "effect_palette": {
         "default": "mdi:palette"
+      },
+      "led_mode": {
+        "default": "mdi:led-on"
       }
     },
     "sensor": {

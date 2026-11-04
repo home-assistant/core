@@ -3,6 +3,7 @@
   "name": "Azure Service Bus",
   "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@hfurubotten"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/azure_service_bus",
   "iot_class": "cloud_push",
   "loggers": ["azure"],
