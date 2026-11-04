@@ -156,7 +156,7 @@ class HabiticaPartyChatNotifyEntity(HabiticaBaseNotifyEntity):
         party: GroupData,
     ) -> None:
         """Initialize a Habitica entity."""
-        self._attr_translation_placeholders = {CONF_NAME: party.name}
+        self._attr_translation_placeholders = {"name": party.name}
 
         self.entity_description = NotifyEntityDescription(
             key=HabiticaNotify.PARTY_CHAT,
@@ -184,7 +184,7 @@ class HabiticaPrivateMessageNotifyEntity(HabiticaBaseNotifyEntity):
         member: UserData,
     ) -> None:
         """Initialize a Habitica entity."""
-        self._attr_translation_placeholders = {CONF_NAME: member.profile.name or ""}
+        self._attr_translation_placeholders = {"name": member.profile.name or ""}
         self.entity_description = NotifyEntityDescription(
             key=f"{member.id!s}_{HabiticaNotify.PRIVATE_MESSAGE}",
             translation_key=HabiticaNotify.PRIVATE_MESSAGE,

@@ -1172,7 +1172,7 @@ async def test_set_value(
         )
 
     # Test setting a value with no valid nodes raises Exception
-    with pytest.raises(probatio.MultipleInvalid):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_VALUE,
@@ -1184,6 +1184,8 @@ async def test_set_value(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
 
 
 async def test_set_value_string(
@@ -1504,6 +1506,21 @@ async def test_multicast_set_value(
             DOMAIN,
             SERVICE_MULTICAST_SET_VALUE,
             {
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_PROPERTY: "setpoint",
+                ATTR_PROPERTY_KEY: 1,
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(probatio.MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MULTICAST_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
                 ATTR_COMMAND_CLASS: 67,
                 ATTR_PROPERTY: "setpoint",
                 ATTR_PROPERTY_KEY: 1,
@@ -2190,6 +2207,11 @@ async def test_refresh_notifications(
             SERVICE_SET_VALUE,
             {ATTR_COMMAND_CLASS: 117, ATTR_PROPERTY: "local", ATTR_VALUE: 2},
             id="set_value",
+        ),
+        pytest.param(
+            SERVICE_MULTICAST_SET_VALUE,
+            {ATTR_COMMAND_CLASS: 117, ATTR_PROPERTY: "local", ATTR_VALUE: 2},
+            id="multicast_set_value",
         ),
     ],
 )

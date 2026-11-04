@@ -213,7 +213,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Trigger a reauthentication flow."""
-        self.context["title_placeholders"] = {CONF_HOST: entry_data[CONF_HOST]}
+        self.context["title_placeholders"] = {"host": entry_data[CONF_HOST]}
 
         self.host = entry_data[CONF_HOST]
         self.port = entry_data[CONF_PORT]

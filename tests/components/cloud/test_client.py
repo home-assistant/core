@@ -554,6 +554,7 @@ async def test_async_delete_repair_issue(
         active=True,
         breaks_in_ha_version=None,
         config_entry_id=None,
+        config_subentry_id=None,
         created=dt_util.utcnow(),
         data={},
         dismissed_version=None,

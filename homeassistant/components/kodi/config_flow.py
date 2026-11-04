@@ -123,7 +123,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        self.context.update({"title_placeholders": {CONF_NAME: self._name}})
+        self.context.update({"title_placeholders": {"name": self._name}})
 
         try:
             await validate_http(self.hass, self._get_data())
