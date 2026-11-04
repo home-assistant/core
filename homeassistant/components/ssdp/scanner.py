@@ -324,6 +324,18 @@ class Scanner:
 
         location = ssdp_device.location
         _, info_desc = self._description_cache.peek_description_dict(location)
+        if (
+            info_desc is not None
+            and dst == _ROOT_DEVICE
+            and _description_is_stale(ssdp_device, info_desc)
+        ):
+            # Address was reassigned to a different device (e.g. by DHCP).
+            _LOGGER.debug(
+                "SSDP: cached description for %s belongs to another device",
+                location,
+            )
+            self._description_cache.uncache_description(location)
+            info_desc = None
         if info_desc is None:
             # Fetch info desc in separate task and process from there.
             self.hass.async_create_background_task(
@@ -547,6 +559,19 @@ def discovery_info_from_headers_and_description(
         upnp=upnp_info,
         ssdp_all_locations=set(ssdp_device.locations),
     )
+
+
+_ROOT_DEVICE = "upnp:rootdevice"
+
+
+def _description_is_stale(
+    ssdp_device: SsdpDevice, info_desc: Mapping[str, Any]
+) -> bool:
+    """Return if the cached description is for a different root device."""
+    cached_udn = info_desc.get(_ATTR_UPNP_UDN)
+    if not cached_udn or not ssdp_device.udn:
+        return False
+    return str(cached_udn).lower() != ssdp_device.udn.lower()
 
 
 def _udn_from_usn(usn: str | None) -> str | None:

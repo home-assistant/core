@@ -1,7 +1,7 @@
 """Test the SSDP integration."""
 
 from ipaddress import IPv4Address
-from unittest.mock import ANY, AsyncMock, call, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 from async_upnp_client.server import UpnpServer
 from async_upnp_client.ssdp_listener import SsdpListener
@@ -1106,3 +1106,21 @@ async def test_ssdp_rediscover_no_match(
     await hass.async_block_till_done()
 
     assert len(mock_flow_init.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("device_udn", "description", "expected"),
+    [
+        pytest.param("uuid:AAA", {"UDN": "uuid:AAA"}, False, id="same_device"),
+        pytest.param("uuid:aaa", {"UDN": "uuid:AAA"}, False, id="case_insensitive"),
+        pytest.param("uuid:BBB", {"UDN": "uuid:AAA"}, True, id="other_device"),
+        pytest.param("uuid:BBB", {}, False, id="no_cached_udn"),
+        pytest.param(None, {"UDN": "uuid:AAA"}, False, id="no_device_udn"),
+    ],
+)
+def test_description_is_stale(
+    device_udn: str | None, description: dict[str, str], expected: bool
+) -> None:
+    """Test detecting a cached description that belongs to another device."""
+    ssdp_device = MagicMock(udn=device_udn)
+    assert scanner._description_is_stale(ssdp_device, description) is expected
