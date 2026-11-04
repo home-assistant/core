@@ -21,8 +21,10 @@ from homeassistant.components.sonos.const import (
     DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
     UPNP_ISSUE_ID,
+    UPNP_ST,
 )
 from homeassistant.components.sonos.exception import SonosUpdateError
+from homeassistant.components.ssdp import SsdpChange
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
@@ -31,6 +33,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -233,6 +236,50 @@ async def test_discovery_reenable_device_on_new_discovery(
 
     assert soco.zoneGroupTopology.subscribe.await_count > 0
     assert er.async_entries_for_device(entity_registry, device.id)
+
+
+async def test_discovery_from_ssdp_advertisement(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+    discover: MagicMock,
+    fire_zgs_event: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Test speakers are set up when SSDP only receives advertisements."""
+    # NOTIFY advertisements carry "nt" but no "st" header.
+    advertisement_headers = {
+        "nt": UPNP_ST,
+        "nts": "ssdp:alive",
+        "location": f"http://{soco.ip_address}/",
+    }
+
+    def replay_advertisement(
+        hass: HomeAssistant,
+        callback: Callable[[SsdpServiceInfo, SsdpChange], None],
+        match_dict: dict[str, str],
+    ) -> MagicMock:
+        if match_dict.items() <= advertisement_headers.items():
+            callback(
+                SsdpServiceInfo(
+                    ssdp_location=f"http://{soco.ip_address}/",
+                    ssdp_st=UPNP_ST,
+                    ssdp_nt=UPNP_ST,
+                    ssdp_usn=f"uuid:{soco.uid}::{UPNP_ST}",
+                    upnp={ATTR_UPNP_UDN: f"uuid:{soco.uid}"},
+                ),
+                SsdpChange.ALIVE,
+            )
+        return MagicMock()
+
+    discover.side_effect = replay_advertisement
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    soco.zoneGroupTopology.subscribe.assert_awaited()
+    await fire_zgs_event()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("media_player.zone_a")
 
 
 async def test_async_poll_manual_hosts_warnings(

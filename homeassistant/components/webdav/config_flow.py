@@ -139,7 +139,7 @@ class WebDavConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "name": reauth_entry.title,
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
-                CONF_URL: reauth_entry.data[CONF_URL],
+                "username": reauth_entry.data[CONF_USERNAME],
+                "url": reauth_entry.data[CONF_URL],
             },
         )

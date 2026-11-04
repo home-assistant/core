@@ -10,6 +10,7 @@
     "@XiaoLing-git"
   ],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/switchbot_cloud",
   "integration_type": "hub",

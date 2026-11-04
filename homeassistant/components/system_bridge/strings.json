@@ -17,13 +17,32 @@
         "data": {
           "token": "[%key:common::config_flow::data::api_token%]"
         },
+        "data_description": {
+          "token": "[%key:component::system_bridge::config::step::user::data_description::token%]"
+        },
         "description": "Please enter the token set in your configuration for {name}."
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the computer running System Bridge.",
+          "port": "The port System Bridge listens on. The default is 9170."
+        },
+        "description": "Update the connection details for System Bridge."
       },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "token": "Token"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the computer running System Bridge.",
+          "port": "The port System Bridge listens on. The default is 9170.",
+          "token": "The token from the System Bridge settings."
         },
         "description": "Please enter your connection details."
       }
@@ -36,6 +55,9 @@
       },
       "camera_in_use": {
         "name": "Camera in use"
+      },
+      "locked": {
+        "name": "Locked"
       },
       "pending_reboot": {
         "name": "Pending reboot"
@@ -59,13 +81,35 @@
       }
     },
     "media_player": {
+      "audio": {
+        "name": "Audio"
+      },
+      "audio_output": {
+        "name": "{name} output"
+      },
       "media": {
         "name": "Media"
       }
     },
     "number": {
+      "audio_input_volume": {
+        "name": "{name} input volume"
+      },
       "display_brightness": {
         "name": "Display {display_id} brightness"
+      }
+    },
+    "select": {
+      "audio_input": {
+        "name": "Audio input"
+      },
+      "power_profile": {
+        "name": "Power profile",
+        "state": {
+          "balanced": "Balanced",
+          "performance": "Performance",
+          "power-saver": "Power saver"
+        }
       }
     },
     "sensor": {
@@ -191,6 +235,9 @@
       "gpu_usage_percentage": {
         "name": "{gpu_name} usage %"
       },
+      "idle_time": {
+        "name": "Idle time"
+      },
       "kernel": {
         "name": "Kernel"
       },
@@ -251,6 +298,12 @@
       "space_used": {
         "name": "{partition} space used"
       },
+      "swap_used": {
+        "name": "Swap used"
+      },
+      "swap_used_percentage": {
+        "name": "Swap usage"
+      },
       "version": {
         "name": "Version"
       },
@@ -259,12 +312,24 @@
       }
     },
     "switch": {
+      "audio_input_mute": {
+        "name": "{name} input mute"
+      },
       "display_power": {
         "name": "Display {display_id} power"
+      },
+      "keep_awake": {
+        "name": "Keep awake"
       }
     }
   },
   "exceptions": {
+    "audio_control_failed": {
+      "message": "Failed to control audio device {name}: {error}"
+    },
+    "audio_device_not_found": {
+      "message": "No audio device named {name}"
+    },
     "authentication_failed": {
       "message": "Authentication failed for {title} ({host})"
     },
@@ -273,6 +338,12 @@
     },
     "display_control_failed": {
       "message": "Failed to control display {display_id}: {error}"
+    },
+    "media_control_failed": {
+      "message": "Failed to control the media player: {error}"
+    },
+    "media_player_not_found": {
+      "message": "No media player named {name}"
     },
     "no_data_received": {
       "message": "No data received from {host}"
@@ -285,6 +356,9 @@
     },
     "send_message_failed": {
       "message": "Failed to send message to {title} ({host}) due to a connection error"
+    },
+    "system_control_failed": {
+      "message": "System Bridge couldn't make the change: {error}"
     },
     "timeout": {
       "message": "A timeout occurred for {title} ({host})"

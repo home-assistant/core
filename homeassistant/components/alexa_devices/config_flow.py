@@ -160,7 +160,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth flow."""
-        self.context["title_placeholders"] = {CONF_USERNAME: entry_data[CONF_USERNAME]}
+        self.context["title_placeholders"] = {"username": entry_data[CONF_USERNAME]}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -196,7 +196,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={CONF_USERNAME: entry_data[CONF_USERNAME]},
+            description_placeholders={"username": entry_data[CONF_USERNAME]},
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
