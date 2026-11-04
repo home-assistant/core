@@ -36,7 +36,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
 
 async def test_user_success(
     hass: HomeAssistant,
-    mock_controller: MagicMock,
+    mock_client: MagicMock,
 ) -> None:
     """Test successful configuration."""
     result = await hass.config_entries.flow.async_init(
@@ -51,13 +51,13 @@ async def test_user_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "GRAFIK Eye (192.168.1.100)"
     assert result["data"] == USER_INPUT
-    mock_controller.assert_called_once_with(
+    mock_client.assert_called_once_with(
         host=USER_INPUT[CONF_HOST],
         port=USER_INPUT[CONF_PORT],
         login=USER_INPUT[CONF_PASSWORD],
     )
-    mock_controller.return_value.connect.assert_awaited_once()
-    mock_controller.return_value.disconnect.assert_awaited_once()
+    mock_client.return_value.connect.assert_awaited_once()
+    mock_client.return_value.disconnect.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -70,12 +70,12 @@ async def test_user_success(
 )
 async def test_user_connection_error(
     hass: HomeAssistant,
-    mock_controller: MagicMock,
+    mock_client: MagicMock,
     exception: type[Exception],
     error: str,
 ) -> None:
     """Test connection errors."""
-    mock_controller.return_value.connect.side_effect = exception()
+    mock_client.return_value.connect.side_effect = exception()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -90,10 +90,10 @@ async def test_user_connection_error(
         key.schema: key.description["suggested_value"]
         for key in result["data_schema"].schema
     } == USER_INPUT
-    mock_controller.return_value.disconnect.assert_awaited_once()
+    mock_client.return_value.disconnect.assert_awaited_once()
 
     # Retry after the connection error has been resolved.
-    mock_controller.return_value.connect.side_effect = None
+    mock_client.return_value.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=USER_INPUT
@@ -101,13 +101,13 @@ async def test_user_connection_error(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == USER_INPUT
-    assert mock_controller.return_value.connect.await_count == 2
-    assert mock_controller.return_value.disconnect.await_count == 2
+    assert mock_client.return_value.connect.await_count == 2
+    assert mock_client.return_value.disconnect.await_count == 2
 
 
 async def test_user_duplicate(
     hass: HomeAssistant,
-    mock_controller: MagicMock,
+    mock_client: MagicMock,
 ) -> None:
     """Test duplicate configuration is rejected."""
     MockConfigEntry(domain=DOMAIN, data=USER_INPUT).add_to_hass(hass)
@@ -121,12 +121,12 @@ async def test_user_duplicate(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    mock_controller.assert_not_called()
+    mock_client.assert_not_called()
 
 
 async def test_user_different_port(
     hass: HomeAssistant,
-    mock_controller: MagicMock,
+    mock_client: MagicMock,
 ) -> None:
     """Test the same host with a different port is allowed."""
     MockConfigEntry(domain=DOMAIN, data=USER_INPUT).add_to_hass(hass)
@@ -142,4 +142,4 @@ async def test_user_different_port(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == user_input
-    mock_controller.return_value.connect.assert_awaited_once()
+    mock_client.return_value.connect.assert_awaited_once()

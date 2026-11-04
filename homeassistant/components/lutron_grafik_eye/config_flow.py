@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from grafikeye import GrafikEyeController
+from grafikeye import GrafikEyeClient
 from grafikeye.exceptions import (
     GrafikEyeAuthenticationError,
     GrafikEyeConnectionError,
@@ -40,14 +40,14 @@ class GrafikEyeConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            controller = GrafikEyeController(
+            client = GrafikEyeClient(
                 host=user_input[CONF_HOST],
                 port=user_input[CONF_PORT],
                 login=user_input[CONF_PASSWORD],
             )
 
             try:
-                await controller.connect()
+                await client.connect()
             except GrafikEyeAuthenticationError:
                 errors["base"] = "invalid_auth"
             except GrafikEyeConnectionInUseError:
@@ -65,7 +65,7 @@ class GrafikEyeConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
             finally:
-                await controller.disconnect()
+                await client.disconnect()
 
         return self.async_show_form(
             step_id="user",

@@ -2,7 +2,7 @@
 
 import logging
 
-from grafikeye import GrafikEyeController
+from grafikeye import GrafikEyeClient
 from grafikeye.exceptions import GrafikEyeAuthenticationError, GrafikEyeConnectionError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 PLATFORMS = [Platform.SELECT]
 
-type GrafikEyeConfigEntry = ConfigEntry[GrafikEyeController]
+type GrafikEyeConfigEntry = ConfigEntry[GrafikEyeClient]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,20 +22,20 @@ async def async_setup_entry(
     entry: GrafikEyeConfigEntry,
 ) -> None:
     """Set up Lutron GRAFIK Eye from a config entry."""
-    controller = GrafikEyeController(
+    client = GrafikEyeClient(
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
         login=entry.data[CONF_PASSWORD],
     )
 
     try:
-        await controller.connect()
+        await client.connect()
     except GrafikEyeAuthenticationError as error:
         raise ConfigEntryAuthFailed from error
     except GrafikEyeConnectionError as error:
         raise ConfigEntryNotReady from error
 
-    entry.runtime_data = controller
+    entry.runtime_data = client
 
     @callback
     def on_disconnect() -> None:
@@ -45,12 +45,12 @@ async def async_setup_entry(
             )
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
-    entry.async_on_unload(controller.register_disconnect_callback(on_disconnect))
+    entry.async_on_unload(client.register_disconnect_callback(on_disconnect))
 
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except BaseException:
-        await controller.disconnect()
+        await client.disconnect()
         raise
 
 

@@ -2,7 +2,7 @@
 
 from typing import override
 
-from grafikeye import GrafikEyeController
+from grafikeye import GrafikEyeClient
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
@@ -19,13 +19,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lutron GRAFIK Eye scene selectors."""
-    controller = entry.runtime_data
-    control_units = await controller.get_control_units()
+    client = entry.runtime_data
+    control_units = await client.get_control_units()
 
     async_add_entities(
         GrafikEyeSceneSelect(
             entry_id=entry.entry_id,
-            controller=controller,
+            client=client,
             control_unit_id=unit.id,
             scene=unit.active_scene,
         )
@@ -43,7 +43,7 @@ class GrafikEyeSceneSelect(SelectEntity):
     def __init__(
         self,
         entry_id: str,
-        controller: GrafikEyeController,
+        client: GrafikEyeClient,
         control_unit_id: int,
         scene: int,
     ) -> None:
@@ -56,7 +56,7 @@ class GrafikEyeSceneSelect(SelectEntity):
             manufacturer=MANUFACTURER,
         )
 
-        self._controller = controller
+        self._client = client
         self._control_unit_id = control_unit_id
 
     @override
@@ -64,7 +64,7 @@ class GrafikEyeSceneSelect(SelectEntity):
         """Register scene updates."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self._controller.register_scene_callback(
+            self._client.register_scene_callback(
                 self._control_unit_id,
                 self._scene_changed,
             )
@@ -73,7 +73,7 @@ class GrafikEyeSceneSelect(SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Select a scene."""
-        await self._controller.select_scene(int(option), self._control_unit_id)
+        await self._client.select_scene(int(option), self._control_unit_id)
         self._attr_current_option = option
         self.async_write_ha_state()
 

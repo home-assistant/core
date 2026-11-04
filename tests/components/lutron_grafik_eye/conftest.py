@@ -7,10 +7,10 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def mock_controller() -> Generator[MagicMock]:
-    """Mock the GRAFIK Eye controller."""
+def mock_client() -> Generator[MagicMock]:
+    """Mock the GRAFIK Eye client."""
     with patch(
-        "homeassistant.components.lutron_grafik_eye.config_flow.GrafikEyeController",
+        "homeassistant.components.lutron_grafik_eye.config_flow.GrafikEyeClient",
         autospec=True,
     ) as mock:
         yield mock
