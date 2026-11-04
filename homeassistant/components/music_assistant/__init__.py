@@ -161,8 +161,9 @@ async def async_setup_entry(  # noqa: C901
     # store the listen task and mass client in the entry data
     entry.runtime_data = MusicAssistantEntryData(mass, listen_task)
 
-    # check if any playerconfigs have been removed while we were disconnected,
-    # before forwarding the platforms, as the server can still go away here.
+    # check if any players have been removed, disabled or hidden from Home
+    # Assistant while we were disconnected, before forwarding the platforms,
+    # as the server can still go away here.
     # never clean up dashboard devices: their registration is connection-scoped,
     # so the cache may still be empty right after a reconnect.
     try:
@@ -173,7 +174,17 @@ async def async_setup_entry(  # noqa: C901
         raise ConfigEntryNotReady(
             f"Lost connection to music assistant server {mass_url}: {err}"
         ) from err
-    player_ids = {player.player_id for player in all_player_configs}
+    # the config summary carries no expose setting, so a player that is not
+    # registered on the server keeps its device as long as its config is enabled
+    player_ids = {
+        config.player_id
+        for config in all_player_configs
+        if config.enabled
+        and (
+            (player := mass.players.get(config.player_id)) is None
+            or player.expose_to_ha
+        )
+    }
     dev_reg = dr.async_get(hass)
     dev_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
     for device in dev_entries:
@@ -215,7 +226,7 @@ async def async_setup_entry(  # noqa: C901
         player = mass.players.get(event.object_id)
         if TYPE_CHECKING:
             assert player is not None
-        if not player.expose_to_ha:
+        if not (player.enabled and player.expose_to_ha):
             return
         add_player(player)
 
@@ -223,7 +234,7 @@ async def async_setup_entry(  # noqa: C901
 
     # add all current players
     for player in mass.players:
-        if not player.expose_to_ha:
+        if not (player.enabled and player.expose_to_ha):
             continue
         add_player(player)
 
@@ -239,19 +250,22 @@ async def async_setup_entry(  # noqa: C901
     )
 
     # register listener for player configs
-    # (to handle toggling of the 'expose_to_ha' setting)
+    # (to handle toggling of the 'enabled' and 'expose_to_ha' settings)
     def handle_player_config_updated(event: MassEvent) -> None:
         """Handle Mass Player Config Updated event."""
         if event.object_id is None or not event.data:
             return
         player_id = event.object_id
         player_config = PlayerConfig.from_dict(event.data)
-        expose_to_ha = player_config.get_value(ATTR_CONF_EXPOSE_PLAYER_TO_HA, True)
-        if not expose_to_ha and player_id in entry.runtime_data.discovered_players:
-            # player is no longer exposed to Home Assistant
+        exposed = player_config.enabled and player_config.get_value(
+            ATTR_CONF_EXPOSE_PLAYER_TO_HA, True
+        )
+        if not exposed:
+            # player is disabled or no longer exposed to Home Assistant;
+            # also drops a device kept at setup for an unregistered player
             remove_player(player_id)
-        elif expose_to_ha and player_id not in entry.runtime_data.discovered_players:
-            # player is now exposed to Home Assistant
+        elif exposed and player_id not in entry.runtime_data.discovered_players:
+            # player is now enabled and exposed to Home Assistant
             if not (player := mass.players.get(player_id)):
                 return  # guard
             add_player(player)
@@ -272,7 +286,7 @@ async def async_setup_entry(  # noqa: C901
 
 async def _client_listen(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MusicAssistantConfigEntry,
     mass: MusicAssistantClient,
     init_ready: asyncio.Event,
 ) -> None:
