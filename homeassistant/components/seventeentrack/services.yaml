@@ -28,6 +28,12 @@ add_package:
       required: true
       selector:
         text:
+    first_carrier:
+      selector:
+        text:
+    second_carrier:
+      selector:
+        text:
     config_entry_id:
       required: true
       selector:
