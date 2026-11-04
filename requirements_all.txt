@@ -1143,7 +1143,7 @@ gTTS==2.5.4
 
 # homeassistant.components.gardena_bluetooth
 # homeassistant.components.husqvarna_automower_ble
-gardena-bluetooth==2.10.1
+gardena-bluetooth==3.1.0
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.1.0
@@ -1361,7 +1361,7 @@ hole==0.9.2
 holidays==0.107
 
 # homeassistant.components.frontend
-home-assistant-frontend==20261028.3
+home-assistant-frontend==20261028.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.10.27
@@ -2231,7 +2231,7 @@ pycsspeechtts==1.0.8
 pycync==0.6.1
 
 # homeassistant.components.daikin
-pydaikin==2.22.0
+pydaikin==2.22.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==1.0.0
