@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.tellduslive.api import TelldusLiveRateLimitError
 from homeassistant.components.tellduslive.const import DOMAIN
-from homeassistant.const import EntityCategory
+from homeassistant.const import STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -61,3 +61,27 @@ async def test_sensors_follow_refresh(
 
     assert hass.states.get(REQUESTS).state == "7"
     assert hass.states.get(STATUS).state == "retrying"
+
+
+@pytest.fixture
+def device(mock_tellduslive: MagicMock, raw_value: str) -> MagicMock:
+    """Return a mocked sensor device with one temperature item."""
+    device = mock_tellduslive.devices[0]
+    device.is_sensor = True
+    device.items = [MagicMock(scale=0)]
+    device.items[0].name = "temp"
+    device.value.return_value = raw_value
+    return device
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    [
+        pytest.param("21.46", "21.5", id="rounded"),
+        pytest.param("not-a-number", STATE_UNKNOWN, id="malformed"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_temperature_sensor(hass: HomeAssistant, expected: str) -> None:
+    """Test the temperature is rounded and malformed values do not raise."""
+    assert hass.states.get("sensor.kitchen_temperature").state == expected

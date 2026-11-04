@@ -15,6 +15,7 @@ from homeassistant.components.tellduslive.const import (
     TURNON,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
 HUB_ID = "hub-1"
 DEVICE_ID = "device-1"
@@ -70,3 +71,24 @@ def mock_tellduslive() -> Generator[MagicMock]:
 
     with patch("homeassistant.components.tellduslive.Session", return_value=session):
         yield session
+
+
+@pytest.fixture
+def device(mock_tellduslive: MagicMock) -> MagicMock:
+    """Return the mocked device served by the mocked session."""
+    return mock_tellduslive.devices[0]
+
+
+@pytest.fixture
+async def setup_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+    device: MagicMock,
+) -> MockConfigEntry:
+    """Set up the integration and wait for the first refresh."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_config_entry.runtime_data.setup_task
+    await hass.async_block_till_done()
+    return mock_config_entry
