@@ -741,7 +741,8 @@ async def test_pruning_stale_restored_clients(
 
     await config_entry_factory()
 
-    # Recently seen client is restored with its tracker and device intact
+    # Recently seen client is restored with its tracker and device registry
+    # entry intact
     assert hass.states.get("device_tracker.recent")
     assert entity_registry.async_get(entries[recent["mac"]].entity_id)
     assert device_registry.async_get_device_by_connection(
@@ -752,7 +753,7 @@ async def test_pruning_stale_restored_clients(
     assert not hass.states.get("device_tracker.stale")
 
     # Stale client and client absent from a loaded clients_all are pruned
-    # together with their device
+    # together with their device registry entry
     for mac in (stale["mac"], absent_mac):
         assert entity_registry.async_get(entries[mac].entity_id) is None
         assert (
@@ -777,7 +778,7 @@ async def test_pruning_stale_restored_clients(
         ]
     ],
 )
-# Loaded devices, so only the clients_all guard can prevent the pruning
+# Network devices are loaded, so only the clients_all guard can prevent pruning
 @pytest.mark.parametrize("device_payload", [[SWITCH_1]])
 async def test_no_pruning_when_clients_all_fails(
     hass: HomeAssistant,
@@ -786,7 +787,7 @@ async def test_no_pruning_when_clients_all_fails(
     config_entry: MockConfigEntry,
     config_entry_factory: ConfigEntryFactoryType,
 ) -> None:
-    """Keep every tracker and device when clients_all could not be loaded."""
+    """Keep each client's entities and device registry entry when clients_all fails."""
     macs = ("00:00:00:00:00:06", "00:00:00:00:00:07")
     for mac in macs:
         entity_registry.async_get_or_create(
@@ -799,7 +800,7 @@ async def test_no_pruning_when_clients_all_fails(
             config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, mac)},
         )
-    # Client device without a tracker
+    # Device registry entry of a client without a tracker
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:08")},
@@ -843,7 +844,7 @@ async def test_no_pruning_when_clients_all_fails(
         pytest.param([], False, id="devices_not_loaded"),
     ],
 )
-async def test_pruning_unlisted_devices(
+async def test_pruning_unlisted_device_registry_entries(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -851,8 +852,8 @@ async def test_pruning_unlisted_devices(
     config_entry_factory: ConfigEntryFactoryType,
     unlisted_pruned: bool,
 ) -> None:
-    """Prune devices the controller no longer lists, keep the listed ones."""
-    devices: dict[str, dr.DeviceEntry] = {
+    """Prune device registry entries of unlisted clients and network devices."""
+    entries: dict[str, dr.DeviceEntry] = {
         mac: device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, mac)},
@@ -860,9 +861,9 @@ async def test_pruning_unlisted_devices(
         for mac in (
             WIRED_CLIENT_1["mac"],  # Connected client
             "00:00:00:00:00:05",  # Listed in clients_all
-            "00:00:00:00:00:07",  # Unlisted, no entities
-            "00:00:00:00:00:08",  # Unlisted, only a disabled link speed sensor
-            "00:00:00:00:00:09",  # Unlisted, but selected by the user
+            "00:00:00:00:00:07",  # Unlisted client, no entities
+            "00:00:00:00:00:08",  # Unlisted client, only a disabled link speed sensor
+            "00:00:00:00:00:09",  # Unlisted client, but selected by the user
             SWITCH_1["mac"],  # Network device
             "00:00:00:00:01:02",  # Network device removed from the controller
         )
@@ -872,7 +873,7 @@ async def test_pruning_unlisted_devices(
         DOMAIN,
         "wired_speed-00:00:00:00:00:08",
         config_entry=config_entry,
-        device_id=devices["00:00:00:00:00:08"].id,
+        device_id=entries["00:00:00:00:00:08"].id,
         disabled_by=er.RegistryEntryDisabler.INTEGRATION,
     )
     removed_device_tracker = entity_registry.async_get_or_create(
@@ -880,7 +881,7 @@ async def test_pruning_unlisted_devices(
         DOMAIN,
         "00:00:00:00:01:02",
         config_entry=config_entry,
-        device_id=devices["00:00:00:00:01:02"].id,
+        device_id=entries["00:00:00:00:01:02"].id,
     )
     service = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -890,7 +891,7 @@ async def test_pruning_unlisted_devices(
     await config_entry_factory()
 
     for mac in ("00:00:00:00:00:07", "00:00:00:00:00:08", "00:00:00:00:01:02"):
-        assert (device_registry.async_get(devices[mac].id) is None) is unlisted_pruned
+        assert (device_registry.async_get(entries[mac].id) is None) is unlisted_pruned
     for entity in (link_speed, removed_device_tracker):
         assert (entity_registry.async_get(entity.entity_id) is None) is unlisted_pruned
 
@@ -900,7 +901,7 @@ async def test_pruning_unlisted_devices(
         "00:00:00:00:00:09",
         SWITCH_1["mac"],
     ):
-        assert device_registry.async_get(devices[mac].id)
+        assert device_registry.async_get(entries[mac].id)
     assert device_registry.async_get(service.id)
 
 

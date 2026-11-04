@@ -131,7 +131,8 @@ class UnifiEntityLoader:
                 ]
             ),
         )
-        # Pruning removes clients that weren't restored, so restore must run first
+        # Pruning removes the entities of clients that weren't restored, so
+        # restore must run first
         self._restore_inactive_clients()
         self._prune_entities_of_unlisted_clients()
         self._prune_entities_of_unlisted_devices()
