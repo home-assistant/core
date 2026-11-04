@@ -76,8 +76,8 @@ class AtombergFan(AtombergEntity, FanEntity):
         if percentage == 0:
             await self.async_turn_off()
             return
-        if not self.is_on:
-            await self._async_send({COMMAND_POWER: True}, {COMMAND_POWER: True})
+        # Always send the power command: the cached state can be 30 minutes old.
+        await self._async_send({COMMAND_POWER: True}, {COMMAND_POWER: True})
         if percentage is not None:
             await self._async_set_speed(percentage)
 
@@ -92,8 +92,7 @@ class AtombergFan(AtombergEntity, FanEntity):
         if percentage == 0:
             await self.async_turn_off()
             return
-        if not self.is_on:
-            await self._async_send({COMMAND_POWER: True}, {COMMAND_POWER: True})
+        await self._async_send({COMMAND_POWER: True}, {COMMAND_POWER: True})
         await self._async_set_speed(percentage)
 
     async def _async_set_speed(self, percentage: int) -> None:

@@ -68,6 +68,20 @@ async def test_turn_on_powers_on_only(
     assert hass.states.get(OFF_FAN).state == STATE_ON
 
 
+async def test_turn_on_sends_power_even_when_state_is_on(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test turn on always sends the command, as the cached state may be stale."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ON_FAN).state == STATE_ON
+
+    await hass.services.async_call(
+        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ON_FAN}, blocking=True
+    )
+
+    mock_client.async_send_command.assert_awaited_once_with(ON_ID, {"power": True})
+
+
 @pytest.mark.parametrize(("percentage", "speed"), [(16, 1), (50, 3), (100, 6)])
 async def test_set_percentage_when_on(
     hass: HomeAssistant,
@@ -76,7 +90,7 @@ async def test_set_percentage_when_on(
     percentage: int,
     speed: int,
 ) -> None:
-    """Test changing speed on a running fan sends only the speed."""
+    """Test changing speed always sends the power command first."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -86,7 +100,10 @@ async def test_set_percentage_when_on(
         blocking=True,
     )
 
-    mock_client.async_send_command.assert_awaited_once_with(ON_ID, {"speed": speed})
+    assert mock_client.async_send_command.await_args_list == [
+        call(ON_ID, {"power": True}),
+        call(ON_ID, {"speed": speed}),
+    ]
 
 
 async def test_set_percentage_when_off_powers_on_first(
