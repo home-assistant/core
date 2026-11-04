@@ -1,6 +1,6 @@
 """Music Assistant Time platform."""
 
-from datetime import datetime, time, timedelta
+from datetime import UTC, datetime, time, timedelta
 from typing import override
 
 from music_assistant_models.enums import EventType
@@ -60,10 +60,12 @@ class MusicAssistantPlayerSleepTimerTime(MusicAssistantEntity, TimeEntity):
     @override
     async def async_on_update(self) -> None:
         """Handle player updates."""
-        expiry = await self.mass.players.get_sleep_timer(self.player_id)
-        self._attr_native_value = (
-            dt_util.as_local(expiry).time() if expiry is not None else None
-        )
+        if (expires_at := self.player.sleep_timer_expires_at) is None:
+            self._attr_native_value = None
+            return
+        self._attr_native_value = dt_util.as_local(
+            datetime.fromtimestamp(expires_at, tz=UTC)
+        ).time()
 
     @catch_musicassistant_error
     @override
@@ -73,6 +75,7 @@ class MusicAssistantPlayerSleepTimerTime(MusicAssistantEntity, TimeEntity):
         expiry = datetime.combine(now.date(), value, tzinfo=now.tzinfo)
         if expiry <= now:
             expiry += timedelta(days=1)
-        await self.mass.players.set_sleep_timer(
-            self.player_id, int((expiry - now).total_seconds())
-        )
+        # Subtract in UTC: datetimes sharing a tzinfo subtract as wall-clock times,
+        # which is off by the DST shift when the timer spans a transition
+        seconds = (dt_util.as_utc(expiry) - dt_util.as_utc(now)).total_seconds()
+        await self.mass.players.set_sleep_timer(self.player_id, int(seconds))
