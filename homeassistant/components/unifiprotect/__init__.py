@@ -134,11 +134,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
             translation_key="api_key_required",
         )
 
+    cloud_user_issue_id = f"cloud_user_{entry.entry_id}"
     if auth_user and auth_user.cloud_account:
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "cloud_user",
+            cloud_user_issue_id,
+            config_entry_id=entry.entry_id,
             is_fixable=True,
             is_persistent=False,
             learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#full-access",
@@ -146,6 +148,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
             translation_key="cloud_user",
             data={"entry_id": entry.entry_id},
         )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, cloud_user_issue_id)
 
     if nvr_info.version < MIN_REQUIRED_PROTECT_V:
         raise ConfigEntryError(
