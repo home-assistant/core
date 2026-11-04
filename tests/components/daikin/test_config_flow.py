@@ -345,9 +345,26 @@ async def test_reconfigure_unique_id_mismatch(
     assert mock_config_entry.data[CONF_HOST] == HOST
 
 
-@pytest.mark.usefixtures("mock_daikin")
-async def test_reconfigure_host_based_unique_id(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("device_mac", "user_input"),
+    [
+        pytest.param(MAC, {CONF_HOST: "127.0.0.2"}, id="new_host"),
+        # The device can report its host as MAC, which matches this entry itself
+        pytest.param(
+            HOST,
+            {CONF_HOST: HOST, CONF_PASSWORD: "password"},
+            id="mac_falls_back_to_host",
+        ),
+    ],
+)
+async def test_reconfigure_host_based_unique_id(
+    hass: HomeAssistant,
+    mock_daikin: MagicMock,
+    device_mac: str,
+    user_input: dict[str, str],
+) -> None:
     """Test reconfiguring an entry with a host based unique ID keeps it."""
+    type(mock_daikin).mac = PropertyMock(return_value=device_mac)
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=HOST, data={CONF_HOST: HOST, KEY_MAC: HOST}
     )
@@ -355,12 +372,12 @@ async def test_reconfigure_host_based_unique_id(hass: HomeAssistant) -> None:
 
     result = await entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "127.0.0.2"}
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data[CONF_HOST] == "127.0.0.2"
+    assert entry.data[CONF_HOST] == user_input[CONF_HOST]
     # Left for the migration on setup, which renames the entities
     assert entry.unique_id == HOST
     assert entry.data[KEY_MAC] == HOST

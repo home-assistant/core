@@ -177,9 +177,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         # Host based unique IDs cannot identify the device, setup
                         # migrates them once the device reports its MAC
                         self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
-                        if self.hass.config_entries.async_entry_for_domain_unique_id(
-                            DOMAIN, mac
-                        ):
+                        other = (
+                            self.hass.config_entries.async_entry_for_domain_unique_id(
+                                DOMAIN, mac
+                            )
+                        )
+                        if other and other.entry_id != entry.entry_id:
                             return self.async_abort(reason="already_configured")
                     else:
                         await self.async_set_unique_id(mac)
