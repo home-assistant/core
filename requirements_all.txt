@@ -457,7 +457,7 @@ aiosaj==0.2.2
 aioseafile==0.1.3
 
 # homeassistant.components.shelly
-aioshelly==14.0.1
+aioshelly==14.1.0
 
 # homeassistant.components.skybell
 aioskybell==23.12.0
@@ -517,10 +517,10 @@ aiowaqi==3.1.0
 aiowatttime==2024.6.0
 
 # homeassistant.components.webdav
-aiowebdav2==0.6.2
+aiowebdav2==1.0.3
 
 # homeassistant.components.webostv
-aiowebostv==0.10.0
+aiowebostv==1.0.0
 
 # homeassistant.components.withings
 aiowithings==3.1.6
@@ -1143,7 +1143,7 @@ gTTS==2.5.4
 
 # homeassistant.components.gardena_bluetooth
 # homeassistant.components.husqvarna_automower_ble
-gardena-bluetooth==2.10.1
+gardena-bluetooth==3.1.0
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.1.0
@@ -1361,7 +1361,7 @@ hole==0.9.2
 holidays==0.107
 
 # homeassistant.components.frontend
-home-assistant-frontend==20261028.3
+home-assistant-frontend==20261028.4
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.10.27
@@ -1701,7 +1701,7 @@ millheater==0.14.1
 minio==7.1.12
 
 # homeassistant.components.mitsubishi_comfort
-mitsubishi-comfort==0.6.0
+mitsubishi-comfort==0.6.1
 
 # homeassistant.components.moat
 moat-ble==0.1.1
@@ -2231,7 +2231,7 @@ pycsspeechtts==1.0.8
 pycync==0.6.1
 
 # homeassistant.components.daikin
-pydaikin==2.22.0
+pydaikin==2.22.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==1.0.0
@@ -2828,13 +2828,13 @@ python-homeassistant-analytics==0.9.0
 python-homewizard-energy==10.2.0
 
 # homeassistant.components.hotspring
-python-hotspring==3.1.0
+python-hotspring==4.0.1
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
 
 # homeassistant.components.izone
-python-izone==1.3.12
+python-izone==2.0.0
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.1.1
@@ -2883,7 +2883,7 @@ python-picnic-api2==2.0.1
 python-pooldose==0.9.10
 
 # homeassistant.components.hr_energy_qube
-python-qube-heatpump==1.17.0
+python-qube-heatpump==1.18.0
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -3252,7 +3252,7 @@ speedtest-cli==2.1.3
 spinev-ble[bleak]==0.5.0
 
 # homeassistant.components.spotify
-spotifyaio==2.0.2
+spotifyaio==2.1.0
 
 # homeassistant.components.sql
 sqlparse==0.6.0
@@ -3413,7 +3413,7 @@ ttls==1.11.1
 ttn_client==1.3.0
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.33
+tuya-device-handlers==0.0.34
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.15
@@ -3511,7 +3511,7 @@ voip-utils==0.5.1
 volkszaehler==0.4.0
 
 # homeassistant.components.volvo
-volvocarsapi==0.4.4
+volvocarsapi==0.5.0
 
 # homeassistant.components.verisure
 vsure==2.10.0
@@ -3646,7 +3646,7 @@ zeroconf==0.152.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha-quirks==2.4.0
+zha-quirks==2.4.1
 
 # homeassistant.components.zha
 zha==2.4.2

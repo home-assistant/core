@@ -29,7 +29,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -159,8 +158,8 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         """Trigger a reauthentication flow."""
         reauth_entry = self._get_reauth_entry()
         self.context["title_placeholders"] = {
-            CONF_HOST: reauth_entry.data[CONF_HOST],
-            CONF_NAME: reauth_entry.title,
+            "host": reauth_entry.data[CONF_HOST],
+            "name": reauth_entry.title,
         }
 
         return await self.async_step_reconfigure()
@@ -257,13 +256,13 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         self.context["title_placeholders"] = {
-            CONF_NAME: (
+            "name": (
                 discovery_info.get("name")
                 or discovery_info.get("hostname")
                 or discovery_info.get("product_name")
                 or "UniFi Network"
             ),
-            CONF_HOST: source_ip,
+            "host": source_ip,
         }
         self.context["configuration_url"] = f"https://{host}"
 

@@ -48,6 +48,7 @@ from homeassistant.util import dt as dt_util
 
 NODE_UPDATE_ENTITY = "update.z_wave_thermostat_firmware"
 CONTROLLER_UPDATE_ENTITY = "update.z_stick_gen5_usb_controller_firmware"
+SLEEPING_NODE_UPDATE_ENTITY = "update.tilt_shock_xs_sensor_firmware"
 LATEST_VERSION_FIRMWARE = {
     "version": "11.2.4",
     "changelog": "blah 2",
@@ -243,6 +244,73 @@ async def test_update_entity_states(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
+
+
+@pytest.fixture
+def sleeping_node(
+    client: MagicMock, zooz_zse43_state: dict[str, Any], metadata: dict[str, str]
+) -> Node:
+    """Mock a sleeping node with the given device config metadata."""
+    state = deepcopy(zooz_zse43_state)
+    state["deviceConfig"]["metadata"] = metadata
+    node = Node(client, state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.mark.parametrize(
+    ("metadata", "expected_message"),
+    [
+        pytest.param(
+            {"wakeup": "Click the Z-Wave button 4 times quickly.\n"},
+            "This is a battery powered sleeping device. You may need to wake it up"
+            " manually for the update to begin. To wake up this device:\n\n"
+            "Click the Z-Wave button 4 times quickly.",
+            id="wakeup_instructions",
+        ),
+        pytest.param(
+            {},
+            "This is a battery powered sleeping device. You may need to wake it up"
+            " manually for the update to begin.",
+            id="no_wakeup_instructions",
+        ),
+        pytest.param(
+            {"wakeup": "  \n"},
+            "This is a battery powered sleeping device. You may need to wake it up"
+            " manually for the update to begin.",
+            id="blank_wakeup_instructions",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("sleeping_node", "integration")
+async def test_update_entity_release_notes_sleeping_device(
+    hass: HomeAssistant,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    expected_message: str,
+) -> None:
+    """Test release notes of a sleeping device start with a wake-up alert."""
+    ws_client = await hass_ws_client(hass)
+    client.async_send_command.return_value = FIRMWARE_UPDATES
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SLEEPING_NODE_UPDATE_ENTITY)
+    assert state
+    assert state.state == STATE_ON
+
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": SLEEPING_NODE_UPDATE_ENTITY,
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["result"] == (
+        f"<ha-alert alert-type='info'>\n\n{expected_message}\n\n</ha-alert>\n\nblah 2"
+    )
 
 
 @pytest.mark.parametrize(

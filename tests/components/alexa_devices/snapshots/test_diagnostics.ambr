@@ -280,7 +280,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'alexa_devices',
-      'minor_version': 3,
+      'minor_version': 4,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
