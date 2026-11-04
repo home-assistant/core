@@ -226,8 +226,11 @@
     'name': None,
     'object_id_base': 'Engine capacity',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
     'original_icon': None,
     'original_name': 'Engine capacity',
     'platform': 'dvla',
@@ -236,14 +239,15 @@
     'supported_features': 0,
     'translation_key': 'engine_capacity',
     'unique_id': 'AB12CDE-engineCapacity',
-    'unit_of_measurement': 'cc',
+    'unit_of_measurement': <UnitOfVolume.MILLILITERS: 'mL'>,
   })
 # ---
 # name: test_sensor_platform[sensor.ab12cde_engine_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AB12CDE Engine capacity',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cc',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.MILLILITERS: 'mL'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ab12cde_engine_capacity',

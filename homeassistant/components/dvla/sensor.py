@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import UnitOfMass
+from homeassistant.const import UnitOfMass, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -114,7 +114,8 @@ SENSOR_DESCRIPTIONS: tuple[DVLASensorEntityDescription, ...] = (
     DVLASensorEntityDescription(
         key="engineCapacity",
         translation_key="engine_capacity",
-        native_unit_of_measurement="cc",
+        device_class=SensorDeviceClass.VOLUME,
+        native_unit_of_measurement=UnitOfVolume.MILLILITERS,
         value_fn=int_value,
     ),
     DVLASensorEntityDescription(

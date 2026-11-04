@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -14,6 +15,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -107,6 +109,26 @@ async def test_boolean_fields_are_not_sensor_entities(
         )
         is None
     )
+
+
+async def test_engine_capacity_unit_conversion(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_dvla_entry: Callable[[dict[str, Any] | None], Awaitable[MockConfigEntry]],
+) -> None:
+    """Test engine capacity can be displayed in litres."""
+    await setup_dvla_entry()
+
+    entity_registry.async_update_entity_options(
+        get_entity_id(entity_registry, "engineCapacity"),
+        "sensor",
+        {"unit_of_measurement": UnitOfVolume.LITERS},
+    )
+    await hass.async_block_till_done()
+
+    state = get_state(hass, entity_registry, "engineCapacity")
+    assert float(state.state) == pytest.approx(1.998)
+    assert state.attributes["unit_of_measurement"] == UnitOfVolume.LITERS
 
 
 async def test_revenue_weight_sensor_is_numeric(
