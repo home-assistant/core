@@ -37,12 +37,6 @@ async def async_setup_entry(
 
     entry.runtime_data = controller
 
-    try:
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except BaseException:
-        await controller.disconnect()
-        raise
-
     @callback
     def on_disconnect() -> None:
         if entry.state is ConfigEntryState.LOADED:
@@ -52,6 +46,12 @@ async def async_setup_entry(
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(controller.register_disconnect_callback(on_disconnect))
+
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except BaseException:
+        await controller.disconnect()
+        raise
 
 
 async def async_unload_entry(
