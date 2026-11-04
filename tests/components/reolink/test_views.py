@@ -128,18 +128,27 @@ async def test_proxy_get_source_error(
     assert response.status == HTTPStatus.BAD_REQUEST
 
 
+@pytest.mark.parametrize(
+    "config_entry_id",
+    [
+        pytest.param("wrong_config_id", id="not_found"),
+        pytest.param("other_entry", id="other_integration"),
+    ],
+)
 async def test_proxy_invalid_config_entry_id(
     hass: HomeAssistant,
     reolink_host: MagicMock,
     config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
+    config_entry_id: str,
 ) -> None:
     """Test config entry id not found for playback proxy URL."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    MockConfigEntry(domain="other", entry_id="other_entry").add_to_hass(hass)
 
     proxy_url = async_generate_playback_proxy_url(
-        "wrong_config_id",
+        config_entry_id,
         TEST_CHANNEL,
         TEST_FILE_NAME_MP4,
         TEST_STREAM,
@@ -150,7 +159,7 @@ async def test_proxy_invalid_config_entry_id(
     response = await http_client.get(proxy_url)
 
     assert await response.content.read() == bytes(
-        "Reolink playback proxy could not find config entry id: wrong_config_id",
+        f"Reolink playback proxy could not find config entry id: {config_entry_id}",
         "utf-8",
     )
     assert response.status == HTTPStatus.BAD_REQUEST
