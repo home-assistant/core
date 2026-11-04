@@ -99,6 +99,59 @@ async def test_update_setup(
 
 
 @pytest.mark.parametrize(
+    "catalog_responses",
+    [
+        pytest.param([SmlightConnectionError("Catalog unavailable")], id="core"),
+        pytest.param(
+            [
+                [Firmware(ver="v2.7.5", mode="ESP")],
+                SmlightConnectionError("Catalog unavailable"),
+            ],
+            id="radio",
+        ),
+    ],
+)
+async def test_catalog_connection_error_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    catalog_responses: list[list[Firmware] | SmlightConnectionError],
+) -> None:
+    """Test catalog connection errors preserve availability and recover."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("update.mock_title_core_firmware").state == STATE_ON
+    assert hass.states.get("update.mock_title_zigbee_firmware").state == STATE_ON
+
+    side_effect = mock_smlight_client.get_firmware_version.side_effect
+    mock_smlight_client.get_firmware_version.side_effect = catalog_responses
+
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.mock_title_core_firmware").state == STATE_ON
+    assert hass.states.get("update.mock_title_zigbee_firmware").state == STATE_ON
+
+    mock_smlight_client.get_firmware_version.side_effect = side_effect
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        MAC="AA:BB:CC:DD:EE:FF",
+        model="SLZB-06p7",
+        fw_channel="dev",
+        sw_version="v2.7.5",
+        radios=[Radio(chip_index=0, zb_type=0, zb_version="20250201")],
+    )
+
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.mock_title_core_firmware").state == STATE_OFF
+    assert hass.states.get("update.mock_title_zigbee_firmware").state == STATE_OFF
+
+
+@pytest.mark.parametrize(
     ("radios", "radio_type", "radio_idx", "latest_version"),
     [
         pytest.param(

@@ -107,7 +107,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     if not any(entry.version == 1 for entry in entries):
         return
 
-    api_keys_entries: dict[str, tuple[ConfigEntry, bool]] = {}
+    api_keys_entries: dict[str, tuple[GoogleGenerativeAIConfigEntry, bool]] = {}
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 

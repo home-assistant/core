@@ -558,6 +558,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._ota_reboot_deadline: datetime | None = None
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._connect_task: asyncio.Task | None = None
+        self._initialized_callbacks: list[CALLBACK_TYPE] = []
 
     @cached_property
     def bluetooth_source(self) -> str:
@@ -602,6 +603,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self.update_interval = timedelta(seconds=update_interval)
 
         return True
+
+    @callback
+    def async_on_initialized(self, initialized_callback: CALLBACK_TYPE) -> None:
+        """Run a callback once, the next time the device is initialized."""
+        self._initialized_callbacks.append(initialized_callback)
 
     @callback
     def async_subscribe_ota_events(
@@ -874,6 +880,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self.config_entry.async_create_background_task(
                 self.hass, self._async_connected(), "rpc device init", eager_start=True
             )
+            for initialized_callback in self._initialized_callbacks:
+                initialized_callback()
+            self._initialized_callbacks.clear()
             # Make sure entities are marked available
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.DISCONNECTED:
