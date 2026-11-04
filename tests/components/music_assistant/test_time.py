@@ -48,6 +48,12 @@ async def test_time_entities(
         ),
         pytest.param("2025-10-25 23:00:00+02:00", time(8, 0), 10 * 3600, id="dst_end"),
         pytest.param("2025-03-29 23:00:00+01:00", time(8, 0), 8 * 3600, id="dst_start"),
+        pytest.param(
+            "2025-10-26 02:15:00+01:00",
+            time(2, 45),
+            1800,
+            id="dst_repeated_hour",
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

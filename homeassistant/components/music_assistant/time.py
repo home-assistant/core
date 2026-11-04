@@ -72,7 +72,11 @@ class MusicAssistantPlayerSleepTimerTime(MusicAssistantEntity, TimeEntity):
     async def async_set_value(self, value: time) -> None:
         """Set the sleep timer expiry time."""
         now = dt_util.now()
-        expiry = datetime.combine(now.date(), value, tzinfo=now.tzinfo)
+        # Keep the current fold so a time in the repeated DST hour resolves to the
+        # same occurrence as now instead of defaulting to the first one
+        expiry = datetime.combine(now.date(), value, tzinfo=now.tzinfo).replace(
+            fold=now.fold
+        )
         if expiry <= now:
             expiry += timedelta(days=1)
         # Subtract in UTC: datetimes sharing a tzinfo subtract as wall-clock times,
