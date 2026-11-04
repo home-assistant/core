@@ -3649,7 +3649,7 @@ zeroconf==0.152.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha-quirks==2.4.0
+zha-quirks==2.4.1
 
 # homeassistant.components.zha
 zha==2.4.2
