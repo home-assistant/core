@@ -145,9 +145,6 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_HOST], session
                 )
             except LinkPlayRequestException:
-                _LOGGER.exception(
-                    "Failed to connect to LinkPlay device at %s", user_input[CONF_HOST]
-                )
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(
