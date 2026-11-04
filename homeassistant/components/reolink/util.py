@@ -61,9 +61,10 @@ def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
         config_entry_id
     )
     if config_entry is None:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise Unresolvable(
-            f"Could not find Reolink config entry id '{config_entry_id}'."
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={"config_entry_id": config_entry_id},
         )
     return config_entry.runtime_data.host
 

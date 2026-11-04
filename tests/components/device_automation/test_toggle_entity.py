@@ -2,16 +2,17 @@
 
 from datetime import timedelta
 
+from probatio import Invalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_if_fires_on_state_change(
@@ -195,3 +196,18 @@ async def test_if_fires_on_state_change_with_for(
         service_calls[0].data["some"]
         == f"turn_off device - {entry.entity_id} - on - off - 0:00:05"
     )
+
+
+def test_turned_on_with_bad_for_is_invalid() -> None:
+    """Test the trigger type selects the schema that reports the error."""
+    with pytest.raises(Invalid, match="expected dict at 'for'"):
+        toggle_entity.TRIGGER_SCHEMA(
+            {
+                "platform": "device",
+                "domain": "light",
+                "device_id": "abcdefgh",
+                "entity_id": "light.test",
+                "type": "turned_on",
+                "for": "later",
+            }
+        )

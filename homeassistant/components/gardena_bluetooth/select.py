@@ -8,6 +8,7 @@ from gardena_bluetooth.const import (
     AquaContour,
     AquaContourPosition,
     AquaContourWatering,
+    AquaContourWateringMode,
 )
 from gardena_bluetooth.parse import CharacteristicInt
 
@@ -55,7 +56,11 @@ DESCRIPTIONS = (
     GardenaBluetoothSelectEntityDescription(
         translation_key="watering_active",
         char=AquaContourWatering.watering_active,
-        option_to_number=_enum_to_int(AquaContourWatering.watering_active.enum),
+        option_to_number={
+            option: value
+            for option, value in _enum_to_int(AquaContourWateringMode).items()
+            if value != AquaContourWateringMode.STEP_TEST
+        },
     ),
     GardenaBluetoothSelectEntityDescription(
         translation_key="operation_mode",

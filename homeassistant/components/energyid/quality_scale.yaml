@@ -94,7 +94,7 @@ rules:
   entity-translations:
     status: exempt
     comment: This integration does not create its own entities.
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: This integration does not create its own entities.

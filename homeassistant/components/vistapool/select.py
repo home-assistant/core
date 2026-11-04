@@ -186,7 +186,6 @@ class VistapoolSelect(VistapoolEntity, SelectEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
-        self.coordinator.apply_optimistic(self.entity_description.value_path, value)
 
 
 class VistapoolLightModeSelect(VistapoolEntity, SelectEntity):
@@ -231,4 +230,3 @@ class VistapoolLightModeSelect(VistapoolEntity, SelectEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
-        self.coordinator.apply_optimistic_values(updates)

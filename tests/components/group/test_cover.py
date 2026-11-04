@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -39,8 +40,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 COVER_GROUP = "cover.cover_group"
 DEMO_COVER = "cover.kitchen_window"

@@ -22,7 +22,6 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -146,7 +145,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_mismatch(
                     description_placeholders={
                         "wrong_account": user.online_id,
-                        CONF_NAME: entry.title,
+                        "name": entry.title,
                     }
                 )
 
@@ -155,6 +154,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates={CONF_NPSSO: npsso},
                 )
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reauth_confirm" if self.source == SOURCE_REAUTH else "reconfigure",
             data_schema=self.add_suggested_values_to_schema(

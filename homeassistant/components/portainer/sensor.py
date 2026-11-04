@@ -10,32 +10,32 @@ from pyportainer import StackType
 from pyportainer.models.docker import DockerContainerState, DockerSystemDF
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
-from homeassistant.const import UnitOfInformation, UnitOfRatio
+from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
+    PortainerCoordinatorData,
     PortainerStackData,
     PortainerVolumeData,
 )
 from .entity import (
     PortainerContainerEntity,
-    PortainerCoordinatorData,
     PortainerDockerSystemDiskSpaceEndpointEntity,
     PortainerEndpointEntity,
     PortainerStackEntity,
     PortainerVolumeEntity,
 )
+from .util import async_add_entities_by_subentry
 
 PARALLEL_UPDATES = 0
 
@@ -136,6 +136,28 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         ),
         device_class=SensorDeviceClass.ENUM,
         options=["healthy", "unhealthy", "starting"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Docker reports 0001-01-01 as the start time of a container that never started.
+    PortainerContainerSensorEntityDescription(
+        key="container_started_at",
+        translation_key="container_started_at",
+        value_fn=lambda data: (
+            started_at
+            if (state := data.container_inspect.state)
+            and state.started_at
+            and (started_at := dt_util.parse_datetime(state.started_at))
+            and started_at.year > 1
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="container_restart_count",
+        translation_key="container_restart_count",
+        value_fn=lambda data: data.container_inspect.restart_count,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerContainerSensorEntityDescription(
@@ -416,69 +438,100 @@ async def async_setup_entry(
 
     def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
         """Add new endpoint sensors."""
-        async_add_entities(
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
             chain(
                 (
-                    PortainerEndpointSensor(coordinator, entity_description, endpoint)
+                    (
+                        PortainerEndpointSensor(
+                            coordinator, entity_description, endpoint
+                        ),
+                        endpoint.id,
+                    )
                     for entity_description in ENDPOINT_SENSORS
                     for endpoint in endpoints
                 ),
                 (
-                    PortainerDockerSystemDiskSpaceSensor(
-                        ds_coordinator,
-                        entity_description,
-                        endpoint,
+                    (
+                        PortainerDockerSystemDiskSpaceSensor(
+                            ds_coordinator,
+                            entity_description,
+                            endpoint,
+                        ),
+                        endpoint.id,
                     )
                     for entity_description in DOCKER_SYSTEM_DISK_SPACE_SENSORS
                     for endpoint in endpoints
                 ),
-            )
+            ),
         )
 
     def _async_add_new_containers(
         containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
     ) -> None:
         """Add new container sensors."""
-        async_add_entities(
-            PortainerContainerSensor(
-                coordinator,
-                entity_description,
-                container,
-                endpoint,
-            )
-            for (endpoint, container) in containers
-            for entity_description in CONTAINER_SENSORS
-            if entity_description.supported_fn(container)
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerContainerSensor(
+                        coordinator,
+                        entity_description,
+                        container,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, container) in containers
+                for entity_description in CONTAINER_SENSORS
+                if entity_description.supported_fn(container)
+            ),
         )
 
     def _async_add_new_stacks(
         stacks: list[tuple[PortainerCoordinatorData, PortainerStackData]],
     ) -> None:
         """Add new stack sensors."""
-        async_add_entities(
-            PortainerStackSensor(
-                coordinator,
-                entity_description,
-                stack,
-                endpoint,
-            )
-            for (endpoint, stack) in stacks
-            for entity_description in STACK_SENSORS
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerStackSensor(
+                        coordinator,
+                        entity_description,
+                        stack,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, stack) in stacks
+                for entity_description in STACK_SENSORS
+            ),
         )
 
     def _async_add_new_volumes(
         volumes: list[tuple[PortainerCoordinatorData, PortainerVolumeData]],
     ) -> None:
         """Add new volume sensors."""
-        async_add_entities(
-            PortainerVolumeSensor(
-                coordinator,
-                entity_description,
-                volume.volume,
-                endpoint,
-            )
-            for (endpoint, volume) in volumes
-            for entity_description in VOLUME_SENSORS
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerVolumeSensor(
+                        coordinator,
+                        entity_description,
+                        volume.volume,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, volume) in volumes
+                for entity_description in VOLUME_SENSORS
+            ),
         )
 
     coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)

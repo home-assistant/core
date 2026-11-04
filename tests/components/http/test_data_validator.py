@@ -5,12 +5,11 @@ from unittest.mock import Mock
 
 from aiohttp import web
 import probatio
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS
-
-from tests.typing import ClientSessionGenerator
 
 
 async def get_client(aiohttp_client, validator):

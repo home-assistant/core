@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from Netio.exceptions import AuthError, CommunicationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netio.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_netio")

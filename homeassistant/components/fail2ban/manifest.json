@@ -1,6 +1,7 @@
 {
   "domain": "fail2ban",
   "name": "Fail2Ban",
+  "categories": ["computers_network.monitoring"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/fail2ban",
   "iot_class": "local_polling",

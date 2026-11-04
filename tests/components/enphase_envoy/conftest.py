@@ -27,6 +27,7 @@ from pyenphase.models.home import EnvoyInterfaceInformation
 from pyenphase.models.meters import EnvoyMeterData
 from pyenphase.models.tariff import EnvoyStorageSettings, EnvoyTariff
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import CONF_MANUAL_TOKEN
@@ -41,15 +42,13 @@ from homeassistant.core import HomeAssistant
 
 from . import envoy_token
 
-from tests.common import MockConfigEntry, load_json_object_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.enphase_envoy.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -191,6 +190,11 @@ def load_envoy_fixture(mock_envoy: AsyncMock, fixture_name: str) -> None:
         mock_envoy.interface_settings.return_value = EnvoyInterfaceInformation(**item)
     else:
         mock_envoy.interface_settings.return_value = None
+
+    if item := json_fixture.get("fixture_collection"):
+        mock_envoy.fixture_collection.return_value = item
+    else:
+        mock_envoy.fixture_collection.return_value = None
 
 
 def _load_json_2_production_data(

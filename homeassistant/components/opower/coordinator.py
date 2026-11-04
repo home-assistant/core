@@ -108,10 +108,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             # assume previous session has expired and re-login.
             await self.api.async_login()
         except (InvalidAuth, MfaChallenge) as err:
-            _LOGGER.error("Error during login: %s", err)
             raise ConfigEntryAuthFailed from err
         except CannotConnect as err:
-            _LOGGER.error("Error during login: %s", err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="login_error",
@@ -503,7 +501,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         ir.async_create_issue(
             self.hass,
             DOMAIN,
-            issue_id=f"return_to_grid_migration_{utility_account_id}",
+            issue_id=f"return_to_grid_migration_{self.config_entry.entry_id}_{utility_account_id}",
+            config_entry_id=self.config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="return_to_grid_migration",

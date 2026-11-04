@@ -1,15 +1,23 @@
 """Constants for the Renault integration tests."""
 
+from renault_api.kamereon.exceptions import ForbiddenException
+
 from homeassistant.components.renault.const import RenaultConfigurationKeys
 
 MOCK_ACCOUNT_ID = "account_id_1"
+OTHER_ACCOUNT_ID = "account_id_2"
+FORBIDDEN_EXCEPTION = ForbiddenException(
+    "err.func.wired.forbidden", "The access is forbidden"
+)
 MOCK_LOGIN_TOKEN = "sample-login-token"
+MOCK_DEVICE_IDS = {"gmid": "sample-gmid", "ucid": "sample-ucid"}
 
 # Mock config data to be used across multiple tests
 MOCK_CONFIG = {
     RenaultConfigurationKeys.USERNAME: "email@test.com",
     RenaultConfigurationKeys.PASSWORD: "test",
     RenaultConfigurationKeys.LOGIN_TOKEN: MOCK_LOGIN_TOKEN,
+    RenaultConfigurationKeys.DEVICE_IDS: MOCK_DEVICE_IDS,
     RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID: MOCK_ACCOUNT_ID,
     RenaultConfigurationKeys.LOCALE: "fr_FR",
 }

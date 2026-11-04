@@ -6,6 +6,7 @@ import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -96,9 +97,9 @@ async def async_attach_trigger(
 
     event_config = event.TRIGGER_SCHEMA(
         {
-            event.CONF_PLATFORM: "event",
-            event.CONF_EVENT_TYPE: f"lcn_{config[CONF_TYPE]}",
-            event.CONF_EVENT_DATA: event_data,
+            EventTriggerArgument.PLATFORM: "event",
+            EventTriggerArgument.EVENT_TYPE: f"lcn_{config[CONF_TYPE]}",
+            EventTriggerArgument.EVENT_DATA: event_data,
         }
     )
 

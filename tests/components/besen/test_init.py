@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from besen.exceptions import CannotConnect, InvalidAuth
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import publish_besen_state
 from .conftest import charger_state, setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_success(

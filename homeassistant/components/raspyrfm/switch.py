@@ -42,7 +42,7 @@ DEFAULT_HOST = "127.0.0.1"
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_PORT): probatio.Port(),
         probatio.Optional(CONF_GATEWAY_MANUFACTURER): cv.string,
         probatio.Optional(CONF_GATEWAY_MODEL): cv.string,
         probatio.Required(CONF_SWITCHES): probatio.Schema(

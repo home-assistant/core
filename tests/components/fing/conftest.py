@@ -5,12 +5,15 @@ from unittest.mock import MagicMock, patch
 
 from fing_agent_api.models import AgentInfoResponse, DeviceResponse
 import pytest
+from pytest_homeassistant.common import (
+    Generator,
+    load_fixture,
+    load_json_object_fixture,
+)
+from pytest_homeassistant.plugins import MockConfigEntry
 
 from homeassistant.components.fing.const import DOMAIN, UPNP_AVAILABLE
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
-
-from tests.common import Generator, load_fixture, load_json_object_fixture
-from tests.conftest import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

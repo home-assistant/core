@@ -5,11 +5,6 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from pyportainer import DockerContainerState, Portainer, StackStatus
-from pyportainer.exceptions import (
-    PortainerAuthenticationError,
-    PortainerConnectionError,
-    PortainerTimeoutError,
-)
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -17,21 +12,17 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .const import DOMAIN
 from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
+    PortainerCoordinatorData,
     PortainerStackData,
 )
-from .entity import (
-    PortainerContainerEntity,
-    PortainerCoordinatorData,
-    PortainerStackEntity,
-)
+from .entity import PortainerContainerEntity, PortainerStackEntity
+from .util import async_add_entities_by_subentry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -60,25 +51,8 @@ async def _perform_action(
     coroutine: Coroutine[Any, Any, Any],
 ) -> None:
     """Perform a Portainer action with error handling and coordinator refresh."""
-    try:
-        await coroutine
-    except PortainerAuthenticationError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_auth",
-        ) from err
-    except PortainerConnectionError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from err
-    except PortainerTimeoutError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="timeout_connect",
-        ) from err
-    else:
-        await coordinator.async_request_refresh()
+    await coordinator.async_call_portainer(coroutine)
+    await coordinator.async_request_refresh()
 
 
 CONTAINER_SWITCHES: tuple[PortainerSwitchEntityDescription, ...] = (
@@ -119,30 +93,44 @@ async def async_setup_entry(
         containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
     ) -> None:
         """Add new container switch sensors."""
-        async_add_entities(
-            PortainerContainerSwitch(
-                coordinator,
-                entity_description,
-                container,
-                endpoint,
-            )
-            for (endpoint, container) in containers
-            for entity_description in CONTAINER_SWITCHES
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerContainerSwitch(
+                        coordinator,
+                        entity_description,
+                        container,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, container) in containers
+                for entity_description in CONTAINER_SWITCHES
+            ),
         )
 
     def _async_add_new_stacks(
         stacks: list[tuple[PortainerCoordinatorData, PortainerStackData]],
     ) -> None:
         """Add new stack switch sensors."""
-        async_add_entities(
-            PortainerStackSwitch(
-                coordinator,
-                entity_description,
-                stack,
-                endpoint,
-            )
-            for (endpoint, stack) in stacks
-            for entity_description in STACK_SWITCHES
+        async_add_entities_by_subentry(
+            async_add_entities,
+            coordinator.subentry_id_for_endpoint,
+            (
+                (
+                    PortainerStackSwitch(
+                        coordinator,
+                        entity_description,
+                        stack,
+                        endpoint,
+                    ),
+                    endpoint.id,
+                )
+                for (endpoint, stack) in stacks
+                for entity_description in STACK_SWITCHES
+            ),
         )
 
     coordinator.new_containers_callbacks.append(_async_add_new_containers)

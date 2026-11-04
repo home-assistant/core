@@ -2,7 +2,6 @@
 
 import abc
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Unpack, override
 
 import probatio
@@ -12,7 +11,6 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from homeassistant.const import ATTR_DEVICE_ID, CONF_OPTIONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.condition import (
     ATTR_BEHAVIOR,
     BEHAVIOR_ALL,
@@ -48,7 +46,7 @@ CONF_STATUS = "status"
 _CONDITION_VALUE_SCHEMA = probatio.Any(bool, int, float, dict, cv.string)
 
 _BASE_SCHEMA_DICT: dict[probatio.Marker, Any] = {
-    probatio.Required(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+    probatio.Required(ATTR_DEVICE_ID): probatio.All(probatio.EnsureList(), [cv.string]),
     probatio.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): probatio.In(
         [BEHAVIOR_ANY, BEHAVIOR_ALL]
     ),
@@ -88,46 +86,24 @@ def _condition_schema(
     )
 
 
-@dataclass(slots=True)
-class _ResolvedNodes:
-    """Z-Wave nodes resolved from the targeted devices."""
-
-    nodes: set[ZwaveNode] = field(default_factory=set)
-    unresolved: int = 0
-
-
 @callback
 def _async_resolve_nodes(
     hass: HomeAssistant, device_ids: Iterable[str]
-) -> _ResolvedNodes:
-    """Resolve targeted device IDs to Z-Wave nodes."""
-    resolved = _ResolvedNodes()
+) -> set[ZwaveNode]:
+    """Resolve targeted device IDs to Z-Wave nodes, skipping any that don't resolve."""
+    nodes: set[ZwaveNode] = set()
     for device_id in set(device_ids):
         try:
-            node = async_get_node_from_device_id(hass, device_id)
+            nodes.add(async_get_node_from_device_id(hass, device_id))
         except ValueError:
-            resolved.unresolved += 1
-        else:
-            resolved.nodes.add(node)
-    return resolved
+            continue
+    return nodes
 
 
 class _ZwaveNodeCondition(Condition):
     """Base for conditions evaluated per Z-Wave node."""
 
-    options_schema_dict: dict[probatio.Marker, Any]
     _schema: probatio.Schema
-
-    @classmethod
-    @override
-    async def async_validate_complete_config(
-        cls, hass: HomeAssistant, complete_config: ConfigType
-    ) -> ConfigType:
-        """Validate complete config."""
-        complete_config = move_top_level_schema_fields_to_options(
-            complete_config, cls.options_schema_dict
-        )
-        return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
     @override
@@ -140,10 +116,10 @@ class _ZwaveNodeCondition(Condition):
         if async_bypass_dynamic_config_validation(hass, {ATTR_DEVICE_ID: device_ids}):
             return config
 
-        resolved = _async_resolve_nodes(hass, device_ids)
-        if not resolved.nodes:
+        nodes = _async_resolve_nodes(hass, device_ids)
+        if not nodes:
             raise probatio.Invalid("No nodes found for the given devices")
-        cls._validate_nodes(resolved.nodes, config[CONF_OPTIONS])
+        cls._validate_nodes(nodes, config[CONF_OPTIONS])
         return config
 
     @classmethod
@@ -164,20 +140,16 @@ class _ZwaveNodeCondition(Condition):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test the condition against all targeted nodes."""
-        resolved = _async_resolve_nodes(self._hass, self._options[ATTR_DEVICE_ID])
-        if not resolved.nodes:
-            return False
-        behavior_all = self._options[ATTR_BEHAVIOR] == BEHAVIOR_ALL
-        if behavior_all and resolved.unresolved:
-            return False
-        combine: Callable[[Iterable[object]], bool] = all if behavior_all else any
-        return combine(self._node_matches(node) for node in resolved.nodes)
+        nodes = _async_resolve_nodes(self._hass, self._options[ATTR_DEVICE_ID])
+        combine: Callable[[Iterable[object]], bool] = (
+            all if self._options[ATTR_BEHAVIOR] == BEHAVIOR_ALL else any
+        )
+        return combine(self._node_matches(node) for node in nodes)
 
 
 class NodeStatusCondition(_ZwaveNodeCondition):
     """Test the status of Z-Wave nodes."""
 
-    options_schema_dict = _NODE_STATUS_OPTIONS_SCHEMA_DICT
     _schema = _condition_schema(_NODE_STATUS_OPTIONS_SCHEMA_DICT)
 
     @override
@@ -224,7 +196,6 @@ class _ZwaveValueCondition(_ZwaveNodeCondition):
 class ValueCondition(_ZwaveValueCondition):
     """Test a Z-Wave value."""
 
-    options_schema_dict = _VALUE_OPTIONS_SCHEMA_DICT
     _schema = _condition_schema(_VALUE_OPTIONS_SCHEMA_DICT)
 
     @classmethod
@@ -247,7 +218,6 @@ class ValueCondition(_ZwaveValueCondition):
 class ConfigParameterCondition(_ZwaveValueCondition):
     """Test a Z-Wave configuration parameter."""
 
-    options_schema_dict = _CONFIG_PARAMETER_OPTIONS_SCHEMA_DICT
     _schema = _condition_schema(_CONFIG_PARAMETER_OPTIONS_SCHEMA_DICT)
 
     @classmethod

@@ -1,8 +1,10 @@
 {
   "domain": "yamaha_musiccast",
   "name": "MusicCast",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@vigonotion", "@micha91"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/yamaha_musiccast",
   "integration_type": "device",
