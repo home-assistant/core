@@ -69,20 +69,15 @@ class GrafikEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(
-                        CONF_HOST,
-                        default=user_input.get(CONF_HOST, "") if user_input else "",
-                    ): str,
-                    probatio.Required(
-                        CONF_PORT,
-                        default=user_input.get(CONF_PORT, DEFAULT_PORT)
-                        if user_input
-                        else DEFAULT_PORT,
-                    ): int,
-                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                    }
+                ),
+                user_input,
             ),
             errors=errors,
         )

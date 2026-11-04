@@ -86,10 +86,10 @@ async def test_user_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
-    assert result["data_schema"]({CONF_PASSWORD: "test"}) == {
-        **USER_INPUT,
-        CONF_PASSWORD: "test",
-    }
+    assert {
+        key.schema: key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    } == USER_INPUT
     mock_controller.return_value.disconnect.assert_awaited_once()
 
     # Retry after the connection error has been resolved.
