@@ -129,7 +129,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_mismatch()
         elif self.unique_id:
             self._abort_if_unique_id_configured(updates=dict(data))
-        else:
+        if not self.unique_id:
             self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
         return None
 

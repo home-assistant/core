@@ -567,3 +567,31 @@ async def test_reconfigure_without_equipment_identifier(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_HOST] == "192.168.1.99"
+
+
+async def test_reconfigure_without_equipment_identifier_host_in_use(
+    hass: HomeAssistant, telegrams: TelegramQueue, telegram_data: str
+) -> None:
+    """Test a meter without an identifier can't move to another entry's host."""
+    data = {
+        CONF_HOST: "192.168.1.88",
+        CONF_PORT: 80,
+        CONF_WS_PATH: "/ws",
+        CONF_DSMR_VERSION: "5S",
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=data)
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data={**data, CONF_HOST: "192.168.1.99"}
+    ).add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    telegrams.put_nowait(_without_equipment_id(telegram_data))
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.99", CONF_DSMR_VERSION: "5S"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "192.168.1.88"
