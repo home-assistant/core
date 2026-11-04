@@ -42,6 +42,26 @@ TELEGRAM_V5 = (
     "!EFF0\r\n"
 )
 
+# DSMR 2.2 telegram, which reports the gas meter in the older profile format.
+TELEGRAM_V2_2 = (
+    "/ISk5\\2MT382-1004\r\n"
+    "\r\n"
+    f"0-0:96.1.1({EQUIPMENT_IDENTIFIER})\r\n"
+    "1-0:1.8.1(00001.001*kWh)\r\n"
+    "1-0:1.8.2(00001.001*kWh)\r\n"
+    "1-0:2.8.1(00001.001*kWh)\r\n"
+    "1-0:2.8.2(00001.001*kWh)\r\n"
+    "0-0:96.14.0(0001)\r\n"
+    "1-0:1.7.0(0001.01*kW)\r\n"
+    "1-0:2.7.0(0000.00*kW)\r\n"
+    "0-1:24.1.0(3)\r\n"
+    "0-1:96.1.0(3232323241424344313233343536373839)\r\n"
+    "0-1:24.3.0(161107190000)(00)(60)(1)(0-1:24.2.1)(m3)\r\n"
+    "(00001.001)\r\n"
+    "0-1:24.4.0(1)\r\n"
+    "!\r\n"
+)
+
 # EasyMeter Q3D telegram, which reports power in W instead of kW.
 TELEGRAM_Q3D = (
     "/ESY5Q3DB1024 V3.04\r\n"

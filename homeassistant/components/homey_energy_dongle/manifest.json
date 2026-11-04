@@ -9,6 +9,6 @@
   "iot_class": "local_push",
   "loggers": ["dsmr_parser", "homey_energy_dongle_ws"],
   "quality_scale": "gold",
-  "requirements": ["dsmr-parser==1.11.1", "homey-energy-dongle-ws==0.5.0"],
+  "requirements": ["dsmr-parser==1.11.1", "homey-energy-dongle-ws==0.6.0"],
   "zeroconf": ["_energydongle._tcp.local."]
 }

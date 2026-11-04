@@ -27,7 +27,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import EQUIPMENT_IDENTIFIER, TELEGRAM_MBUS, TELEGRAM_Q3D, TELEGRAM_V5
+from . import (
+    EQUIPMENT_IDENTIFIER,
+    TELEGRAM_MBUS,
+    TELEGRAM_Q3D,
+    TELEGRAM_V2_2,
+    TELEGRAM_V5,
+)
 from .conftest import TelegramQueue
 
 POWER_ENTITY_ID = "sensor.electricity_meter_power"
@@ -199,6 +205,40 @@ async def test_belgian_demand(
         hass.states.get(average).attributes["unit_of_measurement"] == UnitOfPower.WATT
     )
     assert hass.states.get(month).attributes["unit_of_measurement"] == UnitOfPower.WATT
+
+
+@pytest.mark.parametrize(
+    ("dsmr_version", "telegram_data", "state"),
+    [
+        pytest.param("4", TELEGRAM_V5, "0.107", id="dsmr4"),
+        pytest.param("2.2", TELEGRAM_V2_2, "1.001", id="dsmr2.2"),
+    ],
+)
+async def test_legacy_gas_meter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    telegrams: TelegramQueue,
+    dsmr_version: str,
+    telegram_data: str,
+    state: str,
+) -> None:
+    """Test DSMR 4 and 2.2 gas meters get a meter reading sensor."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_DSMR_VERSION: dsmr_version},
+    )
+    telegrams.put_nowait(
+        parse_telegram(
+            telegram_data,
+            telegram_specification=TELEGRAM_SPECIFICATIONS[dsmr_version],
+            apply_checksum_validation=False,
+        )
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(GAS_ENTITY_ID).state == state
 
 
 async def test_power_reported_in_watts(
