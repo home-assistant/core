@@ -60,6 +60,7 @@ FLOWS = {
         "alexa_devices",
         "alpha_bidet_infrared",
         "altruist",
+        "amazon_polly",
         "amberelectric",
         "ambient_network",
         "ambient_station",

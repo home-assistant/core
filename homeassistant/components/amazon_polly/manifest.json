@@ -2,11 +2,13 @@
   "domain": "amazon_polly",
   "name": "Amazon Polly",
   "categories": ["ai_voice.speech"],
-  "codeowners": ["@jschlyter"],
+  "codeowners": ["@jschlyter", "@caraar12345"],
+  "config_flow": true,
   "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/amazon_polly",
+  "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["aiobotocore", "botocore"],
-  "quality_scale": "legacy",
+  "quality_scale": "bronze",
   "requirements": ["aiobotocore==3.10.0"]
 }

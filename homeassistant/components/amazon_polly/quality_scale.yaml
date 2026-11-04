@@ -1,0 +1,104 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling:
+    status: exempt
+    comment: Integration does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-conditions:
+    status: exempt
+    comment: Integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: Integration does not provide triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities do not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: exempt
+    comment: The text-to-speech entity has no availability state; failures are raised when speech is requested.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: The text-to-speech entity has no availability state; failures are raised when speech is requested.
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: Amazon Polly is a cloud service that cannot be discovered.
+  discovery:
+    status: exempt
+    comment: Amazon Polly is a cloud service that cannot be discovered.
+  docs-data-update:
+    status: exempt
+    comment: Integration does not fetch data updates.
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: Integration is a service and does not support devices.
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Integration creates a single service device per config entry.
+  entity-category:
+    status: exempt
+    comment: The text-to-speech entity is a primary entity.
+  entity-device-class:
+    status: exempt
+    comment: Text-to-speech entities have no device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The single text-to-speech entity should always be enabled.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: Text-to-speech entities use the platform icon.
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: Integration creates a single service device per config entry.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: aiobotocore manages its own HTTP session and does not accept an aiohttp session.
+  strict-typing:
+    status: todo
+    comment: aiobotocore does not ship a py.typed marker.

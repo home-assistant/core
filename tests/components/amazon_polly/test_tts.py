@@ -7,18 +7,26 @@ from unittest.mock import AsyncMock, MagicMock
 
 from botocore.exceptions import ClientError, EndpointConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pytest_homeassistant.typing import ClientSessionGenerator
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tts
 from homeassistant.components.amazon_polly.const import DOMAIN
 from homeassistant.components.media_player import ATTR_MEDIA_CONTENT_ID
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
+
+from .conftest import ENTRY_DATA
 
 from tests.components.tts.common import retrieve_media
 
+ENTITY_ID = "tts.amazon_polly_us_east_1_text_to_speech"
 CONFIG = {
     CONF_PLATFORM: DOMAIN,
     "aws_access_key_id": "AKIAIOSFODNN7EXAMPLE",
@@ -42,6 +50,181 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
     """Set up internal url."""
     await async_process_ha_core_config(
         hass, {"internal_url": "http://example.local:8123"}
+    )
+
+
+@pytest.fixture
+async def setup_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_polly_client: AsyncMock,
+) -> None:
+    """Set up the Amazon Polly config entry."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("setup_entry")
+async def test_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the text-to-speech entity."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    entity = hass.data[tts.DOMAIN].get_entity(ENTITY_ID)
+    assert entity.default_language == "en-US"
+    assert entity.async_get_supported_voices("en-GB") == [
+        tts.Voice("Amy", "Amy"),
+        tts.Voice("Brian", "Brian"),
+    ]
+
+
+@pytest.mark.usefixtures("setup_entry")
+@pytest.mark.parametrize(
+    ("service_data", "expected_call"),
+    [
+        pytest.param({}, {"VoiceId": "Joanna", "Engine": "standard"}, id="defaults"),
+        pytest.param(
+            {
+                tts.ATTR_LANGUAGE: "en-GB",
+                tts.ATTR_OPTIONS: {"voice": "Amy", "engine": "neural"},
+            },
+            {"VoiceId": "Amy", "Engine": "neural"},
+            id="options",
+        ),
+        pytest.param(
+            {tts.ATTR_OPTIONS: {"voice": "Danielle"}},
+            {"VoiceId": "Danielle", "Engine": "neural"},
+            id="voice_without_default_engine",
+        ),
+    ],
+)
+async def test_tts_speak(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    service_calls: list[ServiceCall],
+    mock_polly_client: AsyncMock,
+    service_data: dict[str, Any],
+    expected_call: dict[str, str],
+) -> None:
+    """Test the speak action synthesizes with Polly."""
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "speak",
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+            tts.ATTR_MESSAGE: "There is a person at the front door.",
+            **service_data,
+        },
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert (
+        await retrieve_media(
+            hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
+        )
+        == HTTPStatus.OK
+    )
+    mock_polly_client.synthesize_speech.assert_awaited_once_with(
+        OutputFormat="mp3",
+        SampleRate="22050",
+        Text="There is a person at the front door.",
+        TextType="text",
+        **expected_call,
+    )
+
+
+@pytest.mark.usefixtures("setup_entry")
+@pytest.mark.parametrize(
+    ("language", "options", "synthesis_error"),
+    [
+        pytest.param("en-US", {"voice": "Nobody"}, None, id="unknown_voice"),
+        pytest.param("en-GB", {}, None, id="language_not_supported"),
+        pytest.param(
+            "en-GB", {"voice": "Brian", "engine": "neural"}, None, id="engine"
+        ),
+        pytest.param(
+            "en-US",
+            {},
+            ClientError(
+                {"Error": {"Code": "TextLengthExceededException", "Message": "Long"}},
+                "SynthesizeSpeech",
+            ),
+            id="synthesis_failed",
+        ),
+    ],
+)
+async def test_tts_errors(
+    hass: HomeAssistant,
+    mock_polly_client: AsyncMock,
+    language: str,
+    options: dict[str, str],
+    synthesis_error: Exception | None,
+) -> None:
+    """Test invalid requests and Polly failures raise errors."""
+    mock_polly_client.synthesize_speech.side_effect = synthesis_error
+    entity = hass.data[tts.DOMAIN].get_entity(ENTITY_ID)
+
+    with pytest.raises(HomeAssistantError):
+        await entity.async_get_tts_audio("Hello", language, options)
+
+
+@pytest.mark.parametrize(
+    ("config", "issue_id", "entry_states"),
+    [
+        pytest.param(
+            ENTRY_DATA, "deprecated_yaml", [ConfigEntryState.LOADED], id="imported"
+        ),
+        pytest.param(
+            {"profile_name": "polly"},
+            "deprecated_yaml_import_issue_credentials",
+            [],
+            id="profile",
+        ),
+    ],
+)
+async def test_legacy_yaml(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    service_calls: list[ServiceCall],
+    issue_registry: ir.IssueRegistry,
+    mock_polly_client: AsyncMock,
+    config: dict[str, str],
+    issue_id: str,
+    entry_states: list[ConfigEntryState],
+) -> None:
+    """Test the YAML platform keeps working, is imported and raises an issue."""
+    assert await async_setup_component(
+        hass, tts.DOMAIN, {tts.DOMAIN: {CONF_PLATFORM: DOMAIN} | config}
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert [entry.state for entry in entries] == entry_states
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        "amazon_polly_say",
+        {
+            ATTR_ENTITY_ID: "media_player.something",
+            tts.ATTR_MESSAGE: "There is a person at the front door.",
+        },
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert (
+        await retrieve_media(
+            hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
+        )
+        == HTTPStatus.OK
     )
 
 
@@ -154,12 +337,14 @@ async def test_client_closed_on_shutdown(
     """Test the Polly client is closed when Home Assistant shuts down."""
     assert await async_setup_component(hass, tts.DOMAIN, {tts.DOMAIN: CONFIG})
     await hass.async_block_till_done()
-    mock_polly_client.__aexit__.assert_not_awaited()
+    # Validating the YAML import closes its own client.
+    closed = mock_polly_client.__aexit__.await_count
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
     await hass.async_block_till_done()
 
-    mock_polly_client.__aexit__.assert_awaited_once()
+    # The legacy provider and the imported entry each close their client.
+    assert mock_polly_client.__aexit__.await_count == closed + 2
 
 
 @pytest.mark.parametrize(

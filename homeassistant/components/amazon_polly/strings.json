@@ -1,7 +1,69 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_region": "Amazon Polly is not available in this region.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "aws_access_key_id": "[%key:component::amazon_polly::config::step::user::data::aws_access_key_id%]",
+          "aws_secret_access_key": "[%key:component::amazon_polly::config::step::user::data::aws_secret_access_key%]"
+        },
+        "data_description": {
+          "aws_access_key_id": "[%key:component::amazon_polly::config::step::user::data_description::aws_access_key_id%]",
+          "aws_secret_access_key": "[%key:component::amazon_polly::config::step::user::data_description::aws_secret_access_key%]"
+        },
+        "description": "AWS rejected the credentials for {title}. Enter a new access key.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "aws_access_key_id": "[%key:component::amazon_polly::config::step::user::data::aws_access_key_id%]",
+          "aws_secret_access_key": "[%key:component::amazon_polly::config::step::user::data::aws_secret_access_key%]",
+          "region_name": "[%key:component::amazon_polly::config::step::user::data::region_name%]"
+        },
+        "data_description": {
+          "aws_access_key_id": "[%key:component::amazon_polly::config::step::user::data_description::aws_access_key_id%]",
+          "aws_secret_access_key": "[%key:component::amazon_polly::config::step::user::data_description::aws_secret_access_key%]",
+          "region_name": "[%key:component::amazon_polly::config::step::user::data_description::region_name%]"
+        }
+      },
+      "user": {
+        "data": {
+          "aws_access_key_id": "Access key ID",
+          "aws_secret_access_key": "Secret access key",
+          "region_name": "Region"
+        },
+        "data_description": {
+          "aws_access_key_id": "ID of an IAM access key allowed to call `polly:DescribeVoices` and `polly:SynthesizeSpeech`.",
+          "aws_secret_access_key": "Secret of the IAM access key.",
+          "region_name": "AWS region whose Polly endpoint is used. Search by name or ID."
+        }
+      }
+    }
+  },
+  "entity": {
+    "tts": {
+      "tts": {
+        "name": "Text-to-speech"
+      }
+    }
+  },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to Amazon Polly: {error}"
+    },
     "engine_not_supported": {
       "message": "Voice {voice} does not support the {engine} engine."
+    },
+    "invalid_auth": {
+      "message": "AWS rejected the access key."
     },
     "language_not_supported": {
       "message": "Voice {voice} does not support the {language} language."
@@ -11,6 +73,52 @@
     },
     "unknown_voice": {
       "message": "Voice {voice} is not available."
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nThe `tts.{domain}_say` action will be removed. Update your automations to use the `tts.speak` action with the new text-to-speech entity, then remove the `{domain}` platform from your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed, but importing your YAML configuration failed because Amazon Polly could not be reached.\n\nAdd {integration_title} from the UI, then remove the `{domain}` platform from your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "[%key:component::amazon_polly::issues::deprecated_yaml::title%]"
+    },
+    "deprecated_yaml_import_issue_credentials": {
+      "description": "Configuring {integration_title} using YAML is being removed. Your YAML configuration uses an AWS profile or the default AWS credentials, which cannot be imported automatically.\n\nAdd {integration_title} from the UI with an IAM access key, then remove the `{domain}` platform from your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "[%key:component::amazon_polly::issues::deprecated_yaml::title%]"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} using YAML is being removed, but importing your YAML configuration failed because AWS rejected the access key.\n\nAdd {integration_title} from the UI with a valid access key, then remove the `{domain}` platform from your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "[%key:component::amazon_polly::issues::deprecated_yaml::title%]"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} using YAML is being removed, but importing your YAML configuration failed with an unexpected error.\n\nAdd {integration_title} from the UI, then remove the `{domain}` platform from your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "[%key:component::amazon_polly::issues::deprecated_yaml::title%]"
+    }
+  },
+  "options": {
+    "error": {
+      "engine_not_supported": "The selected voice does not support this engine.",
+      "invalid_sample_rate": "This sample rate is not available for the selected output format."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "engine": "Engine",
+          "output_format": "Output format",
+          "sample_rate": "Sample rate",
+          "text_type": "Text type",
+          "voice": "Voice"
+        },
+        "data_description": {
+          "engine": "Default Polly engine. It can be overridden per message with the `engine` option.",
+          "output_format": "Audio format Polly returns.",
+          "sample_rate": "Sample rate in Hz. Leave empty to use the default for the output format.",
+          "text_type": "Whether messages are plain text or SSML.",
+          "voice": "Default voice. Its language becomes the default language."
+        }
+      }
     }
   }
 }

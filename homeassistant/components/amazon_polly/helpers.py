@@ -9,6 +9,7 @@ from aiobotocore.config import AioConfig
 from aiobotocore.session import AioSession
 from botocore.exceptions import BotoCoreError, ClientError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -43,6 +44,14 @@ class AmazonPollyData:
     voices: dict[str, dict[str, Any]] = field(default_factory=dict)
     languages: list[str] = field(default_factory=list)
     engines: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
+
+
+type AmazonPollyConfigEntry = ConfigEntry[AmazonPollyData]
+
+
+def unique_id_for(access_key_id: str, region: str) -> str:
+    """Return the config entry unique ID for an access key in a region."""
+    return f"{access_key_id}_{region}"
 
 
 def _create_session(profile: str | None) -> AioSession:
