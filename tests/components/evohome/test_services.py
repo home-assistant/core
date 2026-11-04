@@ -180,6 +180,68 @@ async def test_set_system_mode(
         )
 
 
+@pytest.mark.usefixtures("evohome")
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("entity_fixture", "service", "service_data", "target", "call_args"),
+    [
+        pytest.param(
+            "ctl_id",
+            EvoService.SET_SYSTEM_MODE,
+            {SZ_MODE: "AutoWithEco"},
+            "evohomeasync2.control_system.ControlSystem.set_mode",
+            ("auto_with_eco",),
+            id="system_mode",
+        ),
+        pytest.param(
+            "zone_id",
+            EvoService.SET_ZONE_OVERRIDE,
+            {SZ_SETPOINT: 19.5},
+            "evohomeasync2.zone.Zone.set_temperature",
+            (19.5,),
+            id="zone_override",
+        ),
+        pytest.param(
+            "dhw_id",
+            EvoService.SET_DHW_OVERRIDE,
+            {SZ_STATE: True},
+            "evohomeasync2.hotwater.HotWater.set_on",
+            (),
+            id="dhw_override",
+        ),
+    ],
+)
+async def test_duration_spans_dst_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    request: pytest.FixtureRequest,
+    entity_fixture: str,
+    service: EvoService,
+    service_data: dict[str, Any],
+    target: str,
+    call_args: tuple[Any, ...],
+) -> None:
+    """Test a duration is elapsed time, even if it spans a change to/from DST."""
+
+    entity_id = request.getfixturevalue(entity_fixture)
+
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    freezer.move_to("2026-03-28T23:30:00+00:00")  # the clocks go forward at 01:00Z
+
+    with patch(target) as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            service_data | {SZ_DURATION: {"hours": 3}},
+            target={ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    mock_fcn.assert_awaited_once_with(
+        *call_args, until=datetime(2026, 3, 29, 2, 30, tzinfo=UTC)
+    )
+
+
 @pytest.mark.parametrize("install", ["default"])
 async def test_set_zone_override(
     hass: HomeAssistant,

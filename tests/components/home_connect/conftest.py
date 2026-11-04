@@ -331,16 +331,16 @@ def mock_client(
         autospec=HomeConnectClient,
     )
 
-    event_queue: asyncio.Queue[list[EventMessage | Exception]] = asyncio.Queue()
+    event_queue: asyncio.Queue[list[EventMessage | Exception | None]] = asyncio.Queue()
 
-    async def add_events(events: list[EventMessage | Exception]) -> None:
+    async def add_events(events: list[EventMessage | Exception | None]) -> None:
         await event_queue.put(events)
 
     mock.add_events = add_events
 
     appliances = [appliance] if appliance else appliances
 
-    async def stream_all_events() -> AsyncGenerator[EventMessage]:
+    async def stream_all_events() -> AsyncGenerator[EventMessage | None]:
         """Mock stream_all_events."""
         while True:
             for event in await event_queue.get():
@@ -465,7 +465,7 @@ def mock_client_with_exception(
 
     event_queue: asyncio.Queue[list[EventMessage]] = asyncio.Queue()
 
-    async def stream_all_events() -> AsyncGenerator[EventMessage]:
+    async def stream_all_events() -> AsyncGenerator[EventMessage | None]:
         """Mock stream_all_events."""
         while True:
             for event in await event_queue.get():

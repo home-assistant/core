@@ -3,6 +3,7 @@
   "name": "Swiss Hydrological Data",
   "categories": ["weather_alerts"],
   "codeowners": ["@fabaff"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/swiss_hydrological_data",
   "iot_class": "cloud_polling",
   "loggers": ["swisshydrodata"],

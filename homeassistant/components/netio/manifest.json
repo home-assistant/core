@@ -4,6 +4,7 @@
   "categories": ["plugs_switches"],
   "codeowners": ["@agners"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/netio",
   "integration_type": "device",
