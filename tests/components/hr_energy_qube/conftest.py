@@ -53,9 +53,7 @@ def mock_qube_client() -> Generator[MagicMock]:
         client.host = "1.2.3.4"
         client.port = 502
         client.unit = 1
-        client.connect = AsyncMock(return_value=True)
         client.is_connected = True
-        client.close = AsyncMock(return_value=None)
         client.async_verify_device = AsyncMock(return_value=True)
         client.async_get_software_version = AsyncMock(return_value="2.15")
 
