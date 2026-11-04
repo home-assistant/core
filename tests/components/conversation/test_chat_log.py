@@ -722,6 +722,17 @@ def _other_tool(name: str) -> llm.Tool:
             "intent_script__Room_HassTurnOn",
             id="custom_intent_type_with_separator",
         ),
+        pytest.param(
+            [
+                _intent_tool(
+                    "intent__Room__intent__HassTurnOn", "Room__intent__HassTurnOn"
+                ),
+                _intent_tool("intent__HassTurnOn"),
+            ],
+            "Room__intent__HassTurnOn",
+            "intent__Room__intent__HassTurnOn",
+            id="exact_intent_type_beats_suffix_match",
+        ),
     ],
 )
 async def test_external_tool_calls_match_offered_tool_names(

@@ -817,15 +817,18 @@ class ChatLog:
                         pos += 2
                         if "__" in (suffix := tool_call.tool_name[pos:]):
                             names.add(suffix)
-                    matches = {
-                        match
-                        for name in names
-                        if (match := intent_names.get(name)) is not None
-                    }
-                    if (match := intent_types.get(tool_call.tool_name)) is not None:
-                        matches.add(match)
-                    if len(matches) == 1:
-                        matched = next(iter(matches))
+                    # An intent type recorded by local handling names the tool
+                    # exactly, so it wins over a name that only shares a suffix.
+                    matched = intent_types.get(tool_call.tool_name)
+                    if matched is None:
+                        matches = {
+                            match
+                            for name in names
+                            if (match := intent_names.get(name)) is not None
+                        }
+                        if len(matches) == 1:
+                            matched = next(iter(matches))
+                    if matched is not None:
                         tool_calls[call_index] = replace(tool_call, tool_name=matched)
                         renamed[tool_call.id] = matched
                 if tool_calls != content.tool_calls:
