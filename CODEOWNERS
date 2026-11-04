@@ -850,6 +850,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/homevolt/ @danielhiversen @liudger
 /homeassistant/components/homewizard/ @DCSBL @lexpostma
 /tests/components/homewizard/ @DCSBL @lexpostma
+/homeassistant/components/homey_energy_dongle/ @Doekse
+/tests/components/homey_energy_dongle/ @Doekse
 /homeassistant/components/honeywell/ @mkmer
 /tests/components/honeywell/ @mkmer
 /homeassistant/components/honeywell_string_lights/ @balloob
