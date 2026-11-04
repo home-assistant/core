@@ -1,11 +1,11 @@
 """Test automatic Waze polling intervals."""
 
-from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pywaze.route_calculator import WRCError
 
 from homeassistant.components.waze_travel_time.config_flow import WazeConfigFlow
@@ -16,18 +16,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-
-@pytest.fixture(autouse=True)
-def no_api_delay() -> Generator[None]:
-    """Avoid real delays between mocked requests."""
-    with patch(
-        "homeassistant.components.waze_travel_time.coordinator.SECONDS_BETWEEN_API_CALLS",
-        0,
-    ):
-        yield
 
 
 @pytest.fixture

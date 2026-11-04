@@ -7,7 +7,6 @@ import probatio
 from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
 from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
@@ -22,7 +21,7 @@ IS_OPTION_SELECTED_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
         probatio.Required(CONF_OPTIONS): {
             probatio.Required(CONF_OPTION): probatio.All(
-                cv.ensure_list, probatio.Length(min=1), [str]
+                probatio.EnsureList(), probatio.NonEmpty(), [str]
             ),
         },
     }

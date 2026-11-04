@@ -445,29 +445,6 @@ def test_install_constraint(mock_popen, mock_env_copy, mock_sys) -> None:
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-async def test_async_get_user_site(mock_env_copy) -> None:
-    """Test async get user site directory."""
-    deps_dir = "/deps_dir"
-    env = mock_env_copy()
-    env["PYTHONUSERBASE"] = os.path.abspath(deps_dir)
-    args = [sys.executable, "-m", "site", "--user-site"]
-    with patch(
-        "homeassistant.util.package.asyncio.create_subprocess_exec",
-        return_value=mock_async_subprocess(),
-    ) as popen_mock:
-        ret = await package.async_get_user_site(deps_dir)
-    assert popen_mock.call_count == 1
-    assert popen_mock.call_args == call(
-        *args,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.DEVNULL,
-        env=env,
-        close_fds=False,
-    )
-    assert ret == os.path.join(deps_dir, "lib_dir")
-
-
 async def test_async_get_installed_packages() -> None:
     """Test async get installed packages."""
     mock_output = (

@@ -19,13 +19,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Konnected.io from a config entry."""
     _create_issue(hass)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
     if all(
         config_entry.state is ConfigEntryState.NOT_LOADED
@@ -33,8 +32,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if config_entry.entry_id != entry.entry_id
     ):
         ir.async_delete_issue(hass, DOMAIN, DOMAIN)
-
-    return True
 
 
 def _create_issue(hass: HomeAssistant) -> None:

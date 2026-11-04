@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable
 
-import httpx
+import httpx2
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceUnauthorizedException,
@@ -38,7 +38,7 @@ async def await_or_reraise(
         raise HomeAssistantError(
             f"Aqualink error: {error_detail(timeout_exception)}"
         ) from timeout_exception
-    except (AqualinkServiceException, httpx.HTTPError) as svc_exception:
+    except (AqualinkServiceException, httpx2.HTTPError) as svc_exception:
         raise HomeAssistantError(
             f"Aqualink error: {error_detail(svc_exception)}"
         ) from svc_exception

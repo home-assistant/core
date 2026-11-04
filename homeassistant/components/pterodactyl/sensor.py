@@ -17,12 +17,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .api import PterodactylGameServer
-from .coordinator import (
-    PterodactylConfigEntry,
-    PterodactylCoordinator,
-    PterodactylGameServerData,
-)
+from .api import PterodactylGameServer, PterodactylGameServerData
+from .coordinator import PterodactylConfigEntry, PterodactylCoordinator
 from .entity import PterodactylEntity
 
 KEY_CPU_UTILIZATION = "cpu_utilization"

@@ -15,6 +15,7 @@ from denon_rs232 import (
 )
 from denon_rs232.models import MODELS
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.denon_rs232.config_flow import CONF_MODEL_NAME
 from homeassistant.components.denon_rs232.const import DOMAIN
@@ -22,8 +23,6 @@ from homeassistant.const import CONF_DEVICE, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_DEVICE, MOCK_MODEL
-
-from tests.common import MockConfigEntry
 
 type ZoneName = Literal["main", "zone_2", "zone_3"]
 

@@ -6,17 +6,7 @@ from typing import Any, override
 from flux_led.aiodevice import AIOWifiLedBulb
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_HW_VERSION,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-    CONF_MODEL,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -37,17 +27,17 @@ def _async_device_info(
         sw_version_str = f"{sw_version:0.2f}"
     else:
         sw_version_str = str(device.version_num)
-    device_info: DeviceInfo = {
-        ATTR_IDENTIFIERS: {(DOMAIN, entry.entry_id)},
-        ATTR_MANUFACTURER: "Zengge",
-        ATTR_MODEL: device.model,
-        ATTR_NAME: entry.data.get(CONF_NAME, entry.title),
-        ATTR_SW_VERSION: sw_version_str,
-    }
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Zengge",
+        model=device.model,
+        name=entry.data.get(CONF_NAME, entry.title),
+        sw_version=sw_version_str,
+    )
     if hw_model := entry.data.get(CONF_MODEL):
-        device_info[ATTR_HW_VERSION] = hw_model
+        device_info.hw_version = hw_model
     if entry.unique_id:
-        device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+        device_info.connections = {(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     return device_info
 
 

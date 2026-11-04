@@ -62,5 +62,13 @@
         "name": "Gas this year"
       }
     }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed"
+    },
+    "customer_overview_failed": {
+      "message": "Getting customer ID failed"
+    }
   }
 }

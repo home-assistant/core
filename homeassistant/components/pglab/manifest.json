@@ -1,8 +1,10 @@
 {
   "domain": "pglab",
   "name": "PG LAB Electronics",
+  "categories": ["plugs_switches", "blinds_curtains"],
   "codeowners": ["@pglab-electronics"],
   "config_flow": true,
+  "connectivity": ["mqtt"],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/pglab",
   "integration_type": "hub",

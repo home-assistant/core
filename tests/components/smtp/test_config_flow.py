@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiosmtplib import SMTPAuthenticationError, SMTPException, SMTPTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smtp.const import (
     CONF_REPLY_TO,
@@ -33,8 +34,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("smtp")

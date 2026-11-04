@@ -81,11 +81,11 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_PLATFORM): "time",
         probatio.Required(CONF_AT): probatio.All(
-            cv.ensure_list, [_TIME_TRIGGER_SCHEMA]
+            probatio.EnsureList(), [_TIME_TRIGGER_SCHEMA]
         ),
         probatio.Optional(CONF_WEEKDAY): probatio.Any(
             probatio.In(WEEKDAYS),
-            probatio.All(cv.ensure_list, [probatio.In(WEEKDAYS)]),
+            probatio.All(probatio.EnsureList(), [probatio.In(WEEKDAYS)]),
         ),
     }
 )

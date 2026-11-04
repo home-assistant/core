@@ -39,8 +39,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     CONF_NAME,
@@ -68,6 +66,8 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
@@ -612,7 +612,7 @@ async def webhook_register_sensor(
 @WEBHOOK_COMMANDS.register("update_sensor_states")
 @validate_schema(
     probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         [
             # Partial schema, enough to identify schema.
             # We don't validate everything because otherwise 1 invalid sensor

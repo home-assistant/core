@@ -1,5 +1,7 @@
 """Constants for Mold indicator component."""
 
+from enum import StrEnum
+
 DOMAIN = "mold_indicator"
 
 CONF_CALIBRATION_FACTOR = "calibration_factor"
@@ -8,3 +10,10 @@ CONF_INDOOR_TEMP = "indoor_temp_sensor"
 CONF_OUTDOOR_TEMP = "outdoor_temp_sensor"
 
 DEFAULT_NAME = "Mold Indicator"
+
+
+class MoldIndicatorEntityStateAttribute(StrEnum):
+    """State attributes for mold indicator entities."""
+
+    CRITICAL_TEMP = "estimated_critical_temp"
+    DEWPOINT = "dewpoint"

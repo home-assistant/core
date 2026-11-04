@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import ConnectTimeout
 
 from homeassistant import config_entries
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_HOST, TEST_PASSWORD, TEST_SERIAL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 STANDARD_CONFIG = {
     CONF_USERNAME: TEST_USERNAME,

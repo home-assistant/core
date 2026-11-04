@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.lock import LockState
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
@@ -19,8 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import state
-
-from tests.common import async_mock_service
 
 
 async def test_call_to_component(hass: HomeAssistant) -> None:

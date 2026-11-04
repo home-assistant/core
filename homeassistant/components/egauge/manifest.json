@@ -1,8 +1,10 @@
 {
   "domain": "egauge",
   "name": "eGauge",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@neggert"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/egauge",
   "integration_type": "device",
   "iot_class": "local_polling",

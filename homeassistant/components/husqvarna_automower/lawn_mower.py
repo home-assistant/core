@@ -14,9 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AutomowerConfigEntry
 from .const import DOMAIN, ERROR_STATES, MOW, PARK
-from .coordinator import AutomowerDataUpdateCoordinator
+from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity, handle_sending_exception
 
 PARALLEL_UPDATES = 1
@@ -87,6 +86,8 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
             or mower_attributes.mower.activity in DOCKED_ACTIVITIES
         ):
             return LawnMowerActivity.DOCKED
+        if mower_attributes.mower.state is MowerStates.STOPPED:
+            return LawnMowerActivity.IDLE
         if mower_attributes.mower.state in MowerStates.IN_OPERATION:
             return LawnMowerActivity.MOWING
         return LawnMowerActivity.ERROR

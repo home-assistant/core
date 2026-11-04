@@ -197,5 +197,10 @@
         "name": "Off-grid operation"
       }
     }
+  },
+  "exceptions": {
+    "api_changed": {
+      "message": "The Powerwall API has changed"
+    }
   }
 }

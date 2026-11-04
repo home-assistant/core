@@ -10,4 +10,4 @@ DOMAIN: Final = "goalzero"
 DEFAULT_NAME = "Yeti"
 MANUFACTURER = "Goal Zero"
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)

@@ -1,8 +1,10 @@
 {
   "domain": "hue",
   "name": "Philips Hue",
+  "categories": ["lighting.lighting_systems"],
   "codeowners": ["@marcelveldt"],
   "config_flow": true,
+  "connectivity": ["zigbee"],
   "documentation": "https://www.home-assistant.io/integrations/hue",
   "homekit": {
     "models": ["BSB002"]

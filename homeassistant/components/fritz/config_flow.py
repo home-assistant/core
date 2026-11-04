@@ -27,6 +27,11 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
@@ -98,6 +103,14 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 pool_maxsize=30,
                 redact_debug_log=True,
             )
+            # Credentials are only checked by the first TR-064 call
+            self._model = connection.call_action("DeviceInfo:1", "GetInfo")[
+                "NewModelName"
+            ]
+            upnp_disabled = (
+                "X_AVM-DE_UPnP1" in connection.services
+                and not connection.call_action("X_AVM-DE_UPnP1", "GetInfo")["NewEnable"]
+            )
         except FRITZ_AUTH_EXCEPTIONS:
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
@@ -106,15 +119,25 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
 
-        self._model = connection.call_action("DeviceInfo:1", "GetInfo")["NewModelName"]
-
-        if (
-            "X_AVM-DE_UPnP1" in connection.services
-            and not connection.call_action("X_AVM-DE_UPnP1", "GetInfo")["NewEnable"]
-        ):
+        if upnp_disabled:
             return ERROR_UPNP_NOT_CONFIGURED
 
         return None
+
+    async def async_has_tr064_support(self) -> bool:
+        """Check if the device supports TR-064."""
+        return await self.hass.async_add_executor_job(self.has_tr064_support)
+
+    def has_tr064_support(self) -> bool:
+        """Check if the device supports TR-064."""
+        try:
+            # During initialization, FritzConnection tries to fetch the TR-064
+            # description file from the device. If it does not exist, the
+            # library raises a FritzConnectionException.
+            FritzConnection(address=self._host)
+        except FritzConnectionException:
+            return False
+        return True
 
     async def async_check_configured_entry(self) -> FritzConfigEntry | None:
         """Check if entry is configured."""
@@ -185,6 +208,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
             return self.async_abort(reason="already_configured")
 
+        if not await self.async_has_tr064_support():
+            return self.async_abort(reason="not_supported")
+
         self.context.update(
             {
                 "title_placeholders": {"name": self._name.replace("FRITZ!Box ", "")},
@@ -230,10 +256,17 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+                    probatio.Optional(CONF_HOST, default=DEFAULT_HOST): TextSelector(),
                     probatio.Optional(CONF_PORT): probatio.Coerce(int),
-                    probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): TextSelector(
+                        TextSelectorConfig(autocomplete="username")
+                    ),
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                     probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                     probatio.Required(
                         CONF_FEATURE_DEVICE_TRACKING,
@@ -252,8 +285,15 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): TextSelector(
+                        TextSelectorConfig(autocomplete="username")
+                    ),
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                     probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                     probatio.Required(
                         CONF_FEATURE_DEVICE_TRACKING,
@@ -312,8 +352,15 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_USERNAME, default=default_username): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(
+                        CONF_USERNAME, default=default_username
+                    ): TextSelector(TextSelectorConfig(autocomplete="username")),
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                 }
             ),
             description_placeholders={"host": self._host},
@@ -356,7 +403,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                    probatio.Required(
+                        CONF_HOST, default=user_input[CONF_HOST]
+                    ): TextSelector(),
                     probatio.Optional(
                         CONF_PORT, default=user_input[CONF_PORT]
                     ): probatio.Coerce(int),

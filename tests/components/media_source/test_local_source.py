@@ -1,6 +1,6 @@
 """Test Local Media Source."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from http import HTTPStatus
 import io
 from pathlib import Path
@@ -8,6 +8,8 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components import media_source, websocket_api
 from homeassistant.components.media_player import (
@@ -20,9 +22,6 @@ from homeassistant.components.media_source.local_source import MAX_SEARCH_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -160,13 +159,23 @@ async def test_async_search_media(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.parametrize(
+    ("suffix", "create"),
+    [
+        pytest.param(".mp3", Path.touch, id="files"),
+        pytest.param("", Path.mkdir, id="folders"),
+    ],
+)
 async def test_async_search_media_limit_and_hidden(
-    hass: HomeAssistant, tmp_path: Path
+    hass: HomeAssistant,
+    tmp_path: Path,
+    suffix: str,
+    create: Callable[[Path], None],
 ) -> None:
-    """Test that search caps results and skips hidden files."""
+    """Test that search caps results and skips hidden entries."""
     for i in range(MAX_SEARCH_RESULTS + 20):
-        (tmp_path / f"song_{i}.mp3").touch()
-    (tmp_path / ".hidden_song.mp3").touch()
+        create(tmp_path / f"song_{i}{suffix}")
+    create(tmp_path / f".hidden_song{suffix}")
 
     await async_process_ha_core_config(
         hass, {"media_dirs": {"local": str(tmp_path), "recordings": str(tmp_path)}}
@@ -184,6 +193,65 @@ async def test_async_search_media_limit_and_hidden(
     )
     assert len(result.result) == MAX_SEARCH_RESULTS
     assert all(not item.title.startswith(".") for item in result.result)
+
+
+FOLDER_RESULT = ("Albums/Best Of", MediaClass.DIRECTORY, "", False, True, True)
+FILE_RESULT = (
+    "Albums/Best Of Live.mp3",
+    MediaClass.MUSIC,
+    "audio/mpeg",
+    True,
+    False,
+    False,
+)
+
+
+@pytest.mark.parametrize(
+    ("media_filter_classes", "expected"),
+    [
+        pytest.param(None, [FOLDER_RESULT, FILE_RESULT], id="no_filter"),
+        pytest.param([MediaClass.MUSIC], [FILE_RESULT], id="music_filter"),
+    ],
+)
+async def test_async_search_media_folders(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    media_filter_classes: list[MediaClass] | None,
+    expected: list[tuple[str, MediaClass, str, bool, bool, bool]],
+) -> None:
+    """Test that search returns matching folders unless a media class filter is set."""
+    (tmp_path / "Albums" / "Best Of").mkdir(parents=True)
+    (tmp_path / "Albums" / "Best Of" / "track.mp3").touch()
+    (tmp_path / "Albums" / "Best Of Live.mp3").touch()
+    (tmp_path / ".hidden" / "Best Of").mkdir(parents=True)
+
+    await async_process_ha_core_config(hass, {"media_dirs": {"local": str(tmp_path)}})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, const.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    result = await media_source.async_search_media(
+        hass,
+        f"{const.URI_SCHEME}{const.DOMAIN}/local",
+        SearchMediaQuery(
+            search_query="best of", media_filter_classes=media_filter_classes
+        ),
+    )
+    assert [
+        (
+            item.media_content_id,
+            item.media_class,
+            item.media_content_type,
+            item.can_play,
+            item.can_expand,
+            item.can_search,
+        )
+        for item in result.result
+    ] == [
+        (f"{const.URI_SCHEME}{const.DOMAIN}/local/{location}", *flags)
+        for location, *flags in expected
+    ]
 
 
 async def test_browse_media_can_search(hass: HomeAssistant) -> None:
