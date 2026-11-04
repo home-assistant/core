@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from music_assistant_client.exceptions import (
     CannotConnect,
     ConnectionFailed,
+    InvalidServerVersion,
     InvalidState,
 )
 from music_assistant_models.config_entries import PlayerConfig
@@ -572,3 +573,54 @@ async def test_server_lost_late_in_setup_retries(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     music_assistant_client.disconnect.assert_awaited_once()
+
+
+async def test_invalid_server_version_issue_per_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test each entry gets its own linked invalid server version issue."""
+    entries = [
+        MockConfigEntry(
+            domain=DOMAIN,
+            title=f"Music Assistant {idx}",
+            data={"url": f"http://server{idx}:8095"},
+            unique_id=f"server_{idx}",
+        )
+        for idx in (1, 2)
+    ]
+    music_assistant_client.connect.side_effect = InvalidServerVersion("too old")
+
+    for entry in entries:
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    for entry in entries:
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"invalid_server_version_{entry.entry_id}"
+        )
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
+        assert issue.translation_key == "invalid_server_version"
+
+    await hass.config_entries.async_remove(entries[0].entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"invalid_server_version_{entries[0].entry_id}"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"invalid_server_version_{entries[1].entry_id}"
+    )
+
+    music_assistant_client.connect.side_effect = None
+    await hass.config_entries.async_reload(entries[1].entry_id)
+    await hass.async_block_till_done()
+
+    assert entries[1].state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"invalid_server_version_{entries[1].entry_id}"
+    )

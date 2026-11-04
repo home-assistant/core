@@ -16,7 +16,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('overseerr', '01JG00V55WEVTJ0CJHM0GAD7PC')]>,
     'disabled_by': None,

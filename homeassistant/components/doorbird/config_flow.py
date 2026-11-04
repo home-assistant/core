@@ -158,8 +158,8 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         existing_data = self.reauth_entry.data
         placeholders: dict[str, str] = {
-            CONF_NAME: existing_data[CONF_NAME],
-            CONF_HOST: existing_data[CONF_HOST],
+            "name": existing_data[CONF_NAME],
+            "host": existing_data[CONF_HOST],
         }
         self.context["title_placeholders"] = placeholders
         if user_input is not None:
@@ -244,8 +244,8 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         friendly_hostname = discovery_info.name.removesuffix(chop_ending)
 
         self.context["title_placeholders"] = {
-            CONF_NAME: friendly_hostname,
-            CONF_HOST: host,
+            "name": friendly_hostname,
+            "host": host,
         }
         self.discovery_schema = _schema_with_defaults(host=host, name=friendly_hostname)
 

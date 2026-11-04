@@ -30,11 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import (
-    area_registry as ar,
-    device_registry as dr,
-    issue_registry as ir,
-)
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -108,6 +104,13 @@ class ShellyEntryData:
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
 
+# Components whose config changes only affect entity state, so they are
+# refreshed on config_changed instead of reloading the entry
+RPC_CONFIG_UPDATERS: dict[str, Callable[[RpcDevice], Coroutine[Any, Any, None]]] = {
+    "plugs_ui": lambda device: device.update_plugs_ui_config(),
+    "powerstrip_ui": lambda device: device.update_powerstrip_ui_config(),
+}
+
 
 class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     DataUpdateCoordinator[None]
@@ -127,7 +130,6 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         self.device = device
         self.device_id: str | None = None
         self._pending_platforms: list[Platform] | None = None
-        self.suggested_area: str | None = None
         device_name = device.name if device.initialized else entry.title
         interval_td = (
             timedelta(seconds=update_interval) if update_interval is not None else None
@@ -205,11 +207,6 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             hw_version=f"gen{get_device_entry_gen(self.config_entry)}",
             configuration_url=self.configuration_url,
         )
-        # We want to use the main device area as the suggested area for sub-devices.
-        if (area_id := device_entry.area_id) is not None:
-            area_registry = ar.async_get(self.hass)
-            if (area := area_registry.async_get_area(area_id)) is not None:
-                self.suggested_area = area.name
         self.device_id = device_entry.id
 
     async def shutdown(self) -> None:
@@ -645,6 +642,20 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
         return _unsubscribe
 
+    async def _async_update_component_config(self, component: str) -> None:
+        """Fetch the changed component config and update entities."""
+        try:
+            await RPC_CONFIG_UPDATERS[component](self.device)
+        except (DeviceConnectionError, RpcCallError) as err:
+            LOGGER.debug(
+                "Error updating %s config for %s: %s", component, self.name, err
+            )
+            return
+        except InvalidAuthError:
+            await self.async_shutdown_device_and_start_reauth()
+            return
+        self.async_update_listeners()
+
     @callback
     def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:
         """Handle device events."""
@@ -661,6 +672,15 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
             for event_callback in self._event_listeners:
                 event_callback(event)
+
+            if event_type == "config_changed" and component in RPC_CONFIG_UPDATERS:
+                self.config_entry.async_create_background_task(
+                    self.hass,
+                    self._async_update_component_config(component),
+                    "rpc device component config update",
+                    eager_start=True,
+                )
+                continue
 
             if event_type in ("component_added", "component_removed", "config_changed"):
                 self.update_sleep_period()

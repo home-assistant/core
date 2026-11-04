@@ -13,22 +13,13 @@ from pytest_homeassistant.common import (
 )
 from pytest_homeassistant.typing import WebSocketGenerator
 
-from homeassistant.components.input_number import (
-    ATTR_VALUE,
-    DOMAIN,
-    SERVICE_DECREMENT,
-    SERVICE_INCREMENT,
-    SERVICE_RELOAD,
-    SERVICE_SET_VALUE,
+from homeassistant.components.input_number import DOMAIN
+from homeassistant.components.input_number.const import (
+    InputNumberEntityStateAttribute,
+    InputNumberService,
+    InputNumberServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_EDITABLE,
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, EntityStateAttribute
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
@@ -79,8 +70,8 @@ async def set_value(hass: HomeAssistant, entity_id: str, value: str) -> None:
     """
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+        InputNumberService.SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, InputNumberServiceArgument.VALUE: value},
         blocking=True,
     )
 
@@ -91,7 +82,7 @@ async def increment(hass: HomeAssistant, entity_id: str) -> None:
     This is a legacy helper method. Do not use it for new tests.
     """
     await hass.services.async_call(
-        DOMAIN, SERVICE_INCREMENT, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        DOMAIN, InputNumberService.INCREMENT, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
 
@@ -101,7 +92,7 @@ async def decrement(hass: HomeAssistant, entity_id: str) -> None:
     This is a legacy helper method. Do not use it for new tests.
     """
     await hass.services.async_call(
-        DOMAIN, SERVICE_DECREMENT, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        DOMAIN, InputNumberService.DECREMENT, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
 
@@ -277,11 +268,11 @@ async def test_unit_of_measurement(hass: HomeAssistant) -> None:
 
     state = hass.states.get("input_number.with_unit")
     assert state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == "°C"
 
     state = hass.states.get("input_number.without_unit")
     assert state
-    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+    assert EntityStateAttribute.UNIT_OF_MEASUREMENT not in state.attributes
 
 
 async def test_device_class(hass: HomeAssistant) -> None:
@@ -305,16 +296,16 @@ async def test_device_class(hass: HomeAssistant) -> None:
 
     state = hass.states.get("input_number.with_device_class")
     assert state
-    assert state.attributes[ATTR_DEVICE_CLASS] == "temperature"
+    assert state.attributes[EntityStateAttribute.DEVICE_CLASS] == "temperature"
 
     state = hass.states.get("input_number.unitless_device_class")
     assert state
-    assert state.attributes[ATTR_DEVICE_CLASS] == "aqi"
-    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+    assert state.attributes[EntityStateAttribute.DEVICE_CLASS] == "aqi"
+    assert EntityStateAttribute.UNIT_OF_MEASUREMENT not in state.attributes
 
     state = hass.states.get("input_number.without_device_class")
     assert state
-    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert EntityStateAttribute.DEVICE_CLASS not in state.attributes
 
 
 async def test_set_value_unit_conversion(hass: HomeAssistant) -> None:
@@ -339,7 +330,7 @@ async def test_set_value_unit_conversion(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert float(state.state) == 68
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°F"
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == "°F"
     assert state.attributes["min"] == 32
     assert state.attributes["max"] == 104
 
@@ -600,13 +591,13 @@ async def test_reload(
         with pytest.raises(Unauthorized):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_RELOAD,
+                InputNumberService.RELOAD,
                 blocking=True,
                 context=Context(user_id=hass_read_only_user.id),
             )
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            InputNumberService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
@@ -633,8 +624,8 @@ async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert float(state.state) == 0  # initial is not supported when loading from storage
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(InputNumberEntityStateAttribute.EDITABLE)
 
 
 async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> None:
@@ -655,12 +646,12 @@ async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> N
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert float(state.state) == 0
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
-    assert state.attributes.get(ATTR_EDITABLE)
+    assert state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(InputNumberEntityStateAttribute.EDITABLE)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert float(state.state) == 5
-    assert not state.attributes.get(ATTR_EDITABLE)
+    assert not state.attributes.get(InputNumberEntityStateAttribute.EDITABLE)
 
 
 async def test_ws_list(
@@ -694,7 +685,7 @@ async def test_ws_list(
     assert len(result) == 1
     assert storage_ent in result
     assert yaml_ent not in result
-    assert result[storage_ent][ATTR_NAME] == "from storage"
+    assert result[storage_ent][CONF_NAME] == "from storage"
 
 
 async def test_ws_delete(
@@ -821,7 +812,7 @@ async def test_ws_update_device_class(
     assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
-    assert state.attributes[ATTR_DEVICE_CLASS] == "temperature"
+    assert state.attributes[EntityStateAttribute.DEVICE_CLASS] == "temperature"
 
     await client.send_json_auto_id(
         {"type": f"{DOMAIN}/update", f"{DOMAIN}_id": "from_storage", **settings}
@@ -830,7 +821,7 @@ async def test_ws_update_device_class(
     assert resp["success"]
 
     state = hass.states.get(input_entity_id)
-    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert EntityStateAttribute.DEVICE_CLASS not in state.attributes
 
     await client.send_json_auto_id(
         {
@@ -889,7 +880,7 @@ async def test_number_does_not_enforce_device_class_units(
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state
     assert float(state.state) == 0
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "hPa"
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == "hPa"
     assert (
         "is using native unit of measurement 'hPa' which is not a valid unit "
         "for the device class ('temperature') it is using"
@@ -927,7 +918,7 @@ async def test_ws_create_unit_conversion(
 
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 68
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°F"
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == "°F"
     assert state.attributes["min"] == 32
     assert state.attributes["max"] == 104
 
@@ -953,7 +944,7 @@ async def test_ws_create_unit_conversion(
 
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 30
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == "°C"
     assert state.attributes["max"] == 40
 
 
@@ -1000,7 +991,7 @@ async def test_ws_update_drops_incompatible_display_unit(
     await hass.async_block_till_done()
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 32
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°F"
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == "°F"
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -1016,7 +1007,9 @@ async def test_ws_update_drops_incompatible_display_unit(
 
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 0
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
+    assert (
+        state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) == expected_unit
+    )
 
     # The native unit is used again, so setting a value needs no conversion
     await set_value(hass, input_entity_id, "10")
@@ -1071,7 +1064,7 @@ async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            InputNumberService.RELOAD,
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )

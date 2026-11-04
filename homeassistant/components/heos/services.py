@@ -1,33 +1,40 @@
 """Services for the HEOS integration."""
 
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 from typing import Final
 
 import probatio
 
-from homeassistant.components.media_player import (
-    ATTR_MEDIA_VOLUME_LEVEL,
-    DOMAIN as MEDIA_PLAYER_DOMAIN,
-)
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_platform_entity_service
 from homeassistant.helpers.typing import VolDictType, VolSchemaType
 
-from .const import (
-    ATTR_DESTINATION_POSITION,
-    ATTR_QUEUE_IDS,
-    DOMAIN,
-    SERVICE_GET_QUEUE,
-    SERVICE_GROUP_VOLUME_DOWN,
-    SERVICE_GROUP_VOLUME_SET,
-    SERVICE_GROUP_VOLUME_UP,
-    SERVICE_MOVE_QUEUE_ITEM,
-    SERVICE_REMOVE_FROM_QUEUE,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class HeosService(StrEnum):
+    """Store keys for HEOS services."""
+
+    GET_QUEUE = "get_queue"
+    REMOVE_FROM_QUEUE = "remove_from_queue"
+    MOVE_QUEUE_ITEM = "move_queue_item"
+    GROUP_VOLUME_SET = "group_volume_set"
+    GROUP_VOLUME_DOWN = "group_volume_down"
+    GROUP_VOLUME_UP = "group_volume_up"
+
+
+class HeosServiceArgument(StrEnum):
+    """Store keys for HEOS service arguments."""
+
+    QUEUE_IDS = "queue_ids"
+    DESTINATION_POSITION = "destination_position"
+    VOLUME_LEVEL = "volume_level"
 
 
 @callback
@@ -56,22 +63,22 @@ class EntityServiceDescription:
 
 
 REMOVE_FROM_QUEUE_SCHEMA: Final[VolDictType] = {
-    probatio.Required(ATTR_QUEUE_IDS): probatio.All(
+    probatio.Required(HeosServiceArgument.QUEUE_IDS): probatio.All(
         probatio.EnsureList(),
         [probatio.All(cv.positive_int, probatio.Range(min=1))],
         probatio.Unique(),
     )
 }
 GROUP_VOLUME_SET_SCHEMA: Final[VolDictType] = {
-    probatio.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float
+    probatio.Required(HeosServiceArgument.VOLUME_LEVEL): cv.small_float
 }
 MOVE_QEUEUE_ITEM_SCHEMA: Final[VolDictType] = {
-    probatio.Required(ATTR_QUEUE_IDS): probatio.All(
+    probatio.Required(HeosServiceArgument.QUEUE_IDS): probatio.All(
         probatio.EnsureList(),
         [probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=1000))],
         probatio.Unique(),
     ),
-    probatio.Required(ATTR_DESTINATION_POSITION): probatio.All(
+    probatio.Required(HeosServiceArgument.DESTINATION_POSITION): probatio.All(
         probatio.Coerce(int), probatio.Range(min=1, max=1000)
     ),
 }
@@ -79,20 +86,24 @@ MOVE_QEUEUE_ITEM_SCHEMA: Final[VolDictType] = {
 MEDIA_PLAYER_ENTITY_SERVICES: Final = (
     # Player queue services
     EntityServiceDescription(
-        SERVICE_GET_QUEUE, "async_get_queue", supports_response=SupportsResponse.ONLY
+        HeosService.GET_QUEUE,
+        "async_get_queue",
+        supports_response=SupportsResponse.ONLY,
     ),
     EntityServiceDescription(
-        SERVICE_REMOVE_FROM_QUEUE, "async_remove_from_queue", REMOVE_FROM_QUEUE_SCHEMA
+        HeosService.REMOVE_FROM_QUEUE,
+        "async_remove_from_queue",
+        REMOVE_FROM_QUEUE_SCHEMA,
     ),
     EntityServiceDescription(
-        SERVICE_MOVE_QUEUE_ITEM, "async_move_queue_item", MOVE_QEUEUE_ITEM_SCHEMA
+        HeosService.MOVE_QUEUE_ITEM, "async_move_queue_item", MOVE_QEUEUE_ITEM_SCHEMA
     ),
     # Group volume services
     EntityServiceDescription(
-        SERVICE_GROUP_VOLUME_SET,
+        HeosService.GROUP_VOLUME_SET,
         "async_set_group_volume_level",
         GROUP_VOLUME_SET_SCHEMA,
     ),
-    EntityServiceDescription(SERVICE_GROUP_VOLUME_DOWN, "async_group_volume_down"),
-    EntityServiceDescription(SERVICE_GROUP_VOLUME_UP, "async_group_volume_up"),
+    EntityServiceDescription(HeosService.GROUP_VOLUME_DOWN, "async_group_volume_down"),
+    EntityServiceDescription(HeosService.GROUP_VOLUME_UP, "async_group_volume_up"),
 )

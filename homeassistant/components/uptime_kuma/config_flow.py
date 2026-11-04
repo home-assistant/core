@@ -216,7 +216,6 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         ):
             if user_input is None:
-                self._set_confirm_only()
                 return self.async_show_form(
                     step_id="hassio_confirm",
                     description_placeholders={

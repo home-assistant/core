@@ -49,7 +49,7 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -189,9 +189,9 @@ async def _async_get_modifier(
 ) -> AnalyticsModifier | None:
     """Get analytics modifier."""
     modifiers = _async_get_modifiers(hass)
-    modifier = modifiers.get(domain, UNDEFINED)
+    modifier = modifiers.get(domain, Undefined)
 
-    if modifier is not UNDEFINED:
+    if modifier is not Undefined:
         return modifier
 
     platform = await _async_get_analytics_platform(hass, domain)

@@ -4,6 +4,7 @@
   "categories": ["energy.ev_charging"],
   "codeowners": ["@BrzezowskiGC"],
   "config_flow": true,
+  "connectivity": ["mqtt"],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/greencell",
   "integration_type": "device",
