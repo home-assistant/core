@@ -589,7 +589,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: (
+                    "name": (
                         f"Network {home_id_display} at "
                         f"{discovery_info.host}:{discovery_info.port}"
                     )
@@ -705,7 +705,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 pid,
             )
             title = human_name.split(" - ")[0].strip()
-        self.context["title_placeholders"] = {CONF_NAME: title}
+        self.context["title_placeholders"] = {"name": title}
 
         self._adapter_discovered = True
         if current_config_entries:
@@ -1785,7 +1785,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.socket_path = discovery_info.socket_path
         home_id_display = format_home_id_for_display(discovery_info.zwave_home_id)
         self.context["title_placeholders"] = {
-            CONF_NAME: f"Network {home_id_display} via {discovery_info.name} (ESPHome)"
+            "name": f"Network {home_id_display} via {discovery_info.name} (ESPHome)"
         }
         self._adapter_discovered = True
 
