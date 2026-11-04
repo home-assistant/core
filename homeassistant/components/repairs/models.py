@@ -4,13 +4,10 @@ from collections.abc import Mapping
 from typing import Any, Protocol, override
 
 from homeassistant import data_entry_flow
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlowResult,
-    SubentryFlowResult,
-)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.frame import report_usage
+import homeassistant.helpers.issue_registry as ir
 
 from .const import DOMAIN, FlowType
 
@@ -31,7 +28,7 @@ class RepairsFlowResult(
     """Typed result dict for repairs flow."""
 
     next_flow: tuple[FlowType, str]
-    result: ConfigEntry | None
+    result: ConfigEntry | ir.IssueEntry | None
 
 
 class RepairsFlow(
@@ -126,19 +123,31 @@ class RepairsFlow(
         if flow_type not in FlowType:
             raise data_entry_flow.UnknownFlow("Invalid next_flow FlowType")
         entry_id: str | None = None
-        if flow_type == FlowType.CONFIG_FLOW:
-            config_flow: ConfigFlowResult = self.hass.config_entries.flow.async_get(
-                flow_id
-            )
-            entry_id = config_flow["context"].get("entry_id")
-        elif flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
-            subentry_flow: SubentryFlowResult = (
-                self.hass.config_entries.subentries.async_get(flow_id)
-            )
-            entry_id, _ = subentry_flow["handler"]
-        else:  # FlowType.OPTIONS_FLOW
-            config_flow = self.hass.config_entries.options.async_get(flow_id)
-            entry_id = config_flow["handler"]
+        match flow_type:
+            case FlowType.CONFIG_FLOW:
+                config_flow = self.hass.config_entries.flow.async_get(flow_id)
+                entry_id = config_flow["context"].get("entry_id")
+            case FlowType.CONFIG_SUBENTRIES_FLOW:
+                subentry_flow = self.hass.config_entries.subentries.async_get(flow_id)
+                entry_id, _ = subentry_flow["handler"]
+            case FlowType.OPTIONS_FLOW:
+                config_flow = self.hass.config_entries.options.async_get(flow_id)
+                entry_id = config_flow["handler"]
+            case FlowType.REPAIRS_FLOW:
+                from . import repairs_flow_manager  # noqa: PLC0415
+
+                repairs_flow = repairs_flow_manager(self.hass).async_get(flow_id)
+                if (
+                    issue := ir.async_get(self.hass).async_get_issue(
+                        repairs_flow["handler"], repairs_flow["context"]["issue_id"]
+                    )
+                ) is None:
+                    raise data_entry_flow.FlowError(
+                        f"issue {repairs_flow['context']['issue_id']} not found in next_flow"
+                    )
+                result["result"] = issue
+                result["next_flow"] = next_flow
+                return
         # entry_id can be None for config flows creating a new config entry
         result["result"] = (
             self.hass.config_entries.async_get_known_entry(entry_id)

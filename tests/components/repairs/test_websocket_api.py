@@ -1,6 +1,6 @@
 """Test the repairs websocket API."""
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
 from typing import Any
@@ -36,6 +36,8 @@ from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
+
+from .common import MockFixFlowNextFlowRepairsFlow
 
 DEFAULT_ISSUES = [
     {
@@ -103,6 +105,7 @@ EXPECTED_DATA = {
     "invalid_flow": None,
     "unknown_entry": None,
     "unknown_entry_via_form": None,
+    "repairs_flow_issue": None,
 }
 
 
@@ -163,6 +166,8 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
             "unknown_entry_via_form",
         ]:
             return MockFixFlowNextFlow()
+        if issue_id == "repairs_flow_issue":
+            return MockFixFlowNextFlowRepairsFlow()
         return MockFixFlow()
 
     mock_platform(
@@ -404,7 +409,7 @@ async def test_fix_issue(
 
 
 @contextmanager
-def mock_core_config_flow() -> Iterator[None]:
+def mock_core_config_flow() -> Generator[None]:
     """Mock a config flow."""
 
     class CompConfigFlow(ConfigFlow):
@@ -533,7 +538,7 @@ async def test_fix_issue_next_flow_errors(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test next_flow RepairFlows."""
+    """Test next_flow as config flows."""
     assert await async_setup_component(hass, "http", {})
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -594,6 +599,61 @@ async def test_fix_issue_next_flow_errors(
     assert resp.status == HTTPStatus.BAD_REQUEST
     data = await resp.json()
     assert "not found in next_flow" in data["message"]
+
+
+@pytest.mark.parametrize(
+    ("ignore_translations_for_mock_domains"),
+    [
+        ["fake_integration"],
+    ],
+)
+async def test_fix_issue_next_flow_repair_flow(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that that a repair flow can continue in another repairs flow.
+
+    This also tests serialization of the `IssueEntry`.
+    """
+
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    client = await hass_client()
+
+    ir.async_create_issue(
+        hass,
+        issue_id="repairs_flow_issue",
+        domain="fake_integration",
+        is_fixable=True,
+        severity="error",
+        translation_key="fake_key",
+    )
+
+    ir.async_create_issue(hass, **DEFAULT_ISSUES[0])
+
+    issue = issue_registry.async_get_issue("fake_integration", "issue_1")
+
+    url = "/api/repairs/issues/fix"
+
+    resp = await client.post(
+        url, json={"handler": "fake_integration", "issue_id": "repairs_flow_issue"}
+    )
+
+    assert resp.status == HTTPStatus.OK, (
+        f"Error: {resp.status} cause {await resp.text()}"
+    )
+    data = await resp.json()
+    assert data["type"] == data_entry_flow.FlowResultType.FORM
+    url = f"/api/repairs/issues/fix/{data['flow_id']}"
+    resp = await client.post(url, json={})
+    assert resp.status == HTTPStatus.OK, (
+        f"Error: {resp.status} cause {await resp.text()}"
+    )
+    data = await resp.json()
+    assert data["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert data["result"] == issue.to_json()
 
 
 async def test_fix_issue_unauth(

@@ -11,3 +11,4 @@ class FlowType(StrEnum):
     CONFIG_FLOW = "config_flow"
     OPTIONS_FLOW = "options_flow"
     CONFIG_SUBENTRIES_FLOW = "config_subentries_flow"
+    REPAIRS_FLOW = "repairs_flow"

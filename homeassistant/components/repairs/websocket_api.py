@@ -118,15 +118,19 @@ def ws_list_issues(
 
 
 def _prepare_repairs_flow_result_json(
-    result: RepairsFlowResult,
+    flow_result: RepairsFlowResult,
     prepare_result_json: Callable[[RepairsFlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
     """Convert result to serializable JSON dict."""
-    entry: ConfigEntry | None = result.pop("result", None)
-    data = prepare_result_json(result)
-    if entry is not None:
-        # Overwrite the ConfigEntry object with its json representation for frontend.
-        data["result"] = entry.as_json_fragment
+    result = flow_result.pop("result", None)
+    data = prepare_result_json(flow_result)
+    if result is not None:
+        # Overwrite the ConfigEntry/IssueEntry object with its json representation for frontend.
+        data["result"] = (
+            result.as_json_fragment
+            if isinstance(result, ConfigEntry)
+            else result.to_json()
+        )
     return data
 
 
@@ -159,7 +163,7 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager, RepairsFlowR
                 f"Unknown flow{f': {ex!s}' if str(ex) else ''}",
                 HTTPStatus.NOT_FOUND,
             )
-        except data_entry_flow.UnknownStep as ex:
+        except data_entry_flow.FlowError as ex:
             return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
         except UnknownEntry as ex:
             return self.json_message(
@@ -176,7 +180,7 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager, RepairsFlowR
 class RepairsFlowResourceView(
     FlowManagerResourceView[RepairsFlowManager, RepairsFlowResult]
 ):
-    """View to interact with the option flow manager."""
+    """View to interact with the repairs flow manager."""
 
     url = "/api/repairs/issues/fix/{flow_id}"
     name = "api:repairs:issues:fix:resource"
