@@ -1273,6 +1273,12 @@ class _DefaultPipelineProcessor:
                 raise PipelineRunValidationError(
                     "stt_stream is required for speech-to-text"
                 )
+            if (request.wake_word_audio_ms is not None) and (
+                request.wake_word_phrase is None
+            ):
+                raise PipelineRunValidationError(
+                    "wake_word_phrase is required with wake_word_audio_ms"
+                )
         elif self.host.start_stage == PipelineStage.INTENT:
             if request.intent_input is None:
                 raise PipelineRunValidationError(

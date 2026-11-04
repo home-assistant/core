@@ -27,7 +27,7 @@ async def _async_run_pipeline(
     wake_word_audio_ms: int,
     end_stage: assist_pipeline.PipelineStage = assist_pipeline.PipelineStage.STT,
     start_stage: assist_pipeline.PipelineStage = assist_pipeline.PipelineStage.STT,
-    wake_word_phrase: str = "okay nabu",
+    wake_word_phrase: str | None = "okay nabu",
 ) -> list[PipelineEvent]:
     events: list[PipelineEvent] = []
     await assist_pipeline.async_pipeline_from_audio_stream(
@@ -147,3 +147,25 @@ async def test_wake_word_audio_detected_by_pipeline(hass: HomeAssistant) -> None
         PipelineEventType.STT_END,
         PipelineEventType.RUN_END,
     ]
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_wake_word_audio_requires_phrase(
+    hass: HomeAssistant,
+    mock_stt_provider_entity: MockSTTProviderEntity,
+) -> None:
+    """Test wake word audio is rejected without the phrase it belongs to."""
+    events = await _async_run_pipeline(
+        hass, _audio_stream(WAKE, COMMAND), MS_PER_CHUNK, wake_word_phrase=None
+    )
+
+    assert [event.type for event in events] == [
+        PipelineEventType.RUN_START,
+        PipelineEventType.ERROR,
+        PipelineEventType.RUN_END,
+    ]
+    assert events[1].data == {
+        "code": "validation-error",
+        "message": "wake_word_phrase is required with wake_word_audio_ms",
+    }
+    assert not mock_stt_provider_entity.received
