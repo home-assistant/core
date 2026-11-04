@@ -193,6 +193,9 @@ class OpenAQConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = error
             else:
+                self._async_abort_entries_match(
+                    {CONF_API_KEY: user_input[CONF_API_KEY]}
+                )
                 return self.async_create_entry(
                     title="OpenAQ",
                     data={CONF_API_KEY: user_input[CONF_API_KEY]},

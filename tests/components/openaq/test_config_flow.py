@@ -1,6 +1,8 @@
 """Test the OpenAQ config flow."""
 
+import asyncio
 from collections.abc import Sequence
+from threading import Barrier
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, call
 
@@ -139,6 +141,42 @@ async def test_duplicate_parent_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     mock_openaq_client.parameters.list.assert_not_called()
+
+
+async def test_concurrent_parent_flows(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_openaq_client: MagicMock,
+) -> None:
+    """Test concurrent flows create only one entry for the same API key."""
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    validation_barrier = Barrier(2)
+    mock_openaq_client.parameters.list.side_effect = lambda **_: (
+        validation_barrier.wait(timeout=10)
+    )
+
+    results = await asyncio.gather(
+        hass.config_entries.flow.async_configure(
+            first["flow_id"], {CONF_API_KEY: API_KEY}
+        ),
+        hass.config_entries.flow.async_configure(
+            second["flow_id"], {CONF_API_KEY: API_KEY}
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert sorted(result["type"] for result in results) == [
+        FlowResultType.ABORT,
+        FlowResultType.CREATE_ENTRY,
+    ]
+    assert {result.get("reason") for result in results} == {None, "already_configured"}
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    mock_setup_entry.assert_called_once()
 
 
 async def test_different_api_key_parent_entry(
