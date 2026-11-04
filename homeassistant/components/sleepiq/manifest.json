@@ -4,6 +4,7 @@
   "categories": ["health_wellbeing"],
   "codeowners": ["@mfugate1", "@kbickar"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "macaddress": "64DBA0*"

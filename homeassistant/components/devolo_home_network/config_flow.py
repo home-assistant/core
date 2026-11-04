@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN, PRODUCT, SERIAL_NUMBER, TITLE
+from .const import DOMAIN, SERIAL_NUMBER, TITLE
 from .coordinator import DevoloHomeNetworkConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -112,8 +112,8 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.host = discovery_info.host
         self.context["title_placeholders"] = {
-            PRODUCT: discovery_info.properties["Product"],
-            CONF_NAME: discovery_info.hostname.split(".")[0],
+            "product": discovery_info.properties["Product"],
+            "name": discovery_info.hostname.split(".")[0],
         }
 
         return await self.async_step_zeroconf_confirm()
@@ -154,7 +154,7 @@ class DevoloHomeNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         self.host = entry_data[CONF_IP_ADDRESS]
         placeholders = {
             **self.context["title_placeholders"],
-            PRODUCT: self._reauth_entry.runtime_data.device.product,
+            "product": self._reauth_entry.runtime_data.device.product,
         }
         self.context["title_placeholders"] = placeholders
         return await self.async_step_reauth_confirm()

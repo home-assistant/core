@@ -32,8 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneWireConfigEntry) -> N
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
             translation_placeholders={
-                CONF_HOST: entry.data[CONF_HOST],
-                CONF_PORT: str(entry.data[CONF_PORT]),
+                "host": entry.data[CONF_HOST],
+                "port": str(entry.data[CONF_PORT]),
             },
         ) from exc
 

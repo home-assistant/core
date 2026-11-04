@@ -13,11 +13,12 @@ from google.genai.interactions import (
 from google.genai.types import Part
 
 from homeassistant.components import stt
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import GoogleGenerativeAIConfigEntry
 from .const import CONF_CHAT_MODEL, DEFAULT_STT_PROMPT, LOGGER, RECOMMENDED_STT_MODEL
 from .entity import GoogleGenerativeAILLMBaseEntity
 from .helpers import convert_to_wav
@@ -36,7 +37,7 @@ def _model_requires_interactions_api(model: str) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GoogleGenerativeAIConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up STT entities."""
@@ -55,7 +56,9 @@ class GoogleGenerativeAISttEntity(
 ):
     """Google Generative AI speech-to-text entity."""
 
-    def __init__(self, config_entry: ConfigEntry, subentry: ConfigSubentry) -> None:
+    def __init__(
+        self, config_entry: GoogleGenerativeAIConfigEntry, subentry: ConfigSubentry
+    ) -> None:
         """Initialize the STT entity."""
         super().__init__(config_entry, subentry, RECOMMENDED_STT_MODEL)
 

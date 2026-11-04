@@ -28,6 +28,23 @@
         'theme',
       ]),
       'disabled_reason': None,
+      'download_profile': dict({
+        'endpoints': dict({
+          'api': list([
+            'https://api.github.com',
+          ]),
+          'catalog': list([
+            'https://data-v2.hacs.xyz',
+          ]),
+          'github': list([
+            'https://github.com',
+          ]),
+          'raw': list([
+            'https://raw.githubusercontent.com',
+          ]),
+        }),
+        'id': 'default',
+      }),
       'github_connected': True,
       'ignored_repositories': list([
       ]),

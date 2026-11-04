@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@chemelli74"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["ssdp"],
   "dhcp": [
     {
@@ -39,7 +40,7 @@
   "requirements": [
     "getmac==0.9.6",
     "samsungctl[websocket]==0.7.1",
-    "samsungtvws[async,encrypted]==3.0.6",
+    "samsungtvws[async,encrypted]==3.0.7",
     "async-upnp-client==0.49.0"
   ],
   "ssdp": [

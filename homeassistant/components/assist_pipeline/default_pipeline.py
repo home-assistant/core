@@ -12,6 +12,7 @@ import audioop  # pylint: disable=deprecated-module
 import hass_nabucasa
 
 from homeassistant.components import conversation, media_player, stt, tts, wake_word
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import MATCH_ALL, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -976,17 +977,25 @@ class _DefaultPipelineProcessor:
 
         tts_options: dict[str, Any] = {}
         if self.host.pipeline.tts_voice is not None:
-            tts_options[tts.ATTR_VOICE] = self.host.pipeline.tts_voice
+            tts_options[TextToSpeechCommonOption.VOICE] = self.host.pipeline.tts_voice
 
         if isinstance(self.host.tts_audio_output, dict):
             tts_options.update(self.host.tts_audio_output)
         elif isinstance(self.host.tts_audio_output, str):
-            tts_options[tts.ATTR_PREFERRED_FORMAT] = self.host.tts_audio_output
+            tts_options[TextToSpeechCommonOption.PREFERRED_FORMAT] = (
+                self.host.tts_audio_output
+            )
             if self.host.tts_audio_output == "wav":
                 # 16 Khz, 16-bit mono
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = SAMPLE_RATE
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = SAMPLE_CHANNELS
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = SAMPLE_WIDTH
+                tts_options[TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE] = (
+                    SAMPLE_RATE
+                )
+                tts_options[TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS] = (
+                    SAMPLE_CHANNELS
+                )
+                tts_options[TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES] = (
+                    SAMPLE_WIDTH
+                )
 
         try:
             self.tts_stream = tts.async_create_stream(
