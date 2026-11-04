@@ -30,6 +30,7 @@ async def async_get_config_entry_diagnostics(
     }
     if not connection.connected:
         return diagnostics
+    # Kodi has no cached state, so an unreachable Kodi is reported as an error
     try:
         properties = await kodi.get_application_properties(["version"])
         players = await kodi.get_players()
