@@ -155,6 +155,14 @@ class MarketplaceData:
             data["version_installed"] = repository.data.installed_version
         if repository.data.last_fetched:
             data["last_fetched"] = repository.data.last_fetched.timestamp()
+        # Kept for a start without the catalog, the next catalog fetch decides
+        if self.marketplace.repositories.is_default(repository.data.id):
+            data["default"] = True
+            # What an install without the GitHub API needs, installed ones have it
+            if not repository.data.installed:
+                for key in ("last_version", "last_commit"):
+                    if (value := getattr(repository.data, key)) is not None:
+                        data[key] = value
 
         self.content[repository.data.id] = data
 
@@ -461,3 +469,6 @@ class MarketplaceData:
         # Every removal checks it is safe again, resolving here would block
         if repository.localpath is not None:
             repository.content.path.local = repository.localpath
+
+        if repository_data.get("default") is True:
+            self.marketplace.repositories.mark_default(repository)
