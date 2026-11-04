@@ -9,6 +9,13 @@ from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 
 from .const import CONF_BAUDRATE, TYPE_SERIAL
 
+_DEVICE_TYPE_NAMES = {5: "aerosmart m"}
+
+
+def format_device_type(device_type: int) -> str:
+    """Return the product name for a device type code."""
+    return _DEVICE_TYPE_NAMES.get(device_type, str(device_type))
+
 
 def create_modbus_params(
     data: Mapping[str, Any],

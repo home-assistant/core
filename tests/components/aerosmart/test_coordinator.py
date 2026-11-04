@@ -23,7 +23,7 @@ async def test_device_info_includes_model_and_software_version(
     mock_modbus_unit_ventilation: MockModbusUnit,
 ) -> None:
     """Device metadata is included when the controller provides it."""
-    mock_modbus_unit_ventilation.holding[5000] = [0, 3]
+    mock_modbus_unit_ventilation.holding[5000] = [0, 5]
     mock_modbus_unit_ventilation.holding[1156] = [0, 42]
 
     mock_config_entry.add_to_hass(hass)
@@ -34,7 +34,7 @@ async def test_device_info_includes_model_and_software_version(
         (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device is not None
-    assert device.model == "3"
+    assert device.model == "aerosmart m"
     assert device.sw_version == "42"
 
 

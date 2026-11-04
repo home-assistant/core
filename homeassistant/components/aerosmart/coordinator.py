@@ -17,6 +17,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .helpers import format_device_type
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +102,9 @@ class AerosmartCoordinator(DataUpdateCoordinator[UpdateReport]):
 
         general = self.device.general
         if (device_type := general.device_type) is not None:
-            registry.async_update_device(device.id, model=str(device_type))
+            registry.async_update_device(
+                device.id, model=format_device_type(device_type)
+            )
         if (software_version := general.software_version) is not None:
             registry.async_update_device(device.id, sw_version=str(software_version))
 
