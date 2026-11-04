@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "continue_setup": "Continue setting up the discovered iZone controller.",
       "discovery_failed": "Failed to start iZone discovery. Make sure your network is properly configured.",
       "discovery_started": "iZone discovery has started. Your controllers will appear as discovered devices under Settings \u003e Devices \u0026 services.",
@@ -88,6 +89,9 @@
     },
     "invalid_airflow_step": {
       "message": "Airflow {value}% is not a multiple of 5%"
+    },
+    "invalid_temperature_step": {
+      "message": "Temperature {value}°C is not a multiple of 0.5°C"
     },
     "missing_host": {
       "message": "iZone config entry is missing host"

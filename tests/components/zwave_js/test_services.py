@@ -478,7 +478,7 @@ async def test_set_config_parameter(
     client.async_send_command.reset_mock()
 
     # Test setting config parameter with no valid nodes raises Exception
-    with pytest.raises(probatio.MultipleInvalid):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_CONFIG_PARAMETER,
@@ -490,6 +490,8 @@ async def test_set_config_parameter(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
 
     client.async_send_command_no_wait.reset_mock()
     client.async_send_command.reset_mock()
@@ -1169,6 +1171,22 @@ async def test_set_value(
             blocking=True,
         )
 
+    # Test setting a value with no valid nodes raises Exception
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_COMMAND_CLASS: 117,
+                ATTR_PROPERTY: "local",
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+
 
 async def test_set_value_string(
     hass: HomeAssistant, client, climate_danfoss_lc_13, lock_schlage_be469, integration
@@ -1496,6 +1514,23 @@ async def test_multicast_set_value(
             blocking=True,
         )
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MULTICAST_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_PROPERTY: "setpoint",
+                ATTR_PROPERTY_KEY: 1,
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+
     # Test that when a command is unsuccessful we raise an exception
     client.async_send_command.return_value = {
         "result": {"status": 2, "message": "test"}
@@ -1548,7 +1583,7 @@ async def test_multicast_set_value(
     diff_network_node.client.driver.controller.home_id.return_value = "diff_home_id"
 
     with (
-        pytest.raises(probatio.MultipleInvalid),
+        pytest.raises(ServiceValidationError) as exc_info,
         patch(
             "homeassistant.components.zwave_js.helpers.async_get_node_from_device_id",
             side_effect=(climate_danfoss_lc_13, diff_network_node),
@@ -1569,12 +1604,43 @@ async def test_multicast_set_value(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "multicast_different_networks"
+
+    # Test that a target node without a ready driver raises an error
+    no_driver_node = MagicMock()
+    no_driver_node.client.driver = None
+
+    with (
+        pytest.raises(HomeAssistantError) as exc_info,
+        patch(
+            "homeassistant.components.zwave_js.helpers.async_get_node_from_device_id",
+            side_effect=(climate_danfoss_lc_13, no_driver_node),
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MULTICAST_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: [
+                    CLIMATE_DANFOSS_LC13_ENTITY,
+                ],
+                ATTR_DEVICE_ID: "fake_device_id",
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_PROPERTY: "setpoint",
+                ATTR_PROPERTY_KEY: 1,
+                ATTR_VALUE: 2,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "driver_not_ready"
 
     # Test that when there are multiple zwave_js config entries, service will fail
     # without devices or entities
     new_entry = MockConfigEntry(domain=DOMAIN)
     new_entry.add_to_hass(hass)
-    with pytest.raises(probatio.Invalid):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_MULTICAST_SET_VALUE,
@@ -1587,6 +1653,8 @@ async def test_multicast_set_value(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "multicast_broadcast_requires_target"
 
 
 async def test_multicast_set_value_options(
@@ -2004,6 +2072,24 @@ async def test_invoke_cc_api(
     client.async_send_command.reset_mock()
     client.async_send_command_no_wait.reset_mock()
 
+    # Test that targets without Z-Wave devices raise an error
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_INVOKE_CC_API,
+            {
+                ATTR_ENTITY_ID: "sensor.fake",
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_METHOD_NAME: "someMethod",
+                ATTR_PARAMETERS: [1, 2],
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "no_nodes_found"
+    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
+
 
 async def test_refresh_notifications(
     hass: HomeAssistant,
@@ -2142,6 +2228,25 @@ async def test_refresh_notifications(
             SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
             {ATTR_CONFIG_PARAMETER: 102, ATTR_CONFIG_VALUE: 241},
             id="bulk_set_partial_config_parameters",
+        ),
+        pytest.param(
+            SERVICE_INVOKE_CC_API,
+            {
+                ATTR_COMMAND_CLASS: 67,
+                ATTR_METHOD_NAME: "someMethod",
+                ATTR_PARAMETERS: [1, 2],
+            },
+            id="invoke_cc_api",
+        ),
+        pytest.param(
+            SERVICE_SET_VALUE,
+            {ATTR_COMMAND_CLASS: 117, ATTR_PROPERTY: "local", ATTR_VALUE: 2},
+            id="set_value",
+        ),
+        pytest.param(
+            SERVICE_MULTICAST_SET_VALUE,
+            {ATTR_COMMAND_CLASS: 117, ATTR_PROPERTY: "local", ATTR_VALUE: 2},
+            id="multicast_set_value",
         ),
     ],
 )

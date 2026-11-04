@@ -2676,7 +2676,7 @@
       17.0,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
@@ -2689,7 +2689,7 @@
       21.5,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
@@ -2702,7 +2702,7 @@
       21.5,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Kiev')),
     }),
   ])
 # ---
@@ -2728,7 +2728,7 @@
       5.0,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     }),
   ])
 # ---
@@ -2741,7 +2741,7 @@
       17.0,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
@@ -2754,7 +2754,7 @@
       15.0,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     }),
   ])
 # ---
@@ -2767,28 +2767,28 @@
       14.0,
     ),
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Paris')),
     }),
   ])
 # ---
 # name: test_zone_set_temperature[default]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
 # name: test_zone_set_temperature[h032585]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
 # name: test_zone_set_temperature[h099625]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Kiev')),
     }),
   ])
 # ---
@@ -2802,14 +2802,14 @@
 # name: test_zone_set_temperature[h157546]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
     }),
   ])
 # ---
 # name: test_zone_set_temperature[minimal]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
     }),
   ])
 # ---
@@ -2823,7 +2823,7 @@
 # name: test_zone_set_temperature[sys_006]
   list([
     dict({
-      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Paris')),
     }),
   ])
 # ---

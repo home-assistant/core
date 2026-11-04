@@ -1677,7 +1677,7 @@ async def test_statistics_during_period_stream_error_falls_back(
                 }
             ],
         }
-    assert "Error reading statistics, retrying" in caplog.text
+    assert "Error reading rows, retrying" in caplog.text
 
 
 @pytest.mark.parametrize(

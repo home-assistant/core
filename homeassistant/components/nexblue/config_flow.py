@@ -101,7 +101,7 @@ class NexBlueConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
-            description_placeholders={CONF_USERNAME: username},
+            description_placeholders={"username": username},
             errors=errors,
         )
 
