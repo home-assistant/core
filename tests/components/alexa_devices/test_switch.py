@@ -450,3 +450,42 @@ async def test_switch_led_cannot_set_feature(
     assert exc_info.value.translation_key == "cannot_set_feature_with_error"
     assert (state := hass.states.get(LED_ENTITY_ID))
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize("key", ["communications", "announcements"])
+async def test_communication_switch_created_when_settings_arrive_later(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    key: str,
+) -> None:
+    """Create each switch when its setting arrives, without duplicates on refresh."""
+    device = mock_amazon_devices_client.get_devices_data.return_value[TEST_DEVICE_1_SN]
+    device.communication_settings = {}
+    await setup_integration(hass, mock_config_entry)
+    entity_id = f"switch.echo_test_{key}"
+    assert hass.states.get(entity_id) is None
+
+    device.communication_settings = {key: "ON"}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_ON
+    assert (registered := entity_registry.async_get(entity_id)) is not None
+
+    device.communication_settings = {}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    device.communication_settings = {key: "OFF"}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF
+    assert entity_registry.async_get(entity_id) is registered
+    assert hass.states.get(f"{entity_id}_2") is None

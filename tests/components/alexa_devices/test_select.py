@@ -243,3 +243,29 @@ async def test_service_select_option_loaded_from_library(
 
     assert (state := hass.states.get(ENTITY_ID_2))
     assert state.state == TEST_DEVICE_2.account_name
+
+
+async def test_dropin_created_when_settings_arrive_later(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Create Drop In after delayed communication settings arrive, only once."""
+    device = mock_amazon_devices_client.get_devices_data.return_value[TEST_DEVICE_1_SN]
+    device.communication_settings = {}
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID) is None
+
+    device.communication_settings = {"dropin": "Home"}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state == "home"
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "home"
+    assert hass.states.get(f"{ENTITY_ID}_2") is None
