@@ -13,9 +13,6 @@ CONF_RFSESSION_ID = "rf_session_id"
 CONF_EZVIZ_ACCOUNT = "ezviz_account"
 CONF_ENCRYPTION_PASSWORD = "encryption_password"
 
-# Service names
-SERVICE_WAKE_DEVICE = "wake_device"
-
 # Defaults
 EU_URL = "apiieu.ezvizlife.com"
 RUSSIA_URL = "apirus.ezvizru.com"
