@@ -1,6 +1,6 @@
 """Tests for the Telldus Live API client."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -22,6 +22,7 @@ from homeassistant.components.tellduslive.const import (
     TURNON,
     UP,
 )
+from homeassistant.util import dt as dt_util
 
 CLOUD_URL = "https://pa-api.telldus.com/json/"
 LOCAL_URL = "http://192.0.2.1/api/"
@@ -381,7 +382,7 @@ def test_local_maybe_refresh_token(
         f"{LOCAL_URL}refreshToken", json={"token": "new", "expires": 1900000000}
     )
     session = LocalAPISession("192.0.2.1", "HA")
-    session.token_timestamp = datetime.now() - age
+    session.token_timestamp = dt_util.naive_now() - age
 
     session.maybe_refresh_token()
 

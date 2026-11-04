@@ -15,6 +15,8 @@ from urllib.parse import urljoin
 import requests
 from requests_oauthlib import OAuth1Session
 
+from homeassistant.util import dt as dt_util
+
 from .const import (
     DIM,
     DOWN,
@@ -152,7 +154,7 @@ class LocalAPISession(requests.Session):
             if "token" in result:
                 self.access_token = result["token"]
                 self.headers.update({"Authorization": f"Bearer {self.access_token}"})
-                self.token_timestamp = datetime.now()
+                self.token_timestamp = dt_util.naive_now()
                 _LOGGER.debug(
                     "Token expires %s", datetime.fromtimestamp(result.get("expires"))
                 )
@@ -172,7 +174,7 @@ class LocalAPISession(requests.Session):
             result = response.json()
             self.access_token = result.get("token")
             self.headers.update({"Authorization": f"Bearer {self.access_token}"})
-            self.token_timestamp = datetime.now()
+            self.token_timestamp = dt_util.naive_now()
             _LOGGER.debug(
                 "Token expires %s", datetime.fromtimestamp(result.get("expires"))
             )
@@ -190,7 +192,7 @@ class LocalAPISession(requests.Session):
         """Refresh the access token if expired."""
         if (
             self.token_timestamp
-            and datetime.now() - self.token_timestamp > TOKEN_REFRESH_AGE
+            and dt_util.naive_now() - self.token_timestamp > TOKEN_REFRESH_AGE
         ):
             self.refresh_access_token()
 
