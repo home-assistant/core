@@ -105,7 +105,8 @@ async def async_setup_entry(  # noqa: C901
         async_create_issue(
             hass,
             DOMAIN,
-            "invalid_server_version",
+            f"invalid_server_version_{entry.entry_id}",
+            config_entry_id=entry.entry_id,
             is_fixable=False,
             severity=IssueSeverity.ERROR,
             translation_key="invalid_server_version",
@@ -135,7 +136,7 @@ async def async_setup_entry(  # noqa: C901
             f"Unknown error connecting to the Music Assistant server {mass_url}"
         ) from err
 
-    async_delete_issue(hass, DOMAIN, "invalid_server_version")
+    async_delete_issue(hass, DOMAIN, f"invalid_server_version_{entry.entry_id}")
 
     async def on_hass_stop(event: Event) -> None:
         """Handle incoming stop event from Home Assistant."""

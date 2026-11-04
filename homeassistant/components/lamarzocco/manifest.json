@@ -27,6 +27,7 @@
   "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
+  "connectivity": ["bluetooth", "cloud"],
   "dependencies": ["bluetooth_adapters"],
   "dhcp": [
     {

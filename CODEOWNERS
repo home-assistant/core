@@ -26,7 +26,7 @@ requirements_test.txt @home-assistant/core
 /homeassistant/util/ @home-assistant/core
 /packages/hassfest/ @home-assistant/core
 /packages/pylint-home-assistant/ @home-assistant/core
-/packages/pytest-home-assistant/ @home-assistant/core
+/packages/pytest-homeassistant/ @home-assistant/core
 /script/ @home-assistant/core
 
 # Home Assistant Supervisor
@@ -374,6 +374,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/cover/ @home-assistant/core
 /homeassistant/components/cpuspeed/ @fabaff
 /tests/components/cpuspeed/ @fabaff
+/homeassistant/components/croma_infrared/ @Dr-Blank
+/tests/components/croma_infrared/ @Dr-Blank
 /homeassistant/components/crownstone/ @Crownstone @RicArch97
 /tests/components/crownstone/ @Crownstone @RicArch97
 /homeassistant/components/cync/ @Kinachi249
@@ -1830,8 +1832,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/smtp/ @tr4nt0r
 /homeassistant/components/snapcast/ @luar123
 /tests/components/snapcast/ @luar123
-/homeassistant/components/snmp/ @nmaggioni
-/tests/components/snmp/ @nmaggioni
 /homeassistant/components/snoo/ @Lash-L
 /tests/components/snoo/ @Lash-L
 /homeassistant/components/snooz/ @AustinBrunkhorst
