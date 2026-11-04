@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock
 from aiopnsense import OPNsenseConnectionError, OPNsensePrivilegeMissing
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.opnsense.const import (
     DOMAIN,
@@ -22,9 +24,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(
@@ -664,6 +663,7 @@ async def test_firmware_privilege_missing_keeps_tracker_and_recovers(
     mock_opnsense_client: AsyncMock,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Firmware permission errors do not block trackers and clear after recovery."""
     issue_id = get_firmware_privilege_issue_id(mock_config_entry.entry_id)
@@ -691,7 +691,9 @@ async def test_firmware_privilege_missing_keeps_tracker_and_recovers(
     mock_opnsense_client.get_firmware_update_info.return_value = {
         "product": {"product_version": "25.7.8", "product_latest": "25.7.8"}
     }
-    await mock_config_entry.runtime_data.update_coordinator.async_request_refresh()
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
