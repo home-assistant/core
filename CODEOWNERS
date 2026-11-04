@@ -26,7 +26,7 @@ requirements_test.txt @home-assistant/core
 /homeassistant/util/ @home-assistant/core
 /packages/hassfest/ @home-assistant/core
 /packages/pylint-home-assistant/ @home-assistant/core
-/packages/pytest-home-assistant/ @home-assistant/core
+/packages/pytest-homeassistant/ @home-assistant/core
 /script/ @home-assistant/core
 
 # Home Assistant Supervisor
@@ -374,6 +374,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/cover/ @home-assistant/core
 /homeassistant/components/cpuspeed/ @fabaff
 /tests/components/cpuspeed/ @fabaff
+/homeassistant/components/croma_infrared/ @Dr-Blank
+/tests/components/croma_infrared/ @Dr-Blank
 /homeassistant/components/crownstone/ @Crownstone @RicArch97
 /tests/components/crownstone/ @Crownstone @RicArch97
 /homeassistant/components/cync/ @Kinachi249
@@ -2263,8 +2265,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/yandex_transport/ @rishatik92 @devbis
 /homeassistant/components/yardian/ @aeon-matrix
 /tests/components/yardian/ @aeon-matrix
-/homeassistant/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
-/tests/components/yeelight/ @zewelor @shenxn @starkillerOG @alexyao2015
+/homeassistant/components/yeelight/ @shenxn @starkillerOG @alexyao2015
+/tests/components/yeelight/ @shenxn @starkillerOG @alexyao2015
 /homeassistant/components/yeelightsunflower/ @lindsaymarkward
 /homeassistant/components/yi/ @bachya
 /homeassistant/components/yolink/ @matrixd2

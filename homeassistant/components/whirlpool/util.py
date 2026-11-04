@@ -13,7 +13,7 @@ from homeassistant.helpers.issue_registry import (
 from .const import DOMAIN
 
 # Version in which deprecated entities will be removed.
-DEPRECATED_REMOVAL_VERSION = "2026.12.0"
+DEPRECATED_REMOVAL_VERSION = "2027.2.0"
 
 
 def deprecate_entity(

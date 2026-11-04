@@ -83,6 +83,39 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="auth", data_schema=probatio.Schema(fields), errors=errors
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle changing the host of a paired gateway."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                info = await get_gateway_info(
+                    self.hass,
+                    user_input[CONF_HOST],
+                    entry.data[CONF_IDENTITY],
+                    entry.data[CONF_KEY],
+                )
+            except AuthError as err:
+                errors["base"] = err.code
+            else:
+                if info[CONF_GATEWAY_ID] != entry.data[CONF_GATEWAY_ID]:
+                    return self.async_abort(reason="wrong_gateway")
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_HOST: user_input[CONF_HOST]}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or entry.data,
+            ),
+            errors=errors,
+        )
+
     @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo

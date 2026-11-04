@@ -5,12 +5,13 @@
   "categories": ["security_safety.doorbells_intercoms"],
   "codeowners": ["@oblogic7", "@bdraco", "@flacjacket"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["http", "repairs"],
   "documentation": "https://www.home-assistant.io/integrations/doorbird",
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["doorbirdpy"],
-  "requirements": ["DoorBirdPy==3.0.12"],
+  "requirements": ["DoorBirdPy==3.0.13"],
   "zeroconf": [
     {
       "properties": {

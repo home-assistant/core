@@ -73,7 +73,7 @@ dependencies = [
   "PyYAML==6.0.3",
   "requests==2.34.2",
   "securetar==2026.10.0",
-  "SQLAlchemy==2.0.54",
+  "SQLAlchemy==2.1.6",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   # truststore.SSLContext is replaced in homeassistant/__init__.py
@@ -85,7 +85,7 @@ dependencies = [
   "probatio==0.13.0",
   "yarl==1.25.1",
   "webrtc-models==0.3.0",
-  "zeroconf==0.151.5",
+  "zeroconf==0.152.0",
 ]
 
 [project.urls]
@@ -415,7 +415,7 @@ per-file-ignores = [
   # use-implicit-booleaness-not-comparison: Tests need to validate that a list
   # or a dict is returned
   "tests/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
-  "packages/pytest-home-assistant/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
+  "packages/pytest-homeassistant/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
 ]
 
 [tool.pylint.REPORTS]

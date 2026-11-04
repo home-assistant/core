@@ -88,7 +88,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self.username:
             # If we have a username, use it as flow title
-            self.context["title_placeholders"] = {CONF_USERNAME: self.username}
+            self.context["title_placeholders"] = {"username": self.username}
 
         return await self.async_step_reauth_confirm()
 

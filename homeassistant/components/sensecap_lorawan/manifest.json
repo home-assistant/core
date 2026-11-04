@@ -4,6 +4,7 @@
   "categories": ["sensors"],
   "codeowners": ["@balloob"],
   "config_flow": true,
+  "connectivity": ["lorawan"],
   "dependencies": ["lorawan"],
   "documentation": "https://www.home-assistant.io/integrations/sensecap_lorawan",
   "integration_type": "hub",

@@ -34,7 +34,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
     system_state,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -66,11 +65,12 @@ from .const import (
     ATTR_UPDATE_KEY,
     ATTR_WS_EVENT,
     DATA_AUTO_UPDATE,
-    DATA_COMPONENT,
-    DATA_HASSIO_HOST,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     ENTRY_DATA_USER,
+    ENV_SUPERVISOR,
+    ENV_SUPERVISOR_SOCKET,
+    ENV_SUPERVISOR_TOKEN,
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
@@ -107,10 +107,11 @@ from .coordinator import (
 from .discovery import async_setup_discovery_view
 from .exceptions import HassioNotReadyError
 from .handler import (
-    HassIO,
     HassioAPIError,
     async_update_diagnostics,
     get_supervisor_client,
+    get_supervisor_connection,
+    get_supervisor_passthrough_client,
 )
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
@@ -341,26 +342,26 @@ def _check_deprecated_setup(hass: HomeAssistant) -> None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hass.io component."""
-    # Check local setup
-    for env in ("SUPERVISOR", "SUPERVISOR_TOKEN"):
-        if os.environ.get(env):
-            continue
-        _LOGGER.error("Missing %s environment variable", env)
+    missing_env: str | None = None
+    if not os.environ.get(ENV_SUPERVISOR):
+        missing_env = ENV_SUPERVISOR
+    elif not os.environ.get(ENV_SUPERVISOR_SOCKET) and not os.environ.get(
+        ENV_SUPERVISOR_TOKEN
+    ):
+        missing_env = f"{ENV_SUPERVISOR_SOCKET} or {ENV_SUPERVISOR_TOKEN}"
+    if missing_env:
+        _LOGGER.error("Missing %s environment variable", missing_env)
         if config_entries := hass.config_entries.async_entries(DOMAIN):
             hass.async_create_task(
                 hass.config_entries.async_remove(config_entries[0].entry_id)
             )
         return False
 
-    host = os.environ["SUPERVISOR"]
-    websession = async_get_clientsession(hass)
-    hassio = hass.data[DATA_COMPONENT] = HassIO(hass.loop, websession, host)
-    hass.data[DATA_HASSIO_HOST] = host
-
     async def _async_read_core_log() -> list[str]:
         """Return the end of the log of Home Assistant since it started."""
+        supervisor = get_supervisor_passthrough_client(hass)
         try:
-            text: str = await hassio.send_command(
+            text: str = await supervisor.send_command(
                 "/core/logs/latest",
                 method="get",
                 return_text=True,
@@ -389,7 +390,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     async_load_websocket_api(hass)
-    hass.http.register_view(HassIOView(host, websession))
+    hass.http.register_view(HassIOView(get_supervisor_connection(hass)))
     async_setup_services(hass)
     async_setup_discovery_view(hass)
     async_setup_auth_view(hass)
