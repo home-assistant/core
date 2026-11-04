@@ -91,6 +91,14 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         if self._cond_func:
             self._cond_func.async_unload()
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update the entity_id tracked by the coordinator."""
+        super().async_entity_id_changed(old_entity_id)
+        self.coordinator.entity_ids.discard(old_entity_id)
+        self.coordinator.entity_ids.add(self.entity_id)
+
     @override
     def _set_unique_id(self, unique_id: str | None) -> None:
         """Set unique id."""

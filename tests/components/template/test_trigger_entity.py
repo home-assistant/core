@@ -20,7 +20,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import condition, config_validation as cv, template
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    entity_registry as er,
+    template,
+)
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
@@ -303,7 +308,13 @@ async def test_trigger_variables(
     assert "Error rendering trigger variables" not in caplog.text
 
 
-@pytest.mark.parametrize("actions", [{}, {"actions": [{"action": "test.automation"}]}])
+@pytest.mark.parametrize(
+    "actions",
+    [
+        pytest.param({}, id="without_actions"),
+        pytest.param({"actions": [{"action": "test.automation"}]}, id="with_actions"),
+    ],
+)
 async def test_variables_error_logs_entities(
     hass: HomeAssistant,
     calls: list[ServiceCall],
@@ -336,6 +347,35 @@ async def test_variables_error_logs_entities(
         "TypeError: can't multiply sequence by non-int of type 'float'"
     ) in caplog.text
     assert hass.states.get("sensor.test").state == STATE_UNKNOWN
+
+
+async def test_variables_error_logs_entities_after_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test variables errors are logged with the changed entity_id."""
+    with assert_setup_component(1, DOMAIN):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "template": {
+                    "variables": {"a": "{{ 'x' * 1.5 }}"},
+                    "triggers": {"trigger": "event", "event_type": "my_event"},
+                    "sensor": {"unique_id": "test", "name": "test", "state": "{{ a }}"},
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity("sensor.test", new_entity_id="sensor.renamed")
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+
+    assert "Error rendering variables for sensor.renamed: " in caplog.text
 
 
 async def test_trigger_variables_passed_to_entity_actions(
