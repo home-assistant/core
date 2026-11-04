@@ -341,8 +341,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
             entry.data,
             entry.options,
         )
-        location_changed = entry.data[CONF_URL] != self._config_location
-        self._config_location = self.location = entry.data[CONF_URL]
+        new_location: str = entry.data[CONF_URL]
+        location_changed = new_location != self._config_location
+        self._config_location = self.location = new_location
         self.poll_availability = entry.options.get(CONF_POLL_AVAILABILITY, False)
         self.browse_unfiltered = entry.options.get(CONF_BROWSE_UNFILTERED, False)
 
@@ -368,7 +369,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
             port=new_port, callback_url=new_callback_url
         )
         try:
-            await self._device_connect(self.location)
+            # An in-flight connect may have reset self.location while disconnecting
+            await self._device_connect(new_location)
         except UpnpError as err:
             _LOGGER.warning("Couldn't (re)connect after config change: %r", err)
 

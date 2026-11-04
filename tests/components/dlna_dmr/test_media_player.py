@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
-from unittest.mock import ANY, DEFAULT, Mock, patch
+from unittest.mock import ANY, DEFAULT, Mock, call, patch
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.exceptions import (
@@ -2245,6 +2245,58 @@ async def test_config_update_location(
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
     assert mock_state.state == MediaPlayerState.IDLE
+
+
+async def test_config_update_location_during_connect(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    ssdp_scanner_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    mock_disconnected_entity_id: str,
+) -> None:
+    """Test a URL change reconnects to the new URL despite an in-flight connect."""
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+
+    connect_started = asyncio.Event()
+    release_connect = asyncio.Event()
+
+    async def create_device_paused(location: str) -> Any:
+        if location == MOCK_DEVICE_LOCATION:
+            connect_started.set()
+            await release_connect.wait()
+        return DEFAULT
+
+    domain_data_mock.upnp_factory.async_create_device.side_effect = create_device_paused
+
+    # Start a connection to the old URL and pause it inside the device lock
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
+    connect_task = hass.async_create_task(
+        ssdp_callback(
+            SsdpServiceInfo(
+                ssdp_usn=MOCK_DEVICE_USN,
+                ssdp_location=MOCK_DEVICE_LOCATION,
+                ssdp_st=MOCK_DEVICE_TYPE,
+                upnp={},
+            ),
+            ssdp.SsdpChange.ALIVE,
+        )
+    )
+    await connect_started.wait()
+
+    hass.config_entries.async_update_entry(
+        config_entry_mock,
+        data={**config_entry_mock.data, CONF_URL: NEW_DEVICE_LOCATION},
+    )
+    await asyncio.sleep(0)
+
+    release_connect.set()
+    await connect_task
+    await hass.async_block_till_done()
+
+    assert domain_data_mock.upnp_factory.async_create_device.await_args_list == [
+        call(MOCK_DEVICE_LOCATION),
+        call(NEW_DEVICE_LOCATION),
+    ]
 
 
 async def test_config_update_connect_failure(
