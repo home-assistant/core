@@ -126,7 +126,7 @@ async def test_transient_auth_failure(
 
     # The grace period restarts after a successful update
     mock_tedee.sync.side_effect = TedeeLocalAuthException("")
-    freezer.tick(timedelta(minutes=9))
+    freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
