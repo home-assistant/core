@@ -29,7 +29,7 @@ EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED: EventType[EventIssueRegistryUpdatedData] =
 )
 STORAGE_KEY = "repairs.issue_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 
 # Issues that are handled entirely by the frontend and don't need
 # a description or fix_flow.
@@ -62,6 +62,7 @@ class IssueEntry:
     active: bool
     breaks_in_ha_version: str | None
     config_entry_id: str | None
+    config_subentry_id: str | None
     created: datetime
     data: dict[str, str | int | float | None] | None
     dismissed_version: str | None
@@ -80,6 +81,7 @@ class IssueEntry:
         """Return a JSON serializable representation for storage."""
         result = {
             "config_entry_id": self.config_entry_id,
+            "config_subentry_id": self.config_subentry_id,
             "created": self.created.isoformat(),
             "dismissed_version": self.dismissed_version,
             "domain": self.domain,
@@ -119,6 +121,10 @@ class IssueRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
             # Version 1.3 adds config_entry_id
             for issue in old_data["issues"]:
                 issue["config_entry_id"] = None
+        if old_major_version == 1 and old_minor_version < 4:
+            # Version 1.4 adds config_subentry_id
+            for issue in old_data["issues"]:
+                issue["config_subentry_id"] = None
         return old_data
 
 
@@ -271,6 +277,7 @@ class IssueRegistry(BaseRegistry):
         *,
         breaks_in_ha_version: str | None = None,
         config_entry_id: str | None = None,
+        config_subentry_id: str | None = None,
         data: dict[str, str | int | float | None] | None = None,
         is_fixable: bool,
         is_persistent: bool,
@@ -281,12 +288,24 @@ class IssueRegistry(BaseRegistry):
         translation_placeholders: dict[str, str] | None = None,
     ) -> IssueEntry:
         """Get issue. Create if it doesn't exist."""
-        if (
-            config_entry_id is not None
-            and self.hass.config_entries.async_get_entry(config_entry_id) is None
-        ):
+        if config_entry_id is not None:
+            entry = self.hass.config_entries.async_get_entry(config_entry_id)
+            if entry is None:
+                raise HomeAssistantError(
+                    f"Can't link issue to unknown config entry {config_entry_id}"
+                )
+            if (
+                config_subentry_id is not None
+                and config_subentry_id not in entry.subentries
+            ):
+                raise HomeAssistantError(
+                    f"Can't link issue to unknown config subentry {config_subentry_id}"
+                    f" of config entry {config_entry_id}"
+                )
+        elif config_subentry_id is not None:
             raise HomeAssistantError(
-                f"Can't link issue to unknown config entry {config_entry_id}"
+                f"Can't link issue to config subentry {config_subentry_id}"
+                " without a config entry"
             )
         self._async_touch((domain, issue_id))
         if (issue := self.async_get_issue(domain, issue_id)) is None:
@@ -294,6 +313,7 @@ class IssueRegistry(BaseRegistry):
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
                 config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
                 created=dt_util.utcnow(),
                 data=data,
                 dismissed_version=None,
@@ -323,6 +343,7 @@ class IssueRegistry(BaseRegistry):
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
                 config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
                 data=data,
                 is_fixable=is_fixable,
                 is_persistent=is_persistent,
@@ -396,6 +417,19 @@ class IssueRegistry(BaseRegistry):
             key
             for key, issue in self.issues.items()
             if issue.config_entry_id == config_entry_id
+        ]:
+            self.async_delete(domain, issue_id)
+
+    @callback
+    def async_clear_config_subentry(
+        self, config_entry_id: str, config_subentry_id: str
+    ) -> None:
+        """Delete issues linked to a config subentry."""
+        for domain, issue_id in [
+            key
+            for key, issue in self.issues.items()
+            if issue.config_entry_id == config_entry_id
+            and issue.config_subentry_id == config_subentry_id
         ]:
             self.async_delete(domain, issue_id)
 
@@ -511,6 +545,7 @@ class IssueRegistry(BaseRegistry):
                         active=True,
                         breaks_in_ha_version=issue["breaks_in_ha_version"],
                         config_entry_id=issue["config_entry_id"],
+                        config_subentry_id=issue["config_subentry_id"],
                         created=created,
                         data=issue["data"],
                         dismissed_version=issue["dismissed_version"],
@@ -529,6 +564,7 @@ class IssueRegistry(BaseRegistry):
                         active=False,
                         breaks_in_ha_version=None,
                         config_entry_id=issue["config_entry_id"],
+                        config_subentry_id=issue["config_subentry_id"],
                         created=created,
                         data=None,
                         dismissed_version=issue["dismissed_version"],
@@ -554,10 +590,22 @@ class IssueRegistry(BaseRegistry):
         for domain, issue_id in [
             key
             for key, issue in self.issues.items()
-            if issue.config_entry_id is not None
-            and self.hass.config_entries.async_get_entry(issue.config_entry_id) is None
+            if self._async_links_unknown_entry(issue)
         ]:
             self.async_delete(domain, issue_id)
+
+    @callback
+    def _async_links_unknown_entry(self, issue: IssueEntry) -> bool:
+        """Return if an issue is linked to a config (sub)entry which doesn't exist."""
+        if issue.config_entry_id is None:
+            return False
+        entry = self.hass.config_entries.async_get_entry(issue.config_entry_id)
+        if entry is None:
+            return True
+        return (
+            issue.config_subentry_id is not None
+            and issue.config_subentry_id not in entry.subentries
+        )
 
     @callback
     @override
@@ -598,6 +646,7 @@ def async_create_issue(
     *,
     breaks_in_ha_version: str | None = None,
     config_entry_id: str | None = None,
+    config_subentry_id: str | None = None,
     data: dict[str, str | int | float | None] | None = None,
     is_fixable: bool,
     is_persistent: bool = False,
@@ -621,6 +670,7 @@ def async_create_issue(
         issue_id,
         breaks_in_ha_version=breaks_in_ha_version,
         config_entry_id=config_entry_id,
+        config_subentry_id=config_subentry_id,
         data=data,
         is_fixable=is_fixable,
         is_persistent=is_persistent,
@@ -639,6 +689,7 @@ def create_issue(
     *,
     breaks_in_ha_version: str | None = None,
     config_entry_id: str | None = None,
+    config_subentry_id: str | None = None,
     data: dict[str, str | int | float | None] | None = None,
     is_fixable: bool,
     is_persistent: bool = False,
@@ -658,6 +709,7 @@ def create_issue(
             issue_id,
             breaks_in_ha_version=breaks_in_ha_version,
             config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
             data=data,
             is_fixable=is_fixable,
             is_persistent=is_persistent,
