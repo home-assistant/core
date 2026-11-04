@@ -21,6 +21,7 @@ from spotifyaio import (
     RepeatMode as SpotifyRepeatMode,
     SpotifyConnectionError,
     SpotifyNotFoundError,
+    SpotifyRateLimitError,
 )
 from spotifyaio.models import Devices, ProductType
 from syrupy.assertion import SnapshotAssertion
@@ -256,6 +257,7 @@ async def test_normal_playlist(
     "error",
     [
         pytest.param(SpotifyConnectionError(), id="connection"),
+        pytest.param(SpotifyRateLimitError(), id="rate-limit"),
         pytest.param(MissingField("name", str, Playlist), id="missing-playlist-name"),
     ],
 )
@@ -264,7 +266,7 @@ async def test_fetching_playlist_does_not_fail(
     mock_spotify: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    error: SpotifyConnectionError | MissingField,
+    error: SpotifyConnectionError | SpotifyRateLimitError | MissingField,
 ) -> None:
     """Test failing fetching playlist does not fail update."""
     mock_spotify.return_value.get_playlist.side_effect = error
