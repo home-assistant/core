@@ -122,12 +122,25 @@ async def test_unload_when_disconnected(
     mock_config_entry: MockConfigEntry,
     mock_thermostat: MagicMock,
 ) -> None:
-    """Test unloading succeeds when the thermostat has already disconnected."""
+    """Test unloading succeeds and stops the worker when already disconnected."""
+    polling = asyncio.Event()
+    worker_cancelled = asyncio.Event()
+
+    async def get_status() -> None:
+        polling.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            worker_cancelled.set()
+            raise
+
+    mock_thermostat.async_get_status.side_effect = get_status
     mock_thermostat.async_disconnect.side_effect = Eq3StateException("Not connected")
 
-    with patch("homeassistant.components.eq3btsmart._async_run_thermostat"):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    async with asyncio.timeout(1):
+        await polling.wait()
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert worker_cancelled.is_set()
