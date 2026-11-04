@@ -1,11 +1,11 @@
 ---
 name: quality-scale-reviewer
-run-name: "quality-scale-reviewer: ${{ github.event.workflow_run.display_title || format('PR #{0}', inputs.pull_request_number) }}"
+run-name: "quality-scale-reviewer: ${{ inputs.title || format('PR #{0}', inputs.pull_request_number) }}"
 description: >
   Reviews pull requests that touch an integration against the Integration
   Quality Scale rules the integration declares as `done` or `exempt` in its
-  `quality_scale.yaml`. Triggered by completion of the trigger workflow, which
-  runs on pull request events. The `prepare` job resolves the pull request,
+  `quality_scale.yaml`. Dispatched by the agentic workflow relay when the
+  trigger workflow, which runs on pull request events, succeeds. The `prepare` job resolves the pull request,
   collects its metadata and diff, the touched domains, and the rules index and
   documentation, and hands them to the agent as an artifact. Selects the rules
   to check from the rules index, the PR diff, and `quality_scale.yaml`, then
@@ -19,18 +19,25 @@ intent: >
   satisfy receive an inline review comment naming the rule on the offending
   changed line before a human reviews them.
 on:
-  workflow_run:
-    workflows: ["Quality scale reviewer (trigger)"]
-    types: [completed]
+  # The relay dispatches with `run_id`; maintainers dispatch with `pull_request_number`.
+  # gh-aw requires workflow_run triggers to be scoped to trusted branches, which
+  # pull request head branches cannot satisfy.
   workflow_dispatch:
     inputs:
       pull_request_number:
         description: "Pull request number to (re-)review"
-        required: true
+        required: false
         type: number
-  # The default roles [admin, maintainer, write] would not allow this to run for
-  # outside contributors. The only write is the safe-output review comment, so it
-  # is safe to allow "all".
+      run_id:
+        description: "Run ID of the successful Quality scale reviewer (trigger) run"
+        required: false
+        type: number
+      title:
+        description: "Run name suffix, set by the relay"
+        required: false
+        type: string
+  # Relay dispatches run as github-actions[bot], and dispatching already requires
+  # write access. The only write is the safe-output review comment.
   roles: all
 permissions:
   contents: read
@@ -72,19 +79,19 @@ safe-outputs:
     hide-older-comments: true
   needs:
     - prepare
-  # The conclusion job comments on the pull request when the credit budget skips a run.
+  # The credit-budget-notice job comments on the pull request when the budget skips a run.
   report-failure-as-issue: ["!daily_ai_credits_exceeded"]
 jobs:
   prepare:
-    # Resolves the pull request from `workflow_run.head_sha` (or the dispatch
-    # input), runs the collection script on the trusted checkout, and hands the
+    # Resolves the pull request from the trigger run's head SHA (or the
+    # `pull_request_number` input), runs the collection script on the trusted checkout, and hands the
     # results to the agent job as an artifact. `skip` is true when no single
     # open, non-draft pull request matches, or when the pull request is too
     # long or touches no integration with a quality scale, which skips the
     # (token-spending) agent.
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
+      actions: read # To resolve the trigger run
       contents: read
       pull-requests: write # To comment on PRs that are too long to review
     outputs:
@@ -92,25 +99,29 @@ jobs:
       pr_number: ${{ steps.prepare.outputs.pr_number }}
       head_sha: ${{ steps.prepare.outputs.head_sha }}
     steps:
-      - name: Check out the default branch
+      - name: Check out the dispatched branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || github.event.repository.default_branch }}
           persist-credentials: false
       - name: Resolve the pull request
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          EVENT_NAME: ${{ github.event_name }}
           INPUT_PR_NUMBER: ${{ inputs.pull_request_number }}
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-          HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+          RUN_ID: ${{ inputs.run_id }}
         run: |
           set -euo pipefail
-          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+          if [ -n "${INPUT_PR_NUMBER}" ]; then
             echo "pr_number=${INPUT_PR_NUMBER}" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
+          if [ -z "${RUN_ID}" ]; then
+            echo "::error::Set either pull_request_number or run_id"
+            exit 1
+          fi
+          RUN=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}")
+          HEAD_SHA=$(jq -r '.head_sha' <<< "${RUN}")
+          HEAD_REPO=$(jq -r '.head_repository.full_name' <<< "${RUN}")
           MATCHES=$(gh api "repos/${HEAD_REPO}/commits/${HEAD_SHA}/pulls" \
             | jq -c --arg sha "${HEAD_SHA}" --arg repo "${HEAD_REPO}" --arg base "${GITHUB_REPOSITORY}" \
               '[.[] | select(.state == "open" and .base.repo.full_name == $base and .head.sha == $sha and .head.repo.full_name == $repo and .draft == false) | .number]')
@@ -123,7 +134,7 @@ jobs:
           echo "pr_number=$(jq '.[0]' <<< "${MATCHES}")" >> "${GITHUB_OUTPUT}"
       - name: Set up Python
         if: steps.pr.outputs.skip != 'true'
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version-file: ".python-version"
           check-latest: true
@@ -181,19 +192,22 @@ jobs:
           ⏭️ The automated Integration Quality Scale review was skipped: this pull request ${SKIP_REASON}."
       - name: Upload deterministic artifact
         if: steps.prepare.outputs.skip != 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: quality-scale-reviewer-deterministic
           path: deterministic
           if-no-files-found: error
           retention-days: 7
   # The activation job evaluates the daily AI-credit budget but may not write,
-  # so the notice is posted from the conclusion job, which runs when the budget
-  # is exceeded and the agent is skipped.
-  conclusion:
-    pre-steps:
+  # so the notice is posted from a separate job when the budget skips the agent.
+  credit-budget-notice:
+    needs: [activation, prepare]
+    if: needs.activation.outputs.daily_ai_credits_exceeded == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
       - name: Comment that the review was skipped by the daily AI-credit budget
-        if: needs.activation.outputs.daily_ai_credits_exceeded == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
@@ -210,12 +224,12 @@ jobs:
 
           ⏭️ The automated Integration Quality Scale review was skipped: the workflow's daily AI-credit budget is used up."
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.workflow_run.id || inputs.pull_request_number }}
+  group: ${{ github.workflow }}-${{ inputs.run_id || inputs.pull_request_number }}
   cancel-in-progress: true
   job-discriminator: ${{ github.run_id }}
 steps:
   - name: Download deterministic artifact
-    uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+    uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
     with:
       name: quality-scale-reviewer-deterministic
       path: /tmp/gh-aw/agent
