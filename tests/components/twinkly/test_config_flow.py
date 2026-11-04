@@ -11,6 +11,7 @@ from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntrySt
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import TEST_MAC, TEST_MODEL, TEST_NAME
@@ -286,10 +287,11 @@ LEGACY_DEVICE_ID = "00000000-0000-0000-0000-000000000000"
 
 
 @pytest.mark.parametrize(
-    ("device_id", "reason", "state", "unique_id", "host"),
+    ("identifier", "connections", "reason", "state", "unique_id", "host"),
     [
         pytest.param(
             LEGACY_DEVICE_ID,
+            {(dr.CONNECTION_NETWORK_MAC, TEST_MAC)},
             "reconfigure_successful",
             ConfigEntryState.LOADED,
             TEST_MAC,
@@ -297,19 +299,40 @@ LEGACY_DEVICE_ID = "00000000-0000-0000-0000-000000000000"
             id="same_device",
         ),
         pytest.param(
-            "11111111-1111-1111-1111-111111111111",
+            LEGACY_DEVICE_ID,
+            {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")},
             "unique_id_mismatch",
             ConfigEntryState.SETUP_RETRY,
-            "11111111-1111-1111-1111-111111111111",
+            LEGACY_DEVICE_ID,
             "192.168.0.123",
-            id="other_device",
+            id="other_device_same_uuid",
+        ),
+        pytest.param(
+            LEGACY_DEVICE_ID,
+            set(),
+            "unique_id_mismatch",
+            ConfigEntryState.SETUP_RETRY,
+            LEGACY_DEVICE_ID,
+            "192.168.0.123",
+            id="no_registered_mac",
+        ),
+        pytest.param(
+            "11111111-1111-1111-1111-111111111111",
+            {(dr.CONNECTION_NETWORK_MAC, TEST_MAC)},
+            "unique_id_mismatch",
+            ConfigEntryState.SETUP_RETRY,
+            LEGACY_DEVICE_ID,
+            "192.168.0.123",
+            id="no_registered_device",
         ),
     ],
 )
 async def test_reconfigure_flow_before_mac_migration(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_twinkly_client: AsyncMock,
-    device_id: str,
+    identifier: str,
+    connections: set[tuple[str, str]],
     reason: str,
     state: ConfigEntryState,
     unique_id: str,
@@ -321,21 +344,27 @@ async def test_reconfigure_flow_before_mac_migration(
     entry = MockConfigEntry(
         domain=DOMAIN,
         minor_version=1,
-        unique_id=device_id,
+        unique_id=LEGACY_DEVICE_ID,
         data={
             CONF_HOST: "192.168.0.123",
-            CONF_ID: device_id,
+            CONF_ID: LEGACY_DEVICE_ID,
             CONF_NAME: TEST_NAME,
             CONF_MODEL: TEST_MODEL,
         },
     )
     entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, identifier)},
+        connections=connections,
+    )
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
     result = await entry.start_reconfigure_flow(hass)
 
+    # The fixture reports the same legacy UUID, only the MAC tells devices apart
     mock_twinkly_client.get_details.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

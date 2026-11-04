@@ -1,14 +1,15 @@
 """Config flow to configure the Twinkly integration."""
 
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError
 from probatio import Required, Schema
 from ttls.client import Twinkly
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -65,8 +66,11 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_HOST] = "cannot_connect"
             else:
                 if reconfigure_entry.minor_version == 1:
-                    # The MAC migration has not run yet, keep the legacy unique ID
-                    if device_info[DEV_ID] != reconfigure_entry.data[CONF_ID]:
+                    # The MAC migration has not run yet, so the unique ID is the
+                    # device UUID, which is not unique across devices
+                    if self._get_registered_mac(reconfigure_entry) != (
+                        dr.format_mac(device_info["mac"])
+                    ):
                         return self.async_abort(reason="unique_id_mismatch")
                 else:
                     await self.async_set_unique_id(device_info["mac"])
@@ -82,6 +86,25 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input or reconfigure_entry.data,
             ),
             errors=errors,
+        )
+
+    def _get_registered_mac(self, entry: ConfigEntry) -> str | None:
+        """Return the MAC address stored in the device registry for the entry."""
+        if TYPE_CHECKING:
+            assert entry.unique_id is not None
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, entry.unique_id), entry.entry_id
+        )
+        if device is None:
+            return None
+        return next(
+            (
+                value
+                for connection_type, value in device.connections
+                if connection_type == dr.CONNECTION_NETWORK_MAC
+            ),
+            None,
         )
 
     async def _async_get_device_info(self, host: str) -> dict[str, Any] | None:
