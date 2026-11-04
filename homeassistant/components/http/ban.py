@@ -144,6 +144,8 @@ async def process_wrong_login(request: Request, access_method: AccessMethod) -> 
             )
 
     if access_method is AccessMethod.LOGIN:
+        base_msg = f"Failed login attempt (incorrect MFA code) from {remote_host} ({remote_addr})."
+
         try:
             form_data = await request.json()
             if isinstance(form_data, dict) and isinstance(
