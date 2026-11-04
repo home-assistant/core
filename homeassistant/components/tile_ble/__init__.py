@@ -1,5 +1,7 @@
 """The Tile BLE integration."""
 
+from typing import TYPE_CHECKING
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -10,7 +12,8 @@ PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: TileBleConfigEntry) -> None:
     """Set up Tile BLE from a config entry."""
-    assert entry.unique_id is not None
+    if TYPE_CHECKING:
+        assert entry.unique_id is not None
     coordinator = TileBleCoordinator(hass, entry.unique_id)
     entry.runtime_data = coordinator
 

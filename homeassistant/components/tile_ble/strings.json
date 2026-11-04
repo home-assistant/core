@@ -8,10 +8,20 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "wrong_tile": "This is not the Tile you picked over Bluetooth. Pick another Tile."
+      "unknown_tile": "This Tile is not in your Tile account. Pick another Tile.",
+      "wrong_tile": "The Tile did not accept the key from your Tile account. Pick another Tile."
     },
     "step": {
-      "account": {
+      "device": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "Your Tiles are listed by name. A Tile listed by its address could not be matched to your account; Home Assistant connects to it to find out which Tile it is."
+        },
+        "description": "Pick the Tile you want to set up."
+      },
+      "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::email%]"
@@ -20,25 +30,7 @@
           "password": "The password of your Tile account.",
           "username": "The email address of your Tile account."
         },
-        "description": "Log in to your Tile account to get the key Home Assistant needs to ring your Tile. Only the key is stored, not your credentials."
-      },
-      "tile": {
-        "data": {
-          "tile": "Tile"
-        },
-        "data_description": {
-          "tile": "The Tile in your account that you picked over Bluetooth."
-        },
-        "description": "Pick which of your Tiles you are setting up."
-      },
-      "user": {
-        "data": {
-          "address": "[%key:common::config_flow::data::device%]"
-        },
-        "data_description": {
-          "address": "The Tile you want to set up. Tiles with the strongest signal are listed first."
-        },
-        "description": "Hold your Tile close to a Bluetooth adapter or proxy so it appears at the top of the list."
+        "description": "Log in to your Tile account to get the names of your Tiles and the keys needed to ring them. Only the key of the Tile you set up is stored, not your credentials."
       }
     }
   },

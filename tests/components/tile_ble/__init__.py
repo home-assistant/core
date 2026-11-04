@@ -8,6 +8,10 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 TILE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 AUTH_KEY = "AAECAwQFBgcICQoLDA0ODw=="
 OTHER_AUTH_KEY = "EBESExQVFhcYGRobHB0eHw=="
+
+# Wallet's address is derived from its Tile ID; Keys' address is not.
+WALLET_TILE_ID = "aabbccddeeff0102"
+KEYS_TILE_ID = "5176d2dffdbca32a"
 TILE_SERVICE_UUID = "0000feed-0000-1000-8000-00805f9b34fb"
 
 TILE_SERVICE_INFO = BluetoothServiceInfo(

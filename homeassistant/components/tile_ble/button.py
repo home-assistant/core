@@ -2,6 +2,8 @@
 
 from typing import override
 
+from tile_ble import TileBleDevice, TileBleError
+
 from homeassistant.components.bluetooth import (
     BluetoothReachabilityIntent,
     async_address_reachability_diagnostics,
@@ -15,7 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import CONF_AUTH_KEY, DOMAIN
 from .coordinator import TileBleConfigEntry, TileBleCoordinator
 from .entity import TileBleEntity
-from .toa import TileBleDevice, TileBleError
 
 # Ringing needs a Bluetooth connection, so ring one Tile at a time.
 PARALLEL_UPDATES = 1

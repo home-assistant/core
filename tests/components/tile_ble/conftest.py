@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tile_ble.const import CONF_AUTH_KEY, DOMAIN
 
-from . import AUTH_KEY, OTHER_AUTH_KEY, TILE_ADDRESS
+from . import AUTH_KEY, KEYS_TILE_ID, OTHER_AUTH_KEY, TILE_ADDRESS, WALLET_TILE_ID
 
 
 @pytest.fixture(autouse=True)
@@ -49,8 +49,8 @@ def mock_pytile() -> Generator[AsyncMock]:
     """Mock logging in to the Tile cloud."""
     client = AsyncMock()
     client.async_get_tiles.return_value = {
-        "19264d2dffdbca32": _mock_tile("19264d2dffdbca32", "Wallet", AUTH_KEY),
-        "5176d2dffdbca32a": _mock_tile("5176d2dffdbca32a", "Keys", OTHER_AUTH_KEY),
+        WALLET_TILE_ID: _mock_tile(WALLET_TILE_ID, "Wallet", AUTH_KEY),
+        KEYS_TILE_ID: _mock_tile(KEYS_TILE_ID, "Keys", OTHER_AUTH_KEY),
         "phone": _mock_tile("phone", "Phone", None),
     }
     with patch(
@@ -73,3 +73,13 @@ def mock_tile_ble_device() -> Generator[MagicMock]:
         ),
     ):
         yield mock_device
+
+
+@pytest.fixture
+def mock_read_tile_id() -> Generator[AsyncMock]:
+    """Mock reading the Tile ID of a Tile over Bluetooth."""
+    with patch(
+        "homeassistant.components.tile_ble.config_flow.async_read_tile_id",
+        return_value=KEYS_TILE_ID,
+    ) as mock_read:
+        yield mock_read
