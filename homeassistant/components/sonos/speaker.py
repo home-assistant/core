@@ -340,9 +340,10 @@ class SonosSpeaker:
         return self._share_link_plugin
 
     @property
-    def subscription_address(self) -> str:
+    def subscription_address(self) -> str | None:
         """Return the current subscription callback address."""
-        assert len(self._subscriptions) > 0
+        if not self._subscriptions:
+            return None
         addr, port = self._subscriptions[0].event_listener.address
         return ":".join([addr, str(port)])
 
