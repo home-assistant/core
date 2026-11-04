@@ -28,13 +28,23 @@ async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize(
+    ("display_name", "expected_name"),
+    [
+        pytest.param("Henk", "Henk", id="display_name"),
+        pytest.param(None, "1112264111", id="no_display_name"),
+    ],
+)
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_spotify: MagicMock,
+    display_name: str | None,
+    expected_name: str,
 ) -> None:
     """Check a full flow."""
+    mock_spotify.return_value.get_current_user.return_value.display_name = display_name
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -85,7 +95,8 @@ async def test_full_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     result["data"]["token"].pop("expires_at")
-    assert result["data"]["name"] == "Henk"
+    assert result["title"] == expected_name
+    assert result["data"]["name"] == expected_name
     assert result["data"]["token"] == {
         "refresh_token": "mock-refresh-token",
         "access_token": "mock-access-token",
