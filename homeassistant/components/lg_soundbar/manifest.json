@@ -8,5 +8,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["lg_bartalk"],
-  "requirements": ["lg-bartalk==0.1.1"]
+  "requirements": ["lg-bartalk==0.1.2"]
 }
