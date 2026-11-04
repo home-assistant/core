@@ -115,9 +115,8 @@ class AtombergCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         """Send a command and apply the expected state without polling again."""
         with self._command_errors():
             await self.client.async_send_command(device_id, command)
-        self.async_set_updated_data(
-            {
-                **self.data,
-                device_id: {**self.data[device_id], **new_state},
-            }
-        )
+        self.data = {
+            **self.data,
+            device_id: {**self.data[device_id], **new_state},
+        }
+        self.async_update_listeners()
