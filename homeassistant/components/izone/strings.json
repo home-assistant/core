@@ -89,6 +89,9 @@
     "invalid_airflow_step": {
       "message": "Airflow {value}% is not a multiple of 5%"
     },
+    "invalid_temperature_step": {
+      "message": "Temperature {value}°C is not a multiple of 0.5°C"
+    },
     "missing_host": {
       "message": "iZone config entry is missing host"
     },

@@ -87,8 +87,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
-                    "firmware_5_1_required",
+                    f"firmware_5_1_required_{config_entry.entry_id}",
                     is_fixable=False,
+                    config_entry_id=config_entry.entry_id,
                     severity=ir.IssueSeverity.ERROR,
                     translation_key="firmware_5_1_required",
                     translation_placeholders={
@@ -107,7 +108,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             new_data[CONF_USERNAME] = username
             new_data[CONF_PASSWORD] = password
 
-        ir.async_delete_issue(hass, DOMAIN, "firmware_5_1_required")
+        ir.async_delete_issue(
+            hass, DOMAIN, f"firmware_5_1_required_{config_entry.entry_id}"
+        )
         hass.config_entries.async_update_entry(
             config_entry, data=new_data, minor_version=2
         )
