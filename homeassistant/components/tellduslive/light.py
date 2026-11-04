@@ -47,7 +47,7 @@ class TelldusLiveLight(TelldusLiveEntity, LightEntity):
     def __init__(self, client, device_id):
         """Initialize the  Tellstick Net light."""
         super().__init__(client, device_id)
-        self._last_brightness = self.brightness
+        self._last_brightness: int | None = self.brightness
 
     def changed(self):
         """Define a property of the device that might have changed."""
@@ -56,7 +56,7 @@ class TelldusLiveLight(TelldusLiveEntity, LightEntity):
 
     @property
     @override
-    def brightness(self) -> int:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return self.device.dim_level
 
@@ -70,7 +70,7 @@ class TelldusLiveLight(TelldusLiveEntity, LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness)
-        if brightness == 0:
+        if not brightness:
             fallback_brightness = 100
             _LOGGER.debug(
                 "Setting brightness to %d%%, because it was 0", fallback_brightness

@@ -50,6 +50,12 @@ SENSOR_TYPE_LUMINANCE = "lum"
 SENSOR_TYPE_DEW_POINT = "dewp"
 SENSOR_TYPE_BAROMETRIC_PRESSURE = "barpress"
 
+ROUNDED_SENSOR_DIGITS: dict[str, int | None] = {
+    SENSOR_TYPE_TEMPERATURE: 1,
+    SENSOR_TYPE_HUMIDITY: None,
+    SENSOR_TYPE_LUMINANCE: 1,
+}
+
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     SENSOR_TYPE_TEMPERATURE: SensorEntityDescription(
         key=SENSOR_TYPE_TEMPERATURE,
@@ -248,33 +254,17 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
         return self.device.value(*self._id[1:])
 
     @property
-    def _value_as_temperature(self):
-        """Return the value as temperature."""
-        return round(float(self._value), 1)
-
-    @property
-    def _value_as_luminance(self):
-        """Return the value as luminance."""
-        return round(float(self._value), 1)
-
-    @property
-    def _value_as_humidity(self):
-        """Return the value as humidity."""
-        return round(float(self._value))
-
-    @property
     @override
     def native_value(self):
         """Return the state of the sensor."""
         if not self.available:
             return None
-        if self._type == SENSOR_TYPE_TEMPERATURE:
-            return self._value_as_temperature
-        if self._type == SENSOR_TYPE_HUMIDITY:
-            return self._value_as_humidity
-        if self._type == SENSOR_TYPE_LUMINANCE:
-            return self._value_as_luminance
-        return self._value
+        if self._type not in ROUNDED_SENSOR_DIGITS:
+            return self._value
+        try:
+            return round(float(self._value), ROUNDED_SENSOR_DIGITS[self._type])
+        except TypeError, ValueError:
+            return None
 
     @property
     @override

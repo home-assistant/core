@@ -7,12 +7,14 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tellduslive.const import (
+    CLOUD_NAME,
     DOMAIN,
     KEY_REQUEST_DELAY,
     KEY_SCAN_INTERVAL,
     KEY_SESSION,
     TURNON,
 )
+from homeassistant.const import CONF_HOST
 
 HUB_ID = "hub-1"
 DEVICE_ID = "device-1"
@@ -24,6 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
+            CONF_HOST: CLOUD_NAME,
             KEY_SCAN_INTERVAL: 60,
             KEY_SESSION: {"token": "token", "token_secret": "token_secret"},
         },

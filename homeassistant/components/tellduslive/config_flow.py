@@ -1,12 +1,14 @@
 """Config flow for Tellduslive."""
 
 import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
 import probatio
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -78,7 +80,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Let user select host or cloud."""
         if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="already_configured")
 
         if user_input is not None or len(self._hosts) == 1:
             if user_input is not None and user_input[CONF_HOST] != CLOUD_NAME:
@@ -107,6 +109,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         KEY_TOKEN: self._session.access_token,
                         KEY_TOKEN_SECRET: self._session.access_token_secret,
                     }
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates={KEY_SESSION: session}
+                    )
                 return self.async_create_entry(
                     title=host,
                     data={
@@ -137,6 +143,15 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 "auth_url": auth_url,
             },
         )
+
+    @override
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Start reauthentication against the host of the existing entry."""
+        if entry_data[CONF_HOST] != CLOUD_NAME:
+            self._host = entry_data[CONF_HOST]
+        return await self.async_step_auth()
 
     @override
     async def async_step_discovery(
