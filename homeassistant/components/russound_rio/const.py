@@ -12,8 +12,7 @@ SELECT_SOURCE_DELAY = 0.5
 
 RUSSOUND_RIO_EXCEPTIONS = (
     CommandError,
-    ConnectionRefusedError,
-    TimeoutError,
+    OSError,
     asyncio.CancelledError,
 )
 

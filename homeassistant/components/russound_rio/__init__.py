@@ -30,13 +30,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
     """Set up a config entry."""
     handler: RussoundConnectionHandler
     if entry.data[CONF_TYPE] == TYPE_TCP:
-        host = entry.data[CONF_HOST]
-        port = entry.data[CONF_PORT]
-        handler = RussoundTcpConnectionHandler(host, port)
+        address = entry.data[CONF_HOST]
+        port_or_baudrate = entry.data[CONF_PORT]
+        handler = RussoundTcpConnectionHandler(address, port_or_baudrate)
     else:
-        device = entry.data[CONF_DEVICE]
-        baudrate = entry.data[CONF_BAUDRATE]
-        handler = RussoundSerialConnectionHandler(device, baudrate)
+        address = entry.data[CONF_DEVICE]
+        port_or_baudrate = entry.data[CONF_BAUDRATE]
+        handler = RussoundSerialConnectionHandler(address, port_or_baudrate)
     client = RussoundRIOClient(handler)
 
     async def _connection_update_callback(
@@ -45,9 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
         """Call when the device is notified of changes."""
         if _callback_type == CallbackType.CONNECTION:
             if _client.is_connected():
-                _LOGGER.warning("Reconnected to device at %s", entry.data[CONF_HOST])
+                _LOGGER.warning("Reconnected to device at %s", address)
             else:
-                _LOGGER.warning("Disconnected from device at %s", entry.data[CONF_HOST])
+                _LOGGER.warning("Disconnected from device at %s", address)
 
     await client.register_state_update_callbacks(_connection_update_callback)
 
@@ -55,12 +55,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
         await client.connect()
         await client.load_zone_source_metadata()
     except RUSSOUND_RIO_EXCEPTIONS as err:
+        await client.disconnect()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="entry_cannot_connect",
             translation_placeholders={
-                "host": host or device,
-                "port": port or baudrate,
+                "host": address,
+                "port": port_or_baudrate,
             },
         ) from err
     entry.runtime_data = client

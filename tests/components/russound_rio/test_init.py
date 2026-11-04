@@ -19,16 +19,34 @@ from . import mock_state_update, setup_integration
 from .const import HARDWARE_MAC, MOCK_SERIAL_CONFIG, MOCK_TCP_CONFIG, MODEL
 
 
+@pytest.mark.parametrize("exception", [TimeoutError, OSError])
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_russound_client: AsyncMock,
+    exception: type[Exception],
 ) -> None:
-    """Test the Cambridge Audio configuration entry not ready."""
-    mock_russound_client.connect.side_effect = TimeoutError
+    """Test the Russound RIO configuration entry not ready."""
+    mock_russound_client.connect.side_effect = exception
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_russound_client.disconnect.assert_awaited_once()
+
+    mock_russound_client.connect = AsyncMock(return_value=True)
+
+
+async def test_serial_config_entry_not_ready(
+    hass: HomeAssistant,
+    mock_serial_config_entry: MockConfigEntry,
+    mock_russound_client: AsyncMock,
+) -> None:
+    """Test a serial config entry retries setup when the port cannot be opened."""
+    mock_russound_client.connect.side_effect = OSError
+    await setup_integration(hass, mock_serial_config_entry)
+
+    assert mock_serial_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_russound_client.disconnect.assert_awaited_once()
 
     mock_russound_client.connect = AsyncMock(return_value=True)
 
@@ -94,6 +112,24 @@ async def test_disconnect_reconnect_log(
     mock_russound_client.is_connected = Mock(return_value=True)
     await mock_state_update(mock_russound_client, CallbackType.CONNECTION)
     assert "Reconnected to device at 192.168.20.75" in caplog.text
+
+
+async def test_serial_disconnect_reconnect_log(
+    hass: HomeAssistant,
+    mock_russound_client: AsyncMock,
+    mock_serial_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test connection changes are logged with the serial device."""
+    await setup_integration(hass, mock_serial_config_entry)
+
+    mock_russound_client.is_connected = Mock(return_value=False)
+    await mock_state_update(mock_russound_client, CallbackType.CONNECTION)
+    assert "Disconnected from device at /dev/ttyUSB0" in caplog.text
+
+    mock_russound_client.is_connected = Mock(return_value=True)
+    await mock_state_update(mock_russound_client, CallbackType.CONNECTION)
+    assert "Reconnected to device at /dev/ttyUSB0" in caplog.text
 
 
 async def test_migrate_entry_from_v1_to_v2_on_setup(
