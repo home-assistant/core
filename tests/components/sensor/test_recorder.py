@@ -11,7 +11,11 @@ from unittest.mock import ANY, Mock, patch
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import mock_platform, setup_test_component_platform
+from pytest_homeassistant.common import (
+    async_capture_events,
+    mock_platform,
+    setup_test_component_platform,
+)
 from pytest_homeassistant.components.recorder.common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
     assert_multiple_states_equal_without_context_and_last_changed,
@@ -377,6 +381,227 @@ async def test_compile_hourly_statistics(
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("attribute", "value"),
+    [
+        ("state_class", ["measurement"]),
+        ("unit_of_measurement", ["°C"]),
+        ("device_class", ["temperature"]),
+    ],
+)
+async def test_compile_hourly_statistics_unhashable_attribute(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    attribute: str,
+    value: Any,
+) -> None:
+    """Test statistics are compiled when another sensor has an unhashable attribute.
+
+    State attributes are not validated, so an integration can set any of these to a
+    value which is not hashable. Statistics compilation uses them as dict keys and set
+    members, so the resulting TypeError escapes the session which has already inserted
+    this cycle's statistics for every sensor, discarding all of them.
+    """
+    zero = get_start_time(dt_util.utcnow())
+    await async_setup_component(hass, DOMAIN, {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    attributes = {
+        "device_class": "temperature",
+        "state_class": "measurement",
+        "unit_of_measurement": "°C",
+    }
+    with freeze_time(zero) as freezer:
+        await async_record_states(hass, freezer, zero, "sensor.test1", attributes)
+    with freeze_time(zero) as freezer:
+        await async_record_states(
+            hass, freezer, zero, "sensor.broken", {**attributes, attribute: value}
+        )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    assert "Error while processing event StatisticsTask" not in caplog.text
+    # The unrelated sensor's statistics must not be discarded
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert "sensor.test1" in stats
+
+
+@pytest.mark.parametrize(
+    ("attribute", "value"),
+    [
+        ("state_class", ["measurement"]),
+        ("unit_of_measurement", ["°C"]),
+        ("device_class", ["temperature"]),
+    ],
+)
+async def test_list_statistic_ids_unhashable_attribute(
+    hass: HomeAssistant,
+    attribute: str,
+    value: Any,
+) -> None:
+    """Test listing statistic ids when a sensor has an unhashable attribute."""
+    await async_setup_component(hass, DOMAIN, {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    attributes = {
+        "device_class": "temperature",
+        "state_class": "measurement",
+        "unit_of_measurement": "°C",
+    }
+    hass.states.async_set("sensor.test1", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.broken", 10, attributes={**attributes, attribute: value}
+    )
+    await async_wait_recording_done(hass)
+
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert [entry["statistic_id"] for entry in statistic_ids] == ["sensor.test1"]
+
+
+@pytest.mark.parametrize(
+    ("attribute", "value"),
+    [
+        ("state_class", ["measurement"]),
+        ("unit_of_measurement", ["°C"]),
+        ("device_class", ["temperature"]),
+    ],
+)
+async def test_validate_statistics_unhashable_attribute(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    attribute: str,
+    value: Any,
+) -> None:
+    """Test validating statistics when a sensor has an unhashable attribute."""
+    await async_setup_component(hass, DOMAIN, {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    hass.states.async_set(
+        "sensor.broken",
+        10,
+        attributes={
+            "device_class": "temperature",
+            "state_class": "measurement",
+            "unit_of_measurement": "°C",
+            attribute: value,
+        },
+    )
+    await hass.async_block_till_done()
+
+    await assert_validation_result(hass, client, {}, {})
+
+
+@pytest.mark.parametrize(
+    ("unit", "unit_class", "supported_unit"),
+    [
+        pytest.param(
+            "°C", "temperature", "K, °C, °F", id="metadata_unit_with_converter"
+        ),
+        pytest.param("beats", None, "beats", id="metadata_unit_without_converter"),
+    ],
+)
+async def test_validate_statistics_unhashable_unit_with_metadata(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    unit: str,
+    unit_class: str | None,
+    supported_unit: str,
+) -> None:
+    """Test validating statistics of a recorded sensor whose unit is not hashable."""
+    now = get_start_time(dt_util.utcnow())
+    await async_setup_component(hass, DOMAIN, {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+    attributes = {"state_class": "measurement", "unit_of_measurement": unit}
+
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+    )
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        hass, [{"statistic_id": "sensor.test", "unit_of_measurement": unit}]
+    )
+
+    hass.states.async_set(
+        "sensor.test",
+        11,
+        attributes={**attributes, "unit_of_measurement": [unit]},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+
+    # An unhashable unit can never match the unit of the recorded statistics
+    expected = {
+        "sensor.test": [
+            {
+                "data": {
+                    "metadata_unit": unit,
+                    "metadata_unit_class": unit_class,
+                    "state_unit": [unit],
+                    "state_unit_class": None,
+                    "statistic_id": "sensor.test",
+                    "supported_unit": supported_unit,
+                },
+                "type": UNITS_CHANGED_ISSUE,
+            }
+        ],
+    }
+    await assert_validation_result(hass, client, expected, {UNITS_CHANGED_ISSUE})
+
+
+@pytest.mark.parametrize(
+    "units",
+    [
+        # The first state determines the unit class, without a converter the units
+        # of all states are collected
+        pytest.param([["°C"], "°C"], id="malformed_first"),
+        # With a converter, each state's unit is checked against the valid units
+        pytest.param(["°C", ["°C"], "°C"], id="malformed_between"),
+    ],
+)
+async def test_compile_hourly_statistics_unhashable_unit_in_history(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    units: list[Any],
+) -> None:
+    """Test a historical state with an unhashable unit is left out of statistics.
+
+    Only the current state is checked when picking the sensors to compile statistics
+    for, so a state with a malformed unit earlier in the period is still in the
+    history which is compiled.
+    """
+    zero = get_start_time(dt_util.utcnow())
+    await async_setup_component(hass, DOMAIN, {})
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    attributes = {"device_class": "temperature", "state_class": "measurement"}
+    with freeze_time(zero) as freezer:
+        for minute, unit in enumerate(units):
+            freezer.move_to(zero + timedelta(minutes=minute))
+            hass.states.async_set(
+                "sensor.test1",
+                # The malformed state's value would stand out in the statistics
+                10 if isinstance(unit, str) else 100,
+                attributes={**attributes, "unit_of_measurement": unit},
+                timestamp=(zero + timedelta(minutes=minute)).timestamp(),
+            )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    assert "Error while processing event StatisticsTask" not in caplog.text
+    # Only the state with a valid unit is compiled
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats["sensor.test1"][0]["mean"] == pytest.approx(10)
+    assert stats["sensor.test1"][0]["max"] == pytest.approx(10)
 
 
 async def test_compile_hourly_statistics_angle(
@@ -6558,6 +6783,7 @@ async def _one_hour_stats(hass: HomeAssistant, start: datetime) -> datetime:
 )
 async def test_update_statistics_issues(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     units,
     attributes,
 ) -> None:
@@ -6598,6 +6824,23 @@ async def test_update_statistics_issues(
         }
     }
     assert_issues(hass, expected)
+
+    # Ignore the issue, it's kept ignored while still valid
+    ir.async_ignore_issue(hass, DOMAIN, "state_class_removed_sensor.test", True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    now = await _one_hour_stats(hass, now)
+    issue = issue_registry.async_get_issue(DOMAIN, "state_class_removed_sensor.test")
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    assert events == []
+
+    # State class restored, the issue is deleted
+    hass.states.async_set(
+        "sensor.test", 14, attributes=attributes, timestamp=now.timestamp()
+    )
+    await hass.async_block_till_done()
+    now = await _one_hour_stats(hass, now)
+    assert_issues(hass, {})
 
 
 @pytest.mark.parametrize(
@@ -6842,10 +7085,31 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
 )
 async def test_clean_up_repairs(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test cleaning up repairs."""
+    # A statistics issue created before a restart is loaded as inactive
+    hass_storage[ir.STORAGE_KEY] = {
+        "version": ir.STORAGE_VERSION_MAJOR,
+        "minor_version": ir.STORAGE_VERSION_MINOR,
+        "data": {
+            "issues": [
+                {
+                    "config_entry_id": None,
+                    "created": "2022-07-19T09:41:13.746514+00:00",
+                    "dismissed_version": None,
+                    "domain": DOMAIN,
+                    "is_persistent": False,
+                    "issue_id": "units_changed_sensor.inactive",
+                },
+            ]
+        },
+    }
+    await issue_registry.async_load()
+    assert not issue_registry.issues[(DOMAIN, "units_changed_sensor.inactive")].active
+
     await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client()
 
@@ -6861,21 +7125,32 @@ async def test_clean_up_repairs(
             translation_key="",
         )
 
-    create_issue("test", "test_issue", None)
+    create_issue("test", "state_class_removed_sensor.test", None)
     create_issue(DOMAIN, "test_issue_1", None)
     create_issue(DOMAIN, "test_issue_2", {"issue_type": "another_issue"})
-    create_issue(DOMAIN, "test_issue_3", {"issue_type": STATE_CLASS_REMOVED_ISSUE})
-    create_issue(DOMAIN, "test_issue_4", {"issue_type": UNITS_CHANGED_ISSUE})
-    create_issue(DOMAIN, "test_issue_5", {"issue_type": MEAN_TYPE_CHANGED_ISSUE})
+    create_issue(
+        DOMAIN,
+        "state_class_removed_sensor.test",
+        {"issue_type": STATE_CLASS_REMOVED_ISSUE},
+    )
+    create_issue(
+        DOMAIN, "units_changed_sensor.test", {"issue_type": UNITS_CHANGED_ISSUE}
+    )
+    create_issue(
+        DOMAIN,
+        "mean_type_changed_sensor.test",
+        {"issue_type": MEAN_TYPE_CHANGED_ISSUE},
+    )
 
     # Check the issues
     assert set(issue_registry.issues) == {
-        ("test", "test_issue"),
+        ("test", "state_class_removed_sensor.test"),
         ("sensor", "test_issue_1"),
         ("sensor", "test_issue_2"),
-        ("sensor", "test_issue_3"),
-        ("sensor", "test_issue_4"),
-        ("sensor", "test_issue_5"),
+        ("sensor", "state_class_removed_sensor.test"),
+        ("sensor", "units_changed_sensor.test"),
+        ("sensor", "mean_type_changed_sensor.test"),
+        ("sensor", "units_changed_sensor.inactive"),
     }
 
     # Request update of issues
@@ -6885,7 +7160,7 @@ async def test_clean_up_repairs(
 
     # Check the issues
     assert set(issue_registry.issues) == {
-        ("test", "test_issue"),
+        ("test", "state_class_removed_sensor.test"),
         ("sensor", "test_issue_1"),
         ("sensor", "test_issue_2"),
     }

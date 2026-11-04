@@ -6,7 +6,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from satel_integra import SatelFirmwareVersion, SatelPanelInfo, SatelPanelModel
+from satel_integra import (
+    SatelFirmwareVersion,
+    SatelPanelInfo,
+    SatelPanelModel,
+    SatelRtcAndStatus,
+    SatelState,
+    SatelSystemTroubles,
+)
 
 from homeassistant.components.satel_integra.config_flow import SatelConfigFlow
 from homeassistant.components.satel_integra.const import DOMAIN
@@ -20,7 +27,10 @@ from . import (
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
     MOCK_ZONE_TEMPERATURE_SUBENTRY,
-    get_monitor_callbacks,
+    get_alarm_status_callback,
+    get_output_changed_callback,
+    get_system_status_callback,
+    get_zone_changed_callback,
 )
 
 
@@ -29,7 +39,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override integration setup."""
     with patch(
         "homeassistant.components.satel_integra.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -58,10 +68,30 @@ def mock_satel() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
+        client.add_connection_status_callback.return_value = MagicMock(
+            return_value=None
+        )
 
-        client.partition_states = {}
-        client.violated_outputs = []
-        client.violated_zones = []
+        client.state = SatelState()
+        client.state.zones[1].violated = False
+        client.state.outputs[1].active = False
+        client.state.system_status = SatelRtcAndStatus(
+            service_mode=False,
+            troubles=False,
+            acu_100_present=False,
+            int_rx_present=False,
+            troubles_memory=False,
+            grade_2_or_3=False,
+        )
+        client.state.system_troubles = SatelSystemTroubles(troubles=frozenset())
+
+        for callback_method in (
+            client.add_alarm_status_callback,
+            client.add_zone_changed_callback,
+            client.add_output_changed_callback,
+            client.add_system_status_callback,
+        ):
+            callback_method.return_value = MagicMock(return_value=None)
 
         client.connect = AsyncMock(return_value=True)
         client.read_panel_info = AsyncMock(
@@ -79,16 +109,12 @@ def mock_satel() -> Generator[AsyncMock]:
         client.read_temperatures = AsyncMock(return_value={1: 21.5})
         client.set_output = AsyncMock()
 
-        client.register_callbacks = MagicMock()
-
         # Immediately push baseline values so entities have stable states for snapshots
         async def _start(**_: object) -> None:
-            alarm_status_callback, zone_changed_callback, output_changed_callback = (
-                get_monitor_callbacks(client)
-            )
-            alarm_status_callback()
-            zone_changed_callback({1: 0})
-            output_changed_callback({1: 0})
+            get_alarm_status_callback(client)()
+            get_zone_changed_callback(client)()
+            get_output_changed_callback(client)()
+            get_system_status_callback(client)()
 
         client.start = AsyncMock(side_effect=_start)
 

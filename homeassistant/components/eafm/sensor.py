@@ -56,7 +56,7 @@ async def async_setup_entry(
     )
 
 
-class Measurement(CoordinatorEntity, SensorEntity):
+class Measurement(CoordinatorEntity[EafmCoordinator], SensorEntity):
     """A gauge at a flood monitoring station."""
 
     _attr_attribution = (

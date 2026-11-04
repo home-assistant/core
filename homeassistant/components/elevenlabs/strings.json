@@ -1,6 +1,7 @@
 {
   "config": {
     "error": {
+      "api_key_id_used": "You entered the API key ID. Enter the API key itself, which starts with `sk_` and is only shown when the key is created or rotated.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"

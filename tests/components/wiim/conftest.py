@@ -36,7 +36,7 @@ def mock_local_ip() -> Generator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.wiim.async_setup_entry", return_value=True
+        "homeassistant.components.wiim.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -93,6 +93,7 @@ def mock_wiim_device() -> Generator[AsyncMock]:
         mock.current_media = None
         mock.current_track_duration = 0
         mock.play_mode = "Network"
+        mock.local_input_mode = "Network"
         mock.equalizer_mode = ""
         mock.current_position = 0
         mock.next_track_uri = ""

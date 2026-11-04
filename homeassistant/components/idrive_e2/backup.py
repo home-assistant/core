@@ -19,12 +19,15 @@ from homeassistant.components.backup import (
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.async_iterator import ResourceChunkIterator
 
 from . import IDriveE2ConfigEntry
 from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 CACHE_TTL = 300
+# Matches the default chunk size of aiobotocore's StreamingBody.iter_chunks
+DOWNLOAD_CHUNK_SIZE = 1024
 
 # S3 part size requirements: 5 MiB to 5 GiB per part
 # https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html
@@ -122,7 +125,10 @@ class IDriveE2BackupAgent(BackupAgent):
         response = await cast(Any, self._client).get_object(
             Bucket=self._bucket, Key=tar_filename
         )
-        return response["Body"].iter_chunks()
+        body = response["Body"]
+        return ResourceChunkIterator(
+            functools.partial(body.read, DOWNLOAD_CHUNK_SIZE), close=body.close
+        )
 
     @override
     async def async_upload_backup(

@@ -22,8 +22,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .const import KNOWN_DEVICES
 from .entity import CharacteristicEntity
 
 _LOGGER = logging.getLogger(__name__)

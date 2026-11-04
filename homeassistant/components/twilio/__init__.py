@@ -30,6 +30,11 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
+__all__ = [
+    "DOMAIN",
+    "get_client",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Twilio component."""
@@ -41,6 +46,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         Client, conf.get(CONF_ACCOUNT_SID), conf.get(CONF_AUTH_TOKEN)
     )
     return True
+
+
+def get_client(hass: HomeAssistant) -> Client:
+    """Return the Twilio client."""
+    return hass.data[DATA_TWILIO]
 
 
 async def handle_webhook(

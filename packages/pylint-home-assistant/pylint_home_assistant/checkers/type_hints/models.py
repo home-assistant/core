@@ -1,15 +1,11 @@
 """Data types for type hint pattern matching."""
 
 from dataclasses import dataclass
-from enum import Enum
 
 from astroid import nodes
+from typing_extensions import Sentinel as sentinel
 
-
-class _Special(Enum):
-    """Sentinel values."""
-
-    UNDEFINED = 1
+_Undefined = sentinel("_Undefined")
 
 
 @dataclass
@@ -17,7 +13,7 @@ class TypeHintMatch:
     """Class for pattern matching."""
 
     function_name: str
-    return_type: list[str | _Special | None] | str | _Special | None
+    return_type: list[str | _Undefined | None] | str | _Undefined | None
     arg_types: dict[int, str] | None = None
     """arg_types is for positional arguments"""
     named_arg_types: dict[str, str] | None = None
@@ -28,6 +24,9 @@ class TypeHintMatch:
     """`function_name` and `async_function_name` share arguments and return type"""
     mandatory: bool = False
     """bypass ignore_missing_annotations"""
+    coroutine: bool | None = None
+    """`True` for `async def`, `False` for `def`, `None` to skip the check;
+    the async counterpart of a `has_async_counterpart` match is always `async def`"""
 
     def need_to_check_function(self, node: nodes.FunctionDef) -> bool:
         """Confirm if function should be checked."""

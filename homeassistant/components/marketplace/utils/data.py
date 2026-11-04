@@ -14,7 +14,12 @@ from homeassistant.helpers import issue_registry as ir
 from ..const import DOMAIN, LEGACY_HACS_REPOSITORY_ID, RESTART_ISSUE_PREFIX
 from ..enums import DisabledReason, MarketplaceSignal, RepositoryCategory
 from ..migration import async_forget_retired_repositories
-from ..repositories.base import TOPIC_FILTER, Repository, RepositoryManifest
+from ..repositories.base import (
+    TOPIC_FILTER,
+    Repository,
+    RepositoryManifest,
+    valid_integration_categories,
+)
 from .backup import backed_up_paths
 from .identity import one_stored_entry_per_name
 from .logger import LOGGER
@@ -38,6 +43,7 @@ EXPORTED_REPOSITORY_DATA: tuple[tuple[str, Any], ...] = (
     ("downloads", 0),
     ("etag_repository", None),
     ("hide", False),
+    ("integration_categories", []),
     ("last_updated", 0),
     ("stargazers_count", 0),
     ("topics", []),
@@ -145,6 +151,14 @@ class MarketplaceData:
             data["version_installed"] = repository.data.installed_version
         if repository.data.last_fetched:
             data["last_fetched"] = repository.data.last_fetched.timestamp()
+        # Kept for a start without the catalog, the next catalog fetch decides
+        if self.marketplace.repositories.is_default(repository.data.id):
+            data["default"] = True
+            # What an install without the GitHub API needs, installed ones have it
+            if not repository.data.installed:
+                for key in ("last_version", "last_commit"):
+                    if (value := getattr(repository.data, key)) is not None:
+                        data[key] = value
 
         self.content[repository.data.id] = data
 
@@ -379,6 +393,9 @@ class MarketplaceData:
             if topic not in TOPIC_FILTER
         ]
         repository.data.domain = repository_data.get("domain")
+        repository.data.integration_categories = valid_integration_categories(
+            repository_data.get("integration_categories", [])
+        )
         repository.data.stargazers_count = repository_data.get(
             "stargazers_count"
         ) or repository_data.get("stars", 0)
@@ -438,3 +455,6 @@ class MarketplaceData:
         # Every removal checks it is safe again, resolving here would block
         if repository.localpath is not None:
             repository.content.path.local = repository.localpath
+
+        if repository_data.get("default") is True:
+            self.marketplace.repositories.mark_default(repository)

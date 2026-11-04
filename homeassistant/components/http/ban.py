@@ -1,5 +1,6 @@
 """Ban logic for HTTP component."""
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
@@ -7,7 +8,7 @@ from datetime import datetime
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
-from socket import gethostbyaddr, herror
+from socket import gethostbyaddr
 from typing import Any, Concatenate, Final
 
 from aiohttp.web import (
@@ -26,10 +27,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
+from homeassistant.helpers.http import KEY_HASS, HomeAssistantView
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from .const import KEY_HASS, is_supervisor_unix_socket_request
-from .view import HomeAssistantView
+from .const import is_supervisor_unix_socket_request
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -43,6 +44,8 @@ NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"
 
 IP_BANS_FILE: Final = "ip_bans.yaml"
+# Bound the reverse DNS lookup so a slow resolver cannot stall the response
+REVERSE_DNS_TIMEOUT: Final = 1
 ATTR_BANNED_AT: Final = "banned_at"
 
 SCHEMA_IP_BAN_ENTRY: Final = probatio.Schema(
@@ -122,10 +125,12 @@ async def process_wrong_login(request: Request) -> None:
     banned = await _async_count_wrong_login(request.app, hass, remote_addr)
 
     remote_host = request.remote
-    with suppress(herror, UnicodeDecodeError):
-        remote_host, _, _ = await hass.async_add_executor_job(
-            gethostbyaddr, request.remote
-        )
+    # The hostname only feeds the log and notification below
+    with suppress(TimeoutError, OSError, UnicodeError):
+        async with asyncio.timeout(REVERSE_DNS_TIMEOUT):
+            remote_host, _, _ = await hass.async_add_executor_job(
+                gethostbyaddr, request.remote
+            )
 
     base_msg = (
         "Login attempt or request with invalid authentication from"

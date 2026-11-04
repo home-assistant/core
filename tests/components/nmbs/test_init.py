@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pyrail import ApiUnavailableError
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
@@ -28,6 +29,23 @@ async def test_setup_entry_api_unavailable(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the entry is retried when the station list cannot be fetched."""
+    mock_nmbs_client.get_stations.side_effect = ApiUnavailableError(
+        "The iRail API is unavailable"
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_station_list_not_modified(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry is retried when the station list is not modified."""
     mock_nmbs_client.get_stations.return_value = None
     mock_config_entry.add_to_hass(hass)
 

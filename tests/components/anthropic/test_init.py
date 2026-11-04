@@ -20,30 +20,35 @@ from httpx2 import URL, Request, Response
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components import conversation
 from homeassistant.components.anthropic.config_flow import AnthropicConfigFlow
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
+    CONF_EFFORT,
     CONF_RECOMMENDED,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_TYPE,
     DOMAIN,
 )
 from homeassistant.config_entries import (
     ConfigEntryDisabler,
     ConfigEntryState,
-    ConfigSubentryData,
+    ConfigSubentryDataWithId,
 )
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
+    intent,
     issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
 
-from . import model_list
+from . import create_content_block, model_list
 
 MINOR_VERSION = AnthropicConfigFlow.MINOR_VERSION
 
@@ -233,10 +238,8 @@ async def test_reconfigure_deprecated_model_repair(
         hass, subentry.subentry_id
     )
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_RECOMMENDED: False}
-    )
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_CHAT_MODEL: deprecated_model.id}
+        result["flow_id"],
+        {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: deprecated_model.id},
     )
     assert result["step_id"] == "model"
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
@@ -248,6 +251,176 @@ async def test_reconfigure_deprecated_model_repair(
     assert mock_config_entry.runtime_data is not coordinator
     assert subentry.data[CONF_CHAT_MODEL] == deprecated_model.id
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+
+
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.parametrize(
+    "lifecycle",
+    [
+        pytest.param("deprecated", id="deprecated"),
+        pytest.param("retired", id="retired"),
+    ],
+)
+async def test_reconfigure_clears_model_repair(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    subentry_type: str,
+    lifecycle: Literal["deprecated", "retired"],
+) -> None:
+    """Clear a repair discovered by the model picker after replacing that model."""
+    configured_model = model_list[0].model_copy(update={"id": "claude-configured"})
+    replacement_model = model_list[0].model_copy(update={"id": "claude-replacement"})
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data={CONF_CHAT_MODEL: configured_model.id}
+    )
+    mock_model_list.side_effect = partial(
+        _model_page, [configured_model, replacement_model]
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+
+    mock_model_list.side_effect = partial(
+        _model_page,
+        [
+            configured_model.model_copy(update={"lifecycle": lifecycle}),
+            replacement_model,
+        ],
+    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert result["step_id"] == "init"
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: replacement_model.id},
+    )
+    assert result["step_id"] == "model"
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert subentry.data[CONF_CHAT_MODEL] == replacement_model.id
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+
+
+async def test_model_repair_retained_for_other_subentries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Retain the shared repair until all affected accounts and subentries are fixed."""
+    deprecated_model = model_list[0].model_copy(
+        update={"id": "claude-deprecated", "lifecycle": "deprecated"}
+    )
+    active_model = model_list[0].model_copy(update={"id": "claude-active"})
+    for subentry in mock_config_entry.subentries.values():
+        hass.config_entries.async_update_subentry(
+            mock_config_entry, subentry, data={CONF_CHAT_MODEL: deprecated_model.id}
+        )
+    mock_model_list.side_effect = partial(_model_page, [deprecated_model, active_model])
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+
+    disabled_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Disabled account",
+        data={CONF_API_KEY: "disabled-api-key"},
+        version=2,
+        disabled_by=ConfigEntryDisabler.USER,
+        subentries_data=[
+            {
+                "data": {CONF_CHAT_MODEL: deprecated_model.id},
+                "subentry_type": "conversation",
+                "title": "Disabled conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    disabled_entry.add_to_hass(hass)
+    assert disabled_entry.state is ConfigEntryState.NOT_LOADED
+
+    healthy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Other account",
+        data={CONF_API_KEY: "other-api-key"},
+        version=2,
+        subentries_data=[
+            {
+                "data": {CONF_CHAT_MODEL: active_model.id},
+                "subentry_type": "conversation",
+                "title": "Other conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    healthy_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(healthy_entry.entry_id)
+    await hass.async_block_till_done()
+    assert healthy_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+
+    mock_model_list.side_effect = partial(
+        _model_page,
+        [
+            deprecated_model,
+            active_model.model_copy(update={"display_name": "Updated active model"}),
+        ],
+    )
+    healthy_subentry = next(iter(healthy_entry.subentries.values()))
+    result = await healthy_entry.start_subentry_reconfigure_flow(
+        hass, healthy_subentry.subentry_id
+    )
+    assert result["step_id"] == "init"
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: active_model.id}
+    )
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert healthy_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+
+    for subentry, expected_issue in zip(
+        mock_config_entry.subentries.values(), (True, False), strict=True
+    ):
+        result = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {CONF_RECOMMENDED: False, CONF_CHAT_MODEL: active_model.id},
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["reason"] == "reconfigure_successful"
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert subentry.data[CONF_CHAT_MODEL] == active_model.id
+        assert (
+            issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+        ) is expected_issue
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -805,28 +978,29 @@ async def test_migration_from_v2_1_to_v2_2(
         "prompt": "You are a helpful assistant",
         "chat_model": "claude-haiku-4-5",
     }
+    subentries_data: list[ConfigSubentryDataWithId] = [
+        {
+            "data": options,
+            "subentry_id": "mock_id_1",
+            "subentry_type": "conversation",
+            "title": "Claude",
+            "unique_id": None,
+        },
+        {
+            "data": options,
+            "subentry_id": "mock_id_2",
+            "subentry_type": "conversation",
+            "title": "Claude 2",
+            "unique_id": None,
+        },
+    ]
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={"api_key": "1234"},
         entry_id="mock_entry_id",
         version=2,
         minor_version=1,
-        subentries_data=[
-            ConfigSubentryData(
-                data=options,
-                subentry_id="mock_id_1",
-                subentry_type="conversation",
-                title="Claude",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data=options,
-                subentry_id="mock_id_2",
-                subentry_type="conversation",
-                title="Claude 2",
-                unique_id=None,
-            ),
-        ],
+        subentries_data=subentries_data,
         title="Claude",
     )
     mock_config_entry.add_to_hass(hass)
@@ -1098,10 +1272,13 @@ async def test_migrate_entry_to_v2_3(
         mock_config_entry.entry_id,
         config_entry=mock_config_entry,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=entity_disabled_by,
         device_id=conversation_device.id,
         suggested_object_id="claude",
     )
+    conversation_entity = attr.evolve(
+        conversation_entity, disabled_by=entity_disabled_by
+    )
+    entity_registry.entities[conversation_entity.entity_id] = conversation_entity
 
     # Verify initial state
     assert mock_config_entry.version == 2
@@ -1197,3 +1374,145 @@ async def test_migrate_entry_to_v2_4(
         "prompt": "You are a helpful assistant",
         "chat_model": "claude-haiku-4-5",
     }
+
+
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("subentry_options", "expected_options"),
+    [
+        pytest.param({}, {}, id="defaults"),
+        pytest.param(
+            {"thinking_effort": "high", CONF_THINKING_BUDGET: 0},
+            {CONF_EFFORT: "high", CONF_THINKING_BUDGET: 0},
+            id="effort_with_disabled_manual_thinking",
+        ),
+        pytest.param(
+            {CONF_RECOMMENDED: True, "thinking_effort": "none"},
+            {
+                CONF_RECOMMENDED: True,
+                CONF_THINKING_TYPE: "disabled",
+            },
+            id="recommended_with_disabled_thinking",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_migrate_entry_to_v2_5(
+    hass: HomeAssistant,
+    subentry_type: str,
+    subentry_options: dict[str, str | int | bool],
+    expected_options: dict[str, str | int | bool],
+) -> None:
+    """Migrate effort independently from the selected thinking type."""
+    common_options = {
+        CONF_CHAT_MODEL: "claude-test-model",
+        CONF_RECOMMENDED: False,
+        "max_tokens": 4096,
+        "prompt": "You are a helpful assistant",
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        version=2,
+        minor_version=4,
+        subentries_data=[
+            {
+                "data": common_options | subentry_options,
+                "subentry_id": "mock_id",
+                "subentry_type": subentry_type,
+                "title": "Claude",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 2
+    assert entry.minor_version == MINOR_VERSION
+    assert entry.subentries["mock_id"].data == common_options | expected_options
+
+
+@pytest.mark.parametrize(
+    ("model", "legacy_options", "expected_options", "expected_effort"),
+    [
+        pytest.param(
+            "claude-haiku-4-5",
+            {CONF_THINKING_BUDGET: 0},
+            {CONF_THINKING_BUDGET: 0},
+            None,
+            id="manual_without_effort",
+        ),
+        pytest.param(
+            "claude-opus-4-5",
+            {CONF_THINKING_BUDGET: 0},
+            {CONF_THINKING_BUDGET: 0},
+            {"effort": "low"},
+            id="manual_with_effort",
+        ),
+        pytest.param(
+            "claude-haiku-5-5",
+            {"thinking_effort": "none"},
+            {CONF_THINKING_TYPE: "disabled"},
+            {"effort": "low"},
+            id="adaptive",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_model_list")
+async def test_migrate_disabled_thinking_request(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    model: str,
+    legacy_options: dict[str, str | int],
+    expected_options: dict[str, str | int],
+    expected_effort: dict[str, str] | None,
+) -> None:
+    """Preserve disabled thinking through migration, setup, and the first request."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        version=2,
+        minor_version=4,
+        subentries_data=[
+            {
+                "data": {CONF_CHAT_MODEL: model} | legacy_options,
+                "subentry_id": "mock_id",
+                "subentry_type": "conversation",
+                "title": "Claude conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        entry.subentries["mock_id"].data == {CONF_CHAT_MODEL: model} | expected_options
+    )
+    mock_create_stream.return_value = [create_content_block(0, ["Hello"])]
+
+    result = await conversation.async_converse(
+        hass,
+        "hello",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert entry.minor_version == MINOR_VERSION
+    assert (
+        entry.subentries["mock_id"].data == {CONF_CHAT_MODEL: model} | expected_options
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    request = mock_create_stream.call_args.kwargs
+    assert request["thinking"] == {"type": "disabled"}
+    assert request.get("output_config") == expected_effort

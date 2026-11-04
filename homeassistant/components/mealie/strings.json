@@ -132,6 +132,9 @@
     "end_date_before_start_date": {
       "message": "End date must be after start date."
     },
+    "ingredient_requires_food_or_note": {
+      "message": "Provide a food ID or a note to add an ingredient."
+    },
     "invalid_mealplan_entry_type": {
       "message": "Entry type {mealplan_type} is not valid for this Mealie version."
     },
@@ -206,6 +209,28 @@
     }
   },
   "services": {
+    "add_ingredient": {
+      "description": "Adds an ingredient to a Mealie shopping list using food and unit IDs.",
+      "fields": {
+        "food_id": {
+          "description": "The Mealie food ID to add. Required if no note is provided.",
+          "name": "Food ID"
+        },
+        "note": {
+          "description": "A note for the ingredient. Required if no food ID is provided.",
+          "name": "Note"
+        },
+        "quantity": {
+          "description": "The quantity of the ingredient. Defaults to 0 if omitted.",
+          "name": "Quantity"
+        },
+        "unit_id": {
+          "description": "The Mealie unit ID to use for the quantity.",
+          "name": "Unit ID"
+        }
+      },
+      "name": "Add ingredient"
+    },
     "delete_mealplan": {
       "description": "Deletes a mealplan",
       "fields": {

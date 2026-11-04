@@ -4,6 +4,7 @@
   "categories": ["lighting.led_strips_controllers"],
   "codeowners": ["@dr1rrb", "@Robbie1221", "@Olen"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "twinkly_*"

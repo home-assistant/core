@@ -9,7 +9,7 @@ from typing import Any
 import probatio
 
 from homeassistant.components import frontend, onboarding, websocket_api
-from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
+from homeassistant.const import CONF_FILENAME, CONF_ICON, CONF_MODE, CONF_RESOURCES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -25,7 +25,6 @@ from homeassistant.util import slugify
 from . import dashboard, resources, websocket
 from .const import (
     CONF_ALLOW_SINGLE_WORD,
-    CONF_ICON,
     CONF_REQUIRE_ADMIN,
     CONF_RESOURCE_MODE,
     CONF_SHOW_IN_SIDEBAR,
@@ -44,6 +43,7 @@ from .const import (
     SERVICE_RELOAD_RESOURCES,
     STORAGE_DASHBOARD_CREATE_FIELDS,
     STORAGE_DASHBOARD_UPDATE_FIELDS,
+    LovelaceService,
 )
 from .services import async_setup_services
 
@@ -60,6 +60,7 @@ __all__ = [
     "MODE_STORAGE",
     "SERVICE_RELOAD_RESOURCES",
     "LovelaceData",
+    "LovelaceService",
 ]
 
 

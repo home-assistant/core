@@ -1,6 +1,7 @@
 """Tests for the OpenRGB integration init."""
 
 import copy
+import errno
 import socket
 from unittest.mock import MagicMock
 
@@ -196,6 +197,10 @@ async def test_remove_config_entry_device_with_multiple_identifiers(
         (ControllerParsingError, ConfigEntryState.SETUP_RETRY),
         (TimeoutError, ConfigEntryState.SETUP_RETRY),
         (socket.gaierror, ConfigEntryState.SETUP_RETRY),
+        (
+            OSError(errno.EHOSTUNREACH, "Host is unreachable"),
+            ConfigEntryState.SETUP_RETRY,
+        ),
         (SDKVersionError, ConfigEntryState.SETUP_RETRY),
         (RuntimeError("Test error"), ConfigEntryState.SETUP_RETRY),
     ],
@@ -263,11 +268,22 @@ async def test_reconnection_on_update_failure(
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    "connect_exception",
+    [
+        pytest.param(ConnectionRefusedError(), id="connection_refused"),
+        pytest.param(
+            OSError(errno.EHOSTUNREACH, "Host is unreachable"), id="host_unreachable"
+        ),
+    ],
+)
 async def test_reconnection_fails_second_attempt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    connect_exception: Exception,
 ) -> None:
     """Test that coordinator fails when reconnection also fails."""
     mock_config_entry.add_to_hass(hass)
@@ -292,7 +308,7 @@ async def test_reconnection_fails_second_attempt(
     ]
 
     # Simulate connect raising an exception to mimic failed reconnection
-    mock_openrgb_client.connect.side_effect = ConnectionRefusedError()
+    mock_openrgb_client.connect.side_effect = connect_exception
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -302,6 +318,8 @@ async def test_reconnection_fails_second_attempt(
     state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_UNAVAILABLE
+    # A connection failure is expected, not an unexpected error with a traceback
+    assert "Unexpected error fetching" not in caplog.text
 
     # Verify that disconnect and connect were called (reconnection was attempted)
     mock_openrgb_client.disconnect.assert_called_once()

@@ -140,7 +140,7 @@ def mock_token_hex() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Bypass the integration setup so the config flow can be tested in isolation."""
     with patch(
-        "homeassistant.components.yoto.async_setup_entry", return_value=True
+        "homeassistant.components.yoto.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

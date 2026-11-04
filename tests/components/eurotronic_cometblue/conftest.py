@@ -217,7 +217,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async setup entry to return True."""
     with patch(
         "homeassistant.components.eurotronic_cometblue.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 

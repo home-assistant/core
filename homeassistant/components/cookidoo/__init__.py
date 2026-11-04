@@ -105,7 +105,7 @@ async def async_migrate_entry(
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
-                translation_placeholders={CONF_EMAIL: config_entry.data[CONF_EMAIL]},
+                translation_placeholders={"email": config_entry.data[CONF_EMAIL]},
             ) from e
         except (CookidooParseException, CookidooRequestException) as e:
             raise ConfigEntryNotReady(
@@ -129,7 +129,7 @@ async def async_migrate_entry(
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
-                translation_placeholders={CONF_EMAIL: config_entry.data[CONF_EMAIL]},
+                translation_placeholders={"email": config_entry.data[CONF_EMAIL]},
             ) from e
         except (CookidooParseException, CookidooRequestException) as e:
             raise ConfigEntryNotReady(

@@ -24,6 +24,18 @@ from pylint_home_assistant.helpers.module_info import parse_module
 # (%s, {}, {name}), empty names, and other dynamic patterns.
 _LOOKS_LIKE_ICON_NAME = re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]*[a-zA-Z0-9]$")
 
+# Logos the frontend bundles and serves under the mdi: prefix, see
+# CUSTOM_ICONS in src/components/ha-icon.ts of the frontend repository
+FRONTEND_LOGO_ICONS = {
+    "esphome",
+    "home-assistant",
+    "matter",
+    "mqtt",
+    "music-assistant",
+}
+
+KNOWN_ICONS = MDI_ICONS | FRONTEND_LOGO_ICONS
+
 
 class MdiIconsChecker(BaseChecker):
     """Checker for invalid MDI icon references."""
@@ -76,7 +88,7 @@ class MdiIconsChecker(BaseChecker):
         mdi_refs = collect_mdi_icons(icons_data)
         for icon_ref in sorted(mdi_refs):
             icon_name = icon_ref[4:]  # Strip "mdi:" prefix
-            if icon_name not in MDI_ICONS:
+            if icon_name not in KNOWN_ICONS:
                 self.add_message(
                     "home-assistant-mdi-icon-json-not-found",
                     node=node,
@@ -102,7 +114,7 @@ class MdiIconsChecker(BaseChecker):
         if not _LOOKS_LIKE_ICON_NAME.match(icon_name):
             return
 
-        if icon_name not in MDI_ICONS:
+        if icon_name not in KNOWN_ICONS:
             self.add_message(
                 "home-assistant-mdi-icon-not-found",
                 node=node,

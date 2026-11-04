@@ -1,14 +1,17 @@
 """Proxy to handle account communication with Renault servers."""
 
 import asyncio
+from collections.abc import Callable
 import contextlib
 from datetime import timedelta
 import logging
 from time import time
 from typing import TYPE_CHECKING
 
+import aiohttp
 from renault_api.exceptions import NotAuthenticatedException
 from renault_api.gigya.exceptions import (
+    GigyaException,
     InvalidCredentialsException,
     PendingTwoFactorAuthenticationException,
 )
@@ -18,8 +21,8 @@ from renault_api.kamereon.models import KamereonVehiclesLink
 from renault_api.renault_account import RenaultAccount
 from renault_api.renault_client import RenaultClient
 
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -29,6 +32,7 @@ from .const import (
     MAX_CALLS_PER_HOURS,
     RenaultConfigurationKeys,
 )
+from .coordinator import RenaultVehicleListCoordinator
 from .renault_vehicle import COORDINATORS, RenaultVehicleProxy
 
 if TYPE_CHECKING:
@@ -40,17 +44,22 @@ LOGGER = logging.getLogger(__name__)
 async def _get_filtered_vehicles(account: RenaultAccount) -> list[KamereonVehiclesLink]:
     """Get the vehicles, filtering out those with missing details."""
     vehicles = await account.get_vehicles()
-    return await _filter_vehicles_with_details(account, vehicles.vehicleLinks or [])
+    return await _filter_vehicles_with_details(
+        account, vehicles.vehicleLinks or [], set()
+    )
 
 
 async def _filter_vehicles_with_details(
-    account: RenaultAccount, vehicle_links: list[KamereonVehiclesLink]
+    account: RenaultAccount,
+    vehicle_links: list[KamereonVehiclesLink],
+    missing_details_vins: set[str | None],
 ) -> list[KamereonVehiclesLink]:
     """Filter out the vehicles with missing details.
 
     The vehicle list sometimes omits the details, so they are requested
     separately. They may still be missing for new purchases, or due to an
-    issue with the Renault servers.
+    issue with the Renault servers. A warning is logged once for each vehicle,
+    `missing_details_vins` keeps track of the vehicles already logged.
     """
     result: list[KamereonVehiclesLink] = []
     for link in vehicle_links:
@@ -59,10 +68,20 @@ async def _filter_vehicles_with_details(
             with contextlib.suppress(KamereonResponseException):
                 link.vehicleDetails = await vehicle.get_details()
         if link.vehicleDetails is None:
-            LOGGER.warning("Ignoring vehicle with missing details: %s", link.vin)
+            if link.vin in missing_details_vins:
+                LOGGER.debug("Ignoring vehicle with missing details: %s", link.vin)
+            else:
+                LOGGER.warning("Ignoring vehicle with missing details: %s", link.vin)
+                missing_details_vins.add(link.vin)
             continue
         result.append(link)
     return result
+
+
+def _get_scan_interval(num_call_per_scan: int) -> timedelta:
+    """Get the scan interval that keeps the calls within the hourly limit."""
+    # One call per hour is kept for the vehicle list.
+    return timedelta(seconds=(3600 * num_call_per_scan) / (MAX_CALLS_PER_HOURS - 1))
 
 
 class RenaultHub:
@@ -75,7 +94,11 @@ class RenaultHub:
             websession=async_get_clientsession(self._hass), locale=locale
         )
         self._account: RenaultAccount | None = None
+        self._config_entry: RenaultConfigEntry | None = None
         self._vehicles: dict[str, RenaultVehicleProxy] = {}
+        self._vehicle_listeners: list[Callable[[RenaultVehicleProxy], None]] = []
+        self._vehicles_lock = asyncio.Lock()
+        self._missing_details_vins: set[str | None] = set()
 
         self._got_throttled_at_time: float | None = None
 
@@ -167,11 +190,12 @@ class RenaultHub:
             RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID
         ]
 
+        self._config_entry = config_entry
         self._account = await self._client.get_api_account(account_id)
         vehicles = await self._account.get_vehicles()
         all_vehicle_links = vehicles.vehicleLinks or []
         vehicle_links = await _filter_vehicles_with_details(
-            self._account, all_vehicle_links
+            self._account, all_vehicle_links, self._missing_details_vins
         )
         # An empty list is more likely a server issue than all vehicles removed.
         if vins := {link.vin for link in all_vehicle_links if link.vin}:
@@ -185,39 +209,110 @@ class RenaultHub:
                 translation_key="no_vehicle_details",
             )
 
-        num_call_per_scan = len(COORDINATORS) * len(vehicle_links)
-        scan_interval = timedelta(
-            seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
+        await self._async_add_vehicles(vehicle_links)
+
+        vehicle_list = RenaultVehicleListCoordinator(
+            self._hass, config_entry, self, self._account
+        )
+        vehicle_list.async_set_updated_data(all_vehicle_links)
+        config_entry.async_on_unload(
+            vehicle_list.async_add_listener(
+                lambda: self._async_vehicle_list_updated(vehicle_list.data)
+            )
+        )
+
+    async def _async_add_vehicles(
+        self, vehicle_links: list[KamereonVehiclesLink]
+    ) -> None:
+        """Set up vehicles and adjust the scan interval of all vehicles."""
+        assert self._account is not None
+        assert self._config_entry is not None
+        # Assume all coordinators until the endpoints of the new vehicles are checked.
+        scan_interval = _get_scan_interval(
+            sum(len(vehicle.coordinators) for vehicle in self._vehicles.values())
+            + len(COORDINATORS) * len(vehicle_links)
         )
 
         device_registry = dr.async_get(self._hass)
-        await asyncio.gather(
+        results = await asyncio.gather(
             *(
                 self.async_initialise_vehicle(
                     vehicle_link,
                     self._account,
                     scan_interval,
-                    config_entry,
+                    self._config_entry,
                     device_registry,
                 )
                 for vehicle_link in vehicle_links
-            )
+            ),
+            return_exceptions=True,
+        )
+        self._async_update_scan_interval()
+        for result in results:
+            if isinstance(result, BaseException):
+                raise result
+
+    @callback
+    def _async_update_scan_interval(self) -> None:
+        """Set the scan interval of all vehicles from their active coordinators."""
+        scan_interval = _get_scan_interval(
+            sum(len(vehicle.coordinators) for vehicle in self._vehicles.values())
+        )
+        for vehicle in self._vehicles.values():
+            vehicle.update_scan_interval(scan_interval)
+
+    @callback
+    def _async_vehicle_list_updated(
+        self, vehicle_links: list[KamereonVehiclesLink]
+    ) -> None:
+        """Add and remove vehicles when the vehicle list changes."""
+        # Listeners are also called with the previous list while throttled.
+        if self.is_throttled():
+            return
+        if {link.vin for link in vehicle_links if link.vin} == set(self._vehicles):
+            return
+        assert self._config_entry is not None
+        self._config_entry.async_create_background_task(
+            self._hass,
+            self._async_update_vehicles(vehicle_links),
+            "renault_update_vehicles",
         )
 
-        # all vehicles have been initiated with the right number of active coordinators
-        num_call_per_scan = 0
-        for vehicle_link in vehicle_links:
-            vehicle = self._vehicles[str(vehicle_link.vin)]
-            num_call_per_scan += len(vehicle.coordinators)
+    async def _async_update_vehicles(
+        self, vehicle_links: list[KamereonVehiclesLink]
+    ) -> None:
+        """Add new vehicles and remove the vehicles no longer in the account."""
+        assert self._account is not None
+        assert self._config_entry is not None
+        async with self._vehicles_lock:
+            # An empty list is more likely a server issue than all vehicles removed.
+            if vins := {link.vin for link in vehicle_links if link.vin}:
+                self._async_remove_stale_devices(self._config_entry, vins)
+                for vin in set(self._vehicles) - vins:
+                    vehicle = self._vehicles.pop(vin)
+                    for coordinator in vehicle.coordinators.values():
+                        await coordinator.async_shutdown()
+                self._async_update_scan_interval()
 
-        new_scan_interval = timedelta(
-            seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
-        )
-        if new_scan_interval != scan_interval:
-            # we need to change the vehicles with the right scan interval
-            for vehicle_link in vehicle_links:
-                vehicle = self._vehicles[str(vehicle_link.vin)]
-                vehicle.update_scan_interval(new_scan_interval)
+            try:
+                new_vehicle_links = await _filter_vehicles_with_details(
+                    self._account,
+                    [
+                        link
+                        for link in vehicle_links
+                        if link.vin and link.vin not in self._vehicles
+                    ],
+                    self._missing_details_vins,
+                )
+                if new_vehicle_links:
+                    await self._async_add_vehicles(new_vehicle_links)
+            except ConfigEntryAuthFailed, NotAuthenticatedException:
+                self._config_entry.async_start_reauth(self._hass)
+            except (aiohttp.ClientError, TimeoutError, GigyaException) as err:
+                LOGGER.debug(
+                    "Failed to update the vehicles, retrying at the next check: %s",
+                    err,
+                )
 
     @callback
     def _async_remove_stale_devices(
@@ -233,6 +328,16 @@ class RenaultHub:
                 for domain, identifier in device_entry.identifiers
             ):
                 device_registry.async_remove_device(device_entry.id)
+
+    @callback
+    def async_add_vehicle_listener(
+        self, add_vehicle: Callable[[RenaultVehicleProxy], None]
+    ) -> CALLBACK_TYPE:
+        """Call add_vehicle for the current vehicles and each vehicle added later."""
+        for vehicle in self._vehicles.values():
+            add_vehicle(vehicle)
+        self._vehicle_listeners.append(add_vehicle)
+        return lambda: self._vehicle_listeners.remove(add_vehicle)
 
     async def async_initialise_vehicle(
         self,
@@ -265,6 +370,8 @@ class RenaultHub:
             sw_version=None,  # cleanup from PR #125399
         )
         self._vehicles[vehicle_link.vin] = vehicle
+        for add_vehicle in self._vehicle_listeners:
+            add_vehicle(vehicle)
 
     async def get_account_ids(self) -> list[str]:
         """Get Kamereon account ids."""

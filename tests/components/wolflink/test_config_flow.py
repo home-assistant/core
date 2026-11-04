@@ -52,7 +52,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
             "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
             return_value=[DEVICE, SECOND_DEVICE],
         ),
-        patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
+        patch("homeassistant.components.wolflink.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=INPUT_CONFIG
@@ -94,7 +94,7 @@ async def test_user_flow_errors(
             "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
             return_value=[DEVICE],
         ),
-        patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
+        patch("homeassistant.components.wolflink.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=INPUT_CONFIG
