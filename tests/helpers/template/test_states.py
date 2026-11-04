@@ -335,6 +335,58 @@ async def test_unreadable_entity_from_entity_id(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("people")
+async def test_unreadable_entity_from_mixed_case_entity_id(hass: HomeAssistant) -> None:
+    """Test a state looked up by a mixed-case entity ID fails if it cannot be read."""
+    variables = {"this": template.TemplateStateFromEntityId(hass, "Person.Secret")}
+
+    assert template.Template("{{ this.state }}", hass).async_render(variables) == (
+        "not_home"
+    )
+    with pytest.raises(TemplateError, match="Invalid entity id"):
+        _restricted("{{ this.state }}", hass).async_render(variables)
+
+
+@pytest.mark.parametrize(
+    "template_str",
+    [
+        pytest.param("{{ states('person.secret') }}", id="states_call"),
+        pytest.param("{{ states('Person.Secret') }}", id="states_call_mixed_case"),
+        pytest.param("{{ states.person.secret }}", id="domain_attribute"),
+        pytest.param("{{ states['person.secret'] }}", id="all_states_item"),
+        pytest.param("{{ state_translated('person.secret') }}", id="state_translated"),
+    ],
+)
+async def test_unreadable_entities_are_tracked_like_missing(
+    hass: HomeAssistant, template_str: str
+) -> None:
+    """Test unreadable states are tracked like missing ones."""
+    info = template.Template(template_str, hass).async_render_to_info()
+    assert info.entities == {UNREADABLE_PERSON}
+
+    hass.states.async_set(UNREADABLE_PERSON, "not_home")
+    info = _restricted(template_str, hass).async_render_to_info()
+    assert info.entities == {UNREADABLE_PERSON}
+
+
+@pytest.mark.parametrize(
+    "template_str",
+    [
+        pytest.param("{{ states['Person.Secret'].state }}", id="all_states_item"),
+        pytest.param("{{ states.person.Secret.state }}", id="domain_attribute"),
+        pytest.param("{{ state_translated('Person.Secret') }}", id="state_translated"),
+    ],
+)
+@pytest.mark.usefixtures("people")
+async def test_unreadable_entity_mixed_case_is_invalid(
+    hass: HomeAssistant, template_str: str
+) -> None:
+    """Test a mixed-case ID of an unreadable entity is invalid like a missing one."""
+    assert template.Template(template_str, hass).async_render() == "not_home"
+    with pytest.raises(TemplateError, match="Invalid entity ID"):
+        _restricted(template_str, hass).async_render()
+
+
+@pytest.mark.usefixtures("people")
 async def test_unreadable_entities_with_possible_json_value(
     hass: HomeAssistant,
 ) -> None:

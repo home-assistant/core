@@ -568,7 +568,7 @@ def _get_template_state_from_state(
     if state is None:
         # Only need to collect if none, if not none collect first actual
         # access to the state properties in the state wrapper.
-        _collect_state(hass, entity_id)
+        _collect_state(hass, entity_id.lower())
         return None
     return _template_state(hass, state)
 

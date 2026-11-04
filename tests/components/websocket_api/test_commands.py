@@ -2692,6 +2692,55 @@ async def test_render_template_follows_permission_changes(
     assert msg["event"]["result"] == "unknown off"
 
 
+@pytest.mark.parametrize(
+    ("template_str", "result"),
+    [
+        pytest.param(
+            "{{ states('light.unreadable') }} {{ states('Light.Missing') }}",
+            "off unknown",
+            id="states_call",
+        ),
+        pytest.param(
+            "{{ states.light.unreadable.state }} {{ states.light.missing }}",
+            "off None",
+            id="domain_attribute",
+        ),
+        pytest.param(
+            "{{ state_translated('light.unreadable') }}"
+            " {{ state_translated('light.missing') }}",
+            "off unknown",
+            id="state_translated",
+        ),
+    ],
+)
+async def test_render_template_listens_to_unreadable_entities(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+    template_str: str,
+    result: str,
+) -> None:
+    """Test unreadable entities are listened to like missing ones."""
+    _restrict_to_readable_lights(hass_admin_user)
+    hass.states.async_set(UNREADABLE_LIGHT, "on")
+
+    await websocket_client.send_json_auto_id(
+        {"type": "render_template", "template": template_str}
+    )
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    msg = await websocket_client.receive_json()
+    assert sorted(msg["event"]["listeners"]["entities"]) == [
+        "light.missing",
+        UNREADABLE_LIGHT,
+    ]
+
+    hass_admin_user.mock_policy({"entities": {"entity_ids": {UNREADABLE_LIGHT: True}}})
+    hass.states.async_set(UNREADABLE_LIGHT, "off")
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["result"] == result
+
+
 async def test_render_template_user_with_read_access(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
