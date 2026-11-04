@@ -15,6 +15,7 @@
     "@sapuseven"
   ],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [{ "hostname": "levoit-*" }],
   "documentation": "https://www.home-assistant.io/integrations/vesync",
   "integration_type": "hub",

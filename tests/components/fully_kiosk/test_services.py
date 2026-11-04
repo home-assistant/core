@@ -5,17 +5,12 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.fully_kiosk.const import (
-    ATTR_APPLICATION,
-    ATTR_KEY,
-    ATTR_URL,
-    ATTR_VALUE,
-    DOMAIN,
-    SERVICE_LOAD_URL,
-    SERVICE_SET_CONFIG,
-    SERVICE_START_APPLICATION,
+from homeassistant.components.fully_kiosk.const import DOMAIN
+from homeassistant.components.fully_kiosk.services import (
+    FullyKioskService,
+    FullyKioskServiceArgument,
 )
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -37,8 +32,11 @@ async def test_services(
     url = "https://example.com"
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_LOAD_URL,
-        {ATTR_DEVICE_ID: [device_entry.id], ATTR_URL: url},
+        FullyKioskService.LOAD_URL,
+        {
+            CommonServiceArgument.DEVICE_ID: [device_entry.id],
+            FullyKioskServiceArgument.URL: url,
+        },
         blocking=True,
     )
 
@@ -47,8 +45,11 @@ async def test_services(
     app = "de.ozerov.fully"
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START_APPLICATION,
-        {ATTR_DEVICE_ID: [device_entry.id], ATTR_APPLICATION: app},
+        FullyKioskService.START_APPLICATION,
+        {
+            CommonServiceArgument.DEVICE_ID: [device_entry.id],
+            FullyKioskServiceArgument.APPLICATION: app,
+        },
         blocking=True,
     )
 
@@ -59,11 +60,11 @@ async def test_services(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG,
+        FullyKioskService.SET_CONFIG,
         {
-            ATTR_DEVICE_ID: [device_entry.id],
-            ATTR_KEY: key,
-            ATTR_VALUE: value,
+            CommonServiceArgument.DEVICE_ID: [device_entry.id],
+            FullyKioskServiceArgument.KEY: key,
+            FullyKioskServiceArgument.VALUE: value,
         },
         blocking=True,
     )
@@ -75,11 +76,11 @@ async def test_services(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG,
+        FullyKioskService.SET_CONFIG,
         {
-            ATTR_DEVICE_ID: [device_entry.id],
-            ATTR_KEY: key,
-            ATTR_VALUE: value,
+            CommonServiceArgument.DEVICE_ID: [device_entry.id],
+            FullyKioskServiceArgument.KEY: key,
+            FullyKioskServiceArgument.VALUE: value,
         },
         blocking=True,
     )
@@ -90,11 +91,11 @@ async def test_services(
     value = "true"
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG,
+        FullyKioskService.SET_CONFIG,
         {
-            ATTR_DEVICE_ID: [device_entry.id],
-            ATTR_KEY: key,
-            ATTR_VALUE: value,
+            CommonServiceArgument.DEVICE_ID: [device_entry.id],
+            FullyKioskServiceArgument.KEY: key,
+            FullyKioskServiceArgument.VALUE: value,
         },
         blocking=True,
     )
@@ -105,11 +106,11 @@ async def test_services(
     value = True
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_CONFIG,
+        FullyKioskService.SET_CONFIG,
         {
-            ATTR_DEVICE_ID: [device_entry.id],
-            ATTR_KEY: key,
-            ATTR_VALUE: value,
+            CommonServiceArgument.DEVICE_ID: [device_entry.id],
+            FullyKioskServiceArgument.KEY: key,
+            FullyKioskServiceArgument.VALUE: value,
         },
         blocking=True,
     )
@@ -135,8 +136,11 @@ async def test_service_unloaded_entry(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_LOAD_URL,
-            {ATTR_DEVICE_ID: [device_entry.id], ATTR_URL: "https://nabucasa.com"},
+            FullyKioskService.LOAD_URL,
+            {
+                CommonServiceArgument.DEVICE_ID: [device_entry.id],
+                FullyKioskServiceArgument.URL: "https://nabucasa.com",
+            },
             blocking=True,
         )
     assert excinfo.value.translation_domain == HOMEASSISTANT_DOMAIN
@@ -146,8 +150,11 @@ async def test_service_unloaded_entry(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_APPLICATION,
-            {ATTR_DEVICE_ID: [device_entry.id], ATTR_APPLICATION: "de.ozerov.fully"},
+            FullyKioskService.START_APPLICATION,
+            {
+                CommonServiceArgument.DEVICE_ID: [device_entry.id],
+                FullyKioskServiceArgument.APPLICATION: "de.ozerov.fully",
+            },
             blocking=True,
         )
     assert excinfo.value.translation_domain == HOMEASSISTANT_DOMAIN
@@ -164,8 +171,11 @@ async def test_service_bad_device_id(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_LOAD_URL,
-            {ATTR_DEVICE_ID: ["bad-device_id"], ATTR_URL: "https://example.com"},
+            FullyKioskService.LOAD_URL,
+            {
+                CommonServiceArgument.DEVICE_ID: ["bad-device_id"],
+                FullyKioskServiceArgument.URL: "https://example.com",
+            },
             blocking=True,
         )
 
@@ -198,10 +208,10 @@ async def test_service_called_with_non_fkb_target_devices(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_LOAD_URL,
+            FullyKioskService.LOAD_URL,
             {
-                ATTR_DEVICE_ID: [device_entry.id],
-                ATTR_URL: "https://example.com",
+                CommonServiceArgument.DEVICE_ID: [device_entry.id],
+                FullyKioskServiceArgument.URL: "https://example.com",
             },
             blocking=True,
         )

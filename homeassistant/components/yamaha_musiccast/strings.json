@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "The device at this address is not the device that was originally set up.",
       "yxc_control_url_missing": "The control URL is not given in the ssdp description."
     },
     "error": {
@@ -13,6 +14,14 @@
     "step": {
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::yamaha_musiccast::config::step::user::data_description::host%]"
+        }
       },
       "user": {
         "data": {

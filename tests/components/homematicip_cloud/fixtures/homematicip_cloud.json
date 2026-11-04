@@ -3982,7 +3982,8 @@
           "pumpFollowUpTime": 2,
           "pumpLeadTime": 2,
           "pumpProtectionDuration": 1,
-          "pumpProtectionSwitchingInterval": 14
+          "pumpProtectionSwitchingInterval": 14,
+          "valvePosition": 0.0
         },
         "2": {
           "deviceId": "3014F7110000000000BBBBB1",
@@ -3990,7 +3991,8 @@
           "groupIndex": 2,
           "groups": ["00000000-0000-0000-0000-000000000008"],
           "index": 2,
-          "label": ""
+          "label": "",
+          "valvePosition": 1.0
         },
         "3": {
           "deviceId": "3014F7110000000000BBBBB1",
@@ -3998,7 +4000,8 @@
           "groupIndex": 3,
           "groups": ["00000000-0000-0000-0000-000000000009"],
           "index": 3,
-          "label": ""
+          "label": "",
+          "valvePosition": 0.0
         },
         "4": {
           "deviceId": "3014F7110000000000BBBBB1",
@@ -4006,7 +4009,8 @@
           "groupIndex": 4,
           "groups": ["00000000-0000-0000-0000-000000000010"],
           "index": 4,
-          "label": ""
+          "label": "",
+          "valvePosition": 0.0
         },
         "5": {
           "deviceId": "3014F7110000000000BBBBB1",
@@ -4014,7 +4018,8 @@
           "groupIndex": 5,
           "groups": ["00000000-0000-0000-0000-000000000011"],
           "index": 5,
-          "label": ""
+          "label": "",
+          "valvePosition": 0.0
         },
         "6": {
           "deviceId": "3014F7110000000000BBBBB1",
@@ -4022,7 +4027,8 @@
           "groupIndex": 6,
           "groups": [],
           "index": 6,
-          "label": ""
+          "label": "",
+          "valvePosition": 0.0
         },
         "7": {
           "deviceId": "3014F7110000000000BBBBB1",
@@ -10246,6 +10252,144 @@
       "permanentlyReachable": true,
       "serializedGlobalTradeItemNumber": "3014F71100000000000DRBL4",
       "type": "WIRED_BLIND_4",
+      "updateState": "UP_TO_DATE"
+    },
+    "3014F7110000000000000BSI": {
+      "availableFirmwareVersion": "1.22.12",
+      "connectionType": "HMIP_RF",
+      "deviceArchetype": "HMIP",
+      "firmwareVersion": "1.22.12",
+      "firmwareVersionInteger": 71180,
+      "functionalChannels": {
+        "0": {
+          "altitude": null,
+          "bootedRecently": false,
+          "busConfigMismatch": null,
+          "coProFaulty": false,
+          "coProRestartNeeded": false,
+          "coProUpdateFailure": false,
+          "configPending": false,
+          "controlsMountingOrientation": "UPSIDE_UP",
+          "daliBusState": null,
+          "dataDecodingFailedError": null,
+          "defaultLinkedGroup": [],
+          "deviceAliveSignalEnabled": null,
+          "deviceCanBusError": null,
+          "deviceCommunicationError": null,
+          "deviceDriveError": null,
+          "deviceDriveModeError": null,
+          "deviceId": "3014F7110000000000000BSI",
+          "deviceOperationMode": null,
+          "deviceOverheated": false,
+          "deviceOverloaded": false,
+          "devicePowerFailureDetected": false,
+          "deviceUndervoltage": false,
+          "displayContrast": null,
+          "displayMode": null,
+          "displayMountingOrientation": null,
+          "dutyCycle": false,
+          "fanControlMode": null,
+          "frostProtectionError": null,
+          "frostProtectionErrorAcknowledged": null,
+          "functionalChannelType": "DEVICE_BASE",
+          "groupIndex": 0,
+          "groups": [],
+          "index": 0,
+          "input1CoproEnabled": null,
+          "input2CoproEnabled": null,
+          "input3CoproEnabled": null,
+          "input4CoproEnabled": null,
+          "inputLayoutMode": null,
+          "invertedDisplayColors": null,
+          "label": "",
+          "lastBootTimestamp": 1793082293842,
+          "lockJammed": null,
+          "lowBat": null,
+          "mountingModuleError": null,
+          "mountingOrientation": null,
+          "multicastRoutingEnabled": false,
+          "noDataFromLinkyError": null,
+          "notRechargeableBattery": null,
+          "operationDays": null,
+          "particulateMatterSensorCommunicationError": null,
+          "particulateMatterSensorError": null,
+          "powerShortCircuit": null,
+          "profilePeriodLimitReached": null,
+          "routerModuleEnabled": false,
+          "routerModuleSupported": false,
+          "rssiDeviceValue": -62,
+          "rssiPeerValue": -57,
+          "sensorCommunicationError": null,
+          "sensorError": null,
+          "shortCircuitDataLine": null,
+          "supportedOptionalFeatures": {
+            "IFeatureDeviceOverheated": true,
+            "IFeatureDeviceOverloaded": true,
+            "IFeatureProfilePeriodLimit": true,
+            "IFeatureRssiValue": true,
+            "IOptionalFeatureControlsMountingOrientation": true,
+            "IOptionalFeatureDutyCycle": true
+          },
+          "switchChannelMode": null,
+          "temperatureHumiditySensorCommunicationError": null,
+          "temperatureHumiditySensorError": null,
+          "temperatureOutOfRange": false,
+          "ticVersionError": null,
+          "unreach": false,
+          "valveFlowError": null,
+          "valveWaterError": null
+        },
+        "1": {
+          "channelRole": "SWITCH_ACTUATOR_WITH_MEASURING",
+          "currentDetectionBehavior": "CURRENTDETECTION_ACTIVE",
+          "currentPowerConsumption": 0.0,
+          "deviceId": "3014F7110000000000000BSI",
+          "energyCounter": 11.471699999999998,
+          "energyCounterTwo": null,
+          "energyCounterTwoType": "ENERGY_COUNTER_INPUT_SINGLE_TARIFF",
+          "energyMeterMode": "CONSUMPTION_MEASURING",
+          "functionalChannelType": "SWITCH_MEASURING_CHANNEL",
+          "groupIndex": 1,
+          "groups": [],
+          "index": 1,
+          "internalLinkConfiguration": {
+            "firstInputAction": "OFF",
+            "internalLinkConfigurationType": "DOUBLE_INPUT_SWITCH",
+            "longPressOnTimeEnabled": true,
+            "onTime": 111600.0,
+            "secondInputAction": "ON"
+          },
+          "label": "",
+          "on": false,
+          "powerMeasuringCategory": "LOW",
+          "powerUpSwitchState": "PERMANENT_OFF",
+          "profileMode": "AUTOMATIC",
+          "supportedOptionalFeatures": {
+            "IFeatureLightGroupActuatorChannel": true,
+            "IFeatureLightProfileActuatorChannel": true,
+            "IOptionalFeatureCurrentDetectionBehavior": true,
+            "IOptionalFeatureInternalLinkConfiguration": true,
+            "IOptionalFeaturePowerMeasuringCategory": true,
+            "IOptionalFeaturePowerUpSwitchState": true
+          },
+          "switchVisualization": "SWITCH",
+          "userDesiredProfileMode": "AUTOMATIC"
+        }
+      },
+      "homeId": "00000000-0000-0000-0000-000000000001",
+      "id": "3014F7110000000000000BSI",
+      "label": "Deckenlicht",
+      "lastStatusUpdate": 1793460622716,
+      "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+      "manuallyUpdateForced": false,
+      "manufacturerCode": 1,
+      "measuredAttributes": {},
+      "modelId": 438,
+      "modelType": "HmIP-BSM-I",
+      "oem": "eQ-3",
+      "permanentlyReachable": true,
+      "serializedGlobalTradeItemNumber": "3014F7110000000000000018",
+      "type": "BRAND_SWITCH_MEASURING_INTERNATIONAL",
       "updateState": "UP_TO_DATE"
     }
   },

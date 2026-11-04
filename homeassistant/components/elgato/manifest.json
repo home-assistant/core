@@ -4,6 +4,7 @@
   "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@frenck"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "registered_devices": true

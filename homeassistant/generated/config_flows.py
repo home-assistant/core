@@ -5,6 +5,7 @@ To update, run python3 -m script.hassfest
 
 FLOWS = {
     "helper": [
+        "compensation",
         "derivative",
         "filter",
         "generic_hygrostat",
@@ -155,6 +156,7 @@ FLOWS = {
         "cookidoo",
         "coolmaster",
         "cpuspeed",
+        "croma_infrared",
         "crownstone",
         "cync",
         "daikin",
@@ -655,6 +657,7 @@ FLOWS = {
         "portainer",
         "powerfox",
         "powerfox_local",
+        "powersensor_au",
         "powerwall",
         "prana",
         "private_ble_device",
