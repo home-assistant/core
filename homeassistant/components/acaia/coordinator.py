@@ -1,6 +1,5 @@
 """Coordinator for Acaia integration."""
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import override
@@ -9,14 +8,9 @@ from aioacaia import AcaiaScale
 from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError
 
 from homeassistant.components.bluetooth import (
-    BluetoothCallbackMatcher,
-    BluetoothCallbackReplay,
-    BluetoothChange,
-    BluetoothScanningMode,
-    BluetoothServiceInfoBleak,
+    MONOTONIC_TIME,
     async_get_scanner,
-    async_register_callback,
-    async_track_unavailable,
+    async_last_service_info,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
@@ -25,9 +19,12 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_IDLE_TIMEOUT, CONF_IS_NEW_STYLE_SCALE, CONF_KEEP_CONNECTED
+from .const import CONF_IDLE_TIMEOUT, CONF_IS_NEW_STYLE_SCALE, DEFAULT_IDLE_TIMEOUT
 
 SCAN_INTERVAL = timedelta(seconds=15)
+# Silence that means the scale turned off. Bluetooth's own unavailable tracking takes
+# up to 8 minutes to notice, so a scale turned back on before that would be missed.
+SCALE_OFF_AFTER_SILENCE = 30
 UPDATE_DEBOUNCE_TIME = 0.2
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,63 +63,27 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
             scanner=async_get_scanner(hass),
         )
 
-        # Read from options so the preference applies before the first refresh.
-        self.keep_connected: bool = entry.options.get(CONF_KEEP_CONNECTED, True)
-
         # Minutes without a weight change before disconnecting, 0 disables.
-        self.idle_timeout: int = entry.options.get(CONF_IDLE_TIMEOUT, 0)
+        self._idle_timeout: int = entry.options.get(
+            CONF_IDLE_TIMEOUT, DEFAULT_IDLE_TIMEOUT
+        )
+        self._stopped = False
         self._last_weight: float | None = None
         self._last_activity = dt_util.utcnow()
         self._idle_disconnected = False
-        self._asleep_after_idle = False
-
-        # Polling, the switch and the idle timeout all connect or disconnect the
-        # scale, and those transitions must not overlap.
-        self._connect_lock = asyncio.Lock()
-
-        # The scale keeps advertising after an idle disconnect until its own
-        # auto-off timer fires, so reconnecting on any advertisement would wake
-        # it right back up. Only reconnect once it has gone silent and returns.
-        address = entry.data[CONF_ADDRESS]
-        entry.async_on_unload(
-            async_track_unavailable(hass, self._async_handle_unavailable, address)
-        )
-        entry.async_on_unload(
-            async_register_callback(
-                hass,
-                self._async_handle_advertisement,
-                BluetoothCallbackMatcher(address=address, connectable=True),
-                BluetoothScanningMode.PASSIVE,
-                replay=BluetoothCallbackReplay.DISABLED,
-            )
-        )
+        self._idle_disconnected_at = 0.0
+        self._scale_turned_off = False
 
     @property
     def scale(self) -> AcaiaScale:
         """Return the scale object."""
         return self._scale
 
-    async def async_set_keep_connected(self, keep_connected: bool) -> None:
-        """Enable or disable keeping a persistent connection to the scale."""
-        self.keep_connected = keep_connected
-        self.hass.config_entries.async_update_entry(
-            self.config_entry,
-            options={**self.config_entry.options, CONF_KEEP_CONNECTED: keep_connected},
-        )
-        if keep_connected:
-            self._clear_idle_disconnect()
-        await self._async_sync_connection()
-
-    async def async_set_idle_timeout(self, idle_timeout: int) -> None:
-        """Set the minutes without a weight change before disconnecting."""
-        self.idle_timeout = idle_timeout
-        self.hass.config_entries.async_update_entry(
-            self.config_entry,
-            options={**self.config_entry.options, CONF_IDLE_TIMEOUT: idle_timeout},
-        )
-        if not idle_timeout and self._idle_disconnected:
-            self._clear_idle_disconnect()
-            await self._async_sync_connection()
+    async def async_stop(self) -> None:
+        """Disconnect from the scale and stop connecting to it."""
+        self._stopped = True
+        if self._scale.connected:
+            await self._scale.disconnect()
 
     @callback
     def _async_handle_notification(self) -> None:
@@ -132,102 +93,91 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
             self._last_activity = dt_util.utcnow()
         self._debouncer.async_schedule_call()
 
-    @callback
-    def _async_handle_unavailable(
-        self, service_info: BluetoothServiceInfoBleak
-    ) -> None:
-        """Note that the scale went to sleep after an idle disconnect."""
-        if self._idle_disconnected:
-            self._asleep_after_idle = True
+    def _async_check_scale_restarted(self) -> None:
+        """Allow reconnecting once the scale has turned off and on again.
 
-    @callback
-    def _async_handle_advertisement(
-        self, service_info: BluetoothServiceInfoBleak, change: BluetoothChange
-    ) -> None:
-        """Reconnect once the scale is turned back on after sleeping."""
-        if not self._asleep_after_idle:
-            return
-        self._clear_idle_disconnect()
-        self.config_entry.async_create_task(self.hass, self.async_request_refresh())
+        The scale keeps advertising after an idle disconnect until its own auto-off
+        timer fires, so reconnecting while it advertises would keep it awake forever.
+        It does not advertise while connected, so silence only counts from the
+        disconnect onwards.
+        """
+        service_info = async_last_service_info(
+            self.hass, self.config_entry.data[CONF_ADDRESS]
+        )
+        last_seen = max(
+            service_info.time if service_info else 0, self._idle_disconnected_at
+        )
+        if MONOTONIC_TIME() - last_seen > SCALE_OFF_AFTER_SILENCE:
+            self._scale_turned_off = True
+        elif self._scale_turned_off:
+            self._idle_disconnected = False
+            self._scale_turned_off = False
 
-    def _clear_idle_disconnect(self) -> None:
-        """Allow the coordinator to reconnect to the scale again."""
-        self._idle_disconnected = False
-        self._asleep_after_idle = False
+    def _should_connect(self) -> bool:
+        """Return whether the scale should currently be connected."""
+        return not self._idle_disconnected and not self._stopped
 
     @override
     async def _async_update_data(self) -> None:
         """Fetch data."""
-        await self._async_sync_connection(check_idle=True)
 
-    def _should_connect(self) -> bool:
-        """Return whether the scale should currently be connected."""
-        return self.keep_connected and not self._idle_disconnected
+        if (
+            self._scale.connected
+            and self._idle_timeout
+            and dt_util.utcnow() - self._last_activity
+            >= timedelta(minutes=self._idle_timeout)
+        ):
+            _LOGGER.debug(
+                "No weight change on scale %s for %s minutes, disconnecting",
+                self.config_entry.data[CONF_ADDRESS],
+                self._idle_timeout,
+            )
+            self._idle_disconnected = True
+            self._idle_disconnected_at = MONOTONIC_TIME()
+            await self._scale.disconnect()
 
-    async def _async_sync_connection(self, *, check_idle: bool = False) -> None:
-        """Connect or disconnect the scale to match the connection preferences."""
+        if self._idle_disconnected:
+            self._async_check_scale_restarted()
 
-        # The preferences may have changed while waiting for the lock or for an
-        # earlier transition, so they are rechecked here and after connect().
-        async with self._connect_lock:
-            if (
-                check_idle
-                and self.idle_timeout
-                and self._scale.connected
-                and self._should_connect()
-                and dt_util.utcnow() - self._last_activity
-                >= timedelta(minutes=self.idle_timeout)
-            ):
-                _LOGGER.debug(
-                    "No weight change on scale %s for %s minutes, disconnecting",
-                    self.config_entry.data[CONF_ADDRESS],
-                    self.idle_timeout,
+        if not self._should_connect():
+            return
+
+        # scale is already connected, return
+        if self._scale.connected:
+            return
+
+        # scale is not connected, try to connect
+        try:
+            await self._scale.connect(setup_tasks=False)
+        except (AcaiaDeviceNotFound, AcaiaError, TimeoutError) as ex:
+            _LOGGER.debug(
+                "Could not connect to scale: %s, Error: %s",
+                self.config_entry.data[CONF_ADDRESS],
+                ex,
+            )
+            self._scale.device_disconnected_handler(notify=False)
+            return
+
+        # the entry may have been unloaded while connecting
+        if not self._should_connect():
+            await self._scale.disconnect()
+            return
+
+        self._last_activity = dt_util.utcnow()
+
+        # connected, set up background tasks
+        if not self._scale.heartbeat_task or self._scale.heartbeat_task.done():
+            self._scale.heartbeat_task = self.config_entry.async_create_background_task(
+                hass=self.hass,
+                target=self._scale.send_heartbeats(),
+                name="acaia_heartbeat_task",
+            )
+
+        if not self._scale.process_queue_task or self._scale.process_queue_task.done():
+            self._scale.process_queue_task = (
+                self.config_entry.async_create_background_task(
+                    hass=self.hass,
+                    target=self._scale.process_queue(),
+                    name="acaia_process_queue_task",
                 )
-                self._idle_disconnected = True
-
-            if not self._should_connect():
-                if self._scale.connected:
-                    await self._scale.disconnect()
-                return
-
-            if self._scale.connected:
-                return
-
-            try:
-                await self._scale.connect(setup_tasks=False)
-            except (AcaiaDeviceNotFound, AcaiaError, TimeoutError) as ex:
-                _LOGGER.debug(
-                    "Could not connect to scale: %s, Error: %s",
-                    self.config_entry.data[CONF_ADDRESS],
-                    ex,
-                )
-                self._scale.device_disconnected_handler(notify=False)
-                return
-
-            if not self._should_connect():
-                await self._scale.disconnect()
-                return
-
-            self._last_activity = dt_util.utcnow()
-
-            # connected, set up background tasks
-            if not self._scale.heartbeat_task or self._scale.heartbeat_task.done():
-                self._scale.heartbeat_task = (
-                    self.config_entry.async_create_background_task(
-                        hass=self.hass,
-                        target=self._scale.send_heartbeats(),
-                        name="acaia_heartbeat_task",
-                    )
-                )
-
-            if (
-                not self._scale.process_queue_task
-                or self._scale.process_queue_task.done()
-            ):
-                self._scale.process_queue_task = (
-                    self.config_entry.async_create_background_task(
-                        hass=self.hass,
-                        target=self._scale.process_queue(),
-                        name="acaia_process_queue_task",
-                    )
-                )
+            )
