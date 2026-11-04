@@ -9,10 +9,16 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_time_and_source,
+)
 
 from homeassistant.components.acaia import coordinator as acaia_coordinator
 from homeassistant.components.acaia.const import CONF_IDLE_TIMEOUT
 from homeassistant.components.acaia.coordinator import SCALE_OFF_AFTER_SILENCE
+from homeassistant.components.bluetooth import SOURCE_LOCAL
 from homeassistant.core import HomeAssistant
 
 
@@ -25,14 +31,15 @@ def monotonic_time() -> Generator[MagicMock]:
         yield monotonic_time
 
 
-@pytest.fixture
-def last_advertisement() -> Generator[MagicMock]:
-    """Mock the last advertisement seen from the scale."""
-    with patch.object(
-        acaia_coordinator, "async_last_service_info"
-    ) as last_service_info:
-        last_service_info.return_value = MagicMock(time=0.0)
-        yield last_service_info
+def _advertise(hass: HomeAssistant, time: float) -> None:
+    """Inject an advertisement from the scale, always with the same data."""
+    inject_advertisement_with_time_and_source(
+        hass,
+        generate_ble_device("aa:bb:cc:dd:ee:ff", "LUNAR-DDEEFF"),
+        generate_advertisement_data(local_name="LUNAR-DDEEFF"),
+        time,
+        SOURCE_LOCAL,
+    )
 
 
 def _track_connection_state(mock_scale: MagicMock) -> None:
@@ -122,9 +129,8 @@ async def _idle_disconnect(
 
 
 @pytest.mark.parametrize(
-    "silent_advertisement",
-    [MagicMock(time=1000.0), None],
-    ids=["stale", "forgotten"],
+    "polls_during_silence",
+    [pytest.param(0, id="resumes_between_polls"), pytest.param(3, id="polled")],
 )
 async def test_reconnects_after_scale_turns_off_and_on(
     hass: HomeAssistant,
@@ -132,19 +138,16 @@ async def test_reconnects_after_scale_turns_off_and_on(
     mock_scale: MagicMock,
     freezer: FrozenDateTimeFactory,
     monotonic_time: MagicMock,
-    last_advertisement: MagicMock,
-    silent_advertisement: MagicMock | None,
+    polls_during_silence: int,
 ) -> None:
     """Test an idle disconnect holds until the scale has gone silent and returned."""
     await _idle_disconnect(hass, mock_config_entry, mock_scale, freezer)
 
-    # Silent for longer than the limit, so the scale turned off.
-    last_advertisement.return_value = silent_advertisement
-    monotonic_time.return_value = 1000.0 + SCALE_OFF_AFTER_SILENCE + 1
-    await _tick(hass, freezer, 1)
+    for _ in range(polls_during_silence):
+        await _tick(hass, freezer, 1)
     mock_scale.connect.assert_not_called()
 
-    last_advertisement.return_value = MagicMock(time=monotonic_time.return_value)
+    _advertise(hass, monotonic_time.return_value + SCALE_OFF_AFTER_SILENCE + 1)
     await _tick(hass, freezer, 1)
     mock_scale.connect.assert_called_once()
 
@@ -155,14 +158,14 @@ async def test_no_reconnect_while_scale_advertises_after_idle_disconnect(
     mock_scale: MagicMock,
     freezer: FrozenDateTimeFactory,
     monotonic_time: MagicMock,
-    last_advertisement: MagicMock,
 ) -> None:
-    """Test the scale is left alone while it keeps advertising."""
+    """Test the scale is left alone while it keeps advertising unchanged data."""
     await _idle_disconnect(hass, mock_config_entry, mock_scale, freezer)
 
-    for _ in range(5):
-        monotonic_time.return_value += SCALE_OFF_AFTER_SILENCE
-        last_advertisement.return_value = MagicMock(time=monotonic_time.return_value)
+    for advertisement in range(1, 6):
+        _advertise(
+            hass, monotonic_time.return_value + advertisement * SCALE_OFF_AFTER_SILENCE
+        )
         await _tick(hass, freezer, 1)
 
     mock_scale.connect.assert_not_called()
@@ -174,15 +177,15 @@ async def test_no_advertising_while_connected_does_not_count_as_turned_off(
     mock_scale: MagicMock,
     freezer: FrozenDateTimeFactory,
     monotonic_time: MagicMock,
-    last_advertisement: MagicMock,
 ) -> None:
     """Test silence from before the disconnect is ignored."""
-    # The last advertisement is from before connecting, long before the disconnect.
-    last_advertisement.return_value = MagicMock(time=0.0)
-    await _idle_disconnect(hass, mock_config_entry, mock_scale, freezer)
+    await _setup(hass, mock_config_entry, mock_scale, **{CONF_IDLE_TIMEOUT: 5})
+    _advertise(hass, monotonic_time.return_value - 10 * SCALE_OFF_AFTER_SILENCE)
+    await _tick(hass, freezer, 6)
+    mock_scale.disconnect.assert_called_once()
+    mock_scale.connect.reset_mock()
 
-    last_advertisement.return_value = MagicMock(time=monotonic_time.return_value + 1)
-    monotonic_time.return_value += 1
+    _advertise(hass, monotonic_time.return_value + 1)
     await _tick(hass, freezer, 1)
 
     mock_scale.connect.assert_not_called()

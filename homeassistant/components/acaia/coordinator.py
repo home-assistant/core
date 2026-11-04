@@ -9,8 +9,9 @@ from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError
 
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
+    BluetoothServiceInfoBleak,
     async_get_scanner,
-    async_last_service_info,
+    async_register_advertisement_callback,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
@@ -71,13 +72,23 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         self._last_weight: float | None = None
         self._last_activity = dt_util.utcnow()
         self._idle_disconnected = False
-        self._idle_disconnected_at = 0.0
-        self._scale_turned_off = False
+        self._last_seen = 0.0
 
     @property
     def scale(self) -> AcaiaScale:
         """Return the scale object."""
         return self._scale
+
+    @override
+    async def _async_setup(self) -> None:
+        """Watch advertisements to notice the scale turning off and on again."""
+        self.config_entry.async_on_unload(
+            async_register_advertisement_callback(
+                self.hass,
+                self._async_handle_advertisement,
+                self.config_entry.data[CONF_ADDRESS],
+            )
+        )
 
     async def async_stop(self) -> None:
         """Disconnect from the scale and stop connecting to it."""
@@ -93,7 +104,10 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
             self._last_activity = dt_util.utcnow()
         self._debouncer.async_schedule_call()
 
-    def _async_check_scale_restarted(self) -> None:
+    @callback
+    def _async_handle_advertisement(
+        self, service_info: BluetoothServiceInfoBleak
+    ) -> None:
         """Allow reconnecting once the scale has turned off and on again.
 
         The scale keeps advertising after an idle disconnect until its own auto-off
@@ -101,17 +115,12 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         It does not advertise while connected, so silence only counts from the
         disconnect onwards.
         """
-        service_info = async_last_service_info(
-            self.hass, self.config_entry.data[CONF_ADDRESS]
-        )
-        last_seen = max(
-            service_info.time if service_info else 0, self._idle_disconnected_at
-        )
-        if MONOTONIC_TIME() - last_seen > SCALE_OFF_AFTER_SILENCE:
-            self._scale_turned_off = True
-        elif self._scale_turned_off:
+        if (
+            self._idle_disconnected
+            and service_info.time - self._last_seen > SCALE_OFF_AFTER_SILENCE
+        ):
             self._idle_disconnected = False
-            self._scale_turned_off = False
+        self._last_seen = service_info.time
 
     def _should_connect(self) -> bool:
         """Return whether the scale should currently be connected."""
@@ -133,11 +142,8 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
                 self._idle_timeout,
             )
             self._idle_disconnected = True
-            self._idle_disconnected_at = MONOTONIC_TIME()
+            self._last_seen = MONOTONIC_TIME()
             await self._scale.disconnect()
-
-        if self._idle_disconnected:
-            self._async_check_scale_restarted()
 
         if not self._should_connect():
             return
