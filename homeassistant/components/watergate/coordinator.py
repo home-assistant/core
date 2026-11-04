@@ -11,6 +11,7 @@ from watergate_local_api.models import (
     DeviceState,
     DeviceStateV2,
     NetworkingData,
+    PowerSupply,
     TelemetryData,
 )
 
@@ -54,6 +55,7 @@ class WatergateAgregatedRequests:
     telemetry: TelemetryData
     networking: NetworkingData
     auto_shut_off: AutoShutOffState
+    power: PowerSupply | None = None
 
 
 type WatergateConfigEntry = ConfigEntry[WatergateDataCoordinator]
@@ -89,6 +91,7 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
             telemetry = await self.api.async_get_telemetry_data()
             networking = await self.api.async_get_networking()
             auto_shut_off = await self.api.async_get_auto_shut_off()
+            power = await self._async_fetch_power(state)
         except WatergateApiException as exc:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -101,7 +104,23 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
             assert telemetry is not None
             assert networking is not None
             assert auto_shut_off is not None
-        return WatergateAgregatedRequests(state, telemetry, networking, auto_shut_off)
+        return WatergateAgregatedRequests(
+            state, telemetry, networking, auto_shut_off, power
+        )
+
+    async def _async_fetch_power(
+        self, state: DeviceStateV2 | None
+    ) -> PowerSupply | None:
+        """Fetch the battery voltage, which only a device with a battery reports."""
+        if state is None or "battery" not in state.power_supply:
+            return None
+        # The voltage is a diagnostic extra: failing to read it must not make the
+        # entities backed by the other requests unavailable.
+        try:
+            return await self.api.async_get_power_supply_data()
+        except WatergateApiException as exc:
+            _LOGGER.debug("Could not read the battery voltage: %s", exc)
+            return None
 
     async def _async_fetch_device_state(self) -> DeviceStateV2 | None:
         """Fetch the device state, preferring v2 and falling back to v1."""

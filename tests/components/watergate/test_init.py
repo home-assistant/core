@@ -1,6 +1,7 @@
 """Tests for the Watergate integration init module."""
 
 from collections.abc import Generator
+import copy
 from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import patch
@@ -15,7 +16,7 @@ from pytest_homeassistant.common import (
 )
 from pytest_homeassistant.typing import ClientSessionGenerator
 from watergate_local_api import WatergateApiException
-from watergate_local_api.models import TelemetryData
+from watergate_local_api.models import PowerSupply, TelemetryData
 
 from homeassistant.components.valve import ValveState
 from homeassistant.components.watergate.const import DOMAIN
@@ -399,3 +400,67 @@ async def test_webhook_is_acknowledged_without_coordinator_data(
 
     assert response.status == HTTPStatus.OK
     assert await response.json() == "OK"
+
+
+@pytest.mark.parametrize(
+    ("power_supply", "fetched"),
+    [("battery", True), ("external+battery", True), ("external", False)],
+)
+async def test_power_supply_is_only_fetched_with_a_battery(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+    power_supply: str,
+    fetched: bool,
+) -> None:
+    """A mains-only device has no battery voltage, so /power is not requested."""
+    state = copy.copy(DEFAULT_DEVICE_STATE_V2)
+    state.power_supply = power_supply
+    mock_watergate_client.async_get_device_state_v2.return_value = state
+
+    await init_integration(hass, mock_entry)
+
+    assert mock_entry.state is ConfigEntryState.LOADED
+    assert mock_watergate_client.async_get_power_supply_data.await_count == fetched
+
+
+async def test_power_supply_failure_does_not_fail_the_update(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """The battery voltage is a diagnostic: its failure keeps the rest of the data."""
+    mock_watergate_client.async_get_power_supply_data.side_effect = (
+        WatergateApiException("Server error")
+    )
+
+    await init_integration(hass, mock_entry)
+
+    assert mock_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("valve.sonic").state != STATE_UNAVAILABLE
+
+
+async def test_power_supply_webhook_refreshes_the_battery_voltage(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_entry: MockConfigEntry,
+    mock_watergate_client: Generator[AsyncMock],
+) -> None:
+    """A power supply change re-reads /power, as a battery may have appeared."""
+    await init_integration(hass, mock_entry)
+    assert mock_watergate_client.async_get_power_supply_data.await_count == 1
+    mock_watergate_client.async_get_power_supply_data.return_value = PowerSupply(
+        battery=True,
+        external=True,
+        batteries_voltage=6700,
+    )
+
+    client = await hass_client_no_auth()
+    response = await client.post(
+        f"/api/webhook/{MOCK_WEBHOOK_ID}",
+        json={"type": "power-supply-changed", "data": {"supply": "external+battery"}},
+    )
+    await hass.async_block_till_done()
+
+    assert response.status == HTTPStatus.OK
+    assert mock_watergate_client.async_get_power_supply_data.await_count == 2
