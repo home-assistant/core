@@ -26,12 +26,13 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .config_flow import sensor_name
-from .const import CONF_ONLY_INCLUDE_FEEDID, FEED_ID, FEED_NAME, FEED_TAG
+from .const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN, FEED_ID, FEED_NAME, FEED_TAG
 from .coordinator import EmonCMSConfigEntry, EmoncmsCoordinator
 
 SENSORS: dict[str | None, SensorEntityDescription] = {
@@ -241,15 +242,22 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
         if self.coordinator.data:
             elem = self.coordinator.data[self.idx]
         self._attr_translation_placeholders = {
-            "emoncms_details": f"{elem[FEED_TAG]} {elem[FEED_NAME]}",
+            "emoncms_details": elem[FEED_NAME],
         }
         self._attr_unique_id = f"{unique_id}-{elem[FEED_ID]}"
+        tag = elem[FEED_TAG] or name
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{unique_id}-{tag}")},
+            manufacturer="OpenEnergyMonitor",
+            name=tag,
+        )
         description = SENSORS.get(unit_of_measurement)
         if description is not None:
             self.entity_description = description
         else:
             self._attr_native_unit_of_measurement = unit_of_measurement
-            self._attr_name = f"{name} {elem[FEED_NAME]}"
+            self._attr_name = elem[FEED_NAME]
         self._update_attributes(elem)
 
     def _update_attributes(self, elem: dict[str, Any]) -> None:

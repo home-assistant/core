@@ -14,7 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.emoncms.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import EMONCMS_FAILURE, get_feed
@@ -99,3 +99,25 @@ async def test_coordinator_update(
     await skip_time()
 
     assert f"Error fetching {DOMAIN}_coordinator data" in caplog.text
+
+
+async def test_feeds_grouped_by_tag(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    emoncms_client: AsyncMock,
+) -> None:
+    """Test each feed tag becomes a device holding its feeds."""
+    garage = [{**get_feed(i, unit="°C"), "tag": "garage"} for i in (1, 2)]
+    emoncms_client.async_request.return_value = {
+        "success": True,
+        "message": [*garage, get_feed(3, unit="xyz")],
+    }
+    await setup_integration(hass, config_entry)
+
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    assert sorted(device.name for device in devices) == ["garage", "tag"]
+    garage_device = next(device for device in devices if device.name == "garage")
+    assert len(er.async_entries_for_device(entity_registry, garage_device.id)) == 2
+    assert hass.states.get("sensor.tag_parameter_3").name == "tag parameter 3"
