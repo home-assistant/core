@@ -18,7 +18,7 @@ from homeassistant.components.homey_energy_dongle.const import (
     CONF_WS_PATH,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -444,6 +444,33 @@ async def test_zeroconf_during_user_flow(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_meter"
+
+
+async def test_zeroconf_ignore_unreadable_dongle(
+    hass: HomeAssistant, telegrams: TelegramQueue
+) -> None:
+    """Test a dongle that can't be read can be ignored and stays ignored."""
+    telegrams.put_nowait(LocalApiDisabledError("Local API disabled"))
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY
+    )
+    assert result["step_id"] == "zeroconf_meter"
+    unique_id = hass.config_entries.flow.async_get(result["flow_id"])["context"][
+        "unique_id"
+    ]
+    assert unique_id == "dongle_37e4"
+
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IGNORE},
+        data={"unique_id": unique_id, "title": "Homey Energy Dongle (37e4)"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

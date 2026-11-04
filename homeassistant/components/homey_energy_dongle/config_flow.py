@@ -222,6 +222,10 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         ]
         name = f"Homey Energy Dongle ({dongle_id})"
         self.context["title_placeholders"] = {"name": name}
+        # Lets the user ignore a dongle that can't be read yet. Reading a
+        # telegram replaces it with the meter's identifier.
+        await self.async_set_unique_id(f"dongle_{dongle_id}")
+        self._abort_if_unique_id_configured()
         # The meter's identifier is only in telegrams, so read one to recognize a
         # configured dongle on a new address. Connection errors are shown when
         # the user confirms.
