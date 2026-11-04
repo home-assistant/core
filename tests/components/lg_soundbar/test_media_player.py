@@ -331,6 +331,26 @@ async def test_external_power_cycle(
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.OFF
 
 
+async def test_powered_on_report_refreshes_playback_info(
+    hass: HomeAssistant,
+    mock_soundbar_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a powered-on report requests playback info, an off report does not."""
+    await setup_integration(hass, mock_config_entry)
+    callback = find_update_callback(mock_soundbar_client)
+    client = mock_soundbar_client.return_value
+    client.get_play.reset_mock()
+
+    send_power_status(callback, False)
+    await hass.async_block_till_done()
+    client.get_play.assert_not_called()
+
+    send_power_status(callback, True)
+    await hass.async_block_till_done()
+    client.get_play.assert_called_once_with()
+
+
 async def test_unload_closes_listener(
     hass: HomeAssistant,
     mock_soundbar_client: MagicMock,

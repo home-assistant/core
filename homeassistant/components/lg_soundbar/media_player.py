@@ -163,14 +163,7 @@ class LGDevice(MediaPlayerEntity):
             if "i_curr_func" in data:
                 self._function = data["i_curr_func"]
             if "b_powerstatus" in data:
-                self._device_on = data["b_powerstatus"]
-                if not self._device_on:
-                    self._attr_state = MediaPlayerState.OFF
-                elif self._attr_state not in (
-                    MediaPlayerState.PLAYING,
-                    MediaPlayerState.PAUSED,
-                ):
-                    self._attr_state = MediaPlayerState.ON
+                self._update_power(data["b_powerstatus"])
         elif response["msg"] == "FUNC_VIEW_INFO":
             if "i_curr_func" in data:
                 self._function = data["i_curr_func"]
@@ -199,6 +192,18 @@ class LGDevice(MediaPlayerEntity):
         # Responses can arrive before the entity is added to Home Assistant
         if self.hass is not None:
             self.schedule_update_ha_state()
+
+    def _update_power(self, powered_on: bool) -> None:
+        """Update the power state from a power status report."""
+        self._device_on = powered_on
+        if not powered_on:
+            self._attr_state = MediaPlayerState.OFF
+            return
+        if self._attr_state not in (MediaPlayerState.PLAYING, MediaPlayerState.PAUSED):
+            self._attr_state = MediaPlayerState.ON
+        if self._device is not None:
+            # The cached playback state may be stale after a resync
+            self._device.get_play()
 
     def _update_equalisers(self, data: dict[str, Any]) -> None:
         """Update the equalisers."""
