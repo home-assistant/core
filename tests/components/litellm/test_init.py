@@ -67,8 +67,9 @@ async def test_setup_error(
 def test_client_resources_are_imported_with_the_integration() -> None:
     """Importing the integration must leave no lazy client import for the loop.
 
-    The OpenAI client imports its chat and audio resources on first use, which
-    is a conversation turn or a speech-to-text request in the event loop.
+    The OpenAI client imports its chat, audio and decisions resources on first
+    use, which is a conversation turn, a speech-to-text request or an AI task
+    evaluation in the event loop.
 
     A clean interpreter is the only way to see this: anything the test suite
     imported first would hide it.
@@ -79,7 +80,8 @@ def test_client_resources_are_imported_with_the_integration() -> None:
             "-c",
             "import sys, homeassistant.components.litellm; "
             "print(all(m in sys.modules for m in "
-            "('openai.resources.chat.chat', 'openai.resources.audio.audio')))",
+            "('openai.resources.chat.chat', 'openai.resources.audio.audio', "
+            "'openai.resources.decisions')))",
         ],
         capture_output=True,
         check=True,
