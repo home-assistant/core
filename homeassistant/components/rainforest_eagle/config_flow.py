@@ -159,10 +159,16 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unsupported_device_type"
 
                 if data_updates is not None:
+                    # A title the user renamed is not the generated one.
+                    title = (
+                        user_input[CONF_CLOUD_ID]
+                        if entry.title == entry.data[CONF_CLOUD_ID]
+                        else entry.title
+                    )
                     return self.async_update_reload_and_abort(
                         entry,
                         unique_id=user_input[CONF_CLOUD_ID],
-                        title=user_input[CONF_CLOUD_ID],
+                        title=title,
                         data_updates=data_updates,
                     )
 

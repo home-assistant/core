@@ -21,11 +21,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-def _mock_reconfigure_entry(hass: HomeAssistant) -> MockConfigEntry:
+def _mock_reconfigure_entry(
+    hass: HomeAssistant, title: str = "abcdef"
+) -> MockConfigEntry:
     """Add a mock config entry for reconfigure tests."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="abcdef",
+        title=title,
         unique_id="abcdef",
         data={
             CONF_TYPE: TYPE_EAGLE_200,
@@ -553,9 +555,18 @@ async def test_reconfigure_eagle_100(hass: HomeAssistant) -> None:
     }
 
 
-async def test_reconfigure_updates_unique_id(hass: HomeAssistant) -> None:
-    """Test reconfigure updates the unique ID when Cloud ID changes."""
-    entry = _mock_reconfigure_entry(hass)
+@pytest.mark.parametrize(
+    ("initial_title", "expected_title"),
+    [
+        pytest.param("abcdef", "different", id="generated_title_follows_cloud_id"),
+        pytest.param("Garage eagle", "Garage eagle", id="custom_title_is_kept"),
+    ],
+)
+async def test_reconfigure_changes_cloud_id(
+    hass: HomeAssistant, initial_title: str, expected_title: str
+) -> None:
+    """Test reconfigure moves the unique ID and title when the Cloud ID changes."""
+    entry = _mock_reconfigure_entry(hass, title=initial_title)
     result = await entry.start_reconfigure_flow(hass)
 
     with (
@@ -581,7 +592,7 @@ async def test_reconfigure_updates_unique_id(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.unique_id == "different"
-    assert entry.title == "different"
+    assert entry.title == expected_title
     assert entry.data == {
         CONF_TYPE: TYPE_EAGLE_200,
         CONF_HOST: "192.168.1.56",
