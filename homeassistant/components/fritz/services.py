@@ -26,6 +26,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
+    async_get_device_and_config_entry,
     async_register_admin_service,
 )
 from homeassistant.util.json import JsonArrayType, JsonObjectType
@@ -165,23 +166,9 @@ async def _async_dial(service_call: ServiceCall) -> None:
 
 async def _async_get_mesh_info(service_call: ServiceCall) -> ServiceResponse:
     """Return the most recent mesh info for targeted config entry."""
-    target_entry_ids = await async_extract_config_entry_ids(service_call)
-    target_entries: list[FritzConfigEntry] = [
-        loaded_entry
-        for loaded_entry in service_call.hass.config_entries.async_loaded_entries(
-            DOMAIN
-        )
-        if loaded_entry.entry_id in target_entry_ids
-    ]
-
-    if not target_entries:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_found",
-            translation_placeholders={"service": service_call.service},
-        )
-
-    target_entry = target_entries[0]
+    _, target_entry = async_get_device_and_config_entry(
+        service_call.hass, DOMAIN, service_call.data["device_id"]
+    )
 
     user_id = service_call.context.user_id
     if user_id is None:

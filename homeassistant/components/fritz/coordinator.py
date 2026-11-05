@@ -556,6 +556,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Retrieve latest hosts information from the FRITZ!Box."""
         hosts_attributes: list[HostAttributes] = []
         hosts_info: list[HostInfo] = []
+        self._hosts_attributes_raw = None
         try:
             try:
                 hosts_attributes = cast(
