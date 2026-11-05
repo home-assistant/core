@@ -633,27 +633,43 @@ async def test_fix_issue_next_flow_repair_flow(
 
     ir.async_create_issue(hass, **DEFAULT_ISSUES[0])
 
-    issue = issue_registry.async_get_issue("fake_integration", "issue_1")
-
     url = "/api/repairs/issues/fix"
 
     resp = await client.post(
         url, json={"handler": "fake_integration", "issue_id": "repairs_flow_issue"}
     )
 
-    assert resp.status == HTTPStatus.OK, (
-        f"Error: {resp.status} cause {await resp.text()}"
-    )
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
     assert data["type"] == data_entry_flow.FlowResultType.FORM
-    url = f"/api/repairs/issues/fix/{data['flow_id']}"
-    resp = await client.post(url, json={})
-    assert resp.status == HTTPStatus.OK, (
-        f"Error: {resp.status} cause {await resp.text()}"
-    )
+    flow_id = data["flow_id"]
+    # Test issue removed after flow start error handling
+    resp = await client.post(f"{url}/{flow_id}", json={"remove_issue": True})
+    assert resp.status != HTTPStatus.OK
+    data = await resp.json()
+    assert data["message"] == "issue issue_1 not found in next_flow"
+    # Resurrect the issue
+    ir.async_create_issue(hass, **DEFAULT_ISSUES[0])
+    issue = issue_registry.async_get_issue("fake_integration", "issue_1")
+    # Retry
+    resp = await client.post(f"{url}/{flow_id}", json={})
+    assert resp.ok
     data = await resp.json()
     assert data["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert data["result"] == issue.to_json()
+    assert data["result"] == {
+        "breaks_in_ha_version": issue.breaks_in_ha_version,
+        "created": ANY,
+        "dismissed_version": issue.dismissed_version,
+        "ignored": issue.dismissed_version is not None,
+        "domain": issue.domain,
+        "is_fixable": issue.is_fixable,
+        "issue_domain": issue.issue_domain,
+        "issue_id": issue.issue_id,
+        "learn_more_url": issue.learn_more_url,
+        "severity": issue.severity,
+        "translation_key": issue.translation_key,
+        "translation_placeholders": issue.translation_placeholders,
+    }
 
 
 async def test_fix_issue_unauth(
