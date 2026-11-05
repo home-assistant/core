@@ -933,8 +933,8 @@ async def test_command_connection_error_recovers_on_coordinator_refresh(
 @pytest.mark.parametrize(
     ("service", "setter"),
     [
-        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, "set_airflow_min", id="min"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, "set_airflow_max", id="max"),
+        pytest.param(IZoneService.AIRFLOW_MIN, "set_airflow_min", id="min"),
+        pytest.param(IZoneService.AIRFLOW_MAX, "set_airflow_max", id="max"),
     ],
 )
 async def test_deprecated_airflow_action_still_works_and_raises_issue(
@@ -948,7 +948,10 @@ async def test_deprecated_airflow_action_still_works_and_raises_issue(
     await hass.services.async_call(
         DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ZONE_ENTITY, ATTR_AIRFLOW: 40},
+        {
+            CommonServiceArgument.ENTITY_ID: ZONE_ENTITY,
+            IZoneServiceArgument.AIRFLOW: 40,
+        },
         blocking=True,
     )
 
