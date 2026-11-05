@@ -10,7 +10,7 @@ import requests
 from homeassistant import config_entries
 from homeassistant.components import ifttt
 from homeassistant.components.ifttt import CONF_KEY
-from homeassistant.components.ifttt.const import DOMAIN, SERVICE_TRIGGER
+from homeassistant.components.ifttt.const import DOMAIN, IftttService
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
@@ -75,7 +75,7 @@ async def test_trigger_service_raises_when_ifttt_unreachable(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TRIGGER,
+            IftttService.TRIGGER,
             {"event": "test_event"},
             blocking=True,
         )

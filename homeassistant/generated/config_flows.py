@@ -156,7 +156,7 @@ FLOWS = {
         "cookidoo",
         "coolmaster",
         "cpuspeed",
-        "crownstone",
+        "croma_infrared",
         "cync",
         "daikin",
         "data_grand_lyon",

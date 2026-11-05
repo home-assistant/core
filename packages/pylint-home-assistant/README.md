@@ -106,6 +106,8 @@ Every check has a code following the
 | `C7417` | [`home-assistant-init-not-first`](#c7417-home-assistant-init-not-first) | `__init__` should be defined before other instance methods and properties |
 | `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
 | `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
+| `C7458` | [`home-assistant-logger-const-name`](#c7458-home-assistant-logger-const-name) | Logger in an integration's `const.py` should use `__package__` |
+| `C7459` | [`home-assistant-placeholder-key`](#c7459-home-assistant-placeholder-key) | Placeholder keys should be string literals, not constants such as `CONF_*` |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
 | `E7402` | [`home-assistant-argument-type`](#e7402-home-assistant-argument-type) | Function argument should have the specified type hint |
 | `E7403` | [`home-assistant-return-type`](#e7403-home-assistant-return-type) | Function should have the specified return type hint |
@@ -171,11 +173,13 @@ Every check has a code following the
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 | `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
+| `W7454` | [`home-assistant-sequential-add-entities`](#w7454-home-assistant-sequential-add-entities) | Sequential `async_add_entities` calls should be grouped |
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
+| `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
 
 ## `home_assistant_logger` checker
 
-Enforces consistent formatting of logger messages across the codebase.
+Enforces consistent formatting and naming of loggers across the codebase.
 
 
 ### `C7401`: `home-assistant-logger-period`
@@ -189,6 +193,13 @@ Home Assistant follow a convention of not using trailing punctuation.
 Logger messages must start with a capital letter. Debug-level messages
 are exempt from this rule. If a message does not warrant capitalization,
 consider downgrading it to debug level.
+
+
+### `C7458`: `home-assistant-logger-const-name`
+
+The logger defined in an integration's `const.py` must use
+`logging.getLogger(__package__)`. With `__name__`, log records are attributed
+to `homeassistant.components.<domain>.const` instead of the integration.
 
 
 ## `home_assistant_imports` checker
@@ -422,6 +433,26 @@ When the alias lives in `__init__.py`, import it in the coordinator under
 coordinator that passes `config_entry` to `super().__init__` doesn't need to
 assign `self.config_entry` itself. To narrow its type, annotate it on the
 class instead.
+
+
+## `home_assistant_runtime_data_typed_entry` checker
+
+Checks that config entries that set `runtime_data` are typed.
+
+### `W7460`: `home-assistant-runtime-data-untyped-config-entry`
+
+`ConfigEntry` is generic over its `runtime_data`. When `runtime_data` is set
+on a config entry that is annotated as a plain `ConfigEntry`, that
+`runtime_data` is `Any` and isn't type checked. Define a typed config entry and
+use it instead:
+
+```python
+type MyConfigEntry = ConfigEntry[MyData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MyConfigEntry) -> bool:
+    entry.runtime_data = MyData(...)
+```
 
 
 ## `home_assistant_coordinator_entity_available` checker
@@ -1092,6 +1123,37 @@ The placeholders passed in code (e.g. `translation_placeholders={...}`)
 don't match the `{placeholder}` slots in the `strings.json` message.
 
 
+## `home_assistant_placeholder_keys` checker
+
+Checks the keys of translation placeholder dicts. A placeholder key refers to
+a `{placeholder}` slot in `strings.json`, not to a configuration key or
+attribute.
+
+A dict literal is checked when its name ends in `placeholders`: a keyword
+argument such as `description_placeholders=`, an assignment such as
+`self.context["title_placeholders"] = {...}` or `placeholders = {...}`, or a
+dict entry such as `{"title_placeholders": {...}}`.
+
+### `C7459`: `home-assistant-placeholder-key`
+
+Use a string literal for the placeholder key instead of an unrelated constant
+such as `CONF_USERNAME`. Integrations that need a constant can use a dedicated
+`PLACEHOLDER_*` constant or a `*Placeholder` enum.
+
+```python
+# Bad
+description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]}
+
+# Good
+description_placeholders={"username": entry.data[CONF_USERNAME]}
+
+# Bad
+self.context["title_placeholders"] = {CONF_HOST: discovery_info.host}
+
+# Good
+self.context["title_placeholders"] = {"host": discovery_info.host}
+```
+
 ## `home_assistant_mdi_icons` checker
 
 Validates that `mdi:` icon references in code and `icons.json` refer to
@@ -1255,6 +1317,24 @@ statements (uninterrupted by control flow such as `if`/`try`/`with`/`for`)
 should be combined into a single executor job that performs all the work,
 avoiding unnecessary context switches back to the event loop between
 blocking calls. The rule applies to integration modules only.
+
+
+## `home_assistant_sequential_add_entities` checker
+
+Detects consecutive `async_add_entities` calls in integration modules that
+could be grouped into a single call.
+
+### `W7454`: `home-assistant-sequential-add-entities`
+
+Two or more `async_add_entities` (or `add_entities`) calls appearing as
+consecutive statements (uninterrupted by control flow such as
+`if`/`try`/`with`/`for`) should be combined into a single call that adds all
+entities at once. Calls with different arguments besides the entities, such
+as a different `config_subentry_id` when adding entities for multiple
+subentries or a different `update_before_add`, cannot be combined and are not
+flagged. Only calls to the callback passed to the platform setup function
+(`async_setup_entry`, `async_setup_platform` or `setup_platform`) are checked.
+The rule applies to integration modules only.
 
 
 ## `home_assistant_has_entity_name` checker
