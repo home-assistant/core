@@ -14204,6 +14204,7 @@
         'delay_washing',
         'drying',
         'finish',
+        'none',
         'pre_drain',
         'pre_wash',
         'rinse',
@@ -14254,6 +14255,7 @@
         'delay_washing',
         'drying',
         'finish',
+        'none',
         'pre_drain',
         'pre_wash',
         'rinse',
@@ -14267,7 +14269,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'none',
   })
 # ---
 # name: test_all_entities[da_wm_dw_000001][sensor.theater_dishwasher_energy-entry]
@@ -14869,6 +14871,7 @@
         'delay_washing',
         'drying',
         'finish',
+        'none',
         'pre_drain',
         'pre_wash',
         'rinse',
@@ -14919,6 +14922,7 @@
         'delay_washing',
         'drying',
         'finish',
+        'none',
         'pre_drain',
         'pre_wash',
         'rinse',
@@ -14932,7 +14936,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'none',
   })
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_energy-entry]
