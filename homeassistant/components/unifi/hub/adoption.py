@@ -60,9 +60,7 @@ class UnifiDeviceAdoption:
         if mac in self._pending:
             return
         self._pending[mac] = self.hub.api.devices.subscribe(
-            self._async_pending_device_updated,
-            (ItemEvent.CHANGED, ItemEvent.DELETED),
-            id_filter=mac,
+            self._async_pending_device_changed, ItemEvent.CHANGED, id_filter=mac
         )
 
     @callback
@@ -73,15 +71,13 @@ class UnifiDeviceAdoption:
         self._pending.clear()
 
     @callback
-    def _async_pending_device_updated(self, event: ItemEvent, obj_id: str) -> None:
+    def _async_pending_device_changed(self, event: ItemEvent, obj_id: str) -> None:
         """Add entities once a followed device is adopted."""
-        if event is ItemEvent.DELETED:
-            self._pending.pop(obj_id)()
-            return
         if not async_device_supported_fn(self.hub, obj_id):
             return
         self._pending.pop(obj_id)()
-        # The ports and outlets of this update are processed after this callback
+        # aiounifi processes the ports and outlets of this update after this
+        # callback, and their entities are only created on added events
         self.hub.hass.loop.call_soon(self._async_add_entities)
 
     @callback

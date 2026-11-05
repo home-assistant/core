@@ -273,7 +273,7 @@ PENDING_DEVICE = {
     "version": "4.0.42.10433",
 }
 
-# The port table is only reported once the device is adopted
+# A device may not report its port table until it is adopted
 ADOPTED_PENDING_DEVICE = {
     **PENDING_DEVICE,
     "adopted": True,
@@ -353,11 +353,17 @@ async def test_device_pending_adoption(
     assert (pending_device_entry := device_entry(PENDING_MAC))
     assert all(entity_ids(PENDING_MAC))
 
-    # Forgetting the device in the controller removes its loaded entities again
+    # Forgetting the device in the controller removes its loaded entities,
+    # the registry entries of its disabled entities are kept
     mock_websocket_message(message=MessageKey.DEVICE, data=PENDING_DEVICE)
     await hass.async_block_till_done()
 
-    assert not entity_ids(PENDING_MAC)[0]
+    assert [bool(entity_id) for entity_id in entity_ids(PENDING_MAC)] == [
+        False,
+        True,
+        False,
+        True,
+    ]
 
     # The device entry of a device that is not adopted can be removed from the UI
     assert await async_setup_component(hass, "config", {})
@@ -387,14 +393,6 @@ async def test_device_pending_adoption(
     await hass.async_block_till_done()
 
     assert entity_ids(ADOPTED_MAC)[0]
-
-    # A device pending adoption that the controller stops listing is let go of
-    mock_websocket_message(message=MessageKey.DEVICE, data=PENDING_DEVICE)
-    await hass.async_block_till_done()
-    config_entry.runtime_data.api.devices.remove_item({"mac": PENDING_MAC})
-    await hass.async_block_till_done()
-
-    assert not entity_ids(PENDING_MAC)[0]
 
     # Unloading with a device still pending adoption
     mock_websocket_message(
