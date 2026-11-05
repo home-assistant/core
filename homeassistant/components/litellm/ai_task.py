@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import override
 
 import openai
+from openai.types.decision import AnswerAnswerResourceChoice
 from openai.types.decision_create_params import Question
 from openai.types.decision_input_message_param import DecisionInputMessageParam
 from openai.types.decision_input_part_union_param import DecisionInputPartUnionParam
@@ -37,6 +38,24 @@ def _read_image_base64(path: Path) -> str:
     return base64.b64encode(path.read_bytes()).decode("ascii")
 
 
+def _convert_choice(
+    answer: AnswerAnswerResourceChoice, options: set[str]
+) -> ai_task.ChoiceAnswer:
+    """Convert a choice answer, validating it against the requested options."""
+    if not isinstance(answer.choice, str) or any(
+        not isinstance(option.value, str) for option in answer.probabilities
+    ):
+        raise HomeAssistantError("LiteLLM returned an invalid choice")
+    probabilities = {
+        str(option.value): option.probability for option in answer.probabilities
+    }
+    if set(probabilities) != options:
+        raise HomeAssistantError("LiteLLM returned invalid choice probabilities")
+    if answer.choice not in options:
+        raise HomeAssistantError("LiteLLM returned an unknown choice")
+    return ai_task.ChoiceAnswer(choice=answer.choice, probabilities=probabilities)
+
+
 class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
     """LiteLLM decision task entity."""
 
@@ -53,6 +72,7 @@ class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
         """Evaluate questions using the LiteLLM decisions API."""
         questions: list[Question] = []
         score_levels: dict[str, int] = {}
+        choice_options: dict[str, set[str]] = {}
         for question_id, question in task.questions.items():
             if question["type"] == "noul":
                 questions.append(
@@ -63,6 +83,7 @@ class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
                     }
                 )
             elif question["type"] == "choice":
+                choice_options[question_id] = set(question["criteria"])
                 questions.append(
                     {
                         "type": "choice",
@@ -165,20 +186,8 @@ class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
             if answer.type == "predicate":
                 answers[question_id] = ai_task.NoulAnswer(noul=answer.probability)
             elif answer.type == "choice":
-                if not isinstance(answer.choice, str) or any(
-                    not isinstance(option.value, str) for option in answer.probabilities
-                ):
-                    raise HomeAssistantError("LiteLLM returned an invalid choice")
-                probabilities = {
-                    str(option.value): option.probability
-                    for option in answer.probabilities
-                }
-                if len(probabilities) != len(answer.probabilities):
-                    raise HomeAssistantError(
-                        "LiteLLM returned duplicate choice probabilities"
-                    )
-                answers[question_id] = ai_task.ChoiceAnswer(
-                    choice=answer.choice, probabilities=probabilities
+                answers[question_id] = _convert_choice(
+                    answer, choice_options[question_id]
                 )
             elif answer.type == "score":
                 levels = sorted(answer.probabilities, key=lambda level: level.value)
