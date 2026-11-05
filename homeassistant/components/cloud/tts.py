@@ -8,9 +8,8 @@ from hass_nabucasa.voice import AudioOutput, VoiceError
 from hass_nabucasa.voice_data import TTS_VOICES
 
 from homeassistant.components.tts import (
-    ATTR_AUDIO_OUTPUT,
-    ATTR_VOICE,
     Provider,
+    TextToSpeechCommonOption,
     TextToSpeechEntity,
     TTSAudioRequest,
     TTSAudioResponse,
@@ -195,7 +194,6 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def _prepare_voice_args(
     *,
-    hass: HomeAssistant,
     language: str,
     voice: str,
 ) -> dict:
@@ -277,7 +275,7 @@ class CloudTTSEntity(TextToSpeechEntity):
     def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
-            ATTR_AUDIO_OUTPUT: AudioOutput.MP3.value,
+            TextToSpeechCommonOption.AUDIO_OUTPUT: AudioOutput.MP3.value,
         }
 
     @property
@@ -290,7 +288,7 @@ class CloudTTSEntity(TextToSpeechEntity):
     @override
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
-        return [ATTR_VOICE, ATTR_AUDIO_OUTPUT]
+        return [TextToSpeechCommonOption.VOICE, TextToSpeechCommonOption.AUDIO_OUTPUT]
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -361,12 +359,11 @@ class CloudTTSEntity(TextToSpeechEntity):
         try:
             data = await self.cloud.voice.process_tts(
                 text=message,
-                output=options[ATTR_AUDIO_OUTPUT],
+                output=options[TextToSpeechCommonOption.AUDIO_OUTPUT],
                 **_prepare_voice_args(
-                    hass=self.hass,
                     language=language,
                     voice=options.get(
-                        ATTR_VOICE,
+                        TextToSpeechCommonOption.VOICE,
                         (
                             self._voice
                             if language == self._language
@@ -379,7 +376,7 @@ class CloudTTSEntity(TextToSpeechEntity):
             _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return (options[ATTR_AUDIO_OUTPUT], data)
+        return (options[TextToSpeechCommonOption.AUDIO_OUTPUT], data)
 
     @override
     async def async_stream_tts_audio(
@@ -389,10 +386,9 @@ class CloudTTSEntity(TextToSpeechEntity):
         data_gen = self.cloud.voice.process_tts_stream(
             text_stream=request.message_gen,
             **_prepare_voice_args(
-                hass=self.hass,
                 language=request.language,
                 voice=request.options.get(
-                    ATTR_VOICE,
+                    TextToSpeechCommonOption.VOICE,
                     (
                         self._voice
                         if request.language == self._language
@@ -437,7 +433,7 @@ class CloudProvider(Provider):
     @override
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
-        return [ATTR_VOICE, ATTR_AUDIO_OUTPUT]
+        return [TextToSpeechCommonOption.VOICE, TextToSpeechCommonOption.AUDIO_OUTPUT]
 
     @callback
     @override
@@ -483,7 +479,7 @@ class CloudProvider(Provider):
     def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
-            ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
+            TextToSpeechCommonOption.AUDIO_OUTPUT: AudioOutput.MP3,
         }
 
     @override
@@ -496,12 +492,11 @@ class CloudProvider(Provider):
         try:
             data = await self.cloud.voice.process_tts(
                 text=message,
-                output=options[ATTR_AUDIO_OUTPUT],
+                output=options[TextToSpeechCommonOption.AUDIO_OUTPUT],
                 **_prepare_voice_args(
-                    hass=self.hass,
                     language=language,
                     voice=options.get(
-                        ATTR_VOICE,
+                        TextToSpeechCommonOption.VOICE,
                         (
                             self._voice
                             if language == self._language
@@ -514,4 +509,4 @@ class CloudProvider(Provider):
             _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return options[ATTR_AUDIO_OUTPUT], data
+        return options[TextToSpeechCommonOption.AUDIO_OUTPUT], data
