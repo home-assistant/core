@@ -1,6 +1,7 @@
 {
   "domain": "rpi_power",
   "name": "Raspberry Pi Power Supply Checker",
+  "categories": ["diy_makers.boards_hardware", "computers_network.monitoring"],
   "codeowners": ["@shenxn", "@swetoast"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rpi_power",

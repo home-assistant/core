@@ -19,6 +19,7 @@ from data_grand_lyon_ha import (
     VelovStationStatus,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.data_grand_lyon.const import (
     CONF_LINE,
@@ -33,8 +34,6 @@ from homeassistant.components.data_grand_lyon.const import (
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 MOCK_DEPARTURES = [
     TclPassage(
@@ -278,7 +277,7 @@ def mock_line_config_entry(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.data_grand_lyon.async_setup_entry", return_value=True
+        "homeassistant.components.data_grand_lyon.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

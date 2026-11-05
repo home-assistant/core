@@ -1,5 +1,7 @@
 """Test Met weather entity."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.met.const import DOMAIN
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_new_config_entry(

@@ -1,6 +1,7 @@
 {
   "domain": "otp",
   "name": "One-Time Password (OTP)",
+  "categories": ["helpers"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/otp",

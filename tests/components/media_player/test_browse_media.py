@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import mock_component
 
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError
-
-from tests.common import mock_component
 
 
 @pytest.fixture(name="mock_sign_path")

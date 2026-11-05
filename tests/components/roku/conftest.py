@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from rokuecp import Device as RokuDevice
 
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 def app_icon_url(*args, **kwargs):
@@ -33,7 +32,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.roku.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.roku.async_setup_entry", return_value=None):
         yield
 
 

@@ -15,6 +15,7 @@ from aiohasupervisor.models import (
     SuggestionType,
 )
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -23,8 +24,6 @@ from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
 from .test_issues import mock_resolution_info
-
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)

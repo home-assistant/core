@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
@@ -19,8 +20,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import WAKE_UP_SLEEP_ENTRY_IDS, async_init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_calendar_events(

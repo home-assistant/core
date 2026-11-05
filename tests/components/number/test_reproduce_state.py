@@ -1,6 +1,7 @@
 """Test reproduce state for Number entities."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.number.const import (
     ATTR_MAX,
@@ -10,8 +11,6 @@ from homeassistant.components.number.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 VALID_NUMBER1 = "19.0"
 VALID_NUMBER2 = "99.9"

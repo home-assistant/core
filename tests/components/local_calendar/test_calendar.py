@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.local_calendar.const import DOMAIN
 from homeassistant.components.local_calendar.store import LocalCalendarStore
@@ -26,8 +27,6 @@ from .conftest import (
     GetEventsFn,
     event_fields,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_empty_calendar(

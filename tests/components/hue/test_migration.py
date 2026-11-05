@@ -2,14 +2,14 @@
 
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import hue
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_bridge
-
-from tests.common import MockConfigEntry
 
 
 async def test_migrate_api_key(hass: HomeAssistant) -> None:

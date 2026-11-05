@@ -42,16 +42,16 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
         return self.coordinator.data.status.fan_on
 
     @override
-    def turn_on(
+    async def async_turn_on(
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn on sauna fan."""
-        self.coordinator.client.set_fan_on(True)
+        await self._async_send_command(lambda client: client.set_fan_on(True))
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off sauna fan."""
-        self.coordinator.client.set_fan_on(False)
+        await self._async_send_command(lambda client: client.set_fan_on(False))

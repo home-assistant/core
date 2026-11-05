@@ -1,13 +1,13 @@
 """Test issue template functions."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
 from tests.helpers.template.helpers import assert_result_info, render_to_info
 
 
@@ -48,6 +48,7 @@ async def test_issues(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> 
         active=False,
         breaks_in_ha_version="2025.12",
         config_entry_id=None,
+        config_subentry_id=None,
         created=dt_util.utcnow(),
         data=None,
         dismissed_version=None,

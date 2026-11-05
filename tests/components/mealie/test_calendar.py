@@ -5,6 +5,8 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
 from aiomealie import About, MealplanResponse
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, Platform
@@ -12,9 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 
 async def test_api_calendar(

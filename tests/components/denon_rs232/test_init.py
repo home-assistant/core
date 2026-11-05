@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from serialx import SerialException
 
 from homeassistant.components.denon_rs232.config_flow import CONF_MODEL_NAME
 from homeassistant.components.denon_rs232.const import DOMAIN
@@ -12,8 +14,6 @@ from homeassistant.core import HomeAssistant
 
 from . import MOCK_MODEL
 from .conftest import MockReceiver
-
-from tests.common import MockConfigEntry
 
 
 async def test_remove_entry_while_loaded(
@@ -70,3 +70,18 @@ async def test_setup_retry_hides_api_key(
         "Error connecting to Denon receiver at esphome://proxy.local:6053/"
     )
     assert "SECRET" not in caplog.text
+
+
+async def test_setup_serial_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Retry setup when the serial transport cannot be opened."""
+    with patch(
+        "serialx.open_serial_connection",
+        side_effect=SerialException("Serial proxy is unavailable"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

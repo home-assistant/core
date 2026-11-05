@@ -6,6 +6,7 @@ from accuweather import ApiError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.accuweather.const import (
@@ -31,8 +32,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import init_integration
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

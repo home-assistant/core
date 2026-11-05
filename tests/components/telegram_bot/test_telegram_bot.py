@@ -2,7 +2,6 @@
 
 import base64
 import errno
-from http import HTTPStatus
 import io
 import os
 from pathlib import Path
@@ -10,6 +9,12 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_load_fixture,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from telegram import (
     Chat,
     File,
@@ -58,7 +63,6 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_REPLY_TO_MSGID,
     ATTR_SHOW_ALERT,
     ATTR_STICKER_ID,
-    ATTR_TARGET,
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
@@ -93,11 +97,9 @@ from homeassistant.components.telegram_bot.const import (
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_SERVICE,
     CONF_API_KEY,
     CONF_PLATFORM,
     HTTP_BASIC_AUTHENTICATION,
@@ -107,17 +109,13 @@ from homeassistant.const import (
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     Context,
-    Event,
     HomeAssistant,
     ServiceResponse,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import write_utf8_file
-
-from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
-from tests.typing import ClientSessionGenerator
 
 
 async def test_webhook_platform_init(hass: HomeAssistant, webhook_bot) -> None:
@@ -368,7 +366,6 @@ async def test_send_message_with_inline_keyboard(
             disable_notification=False,
             reply_to_message_id=None,
             reply_markup=expected,
-            read_timeout=None,
             message_thread_id=None,
         )
 
@@ -581,8 +578,8 @@ def _assert_download_file_response(
 
 async def test_send_chat_action(
     hass: HomeAssistant,
-    webhook_bot,
     mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
 ) -> None:
     """Test the send_chat_action service."""
     mock_broadcast_config_entry.add_to_hass(hass)
@@ -1136,10 +1133,18 @@ async def test_multiple_config_entries_error(
     await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # setup the second entry
-    mock_broadcast_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    # setup the second entry, a different bot with its own token
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="mock api key 2",
+        data={**mock_broadcast_config_entry.data, CONF_API_KEY: "mock api key 2"},
+        options=mock_broadcast_config_entry.options,
+        minor_version=mock_broadcast_config_entry.minor_version,
+    )
+    second_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(second_entry.entry_id)
     await hass.async_block_till_done()
+    assert second_entry.state is ConfigEntryState.LOADED
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
@@ -1275,6 +1280,39 @@ async def test_send_message_config_entry_error(
     await hass.async_block_till_done()
     assert err.value.translation_key == "entry_not_loaded"
     assert err.value.translation_placeholders == {"telegram_bot": "Mock Title"}
+
+
+async def test_send_message_config_entry_wrong_domain(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message with a config entry of another integration."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    other_entry = MockConfigEntry(domain="other", title="Other entry")
+    other_entry.add_to_hass(hass)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                CONF_CONFIG_ENTRY_ID: other_entry.entry_id,
+                ATTR_MESSAGE: "mock message",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "service_config_entry_wrong_domain"
+    assert err.value.translation_placeholders == {
+        "domain": DOMAIN,
+        "entry_title": "Other entry",
+    }
 
 
 async def test_delete_message(
@@ -1444,7 +1482,6 @@ async def test_edit_message(
         parse_mode=None,
         disable_web_page_preview=None,
         reply_markup=None,
-        read_timeout=None,
     )
 
     with patch(
@@ -1470,7 +1507,6 @@ async def test_edit_message(
         inline_message_id=None,
         caption="mock caption",
         reply_markup=None,
-        read_timeout=None,
         parse_mode=PARSER_MD2,
     )
 
@@ -1537,7 +1573,6 @@ async def test_answer_callback_query(
         123456,
         text="mock message",
         show_alert=True,
-        read_timeout=None,
     )
 
 
@@ -1848,7 +1883,6 @@ async def test_set_message_reaction(
         54321,
         reaction="👍",
         is_big=True,
-        read_timeout=None,
     )
 
 
@@ -1886,7 +1920,6 @@ async def test_send_message_draft(
         text="_Thinking..._",
         message_thread_id=123,
         parse_mode=PARSER_MD2,
-        read_timeout=None,
     )
 
 
@@ -2035,159 +2068,6 @@ async def test_notify_entity_send_message(
     }
 
 
-@pytest.mark.parametrize(
-    ("event", "expected_action_origin"),
-    [
-        (
-            Event("automation_triggered", {ATTR_ENTITY_ID: "automation.automation_0"}),
-            "automation.automation_0",
-        ),
-        (
-            Event("call_service", {ATTR_DOMAIN: "script", ATTR_SERVICE: "mock_script"}),
-            "script.mock_script",
-        ),
-        (
-            None,
-            "call_service",
-        ),
-    ],
-)
-async def test_migrate_chat_id(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_broadcast_config_entry: MockConfigEntry,
-    mock_external_calls: None,
-    issue_registry: IssueRegistry,
-    event: Event | None,
-    expected_action_origin: str,
-) -> None:
-    """Test send message using chat_id as target."""
-
-    mock_broadcast_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    context = Context()
-    context.origin_event = event
-    response = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEND_MESSAGE,
-        {ATTR_TARGET: 654321, ATTR_MESSAGE: "test_message"},
-        blocking=True,
-        context=context,
-        return_response=True,
-    )
-
-    assert response == {
-        "chats": [
-            {
-                ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_2",
-            }
-        ]
-    }
-
-    issue_id = (
-        f"migrate_chat_ids_in_target_{expected_action_origin}_{SERVICE_SEND_MESSAGE}"
-    )
-    issue = issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id=issue_id,
-    )
-    assert issue is not None
-    assert issue.domain == DOMAIN
-    assert issue.translation_key == "migrate_chat_ids_in_target"
-    assert issue.translation_placeholders == {
-        "integration_title": "Telegram Bot",
-        "action": "telegram_bot.send_message",
-        "action_origin": expected_action_origin,
-        "chat_ids": "654321",
-        "telegram_bot_entities_url": ("/config/entities?domain=telegram_bot"),
-        "example_old": (
-            "```yaml\naction: send_message\ndata:\n"
-            "  target:  # to be updated\n"
-            "    - 1234567890\n...\n```"
-        ),
-        "example_new_entity_id": (
-            "```yaml\naction: send_message\ndata:\n"
-            "  entity_id:\n"
-            "    - notify.telegram_bot_1234567890_1234567890"
-            "  # replace with your notify entity\n...\n```"
-        ),
-        "example_new_chat_id": (
-            "```yaml\naction: send_message\ndata:\n"
-            "  chat_id:\n"
-            "    - 1234567890"
-            "  # replace with your chat_id\n...\n```"
-        ),
-    }
-
-    # fix the issue via repair flow
-
-    client = await hass_client()
-    resp = await client.post(
-        "/api/repairs/issues/fix",
-        json={"handler": DOMAIN, "issue_id": issue.issue_id},
-    )
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data == {
-        "type": "form",
-        "flow_id": flow_id,
-        "handler": DOMAIN,
-        "step_id": "confirm",
-        "data_schema": [],
-        "errors": None,
-        "description_placeholders": {
-            "integration_title": "Telegram Bot",
-            "action": "telegram_bot.send_message",
-            "action_origin": expected_action_origin,
-            "chat_ids": "654321",
-            "telegram_bot_entities_url": "/config/entities?domain=telegram_bot",
-            "example_old": (
-                "```yaml\naction: send_message\ndata:\n"
-                "  target:  # to be updated\n"
-                "    - 1234567890\n...\n```"
-            ),
-            "example_new_entity_id": (
-                "```yaml\naction: send_message\ndata:\n"
-                "  entity_id:\n"
-                "    - notify.telegram_bot_1234567890_1234567890"
-                "  # replace with your notify entity\n...\n```"
-            ),
-            "example_new_chat_id": (
-                "```yaml\naction: send_message\ndata:\n"
-                "  chat_id:\n"
-                "    - 1234567890"
-                "  # replace with your chat_id\n...\n```"
-            ),
-        },
-        "last_step": None,
-        "preview": None,
-    }
-
-    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data == {
-        "type": "create_entry",
-        "flow_id": flow_id,
-        "handler": DOMAIN,
-        "description": None,
-        "description_placeholders": None,
-    }
-
-    # verify issue is resolved
-    assert not issue_registry.async_get_issue(DOMAIN, "deprecated_timeout_parameter")
-
-
 async def test_notify_entity_not_found(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
@@ -2217,107 +2097,41 @@ async def test_notify_entity_not_found(
     }
 
 
-@pytest.mark.parametrize(
-    ("event", "expected_action_origin"),
-    [
-        (
-            Event("automation_triggered", {ATTR_ENTITY_ID: "automation.automation_0"}),
-            "automation.automation_0",
-        ),
-        (
-            Event("call_service", {ATTR_DOMAIN: "script", ATTR_SERVICE: "mock_script"}),
-            "script.mock_script",
-        ),
-        (
-            None,
-            "call_service",
-        ),
-    ],
-)
-async def test_deprecated_timeout_parameter(
+async def test_notify_entity_other_integration(
     hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
-    issue_registry: IssueRegistry,
-    event: Event | None,
-    expected_action_origin: str,
 ) -> None:
-    """Test send message using the deprecated timeout parameter."""
-
+    """Test send message to a notify entity of another integration."""
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # trigger service call
-    context = Context()
-    context.origin_event = event
-    await hass.services.async_call(
-        DOMAIN,
-        "send_message",
-        {"message": "test message", "timeout": 5},
-        blocking=True,
-        context=context,
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "notify",
+        "other",
+        "unique_id",
+        config_entry=other_entry,
+        suggested_object_id="other",
     )
 
-    # check issue is created correctly
-    issue = issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="deprecated_timeout_parameter",
-    )
-    assert issue is not None
-    assert issue.domain == DOMAIN
-    assert issue.translation_key == "deprecated_timeout_parameter"
-    assert issue.translation_placeholders == {
-        "integration_title": "Telegram Bot",
-        "action": "telegram_bot.send_message",
-        "action_origin": expected_action_origin,
-    }
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.other",
+                ATTR_MESSAGE: "test_message",
+            },
+            blocking=True,
+            return_response=True,
+        )
 
-    # fix the issue via repair flow
-
-    client = await hass_client()
-    resp = await client.post(
-        "/api/repairs/issues/fix",
-        json={"handler": DOMAIN, "issue_id": issue.issue_id},
-    )
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data == {
-        "type": "form",
-        "flow_id": flow_id,
-        "handler": DOMAIN,
-        "step_id": "confirm",
-        "data_schema": [],
-        "errors": None,
-        "description_placeholders": {
-            "integration_title": "Telegram Bot",
-            "action": "telegram_bot.send_message",
-            "action_origin": expected_action_origin,
-        },
-        "last_step": None,
-        "preview": None,
-    }
-
-    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data == {
-        "type": "create_entry",
-        "flow_id": flow_id,
-        "handler": DOMAIN,
-        "description": None,
-        "description_placeholders": None,
-    }
-
-    # verify issue is resolved
-    assert not issue_registry.async_get_issue(DOMAIN, "deprecated_timeout_parameter")
+    assert err.value.translation_key == "invalid_notify_entity"
+    assert err.value.translation_placeholders == {ATTR_ENTITY_ID: "notify.other"}
 
 
 @pytest.mark.parametrize(

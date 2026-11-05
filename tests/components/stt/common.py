@@ -4,6 +4,8 @@ from collections.abc import AsyncGenerator, AsyncIterable, Callable, Coroutine
 from pathlib import Path
 from typing import Any
 
+from pytest_homeassistant.common import MockPlatform, mock_platform
+
 from homeassistant.components.stt import (
     DEFAULT_AUDIO_PROCESSING,
     AudioBitRates,
@@ -23,8 +25,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-from tests.common import MockPlatform, mock_platform
 
 TEST_DOMAIN = "test"
 

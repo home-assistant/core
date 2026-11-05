@@ -3,8 +3,15 @@
 from asyncio import CancelledError
 from unittest.mock import AsyncMock, Mock, patch
 
-from pizone import ControllerCommandError, ControllerEndpoint, UnpairedBridgeError
+from pizone import (
+    ControllerCommandError,
+    ControllerEndpoint,
+    EndpointVerifyError,
+    UnpairedBridgeError,
+    VerifyFailure,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.izone.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -12,8 +19,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .conftest import async_load_yaml_exclude, create_mock_controller
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload(
@@ -326,6 +331,32 @@ async def test_migrate_missing_host_not_found_retries(
     assert entry.minor_version == 1
     assert entry.error_reason_translation_key == "controller_not_found"
     assert entry.error_reason_translation_placeholders == {"uid": "000000001"}
+    mock_discovery_service.create_controller.assert_not_awaited()
+
+
+async def test_migrate_missing_host_verify_error_retries(
+    hass: HomeAssistant,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+) -> None:
+    """A UID whose address fails the HTTP check leaves SETUP_RETRY with its host."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="000000001",
+        data={},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_by_uid = AsyncMock(
+        side_effect=EndpointVerifyError(
+            "192.0.2.1", VerifyFailure.NO_REPLY, uid="000000001"
+        )
+    )
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "cannot_connect"
+    assert entry.error_reason_translation_placeholders == {"host": "192.0.2.1"}
     mock_discovery_service.create_controller.assert_not_awaited()
 
 

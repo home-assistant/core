@@ -1,8 +1,8 @@
 """Tests for the Aladdin Connect Garage Door integration."""
 
-from homeassistant.core import HomeAssistant
+from pytest_homeassistant.common import MockConfigEntry
 
-from tests.common import MockConfigEntry
+from homeassistant.core import HomeAssistant
 
 
 async def init_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None:

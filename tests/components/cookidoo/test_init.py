@@ -13,6 +13,7 @@ from cookidoo_api import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cookidoo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -37,8 +38,6 @@ from .conftest import (
     STALE_AUTH_DATA,
     TEST_UUID,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_cookidoo_client")

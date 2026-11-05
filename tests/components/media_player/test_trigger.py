@@ -3,17 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.media_player import (
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
-    MediaPlayerState,
-)
-from homeassistant.components.media_player.trigger import TRIGGERS
-from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     arm_trigger,
@@ -29,6 +19,15 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
+    MediaPlayerState,
+)
+from homeassistant.components.media_player.trigger import TRIGGERS
+from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.core import HomeAssistant
 
 _VOLUME_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _VOLUME_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}

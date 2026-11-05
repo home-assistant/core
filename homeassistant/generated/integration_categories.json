@@ -203,6 +203,24 @@
     "subcategories": []
   },
   {
+    "slug": "helpers",
+    "name": "Helpers",
+    "description": "Entities you create yourself, without a device behind them: toggles, numbers, timers and schedules, and values calculated from other entities.",
+    "icon": "mdi:tools",
+    "subcategories": [
+      {
+        "slug": "calculate_value",
+        "name": "Calculate a value",
+        "icon": "mdi:calculator-variant"
+      },
+      {
+        "slug": "store_value",
+        "name": "Store a value",
+        "icon": "mdi:form-textbox"
+      }
+    ]
+  },
+  {
     "slug": "hubs_protocols",
     "name": "Hubs & protocols",
     "description": "Smart home hubs and radio protocols that each bring in many kinds of devices.",

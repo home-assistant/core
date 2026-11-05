@@ -5,6 +5,11 @@ import json
 import re
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    get_sensor_display_state,
+)
 import requests_mock
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
@@ -14,20 +19,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import (
     KINGSLYNN_SENSOR_RESULTS,
-    METOFFICE_CONFIG_KINGSLYNN,
-    METOFFICE_CONFIG_WAVERTREE,
     TEST_COORDINATES_KINGSLYNN,
     TEST_COORDINATES_WAVERTREE,
     TEST_DATETIME_STRING,
     TEST_LATITUDE_WAVERTREE,
     TEST_LONGITUDE_WAVERTREE,
     WAVERTREE_SENSOR_RESULTS,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    get_sensor_display_state,
 )
 
 
@@ -38,6 +35,7 @@ async def test_one_sensor_site_running(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
+    entry: MockConfigEntry,
 ) -> None:
     """Test the Met Office sensor platform."""
     # all metoffice test data encapsulated in here
@@ -54,10 +52,6 @@ async def test_one_sensor_site_running(
         text=wavertree_daily,
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -89,6 +83,8 @@ async def test_two_sensor_sites_running(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
+    entry: MockConfigEntry,
+    entry2: MockConfigEntry,
 ) -> None:
     """Test we handle two sets of sensors running for two different sites."""
 
@@ -108,10 +104,6 @@ async def test_two_sensor_sites_running(
         text=wavertree_daily,
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
 
@@ -124,10 +116,6 @@ async def test_two_sensor_sites_running(
         text=kingslynn_daily,
     )
 
-    entry2 = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_KINGSLYNN,
-    )
     entry2.add_to_hass(hass)
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
@@ -184,6 +172,7 @@ async def test_legacy_entities_are_removed(
     entity_registry: er.EntityRegistry,
     requests_mock: requests_mock.Mocker,
     old_unique_id: str,
+    entry: MockConfigEntry,
 ) -> None:
     """Test the expected entities are deleted."""
     mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
@@ -206,10 +195,6 @@ async def test_legacy_entities_are_removed(
         suggested_object_id="met_office_wavertree_visibility_distance",
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=METOFFICE_CONFIG_WAVERTREE,
-    )
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)

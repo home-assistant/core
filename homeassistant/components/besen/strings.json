@@ -79,11 +79,11 @@
       "charging_status": {
         "name": "Charging status",
         "state": {
-          "canceled": "Canceled",
           "connect": "Connect",
           "fault": "[%key:common::state::fault%]",
           "finish_charging": "Finish charging",
           "finished": "Finished",
+          "scheduled": "Scheduled",
           "start": "Start",
           "waiting": "Waiting"
         }

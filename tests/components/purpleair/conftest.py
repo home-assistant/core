@@ -6,13 +6,12 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.models.sensors import GetSensorsResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.purpleair.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 TEST_API_KEY = "abcde12345"
 TEST_SENSOR_INDEX1 = 123456

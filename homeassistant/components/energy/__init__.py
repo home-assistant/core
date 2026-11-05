@@ -12,6 +12,12 @@ from .data import async_get_manager
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+__all__ = [
+    "DOMAIN",
+    "async_get_manager",
+    "is_configured",
+]
+
 
 async def is_configured(hass: HomeAssistant) -> bool:
     """Return a boolean to indicate if energy is configured."""

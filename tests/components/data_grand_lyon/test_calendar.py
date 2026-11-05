@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from data_grand_lyon_ha import TclAlert
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.data_grand_lyon.const import TZ_PARIS
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_TCL_ALERTS
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "calendar.line_c3_alerts"
 

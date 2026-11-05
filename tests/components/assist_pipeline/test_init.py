@@ -12,6 +12,7 @@ import wave
 
 import hass_nabucasa
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import assist_pipeline, conversation, stt
@@ -32,8 +33,6 @@ from .conftest import (
     MockWakeWordEntity,
     make_10ms_chunk,
 )
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

@@ -8,14 +8,14 @@ import re
 import string
 from typing import Any
 
+from hassfest.model import Config, Integration, IntegrationType
 import probatio
 from probatio.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import FRONTEND_HANDLED_ISSUES
-from script.translations import upload
 
-from .model import Config, Integration, IntegrationType
+from .translation_data import generate_upload_data
 
 UNDEFINED = 0
 REQUIRED = 1
@@ -712,6 +712,15 @@ def gen_homeassistant_schema(
                 },
                 slug_validator=translation_key_validator,
             ),
+            # The protocols Home Assistant uses to reach the devices or
+            # service of an integration.
+            probatio.Optional("integration_connectivity"): cv.schema_with_slug_keys(
+                {
+                    probatio.Required("name"): translation_value_validator,
+                    probatio.Required("description"): translation_value_validator,
+                },
+                slug_validator=translation_key_validator,
+            ),
         }
     )
     return _with_integration(schema, config, integration)
@@ -822,7 +831,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         all_strings = None
     else:
-        all_strings = upload.generate_upload_data()  # type: ignore[no-untyped-call]
+        all_strings = generate_upload_data(config.root)
 
     for integration in integrations.values():
         validate_translation_file(config, integration, all_strings)

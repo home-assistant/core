@@ -35,8 +35,8 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import BroadlinkDevice
 from .const import BROADLINK_DATA, DOMAINS_AND_TYPES
+from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device, mac_address
 

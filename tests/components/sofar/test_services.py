@@ -6,6 +6,7 @@ from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sofar.const import DOMAIN
 from homeassistant.components.sofar.services import (
@@ -32,8 +33,6 @@ from . import (
     MOCK_HYBRID_SERIAL,
     seed_hybrid_inverter,
 )
-
-from tests.common import MockConfigEntry
 
 FEED_IN_MODE_REGISTER = 0x1023
 FEED_IN_POWER_REGISTER = 0x1024

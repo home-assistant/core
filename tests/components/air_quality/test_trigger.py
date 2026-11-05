@@ -3,6 +3,21 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.components.common import (
+    TargetSupport,
+    TriggerStateDescription,
+    arm_trigger,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
+    parametrize_numerical_state_value_changed_trigger_states,
+    parametrize_numerical_state_value_crossed_threshold_trigger_states,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 from homeassistant.components.air_quality.trigger import TRIGGERS
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -18,22 +33,6 @@ from homeassistant.const import (
     UnitOfRatio,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
-    TargetSupport,
-    TriggerStateDescription,
-    arm_trigger,
-    assert_trigger_behavior_all,
-    assert_trigger_behavior_each,
-    assert_trigger_behavior_first,
-    assert_trigger_options_supported,
-    assert_triggers_target_support,
-    parametrize_numerical_state_value_changed_trigger_states,
-    parametrize_numerical_state_value_crossed_threshold_trigger_states,
-    parametrize_target_entities,
-    parametrize_trigger_states,
-    target_entities,
-)
 
 _UGM3_UNIT_ATTRIBUTES = {
     ATTR_UNIT_OF_MEASUREMENT: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER

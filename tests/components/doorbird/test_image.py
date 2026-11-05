@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.doorbird.const import CONF_EVENTS
 from homeassistant.components.doorbird.image import DoorBirdLastEventImage
@@ -13,8 +14,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import mock_not_found_exception, mock_webhook_call
 from .conftest import DoorbirdMockerType
-
-from tests.typing import ClientSessionGenerator
 
 # A body whose first 4 bytes are a recognized JPEG magic number, so
 # infer_image_type accepts it. The trailing bytes are arbitrary padding.

@@ -4,6 +4,12 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.adax.const import SCAN_INTERVAL
@@ -26,12 +32,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import (
-    AsyncMock,
-    MockConfigEntry,
-    async_fire_time_changed,
-    snapshot_platform,
-)
 from tests.test_setup import FrozenDateTimeFactory
 
 

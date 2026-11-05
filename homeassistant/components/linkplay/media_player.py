@@ -368,7 +368,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         """Image url of playing media."""
         player = self._active_player
         if player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
-            return str(player.album_art)
+            return str(player.album_art) or None
         return None
 
     @exception_wrap

@@ -26,7 +26,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STOP,
-    FORMAT_DATETIME,
     Platform,
 )
 from homeassistant.core import Event, HassJob, HomeAssistant, callback
@@ -41,6 +40,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
+from homeassistant.util.logging import LOG_FORMAT, HomeAssistantLogFormatter
 from homeassistant.util.signal_type import SignalType
 
 # Pre-import backup to avoid it being imported
@@ -98,6 +98,9 @@ LLM_PLATFORMS = [
     Platform.AI_TASK,
     Platform.CONVERSATION,
 ]
+
+# The platforms that were set up for the entry
+type CloudConfigEntry = ConfigEntry[list[Platform]]
 
 
 SIGNAL_CLOUD_CONNECTION_STATE: SignalType[CloudConnectionState] = SignalType(
@@ -177,6 +180,22 @@ CONFIG_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "DOMAIN",
+    "CloudConnectionState",
+    "CloudNotAvailable",
+    "CloudNotConnected",
+    "async_active_subscription",
+    "async_create_cloudhook",
+    "async_delete_cloudhook",
+    "async_get_or_create_cloudhook",
+    "async_is_connected",
+    "async_is_logged_in",
+    "async_listen_cloudhook_change",
+    "async_listen_connection_change",
+    "async_remote_ui_url",
+]
 
 
 class CloudNotAvailable(HomeAssistantError):
@@ -304,6 +323,27 @@ def async_remote_ui_url(hass: HomeAssistant) -> str:
     return f"https://{remote_domain}"
 
 
+@callback
+def async_remote_ui_urls(hass: HomeAssistant) -> list[str]:
+    """Get the remote UI URLs, custom domains first.
+
+    Custom domains are the user facing URLs. The instance domain always
+    works and comes last.
+    """
+    instance_url = async_remote_ui_url(hass)
+    remote = hass.data[DATA_CLOUD].remote
+
+    # A custom domain that failed validation stays in the alias list but is
+    # left out of the certificate, so only the certificate tells which ones work
+    served: set[str] = set()
+    if (certificate := remote.certificate) is not None:
+        served = {certificate.common_name, *(certificate.alternative_names or [])}
+
+    return [f"https://{alias}" for alias in remote.alias or [] if alias in served] + [
+        instance_url
+    ]
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Home Assistant cloud."""
     log_handler = hass.data[DATA_CLOUD_LOG_HANDLER] = await _setup_log_handler(hass)
@@ -416,9 +456,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Clean up after a logout."""
         nonlocal loaded
 
+        # The logout event is not sent here because the tokens aren't cleared yet,
+        # CloudClient.logout_cleanups sends it.
+
         # Forget a pending auto-login, hass_nabucasa cancels it on logout.
-        # No frontend event here, hass_nabucasa publishes LOGOUT before it clears
-        # the tokens, so a client re-reading the status would still see a session.
         hass.data[DATA_PENDING_AUTO_LOGIN] = None
         # Allow _on_start to create a new config entry on the next login.
         loaded = False
@@ -520,7 +561,7 @@ def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> Non
     cloud.client.prefs.async_listen_updates(on_prefs_updated)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: CloudConfigEntry) -> None:
     """Set up a config entry."""
     platforms = PLATFORMS.copy()
     if (cloud := hass.data[DATA_CLOUD]).is_logged_in:
@@ -529,24 +570,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             platforms += LLM_PLATFORMS
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
-    entry.runtime_data = {"platforms": platforms}
+    entry.runtime_data = platforms
     stt_tts_entities_added = hass.data[DATA_PLATFORMS_SETUP]["stt_tts_entities_added"]
     stt_tts_entities_added.set()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: CloudConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms_or_raise(
-        entry, entry.runtime_data["platforms"]
-    )
+    await hass.config_entries.async_unload_platforms_or_raise(entry, entry.runtime_data)
 
 
 async def _setup_log_handler(hass: HomeAssistant) -> FixedSizeQueueLogHandler:
-    fmt = (
-        "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
-    )
     handler = FixedSizeQueueLogHandler()
-    handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
+    handler.setFormatter(HomeAssistantLogFormatter(LOG_FORMAT))
 
     integration = await async_get_integration(hass, DOMAIN)
     loggers: set[str] = {integration.pkg_path, *(integration.loggers or [])}

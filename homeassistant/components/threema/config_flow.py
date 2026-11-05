@@ -8,7 +8,6 @@ from typing import Any, override
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -22,6 +21,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from . import ThreemaConfigEntry
 from .client import (
     ThreemaAPIClient,
     ThreemaAuthError,
@@ -82,7 +82,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: ThreemaConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentry types supported by this integration."""
         return {SUBENTRY_TYPE_RECIPIENT: RecipientSubentryFlowHandler}

@@ -6,6 +6,8 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from pyipma.observation import Observation
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ipma.const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
@@ -22,9 +24,6 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import MockLocation
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 TEST_CONFIG = {
     "name": "HomeTown",

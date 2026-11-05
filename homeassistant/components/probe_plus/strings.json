@@ -47,6 +47,9 @@
     }
   },
   "exceptions": {
+    "migration_no_unique_id": {
+      "message": "Could not migrate the config entry because it has no unique ID"
+    },
     "no_bleak_scanner": {
       "message": "No compatible Bluetooth scanner found."
     }

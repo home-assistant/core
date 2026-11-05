@@ -8,13 +8,12 @@ from botocore.exceptions import (
     ParamValidationError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry_does_not_mask_when_close_fails(

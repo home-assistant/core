@@ -1,5 +1,6 @@
 """Support for esphome devices."""
 
+import dataclasses
 import logging
 
 from aioesphomeapi import APIConnectionError
@@ -10,6 +11,7 @@ from homeassistant.components.usb import (
     SerialDevice,
     USBDevice,
     async_register_serial_port_scanner,
+    usb_serial_device_from_port,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -51,19 +53,40 @@ def _async_scan_serial_ports(
         if device_info is None:
             continue
 
-        manufacturer, model = async_get_manufacturer_model(device_info)
+        identities = entry_data.serial_proxy_identities
 
-        ports.extend(
-            SerialDevice(
-                device=str(serial_proxy.build_url(entry.entry_id, proxy.name)),
-                serial_number=(
-                    device_info.mac_address.replace(":", "") + "-" + slugify(proxy.name)
-                ),
-                manufacturer=manufacturer,
-                description=f"{model} ({proxy.name})",
+        for instance, proxy in enumerate(device_info.serial_proxies):
+            identity = identities.get(instance)
+            url = serial_proxy.build_port_url(entry.entry_id, proxy.name, identity)
+
+            if url is None:
+                continue
+
+            if not serial_proxy.has_identity(identity):
+                manufacturer, model = async_get_manufacturer_model(device_info)
+
+                ports.append(
+                    SerialDevice(
+                        device=str(url),
+                        serial_number=(
+                            device_info.mac_address.replace(":", "")
+                            + "-"
+                            + slugify(proxy.name)
+                        ),
+                        manufacturer=manufacturer,
+                        description=f"{model} ({proxy.name})",
+                    )
+                )
+                continue
+
+            port_info = serial_proxy.identity_port_info(identity)
+            ports.append(
+                usb_serial_device_from_port(
+                    dataclasses.replace(
+                        port_info, device=str(url), resolved_device=str(url)
+                    )
+                )
             )
-            for proxy in device_info.serial_proxies
-        )
 
     return ports
 
@@ -121,7 +144,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> 
     await hass.config_entries.async_unload_platforms_or_raise(
         entry, entry.runtime_data.loaded_platforms
     )
-    await cleanup_instance(entry)
+    await cleanup_instance(hass, entry)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:

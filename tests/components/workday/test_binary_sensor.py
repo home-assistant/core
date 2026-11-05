@@ -5,6 +5,7 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.workday.binary_sensor import SERVICE_CHECK_DATE
@@ -51,8 +52,6 @@ from . import (
     TEST_OPTIONAL_CATEGORY,
     init_integration,
 )
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(

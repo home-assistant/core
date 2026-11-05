@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tellduslive import TURNON
 
 from homeassistant.components.tellduslive.const import (
@@ -11,8 +12,6 @@ from homeassistant.components.tellduslive.const import (
     KEY_SCAN_INTERVAL,
     KEY_SESSION,
 )
-
-from tests.common import MockConfigEntry
 
 HUB_ID = "hub-1"
 DEVICE_ID = "device-1"

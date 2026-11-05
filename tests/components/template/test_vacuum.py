@@ -6,6 +6,11 @@ from itertools import chain
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_mock_restore_state_shutdown_restart,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, vacuum
@@ -51,9 +56,7 @@ from .conftest import (
     setup_restore_template_entity,
 )
 
-from tests.common import MockConfigEntry, async_mock_restore_state_shutdown_restart
 from tests.components.vacuum import common
-from tests.typing import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_ATTRIBUTE_ENTITY_ID = "sensor.test_attribute"

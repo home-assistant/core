@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from universal_silabs_flasher.flasher import Zbt2Flasher
 
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
@@ -30,8 +31,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import USB_DATA_ZBT2
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(name="supervisor")
 def mock_supervisor_fixture() -> Generator[None]:
@@ -48,7 +47,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
         "homeassistant.components.homeassistant_connect_zbt2.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -326,7 +325,9 @@ async def test_options_flow(
                 ),
             ],
         ),
-        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
+        ),
     ):
         pick_result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -336,9 +337,19 @@ async def test_options_flow(
         assert pick_result["type"] is FlowResultType.MENU
         assert pick_result["step_id"] == "zigbee_installation_type"
 
-        create_result = await hass.config_entries.options.async_configure(
+        progress_result = await hass.config_entries.options.async_configure(
             pick_result["flow_id"],
             user_input={"next_step_id": "zigbee_intent_recommended"},
+        )
+
+        assert progress_result["type"] is FlowResultType.SHOW_PROGRESS
+        assert progress_result["step_id"] == "install_zigbee_firmware"
+
+        # Make sure the flow continues when the progress task is done.
+        await hass.async_block_till_done()
+
+        create_result = await hass.config_entries.options.async_configure(
+            progress_result["flow_id"]
         )
 
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
