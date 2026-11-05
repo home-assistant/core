@@ -25,6 +25,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfRatio,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
@@ -66,6 +67,7 @@ JOB_STATE_MAP = {
     "continuousDehumidifying": "continuous_dehumidifying",
     "thawingFrozenInside": "thawing_frozen_inside",
     "delayWash": "delay_wash",
+    "delayWashing": "delay_washing",
     "weightSensing": "weight_sensing",
     "freezeProtection": "freeze_protection",
     "preDrain": "pre_drain",
@@ -371,6 +373,33 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ]
+    },
+    Capability.SAMSUNG_CE_DISHWASHER_JOB_STATE: {
+        Attribute.DISHWASHER_JOB_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.DISHWASHER_JOB_STATE,
+                translation_key="dishwasher_detailed_job_state",
+                value_fn=lambda value: JOB_STATE_MAP.get(value, value),
+            )
+        ],
+    },
+    Capability.SAMSUNG_CE_DISHWASHER_OPERATION: {
+        Attribute.TIME_LEFT_TO_START: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.TIME_LEFT_TO_START,
+                translation_key="dishwasher_time_left_to_start",
+                device_class=SensorDeviceClass.DURATION,
+                native_unit_of_measurement=UnitOfTime.MINUTES,
+            )
+        ],
+        Attribute.REMAINING_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.REMAINING_TIME,
+                translation_key="dishwasher_remaining_cycle_time",
+                device_class=SensorDeviceClass.DURATION,
+                native_unit_of_measurement=UnitOfTime.MINUTES,
+            )
+        ],
     },
     Capability.DISHWASHER_OPERATING_STATE: {
         Attribute.MACHINE_STATE: [
