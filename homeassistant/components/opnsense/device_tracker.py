@@ -3,7 +3,7 @@
 from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -23,11 +23,26 @@ async def async_setup_entry(
     tracked_devices = entry.runtime_data.tracked_devices
 
     coordinator = OPNsenseDeviceTrackerCoordinator(hass, entry, client, interfaces)
+    entry.runtime_data.tracker_coordinator = coordinator
 
     def _async_add_new_entities() -> None:
-        """Add entities for newly discovered devices."""
+        """Rename the devices of renamed clients and add new clients."""
         if not coordinator.data:
             return
+
+        # Done here because disabled trackers do not listen to the coordinator
+        device_registry = dr.async_get(hass)
+        for mac_address, device_data in coordinator.data.items():
+            if (
+                (hostname := device_data.get("hostname"))
+                and (
+                    device_entry := device_registry.async_get_device_by_connection(
+                        (dr.CONNECTION_NETWORK_MAC, mac_address), entry.entry_id
+                    )
+                )
+                and device_entry.name != hostname
+            ):
+                device_registry.async_update_device(device_entry.id, name=hostname)
 
         entities = []
         for mac_address in coordinator.data:
@@ -104,15 +119,3 @@ class OPNsenseDeviceTrackerEntity(
             hostname = device_data.get("hostname")
             return hostname or None
         return None
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Rename the device when the hostname of the client changes."""
-        if (
-            (hostname := self.hostname)
-            and (device_entry := self.device_entry)
-            and device_entry.name != hostname
-        ):
-            dr.async_get(self.hass).async_update_device(device_entry.id, name=hostname)
-        super()._handle_coordinator_update()

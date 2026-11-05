@@ -7,12 +7,7 @@ from typing import Any, override
 from androidtv import state_detection_rules_validator
 import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import SectionConfig, section
@@ -24,7 +19,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from . import async_connect_androidtv, get_androidtv_mac
+from . import AndroidTVConfigEntry, async_connect_androidtv, get_androidtv_mac
 from .const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
@@ -278,7 +273,9 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: AndroidTVConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -286,7 +283,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlow):
     """Handle an option flow for Android Debug Bridge."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: AndroidTVConfigEntry) -> None:
         """Initialize options flow."""
         self._apps: dict[str, Any] = dict(config_entry.options.get(CONF_APPS, {}))
         self._state_det_rules: dict[str, Any] = dict(
