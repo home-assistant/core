@@ -7,9 +7,7 @@
       "setpoint": 13.0,
       "upper_bound": 30.0
     },
-    "available_schedules": [
-      "off"
-    ],
+    "available_schedules": ["off"],
     "away_preset_temperature": {
       "lower_bound": 4.0,
       "resolution": 0.5,
@@ -32,13 +30,7 @@
       "setpoint": 9.0,
       "upper_bound": 30.0
     },
-    "preset_modes": [
-      "vacation",
-      "no_frost",
-      "home",
-      "away",
-      "asleep"
-    ],
+    "preset_modes": ["vacation", "no_frost", "home", "away", "asleep"],
     "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
@@ -51,12 +43,8 @@
       "upper_bound": 99.9
     },
     "thermostats": {
-      "primary": [
-        "1346fbd8498d4dbcab7e18d51b771f3d"
-      ],
-      "secondary": [
-        "356b65335e274d769c338223e7af9c33"
-      ]
+      "primary": ["1346fbd8498d4dbcab7e18d51b771f3d"],
+      "secondary": ["356b65335e274d769c338223e7af9c33"]
     },
     "vacation_preset_temperature": {
       "lower_bound": 4.0,
@@ -65,11 +53,7 @@
       "upper_bound": 30.0
     },
     "vendor": "Plugwise",
-    "zone_profiles": [
-      "active",
-      "off",
-      "passive"
-    ]
+    "zone_profiles": ["active", "off", "passive"]
   },
   "13228dab8ce04617af318a2888b3c548": {
     "active_preset": "home",
@@ -79,9 +63,7 @@
       "setpoint": 17.0,
       "upper_bound": 30.0
     },
-    "available_schedules": [
-      "off"
-    ],
+    "available_schedules": ["off"],
     "away_preset_temperature": {
       "lower_bound": 4.0,
       "resolution": 0.5,
@@ -105,13 +87,7 @@
       "setpoint": 10.0,
       "upper_bound": 30.0
     },
-    "preset_modes": [
-      "home",
-      "asleep",
-      "away",
-      "vacation",
-      "no_frost"
-    ],
+    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
     "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
@@ -124,12 +100,8 @@
       "upper_bound": 30.0
     },
     "thermostats": {
-      "primary": [
-        "f61f1a2535f54f52ad006a3d18e459ca"
-      ],
-      "secondary": [
-        "833de10f269c4deab58fb9df69901b4e"
-      ]
+      "primary": ["f61f1a2535f54f52ad006a3d18e459ca"],
+      "secondary": ["833de10f269c4deab58fb9df69901b4e"]
     },
     "vacation_preset_temperature": {
       "lower_bound": 4.0,
@@ -138,11 +110,7 @@
       "upper_bound": 30.0
     },
     "vendor": "Plugwise",
-    "zone_profiles": [
-      "active",
-      "off",
-      "passive"
-    ]
+    "zone_profiles": ["active", "off", "passive"]
   },
   "1346fbd8498d4dbcab7e18d51b771f3d": {
     "available": true,
@@ -317,11 +285,7 @@
     },
     "dev_class": "gateway",
     "firmware": "3.2.8",
-    "gateway_modes": [
-      "away",
-      "full",
-      "vacation"
-    ],
+    "gateway_modes": ["away", "full", "vacation"],
     "hardware": "AME Smile 2.0 board",
     "location": "9e4433a9d69f40b3aefd15e74395eaec",
     "mac_address": "012345670001",
@@ -329,12 +293,7 @@
     "model_id": "smile_open_therm",
     "name": "Adam",
     "notifications": {},
-    "regulation_modes": [
-      "heating",
-      "off",
-      "bleeding_cold",
-      "bleeding_hot"
-    ],
+    "regulation_modes": ["heating", "off", "bleeding_cold", "bleeding_hot"],
     "select_gateway_mode": "full",
     "select_regulation_mode": "heating",
     "sensors": {
@@ -351,9 +310,7 @@
       "setpoint": 13.0,
       "upper_bound": 30.0
     },
-    "available_schedules": [
-      "off"
-    ],
+    "available_schedules": ["off"],
     "away_preset_temperature": {
       "lower_bound": 4.0,
       "resolution": 0.5,
@@ -377,13 +334,7 @@
       "setpoint": 9.0,
       "upper_bound": 30.0
     },
-    "preset_modes": [
-      "vacation",
-      "no_frost",
-      "home",
-      "away",
-      "asleep"
-    ],
+    "preset_modes": ["vacation", "no_frost", "home", "away", "asleep"],
     "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
@@ -396,12 +347,8 @@
       "upper_bound": 99.9
     },
     "thermostats": {
-      "primary": [
-        "6f3e9d7084214c21b9dfa46f6eeb8700"
-      ],
-      "secondary": [
-        "d4496250d0e942cfa7aea3476e9070d5"
-      ]
+      "primary": ["6f3e9d7084214c21b9dfa46f6eeb8700"],
+      "secondary": ["d4496250d0e942cfa7aea3476e9070d5"]
     },
     "vacation_preset_temperature": {
       "lower_bound": 4.0,
@@ -410,11 +357,7 @@
       "upper_bound": 30.0
     },
     "vendor": "Plugwise",
-    "zone_profiles": [
-      "active",
-      "off",
-      "passive"
-    ]
+    "zone_profiles": ["active", "off", "passive"]
   },
   "d4496250d0e942cfa7aea3476e9070d5": {
     "available": true,
@@ -448,9 +391,7 @@
       "setpoint": 13.0,
       "upper_bound": 30.0
     },
-    "available_schedules": [
-      "off"
-    ],
+    "available_schedules": ["off"],
     "away_preset_temperature": {
       "lower_bound": 4.0,
       "resolution": 0.5,
@@ -474,13 +415,7 @@
       "setpoint": 9.0,
       "upper_bound": 30.0
     },
-    "preset_modes": [
-      "vacation",
-      "no_frost",
-      "home",
-      "away",
-      "asleep"
-    ],
+    "preset_modes": ["vacation", "no_frost", "home", "away", "asleep"],
     "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
@@ -493,12 +428,8 @@
       "upper_bound": 99.9
     },
     "thermostats": {
-      "primary": [
-        "a6abc6a129ee499c88a4d420cc413b47"
-      ],
-      "secondary": [
-        "1da4d325838e4ad8aac12177214505c9"
-      ]
+      "primary": ["a6abc6a129ee499c88a4d420cc413b47"],
+      "secondary": ["1da4d325838e4ad8aac12177214505c9"]
     },
     "vacation_preset_temperature": {
       "lower_bound": 4.0,
@@ -507,11 +438,7 @@
       "upper_bound": 30.0
     },
     "vendor": "Plugwise",
-    "zone_profiles": [
-      "active",
-      "off",
-      "passive"
-    ]
+    "zone_profiles": ["active", "off", "passive"]
   },
   "e4684553153b44afbef2200885f379dc": {
     "available": true,
@@ -529,10 +456,7 @@
     },
     "dev_class": "heater_central",
     "dhw_mode": "eco",
-    "dhw_modes": [
-      "comfort",
-      "eco"
-    ],
+    "dhw_modes": ["comfort", "eco"],
     "dhw_temperature": {
       "current": 37.3,
       "lower_bound": 40.0,

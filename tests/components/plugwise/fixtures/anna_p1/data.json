@@ -7,10 +7,7 @@
       "setpoint": 17.0,
       "upper_bound": 30.0
     },
-    "available_schedules": [
-      "off",
-      "Thermostat schedule"
-    ],
+    "available_schedules": ["off", "Thermostat schedule"],
     "away_preset_temperature": {
       "lower_bound": 4.0,
       "resolution": 0.5,
@@ -37,13 +34,7 @@
       "setpoint": 10.0,
       "upper_bound": 30.0
     },
-    "preset_modes": [
-      "home",
-      "asleep",
-      "away",
-      "vacation",
-      "no_frost"
-    ],
+    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
     "select_schedule": "Thermostat schedule",
     "sensors": {
       "illuminance": 2.0,
@@ -78,10 +69,7 @@
       "heating_state": false
     },
     "dev_class": "heater_central",
-    "dhw_modes": [
-      "comfort",
-      "eco"
-    ],
+    "dhw_modes": ["comfort", "eco"],
     "location": "da7be222ab3b420c927f3e49fade0304",
     "model": "Generic heater",
     "model_id": "HR24",

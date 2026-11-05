@@ -59,13 +59,7 @@
       "setpoint": 10.0,
       "upper_bound": 30.0
     },
-    "preset_modes": [
-      "asleep",
-      "no_frost",
-      "away",
-      "home",
-      "vacation"
-    ],
+    "preset_modes": ["asleep", "no_frost", "away", "home", "vacation"],
     "select_schedule": "Badkamer Schema",
     "sensors": {
       "temperature": 18.9
@@ -130,13 +124,7 @@
       "setpoint": 8.0,
       "upper_bound": 30.0
     },
-    "preset_modes": [
-      "home",
-      "away",
-      "vacation",
-      "no_frost",
-      "asleep"
-    ],
+    "preset_modes": ["home", "away", "vacation", "no_frost", "asleep"],
     "select_schedule": "off",
     "sensors": {
       "electricity_consumed": 0.0,
@@ -150,12 +138,8 @@
       "upper_bound": 100.0
     },
     "thermostats": {
-      "primary": [
-        "df4a4a8169904cdb9c03d61a21f42140"
-      ],
-      "secondary": [
-        "a2c3583e0a6349358998b760cea82d2a"
-      ]
+      "primary": ["df4a4a8169904cdb9c03d61a21f42140"],
+      "secondary": ["a2c3583e0a6349358998b760cea82d2a"]
     },
     "vacation_preset_temperature": {
       "lower_bound": 4.0,
@@ -194,9 +178,7 @@
       "setpoint": 17.0,
       "upper_bound": 30.0
     },
-    "available_schedules": [
-      "off"
-    ],
+    "available_schedules": ["off"],
     "away_preset_temperature": {
       "lower_bound": 4.0,
       "resolution": 0.5,
@@ -220,13 +202,7 @@
       "setpoint": 10.0,
       "upper_bound": 30.0
     },
-    "preset_modes": [
-      "home",
-      "asleep",
-      "away",
-      "vacation",
-      "no_frost"
-    ],
+    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
     "select_schedule": "off",
     "sensors": {
       "temperature": 15.6
@@ -238,9 +214,7 @@
       "upper_bound": 100.0
     },
     "thermostats": {
-      "primary": [
-        "e7693eb9582644e5b865dba8d4447cf1"
-      ],
+      "primary": ["e7693eb9582644e5b865dba8d4447cf1"],
       "secondary": []
     },
     "vacation_preset_temperature": {
@@ -406,13 +380,7 @@
       "setpoint": 10.0,
       "upper_bound": 30.0
     },
-    "preset_modes": [
-      "home",
-      "no_frost",
-      "away",
-      "vacation",
-      "asleep"
-    ],
+    "preset_modes": ["home", "no_frost", "away", "vacation", "asleep"],
     "select_schedule": "CV Jessie",
     "sensors": {
       "temperature": 17.2
@@ -424,12 +392,8 @@
       "upper_bound": 100.0
     },
     "thermostats": {
-      "primary": [
-        "6a3bf693d05e48e0b460c815a4fdd09d"
-      ],
-      "secondary": [
-        "d3da73bde12a47d5a6b8f9dad971f2ec"
-      ]
+      "primary": ["6a3bf693d05e48e0b460c815a4fdd09d"],
+      "secondary": ["d3da73bde12a47d5a6b8f9dad971f2ec"]
     },
     "vacation_preset_temperature": {
       "lower_bound": 4.0,
@@ -591,13 +555,7 @@
       "setpoint": 12.0,
       "upper_bound": 30.0
     },
-    "preset_modes": [
-      "vacation",
-      "asleep",
-      "no_frost",
-      "away",
-      "home"
-    ],
+    "preset_modes": ["vacation", "asleep", "no_frost", "away", "home"],
     "select_schedule": "GF7  Woonkamer",
     "sensors": {
       "electricity_consumed": 35.6,
@@ -611,12 +569,8 @@
       "upper_bound": 100.0
     },
     "thermostats": {
-      "primary": [
-        "b59bcebaf94b499ea7d46e4a66fb62d8"
-      ],
-      "secondary": [
-        "b310b72a0e354bfab43089919b9a88bf"
-      ]
+      "primary": ["b59bcebaf94b499ea7d46e4a66fb62d8"],
+      "secondary": ["b310b72a0e354bfab43089919b9a88bf"]
     },
     "vacation_preset_temperature": {
       "lower_bound": 4.0,

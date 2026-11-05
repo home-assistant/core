@@ -37,10 +37,7 @@
     },
     "dev_class": "heater_central",
     "dhw_mode": "eco",
-    "dhw_modes": [
-      "comfort",
-      "eco"
-    ],
+    "dhw_modes": ["comfort", "eco"],
     "dhw_temperature": {
       "current": 41.5,
       "lower_bound": 35.0,
@@ -74,10 +71,7 @@
       "setpoint_low": 20.5,
       "upper_bound": 30.0
     },
-    "available_schedules": [
-      "off",
-      "standaard"
-    ],
+    "available_schedules": ["off", "standaard"],
     "away_preset_temperature": {
       "lower_bound": 4.0,
       "resolution": 0.5,
@@ -107,13 +101,7 @@
       "setpoint_low": 10.0,
       "upper_bound": 30.0
     },
-    "preset_modes": [
-      "no_frost",
-      "home",
-      "away",
-      "asleep",
-      "vacation"
-    ],
+    "preset_modes": ["no_frost", "home", "away", "asleep", "vacation"],
     "select_schedule": "standaard",
     "sensors": {
       "cooling_activation_outdoor_temperature": 21.0,
