@@ -163,6 +163,13 @@ async def test_migrating_pipelines(
     assert hass_storage[STORAGE_KEY]["data"]["items"][1] == PIPELINE_DATA["items"][1]
     assert hass_storage[STORAGE_KEY]["data"]["items"][2] == PIPELINE_DATA["items"][2]
 
+    # A cloud pipeline with a custom name gets its engines migrated but keeps its name.
+    assert hass_storage[STORAGE_KEY]["data"]["items"][3] == {
+        **PIPELINE_DATA["items"][3],
+        "stt_engine": entity_id,
+        "tts_engine": "tts.home_assistant_link",
+    }
+
 
 @pytest.fixture(name="setup_stt")
 async def setup_stt_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
