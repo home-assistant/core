@@ -50,6 +50,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     AUTH_API_TOKEN,
@@ -67,7 +68,6 @@ from .const import (
     V1_DEVICE_TYPES,
 )
 from .coordinator import (
-    DATA_CLASSIC_SESSIONS,
     GrowattClassicSession,
     GrowattConfigEntry,
     GrowattCoordinator,
@@ -79,6 +79,12 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+# Logged-in sessions by (server URL, username), so setup retries and the setup
+# after migration reuse them instead of logging in again.
+DATA_CLASSIC_SESSIONS: HassKey[dict[tuple[str, str], GrowattClassicSession]] = HassKey(
+    "growatt_server_classic_sessions"
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -383,7 +389,8 @@ async def async_setup_entry(
         # Fetch the device list in the first refresh, so an expired session or
         # a web page gets the same renewal and repair handling as a poll.
         total_coordinator.request_device_list_scan()
-        await total_coordinator.async_config_entry_first_refresh()
+    await total_coordinator.async_config_entry_first_refresh()
+    if classic_session is not None:
         if total_coordinator.device_list is None:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -405,9 +412,6 @@ async def async_setup_entry(
         for device in devices
         if device["deviceType"] in SUPPORTED_DEVICE_TYPES
     }
-
-    if classic_session is None:
-        await total_coordinator.async_config_entry_first_refresh()
 
     # Perform the first refresh for each device coordinator
     for device_coordinator in device_coordinators.values():

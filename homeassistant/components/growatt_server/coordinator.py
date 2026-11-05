@@ -28,7 +28,6 @@ from .const import (
     BATT_MODE_BATTERY_FIRST,
     BATT_MODE_GRID_FIRST,
     BATT_MODE_LOAD_FIRST,
-    DATA_LOGIN_BLOCKED_UNTIL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
     LOGIN_RATE_LIMITED_CODE,
@@ -50,6 +49,10 @@ LOGIN_COOLDOWN = dt.timedelta(hours=2)
 # Growatt keeps answering data requests with a web page.
 RELOGIN_INTERVAL = dt.timedelta(minutes=30)
 ISSUE_UNEXPECTED_WEB_PAGE = "unexpected_web_page"
+# Classic API login cooldown deadlines, keyed by (server URL, username)
+DATA_LOGIN_BLOCKED_UNTIL: HassKey[dict[tuple[str, str], dt.datetime]] = HassKey(
+    "growatt_server_login_blocked_until"
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,13 +156,6 @@ class GrowattClassicSession:
                 if wait > dt.timedelta(0):
                     raise GrowattReloginThrottled(wait.total_seconds())
             return self.login()
-
-
-# Logged-in sessions by (server URL, username), so setup retries and the setup
-# after migration reuse them instead of logging in again.
-DATA_CLASSIC_SESSIONS: HassKey[dict[tuple[str, str], GrowattClassicSession]] = HassKey(
-    "growatt_server_classic_sessions"
-)
 
 
 def _latest_power_value(
@@ -280,7 +276,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     for device in devices
                 ]
             except RequestsJSONDecodeError:
-                # Let the session handling treat a web page as for any request.
+                # Web pages go to the session renewal in _sync_update_data.
                 raise
             except (
                 RequestException,
@@ -288,9 +284,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 KeyError,
                 TypeError,
             ) as err:
-                _LOGGER.debug(
-                    "Failed to fetch Classic device list during scan: %s", err
-                )
+                _LOGGER.warning("Failed to fetch the Growatt device list: %s", err)
                 self.device_list = None
 
     def _sync_renew_session(

@@ -589,6 +589,7 @@ async def test_classic_api_session_dies_during_setup_retries(
     mock_growatt_classic_api: MagicMock,
     mock_config_entry_classic: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a cached session that dies between setup attempts is renewed."""
     cookie_valid = False
@@ -613,8 +614,8 @@ async def test_classic_api_session_dies_during_setup_retries(
     )
     mock_growatt_classic_api.tlx_detail.side_effect = needs_session(tlx_detail(2200))
     # The first refresh fails, so setup is retried with the cached session.
-    mock_growatt_classic_api.plant_info.side_effect = requests.exceptions.HTTPError(
-        "500 Server Error"
+    mock_growatt_classic_api.plant_info.side_effect = (
+        requests.exceptions.ConnectionError("Connection reset")
     )
 
     await setup_integration(hass, mock_config_entry_classic)
@@ -627,6 +628,10 @@ async def test_classic_api_session_dies_during_setup_retries(
     await hass.config_entries.async_reload(mock_config_entry_classic.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
+    # Nothing has worked on this login yet, so the expired session can't be
+    # told apart from a terms page until the renewal succeeds.
+    issue_id = WEB_PAGE_ISSUE_ID.format(entry_id=mock_config_entry_classic.entry_id)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
     for _ in range(40):
         freezer.tick(timedelta(minutes=1))
@@ -637,6 +642,7 @@ async def test_classic_api_session_dies_during_setup_retries(
     # The setup login, then one renewal once RELOGIN_INTERVAL allowed it.
     assert mock_growatt_classic_api.login.call_count == 2
     assert hass.states.get(TLX_OUTPUT_POWER).state == "2200"
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 async def test_classic_api_early_expiry_waits_for_relogin_interval(
@@ -687,8 +693,8 @@ async def test_classic_api_setup_retry_reuses_session(
         {"deviceSn": "TLX123456", "deviceType": "tlx"}
     ]
     plant_info = mock_growatt_classic_api.plant_info.return_value
-    mock_growatt_classic_api.plant_info.side_effect = requests.exceptions.HTTPError(
-        "500 Server Error"
+    mock_growatt_classic_api.plant_info.side_effect = (
+        requests.exceptions.ConnectionError("Connection reset")
     )
 
     await setup_integration(hass, mock_config_entry_classic)
@@ -1670,6 +1676,34 @@ async def test_classic_api_device_scan(
     # The scan reuses the coordinator's API session — device_list must have been
     # called exactly once (by the scan itself, not a fresh login+list cycle).
     mock_growatt_classic_api.device_list.assert_called_once()
+
+
+async def test_classic_api_device_scan_renews_expired_session(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device scan that gets a web page renews the session and retries."""
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+
+    mock_growatt_classic_api.device_list.side_effect = [
+        SESSION_EXPIRED,
+        [
+            {"deviceSn": "TLX123456", "deviceType": "tlx"},
+            {"deviceSn": "TLX999999", "deviceType": "tlx"},
+        ],
+    ]
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_growatt_classic_api.login.call_count == 2
+    assert "TLX999999" in mock_config_entry_classic.runtime_data.devices
 
 
 async def test_classic_api_stale_device_removed(
