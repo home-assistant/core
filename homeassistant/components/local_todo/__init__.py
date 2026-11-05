@@ -18,17 +18,22 @@ STORAGE_PATH = ".storage/local_todo.{key}.ics"
 type LocalTodoConfigEntry = ConfigEntry[LocalTodoListStore]
 
 
+def get_store(hass: HomeAssistant, entry: LocalTodoConfigEntry) -> LocalTodoListStore:
+    """Return the storage of a To-do list."""
+    path = Path(hass.config.path(STORAGE_PATH.format(key=entry.data[CONF_STORAGE_KEY])))
+    return LocalTodoListStore(hass, path)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: LocalTodoConfigEntry) -> None:
     """Set up Local To-do from a config entry."""
-    path = Path(hass.config.path(STORAGE_PATH.format(key=entry.data[CONF_STORAGE_KEY])))
-    store = LocalTodoListStore(hass, path)
+    store = get_store(hass, entry)
     try:
         await store.async_load()
     except OSError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="load_file_error",
-            translation_placeholders={"path": str(path)},
+            translation_placeholders={"path": str(store.path)},
         ) from err
 
     entry.runtime_data = store

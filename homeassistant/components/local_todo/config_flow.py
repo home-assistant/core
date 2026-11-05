@@ -1,5 +1,6 @@
 """Config flow for Local To-do integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -7,15 +8,29 @@ import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+)
 from homeassistant.util import slugify
 
-from .const import CONF_SECTIONS, CONF_STORAGE_KEY, CONF_TODO_LIST_NAME, DOMAIN
+from . import LocalTodoConfigEntry, get_store
+from .const import (
+    CONF_NEW_NAME,
+    CONF_SECTION,
+    CONF_SECTIONS,
+    CONF_STORAGE_KEY,
+    CONF_TODO_LIST_NAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +40,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     }
 )
 
-OPTIONS_SCHEMA = probatio.Schema(
+SECTIONS_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_SECTIONS, default=[]): TextSelector(
             TextSelectorConfig(multiple=True)
@@ -65,22 +80,86 @@ class LocalTodoConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class LocalTodoOptionsFlow(OptionsFlow):
+class LocalTodoOptionsFlow(OptionsFlowWithReload):
     """Handle the options of a Local To-do list."""
+
+    config_entry: LocalTodoConfigEntry
+
+    @property
+    def _sections(self) -> list[str]:
+        return list(self.config_entry.options.get(CONF_SECTIONS, []))
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the sections of the To-do list."""
+        """Choose how to manage the sections."""
+        if not self._sections:
+            return await self.async_step_sections()
+        return self.async_show_menu(
+            step_id="init", menu_options=["sections", "rename_section"]
+        )
+
+    async def async_step_sections(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add, remove and order the sections of the To-do list."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            sections = (section.strip() for section in user_input[CONF_SECTIONS])
-            return self.async_create_entry(
-                data={CONF_SECTIONS: list(dict.fromkeys(filter(None, sections)))}
-            )
+            stripped = (section.strip() for section in user_input[CONF_SECTIONS])
+            sections = list(dict.fromkeys(filter(None, stripped)))
+            if any("," in section for section in sections):
+                errors[CONF_SECTIONS] = "invalid_section"
+            else:
+                removed = set(self._sections) - set(sections)
+                await self._async_change_sections(dict.fromkeys(removed))
+                return self.async_create_entry(data={CONF_SECTIONS: sections})
 
         return self.async_show_form(
-            step_id="init",
+            step_id="sections",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, self.config_entry.options
+                SECTIONS_SCHEMA, user_input or self.config_entry.options
             ),
+            errors=errors,
         )
+
+    async def async_step_rename_section(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Rename a section, keeping its items in it."""
+        sections = self._sections
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            section = user_input[CONF_SECTION]
+            new_name = user_input[CONF_NEW_NAME].strip()
+            if not new_name or "," in new_name:
+                errors[CONF_NEW_NAME] = "invalid_section"
+            elif new_name != section and new_name in sections:
+                errors[CONF_NEW_NAME] = "section_exists"
+            else:
+                await self._async_change_sections({section: new_name})
+                sections[sections.index(section)] = new_name
+                return self.async_create_entry(data={CONF_SECTIONS: sections})
+
+        schema = probatio.Schema(
+            {
+                probatio.Required(CONF_SECTION): SelectSelector(
+                    SelectSelectorConfig(options=sections)
+                ),
+                probatio.Required(CONF_NEW_NAME): TextSelector(),
+            }
+        )
+        return self.async_show_form(
+            step_id="rename_section",
+            data_schema=self.add_suggested_values_to_schema(schema, user_input),
+            errors=errors,
+        )
+
+    async def _async_change_sections(self, changes: Mapping[str, str | None]) -> None:
+        """Apply section changes to the stored items before the entry reloads."""
+        if not changes:
+            return
+        if self.config_entry.state is ConfigEntryState.LOADED:
+            store = self.config_entry.runtime_data
+        else:
+            store = get_store(self.hass, self.config_entry)
+        await store.async_change_sections(changes)

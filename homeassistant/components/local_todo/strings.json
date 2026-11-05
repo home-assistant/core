@@ -14,6 +14,9 @@
     }
   },
   "exceptions": {
+    "invalid_section": {
+      "message": "Section \"{section}\" can't contain a comma"
+    },
     "item_not_found": {
       "message": "Item \"{uid}\" not found in to-do list {entity_id}"
     },
@@ -22,8 +25,30 @@
     }
   },
   "options": {
+    "error": {
+      "invalid_section": "Sections can't be empty or contain a comma.",
+      "section_exists": "A section with this name already exists."
+    },
     "step": {
       "init": {
+        "menu_options": {
+          "rename_section": "Rename a section",
+          "sections": "Manage sections"
+        },
+        "title": "Sections"
+      },
+      "rename_section": {
+        "data": {
+          "new_name": "New name",
+          "section": "Section"
+        },
+        "data_description": {
+          "new_name": "Items of this section are moved to the new name.",
+          "section": "The section to rename."
+        },
+        "description": "Rename a section of this to-do list."
+      },
+      "sections": {
         "data": {
           "sections": "Sections"
         },

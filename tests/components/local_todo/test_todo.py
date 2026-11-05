@@ -28,7 +28,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .conftest import STORAGE_KEY, TEST_ENTITY, TODO_NAME
@@ -1147,67 +1147,72 @@ async def test_crlf_description_preserved_on_reload(
     assert "Repaired malformed iCalendar file" not in caplog.text
 
 
+SECTIONS_ICS = textwrap.dedent(
+    """\
+        BEGIN:VCALENDAR
+        PRODID:-//homeassistant.io//local_todo 2.0//EN
+        VERSION:2.0
+        BEGIN:VTODO
+        DTSTAMP:20231024T014011
+        UID:apples
+        SEQUENCE:1
+        STATUS:NEEDS-ACTION
+        SUMMARY:Apples
+        CATEGORIES:Fresh produce,Organic
+        END:VTODO
+        BEGIN:VTODO
+        DTSTAMP:20231024T014011
+        UID:pasta
+        SEQUENCE:1
+        STATUS:NEEDS-ACTION
+        SUMMARY:Pasta
+        CATEGORIES:Grocery
+        END:VTODO
+        BEGIN:VTODO
+        DTSTAMP:20231024T014011
+        UID:soap
+        SEQUENCE:1
+        STATUS:NEEDS-ACTION
+        SUMMARY:Soap
+        END:VTODO
+        END:VCALENDAR
+    """
+)
+
+
+async def _stored_categories(config_entry: MockConfigEntry) -> list[list[str]]:
+    """Return the categories of the items persisted in the store."""
+    store = config_entry.runtime_data
+    calendar = IcsCalendarStream.calendar_from_ics(await store.async_load())
+    return [todo.categories for todo in calendar.todos]
+
+
 @pytest.mark.parametrize(
     ("item_data", "expected_section", "expected_categories"),
     [
         pytest.param(
-            {ATTR_SECTION: "Household"},
-            "Household",
-            ["Household", "Organic"],
-            id="change_section",
-        ),
-        pytest.param(
-            {ATTR_SECTION: "Organic"},
-            "Organic",
-            ["Organic"],
-            id="promote_other_category",
+            {ATTR_SECTION: "Household"}, "Household", ["Household"], id="change"
         ),
         pytest.param(
             {ATTR_STATUS: "completed"},
             "Fresh produce",
-            ["Fresh produce", "Organic"],
+            ["Fresh produce"],
             id="unrelated_update",
         ),
-        pytest.param(
-            {ATTR_SECTION: None},
-            None,
-            [],
-            id="clear_section",
-        ),
+        pytest.param({ATTR_SECTION: None}, None, [], id="clear"),
     ],
 )
-@pytest.mark.parametrize(
-    "ics_content",
-    [
-        textwrap.dedent(
-            """\
-                BEGIN:VCALENDAR
-                PRODID:-//homeassistant.io//local_todo 2.0//EN
-                VERSION:2.0
-                BEGIN:VTODO
-                DTSTAMP:20231024T014011
-                UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
-                CREATED:20231017T010348
-                LAST-MODIFIED:20231024T014011
-                SEQUENCE:1
-                STATUS:NEEDS-ACTION
-                SUMMARY:Apples
-                CATEGORIES:Fresh produce,Organic
-                END:VTODO
-                END:VCALENDAR
-            """
-        )
-    ],
-)
-async def test_update_section_keeps_other_categories(
+@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+async def test_update_section_categories(
     hass: HomeAssistant,
     setup_integration: None,
+    config_entry: MockConfigEntry,
     ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_section: str | None,
     expected_categories: list[str],
 ) -> None:
-    """Test the section maps to the first category and clearing it clears them all."""
+    """Test the section is stored as the only category of the item."""
     items = await ws_get_items()
     assert items[0]["section"] == "Fresh produce"
 
@@ -1221,94 +1226,40 @@ async def test_update_section_keeps_other_categories(
 
     items = await ws_get_items()
     assert items[0].get("section") == expected_section
-
-    store = hass.config_entries.async_entries("local_todo")[0].runtime_data
-    calendar = IcsCalendarStream.calendar_from_ics(await store.async_load())
-    assert calendar.todos[0].categories == expected_categories
+    assert (await _stored_categories(config_entry))[0] == expected_categories
 
 
 @pytest.mark.parametrize(
-    "config_entry",
+    ("service", "item_data"),
     [
-        MockConfigEntry(
-            domain="local_todo",
-            data={"storage_key": STORAGE_KEY, "todo_list_name": TODO_NAME},
-            options={"sections": ["Fresh produce", "Grocery", "Household"]},
-        )
+        pytest.param(TodoServices.ADD_ITEM, {ATTR_ITEM: "Pears"}, id="add"),
+        pytest.param(TodoServices.UPDATE_ITEM, {ATTR_ITEM: "Apples"}, id="update"),
     ],
 )
-@pytest.mark.parametrize(
-    "ics_content",
-    [
-        textwrap.dedent(
-            """\
-                BEGIN:VCALENDAR
-                PRODID:-//homeassistant.io//local_todo 2.0//EN
-                VERSION:2.0
-                BEGIN:VTODO
-                DTSTAMP:20231024T014011
-                UID:apples
-                SEQUENCE:1
-                STATUS:NEEDS-ACTION
-                SUMMARY:Apples
-                CATEGORIES:Fresh produce,Organic
-                END:VTODO
-                BEGIN:VTODO
-                DTSTAMP:20231024T014011
-                UID:pasta
-                SEQUENCE:1
-                STATUS:NEEDS-ACTION
-                SUMMARY:Pasta
-                CATEGORIES:Grocery
-                END:VTODO
-                BEGIN:VTODO
-                DTSTAMP:20231024T014011
-                UID:soap
-                SEQUENCE:1
-                STATUS:NEEDS-ACTION
-                SUMMARY:Soap
-                CATEGORIES:Bathroom,Fresh produce
-                END:VTODO
-                END:VCALENDAR
-            """
-        )
-    ],
-)
-async def test_sections_from_options(
-    hass: HomeAssistant,
-    setup_integration: None,
-    config_entry: MockConfigEntry,
-    ws_get_items: WsGetItemsType,
+@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_section_with_comma(
+    hass: HomeAssistant, service: TodoServices, item_data: dict[str, Any]
 ) -> None:
-    """Test the sections come from the options and removed ones are cleared."""
+    """Test a section can't contain a comma, as it doesn't survive a reload."""
+    with pytest.raises(ServiceValidationError, match="can't contain a comma"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            service,
+            {**item_data, ATTR_SECTION: "Fruits, vegetables"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_sections_attribute(hass: HomeAssistant) -> None:
+    """Test the sections come from the options."""
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.attributes["sections"] == ["Fresh produce", "Grocery", "Household"]
-
-    hass.config_entries.async_update_entry(
-        config_entry, options={"sections": ["Grocery", "Household"]}
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(TEST_ENTITY)
-    assert state
-    assert state.attributes["sections"] == ["Grocery", "Household"]
-
-    items = await ws_get_items()
-    # Only items whose section was removed are cleared, not other categories.
-    assert {item["summary"]: item.get("section") for item in items} == {
-        "Apples": None,
-        "Pasta": "Grocery",
-        "Soap": "Bathroom",
-    }
-
-    store = config_entry.runtime_data
-    calendar = IcsCalendarStream.calendar_from_ics(await store.async_load())
-    assert [todo.categories for todo in calendar.todos] == [
-        [],
-        ["Grocery"],
-        ["Bathroom", "Fresh produce"],
-    ]
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -1317,3 +1268,102 @@ async def test_no_sections_attribute_without_options(hass: HomeAssistant) -> Non
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert "sections" not in state.attributes
+
+
+async def _remove_fresh_produce(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove the Fresh produce section with the options flow."""
+    result = await hass.config_entries.options.async_init(entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "sections"}
+    )
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], {"sections": ["Grocery", "Household"]}
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_remove_section(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ws_get_items: WsGetItemsType,
+) -> None:
+    """Test removing a section leaves its items without a section."""
+    await _remove_fresh_produce(hass, config_entry.entry_id)
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.attributes["sections"] == ["Grocery", "Household"]
+    items = await ws_get_items()
+    assert {item["summary"]: item.get("section") for item in items} == {
+        "Apples": None,
+        "Pasta": "Grocery",
+        "Soap": None,
+    }
+    assert await _stored_categories(config_entry) == [[], ["Grocery"], []]
+
+
+@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_remove_section_entry_not_loaded(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test items are updated even when the entry isn't loaded."""
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    await _remove_fresh_produce(hass, config_entry.entry_id)
+
+    assert await _stored_categories(config_entry) == [[], ["Grocery"], []]
+
+
+@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_rename_section(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ws_get_items: WsGetItemsType,
+) -> None:
+    """Test renaming a section keeps its items in it."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "rename_section"}
+    )
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], {"section": "Fresh produce", "new_name": "Produce"}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.attributes["sections"] == ["Produce", "Grocery", "Household"]
+    items = await ws_get_items()
+    assert {item["summary"]: item.get("section") for item in items} == {
+        "Apples": "Produce",
+        "Pasta": "Grocery",
+        "Soap": None,
+    }
+    assert await _stored_categories(config_entry) == [["Produce"], ["Grocery"], []]
+
+
+@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_remove_section_write_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the options are kept when the items can't be updated."""
+    with (
+        patch.object(
+            LocalTodoListStore, "_store", side_effect=OSError(errno.EIO, "Error")
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await _remove_fresh_produce(hass, config_entry.entry_id)
+
+    assert config_entry.options == {
+        "sections": ["Fresh produce", "Grocery", "Household"]
+    }

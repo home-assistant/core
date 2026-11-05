@@ -10,6 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.local_todo import LocalTodoListStore
 from homeassistant.components.local_todo.const import (
+    CONF_SECTIONS,
     CONF_STORAGE_KEY,
     CONF_TODO_LIST_NAME,
     DOMAIN,
@@ -88,12 +89,19 @@ def mock_store(ics_content: str, store_read_side_effect: Any | None) -> Generato
         yield
 
 
+@pytest.fixture(name="sections")
+def mock_sections() -> list[str] | None:
+    """Fixture to set the sections of the To-do list."""
+    return None
+
+
 @pytest.fixture(name="config_entry")
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(sections: list[str] | None) -> MockConfigEntry:
     """Fixture for mock configuration entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_STORAGE_KEY: STORAGE_KEY, CONF_TODO_LIST_NAME: TODO_NAME},
+        options={CONF_SECTIONS: sections} if sections is not None else {},
     )
 
 

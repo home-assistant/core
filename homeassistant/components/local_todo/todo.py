@@ -17,9 +17,8 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util
@@ -118,23 +117,23 @@ async def async_setup_entry(
         calendar,
         name,
         unique_id=config_entry.entry_id,
-        sections=config_entry.options.get(CONF_SECTIONS, []),
+        sections=list(config_entry.options.get(CONF_SECTIONS, [])),
     )
     async_add_entities([entity], True)
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(entity.async_update_sections)
-    )
 
     if migrated:
         await entity.async_save()
 
 
-def _convert_item(item: TodoItem, other_categories: list[str] | None = None) -> Todo:
-    """Convert a HomeAssistant TodoItem to an ical Todo.
-
-    The section is stored as the first category. Other categories set outside
-    of Home Assistant are kept after it, unless the section is cleared.
-    """
+def _convert_item(item: TodoItem) -> Todo:
+    """Convert a HomeAssistant TodoItem to an ical Todo."""
+    if item.section and "," in item.section:
+        # ical splits CATEGORIES on commas when reading, even escaped ones
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_section",
+            translation_placeholders={"section": item.section},
+        )
     todo = Todo()
     if item.uid:
         todo.uid = item.uid
@@ -146,14 +145,7 @@ def _convert_item(item: TodoItem, other_categories: list[str] | None = None) -> 
     if todo.due and not isinstance(todo.due, dt.datetime):
         todo.due += dt.timedelta(days=1)
     todo.description = item.description
-    todo.categories = (
-        [
-            item.section,
-            *(cat for cat in other_categories or () if cat != item.section),
-        ]
-        if item.section
-        else []
-    )
+    todo.categories = [item.section] if item.section else []
     return todo
 
 
@@ -227,11 +219,8 @@ class LocalTodoListEntity(TodoListEntity):
     @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list."""
+        todo = _convert_item(item)
         async with self._calendar_lock:
-            existing = next(
-                (todo for todo in self._calendar.todos if todo.uid == item.uid), None
-            )
-            todo = _convert_item(item, existing.categories[1:] if existing else None)
             todo_store = self._new_todo_store()
             await self.hass.async_add_executor_job(todo_store.edit, todo.uid, todo)
             await self.async_save()
@@ -279,26 +268,6 @@ class LocalTodoListEntity(TodoListEntity):
                 dst_idx -= 1
             todos.insert(dst_idx, src_item)
             await self.async_save()
-        await self.async_update_ha_state(force_refresh=True)
-
-    async def async_update_sections(
-        self, hass: HomeAssistant, entry: ConfigEntry
-    ) -> None:
-        """Apply new sections, removing removed sections from their items."""
-        sections: list[str] = entry.options.get(CONF_SECTIONS, [])
-        removed = set(self._attr_todo_sections or ()) - set(sections)
-        async with self._calendar_lock:
-            uids = [
-                todo.uid
-                for todo in self._calendar.todos
-                if todo.categories and todo.categories[0] in removed
-            ]
-            if uids:
-                todo_store = self._new_todo_store()
-                for uid in uids:
-                    todo_store.edit(uid, Todo(categories=[]))
-                await self.async_save()
-        self._attr_todo_sections = sections or None
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_save(self) -> None:
