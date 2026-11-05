@@ -2,11 +2,13 @@
 
 from unittest.mock import patch
 
+from aerosmart_modbus import WriteVerificationError
 from modbus_connection import ModbusConnectionError
 from modbus_connection.mock import MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.aerosmart.number import NUMBER_DESCRIPTIONS
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -121,3 +123,52 @@ async def test_number_write_error_is_translated(
             {ATTR_ENTITY_ID: ROOM_SETPOINT, "value": 21.5},
             blocking=True,
         )
+
+
+async def test_number_read_back_error_is_translated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failed write read-back becomes a Home Assistant error."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    device = mock_config_entry.runtime_data.device
+
+    with (
+        patch.object(
+            device,
+            "async_write_verified",
+            side_effect=WriteVerificationError(
+                "room_temperature", "temp_raumluft_soll", 21.5, 21.0
+            ),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: ROOM_SETPOINT, "value": 21.5},
+            blocking=True,
+        )
+
+
+async def test_number_descriptions_match_library_metadata(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test number limits match the authoritative library metadata."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = mock_config_entry.runtime_data.device
+    for description in NUMBER_DESCRIPTIONS:
+        component = getattr(device, description.component)
+        metadata = component.require_metadata_for(description.attribute)
+        assert metadata.value_kind == "number"
+        assert metadata.verified_writable is True
+        assert metadata.number is not None
+        assert description.native_min_value == metadata.number.min_value
+        assert description.native_max_value == metadata.number.max_value
+        assert description.native_unit_of_measurement == metadata.number.unit
