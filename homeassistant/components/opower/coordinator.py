@@ -261,6 +261,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                     account,
                     self.api.utility.timezone(),
                     last_stat[consumption_statistic_id][0]["start"],
+                    consumption_statistic_id,
                 )
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
@@ -521,13 +522,41 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
 
         return True
 
+    async def _async_has_hourly_statistics(
+        self, statistic_id: str, hourly_cost_reads: list[CostRead]
+    ) -> bool:
+        """Return whether the existing statistics at the hourly reads are hourly.
+
+        Day statistics only exist at local midnight, so having one at the second
+        hourly read means that the statistics there are hourly.
+        """
+        if len(hourly_cost_reads) < 2:
+            return False
+        start = hourly_cost_reads[1].start_time
+        stats = await get_instance(self.hass).async_add_executor_job(
+            statistics_during_period,
+            self.hass,
+            start,
+            start + timedelta(seconds=1),
+            {statistic_id},
+            "hour",
+            None,
+            {"sum"},
+        )
+        return bool(stats.get(statistic_id))
+
     async def _async_get_cost_reads(
-        self, account: Account, time_zone_str: str, start_time: float | None = None
+        self,
+        account: Account,
+        time_zone_str: str,
+        start_time: float | None = None,
+        statistic_id: str | None = None,
     ) -> list[CostRead]:
         """Get cost reads.
 
         If start_time is None, get cost reads since account activation,
-        otherwise since start_time - 30 days to allow corrections in data from utilities
+        otherwise since start_time - 30 days to allow corrections in data from utilities.
+        statistic_id is the statistic that start_time is the last start time of.
 
         We read at different resolutions depending on age:
         - month resolution for all years (since account activation)
@@ -621,16 +650,20 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             return []
         if (
             start_time is not None
+            and statistic_id is not None
             and hourly_cost_reads[0].start_time.timestamp() <= start_time
+            and await self._async_has_hourly_statistics(statistic_id, hourly_cost_reads)
         ):
             # The bill and daily reads start where the billing period containing
             # start_time - 30 days starts, which can be before the hourly reads
-            # since those only cover the last two months. The statistics that
-            # already exist before the hourly reads are hourly too. The running
-            # sum is anchored on the statistic at the first read, so anchoring on
-            # a day read would only count its first hour and drop the rest of
-            # that day from the sum, and the day reads that follow would replace
-            # hourly statistics with day ones. Start at the hourly reads instead.
+            # since those only cover the last two months. If the statistics that
+            # already exist there are hourly, anchoring the running sum on a day
+            # read would only count the first hour of that day and drop the rest
+            # from the sum, and the day reads that follow would replace hourly
+            # statistics with day ones. Start at the hourly reads instead.
+            # If they are day statistics, e.g. because hourly reads were not
+            # available when they were imported, the day reads are a compatible
+            # anchor and the hourly reads that follow replace the day statistics.
             first_hourly_start_time = hourly_cost_reads[0].start_time
             cost_reads = [
                 cost_read
