@@ -1,206 +1,82 @@
 """Tests for ZoneMinder camera entities."""
 
+from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pytest_homeassistant.common import async_fire_time_changed
+import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import CameraState
-from homeassistant.components.zoneminder.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import create_mock_monitor, create_mock_zm_client
+from . import setup_integration
+from .conftest import create_mock_monitor
 
 
-async def _setup_zm_with_cameras(
-    hass: HomeAssistant,
-    mock_zoneminder_client: MagicMock,
-    config: dict,
-    monitors: list,
-    freezer: FrozenDateTimeFactory,
-    verify_ssl: bool = True,
-) -> None:
-    """Set up ZM component with camera platform and given monitors."""
-    mock_zoneminder_client.get_monitors.return_value = monitors
-    type(mock_zoneminder_client).verify_ssl = PropertyMock(return_value=verify_ssl)
+@pytest.fixture(autouse=True)
+def mock_getrandbits() -> Generator[None]:
+    """Mock camera access token which normally is randomized."""
+    with patch(
+        "homeassistant.components.camera.entity.SystemRandom.getrandbits",
+        return_value=1,
+    ):
+        yield
 
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    # Camera uses setup_platform (sync), add camera platform explicitly
-    assert await async_setup_component(
-        hass,
-        "camera",
-        {"camera": [{"platform": DOMAIN}]},
-    )
-    await hass.async_block_till_done(wait_background_tasks=True)
-    # Trigger first poll to update entity state
+
+async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Trigger an entity update poll."""
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
-async def test_one_camera_per_monitor(
+@pytest.mark.usefixtures("mock_zoneminder_client")
+async def test_entities(
     hass: HomeAssistant,
-    mock_zoneminder_client: MagicMock,
-    single_server_config: dict,
-    two_monitors: list,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test one camera entity is created per monitor."""
-    await _setup_zm_with_cameras(
-        hass, mock_zoneminder_client, single_server_config, two_monitors, freezer
-    )
+    await setup_integration(hass, mock_config_entry, [Platform.CAMERA])
+    await _poll(hass, freezer)
 
-    states = hass.states.async_all("camera")
-    assert len(states) == 2
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_camera_entity_name(
+@pytest.mark.parametrize(
+    ("is_recording", "is_available", "expected"),
+    [
+        pytest.param(True, True, CameraState.RECORDING, id="recording"),
+        pytest.param(False, True, CameraState.IDLE, id="idle"),
+        pytest.param(False, False, STATE_UNAVAILABLE, id="unavailable"),
+    ],
+)
+async def test_camera_state(
     hass: HomeAssistant,
     mock_zoneminder_client: MagicMock,
-    single_server_config: dict,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    is_recording: bool,
+    is_available: bool,
+    expected: str,
 ) -> None:
-    """Test camera entity name matches monitor name."""
-    monitors = [create_mock_monitor(name="Front Door")]
-    await _setup_zm_with_cameras(
-        hass, mock_zoneminder_client, single_server_config, monitors, freezer
-    )
-
-    state = hass.states.get("camera.front_door")
-    assert state is not None
-    assert state.name == "Front Door"
-
-
-async def test_camera_recording_state(
-    hass: HomeAssistant,
-    mock_zoneminder_client: MagicMock,
-    single_server_config: dict,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test camera recording state reflects monitor is_recording."""
-    monitors = [
-        create_mock_monitor(name="Recording Cam", is_recording=True, is_available=True)
+    """Test the camera state follows the monitor."""
+    mock_zoneminder_client.get_monitors.return_value = [
+        create_mock_monitor(is_recording=is_recording, is_available=is_available)
     ]
-    await _setup_zm_with_cameras(
-        hass, mock_zoneminder_client, single_server_config, monitors, freezer
-    )
+    await setup_integration(hass, mock_config_entry, [Platform.CAMERA])
+    await _poll(hass, freezer)
 
-    state = hass.states.get("camera.recording_cam")
-    assert state is not None
-    assert state.state == CameraState.RECORDING
-
-
-async def test_camera_idle_state(
-    hass: HomeAssistant,
-    mock_zoneminder_client: MagicMock,
-    single_server_config: dict,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test camera idle state when not recording."""
-    monitors = [
-        create_mock_monitor(name="Idle Cam", is_recording=False, is_available=True)
-    ]
-    await _setup_zm_with_cameras(
-        hass, mock_zoneminder_client, single_server_config, monitors, freezer
-    )
-
-    state = hass.states.get("camera.idle_cam")
-    assert state is not None
-    assert state.state == CameraState.IDLE
-
-
-async def test_camera_unavailable_state(
-    hass: HomeAssistant,
-    mock_zoneminder_client: MagicMock,
-    single_server_config: dict,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test camera unavailable state tracking."""
-    monitors = [create_mock_monitor(name="Offline Cam", is_available=False)]
-    await _setup_zm_with_cameras(
-        hass, mock_zoneminder_client, single_server_config, monitors, freezer
-    )
-
-    state = hass.states.get("camera.offline_cam")
-    assert state is not None
-    assert state.state == "unavailable"
-
-
-async def test_no_monitors_raises_platform_not_ready(
-    hass: HomeAssistant,
-    mock_zoneminder_client: MagicMock,
-    single_server_config: dict,
-) -> None:
-    """Test PlatformNotReady raised when no monitors returned."""
-    mock_zoneminder_client.get_monitors.return_value = []
-
-    assert await async_setup_component(hass, DOMAIN, single_server_config)
-    await hass.async_block_till_done()
-    await async_setup_component(
-        hass,
-        "camera",
-        {"camera": [{"platform": DOMAIN}]},
-    )
-    await hass.async_block_till_done()
-
-    # No camera entities should exist
-    states = hass.states.async_all("camera")
-    assert len(states) == 0
-
-
-async def test_multi_server_camera_creation(
-    hass: HomeAssistant,
-    multi_server_config: dict,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test cameras created from multiple ZM servers."""
-    monitors1 = [create_mock_monitor(monitor_id=1, name="Front Door")]
-    monitors2 = [create_mock_monitor(monitor_id=2, name="Back Yard")]
-
-    clients = iter(
-        [
-            create_mock_zm_client(monitors=monitors1),
-            create_mock_zm_client(monitors=monitors2),
-        ]
-    )
-
-    with patch(
-        "homeassistant.components.zoneminder.ZoneMinder",
-        side_effect=lambda *args, **kwargs: next(clients),
-    ):
-        assert await async_setup_component(hass, DOMAIN, multi_server_config)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert await async_setup_component(
-            hass,
-            "camera",
-            {"camera": [{"platform": DOMAIN}]},
-        )
-        await hass.async_block_till_done(wait_background_tasks=True)
-        freezer.tick(timedelta(seconds=60))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    states = hass.states.async_all("camera")
-    assert len(states) == 2
-
-
-async def test_filter_urllib3_logging_called(
-    hass: HomeAssistant,
-    mock_zoneminder_client: MagicMock,
-    single_server_config: dict,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test filter_urllib3_logging() is called in setup_platform."""
-    monitors = [create_mock_monitor(name="Front Door")]
-
-    with patch(
-        "homeassistant.components.zoneminder.camera.filter_urllib3_logging"
-    ) as mock_filter:
-        await _setup_zm_with_cameras(
-            hass, mock_zoneminder_client, single_server_config, monitors, freezer
-        )
-
-    mock_filter.assert_called_once()
+    assert (state := hass.states.get("camera.front_door"))
+    assert state.state == expected
