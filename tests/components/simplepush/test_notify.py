@@ -1,7 +1,7 @@
 """Test Simplepush notifications."""
 
 from typing import Any
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -226,11 +226,20 @@ async def test_notify_platform(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("service_data", "expected_title"),
+    [
+        pytest.param({ATTR_MESSAGE: "Hello", ATTR_TITLE: "Title"}, "Title", id="title"),
+        pytest.param({ATTR_MESSAGE: "Hello"}, None, id="no_title"),
+    ],
+)
 async def test_entity_send_message(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_client: MagicMock,
     config_entry: MockConfigEntry,
+    service_data: dict[str, str],
+    expected_title: str | None,
 ) -> None:
     """Test sending a message through the notify entity of the current app."""
     await setup_integration(hass, config_entry)
@@ -239,14 +248,12 @@ async def test_entity_send_message(
     assert entity.unique_id == config_entry.entry_id
     assert not hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
 
-    await send_entity_message(hass, {ATTR_MESSAGE: "Hello", ATTR_TITLE: "Title"})
-    await send_entity_message(hass, {ATTR_MESSAGE: "Hello"})
+    await send_entity_message(hass, service_data)
 
     mock_client.assert_called_once_with(api_token="token")
-    assert mock_client.return_value.send_task.call_args_list == [
-        call(title="Title", content="Hello"),
-        call(title=None, content="Hello"),
-    ]
+    mock_client.return_value.send_task.assert_called_once_with(
+        title=expected_title, content="Hello"
+    )
 
 
 @pytest.mark.parametrize(
