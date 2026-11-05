@@ -196,7 +196,6 @@ async def test_timer_live_activity(
                     "silent": True,
                     "notification_icon": "mdi:timer-outline",
                     "chronometer": False,
-                    "critical_text": "Paused",
                     "progress": 90,
                     "progress_max": 120,
                 },
