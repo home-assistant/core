@@ -1,0 +1,220 @@
+# serializer version: 1
+# name: test_dry_run
+  dict({
+    'conditions': list([
+      dict({
+        'condition': 'state',
+        'details': dict({
+          'sub_results': dict({
+            'entity_id/0': dict({
+              'result': False,
+              'state': 'on',
+              'wanted_state': 'off',
+            }),
+          }),
+        }),
+        'path': 'condition/0',
+        'result': 'fail',
+      }),
+      dict({
+        'condition': 'numeric_state',
+        'details': dict({
+          'sub_results': dict({
+            'entity_id/0': dict({
+              'result': True,
+              'state': 21.5,
+            }),
+          }),
+        }),
+        'path': 'condition/1',
+        'result': 'pass',
+      }),
+      dict({
+        'condition': 'template',
+        'details': dict({
+          'entities': list([
+            'sensor.temperature',
+          ]),
+        }),
+        'path': 'condition/2',
+        'result': 'pass',
+      }),
+      dict({
+        'alias': 'Trigger or light',
+        'condition': 'or',
+        'conditions': list([
+          dict({
+            'condition': 'template',
+            'path': 'condition/3/conditions/0',
+            'result': 'depends_on_trigger',
+          }),
+          dict({
+            'condition': 'state',
+            'details': dict({
+              'sub_results': dict({
+                'entity_id/0': dict({
+                  'result': True,
+                  'state': 'on',
+                  'wanted_state': 'on',
+                }),
+              }),
+            }),
+            'path': 'condition/3/conditions/1',
+            'result': 'pass',
+          }),
+        ]),
+        'path': 'condition/3',
+        'result': 'pass',
+      }),
+      dict({
+        'condition': 'not',
+        'conditions': list([
+          dict({
+            'condition': 'template',
+            'path': 'condition/4/conditions/0',
+            'result': 'depends_on_trigger',
+          }),
+        ]),
+        'path': 'condition/4',
+        'result': 'depends_on_trigger',
+      }),
+      dict({
+        'condition': 'trigger',
+        'path': 'condition/5',
+        'result': 'depends_on_trigger',
+      }),
+      dict({
+        'condition': 'state',
+        'path': 'condition/6',
+        'result': 'disabled',
+      }),
+      dict({
+        'condition': 'template',
+        'details': dict({
+          'entities': list([
+            'light.x',
+          ]),
+        }),
+        'path': 'condition/7',
+        'result': 'fail',
+        'template_errors': list([
+          "'None' has no attribute 'state'",
+        ]),
+      }),
+      dict({
+        'condition': 'state',
+        'path': 'condition/8',
+        'result': 'disabled',
+      }),
+    ]),
+    'conditions_result': 'fail',
+    'current_runs': 0,
+    'enabled': True,
+    'entity_id': 'automation.hello',
+    'max_runs': None,
+    'mode': 'single',
+    'reason': 'conditions_not_met',
+    'triggers': list([
+      dict({
+        'details': dict({
+          'sub_results': dict({
+            'entity_id/0': dict({
+              'result': True,
+              'state': 'on',
+              'wanted_state': 'on',
+            }),
+          }),
+        }),
+        'id': '0',
+        'idx': '0',
+        'status': 'in_target_state',
+        'trigger': 'state',
+      }),
+      dict({
+        'details': dict({
+          'sub_results': dict({
+            'entity_id/0': dict({
+              'duration': '2026-11-05T08:55:00+00:00',
+              'result': False,
+              'state': 'on',
+            }),
+          }),
+        }),
+        'id': '1',
+        'idx': '1',
+        'status': 'not_in_target_state',
+        'trigger': 'state',
+      }),
+      dict({
+        'details': dict({
+          'sub_results': dict({
+            'entity_id/0': dict({
+              'result': False,
+              'state': 21.5,
+              'wanted_state_above': 25.0,
+            }),
+          }),
+        }),
+        'id': '2',
+        'idx': '2',
+        'status': 'not_in_range',
+        'trigger': 'numeric_state',
+      }),
+      dict({
+        'id': '3',
+        'idx': '3',
+        'next': '2026-11-09T07:00:00+01:00',
+        'status': 'scheduled',
+        'trigger': 'time',
+      }),
+      dict({
+        'id': 'event',
+        'idx': '4',
+        'status': 'waits_for_event',
+        'trigger': 'event',
+      }),
+      dict({
+        'id': '5',
+        'idx': '5',
+        'status': 'disabled',
+        'trigger': 'event',
+      }),
+      dict({
+        'details': dict({
+          'sub_results': dict({
+            'entity_id/0': dict({
+              'result': True,
+              'state': 43.0,
+            }),
+          }),
+        }),
+        'id': '6',
+        'idx': '6',
+        'status': 'in_range',
+        'trigger': 'numeric_state',
+      }),
+      dict({
+        'details': dict({
+          'sub_results': dict({
+            'entity_id/0': dict({
+              'result': False,
+              'state': 'on',
+              'wanted_state': 'off',
+            }),
+          }),
+        }),
+        'id': '7',
+        'idx': '7',
+        'status': 'not_in_target_state',
+        'trigger': 'state',
+      }),
+      dict({
+        'id': '8',
+        'idx': '8',
+        'status': 'waits_for_event',
+        'trigger': 'time',
+      }),
+    ]),
+    'would_run': False,
+  })
+# ---
