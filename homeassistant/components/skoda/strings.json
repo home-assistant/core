@@ -59,6 +59,11 @@
         "name": "Windows"
       }
     },
+    "number": {
+      "charge_limit": {
+        "name": "Charge limit"
+      }
+    },
     "sensor": {
       "aux_heating_duration": {
         "name": "Auxiliary heating remaining duration"
