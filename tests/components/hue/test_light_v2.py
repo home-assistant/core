@@ -1077,3 +1077,46 @@ async def test_light_with_null_mirek(
     assert test_light.attributes["color_mode"] == ColorMode.COLOR_TEMP
     # Falls back instead of converting the missing mirek value
     assert test_light.attributes["color_temp_kelvin"] == 5800
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("light.hue_light_with_color_and_color_temperature_1", id="light"),
+        pytest.param("light.test_zone", id="grouped_light"),
+    ],
+)
+async def test_turn_on_with_brightness_clears_restore_brightness(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    entity_id: str,
+) -> None:
+    """Test brightness kept after a transition turn_off is not applied later."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": entity_id, "transition": 0.25},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity_id, "brightness_pct": 100},
+        blocking=True,
+    )
+    mock_bridge_v2.mock_requests.clear()
+
+    # A color only call must not bring back the brightness from before turn_off
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity_id, "color_temp_kelvin": 2210},
+        blocking=True,
+    )
+
+    assert len(mock_bridge_v2.mock_requests) == 1
+    assert "dimming" not in mock_bridge_v2.mock_requests[0]["json"]
