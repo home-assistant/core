@@ -47,6 +47,7 @@ async def test_explorer(
             "message_rate": 0.0,
             "byte_rate": 0.0,
             "dropped_messages": 0,
+            "dropped_payloads": 0,
         },
         "topics": [],
         "messages": [],
@@ -69,6 +70,7 @@ async def test_explorer(
         "message_rate": 4.0,
         "byte_rate": 39.5,
         "dropped_messages": 0,
+        "dropped_payloads": 0,
     }
     assert event["topics"] == [
         {
@@ -254,6 +256,101 @@ async def test_explorer_not_loaded(
     await client.send_json({"id": 5, "type": "mqtt/explorer/subscribe"})
     response = await client.receive_json()
     assert response["error"]["code"] == "not_loaded"
+
+
+@pytest.mark.usefixtures("mqtt_client_mock")
+async def test_explorer_not_loaded_after_unload(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the explorer is rejected while the MQTT entry is unloaded."""
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {})
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    # The MQTT data outlives the unload, so it must not count as loaded.
+    assert DATA_MQTT in hass.data
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "mqtt/explorer/subscribe"})
+    response = await client.receive_json()
+    assert response["error"]["code"] == "not_loaded"
+    assert hass.data[DATA_MQTT].client.async_count_matching_subscriptions("a") == 0
+
+
+async def test_explorer_payload_budget(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test payloads beyond the snapshot budget are only counted."""
+    await mqtt_mock_entry()
+    client = await hass_ws_client(hass)
+    with patch("homeassistant.components.mqtt.explorer.MAX_SNAPSHOT_PAYLOAD_SIZE", 8):
+        await client.send_json({"id": 5, "type": "mqtt/explorer/subscribe"})
+        assert (await client.receive_json())["success"]
+        await client.receive_json()
+
+        for topic, payload in (("a", "1234"), ("b", "5678"), ("c", "9"), ("a", "0")):
+            async_fire_mqtt_message(hass, topic, payload)
+        await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=2))
+        async_fire_time_changed(hass)
+        event = (await client.receive_json())["event"]
+
+        assert [message["payload"] for message in event["messages"]] == [
+            "1234",
+            "5678",
+        ]
+        assert [topic["topic"] for topic in event["topics"]] == ["a", "b", "c"]
+        assert event["total"]["messages"] == 4
+        assert event["total"]["dropped_payloads"] == 2
+
+        async_fire_mqtt_message(hass, "c", "9")
+        await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=2))
+        async_fire_time_changed(hass)
+        event = (await client.receive_json())["event"]
+
+    assert [message["payload"] for message in event["messages"]] == ["9"]
+    assert event["total"]["dropped_payloads"] == 2
+
+
+async def test_explorer_payload_budget_frees_evicted(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a payload pushed out of a topic's samples frees its budget."""
+    await mqtt_mock_entry()
+    client = await hass_ws_client(hass)
+    with patch("homeassistant.components.mqtt.explorer.MAX_SNAPSHOT_PAYLOAD_SIZE", 6):
+        await client.send_json({"id": 5, "type": "mqtt/explorer/subscribe"})
+        assert (await client.receive_json())["success"]
+        await client.receive_json()
+
+        for value in range(7):
+            async_fire_mqtt_message(hass, "a", str(value))
+        async_fire_mqtt_message(hass, "b", "x")
+        await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=2))
+        async_fire_time_changed(hass)
+        event = (await client.receive_json())["event"]
+
+    assert [message["payload"] for message in event["messages"]] == [
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "x",
+    ]
+    assert event["total"]["dropped_payloads"] == 0
 
 
 async def test_explorer_topic_limit(

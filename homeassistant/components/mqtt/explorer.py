@@ -23,6 +23,8 @@ MAX_INTERVAL = 60
 MAX_PAYLOAD_SIZE = 16384
 MESSAGES_PER_TOPIC = 5
 MAX_TOPICS = 10000
+# Bounds the payload text buffered for and sent in one snapshot.
+MAX_SNAPSHOT_PAYLOAD_SIZE = 1048576
 
 
 @dataclass(slots=True)
@@ -46,6 +48,8 @@ class TopicExplorer:
     topics: dict[str, TopicStats] = field(default_factory=dict)
     new_messages: dict[str, deque[dict[str, Any]]] = field(default_factory=dict)
     dropped_messages: int = 0
+    dropped_payloads: int = 0
+    buffered_payload_size: int = 0
 
     @callback
     def async_add_message(self, msg: ReceiveMessage) -> None:
@@ -68,10 +72,17 @@ class TopicExplorer:
         stats.qos = msg.qos
         if (messages := self.new_messages.get(msg.topic)) is None:
             messages = self.new_messages[msg.topic] = deque(maxlen=MESSAGES_PER_TOPIC)
+        if self.buffered_payload_size >= MAX_SNAPSHOT_PAYLOAD_SIZE:
+            self.dropped_payloads += 1
+            return
+        if len(messages) == MESSAGES_PER_TOPIC:
+            self.buffered_payload_size -= len(messages[0]["payload"])
+        text = _decode(payload, truncated)
+        self.buffered_payload_size += len(text)
         messages.append(
             {
                 "topic": msg.topic,
-                "payload": _decode(payload, truncated),
+                "payload": text,
                 "truncated": truncated,
                 "size": size,
                 "timestamp": received,
@@ -111,6 +122,7 @@ class TopicExplorer:
             for message in topic_messages
         ]
         self.new_messages.clear()
+        self.buffered_payload_size = 0
         return {
             "interval": interval,
             "now": dt_util.utcnow().timestamp(),
@@ -122,6 +134,7 @@ class TopicExplorer:
                 "message_rate": interval_messages / interval,
                 "byte_rate": interval_bytes / interval,
                 "dropped_messages": self.dropped_messages,
+                "dropped_payloads": self.dropped_payloads,
             },
             "topics": topics,
             "messages": messages,
@@ -157,7 +170,7 @@ def websocket_subscribe_explorer(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Send the topics and payloads below a topic filter until unsubscribed."""
-    if DATA_MQTT not in hass.data:
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         connection.send_error(msg["id"], "not_loaded", f"{DOMAIN} is not loaded")
         return
 
