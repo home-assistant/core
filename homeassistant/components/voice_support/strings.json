@@ -1,0 +1,47 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "app_info_failed": "Failed to get {name} app info.",
+      "install_failed": "Failed to install the {name} app.",
+      "no_discovery": "The {name} app is running, but Home Assistant cannot reach it. Check its log.",
+      "repository_missing": "The {name} app was not found in the app store. Add the repository {repository} and try again.",
+      "start_failed": "Failed to start the {name} app."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unsupported_version": "That is a {name} app this version of Home Assistant does not know how to talk to."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "hassio_confirm": {
+        "description": "Set up {name} so that it can check the wake words your voice satellites hear, and a television saying something similar does not run a command.\n\nChecking is turned on separately, under Settings > System > General > Home Assistant Labs.",
+        "title": "Voice app"
+      },
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the machine running the app.",
+          "port": "The port the app listens on."
+        },
+        "description": "Where is the {name} app running? It is the host and port its websocket is served on.",
+        "title": "Voice app"
+      },
+      "user": {
+        "description": "The {name} app will be installed and started, so that it can check the wake words your voice satellites hear, and a television saying something similar does not run a command.\n\nInstalling takes a few minutes. Checking is turned on separately, under Settings > System > General > Home Assistant Labs.",
+        "title": "Voice app"
+      }
+    }
+  },
+  "preview_features": {
+    "wake_word_verification": {
+      "description": "Check the wake words your voice satellites hear against a second, more careful listener running on this machine, so that a television saying something close to \"okay nabu\" does not run a command.\n\nSatellites that support it send the audio their own detector fired on, and the Voice app says whether it really was the wake word. Needs the Voice app installed and running.",
+      "disable_confirmation": "Wake words will be taken as your satellites report them, without a second opinion.",
+      "enable_confirmation": "This feature is still in development and may change. Satellites listen more readily while it is on, relying on the Voice app to catch what that lets through.",
+      "name": "Wake word verification"
+    }
+  }
+}
