@@ -849,15 +849,6 @@ cookidoo-api==0.18.4
 # homeassistant.components.utility_meter
 cronsim==2.7
 
-# homeassistant.components.crownstone
-crownstone-cloud==1.4.11
-
-# homeassistant.components.crownstone
-crownstone-sse==2.0.5
-
-# homeassistant.components.crownstone
-crownstone-uart==2.1.0
-
 # homeassistant.components.data_grand_lyon
 data-grand-lyon-ha==0.9.0
 
@@ -2457,7 +2448,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.5.5
+pylamarzocco==2.5.6
 
 # homeassistant.components.lastfm
 pylast==5.1.0

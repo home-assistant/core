@@ -29,7 +29,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers.selector import (
-    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     TextSelector,
@@ -140,10 +139,10 @@ def validate_lastfm_users(
     return valid_users, errors
 
 
-def get_user_friends(api_key: str, username: str) -> list[User]:
-    """Get the friends of a Last.fm user."""
+def get_user_friends(api_key: str, username: str) -> list[str]:
+    """Get the usernames of the friends of a Last.fm user."""
     user, _ = get_lastfm_user(api_key, username)
-    return user.get_friends()
+    return [friend.get_name() for friend in user.get_friends()]
 
 
 def get_web_auth_url(api_key: str, api_secret: str) -> tuple[SessionKeyGenerator, str]:
@@ -629,16 +628,11 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     data={},
                     options=options,
                 )
-        try:
-            friends_response = await self.hass.async_add_executor_job(
+        friends: list[str] = []
+        with suppress(PyLastError):
+            friends = await self.hass.async_add_executor_job(
                 get_user_friends, self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
-            friends = [
-                SelectOptionDict(value=friend.name, label=friend.get_name(True))
-                for friend in friends_response
-            ]
-        except PyLastError:
-            friends = []
         return self.async_show_form(
             step_id="friends",
             errors=errors,
@@ -690,21 +684,14 @@ class LastFmOptionsFlowHandler(OptionsFlowWithReload):
                         CONF_USERS: user_input[CONF_USERS],
                     },
                 )
+        friends: list[str] = []
         if options[CONF_MAIN_USER]:
-            try:
-                friends_response = await self.hass.async_add_executor_job(
+            with suppress(PyLastError):
+                friends = await self.hass.async_add_executor_job(
                     get_user_friends,
                     options[CONF_API_KEY],
                     options[CONF_MAIN_USER],
                 )
-                friends = [
-                    SelectOptionDict(value=friend.name, label=friend.get_name(True))
-                    for friend in friends_response
-                ]
-            except PyLastError:
-                friends = []
-        else:
-            friends = []
         return self.async_show_form(
             step_id="init",
             errors=errors,
