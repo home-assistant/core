@@ -634,6 +634,39 @@ async def test_profile_suggestion_entry_removed_while_the_menu_is_open(
     assert issue_registry.async_get_issue(DOMAIN, PROFILE_ISSUE_ID) is None
 
 
+@pytest.mark.parametrize("next_step_id", ["use_profile", "ignore"])
+async def test_profile_suggestion_entry_added_again_while_the_menu_is_open(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    next_step_id: str,
+) -> None:
+    """Test the fix flow of a removed entry leaves the issue of the new entry."""
+    assert await async_setup_component(hass, "repairs", {})
+    await setup_integration(hass, mock_config_entry)
+    hass.config.country = "CN"
+    await _unreachable_catalog(get_marketplace(hass))
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, PROFILE_ISSUE_ID)
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    new_entry = MockConfigEntry(domain=DOMAIN)
+    await setup_integration(hass, new_entry)
+    await _unreachable_catalog(get_marketplace(hass))
+    data = await process_repair_fix_flow(
+        client, data["flow_id"], json={"next_step_id": next_step_id}
+    )
+
+    assert data["type"] == "abort"
+    assert data["reason"] == "entry_removed"
+    assert new_entry.options == {}
+    issue = issue_registry.async_get_issue(DOMAIN, PROFILE_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == new_entry.entry_id
+    assert issue.dismissed_version is None
+
+
 @pytest.mark.parametrize("download_profile", ["hasscn"])
 async def test_system_health_checks_the_mirrors(
     hass: HomeAssistant,

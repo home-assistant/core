@@ -116,10 +116,10 @@ class DownloadProfileFixFlow(RepairsFlow):
         reached again while the menu was open. It is created again, the
         ignore is only remembered on the issue.
         """
+        # An entry added again can have created an issue with the same ID
+        if self.hass.config_entries.async_get_entry(self.entry_id) is None:
+            return self.async_abort(reason="entry_removed")
         if ir.async_get(self.hass).async_get_issue(DOMAIN, self.issue_id) is None:
-            # Removing the entry deleted the issue, there is nothing to ignore
-            if self.hass.config_entries.async_get_entry(self.entry_id) is None:
-                return self.async_abort(reason="entry_removed")
             async_create_profile_suggestion(self.hass, self.entry_id, self.profile)
         ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, ignore=True)
         return self.async_abort(reason="issue_ignored")
