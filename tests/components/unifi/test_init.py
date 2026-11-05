@@ -336,6 +336,15 @@ async def test_device_pending_adoption(
     assert not device_entry(PENDING_MAC)
     assert not any(entity_ids(PENDING_MAC))
 
+    # Updates of a device still pending adoption change nothing
+    mock_websocket_message(
+        message=MessageKey.DEVICE, data={**PENDING_DEVICE, "state": 1}
+    )
+    await hass.async_block_till_done()
+
+    assert not device_entry(PENDING_MAC)
+    assert not any(entity_ids(PENDING_MAC))
+
     # Adopting the device creates its entities, including those of its ports
     # that are first reported in the same update
     mock_websocket_message(message=MessageKey.DEVICE, data=ADOPTED_PENDING_DEVICE)
@@ -378,6 +387,23 @@ async def test_device_pending_adoption(
     await hass.async_block_till_done()
 
     assert entity_ids(ADOPTED_MAC)[0]
+
+    # A device pending adoption that the controller stops listing is let go of
+    mock_websocket_message(message=MessageKey.DEVICE, data=PENDING_DEVICE)
+    await hass.async_block_till_done()
+    config_entry.runtime_data.api.devices.remove_item({"mac": PENDING_MAC})
+    await hass.async_block_till_done()
+
+    assert not entity_ids(PENDING_MAC)[0]
+
+    # Unloading with a device still pending adoption
+    mock_websocket_message(
+        message=MessageKey.DEVICE, data={**ADOPTED_DEVICE, "adopted": False}
+    )
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize("device_payload", [[ADOPTED_DEVICE]])
