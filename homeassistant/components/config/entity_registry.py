@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+import attr
 import probatio
 
 from homeassistant import config_entries
@@ -326,6 +327,14 @@ def websocket_remove_entity(
     {
         probatio.Required("type"): "config/entity_registry/get_automatic_entity_ids",
         probatio.Required("entity_ids"): cv.entity_ids,
+        # Unsaved changes to use instead of the stored values, for example
+        # while the user is editing the entity
+        probatio.Optional("overrides"): {
+            cv.entity_id: {
+                probatio.Optional("area_id"): probatio.Any(str, None),
+                probatio.Optional("name"): probatio.Any(str, None),
+            }
+        },
     }
 )
 @callback
@@ -341,12 +350,15 @@ def websocket_get_automatic_entity_ids(
     registry = er.async_get(hass)
 
     entity_ids = msg["entity_ids"]
+    overrides: dict[str, dict[str, Any]] = msg.get("overrides", {})
     automatic_entity_ids: dict[str, str | None] = {}
     reserved_entity_ids: set[str] = set()
     for entity_id in entity_ids:
         if not (entry := registry.entities.get(entity_id)):
             automatic_entity_ids[entity_id] = None
             continue
+        if entity_overrides := overrides.get(entity_id):
+            entry = attr.evolve(entry, **entity_overrides)
         new_entity_id = registry.async_regenerate_entity_id(
             entry,
             reserved_entity_ids=reserved_entity_ids,
