@@ -8,6 +8,7 @@ from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.intent import TIMER_DATA
 from homeassistant.components.mobile_app import DATA_DEVICES, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent as intent_helper
@@ -143,6 +144,12 @@ def _sent(mock_send_message: MagicMock) -> list[dict[str, Any]]:
     return [call.kwargs for call in mock_send_message.mock_calls]
 
 
+def _timer_tag(hass: HomeAssistant) -> str:
+    """Return the Live Activity tag of the only running timer."""
+    (timer_id,) = hass.data[TIMER_DATA].timers
+    return f"timer-{timer_id}"
+
+
 async def test_timer_live_activity(
     hass: HomeAssistant,
     live_activity_registration: dict[str, Any],
@@ -160,10 +167,8 @@ async def test_timer_live_activity(
             device_id,
             {"minutes": {"value": 2}, "name": {"value": "pizza"}},
         )
-        sent = _sent(mock_send_message)
-        tag = sent[0]["data"]["tag"]
-        assert tag.startswith("timer-")
-        assert sent == [
+        tag = _timer_tag(hass)
+        assert _sent(mock_send_message) == [
             {
                 "target": [webhook_id],
                 "title": "pizza",
@@ -207,7 +212,22 @@ async def test_timer_live_activity(
         await _async_handle_timer_intent(
             hass, intent_helper.INTENT_UNPAUSE_TIMER, device_id, {}
         )
-        assert _sent(mock_send_message)[0]["data"]["when"] == now + 90 + 90
+        assert _sent(mock_send_message) == [
+            {
+                "target": [webhook_id],
+                "title": "pizza",
+                "message": "0:02:00 timer",
+                "data": {
+                    "tag": tag,
+                    "live_update": True,
+                    "silent": True,
+                    "notification_icon": "mdi:timer-outline",
+                    "chronometer": True,
+                    "when": now + 90 + 90,
+                    "when_relative": False,
+                },
+            }
+        ]
 
         mock_send_message.reset_mock()
         await _async_handle_timer_intent(
@@ -216,7 +236,23 @@ async def test_timer_live_activity(
             device_id,
             {"minutes": {"value": 1}},
         )
-        assert _sent(mock_send_message)[0]["data"]["when"] == now + 90 + 150
+        # Adding time past the original duration also raises the created duration.
+        assert _sent(mock_send_message) == [
+            {
+                "target": [webhook_id],
+                "title": "pizza",
+                "message": "0:02:30 timer",
+                "data": {
+                    "tag": tag,
+                    "live_update": True,
+                    "silent": True,
+                    "notification_icon": "mdi:timer-outline",
+                    "chronometer": True,
+                    "when": now + 90 + 150,
+                    "when_relative": False,
+                },
+            }
+        ]
 
         mock_send_message.reset_mock()
         await _async_handle_timer_intent(
@@ -245,8 +281,7 @@ async def test_timer_live_activity_finished(
             device_id,
             {"minutes": {"value": 2}},
         )
-        tag = _sent(mock_send_message)[0]["data"]["tag"]
-        assert _sent(mock_send_message)[0]["title"] == "Timer"
+        tag = _timer_tag(hass)
         mock_send_message.reset_mock()
 
         await _async_handle_timer_intent(

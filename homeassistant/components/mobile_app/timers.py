@@ -92,8 +92,7 @@ def _async_handle_live_activity(
     if event_type == TimerEventType.FINISHED:
         message = _finished_message(timer_info)
         data["chronometer"] = False
-        # Not silent, so the end state alerts in place of the finished notification.
-        # The push relay only adds a sound to an alert it is given.
+        # Not silent, and the push relay only plays a sound for an alert it is given.
         data["alert"] = {"title": title, "body": message}
         data["alert_sound"] = "default"
     else:
