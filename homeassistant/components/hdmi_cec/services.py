@@ -2,13 +2,17 @@
 
 from dataclasses import dataclass
 import logging
+from typing import TYPE_CHECKING
 
 import probatio
-from pycec.network import HDMINetwork, PhysicalAddress
+from pycec.network import PhysicalAddress
 
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import DATA_HDMI_CEC, DOMAIN
+
+if TYPE_CHECKING:
+    from pycec.network import HDMINetwork
 
 _LOGGER = logging.getLogger(__name__)
 
