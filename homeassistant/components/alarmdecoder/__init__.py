@@ -90,13 +90,13 @@ async def async_setup_entry(
             data.connecting = True
         try:
             controller.open(baud)
-            data.restart = True
         finally:
             with data.lock:
                 data.connecting = False
                 closed = data.closed
             if closed:
                 controller.close()
+        data.restart = True
 
     def close_controller() -> None:
         """Close the connection once, or leave that to a connect in progress."""
