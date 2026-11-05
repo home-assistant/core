@@ -192,3 +192,20 @@ async def test_async_ping_subprocess_uses_c_locale(hass: HomeAssistant) -> None:
         await ping.async_update()
 
     assert mock_exec.call_args.kwargs["env"]["LC_ALL"] == "C"
+
+
+async def test_async_ping_subprocess_unparsable_round_trip(hass: HomeAssistant) -> None:
+    """Test output with packet statistics but an unparsable round trip line."""
+    ping = PingDataSubProcess(hass, host="10.10.10.10", count=3, privileged=False)
+    with patch(
+        "asyncio.create_subprocess_exec",
+        return_value=MockCompletedSubprocess(
+            b"3 packets transmitted, 3 received, 0% packet loss\nrtt min/avg/max/mdev = garbled\n",
+            b"",
+            0,
+        ),
+    ):
+        await ping.async_update()
+
+    assert ping.is_alive is False
+    assert ping.data is None
