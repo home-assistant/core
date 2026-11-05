@@ -31,5 +31,5 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         ir.async_delete_issue(hass, DOMAIN, DOMAIN)
         # Remove any remaining disabled or ignored entries
-        for _entry in hass.config_entries.async_entries(DOMAIN):
-            hass.async_create_task(hass.config_entries.async_remove(_entry.entry_id))
+        while entries := hass.config_entries.async_entries(DOMAIN):
+            await hass.config_entries.async_remove(entries[0].entry_id)
