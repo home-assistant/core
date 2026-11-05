@@ -15,11 +15,9 @@ from typing import TYPE_CHECKING, Any, Literal, override
 import zipfile
 
 from aiogithubapi import (
-    GitHubAuthenticationException,
     GitHubException,
     GitHubNotFoundException,
     GitHubNotModifiedException,
-    GitHubRatelimitException,
 )
 from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 import attr
@@ -30,7 +28,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
 from ..const import DOMAIN, MAX_ARCHIVE_MEMBERS, MAX_DOWNLOAD_SIZE, RELEASE_LIMIT
-from ..enums import DisabledReason, MarketplaceSignal, RepositoryFile
+from ..enums import MarketplaceSignal, RepositoryFile
 from ..exceptions import (
     AppRepositoryError,
     CatalogContentUnresolvedError,
@@ -1413,26 +1411,12 @@ class Repository:
     ) -> tuple[GitHubRepositoryModel, str | None]:
         """Return the repository and the etag of the response."""
         try:
-            response = await self.marketplace.githubapi.repos.get(
-                self.data.full_name, etag=etag
+            response = await self.marketplace.async_github_api_method(
+                lambda api: api.repos.get(self.data.full_name, etag=etag)
             )
         except GitHubNotModifiedException as exception:
             raise NotModifiedError(
                 translation_domain=DOMAIN, translation_key="not_modified"
-            ) from exception
-        except GitHubRatelimitException as exception:
-            if not self.marketplace.github_connected:
-                raise GitHubAnonymousRateLimitError from exception
-            raise MarketplaceError(
-                translation_domain=DOMAIN, translation_key="rate_limited"
-            ) from exception
-        except GitHubAuthenticationException as exception:
-            # Like every other GitHub call, a token that stopped working asks
-            # the user to connect again
-            if self.marketplace.github_connected:
-                self.marketplace.disable(DisabledReason.INVALID_TOKEN)
-            raise MarketplaceError(
-                translation_domain=DOMAIN, translation_key="invalid_token"
             ) from exception
         except GitHubException as exception:
             raise MarketplaceError(
