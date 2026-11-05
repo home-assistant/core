@@ -5,7 +5,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from decimal import Decimal
 from functools import partial
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from dsmr_parser.objects import MbusDevice, Telegram
 
@@ -476,14 +476,25 @@ class HomeyEnergyDongleSensor(
         self._serial = serial
 
     @property
+    def _meter(self) -> Telegram | MbusDevice | None:
+        """Return the readings of this sensor's meter in the latest telegram."""
+        return meters(self.coordinator.data, self.coordinator.config_entry).get(
+            self._serial
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if this sensor's meter is in the latest telegram."""
+        return super().available and self._meter is not None
+
+    @property
     @override
     def native_value(self) -> StateType | datetime | Decimal:
         """Return the value of this sensor's meter in the latest telegram."""
-        data = meters(self.coordinator.data, self.coordinator.config_entry).get(
-            self._serial
-        )
-        if data is None:
-            return None
+        data = self._meter
+        if TYPE_CHECKING:
+            assert data is not None
         value = self.entity_description.value_fn(data)
         # A meter briefly reporting 0 would reset the long-term statistics.
         if (

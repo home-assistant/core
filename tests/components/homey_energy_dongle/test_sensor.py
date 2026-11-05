@@ -108,13 +108,22 @@ async def test_total_without_all_tariff_registers(
 async def test_mbus_device_missing(
     hass: HomeAssistant, telegrams: TelegramQueue
 ) -> None:
-    """Test an M-Bus reading is unknown when its meter drops out of the telegram."""
+    """Test an M-Bus meter is unavailable when it drops out of the telegram."""
     assert hass.states.get(GAS_ENTITY_ID).state == "0.107"
 
-    telegrams.put_nowait(Telegram())
+    telegrams.put_nowait(
+        parse(
+            "".join(
+                line
+                for line in TELEGRAM_V5.splitlines(keepends=True)
+                if not line.startswith("0-1:")
+            )
+        )
+    )
     await hass.async_block_till_done()
 
-    assert hass.states.get(GAS_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(GAS_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(POWER_ENTITY_ID).state == "244"
 
 
 async def test_mbus_meter_recreated_after_removal(
@@ -166,7 +175,7 @@ async def test_meter_replaced(
     telegrams.put_nowait(parse(replacement))
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
     assert hass.states.get(f"{entity_id}_2").state == state
 
 
