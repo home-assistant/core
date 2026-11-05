@@ -170,7 +170,7 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
 
     @property
     @override
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the present setpoint value."""
         ctrl = self.device.get(self._data_key, {})
         value_keys = self.entity_description.value_keys
