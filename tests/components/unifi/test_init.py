@@ -247,6 +247,36 @@ async def test_remove_config_entry_wan_device(
     assert (device_registry.async_get(device_entry.id) is None) is expected_success
 
 
+@pytest.mark.parametrize("config_entry_options", [WAN_ENABLED_OPTIONS])
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+async def test_remove_config_entry_wan_device_after_network_deleted(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Verify a WAN device can be removed once the controller deletes its network."""
+    assert await async_setup_component(hass, "config", {})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, WAN_NETWORKS[0]["_id"]), config_entry_setup.entry_id
+    )
+    assert device_entry
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id)
+    assert not response["success"]
+
+    mock_websocket_message(
+        message=MessageKey.NETWORK_CONF_DELETED, data=WAN_NETWORKS[0]
+    )
+    await hass.async_block_till_done()
+
+    response = await client.remove_device(device_entry.id)
+    assert response["success"]
+    assert device_registry.async_get(device_entry.id) is None
+
+
 async def test_remove_config_entry_device_rejects_child_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
