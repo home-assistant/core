@@ -79,7 +79,7 @@ class TimeDateSensor(SensorEntity):
         """Initialize the sensor."""
         self._attr_translation_key = option_type
         self.type = option_type
-        self.entity_id = ENTITY_ID_FORMAT.format(option_type)
+        self.entity_id = ENTITY_ID_FORMAT.format(option_type)  # pylint: disable=home-assistant-entity-sets-entity-id
         self._attr_unique_id = option_type if entry_id else None
 
         self._update_internal_state(dt_util.utcnow())

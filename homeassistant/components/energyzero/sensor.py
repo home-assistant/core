@@ -226,7 +226,7 @@ class EnergyZeroSensorEntity(
         """Initialize EnergyZero sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
-        self.entity_id = (
+        self.entity_id = (  # pylint: disable=home-assistant-entity-sets-entity-id
             f"{SENSOR_DOMAIN}.{DOMAIN}_{description.service_type}_{description.key}"
         )
         self._attr_unique_id = (

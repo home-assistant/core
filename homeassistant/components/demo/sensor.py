@@ -207,7 +207,7 @@ class DemoSumSensor(RestoreSensor):
         suggested_entity_id: str,
     ) -> None:
         """Initialize the sensor."""
-        self.entity_id = f"{SENSOR_DOMAIN}.{suggested_entity_id}"
+        self.entity_id = f"{SENSOR_DOMAIN}.{suggested_entity_id}"  # pylint: disable=home-assistant-entity-sets-entity-id
         self._attr_device_class = device_class
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_native_value = 0

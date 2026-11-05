@@ -39,7 +39,7 @@ class VeraSwitch(VeraEntity[veraApi.VeraSwitch], SwitchEntity):
     ) -> None:
         """Initialize the Vera device."""
         VeraEntity.__init__(self, vera_device, controller_data)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)  # pylint: disable=home-assistant-entity-sets-entity-id
 
     @override
     def turn_on(self, **kwargs: Any) -> None:

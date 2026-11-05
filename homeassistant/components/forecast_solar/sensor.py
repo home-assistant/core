@@ -167,7 +167,7 @@ class ForecastSolarSensorEntity(
         """Initialize Forecast.Solar sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = entity_description
-        self.entity_id = f"{SENSOR_DOMAIN}.{entity_description.key}"
+        self.entity_id = f"{SENSOR_DOMAIN}.{entity_description.key}"  # pylint: disable=home-assistant-entity-sets-entity-id
         self._attr_unique_id = f"{entry_id}_{entity_description.key}"
 
         self._attr_device_info = DeviceInfo(

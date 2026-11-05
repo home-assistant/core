@@ -341,7 +341,7 @@ class UtilityMeterSensor(RestoreSensor):
         """Initialize the Utility Meter sensor."""
         self._attr_unique_id = unique_id
         self.device_entry = device
-        self.entity_id = suggested_entity_id
+        self.entity_id = suggested_entity_id  # pylint: disable=home-assistant-entity-sets-entity-id
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
         self._last_period = Decimal(0)

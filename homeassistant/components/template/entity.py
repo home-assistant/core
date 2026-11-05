@@ -124,7 +124,7 @@ class AbstractTemplateEntity(Entity):
 
         if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
             _, _, object_id = default_entity_id.partition(".")
-            self.entity_id = async_generate_entity_id(
+            self.entity_id = async_generate_entity_id(  # pylint: disable=home-assistant-entity-sets-entity-id
                 self._entity_id_format, object_id, hass=self.hass
             )
 

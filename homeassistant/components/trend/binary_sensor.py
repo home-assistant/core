@@ -193,7 +193,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         self.device_entry = device
 
         if sensor_entity_id:
-            self.entity_id = sensor_entity_id
+            self.entity_id = sensor_entity_id  # pylint: disable=home-assistant-entity-sets-entity-id
 
     @property
     @override

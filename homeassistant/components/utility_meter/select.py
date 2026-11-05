@@ -99,7 +99,7 @@ class TariffSelect(SelectEntity, RestoreEntity):
         """Initialize a tariff selector."""
         self._attr_name = name
         if yaml_slug:  # Backwards compatibility with YAML configuration entries
-            self.entity_id = f"select.{yaml_slug}"
+            self.entity_id = f"select.{yaml_slug}"  # pylint: disable=home-assistant-entity-sets-entity-id
         self._attr_unique_id = unique_id
         self.device_entry = device
         self._current_tariff: str | None = None
