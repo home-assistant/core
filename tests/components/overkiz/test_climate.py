@@ -1,13 +1,13 @@
 """Tests for the Overkiz climate platform."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
-from pyoverkiz.models import Event
+from pyoverkiz.models import Event, Setup
 import pytest
 from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -599,6 +599,89 @@ async def test_zone_control_zone_set_temperature(
         ],
         ZONE_CONTROL_ZONE_REFRESH,
     ]
+
+
+def set_zone_control_zone_states(states: dict[str, str]) -> Callable[[Setup], None]:
+    """Return a setup mutation overriding states of the Zone Control zone."""
+
+    def _mutate(setup: Setup) -> None:
+        device = next(
+            device
+            for device in setup.devices
+            if device.device_url == ZONE_CONTROL_ZONE.device_url
+        )
+        for name, value in states.items():
+            device.states[name].value = value
+
+    return _mutate
+
+
+@pytest.mark.usefixtures("mock_zone_control_zone_sleep")
+@pytest.mark.parametrize(
+    ("thermal_configuration", "expected_command"),
+    [
+        pytest.param("heating", "setHeatingTargetTemperature", id="heating"),
+        pytest.param("cooling", "setCoolingTargetTemperature", id="cooling"),
+    ],
+)
+async def test_zone_control_zone_set_single_temperature(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    thermal_configuration: str,
+    expected_command: str,
+) -> None:
+    """Test a single setpoint zone sends its setpoint and the derogation at once."""
+    await setup_overkiz_integration(
+        fixture=ZONE_CONTROL_ZONE.fixture,
+        mutate=set_zone_control_zone_states(
+            {OverkizState.CORE_THERMAL_CONFIGURATION: thermal_configuration}
+        ),
+    )
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": ZONE_CONTROL_ZONE.entity_id, ATTR_TEMPERATURE: 22.0},
+        blocking=True,
+    )
+
+    assert executed_commands(mock_client) == [
+        [(expected_command, [22.0]), ("setDerogationOnOffState", ["on"])],
+        ZONE_CONTROL_ZONE_REFRESH,
+    ]
+
+
+@pytest.mark.usefixtures("mock_zone_control_zone_sleep")
+async def test_zone_control_zone_set_temperature_when_off(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test setting a temperature on a stopped zone sends no execution."""
+    await setup_overkiz_integration(
+        fixture=ZONE_CONTROL_ZONE.fixture,
+        mutate=set_zone_control_zone_states(
+            {
+                OverkizState.CORE_HEATING_ON_OFF: "off",
+                OverkizState.CORE_COOLING_ON_OFF: "off",
+            }
+        ),
+    )
+    assert hass.states.get(ZONE_CONTROL_ZONE.entity_id).state == HVACMode.OFF
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": ZONE_CONTROL_ZONE.entity_id,
+            ATTR_TARGET_TEMP_LOW: 19.0,
+            ATTR_TARGET_TEMP_HIGH: 25.0,
+        },
+        blocking=True,
+    )
+
+    mock_client.execute_action_group.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("mock_zone_control_zone_sleep")
