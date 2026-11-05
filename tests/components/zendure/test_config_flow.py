@@ -59,9 +59,10 @@ async def test_user_flow_errors(
     mock_read.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.50"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.50"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -114,9 +115,10 @@ async def test_user_flow_already_configured(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.99"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.99"}
     )
 
     assert result["type"] is FlowResultType.ABORT
