@@ -268,7 +268,6 @@ async def test_timer_live_activity_finished(
                 "live_update": True,
                 "notification_icon": "mdi:timer-outline",
                 "chronometer": False,
-                "critical_text": "Finished",
                 "alert": {"title": "Timer", "body": "0:02:00 timer finished"},
                 "alert_sound": "default",
             },
