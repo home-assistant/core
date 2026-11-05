@@ -4,16 +4,27 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     },
     "error": {
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "invalid_date": "The API key generation date cannot be in the future"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_key_date": "API key generation date"
+        },
+        "description": "The AEMET API key is no longer valid. Enter a new API key. To generate one go to {api_key_url}. The generation date defaults to today and is only used for the expiry reminder."
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_key_date": "API key generation date",
+          "api_key_reminder": "Remind me before the API key expires",
           "location": "[%key:common::config_flow::data::location%]",
           "name": "Name of the integration"
         },
-        "description": "To generate API key go to {api_key_url}"
+        "description": "To generate API key go to {api_key_url}. AEMET API keys expire every 3 months. Enter the actual generation date; it is only used for the expiry reminder."
       }
     }
   },
@@ -25,17 +36,29 @@
     }
   },
   "exceptions": {
+    "invalid_api_key": {
+      "message": "The AEMET API key is invalid or has expired"
+    },
     "town_not_found": {
       "message": "No AEMET town found for coordinates {latitude}, {longitude}"
     }
   },
   "options": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "invalid_date": "The API key generation date cannot be in the future"
+    },
     "step": {
       "init": {
         "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_key_date": "API key generation date",
+          "api_key_reminder": "Remind me before the API key expires",
           "radar_updates": "Gather data from AEMET weather radar",
           "station_updates": "Gather data from AEMET weather stations"
-        }
+        },
+        "description": "Enter a new API key to replace the current one, or leave it blank to keep it. AEMET API keys expire every 3 months. The generation date is used for the expiry reminder. If left empty, the existing date is kept; if the reminder is enabled and there is no existing date, today's date is used."
       }
     }
   }
