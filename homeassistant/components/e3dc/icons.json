@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "charging_locked": {
+        "default": "mdi:battery-lock"
+      },
+      "discharging_locked": {
+        "default": "mdi:battery-lock"
+      },
+      "feed_in_limited": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "weather_based_charging": {
+        "default": "mdi:weather-partly-cloudy"
+      }
+    }
+  }
+}
