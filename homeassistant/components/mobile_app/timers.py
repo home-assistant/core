@@ -113,9 +113,10 @@ def _async_handle_live_activity(
             # The app draws a progress bar in place of the ticking one, so only send
             # it while paused.
             data["chronometer"] = False
+            data["critical_text"] = "Paused"
             data["progress"] = seconds_left
             data["progress_max"] = timer_info.created_seconds
-            message = f"Paused, {timedelta(seconds=seconds_left)} left"
+            message = f"{timedelta(seconds=seconds_left)} left"
 
     _async_send(hass, entry, timer_info, message, data, title=title)
 

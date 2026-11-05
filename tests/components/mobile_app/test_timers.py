@@ -194,13 +194,14 @@ async def test_timer_live_activity(
             {
                 "target": [webhook_id],
                 "title": "pizza",
-                "message": "Paused, 0:01:30 left",
+                "message": "0:01:30 left",
                 "data": {
                     "tag": tag,
                     "live_update": True,
                     "silent": True,
                     "notification_icon": "mdi:timer-outline",
                     "chronometer": False,
+                    "critical_text": "Paused",
                     "progress": 90,
                     "progress_max": 120,
                 },
