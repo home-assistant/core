@@ -9,7 +9,12 @@ from bleak.exc import BleakError
 import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.ryse.const import DATA_LOCAL_WAITERS, DOMAIN, SERVICE_UUID
+from homeassistant.components.ryse.const import (
+    DATA_LOCAL_WAITERS,
+    DOMAIN,
+    MANUFACTURER_ID,
+    SERVICE_UUID,
+)
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -455,7 +460,8 @@ async def test_bluetooth_discovery_from_service_uuid(hass: HomeAssistant) -> Non
     await hass.async_block_till_done(wait_background_tasks=True)
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert not flows
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "bluetooth_confirm"
     cancel()
 
 
@@ -523,11 +529,31 @@ async def test_async_step_bluetooth_already_configured(
 async def test_async_step_bluetooth_not_in_pairing_mode(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
-    """Test idle advertisements are not shown as discoveries."""
-    cancel, _ = _see_on_local(hass, pairing=False)
+    """Test an idle shade stays on one confirm form so it can be ignored."""
+    device = make_ble_device()
+    cancel = register_local_scanner(hass, device, make_advertisement(pairing=False))
+    inject_ryse(hass, device, make_advertisement(pairing=False), LOCAL_SOURCE)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "bluetooth_confirm"
+
+    # A later advertisement with different payload must not start another flow.
+    inject_ryse(
+        hass,
+        device,
+        make_advertisement(manufacturer_data={MANUFACTURER_ID: b"\x8c\x11\x22\x33"}),
+        LOCAL_SOURCE,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
+
+    result = await hass.config_entries.flow.async_configure(
+        flows[0]["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "not_in_pairing_mode"}
     mock_device.pair.assert_not_called()
     cancel()
 
@@ -716,7 +742,13 @@ async def test_async_step_bluetooth_rejects_idle_local_when_proxy_is_pairing(
         remote.inject_advertisement(device, make_advertisement())
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        assert len(flows) == 1
+        result = await hass.config_entries.flow.async_configure(
+            flows[0]["flow_id"], user_input={}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "not_in_pairing_mode"}
         mock_device.pair.assert_not_called()
     finally:
         cancel_local()
@@ -726,23 +758,23 @@ async def test_async_step_bluetooth_rejects_idle_local_when_proxy_is_pairing(
 async def test_async_step_bluetooth_pairing_overrides_stale_idle(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
-    """Test a PAIR advertisement is shown even if the scanner cache is still idle."""
+    """Test submit uses a fresh PAIR advertisement when the scanner cache is still idle."""
     device = make_ble_device()
     idle = make_advertisement(pairing=False)
     pairing = make_advertisement()
     cancel = register_local_scanner(hass, device, idle)
     inject_ryse(hass, device, idle, LOCAL_SOURCE)
     await hass.async_block_till_done(wait_background_tasks=True)
-    await _abort_bluetooth_flows(hass)
-
-    inject_ryse(hass, device, pairing, LOCAL_SOURCE)
-    await hass.async_block_till_done(wait_background_tasks=True)
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
-    result = await hass.config_entries.flow.async_configure(
-        flows[0]["flow_id"], user_input={}
-    )
+    flow_id = flows[0]["flow_id"]
+
+    inject_ryse(hass, device, pairing, LOCAL_SOURCE)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
+
+    result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     mock_device.pair.assert_awaited_once()
     cancel()
@@ -812,22 +844,21 @@ async def test_async_step_bluetooth_left_pairing_mode(
 async def test_async_step_bluetooth_idle_then_pair(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
-    """Test an idle advertisement can be rediscovered after the PAIR flag appears."""
+    """Test an open idle discovery pairs once the PAIR flag appears."""
     device = make_ble_device()
     cancel = register_local_scanner(hass, device, make_advertisement(pairing=False))
     inject_ryse(hass, device, make_advertisement(pairing=False), LOCAL_SOURCE)
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    flow_id = flows[0]["flow_id"]
     mock_device.pair.assert_not_called()
 
     inject_ryse(hass, device, make_advertisement(), LOCAL_SOURCE)
     await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
 
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert len(flows) == 1
-    result = await hass.config_entries.flow.async_configure(
-        flows[0]["flow_id"], user_input={}
-    )
+    result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     mock_device.pair.assert_awaited_once()
     cancel()

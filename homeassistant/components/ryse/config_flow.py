@@ -14,7 +14,6 @@ from homeassistant.components.bluetooth import (
     BluetoothScannerDevice,
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
-    async_clear_address_from_match_history,
     async_discovered_service_info,
     async_last_service_info,
     async_rediscover_address,
@@ -205,14 +204,9 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
             _async_watch_for_local_route(self.hass, discovery_info.address)
             return self.async_abort(reason="not_local_source")
         async_cancel_local_waiter(self.hass, discovery_info.address)
-        if not is_pairing_mode(latest.manufacturer_data):
-            # Idle shades still match the manifest; drop them here so they are
-            # not shown as unusable discoveries. Clear matcher history so a
-            # later PAIR-flag advertisement can start a new flow.
-            await self.async_set_unique_id(None)
-            async_clear_address_from_match_history(self.hass, discovery_info.address)
-            return self.async_abort(reason="not_in_pairing_mode")
-
+        # Keep match history and show the confirm step even when the shade is
+        # idle. Clearing history restarts discovery on every later advertisement,
+        # and aborting never offers Ignore. Pairing mode is checked on submit.
         self._discovery_info = latest
 
         return await self.async_step_bluetooth_confirm()
