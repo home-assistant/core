@@ -2,18 +2,22 @@
 
 Support for bandwidth sensors of network clients.
 Support for uptime sensors of network clients.
+Support for status sensors of WAN networks.
 """
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from enum import StrEnum
 from functools import partial
 from typing import Literal, cast, override
 
+import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.devices import Devices
+from aiounifi.interfaces.networks import Networks
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
@@ -21,10 +25,13 @@ from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 from aiounifi.models.device import (
     Device,
+    DeviceType,
     TypedDeviceTemperature,
     TypedDeviceUplink,
     TypedDeviceUptimeStatsWanMonitor,
+    TypedDeviceWanInterface,
 )
+from aiounifi.models.network import Network
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.wlan import Wlan
@@ -57,12 +64,15 @@ from . import UnifiConfigEntry
 from .const import DEVICE_STATES, DOMAIN
 from .device_tracker import async_client_allowed_fn
 from .entity import (
+    SubscriptionType,
     UnifiEntity,
     UnifiEntityDescription,
     async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
     async_device_supported_fn,
+    async_wan_allowed_fn,
+    async_wan_device_info_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
     is_locally_administered_mac,
@@ -297,6 +307,73 @@ def async_device_state_value_fn(hub: UnifiHub, device: Device) -> str | None:
     return DEVICE_STATES.get(device.state)
 
 
+# The gateway reports WAN as wan1, the other WAN network groups keep their number.
+WAN_INTERFACE_FN: dict[str, Callable[[Device], TypedDeviceWanInterface | None]] = {
+    "WAN": lambda device: device.wan1,
+    "WAN2": lambda device: device.wan2,
+    "WAN3": lambda device: device.wan3,
+    "WAN4": lambda device: device.wan4,
+    "WAN5": lambda device: device.wan5,
+    "WAN6": lambda device: device.wan6,
+}
+GATEWAY_DEVICE_TYPES = {
+    DeviceType.CLOUD_GATEWAY,
+    DeviceType.DREAM_MACHINE,
+    DeviceType.NEXTGEN_GATEWAY,
+    DeviceType.SECURITY_GATEWAY,
+}
+
+
+class WanStatus(StrEnum):
+    """Status of a WAN network."""
+
+    DISABLED = "disabled"
+    NO_LINK = "no_link"
+    OFFLINE = "offline"
+    ONLINE = "online"
+
+
+@callback
+def async_gateway(hub: UnifiHub) -> Device | None:
+    """Return the gateway, the device terminating the WAN links of the site.
+
+    A site has a single gateway, identified by its device type.
+    """
+    return next(
+        (
+            device
+            for device in hub.api.devices.values()
+            if device.type in GATEWAY_DEVICE_TYPES
+        ),
+        None,
+    )
+
+
+@callback
+def async_wan_status_value_fn(hub: UnifiHub, network: Network) -> WanStatus | None:
+    """Retrieve the status of a WAN network from its gateway.
+
+    The network configuration only says how a WAN is set up. Whether its link is
+    up and whether it reaches the internet is only reported by the gateway, per
+    WAN group (WAN, WAN2, ...) as named by the network's wan_networkgroup.
+    """
+    if network.wan_type == "disabled":
+        return WanStatus.DISABLED
+    if (gateway := async_gateway(hub)) is None or (
+        group := network.wan_networkgroup
+    ) is None:
+        return None
+    if (
+        (wan_interface_fn := WAN_INTERFACE_FN.get(group)) is None
+        or (wan_interface := wan_interface_fn(gateway)) is None
+        or wan_interface.get("up") is not True
+    ):
+        return WanStatus.NO_LINK
+    if (gateway.last_wan_status or {}).get(group) != "online":
+        return WanStatus.OFFLINE
+    return WanStatus.ONLINE
+
+
 @callback
 def async_device_wan_latency_discovery_fn(
     wan: WanName,
@@ -457,6 +534,8 @@ class UnifiSensorEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     value_fn: Callable[[UnifiHub, ApiItemT], datetime | float | int | str | None]
 
     # Optional
+    custom_subscribe: Callable[[aiounifi.Controller], SubscriptionType] | None = None
+    """Callback for additional subscriptions to any UniFi handler."""
     discovery_fn: Callable[[UnifiHub, str], bool] | None = None
     """Require telemetry evidence for first discovery, not continued support."""
     is_connected_fn: Callable[[UnifiHub, str], bool] | None = None
@@ -937,6 +1016,20 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         min_update_interval=TELEMETRY_UPDATE_INTERVAL,
         immediate_change=TELEMETRY_IMMEDIATE_CHANGE,
     ),
+    UnifiSensorEntityDescription[Networks, Network](
+        key="WAN status",
+        translation_key="wan_status",
+        device_class=SensorDeviceClass.ENUM,
+        allowed_fn=async_wan_allowed_fn,
+        api_handler_fn=lambda api: api.networks,
+        custom_subscribe=lambda api: api.devices.subscribe,
+        device_info_fn=async_wan_device_info_fn,
+        object_fn=lambda api, obj_id: api.networks[obj_id],
+        options=[status.value for status in WanStatus],
+        supported_fn=lambda hub, obj_id: hub.api.networks[obj_id].is_wan,
+        unique_id_fn=lambda hub, obj_id: f"wan_status-{obj_id}",
+        value_fn=async_wan_status_value_fn,
+    ),
 )
 
 ENTITY_DESCRIPTIONS += make_wan_latency_sensors() + make_device_temperatur_sensors()
@@ -1105,6 +1198,14 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         """Register callbacks."""
         await super().async_added_to_hass()
 
+        if self.entity_description.custom_subscribe is not None:
+            # Only changes, a gateway adopted or removed is picked up on reload
+            self.async_on_remove(
+                self.entity_description.custom_subscribe(self.api)(
+                    self._async_custom_subscription_callback, ItemEvent.CHANGED
+                ),
+            )
+
         if self.entity_description.is_connected_fn is not None:
             # Register callback for missed heartbeat
             self.async_on_remove(
@@ -1114,6 +1215,17 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                     self._make_disconnected,
                 )
             )
+
+    @callback
+    def _async_custom_subscription_callback(
+        self, event: ItemEvent, obj_id: str
+    ) -> None:
+        """Update state from another handler, only writing when the value changed."""
+        description = self.entity_description
+        if self._obj_id not in description.api_handler_fn(self.api):
+            return
+        if description.value_fn(self.hub, self.get_object()) != self.native_value:
+            self._async_process_update(event)
 
     @override
     async def async_will_remove_from_hass(self) -> None:

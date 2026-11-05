@@ -27,6 +27,7 @@ from ..const import (
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    CONF_TRACK_WAN_NETWORKS,
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
@@ -36,6 +37,7 @@ from ..const import (
     DEFAULT_IGNORE_WIRED_BUG,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
+    DEFAULT_TRACK_WAN_NETWORKS,
     DEFAULT_TRACK_WIRED_CLIENTS,
 )
 
@@ -87,6 +89,11 @@ class UnifiConfig:
     option_allow_uptime_sensors: bool
     """Config entry option to allow uptime sensors."""
 
+    # WAN network options
+
+    option_track_wan_networks: bool
+    """Config entry option to allow WAN network devices and entities."""
+
     @classmethod
     def from_config_entry(cls, config_entry: ConfigEntry) -> Self:
         """Create object from config entry."""
@@ -125,5 +132,8 @@ class UnifiConfig:
             ),
             option_allow_uptime_sensors=options.get(
                 CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
+            ),
+            option_track_wan_networks=options.get(
+                CONF_TRACK_WAN_NETWORKS, DEFAULT_TRACK_WAN_NETWORKS
             ),
         )

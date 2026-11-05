@@ -16,7 +16,11 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
+from homeassistant.components.unifi.const import (
+    CONF_BLOCK_CLIENT,
+    CONF_TRACK_WAN_NETWORKS,
+    DOMAIN,
+)
 from homeassistant.components.unifi.coordinator import (
     IDLE_POLL_INTERVAL,
     POLL_INTERVAL,
@@ -32,10 +36,12 @@ from homeassistant.components.unifi.hub.connection import REQUEST_TIMEOUT
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import EVENT_STATE_REPORTED, Platform
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    WAN_ENABLED_OPTIONS,
+    WAN_NETWORKS,
     ConfigEntryFactoryType,
     WebsocketMessageMock,
     WebsocketStateManager,
@@ -90,8 +96,10 @@ async def test_coordinators_preserve_handler_update_sources(
 
     clients_coordinator = loader.get_data_update_coordinator(api.clients)
     devices_coordinator = loader.get_data_update_coordinator(api.devices)
+    networks_coordinator = loader.get_data_update_coordinator(api.networks)
     assert clients_coordinator.update_interval is None
     assert devices_coordinator.update_interval is None
+    assert networks_coordinator.update_interval is None
 
     assert loader.get_data_update_coordinator(api.ports) is devices_coordinator
     assert loader.get_data_update_coordinator(api.outlets) is devices_coordinator
@@ -743,3 +751,59 @@ async def test_get_unifi_api_mfa_required(
     assert record.levelno == logging.WARNING
     assert record.exc_info is None
     assert "requires multi-factor authentication" in record.getMessage()
+
+
+WAN_STATUS_ENTITY_ID = "sensor.internet_1_status"
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+@pytest.mark.parametrize(
+    ("config_entry_options", "expected_created"),
+    [
+        pytest.param({}, False, id="disabled_by_default"),
+        pytest.param(WAN_ENABLED_OPTIONS, True, id="enabled"),
+    ],
+)
+async def test_wan_networks_option(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry_setup: MockConfigEntry,
+    expected_created: bool,
+) -> None:
+    """Verify WAN network devices and entities are only created when enabled."""
+    assert (hass.states.get(WAN_STATUS_ENTITY_ID) is not None) is expected_created
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, WAN_NETWORKS[0]["_id"]), config_entry_setup.entry_id
+        )
+        is not None
+    ) is expected_created
+
+
+@pytest.mark.parametrize("network_payload", [[WAN_NETWORKS[0]]])
+async def test_wan_networks_option_toggle(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify toggling the WAN network option adds and removes entities."""
+    assert hass.states.get(WAN_STATUS_ENTITY_ID) is None
+
+    hass.config_entries.async_update_entry(
+        config_entry_setup, options={CONF_TRACK_WAN_NETWORKS: True}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(WAN_STATUS_ENTITY_ID)
+
+    hass.config_entries.async_update_entry(
+        config_entry_setup, options={CONF_TRACK_WAN_NETWORKS: False}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(WAN_STATUS_ENTITY_ID) is None
+    assert entity_registry.async_get(WAN_STATUS_ENTITY_ID) is None
+
+    hass.config_entries.async_update_entry(
+        config_entry_setup, options={CONF_TRACK_WAN_NETWORKS: True}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(WAN_STATUS_ENTITY_ID)
