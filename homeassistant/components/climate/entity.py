@@ -165,15 +165,17 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         }
 
         if target_temperature_step := self.target_temperature_step:
-            step = TemperatureDeltaConverter.convert(
-                target_temperature_step,
-                native_temperature_unit,
-                hass.config.units.temperature_unit,
-            )
-            # Three significant digits drop conversion noise (0.556 °C gives 1 °F)
-            # and keep steps as small as 0.001.
-            data[ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP] = float(
-                f"{step:.3g}"
+            if native_temperature_unit != hass.config.units.temperature_unit:
+                converted_step = TemperatureDeltaConverter.convert(
+                    target_temperature_step,
+                    native_temperature_unit,
+                    hass.config.units.temperature_unit,
+                )
+                # Three significant digits drop conversion noise (0.556 °C gives
+                # 1 °F) and keep steps as small as 0.001.
+                target_temperature_step = float(f"{converted_step:.3g}")
+            data[ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP] = (
+                target_temperature_step
             )
 
         if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
