@@ -35,7 +35,7 @@ async def start_flow(hass: HomeAssistant, app: str) -> FlowResult:
     assert result["type"] is FlowResultType.MENU
     assert result["menu_options"] == ["app", "legacy"]
     return await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": app}
+        result["flow_id"], user_input={"next_step_id": app}
     )
 
 
