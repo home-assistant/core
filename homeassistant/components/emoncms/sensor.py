@@ -245,12 +245,11 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
             "emoncms_details": elem[FEED_NAME],
         }
         self._attr_unique_id = f"{unique_id}-{elem[FEED_ID]}"
-        tag = elem[FEED_TAG] or name
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{unique_id}-{tag}")},
+            identifiers={(DOMAIN, f"{unique_id}-{elem[FEED_TAG]}")},
             manufacturer="OpenEnergyMonitor",
-            name=tag,
+            name=elem[FEED_TAG] or name,
         )
         description = SENSORS.get(unit_of_measurement)
         if description is not None:
