@@ -165,20 +165,21 @@ class TessieWallConnectorEntity(TessieBaseEntity):
         key: str,
         data_key: str | None = None,
     ) -> None:
-        """Initialize common aspects of a Teslemetry entity."""
+        """Initialize common aspects of a Tessie wall connector entity."""
         self.din = din
+        serial = din.rsplit("-", maxsplit=1)[-1]
         self._attr_unique_id = f"{data.id}-{din}-{key}"
         assert data.live_coordinator
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, din)},
             manufacturer="Tesla",
-            name="Wall Connector",
+            name=f"Wall Connector {serial}",
             via_device_id=dr.async_get_device_id_by_identifier(
                 data.live_coordinator.hass,
                 (DOMAIN, str(data.id)),
                 config_entry_id=data.live_coordinator.config_entry.entry_id,
             ),
-            serial_number=din.rsplit("-", maxsplit=1)[-1],
+            serial_number=serial,
         )
         super().__init__(data.live_coordinator, key, data_key)
 

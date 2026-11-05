@@ -157,10 +157,10 @@ async def test_aiohttp_client_error_on_live_status_retries(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_wall_connector_via_device_id(
+async def test_wall_connector_device_identity(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test that a wall connector device links to its energy site via via_device_id."""
+    """Test wall connector device names and their link to the energy site."""
 
     entry = await setup_platform(hass, [Platform.SENSOR])
 
@@ -173,4 +173,12 @@ async def test_wall_connector_via_device_id(
         (DOMAIN, "abd-123"), entry.entry_id
     )
     assert wall_connector_device is not None
+    assert wall_connector_device.name == "Wall Connector 123"
     assert wall_connector_device.via_device_id == energy_site_device.id
+
+    second_wall_connector_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "bcd-234"), entry.entry_id
+    )
+    assert second_wall_connector_device is not None
+    assert second_wall_connector_device.name == "Wall Connector 234"
+    assert second_wall_connector_device.via_device_id == energy_site_device.id
