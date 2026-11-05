@@ -37,11 +37,16 @@ def async_handle_timer_event(
     if event_type != TimerEventType.FINISHED:
         return
 
+    if timer_info.name:
+        message = f"{timer_info.name} finished"
+    else:
+        message = f"{timedelta(seconds=timer_info.created_seconds)} timer finished"
+
     _async_send(
         hass,
         entry,
         timer_info,
-        _finished_message(timer_info),
+        message,
         {
             "group": "timers",
             # Android
@@ -55,13 +60,6 @@ def async_handle_timer_event(
             },
         },
     )
-
-
-def _finished_message(timer_info: TimerInfo) -> str:
-    """Return the message for a finished timer."""
-    if timer_info.name:
-        return f"{timer_info.name} finished"
-    return f"{timedelta(seconds=timer_info.created_seconds)} timer finished"
 
 
 def _supports_live_activity(entry: ConfigEntry) -> bool:
@@ -90,7 +88,7 @@ def _async_handle_live_activity(
         "notification_icon": TIMER_LIVE_ACTIVITY_ICON,
     }
     if event_type == TimerEventType.FINISHED:
-        message = _finished_message(timer_info)
+        message = "Finished"
         data["chronometer"] = False
         # Not silent, and the push relay only plays a sound for an alert it is given.
         data["alert"] = {"title": title, "body": message}
@@ -103,12 +101,11 @@ def _async_handle_live_activity(
 
         # The user just asked for this, so don't chime.
         data["silent"] = True
-        duration = str(timedelta(seconds=timer_info.created_seconds))
         if timer_info.is_active:
             data["chronometer"] = True
             data["when"] = dt_util.utcnow().timestamp() + seconds_left
             data["when_relative"] = False
-            message = f"{duration} timer"
+            message = str(timedelta(seconds=timer_info.created_seconds))
         else:
             # The app draws a progress bar in place of the ticking one, so only send
             # it while paused.

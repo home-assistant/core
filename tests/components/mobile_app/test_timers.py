@@ -172,7 +172,7 @@ async def test_timer_live_activity(
             {
                 "target": [webhook_id],
                 "title": "pizza",
-                "message": "0:02:00 timer",
+                "message": "0:02:00",
                 "data": {
                     "tag": tag,
                     "live_update": True,
@@ -217,7 +217,7 @@ async def test_timer_live_activity(
             {
                 "target": [webhook_id],
                 "title": "pizza",
-                "message": "0:02:00 timer",
+                "message": "0:02:00",
                 "data": {
                     "tag": tag,
                     "live_update": True,
@@ -242,7 +242,7 @@ async def test_timer_live_activity(
             {
                 "target": [webhook_id],
                 "title": "pizza",
-                "message": "0:02:30 timer",
+                "message": "0:02:30",
                 "data": {
                     "tag": tag,
                     "live_update": True,
@@ -297,13 +297,13 @@ async def test_timer_live_activity_finished(
         {
             "target": [webhook_id],
             "title": "Timer",
-            "message": "0:02:00 timer finished",
+            "message": "Finished",
             "data": {
                 "tag": tag,
                 "live_update": True,
                 "notification_icon": "mdi:timer-outline",
                 "chronometer": False,
-                "alert": {"title": "Timer", "body": "0:02:00 timer finished"},
+                "alert": {"title": "Timer", "body": "Finished"},
                 "alert_sound": "default",
             },
         },
