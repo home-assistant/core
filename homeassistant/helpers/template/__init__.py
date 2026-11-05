@@ -102,16 +102,18 @@ _HASS_LOADER = "template.hass_loader"
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$", re.ASCII)
 
+# One key of a value_json path: .name, ['name'] or ["name"]. Quoted keys
+# with a backslash or carriage return are left to jinja, which unescapes
+# them and normalizes line endings.
+_JSON_PATH_STEP_PATTERN = (
+    r"\.([A-Za-z_][A-Za-z0-9_]*)|\['([^'\\\r]*)'\]|\[\"([^\"\\\r]*)\"\]"
+)
+_JSON_PATH_STEP = re.compile(_JSON_PATH_STEP_PATTERN, re.ASCII)
 # A template that only outputs a value from the JSON payload,
 # e.g. {{ value_json.temperature }} or {{ value_json['ENERGY'].Power }}
 _JSON_PATH_TEMPLATE = re.compile(
-    r"\{\{-?\s*value_json"
-    r"((?:\.[A-Za-z_][A-Za-z0-9_]*|\['[^'\\]*'\]|\[\"[^\"\\]*\"\])+)"
-    r"\s*-?\}\}",
+    rf"\{{\{{-?\s*value_json((?:{_JSON_PATH_STEP_PATTERN})+)\s*-?\}}\}}",
     re.ASCII,
-)
-_JSON_PATH_STEP = re.compile(
-    r"\.([A-Za-z_][A-Za-z0-9_]*)|\['([^'\\]*)'\]|\[\"([^\"\\]*)\"\]", re.ASCII
 )
 
 EVAL_CACHE_SIZE = 512
@@ -365,19 +367,14 @@ def _finalize_output(value: Any, _nested: bool = False) -> Any:
     return value
 
 
-def _render_json_path(
-    value_json: Any, json_path: tuple[tuple[str, bool], ...]
-) -> str | None:
+def _render_json_path(value_json: Any, json_path: tuple[str, ...]) -> str | None:
     """Render a plain value_json template like jinja does, None if it can't.
 
-    Only plain dicts that hold the key are handled, and attribute access only
-    for keys that are not a dict attribute (jinja tries the attribute first).
+    Only plain dicts that hold the key are handled.
     """
     value = value_json
-    for key, is_attribute in json_path:
+    for key in json_path:
         if type(value) is not dict or key not in value:
-            return None
-        if is_attribute and hasattr(dict, key):
             return None
         value = value[key]
     try:
@@ -421,7 +418,7 @@ class Template:
         self._log_fn: Callable[[int, str], None] | None = None
         self._hash_cache: int = hash(self.template)
         self._renders: int = 0
-        self._json_path: tuple[tuple[str, bool], ...] | None = None
+        self._json_path: tuple[str, ...] | None = None
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -717,21 +714,21 @@ class Template:
 
         return _parse_result(render_result)
 
-    def _get_json_path(self) -> tuple[tuple[str, bool], ...]:
+    def _get_json_path(self) -> tuple[str, ...]:
         """Return the keys a plain value_json template outputs, empty otherwise.
 
-        Each key comes with True when it is accessed as an attribute.
+        For attribute access to a name like .items, jinja returns the dict
+        method instead of the key, so those templates are left to jinja.
         """
         if (json_path := self._json_path) is None:
-            match = _JSON_PATH_TEMPLATE.fullmatch(self.template)
-            json_path = self._json_path = (
-                tuple(
-                    (attr, True) if attr else (single or double, False)
-                    for attr, single, double in _JSON_PATH_STEP.findall(match[1])
-                )
-                if match
-                else ()
-            )
+            json_path = ()
+            if match := _JSON_PATH_TEMPLATE.fullmatch(self.template):
+                steps = _JSON_PATH_STEP.findall(match[1])
+                if not any(attr and hasattr(dict, attr) for attr, _, _ in steps):
+                    json_path = tuple(
+                        attr or single or double for attr, single, double in steps
+                    )
+            self._json_path = json_path
         return json_path
 
     def _ensure_compiled(
