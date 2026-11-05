@@ -19,7 +19,6 @@ ALLOWED_TOKENS: dict[str, str] = {
     "hacs.data": "legacy storage key",
     "custom_components/hacs": "where the custom integration was installed",
     "LEGACY_HACS_": "constants that name what the custom integration left behind",
-    "HACS-China": "the China version of the custom integration",
     "hacs.xyz": "documentation links",
     "/hacsfiles": "the path the custom integration served dashboard resources from",
 }

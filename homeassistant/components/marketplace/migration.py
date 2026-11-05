@@ -47,9 +47,9 @@ if TYPE_CHECKING:
 
 LEGACY_HACS_DOMAIN = "hacs"
 
-# The HACS-China fork of the custom integration writes this into the options of
-# its entry, the original never does. Its users chose the Chinese Community
-# Relays, the download profile that has them.
+# The China fork of the custom integration writes this into the options of its
+# entry, the original never does. Its users chose the China mirrors, the
+# download profile that has them.
 LEGACY_HACS_CHINA_OPTION = "use_shared"
 LEGACY_HACS_CHINA_PROFILE = "hasscn"
 
@@ -355,8 +355,8 @@ async def async_remove_duplicate_entries(hass: HomeAssistant) -> None:
     if len(entries) < 2:
         return
 
-    # Before anything is taken from a duplicate, the choice of the HACS-China
-    # fork becomes a profile and its shared token is dropped
+    # Before anything is taken from a duplicate, the choice of the China fork
+    # becomes a profile and its shared token is dropped
     for entry in entries:
         if entry.options.keys() - {CONF_PROFILE}:
             _async_adopt_options(hass, entry)
