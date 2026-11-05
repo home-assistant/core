@@ -1,12 +1,11 @@
 """Test init of ping component."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from icmplib import SocketPermissionError
+from icmplib import Host, SocketPermissionError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.ping.helpers import PingDataICMPLib, PingDataSubProcess
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -53,19 +52,19 @@ async def test_device_migration(
 
 
 @pytest.mark.parametrize(
-    ("ping_side_effect", "privileged", "ping_cls"),
+    ("socket_side_effect", "icmplib_privileged", "subprocess_calls"),
     [
-        pytest.param([None], True, PingDataICMPLib, id="privileged"),
+        pytest.param([None], [True], 0, id="privileged"),
         pytest.param(
             [SocketPermissionError(False), None],
-            False,
-            PingDataICMPLib,
+            [False],
+            0,
             id="unprivileged",
         ),
         pytest.param(
             [SocketPermissionError(True), SocketPermissionError(False)],
-            None,
-            PingDataSubProcess,
+            [],
+            1,
             id="no_socket",
         ),
     ],
@@ -73,28 +72,34 @@ async def test_device_migration(
 async def test_icmp_privilege_detection(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    ping_side_effect: list[Exception | None],
-    privileged: bool | None,
-    ping_cls: type[PingDataICMPLib | PingDataSubProcess],
+    patch_ping: Host,
+    socket_side_effect: list[Exception | None],
+    icmplib_privileged: list[bool],
+    subprocess_calls: int,
 ) -> None:
-    """Test setup picks icmplib or the ping binary based on socket privileges."""
+    """Test the host is pinged with icmplib or the binary based on socket privileges."""
     config_entry.add_to_hass(hass)
     with (
         patch(
             "homeassistant.components.ping.async_ping",
-            side_effect=ping_side_effect,
-        ) as mock_ping,
-        patch(f"{ping_cls.__module__}.{ping_cls.__name__}.async_update"),
+            side_effect=socket_side_effect,
+        ),
+        patch(
+            "homeassistant.components.ping.helpers.async_ping",
+            return_value=patch_ping,
+        ) as mock_icmplib_ping,
+        patch(
+            "asyncio.create_subprocess_exec",
+            return_value=MagicMock(
+                returncode=1, communicate=AsyncMock(return_value=(b"", b""))
+            ),
+        ) as mock_subprocess,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert [call.kwargs["privileged"] for call in mock_ping.call_args_list] == [
-        True,
-        False,
-    ][: len(ping_side_effect)]
-    ping = config_entry.runtime_data.ping
-    assert isinstance(ping, ping_cls)
-    if ping_cls is PingDataICMPLib:
-        assert ping._privileged is privileged
+    assert [
+        call.kwargs["privileged"] for call in mock_icmplib_ping.call_args_list
+    ] == icmplib_privileged
+    assert mock_subprocess.call_count == subprocess_calls
