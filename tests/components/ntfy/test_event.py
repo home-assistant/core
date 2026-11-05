@@ -266,6 +266,7 @@ async def test_event_topic_protected(
         )
     )
     assert issue.config_entry_id == config_entry.entry_id
+    assert issue.config_subentry_id == "ABCDEF"
     assert issue.translation_placeholders == {"topic": "mytopic", "name": "ntfy.sh"}
 
     # The repair flow disables the entity also if it was renamed after the issue
@@ -309,6 +310,7 @@ async def test_event_topic_protected_per_config_entry(
         )
     )
     assert other_issue.config_entry_id == other_config_entry.entry_id
+    assert other_issue.config_subentry_id == "GHIJKL"
     assert other_issue.translation_placeholders == {
         "topic": "mytopic",
         "name": "ntfy.example.com",
@@ -412,4 +414,67 @@ async def test_event_topic_protected_issue_deleted_on_remove(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
+    assert not issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
+
+
+async def test_event_topic_protected_issue_deleted_on_remove_not_loaded(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the protected topic issue is deleted with the topic of an unloaded entry."""
+    mock_aiontfy.subscribe.side_effect = NtfyForbiddenError(403, 403, "forbidden")
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Keep the issue on unload, as it is kept across a restart
+    with patch(
+        "homeassistant.components.ntfy.event.NtfyEventEntity.async_will_remove_from_hass"
+    ):
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
+
+    assert hass.config_entries.async_remove_subentry(config_entry, "ABCDEF")
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
+
+
+async def test_event_topic_protected_issue_deleted_on_entity_disable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the protected topic issue is deleted when the entity is disabled."""
+    mock_aiontfy.subscribe.side_effect = NtfyForbiddenError(403, 403, "forbidden")
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
+
+    entity_registry.async_update_entity(
+        "event.mytopic", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert "ABCDEF" in config_entry.subentries
+    assert hass.states.get("event.mytopic") is None
     assert not issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
