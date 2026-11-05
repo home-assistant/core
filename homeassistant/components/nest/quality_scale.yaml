@@ -38,9 +38,7 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
-  entity-unavailable:
-    status: todo
-    comment: The integration tracks and updates availability status, however it does not do so using the required methods.
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
@@ -57,11 +55,9 @@ rules:
   docs-data-update: todo
   docs-examples:
     status: todo
-    comment: The integration has examples in the documentation, but more could be added (e.g. automationexamples for each entity type, examples using device triggers, etc.).
+    comment: The integration has examples in the documentation, but more could be added (e.g. automation examples for each entity type, examples using device triggers, etc.).
   docs-known-limitations: done
-  docs-supported-devices:
-    status: todo
-    comment: The integration links to the Google Nest documentation for supported devices, but does not have a list of supported devices in the Home Assistant documentation or a specific section for them.
+  docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: todo
