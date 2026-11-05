@@ -370,11 +370,27 @@ async def test_service_dial_unloaded(
         )
 
 
+CACHED_HOSTS = [{"source": "cached_hosts"}]
+LIVE_HOSTS = [{"source": "live_hosts"}]
+
+
 @pytest.mark.parametrize(
-    "options",
+    ("options", "cached_hosts", "hosts_fetch_calls", "expected_hosts"),
     [
-        pytest.param({CONF_FEATURE_DEVICE_TRACKING: False}, id="no_device_tracking"),
-        pytest.param({CONF_OLD_DISCOVERY: True}, id="old_discovery"),
+        pytest.param(
+            {CONF_FEATURE_DEVICE_TRACKING: False},
+            CACHED_HOSTS,
+            0,
+            CACHED_HOSTS,
+            id="no_device_tracking_hosts_cached",
+        ),
+        pytest.param(
+            {CONF_OLD_DISCOVERY: True},
+            None,
+            1,
+            LIVE_HOSTS,
+            id="old_discovery_hosts_fetched",
+        ),
     ],
 )
 @pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
@@ -382,6 +398,9 @@ async def test_get_mesh_info_service_fetches_on_demand(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     options: dict[str, bool],
+    cached_hosts: list[dict[str, str]] | None,
+    hosts_fetch_calls: int,
+    expected_hosts: list[dict[str, str]],
 ) -> None:
     """Test mesh info is fetched on demand when not collected by device tracking."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA, options=options)
@@ -393,26 +412,109 @@ async def test_get_mesh_info_service_fetches_on_demand(
 
     admin_group = await hass.auth.async_get_group(GROUP_ID_ADMIN)
     admin_user = MockUser(groups=[admin_group]).add_to_hass(hass)
-    assert entry.runtime_data.mesh_topology_raw is None
+    avm_wrapper = entry.runtime_data
+    assert avm_wrapper.mesh_topology_raw is None
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert device
 
-    result = await hass.services.async_call(
-        DOMAIN,
-        FritzService.GET_MESH_INFO,
-        {"device_id": device.id},
-        blocking=True,
-        return_response=True,
-        context=Context(user_id=admin_user.id),
-    )
+    # Data that differs from the default mock, so a live fetch is recognizable
+    live_topology = {"source": "live_topology"}
+
+    with (
+        patch.object(
+            type(avm_wrapper),
+            "hosts_attributes_raw",
+            new_callable=PropertyMock,
+            return_value=cached_hosts,
+        ),
+        patch.object(
+            avm_wrapper.fritz_hosts,
+            "get_mesh_topology",
+            return_value=live_topology,
+        ) as mock_get_mesh_topology,
+        patch.object(
+            avm_wrapper.fritz_hosts,
+            "get_hosts_attributes",
+            return_value=LIVE_HOSTS,
+        ) as mock_get_hosts_attributes,
+    ):
+        result = await hass.services.async_call(
+            DOMAIN,
+            FritzService.GET_MESH_INFO,
+            {"device_id": device.id},
+            blocking=True,
+            return_response=True,
+            context=Context(user_id=admin_user.id),
+        )
 
     assert result == {
-        "mesh_topology": MOCK_MESH_DATA,
-        "hosts_attributes": MOCK_HOST_ATTRIBUTES_DATA,
+        "mesh_topology": live_topology,
+        "hosts_attributes": expected_hosts,
     }
+    mock_get_mesh_topology.assert_called_once()
+    assert mock_get_hosts_attributes.call_count == hosts_fetch_calls
+
+
+@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
+async def test_get_mesh_info_service_uses_cached_data(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test cached mesh info is returned without a live fetch."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+    avm_wrapper = entry.runtime_data
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
+    )
+    assert device
+
+    # Cached data that differs from what a live fetch would return
+    cached_topology = {"source": "cached_topology"}
+    cached_hosts = [{"source": "cached_hosts"}]
+
+    with (
+        patch.object(
+            type(avm_wrapper),
+            "mesh_topology_raw",
+            new_callable=PropertyMock,
+            return_value=cached_topology,
+        ),
+        patch.object(
+            type(avm_wrapper),
+            "hosts_attributes_raw",
+            new_callable=PropertyMock,
+            return_value=cached_hosts,
+        ),
+        patch.object(
+            avm_wrapper.fritz_hosts, "get_mesh_topology"
+        ) as mock_get_mesh_topology,
+        patch.object(
+            avm_wrapper.fritz_hosts, "get_hosts_attributes"
+        ) as mock_get_hosts_attributes,
+    ):
+        result = await hass.services.async_call(
+            DOMAIN,
+            FritzService.GET_MESH_INFO,
+            {"device_id": device.id},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert result == {
+        "mesh_topology": cached_topology,
+        "hosts_attributes": cached_hosts,
+    }
+    mock_get_mesh_topology.assert_not_called()
+    mock_get_hosts_attributes.assert_not_called()
 
 
 @pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
@@ -692,6 +794,12 @@ async def test_get_mesh_info_raises_on_missing_data(
             "get_hosts_attributes",
             return_value=hosts_attributes,
             side_effect=hosts_side_effect,
+        ),
+        patch.object(
+            type(avm_wrapper),
+            "hosts_attributes_raw",
+            new_callable=PropertyMock,
+            return_value=None,
         ),
         patch.object(
             type(avm_wrapper.fritz_status),
