@@ -4516,7 +4516,7 @@
           "connectivity": [
             "network"
           ],
-          "name": "Flic"
+          "name": "Flic (legacy)"
         },
         "flic_button": {
           "integration_type": "device",
@@ -5286,6 +5286,12 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "glinet": {
+      "name": "GL.iNet",
+      "iot_standards": [
+        "matter"
+      ]
     },
     "globalcache": {
       "name": "Global Cach\u00e9",

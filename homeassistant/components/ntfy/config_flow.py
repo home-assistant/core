@@ -19,7 +19,6 @@ from yarl import URL
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -59,6 +58,7 @@ from .const import (
     SECTION_FILTER,
     SUBENTRY_TYPE_TOPIC,
 )
+from .coordinator import NtfyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,7 +170,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: NtfyConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_TOPIC: TopicSubentryFlowHandler}

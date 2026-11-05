@@ -2857,11 +2857,13 @@ class ConfigEntries:
         if removed_subentry_ids:
             dev_reg = dr.async_get(self.hass)
             ent_reg = er.async_get(self.hass)
+            issue_reg = ir.async_get(self.hass)
             for subentry_id in removed_subentry_ids:
                 dev_reg.async_clear_config_subentry(
                     entry.entry_id, subentry_id, entry.domain
                 )
                 ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
+                issue_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
 
         self._async_save_and_notify(entry)
         return True

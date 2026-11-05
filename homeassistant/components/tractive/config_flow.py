@@ -9,13 +9,14 @@ import aiohttp
 import aiotractive
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLIENT_ID, DOMAIN
+from .coordinator import TractiveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,7 +114,7 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_update_credentials(
         self,
-        entry: ConfigEntry,
+        entry: TractiveConfigEntry,
         step_id: str,
         user_input: dict[str, Any] | None,
     ) -> ConfigFlowResult:

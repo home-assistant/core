@@ -20,7 +20,7 @@ dependencies = [
   "bleak-retry-connector==4.7.1",
   "freezegun==1.5.5",
   "paho-mqtt==2.1.0",
-  "pytest==9.1.1",
+  "pytest==9.2.0",
   "pytest-aiohttp==1.1.1",
   "pytest-asyncio==1.4.1",
   "pytest-freezer==0.4.9",
