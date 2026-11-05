@@ -286,7 +286,6 @@ SENSORS: tuple[HomeyEnergyDongleSensorEntityDescription, ...] = (
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-            suggested_display_precision=0,
             value_fn=partial(_value, ref=f"INSTANTANEOUS_CURRENT_L{phase}"),
         )
         for phase in PHASES
