@@ -2633,6 +2633,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
