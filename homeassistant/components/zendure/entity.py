@@ -1,5 +1,6 @@
 """Base entities for the Zendure integration."""
 
+from yarl import URL
 from zendure import PropertyValue
 from zendure.catalog import lookup_device
 
@@ -30,7 +31,10 @@ class ZendureEntity(CoordinatorEntity[ZendureDataUpdateCoordinator]):
         # The library only produces snapshots for registered models.
         model = lookup_device(snapshot.product_raw).display_name
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
+            # URL.build adds the brackets an IPv6 host needs.
+            configuration_url=URL.build(
+                scheme="http", host=coordinator.config_entry.data[CONF_HOST]
+            ),
             identifiers={(DOMAIN, snapshot.serial_number)},
             manufacturer=MANUFACTURER,
             model=model,
