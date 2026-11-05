@@ -119,6 +119,7 @@ async def test_wake_word_audio_duplicate(
         "wake_word_output": {
             "wake_word_phrase": "okay nabu",
             "wake_word_audio_ms": MS_PER_CHUNK,
+            "reason": "duplicate",
         }
     }
     # The text-to-speech stream prepared for the rejected run is removed
