@@ -52,6 +52,7 @@ class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
     ) -> ai_task.EvaluationTaskResult:
         """Evaluate questions using the LiteLLM decisions API."""
         questions: list[Question] = []
+        score_levels: dict[str, int] = {}
         for question_id, question in task.questions.items():
             if question["type"] == "noul":
                 questions.append(
@@ -74,6 +75,7 @@ class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
                     }
                 )
             else:
+                score_levels[question_id] = len(question["criteria"])
                 questions.append(
                     {
                         "type": "score",
@@ -130,11 +132,18 @@ class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
                 input=decision_input,
                 questions=questions,
             )
+        except (openai.AuthenticationError, openai.PermissionDeniedError) as err:
+            # Re-check so the proxy is marked unavailable for the auth failure.
+            await coordinator.async_request_refresh()
+            raise HomeAssistantError(f"Error evaluating LiteLLM task: {err}") from err
         except openai.APIConnectionError as err:
             coordinator.mark_connection_error()
             raise HomeAssistantError(f"Error evaluating LiteLLM task: {err}") from err
         except openai.OpenAIError as err:
+            # Reachable but the request failed; keep the entity available.
+            coordinator.async_set_updated_data(None)
             raise HomeAssistantError(f"Error evaluating LiteLLM task: {err}") from err
+        coordinator.async_set_updated_data(None)
 
         answers: dict[str, ai_task.EvaluationAnswer] = {}
         for answer in response.answers:
@@ -167,7 +176,9 @@ class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
                 )
             elif answer.type == "score":
                 levels = sorted(answer.probabilities, key=lambda level: level.value)
-                if [level.value for level in levels] != list(range(len(levels))):
+                if [level.value for level in levels] != list(
+                    range(score_levels[question_id])
+                ):
                     raise HomeAssistantError("LiteLLM returned invalid score levels")
                 answers[question_id] = ai_task.ScoreAnswer(
                     score=answer.score,
@@ -175,4 +186,6 @@ class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
                 )
             else:
                 raise HomeAssistantError("LiteLLM returned an unsupported answer type")
+        if set(answers) != set(task.questions):
+            raise HomeAssistantError("LiteLLM did not answer all questions")
         return ai_task.EvaluationTaskResult(answers=answers)

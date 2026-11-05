@@ -506,12 +506,14 @@ async def test_create_evaluation_entity(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.parametrize("subentry_type", ["conversation", "ai_task_evaluate"])
 async def test_subentry_exceptions(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     reason: str,
+    subentry_type: str,
 ) -> None:
     """Test subentry flow aborts on errors fetching models."""
     await setup_integration(hass, mock_config_entry)
@@ -522,7 +524,7 @@ async def test_subentry_exceptions(
         side_effect=exception,
     ):
         result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
+            (mock_config_entry.entry_id, subentry_type),
             context={"source": SOURCE_USER},
         )
 

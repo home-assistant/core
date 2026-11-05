@@ -1,10 +1,16 @@
 """Test AI task platform of the LiteLLM integration."""
 
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import httpx2
-from openai import APIConnectionError
+from openai import (
+    APIConnectionError,
+    AuthenticationError,
+    OpenAIError,
+    PermissionDeniedError,
+)
 from openai.types.decision import Decision
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -175,11 +181,20 @@ async def test_evaluate(
     )
 
 
+@pytest.mark.parametrize(
+    ("state", "mime_type"),
+    [
+        pytest.param("Look at the front door", "image/jpeg", id="state-and-image"),
+        pytest.param(None, "image/jpg", id="image-only"),
+    ],
+)
 async def test_images(
     hass: HomeAssistant,
     evaluation_entity: str,
     mock_decisions: AsyncMock,
     tmp_path: Path,
+    state: str | None,
+    mime_type: str,
 ) -> None:
     """Pass resolved image bytes with optional textual context."""
     image_path = tmp_path / "snapshot.jpg"
@@ -188,7 +203,7 @@ async def test_images(
         "homeassistant.components.media_source.async_resolve_media",
         return_value=media_source.PlayMedia(
             url="/media/snapshot.jpg",
-            mime_type="image/jpeg",
+            mime_type=mime_type,
             path=image_path,
         ),
     ):
@@ -196,27 +211,57 @@ async def test_images(
             hass,
             task_name="Delivery",
             entity_id=evaluation_entity,
-            state="Look at the front door",
+            state=state,
             questions=QUESTIONS,
             attachments=[
                 {
                     "media_content_id": "media-source://media_source/local/snapshot.jpg",
+                    "media_content_type": mime_type,
+                }
+            ],
+        )
+    content: list[dict] = []
+    if state is not None:
+        content.append({"type": "input_text", "text": state})
+    content.append(
+        {"type": "input_image", "image_url": "data:image/jpeg;base64,Y2FtZXJhIGltYWdl"}
+    )
+    assert mock_decisions.call_args.kwargs["input"] == [
+        {"role": "user", "content": content}
+    ]
+
+
+async def test_missing_attachment(
+    hass: HomeAssistant,
+    evaluation_entity: str,
+    mock_decisions: AsyncMock,
+    tmp_path: Path,
+) -> None:
+    """Reject attachments that can no longer be read."""
+    with (
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=media_source.PlayMedia(
+                url="/media/missing.jpg",
+                mime_type="image/jpeg",
+                path=tmp_path / "missing.jpg",
+            ),
+        ),
+        pytest.raises(HomeAssistantError, match="Unable to read evaluation attachment"),
+    ):
+        await ai_task.async_evaluate(
+            hass,
+            task_name="Delivery",
+            entity_id=evaluation_entity,
+            questions=QUESTIONS,
+            attachments=[
+                {
+                    "media_content_id": "media-source://media_source/local/missing.jpg",
                     "media_content_type": "image/jpeg",
                 }
             ],
         )
-    assert mock_decisions.call_args.kwargs["input"] == [
-        {
-            "role": "user",
-            "content": [
-                {"type": "input_text", "text": "Look at the front door"},
-                {
-                    "type": "input_image",
-                    "image_url": "data:image/jpeg;base64,Y2FtZXJhIGltYWdl",
-                },
-            ],
-        }
-    ]
+    mock_decisions.assert_not_called()
 
 
 async def test_unsupported_attachment(
@@ -294,6 +339,21 @@ async def test_unsupported_attachment(
             "invalid score levels",
             id="duplicate-level",
         ),
+        pytest.param(
+            [
+                ANSWERS[0],
+                ANSWERS[1],
+                {
+                    **ANSWERS[2],
+                    "probabilities": [
+                        {"value": 0, "label": "0", "probability": 0.5},
+                        {"value": 1, "label": "1", "probability": 0.5},
+                    ],
+                },
+            ],
+            "invalid score levels",
+            id="missing-level",
+        ),
     ],
 )
 async def test_invalid_responses(
@@ -323,6 +383,118 @@ async def test_api_error(
         request=httpx2.Request("POST", "http://localhost:4000/v1/decisions")
     )
     with pytest.raises(HomeAssistantError, match="Error evaluating LiteLLM task"):
+        await ai_task.async_evaluate(
+            hass,
+            task_name="Delivery",
+            entity_id=evaluation_entity,
+            state="Delivered",
+            questions=QUESTIONS,
+        )
+
+
+@pytest.mark.parametrize("error_cls", [AuthenticationError, PermissionDeniedError])
+async def test_auth_error_refreshes_coordinator(
+    hass: HomeAssistant,
+    evaluation_entity: str,
+    mock_decisions: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    error_cls: type[AuthenticationError | PermissionDeniedError],
+) -> None:
+    """Test authentication errors refresh coordinator state."""
+    mock_decisions.side_effect = error_cls(
+        message="invalid api key",
+        response=httpx2.Response(
+            401, request=httpx2.Request("POST", "http://localhost")
+        ),
+        body=None,
+    )
+    coordinator = mock_config_entry.runtime_data
+    with (
+        patch.object(
+            coordinator, "async_request_refresh", new_callable=AsyncMock
+        ) as refresh,
+        pytest.raises(HomeAssistantError, match="Error evaluating LiteLLM task"),
+    ):
+        await ai_task.async_evaluate(
+            hass,
+            task_name="Delivery",
+            entity_id=evaluation_entity,
+            state="Delivered",
+            questions=QUESTIONS,
+        )
+    refresh.assert_awaited_once()
+
+
+async def test_provider_error_keeps_entity_available(
+    hass: HomeAssistant, evaluation_entity: str, mock_decisions: AsyncMock
+) -> None:
+    """Test provider errors do not mark the proxy unavailable."""
+    mock_decisions.side_effect = OpenAIError("bad request")
+    with pytest.raises(HomeAssistantError, match="Error evaluating LiteLLM task"):
+        await ai_task.async_evaluate(
+            hass,
+            task_name="Delivery",
+            entity_id=evaluation_entity,
+            state="Delivered",
+            questions=QUESTIONS,
+        )
+    assert hass.states.get(evaluation_entity).state != "unavailable"
+
+
+async def test_success_marks_entity_available(
+    hass: HomeAssistant,
+    evaluation_entity: str,
+    mock_decisions: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a successful evaluation clears a connection error."""
+    coordinator = mock_config_entry.runtime_data
+    coordinator.mark_connection_error()
+    await hass.async_block_till_done()
+    assert coordinator.last_update_success is False
+
+    await ai_task.async_evaluate(
+        hass,
+        task_name="Delivery",
+        entity_id=evaluation_entity,
+        state="Delivered",
+        questions=QUESTIONS,
+    )
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is True
+    assert hass.states.get(evaluation_entity).state != "unavailable"
+
+
+@pytest.mark.parametrize(
+    "answers", [pytest.param([], id="empty"), pytest.param([ANSWERS[0]], id="partial")]
+)
+async def test_missing_answers(
+    hass: HomeAssistant,
+    evaluation_entity: str,
+    mock_decisions: AsyncMock,
+    answers: list[dict],
+) -> None:
+    """Reject responses that do not answer every question."""
+    mock_decisions.return_value = decision(answers)
+    with pytest.raises(HomeAssistantError, match="did not answer all questions"):
+        await ai_task.async_evaluate(
+            hass,
+            task_name="Delivery",
+            entity_id=evaluation_entity,
+            state="Delivered",
+            questions=QUESTIONS,
+        )
+
+
+async def test_unsupported_answer_type(
+    hass: HomeAssistant, evaluation_entity: str, mock_decisions: AsyncMock
+) -> None:
+    """Reject answer types unknown to the integration."""
+    mock_decisions.return_value = SimpleNamespace(
+        answers=[SimpleNamespace(name="delivered", type="mystery")]
+    )
+    with pytest.raises(HomeAssistantError, match="unsupported answer type"):
         await ai_task.async_evaluate(
             hass,
             task_name="Delivery",
