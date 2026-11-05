@@ -13,7 +13,6 @@ from homeassistant.components.rest.data import DEFAULT_TIMEOUT  # pylint: disabl
 from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -63,7 +62,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 
-from . import COMBINED_SCHEMA
+from . import COMBINED_SCHEMA, ScrapeConfigEntry
 from .const import (
     CONF_ADDITIONAL,
     CONF_AUTH,
@@ -205,7 +204,7 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> ScrapeOptionFlow:
+    def async_get_options_flow(config_entry: ScrapeConfigEntry) -> ScrapeOptionFlow:
         """Get the options flow for this handler."""
         return ScrapeOptionFlow()
 
@@ -213,7 +212,7 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: ScrapeConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {"entity": ScrapeSubentryFlowHandler}

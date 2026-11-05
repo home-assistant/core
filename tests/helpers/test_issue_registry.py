@@ -14,21 +14,41 @@ from pytest_homeassistant.common import (
     flush_store,
 )
 
-from homeassistant.config_entries import ConfigEntryDisabler
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
+SUBENTRY_ID = "subentry_1"
+
+
+def _entry_with_subentries(*subentry_ids: str) -> MockConfigEntry:
+    """Return a config entry with subentries."""
+    return MockConfigEntry(
+        domain="test",
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                title=subentry_id,
+                unique_id=subentry_id,
+            )
+            for subentry_id in subentry_ids
+        ],
+    )
+
 
 async def test_load_save_issues(hass: HomeAssistant) -> None:
     """Make sure that we can load/save data correctly."""
-    entry = MockConfigEntry(domain="test")
+    entry = _entry_with_subentries(SUBENTRY_ID)
     entry.add_to_hass(hass)
     issues = [
         {
             "breaks_in_ha_version": "2022.9",
             "config_entry_id": entry.entry_id,
+            "config_subentry_id": SUBENTRY_ID,
             "data": None,
             "domain": "test",
             "issue_domain": None,
@@ -43,6 +63,7 @@ async def test_load_save_issues(hass: HomeAssistant) -> None:
         {
             "breaks_in_ha_version": "2022.8",
             "config_entry_id": None,
+            "config_subentry_id": None,
             "data": None,
             "domain": "test",
             "issue_domain": None,
@@ -57,6 +78,7 @@ async def test_load_save_issues(hass: HomeAssistant) -> None:
         {
             "breaks_in_ha_version": "2022.7",
             "config_entry_id": None,
+            "config_subentry_id": None,
             "data": None,
             "domain": "test",
             "issue_domain": None,
@@ -71,6 +93,7 @@ async def test_load_save_issues(hass: HomeAssistant) -> None:
         {
             "breaks_in_ha_version": "2022.6",
             "config_entry_id": entry.entry_id,
+            "config_subentry_id": SUBENTRY_ID,
             "data": {"entry_id": "123"},
             "domain": "test",
             "issue_domain": "blubb",
@@ -85,6 +108,7 @@ async def test_load_save_issues(hass: HomeAssistant) -> None:
         {
             "breaks_in_ha_version": None,
             "config_entry_id": None,
+            "config_subentry_id": None,
             "data": None,
             "domain": "test",
             "issue_domain": None,
@@ -146,6 +170,7 @@ async def test_load_save_issues(hass: HomeAssistant) -> None:
             active=False,
             breaks_in_ha_version=None,
             config_entry_id=issue.config_entry_id,
+            config_subentry_id=issue.config_subentry_id,
             created=issue.created,
             data=None,
             dismissed_version=issue.dismissed_version,
@@ -161,6 +186,9 @@ async def test_load_save_issues(hass: HomeAssistant) -> None:
         )
     assert registry2.async_get_issue("test", "issue_1").config_entry_id == (
         entry.entry_id
+    )
+    assert registry2.async_get_issue("test", "issue_1").config_subentry_id == (
+        SUBENTRY_ID
     )
     assert registry2.async_get_issue("test", "issue_1").dismissed_version is not None
     for issue_id in ("issue_4", "issue_5"):
@@ -188,6 +216,7 @@ UPDATED_ISSUE: dict[str, Any] = {
         pytest.param(
             {
                 "config_entry_id": None,
+                "config_subentry_id": None,
                 "created": "2022-07-19T09:41:13.746514+00:00",
                 "dismissed_version": "2022.7.0.dev0",
                 "domain": "test",
@@ -200,6 +229,7 @@ UPDATED_ISSUE: dict[str, Any] = {
             {
                 "breaks_in_ha_version": None,
                 "config_entry_id": None,
+                "config_subentry_id": None,
                 "created": "2022-07-19T09:41:13.746514+00:00",
                 "data": None,
                 "dismissed_version": "2022.7.0.dev0",
@@ -233,18 +263,24 @@ async def test_update_issue_by_recreating(
     registry = ir.async_get(hass)
     old_issue = registry.async_get_issue("test", "issue_1")
 
-    entry = MockConfigEntry(domain="test")
+    entry = _entry_with_subentries(SUBENTRY_ID)
     entry.add_to_hass(hass)
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
 
     ir.async_create_issue(
-        hass, "test", "issue_1", config_entry_id=entry.entry_id, **UPDATED_ISSUE
+        hass,
+        "test",
+        "issue_1",
+        config_entry_id=entry.entry_id,
+        config_subentry_id=SUBENTRY_ID,
+        **UPDATED_ISSUE,
     )
     await hass.async_block_till_done()
 
     assert registry.async_get_issue("test", "issue_1") == ir.IssueEntry(
         active=True,
         config_entry_id=entry.entry_id,
+        config_subentry_id=SUBENTRY_ID,
         created=old_issue.created,
         dismissed_version="2022.7.0.dev0",
         domain="test",
@@ -257,7 +293,12 @@ async def test_update_issue_by_recreating(
 
     # Nothing changed, no update event
     ir.async_create_issue(
-        hass, "test", "issue_1", config_entry_id=entry.entry_id, **UPDATED_ISSUE
+        hass,
+        "test",
+        "issue_1",
+        config_entry_id=entry.entry_id,
+        config_subentry_id=SUBENTRY_ID,
+        **UPDATED_ISSUE,
     )
     await hass.async_block_till_done()
 
@@ -269,7 +310,7 @@ async def test_create_delete_issue_from_thread(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test the thread safe create_issue and delete_issue."""
-    entry = MockConfigEntry(domain="test")
+    entry = _entry_with_subentries(SUBENTRY_ID)
     entry.add_to_hass(hass)
 
     await hass.async_add_executor_job(
@@ -279,6 +320,7 @@ async def test_create_delete_issue_from_thread(
             "test",
             "issue_1",
             config_entry_id=entry.entry_id,
+            config_subentry_id=SUBENTRY_ID,
             **UPDATED_ISSUE,
         )
     )
@@ -286,6 +328,7 @@ async def test_create_delete_issue_from_thread(
     assert issue_registry.async_get_issue("test", "issue_1") == ir.IssueEntry(
         active=True,
         config_entry_id=entry.entry_id,
+        config_subentry_id=SUBENTRY_ID,
         created=dt_util.utcnow(),
         dismissed_version=None,
         domain="test",
@@ -310,6 +353,7 @@ async def test_load_save_issues_read_only(
             "issues": [
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created": "2022-07-19T09:41:13.746514+00:00",
                     "dismissed_version": "2022.7.0.dev0",
                     "domain": "test",
@@ -382,6 +426,7 @@ async def test_loading_issues_from_storage(
             "issues": [
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created": "2022-07-19T09:41:13.746514+00:00",
                     "dismissed_version": "2022.7.0.dev0",
                     "domain": "test",
@@ -390,6 +435,7 @@ async def test_loading_issues_from_storage(
                 },
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created": "2022-07-19T19:41:13.746514+00:00",
                     "dismissed_version": None,
                     "domain": "test",
@@ -399,6 +445,7 @@ async def test_loading_issues_from_storage(
                 {
                     "breaks_in_ha_version": "2022.6",
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created": "2022-07-19T19:41:13.746514+00:00",
                     "data": {"entry_id": "123"},
                     "dismissed_version": None,
@@ -451,7 +498,9 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
     registry = hass.data[ir.DATA_REGISTRY]
     assert len(registry.issues) == 2
     assert all(
-        not issue.is_persistent and issue.config_entry_id is None
+        not issue.is_persistent
+        and issue.config_entry_id is None
+        and issue.config_subentry_id is None
         for issue in registry.issues.values()
     )
 
@@ -501,24 +550,113 @@ async def test_migration_1_2(hass: HomeAssistant, hass_storage: dict[str, Any]) 
     await flush_store(registry._store)
     assert hass_storage[ir.STORAGE_KEY]["minor_version"] == ir.STORAGE_VERSION_MINOR
     assert [
-        issue["config_entry_id"]
+        (issue["config_entry_id"], issue["config_subentry_id"])
+        for issue in hass_storage[ir.STORAGE_KEY]["data"]["issues"]
+    ] == [(None, None), (None, None)]
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_3(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
+    """Test migration from version 1.3."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    hass_storage[ir.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 3,
+        "data": {
+            "issues": [
+                {
+                    "config_entry_id": entry.entry_id,
+                    "created": "2022-07-19T09:41:13.746514+00:00",
+                    "dismissed_version": "2022.7.0.dev0",
+                    "domain": "test",
+                    "is_persistent": False,
+                    "issue_id": "issue_1",
+                },
+                {
+                    "breaks_in_ha_version": "2022.6",
+                    "config_entry_id": None,
+                    "created": "2022-07-19T19:41:13.746514+00:00",
+                    "data": {"entry_id": "123"},
+                    "dismissed_version": None,
+                    "domain": "test",
+                    "issue_domain": "blubb",
+                    "issue_id": "issue_2",
+                    "is_fixable": True,
+                    "is_persistent": True,
+                    "learn_more_url": "https://checkboxrace.com/blah",
+                    "severity": "other",
+                    "translation_key": "even_worse",
+                    "translation_placeholders": {"xyz": "abc"},
+                },
+            ]
+        },
+    }
+
+    await ir.async_load(hass)
+
+    registry = hass.data[ir.DATA_REGISTRY]
+    assert [
+        (issue.config_entry_id, issue.config_subentry_id)
+        for issue in registry.issues.values()
+    ] == [(entry.entry_id, None), (None, None)]
+
+    registry.async_schedule_save()
+    await flush_store(registry._store)
+    assert hass_storage[ir.STORAGE_KEY]["minor_version"] == ir.STORAGE_VERSION_MINOR
+    assert [
+        issue["config_subentry_id"]
         for issue in hass_storage[ir.STORAGE_KEY]["data"]["issues"]
     ] == [None, None]
 
 
+@pytest.mark.parametrize(
+    ("config_entry_id", "config_subentry_id", "message"),
+    [
+        pytest.param(
+            "unknown_entry",
+            None,
+            "Can't link issue to unknown config entry unknown_entry",
+            id="unknown_entry",
+        ),
+        pytest.param(
+            "unknown_entry",
+            SUBENTRY_ID,
+            "Can't link issue to unknown config entry unknown_entry",
+            id="unknown_entry_with_subentry",
+        ),
+        pytest.param(
+            None,
+            SUBENTRY_ID,
+            f"Can't link issue to config subentry {SUBENTRY_ID} without a config entry",
+            id="subentry_without_entry",
+        ),
+        pytest.param(
+            "known_entry",
+            "unknown_subentry",
+            "Can't link issue to unknown config subentry unknown_subentry of config"
+            " entry known_entry",
+            id="unknown_subentry",
+        ),
+    ],
+)
 async def test_create_issue_unknown_config_entry(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config_entry_id: str | None,
+    config_subentry_id: str | None,
+    message: str,
 ) -> None:
-    """Test linking an issue to an unknown config entry raises."""
-    with pytest.raises(
-        HomeAssistantError,
-        match="Can't link issue to unknown config entry unknown_entry",
-    ):
+    """Test linking an issue to an unknown config entry or subentry raises."""
+    _entry_with_subentries(SUBENTRY_ID).add_to_hass(hass)
+    MockConfigEntry(domain="test", entry_id="known_entry").add_to_hass(hass)
+    with pytest.raises(HomeAssistantError, match=re.escape(message)):
         ir.async_create_issue(
             hass,
             "test",
             "issue_1",
-            config_entry_id="unknown_entry",
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key="abc_123",
@@ -591,6 +729,55 @@ async def test_remove_config_entry_deletes_issues(
     ]
 
 
+async def test_remove_config_subentry_deletes_issues(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test removing a config subentry deletes its issues and only its issues."""
+    entry = _entry_with_subentries(SUBENTRY_ID, "subentry_2")
+    entry.add_to_hass(hass)
+    # Same subentry id in another entry, its issues must be kept
+    other_entry = _entry_with_subentries(SUBENTRY_ID)
+    other_entry.add_to_hass(hass)
+
+    for issue_id, config_entry_id, config_subentry_id in (
+        ("active", entry.entry_id, SUBENTRY_ID),
+        ("inactive", entry.entry_id, SUBENTRY_ID),
+        ("other_subentry", entry.entry_id, "subentry_2"),
+        ("no_subentry", entry.entry_id, None),
+        ("other_entry", other_entry.entry_id, SUBENTRY_ID),
+        ("no_entry", None, None),
+    ):
+        ir.async_create_issue(
+            hass,
+            "other_domain",
+            issue_id,
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="abc_123",
+        )
+    # Simulate an issue loaded from storage, which is inactive until re-created
+    issue_registry.issues[("other_domain", "inactive")] = dataclasses.replace(
+        issue_registry.issues[("other_domain", "inactive")], active=False
+    )
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    assert hass.config_entries.async_remove_subentry(entry, SUBENTRY_ID)
+    await hass.async_block_till_done()
+
+    assert set(issue_registry.issues) == {
+        ("other_domain", "other_subentry"),
+        ("other_domain", "no_subentry"),
+        ("other_domain", "other_entry"),
+        ("other_domain", "no_entry"),
+    }
+    assert [event.data for event in events] == [
+        {"action": "remove", "domain": "other_domain", "issue_id": "active"},
+        {"action": "remove", "domain": "other_domain", "issue_id": "inactive"},
+    ]
+
+
 async def test_disable_config_entry_keeps_issues(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
@@ -619,13 +806,18 @@ async def test_disable_config_entry_keeps_issues(
 async def test_load_removes_issues_of_unknown_config_entries(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test issues linked to config entries that no longer exist are removed."""
-    entry = MockConfigEntry(domain="test")
+    """Test issues linked to config (sub)entries that no longer exist are removed."""
+    entry = _entry_with_subentries(SUBENTRY_ID)
     entry.add_to_hass(hass)
 
-    def _inactive(issue_id: str, config_entry_id: str | None) -> dict[str, Any]:
+    def _inactive(
+        issue_id: str,
+        config_entry_id: str | None,
+        config_subentry_id: str | None = None,
+    ) -> dict[str, Any]:
         return {
             "config_entry_id": config_entry_id,
+            "config_subentry_id": config_subentry_id,
             "created": "2022-07-19T09:41:13.746514+00:00",
             "dismissed_version": None,
             "domain": "test",
@@ -633,8 +825,12 @@ async def test_load_removes_issues_of_unknown_config_entries(
             "issue_id": issue_id,
         }
 
-    def _persistent(issue_id: str, config_entry_id: str | None) -> dict[str, Any]:
-        return _inactive(issue_id, config_entry_id) | {
+    def _persistent(
+        issue_id: str,
+        config_entry_id: str | None,
+        config_subentry_id: str | None = None,
+    ) -> dict[str, Any]:
+        return _inactive(issue_id, config_entry_id, config_subentry_id) | {
             "breaks_in_ha_version": None,
             "data": None,
             "is_fixable": False,
@@ -649,6 +845,8 @@ async def test_load_removes_issues_of_unknown_config_entries(
     kept = [
         _inactive("inactive_known", entry.entry_id),
         _persistent("persistent_known", entry.entry_id),
+        _inactive("inactive_known_subentry", entry.entry_id, SUBENTRY_ID),
+        _persistent("persistent_known_subentry", entry.entry_id, SUBENTRY_ID),
         _inactive("inactive_no_entry", None),
         _persistent("persistent_no_entry", None),
     ]
@@ -660,6 +858,8 @@ async def test_load_removes_issues_of_unknown_config_entries(
                 *kept,
                 _inactive("inactive_unknown", "unknown_entry"),
                 _persistent("persistent_unknown", "unknown_entry"),
+                _inactive("inactive_unknown_subentry", entry.entry_id, "unknown"),
+                _persistent("persistent_unknown_subentry", entry.entry_id, "unknown"),
             ]
         },
     }
@@ -689,6 +889,7 @@ async def test_load_waits_for_config_entries(
     def _stored_issue(issue_id: str, config_entry_id: str) -> dict[str, Any]:
         return {
             "config_entry_id": config_entry_id,
+            "config_subentry_id": None,
             "created": "2022-07-19T09:41:13.746514+00:00",
             "dismissed_version": None,
             "domain": "test",
@@ -989,6 +1190,7 @@ async def test_refresh_issues_inactive(
             "issues": [
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created": "2022-07-19T09:41:13.746514+00:00",
                     "dismissed_version": "2022.7.0.dev0",
                     "domain": "test",
@@ -1074,6 +1276,7 @@ async def test_refresh_issues_config_entry(
             "issues": [
                 {
                     "config_entry_id": config_entry_id,
+                    "config_subentry_id": None,
                     "created": "2022-07-19T09:41:13.746514+00:00",
                     "dismissed_version": "2022.7.0.dev0",
                     "domain": "test",

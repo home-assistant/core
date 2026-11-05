@@ -28,10 +28,6 @@
       "description": "You do not have a connection to Home Assistant Cloud. Check your network.",
       "title": "No connection"
     },
-    "deprecated_tts_platform_config": {
-      "description": "The whole `platform: cloud` entry under the `tts:` section in configuration.yaml is deprecated and should be removed. You can use the UI to change settings for the Cloud text-to-speech platform. Please adjust your configuration.yaml and restart Home Assistant to fix this issue.",
-      "title": "The Cloud text-to-speech platform configuration is deprecated"
-    },
     "legacy_subscription": {
       "fix_flow": {
         "abort": {

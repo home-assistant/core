@@ -13,7 +13,7 @@ from syrupy.filters import paths
 from homeassistant.components.sonos.const import DOMAIN
 from homeassistant.components.sonos.diagnostics import TO_REDACT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.device_registry import DeviceEntryDisabler, DeviceRegistry
 
 
 async def test_diagnostics_config_entry(
@@ -64,6 +64,29 @@ async def test_diagnostics_device(
             "sonos_group_entities",
         )
     )
+
+
+async def test_diagnostics_disabled_device(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: DeviceRegistry,
+    async_autosetup_sonos,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test diagnostics for a disabled device without subscriptions."""
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "RINCON_test"), config_entry.entry_id
+    )
+    assert device_entry is not None
+
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+
+    assert result["discovered"]["RINCON_test"]["subscription_address"] is None
 
 
 @pytest.mark.parametrize("key", sorted(TO_REDACT))

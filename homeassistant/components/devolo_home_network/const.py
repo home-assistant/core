@@ -10,7 +10,6 @@ from devolo_plc_api.device_api import (
 )
 
 DOMAIN = "devolo_home_network"
-PRODUCT = "product"
 SERIAL_NUMBER = "serial_number"
 TITLE = "title"
 

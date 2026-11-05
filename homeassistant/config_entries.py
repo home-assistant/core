@@ -2857,11 +2857,13 @@ class ConfigEntries:
         if removed_subentry_ids:
             dev_reg = dr.async_get(self.hass)
             ent_reg = er.async_get(self.hass)
+            issue_reg = ir.async_get(self.hass)
             for subentry_id in removed_subentry_ids:
                 dev_reg.async_clear_config_subentry(
                     entry.entry_id, subentry_id, entry.domain
                 )
                 ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
+                issue_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
 
         self._async_save_and_notify(entry)
         return True
@@ -3362,8 +3364,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
             if entry.update_listeners:
                 report_usage(
                     "has an update listener and should use it for scheduling a reload",
-                    core_behavior=ReportBehavior.LOG,
-                    breaks_in_ha_version="2026.12.0",
+                    core_integration_behavior=ReportBehavior.ERROR,
+                    custom_integration_behavior=ReportBehavior.LOG,
                     integration_domain=self.handler,
                 )
         elif (
@@ -3787,8 +3789,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
             if entry.update_listeners:
                 report_usage(
                     "has an update listener and should use it for scheduling a reload",
-                    core_behavior=ReportBehavior.LOG,
-                    breaks_in_ha_version="2026.12.0",
+                    core_integration_behavior=ReportBehavior.ERROR,
+                    custom_integration_behavior=ReportBehavior.LOG,
                     integration_domain=self.handler,
                 )
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
