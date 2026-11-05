@@ -180,3 +180,15 @@ async def test_async_update_replies(
 
     assert ping.is_alive is True
     assert ping.data == expected
+
+
+async def test_async_ping_subprocess_uses_c_locale(hass: HomeAssistant) -> None:
+    """Test the ping binary runs in the C locale so its output can be parsed."""
+    ping = PingDataSubProcess(hass, host="10.10.10.10", count=3, privileged=False)
+    with patch(
+        "asyncio.create_subprocess_exec",
+        return_value=MockCompletedSubprocess(b"", b"", 1),
+    ) as mock_exec:
+        await ping.async_update()
+
+    assert mock_exec.call_args.kwargs["env"]["LC_ALL"] == "C"
