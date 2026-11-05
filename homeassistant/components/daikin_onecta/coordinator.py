@@ -112,7 +112,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         if remaining <= timedelta(0):
             self._polling_backoff_until = None
             return None
-        return remaining
+        return timedelta(seconds=ceil(remaining.total_seconds()))
 
     async def async_execute_command(
         self, command: Callable[[OnectaClient], Awaitable[None]]

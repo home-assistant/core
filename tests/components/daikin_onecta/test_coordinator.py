@@ -505,6 +505,17 @@ class TestOnectaDataUpdateCoordinator:
         assert exc_info.value.translation_key == "rate_limit_exceeded"
         assert coordinator.update_interval == initial_interval
 
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
+    def test_polling_backoff_remaining_rounds_up_fractional_seconds(
+        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
+        """Round up remaining backoff so scheduled refreshes aren't early."""
+        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
+        mock_utcnow.return_value = now
+        coordinator._polling_backoff_until = now + timedelta(milliseconds=500)
+
+        assert coordinator._polling_backoff_remaining() == timedelta(seconds=1)
+
     async def test_manual_update_polls_before_get_retry_after_expires(
         self,
         hass: HomeAssistant,
