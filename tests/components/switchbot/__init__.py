@@ -31,8 +31,8 @@ USER_INPUT_INVALID = {
 }
 
 
-def patch_async_setup_entry(return_value=True):
-    """Patch async setup entry to return True."""
+def patch_async_setup_entry(return_value=None):
+    """Patch async setup entry to return None."""
     return patch(
         "homeassistant.components.switchbot.async_setup_entry",
         return_value=return_value,
@@ -395,6 +395,25 @@ WOCURTAIN3_SERVICE_INFO = BluetoothServiceInfoBleak(
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
     device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoCurtain3"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+# As heard by a passive scanner, which never receives the scan response.
+WOCURTAIN3_PASSIVE_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="AA:BB:CC:DD:EE:FF",
+    address="AA:BB:CC:DD:EE:FF",
+    manufacturer_data={2409: b"\xaa\xbb\xcc\xdd\xee\xff\x07\x03S\x11\x04\x01d"},
+    service_data={},
+    service_uuids=[],
+    rssi=-50,
+    source="passive_proxy",
+    advertisement=generate_advertisement_data(
+        manufacturer_data={2409: b"\xaa\xbb\xcc\xdd\xee\xff\x07\x03S\x11\x04\x01d"},
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", None),
     time=0,
     connectable=True,
     tx_power=-127,

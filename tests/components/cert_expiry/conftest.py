@@ -17,7 +17,7 @@ from pytest_homeassistant.patch_time import ha_datetime_to_fakedatetime
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.cert_expiry.async_setup_entry", return_value=True
+        "homeassistant.components.cert_expiry.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

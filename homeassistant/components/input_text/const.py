@@ -26,3 +26,16 @@ class InputTextEntityStateAttribute(StrEnum):
     """State attributes for input text entities."""
 
     EDITABLE = "editable"
+
+
+class InputTextService(StrEnum):
+    """Store keys for input text services."""
+
+    RELOAD = "reload"
+    SET_VALUE = "set_value"
+
+
+class InputTextServiceArgument(StrEnum):
+    """Store keys for input text service arguments."""
+
+    VALUE = "value"

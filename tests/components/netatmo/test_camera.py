@@ -264,7 +264,7 @@ async def test_service_set_person_away_invalid_person(
         )
     await hass.async_block_till_done()
 
-    assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
+    assert str(excinfo.value) == "Person(s) not registered: Batman"
 
 
 async def test_service_set_persons_home_invalid_person(
@@ -292,7 +292,7 @@ async def test_service_set_persons_home_invalid_person(
         )
     await hass.async_block_till_done()
 
-    assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
+    assert str(excinfo.value) == "Person(s) not registered: Batman"
 
 
 async def test_service_set_persons_home(
@@ -445,7 +445,7 @@ async def test_service_set_camera_light_invalid_type(
     await hass.async_block_till_done()
 
     mock_set_state.assert_not_called()
-    assert "NACamera <Hall> does not have a floodlight" in excinfo.value.args[0]
+    assert str(excinfo.value) == "NACamera <Hall> does not have a floodlight"
 
 
 @pytest.mark.parametrize(

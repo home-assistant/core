@@ -98,16 +98,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     _LOGGER.debug("Discovered %d devices on gateway %s", len(devices), gw_sn)
 
     dev_reg = dr.async_get(hass)
-    dev_reg.async_get_or_create_device(
+    dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, gw_sn)},
-            identifiers={(DOMAIN, gw_sn)},
-            manufacturer=MANUFACTURER,
-            name=gateway.name,
-            model="SR-GW-EDA",
-            serial_number=gw_sn,
-        ),
+        connections={(CONNECTION_NETWORK_MAC, gw_sn)},
+        identifiers={(DOMAIN, gw_sn)},
+        manufacturer=MANUFACTURER,
+        name=gateway.name,
+        model="SR-GW-EDA",
+        serial_number=gw_sn,
     )
     _remove_missing_devices(hass, entry, devices, (DOMAIN, gw_sn))
 

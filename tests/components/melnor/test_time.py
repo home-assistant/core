@@ -18,7 +18,7 @@ from .conftest import (
 async def test_schedule_start_time(hass: HomeAssistant) -> None:
     """Test the frequency schedule start time."""
 
-    now = dt_util.now()
+    now = dt_util.utcnow()
 
     entry = mock_config_entry(hass)
 

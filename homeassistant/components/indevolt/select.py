@@ -10,9 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IndevoltConfigEntry
 from .const import DOMAIN
-from .coordinator import IndevoltCoordinator
+from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 from .entity import IndevoltEntity
 
 PARALLEL_UPDATES = 0

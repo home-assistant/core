@@ -26,12 +26,10 @@ from homeassistant.components.homeassistant import (
     SERVICE_RELOAD_CUSTOM_TEMPLATES,
     SERVICE_SET_LOCATION,
 )
-from homeassistant.components.homeassistant.services import (
-    ATTR_ENTRY_ID,
-    ATTR_SAFE_MODE,
-)
+from homeassistant.components.homeassistant.const import HomeAssistantServiceArgument
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_EXCLUDE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     EVENT_CORE_CONFIG_UPDATE,
@@ -42,6 +40,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -62,7 +61,10 @@ async def test_turn_on(hass: HomeAssistant) -> None:
     await async_setup_component(hass, ha.DOMAIN, {})
     calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
     await hass.services.async_call(
-        ha.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "light.Ceiling"}, blocking=True
+        ha.DOMAIN,
+        SERVICE_TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "light.Ceiling"},
+        blocking=True,
     )
     assert len(calls) == 1
 
@@ -72,7 +74,10 @@ async def test_turn_off(hass: HomeAssistant) -> None:
     await async_setup_component(hass, ha.DOMAIN, {})
     calls = async_mock_service(hass, "light", SERVICE_TURN_OFF)
     await hass.services.async_call(
-        ha.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.Bowl"}, blocking=True
+        ha.DOMAIN,
+        SERVICE_TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "light.Bowl"},
+        blocking=True,
     )
     assert len(calls) == 1
 
@@ -82,7 +87,10 @@ async def test_toggle(hass: HomeAssistant) -> None:
     await async_setup_component(hass, ha.DOMAIN, {})
     calls = async_mock_service(hass, "light", SERVICE_TOGGLE)
     await hass.services.async_call(
-        ha.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "light.Bowl"}, blocking=True
+        ha.DOMAIN,
+        SERVICE_TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: "light.Bowl"},
+        blocking=True,
     )
     assert len(calls) == 1
 
@@ -272,7 +280,10 @@ async def test_setting_location(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_LOCATION,
-        {"latitude": 30, "longitude": 40},
+        {
+            HomeAssistantServiceArgument.LATITUDE: 30,
+            HomeAssistantServiceArgument.LONGITUDE: 40,
+        },
         blocking=True,
     )
     assert len(events) == 1
@@ -283,7 +294,11 @@ async def test_setting_location(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_LOCATION,
-        {"latitude": 30, "longitude": 40, "elevation": 50},
+        {
+            HomeAssistantServiceArgument.LATITUDE: 30,
+            HomeAssistantServiceArgument.LONGITUDE: 40,
+            HomeAssistantServiceArgument.ELEVATION: 50,
+        },
         blocking=True,
     )
     assert hass.config.latitude == 30
@@ -293,7 +308,11 @@ async def test_setting_location(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_LOCATION,
-        {"latitude": 30, "longitude": 40, "elevation": 0.6},
+        {
+            HomeAssistantServiceArgument.LATITUDE: 30,
+            HomeAssistantServiceArgument.LONGITUDE: 40,
+            HomeAssistantServiceArgument.ELEVATION: 0.6,
+        },
         blocking=True,
     )
     assert hass.config.latitude == 30
@@ -326,7 +345,10 @@ async def test_require_admin(
         await hass.services.async_call(
             ha.DOMAIN,
             SERVICE_SET_LOCATION,
-            {"latitude": 0, "longitude": 0},
+            {
+                HomeAssistantServiceArgument.LATITUDE: 0,
+                HomeAssistantServiceArgument.LONGITUDE: 0,
+            },
             context=ha.Context(user_id=hass_read_only_user.id),
             blocking=True,
         )
@@ -348,6 +370,54 @@ async def test_turn_on_off_toggle_schema(
                     context=ha.Context(user_id=hass_read_only_user.id),
                     blocking=True,
                 )
+
+
+async def test_turn_on_exclude(hass: HomeAssistant) -> None:
+    """Test turn_on skips entities matched by the exclude block."""
+    await async_setup_component(hass, DOMAIN, {})
+    calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
+
+    await hass.services.async_call(
+        ha.DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            CommonServiceArgument.ENTITY_ID: ["light.ceiling", "light.kitchen"],
+            CONF_EXCLUDE: {ATTR_ENTITY_ID: "light.kitchen"},
+        },
+        blocking=True,
+    )
+    assert len(calls) == 1
+    assert calls[0].data[ATTR_ENTITY_ID] == ["light.ceiling"]
+
+
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE])
+@pytest.mark.parametrize(
+    "exclude",
+    [
+        pytest.param("light.kitchen", id="string"),
+        pytest.param(["light.kitchen"], id="list"),
+        pytest.param({ATTR_ENTITY_ID: ENTITY_MATCH_ALL}, id="entity_id_all"),
+        pytest.param({CONF_EXCLUDE: {}}, id="nested_exclude"),
+    ],
+)
+async def test_turn_on_off_toggle_invalid_exclude(
+    hass: HomeAssistant, service: str, exclude: object
+) -> None:
+    """Test an invalid exclude is rejected before any entity is acted on."""
+    await async_setup_component(hass, DOMAIN, {})
+    calls = async_mock_service(hass, "light", service)
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            ha.DOMAIN,
+            service,
+            {
+                CommonServiceArgument.ENTITY_ID: ["light.ceiling", "light.kitchen"],
+                CONF_EXCLUDE: exclude,
+            },
+            blocking=True,
+        )
+    assert not calls
 
 
 async def test_not_allowing_recursion(
@@ -430,7 +500,7 @@ async def test_reload_config_entry_by_entry_id(
         await hass.services.async_call(
             DOMAIN,
             "reload_config_entry",
-            {ATTR_ENTRY_ID: "8955375327824e14ba89e4b29cc3ec9a"},
+            {HomeAssistantServiceArgument.ENTRY_ID: "8955375327824e14ba89e4b29cc3ec9a"},
             blocking=True,
         )
 
@@ -529,7 +599,11 @@ async def test_raises_when_config_is_invalid(
 
 @pytest.mark.parametrize(
     ("service_data", "safe_mode_enabled"),
-    [({}, False), ({ATTR_SAFE_MODE: False}, False), ({ATTR_SAFE_MODE: True}, True)],
+    [
+        ({}, False),
+        ({HomeAssistantServiceArgument.SAFE_MODE: False}, False),
+        ({HomeAssistantServiceArgument.SAFE_MODE: True}, True),
+    ],
 )
 async def test_restart_homeassistant(
     hass: HomeAssistant, service_data: dict, safe_mode_enabled: bool

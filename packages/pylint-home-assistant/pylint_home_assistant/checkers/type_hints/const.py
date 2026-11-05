@@ -100,6 +100,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             return_type="bool",
             has_async_counterpart=True,
             mandatory=True,
+            coroutine=False,
         ),
         TypeHintMatch(
             function_name="async_setup_entry",
@@ -107,8 +108,9 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
                 1: "ConfigEntry",
             },
-            return_type=["bool", "None"],
+            return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_remove_entry",
@@ -118,6 +120,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_unload_entry",
@@ -125,8 +128,9 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
                 1: "ConfigEntry",
             },
-            return_type=["bool", "None"],
+            return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_migrate_entry",
@@ -134,8 +138,9 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 0: "HomeAssistant",
                 1: "ConfigEntry",
             },
-            return_type=["bool", "None"],
+            return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_remove_config_entry_device",
@@ -146,6 +151,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="bool",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_reset_platform",
@@ -155,6 +161,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
     ],
     ANY_PLATFORM: [
@@ -169,6 +176,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             return_type=None,
             has_async_counterpart=True,
             mandatory=True,
+            coroutine=False,
         ),
         TypeHintMatch(
             function_name="async_setup_entry",
@@ -179,6 +187,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Module.APPLICATION_CREDENTIALS: [
@@ -191,6 +200,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="AbstractOAuth2Implementation",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_authorization_server",
@@ -199,6 +209,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="AuthorizationServer",
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Module.BACKUP: [
@@ -209,6 +220,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_post_backup",
@@ -217,6 +229,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Module.CAST: [
@@ -228,6 +241,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="list[BrowseMedia]",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_browse_media",
@@ -239,6 +253,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=["BrowseMedia", "BrowseMedia | None"],
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_play_media",
@@ -251,6 +266,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="bool",
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Module.CONFIG_FLOW: [
@@ -272,6 +288,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="ConfigType",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_call_action_from_config",
@@ -283,6 +300,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=None,
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_action_capabilities",
@@ -292,6 +310,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="dict[str, Schema]",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_actions",
@@ -301,6 +320,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Module.DEVICE_CONDITION: [
@@ -312,6 +332,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="ConfigType",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_condition_from_config",
@@ -321,6 +342,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="ConditionCheckerType",
             mandatory=True,
+            coroutine=False,
         ),
         TypeHintMatch(
             function_name="async_get_condition_capabilities",
@@ -330,6 +352,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="dict[str, Schema]",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_conditions",
@@ -339,6 +362,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Platform.DEVICE_TRACKER: [
@@ -352,6 +376,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="bool",
             mandatory=True,
+            coroutine=False,
         ),
         TypeHintMatch(
             function_name="async_setup_scanner",
@@ -363,6 +388,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="bool",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="get_scanner",
@@ -373,17 +399,19 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             return_type=["DeviceScanner", None],
             has_async_counterpart=True,
             mandatory=True,
+            coroutine=False,
         ),
     ],
     Module.DEVICE_TRIGGER: [
         TypeHintMatch(
-            function_name="async_validate_condition_config",
+            function_name="async_validate_trigger_config",
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigType",
             },
             return_type="ConfigType",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_attach_trigger",
@@ -395,6 +423,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="CALLBACK_TYPE",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_trigger_capabilities",
@@ -404,6 +433,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="dict[str, Schema]",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_triggers",
@@ -413,6 +443,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type=["list[dict[str, str]]", "list[dict[str, Any]]"],
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Module.DIAGNOSTICS: [
@@ -424,6 +455,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="Mapping[str, Any]",
             mandatory=True,
+            coroutine=True,
         ),
         TypeHintMatch(
             function_name="async_get_device_diagnostics",
@@ -434,6 +466,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             },
             return_type="Mapping[str, Any]",
             mandatory=True,
+            coroutine=True,
         ),
     ],
     Platform.NOTIFY: [
@@ -447,6 +480,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             return_type=["BaseNotificationService", None],
             has_async_counterpart=True,
             mandatory=True,
+            coroutine=False,
         ),
     ],
 }
@@ -603,7 +637,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="name",
-        return_type=["str", "UndefinedType", None],
+        return_type=["str", "Undefined", None],
     ),
     TypeHintMatch(
         function_name="state",

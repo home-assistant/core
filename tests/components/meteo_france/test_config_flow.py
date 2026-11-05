@@ -82,7 +82,7 @@ def mock_setup() -> Generator[None]:
     """Prevent setup."""
     with patch(
         "homeassistant.components.meteo_france.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

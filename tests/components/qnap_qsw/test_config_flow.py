@@ -37,7 +37,7 @@ def _patch_success() -> Generator[None]:
     with (
         patch(
             "homeassistant.components.qnap_qsw.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.qnap_qsw.QnapQswApi.get_live",
@@ -61,7 +61,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.qnap_qsw.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.qnap_qsw.QnapQswApi.get_live",
@@ -244,7 +244,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.qnap_qsw.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.qnap_qsw.QnapQswApi.get_live",

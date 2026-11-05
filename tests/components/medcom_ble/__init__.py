@@ -11,8 +11,8 @@ from pytest_homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 
 
-def patch_async_setup_entry(return_value=True):
-    """Patch async setup entry to return True."""
+def patch_async_setup_entry(return_value=None):
+    """Patch async setup entry to return None."""
     return patch(
         "homeassistant.components.medcom_ble.async_setup_entry",
         return_value=return_value,

@@ -4,6 +4,7 @@
   "categories": ["garden_plants"],
   "codeowners": ["@bachya"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/rainmachine",
   "homekit": {
     "models": ["Touch HD", "SPK5"]

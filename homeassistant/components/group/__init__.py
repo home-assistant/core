@@ -33,6 +33,8 @@ from .const import (
     REG_KEY,
     SERVICE_REMOVE,
     SERVICE_SET,
+    GroupService,
+    GroupServiceArgument,
 )
 from .entity import Group
 from .registry import async_setup as async_setup_registry
@@ -46,6 +48,8 @@ __all__ = [
     "SERVICE_REMOVE",
     "SERVICE_SET",
     "Group",
+    "GroupService",
+    "GroupServiceArgument",
     "expand_entity_ids",
     "get_entity_ids",
     "groups_with_entity",

@@ -183,7 +183,7 @@ WRONG_NOISE_PSK = "GP+ciK+nVfTQ/gcz6uOdS+oKEdJgesU+jeu8Ssj2how="
 @pytest.fixture(autouse=False)
 def mock_setup_entry():
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=None):
         yield
 
 
@@ -2587,7 +2587,7 @@ async def test_option_flow_allow_service_calls(
         CONF_SUBSCRIBE_LOGS: False,
     }
     with patch(
-        "homeassistant.components.esphome.async_setup_entry", return_value=True
+        "homeassistant.components.esphome.async_setup_entry", return_value=None
     ) as mock_reload:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -2623,7 +2623,7 @@ async def test_option_flow_subscribe_logs(
     }
 
     with patch(
-        "homeassistant.components.esphome.async_setup_entry", return_value=True
+        "homeassistant.components.esphome.async_setup_entry", return_value=None
     ) as mock_reload:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -2653,7 +2653,7 @@ async def test_option_flow_shows_saved_scanning_mode_when_proxy_unavailable(
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert CONF_BLUETOOTH_SCANNING_MODE in result["data_schema"].schema
-    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=None):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
@@ -2693,7 +2693,7 @@ async def test_option_flow_hides_bluetooth_scanning_mode_without_proxy(
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert CONF_BLUETOOTH_SCANNING_MODE not in result["data_schema"].schema
-    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=None):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_ALLOW_SERVICE_CALLS: False, CONF_SUBSCRIBE_LOGS: False},
@@ -2723,7 +2723,7 @@ async def test_option_flow_bluetooth_scanning_mode(
         CONF_SUBSCRIBE_LOGS: False,
         CONF_BLUETOOTH_SCANNING_MODE: DEFAULT_BLUETOOTH_SCANNING_MODE,
     }
-    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=None):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
