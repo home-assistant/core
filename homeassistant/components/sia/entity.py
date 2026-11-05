@@ -8,7 +8,6 @@ from typing import override
 from pysiaalarm import SIAEvent
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
@@ -28,6 +27,7 @@ from .const import (
     SIA_EVENT,
     SIA_HUB_ZONE,
 )
+from .hub import SIAConfigEntry
 from .utils import (
     get_attr_from_sia_event,
     get_unavailability_interval,
@@ -57,7 +57,7 @@ class SIABaseEntity(RestoreEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: SIAConfigEntry,
         account: str,
         zone: int,
         entity_description: SIAEntityDescription,
