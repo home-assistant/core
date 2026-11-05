@@ -161,7 +161,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         ]
         # Round to one digit because of floating point math
         self._attr_target_temperature_step = round(
-            static_info.visual_target_temperature_step, 1
+            static_info.visual_target_temperature_step, 3
         )
         self._attr_min_temp = static_info.visual_min_temperature
         self._attr_max_temp = static_info.visual_max_temperature

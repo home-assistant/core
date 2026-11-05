@@ -1171,7 +1171,7 @@ async def test_default_min_max_temp_use_native_unit(
             METRIC_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
             1.0,
-            0.555556,
+            0.556,
             id="metric-native-fahrenheit",
         ),
         pytest.param(
@@ -1194,6 +1194,13 @@ async def test_default_min_max_temp_use_native_unit(
             0.1,
             0.18,
             id="us-customary-native-celsius-no-float-noise",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.CELSIUS,
+            0.556,
+            1.0,
+            id="us-customary-native-celsius-one-fahrenheit",
         ),
         pytest.param(
             US_CUSTOMARY_SYSTEM,

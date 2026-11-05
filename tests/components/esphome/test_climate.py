@@ -32,6 +32,7 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_STEP,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
@@ -47,7 +48,11 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .conftest import MockGenericDeviceEntryType
 
@@ -986,3 +991,43 @@ async def test_climate_entity_fahrenheit_unit_fahrenheit_system(
     mock_client.climate_command.assert_called_once_with(
         key=1, target_temperature=86.0, device_id=0
     )
+
+
+@pytest.mark.parametrize(
+    ("unit_system", "device_step", "expected_step"),
+    [
+        (US_CUSTOMARY_SYSTEM, 0.556, 1.0),
+        (METRIC_SYSTEM, 0.25, 0.25),
+    ],
+)
+async def test_climate_entity_target_temperature_step(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    unit_system: UnitSystem,
+    device_step: float,
+    expected_step: float,
+) -> None:
+    """Test a device step keeps its precision and is shown in the system's unit."""
+    hass.config.units = unit_system
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            visual_target_temperature_step=device_step,
+            visual_current_temperature_step=device_step,
+            visual_min_temperature=10.0,
+            visual_max_temperature=30.0,
+            supported_modes=[ClimateMode.COOL],
+        )
+    ]
+    states = [ClimateState(key=1, mode=ClimateMode.COOL)]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("climate.test_my_climate")
+    assert state is not None
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == expected_step

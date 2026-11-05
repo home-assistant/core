@@ -170,9 +170,10 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 native_temperature_unit,
                 hass.config.units.temperature_unit,
             )
-            # Six significant digits drop float noise and keep steps as small as 0.001
+            # Three significant digits drop conversion noise (0.556 °C gives 1 °F)
+            # and keep steps as small as 0.001.
             data[ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP] = float(
-                f"{step:.6g}"
+                f"{step:.3g}"
             )
 
         if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:

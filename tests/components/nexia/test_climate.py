@@ -36,7 +36,7 @@ async def test_climate_zones(hass: HomeAssistant, patch_nexia_home: NexiaHome) -
         "supported_features": 415,
         "target_temp_high": 26.1,
         "target_temp_low": 17.2,
-        "target_temp_step": 0.555556,
+        "target_temp_step": 0.556,
         "temperature": None,
     }
     # Only test for a subset of attributes in case
@@ -68,7 +68,7 @@ async def test_climate_zones(hass: HomeAssistant, patch_nexia_home: NexiaHome) -
         "supported_features": 415,
         "target_temp_high": 26.1,
         "target_temp_low": 17.2,
-        "target_temp_step": 0.555556,
+        "target_temp_step": 0.556,
         "temperature": None,
     }
 

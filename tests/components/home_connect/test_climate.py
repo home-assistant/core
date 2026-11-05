@@ -734,7 +734,7 @@ async def test_set_preset_mode_raises_home_assistant_error_on_api_errors(
         (None, DEFAULT_MIN_TEMP, None, DEFAULT_MAX_TEMP, None, None, "°F", 20, 68.0),
         (16, 16, 30, 30, 1, 1, "°C", 20, 20.0),
         (15.5, 15.5, 25.5, 25.5, 0.5, 0.5, "°C", 20.5, 20.5),
-        (20, -6.7, 80, 26.7, 1, 0.555556, "°F", 20, 68.0),
+        (20, -6.7, 80, 26.7, 1, 0.556, "°F", 20, 68.0),
     ],
 )
 async def test_set_temperature_functionality(
