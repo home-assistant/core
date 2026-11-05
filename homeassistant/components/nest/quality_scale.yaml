@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: The integration does not register actions.
+  action-setup: done
   appropriate-polling:
     status: exempt
     comment: The integration does not poll.
@@ -19,7 +17,9 @@ rules:
     comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions:
+    status: todo
+    comment: The integration has a removal instructions section in the documentation, but it only briefly describes how to remove the Google Cloud project and the rest of the Pub/Sub infrastructure.
   docs-triggers: done
   entity-event-setup: done
   entity-unique-id: done
@@ -35,10 +35,12 @@ rules:
 
   # Silver
   action-exceptions: todo
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
-  entity-unavailable: todo
+  entity-unavailable:
+    status: todo
+    comment: The integration tracks and updates availability status, however it does not do so using the required methods.
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
@@ -49,20 +51,28 @@ rules:
   test-coverage: todo
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: todo
   discovery: todo
   docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
+  docs-examples:
+    status: todo
+    comment: The integration has examples in the documentation, but more could be added (e.g. automationexamples for each entity type, examples using device triggers, etc.).
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: todo
+    comment: The integration links to the Google Nest documentation for supported devices, but does not have a list of supported devices in the Home Assistant documentation or a specific section for them.
+  docs-supported-functions: done
+  docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices: done
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+  entity-category:
+    status: exempt
+    comment: The integration does not have any entities that are not primary entities.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration only exposes a few entities, and all are either relevant to the user or not noisy.
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
@@ -72,5 +82,7 @@ rules:
 
   # Platinum
   async-dependency: todo
-  inject-websession: todo
-  strict-typing: todo
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: The integration itself is strictly typed, but the SDM API library does not include a py.typed file or other strict typing signfier.
