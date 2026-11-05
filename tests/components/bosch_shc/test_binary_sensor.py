@@ -15,6 +15,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     climate_control_device,
+    motion_detector2_device,
     setup_integration,
     shutter_contact_device,
     smoke_detection_system_device,
@@ -288,3 +289,32 @@ async def test_climate_control_binary_sensors(
     device = device_registry.async_get(entry.device_id)
     assert device is not None
     assert device.name == "Living Room"
+
+
+@pytest.mark.parametrize(
+    ("device_kwargs", "entity_id", "expected"),
+    [
+        ({"occupied": True}, "binary_sensor.motion_detector_occupancy", STATE_ON),
+        ({}, "binary_sensor.motion_detector_occupancy", STATE_OFF),
+        ({"was_tampered": True}, "binary_sensor.motion_detector_tamper", STATE_ON),
+        ({}, "binary_sensor.motion_detector_tamper", STATE_OFF),
+    ],
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_motion_detector2_binary_sensors(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_kwargs: dict[str, bool],
+    entity_id: str,
+    expected: str,
+) -> None:
+    """A Motion Detector II exposes occupancy and tamper state."""
+    mock_session.device_helper.motion_detectors2 = [
+        motion_detector2_device(**device_kwargs)
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected
