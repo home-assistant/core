@@ -9,8 +9,7 @@ from .const import DOMAIN
 from .coordinator import (
     HomeyEnergyDongleConfigEntry,
     HomeyEnergyDongleCoordinator,
-    electricity_serial,
-    mbus_serial,
+    meters,
 )
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -51,20 +50,14 @@ async def async_remove_config_entry_device(
     entry: HomeyEnergyDongleConfigEntry,
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
-    """Allow removing M-Bus meters that are missing from the latest telegram.
+    """Allow removing meters that are missing from the latest telegram.
 
-    Wireless meters can drop out of a telegram for a while, so they are not
-    removed automatically.
+    Wireless meters can drop out of a telegram for a while, and a replaced
+    meter stays as a device, so neither is removed automatically.
     """
-    uid = entry.unique_id or entry.entry_id
-    telegram = (
-        entry.runtime_data.data if entry.state is ConfigEntryState.LOADED else None
-    )
-    present = {
-        entry.entry_id,
-        electricity_serial(entry.unique_id, entry.entry_id),
-        *(mbus_serial(uid, device) for device in getattr(telegram, "MBUS_DEVICES", [])),
-    }
+    present = {entry.entry_id}
+    if entry.state is ConfigEntryState.LOADED:
+        present.update(meters(entry.runtime_data.data, entry))
     return not any(
         identifier in present
         for domain, identifier in device_entry.identifiers

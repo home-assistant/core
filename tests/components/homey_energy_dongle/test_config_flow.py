@@ -12,7 +12,6 @@ from homey_energy_dongle_ws import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.homey_energy_dongle.config_flow import CONF_DONGLE_ID
 from homeassistant.components.homey_energy_dongle.const import (
     CONF_DSMR_VERSION,
     CONF_WS_PATH,
@@ -24,30 +23,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import EQUIPMENT_IDENTIFIER
+from . import DONGLE_ID, EQUIPMENT_IDENTIFIER
 from .conftest import TelegramQueue
 
 USER_INPUT = {CONF_HOST: "192.168.1.88"}
-
-
-def _with_crc(body: str) -> str:
-    """Append a CRC to a telegram body that already ends with ``!``."""
-    return f"{body}{TelegramParser.crc16(body):04X}\r\n"
-
-
-def _without_equipment_id(telegram: str) -> str:
-    """Return a DSMR 5 telegram that does not identify the meter."""
-    body = telegram.replace(f"0-0:96.1.1({EQUIPMENT_IDENTIFIER})\r\n", "")
-    return _with_crc(body[: body.rindex("!") + 1])
-
-
-def _with_equipment_id(telegram: str, identifier: str) -> str:
-    """Return a telegram that identifies a different meter."""
-    body = telegram.replace(
-        f"0-0:96.1.1({EQUIPMENT_IDENTIFIER})",
-        f"0-0:96.1.1({identifier})",
-    )
-    return _with_crc(body[: body.rindex("!") + 1])
 
 
 def _unknown_telegram() -> str:
@@ -60,14 +39,14 @@ def _unknown_telegram() -> str:
         "1-0:1.8.1(000004.426*kWh)\r\n"
         "!"
     )
-    return _with_crc(body)
+    return f"{body}{TelegramParser.crc16(body):04X}\r\n"
 
 
 DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.1.50"),
     ip_addresses=[ip_address("192.168.1.50")],
     hostname="energy.local.",
-    name="Homey Energy Dongle 37e4._energydongle._tcp.local.",
+    name=f"Homey Energy Dongle {DONGLE_ID}._energydongle._tcp.local.",
     port=80,
     properties={"p": "/ws", "v": "1.0"},
     type="_energydongle._tcp.local.",
@@ -81,7 +60,10 @@ async def test_user_flow(
     telegrams: TelegramQueue,
     telegram_data: str,
 ) -> None:
-    """Test manual setup detects DSMR 5, uses the meter's identifier and disconnects."""
+    """Test manual setup detects DSMR 5 and disconnects.
+
+    Without mDNS there is no dongle ID, so the entry is matched on host.
+    """
     telegrams.put_nowait(telegram_data)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -100,63 +82,9 @@ async def test_user_flow(
         CONF_WS_PATH: "/ws",
         CONF_DSMR_VERSION: "5",
     }
-    assert result["result"].unique_id == EQUIPMENT_IDENTIFIER
+    assert result["result"].unique_id is None
     # The dongle allows two connections, so the probe must release its own.
     mock_client.return_value.__aexit__.assert_awaited_once()
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_flow_without_equipment_identifier(
-    hass: HomeAssistant, telegrams: TelegramQueue, telegram_data: str
-) -> None:
-    """Test meters without an identifier create an entry without unique ID."""
-    telegrams.put_nowait(_without_equipment_id(telegram_data))
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=USER_INPUT
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id is None
-
-
-async def test_user_flow_without_equipment_identifier_known_host(
-    hass: HomeAssistant, telegrams: TelegramQueue, telegram_data: str
-) -> None:
-    """Test meters without an identifier are matched on host instead."""
-    MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.88"}).add_to_hass(hass)
-    telegrams.put_nowait(_without_equipment_id(telegram_data))
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=USER_INPUT
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_user_flow_identified_meter_on_unidentified_entry_host(
-    hass: HomeAssistant, telegrams: TelegramQueue, telegram_data: str
-) -> None:
-    """Test a meter that reports an identifier can't duplicate an entry without one.
-
-    This happens after reconfiguring an entry from a profile without identifier.
-    """
-    MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.88"}).add_to_hass(hass)
-    telegrams.put_nowait(telegram_data)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=USER_INPUT
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -203,18 +131,10 @@ async def test_user_flow_errors(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-@pytest.mark.parametrize(
-    ("version", "unique_id"),
-    [
-        pytest.param("5", EQUIPMENT_IDENTIFIER, id="dsmr5"),
-        pytest.param("5B", EQUIPMENT_IDENTIFIER, id="belgium"),
-        pytest.param("Q3D", "00000000", id="q3d"),
-    ],
-)
 async def test_user_flow_unknown_version(
-    hass: HomeAssistant, telegrams: TelegramQueue, version: str, unique_id: str
+    hass: HomeAssistant, telegrams: TelegramQueue
 ) -> None:
-    """Test an unrecognized telegram asks for the profile, which names the identifier."""
+    """Test an unrecognized telegram asks for the meter profile."""
     telegrams.put_nowait(_unknown_telegram())
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -226,11 +146,11 @@ async def test_user_flow_unknown_version(
     assert result["step_id"] == "dsmr_version"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_DSMR_VERSION: version}
+        result["flow_id"], user_input={CONF_DSMR_VERSION: "Q3D"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_DSMR_VERSION] == version
-    assert result["result"].unique_id == unique_id
+    assert result["data"][CONF_DSMR_VERSION] == "Q3D"
+    assert result["result"].unique_id is None
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -262,25 +182,24 @@ async def test_user_flow_invalid_checksum_asks_then_rejects_same_profile(
     assert result["data"][CONF_DSMR_VERSION] == "2.2"
 
 
-async def test_user_flow_already_configured(
+async def test_user_flow_known_host(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     telegrams: TelegramQueue,
     telegram_data: str,
 ) -> None:
-    """Test the same meter can't be added twice and its host is updated."""
+    """Test a dongle can't be added twice by its address."""
     mock_config_entry.add_to_hass(hass)
     telegrams.put_nowait(telegram_data)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={**USER_INPUT, CONF_HOST: "192.168.1.99"}
+        result["flow_id"], user_input=USER_INPUT
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == "192.168.1.99"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -312,25 +231,19 @@ async def test_zeroconf_flow(
         CONF_HOST: "192.168.1.50",
         CONF_PORT: 80,
         CONF_WS_PATH: "/ws",
-        CONF_DONGLE_ID: "37e4",
         CONF_DSMR_VERSION: "5",
     }
-    assert result["result"].unique_id == EQUIPMENT_IDENTIFIER
+    assert result["result"].unique_id == DONGLE_ID
     assert mock_client.call_args_list == [
         call("192.168.1.50", port=80, path="/ws", reconnect=False, dsmr_version=None),
     ]
 
 
-@pytest.mark.parametrize("dsmr_version", ["5B"])
 async def test_zeroconf_updates_host(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    telegrams: TelegramQueue,
-    telegram_data: str,
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test discovery of a configured meter on a new address updates the entry."""
+    """Test discovery of a configured dongle on a new address updates the entry."""
     mock_config_entry.add_to_hass(hass)
-    telegrams.put_nowait(telegram_data)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY
@@ -339,7 +252,40 @@ async def test_zeroconf_updates_host(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.50"
-    assert mock_config_entry.data[CONF_DSMR_VERSION] == "5B"
+    mock_client.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "expected_unique_id"),
+    [
+        pytest.param(None, DONGLE_ID, id="added_by_address"),
+        pytest.param("aaaa", "aaaa", id="other_dongle"),
+    ],
+)
+async def test_zeroconf_known_host(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    unique_id: str | None,
+    expected_unique_id: str,
+) -> None:
+    """Test discovery of a configured address aborts without connecting.
+
+    An entry added by address learns the dongle ID, so it can follow the
+    dongle to a new address.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=unique_id, data={CONF_HOST: "192.168.1.50"}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == expected_unique_id
+    mock_client.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_onboarding")
@@ -354,7 +300,7 @@ async def test_zeroconf_during_onboarding(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DSMR_VERSION] == "5"
-    assert result["result"].unique_id == EQUIPMENT_IDENTIFIER
+    assert result["result"].unique_id == DONGLE_ID
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -383,7 +329,7 @@ async def test_zeroconf_confirm_error(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DSMR_VERSION] == "5"
-    assert result["result"].unique_id == EQUIPMENT_IDENTIFIER
+    assert result["result"].unique_id == DONGLE_ID
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -407,10 +353,9 @@ async def test_zeroconf_unknown_version(
         CONF_HOST: "192.168.1.50",
         CONF_PORT: 80,
         CONF_WS_PATH: "/ws",
-        CONF_DONGLE_ID: "37e4",
         CONF_DSMR_VERSION: "5",
     }
-    assert result["result"].unique_id == EQUIPMENT_IDENTIFIER
+    assert result["result"].unique_id == DONGLE_ID
 
 
 async def test_zeroconf_confirm_unknown_version(
@@ -431,73 +376,6 @@ async def test_zeroconf_confirm_unknown_version(
     assert result["step_id"] == "dsmr_version"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-@pytest.mark.parametrize(
-    ("unique_id", "data"),
-    [
-        pytest.param(
-            EQUIPMENT_IDENTIFIER, {CONF_HOST: "192.168.1.50"}, id="known_host"
-        ),
-        pytest.param(
-            None,
-            {CONF_HOST: "192.168.1.88", CONF_DONGLE_ID: "37e4"},
-            id="unidentified_meter_new_host",
-        ),
-    ],
-)
-async def test_zeroconf_known_dongle(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    unique_id: str | None,
-    data: dict[str, str],
-) -> None:
-    """Test discovery of a configured dongle updates it without connecting.
-
-    Entries without unique ID can't be matched on the meter's identifier, so
-    the dongle ID lets them follow a new address.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=unique_id,
-        data={CONF_PORT: 80, CONF_WS_PATH: "/ws", CONF_DSMR_VERSION: "5S", **data},
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert entry.data[CONF_HOST] == "192.168.1.50"
-    assert entry.data[CONF_DONGLE_ID] == "37e4"
-    mock_client.assert_not_called()
-
-
-async def test_zeroconf_other_dongle_on_address_of_unidentified_entry(
-    hass: HomeAssistant, telegrams: TelegramQueue
-) -> None:
-    """Test a dongle on the old address of another dongle doesn't take its entry."""
-    data = {
-        CONF_HOST: "192.168.1.50",
-        CONF_PORT: 80,
-        CONF_WS_PATH: "/ws",
-        CONF_DONGLE_ID: "aaaa",
-        CONF_DSMR_VERSION: "5S",
-    }
-    entry = MockConfigEntry(domain=DOMAIN, data=data)
-    entry.add_to_hass(hass)
-    telegrams.put_nowait(ConnectionLostError("refused"))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_meter"
-    assert entry.data == data
-
-
 async def test_zeroconf_already_in_progress(
     hass: HomeAssistant, telegrams: TelegramQueue
 ) -> None:
@@ -514,48 +392,6 @@ async def test_zeroconf_already_in_progress(
     assert result["reason"] == "already_in_progress"
 
 
-async def test_zeroconf_during_user_flow(
-    hass: HomeAssistant, telegrams: TelegramQueue
-) -> None:
-    """Test discovery while a manual setup form is open."""
-    user_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert user_result["type"] is FlowResultType.FORM
-
-    telegrams.put_nowait(ConnectionLostError("refused"))
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_meter"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_zeroconf_without_equipment_identifier(
-    hass: HomeAssistant, telegrams: TelegramQueue, telegram_data: str
-) -> None:
-    """Test a discovered meter without identifier stays ignorable.
-
-    The entry itself has no unique ID, like a manually added one.
-    """
-    telegrams.put_nowait(_without_equipment_id(telegram_data))
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY
-    )
-    assert result["step_id"] == "zeroconf_confirm"
-    flow = hass.config_entries.flow.async_get(result["flow_id"])
-    assert flow["context"]["unique_id"] == "dongle_37e4"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id is None
-
-
 async def test_zeroconf_ignore_unreadable_dongle(
     hass: HomeAssistant, telegrams: TelegramQueue
 ) -> None:
@@ -565,15 +401,11 @@ async def test_zeroconf_ignore_unreadable_dongle(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY
     )
     assert result["step_id"] == "zeroconf_meter"
-    unique_id = hass.config_entries.flow.async_get(result["flow_id"])["context"][
-        "unique_id"
-    ]
-    assert unique_id == "dongle_37e4"
 
     await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IGNORE},
-        data={"unique_id": unique_id, "title": "Homey Energy Dongle (37e4)"},
+        data={"unique_id": DONGLE_ID, "title": "Homey Energy Dongle (37e4)"},
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY
@@ -590,10 +422,7 @@ async def test_reconfigure_flow(
     telegrams: TelegramQueue,
     telegram_data: str,
 ) -> None:
-    """Test the host and DSMR version can be changed after errors.
-
-    The new profile still has to report this meter's identifier.
-    """
+    """Test the host and DSMR version can be changed after errors."""
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -620,30 +449,8 @@ async def test_reconfigure_flow(
         CONF_WS_PATH: "/ws",
         CONF_DSMR_VERSION: "4",
     }
-
-
-async def test_reconfigure_other_meter(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    telegrams: TelegramQueue,
-    telegram_data: str,
-) -> None:
-    """Test reconfiguring to a dongle on another meter aborts."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    telegrams.put_nowait(_with_equipment_id(telegram_data, "1" * 32))
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: "192.168.1.99",
-            CONF_DSMR_VERSION: mock_config_entry.data[CONF_DSMR_VERSION],
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unique_id_mismatch"
-    assert mock_config_entry.data[CONF_HOST] == "192.168.1.88"
+    # Another dongle can answer on the new address; discovery tells which.
+    assert mock_config_entry.unique_id is None
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -657,10 +464,7 @@ async def test_reconfigure_rejects_unparsed_telegram(
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    user_input = {
-        CONF_HOST: mock_config_entry.data[CONF_HOST],
-        CONF_DSMR_VERSION: "5",
-    }
+    user_input = {CONF_HOST: mock_config_entry.data[CONF_HOST], CONF_DSMR_VERSION: "5"}
     telegrams.put_nowait(telegram_data.replace("!EFF0\r\n", "!0000\r\n"))
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
@@ -668,7 +472,6 @@ async def test_reconfigure_rejects_unparsed_telegram(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_dsmr_version"}
-    assert mock_config_entry.data[CONF_DSMR_VERSION] == "5"
 
     telegrams.put_nowait(telegram_data)
     result = await hass.config_entries.flow.async_configure(
@@ -676,90 +479,17 @@ async def test_reconfigure_rejects_unparsed_telegram(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.unique_id == DONGLE_ID
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reconfigure_without_equipment_identifier(
-    hass: HomeAssistant, telegrams: TelegramQueue, telegram_data: str
+async def test_reconfigure_to_host_in_use(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_client: MagicMock
 ) -> None:
-    """Test meters without an identifier can be reconfigured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.88",
-            CONF_PORT: 80,
-            CONF_WS_PATH: "/ws",
-            CONF_DSMR_VERSION: "5S",
-        },
-    )
-    entry.add_to_hass(hass)
-    result = await entry.start_reconfigure_flow(hass)
-
-    telegrams.put_nowait(_without_equipment_id(telegram_data))
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_HOST: "192.168.1.99", CONF_DSMR_VERSION: "5S"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert entry.data[CONF_HOST] == "192.168.1.99"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-@pytest.mark.parametrize(
-    ("unique_id", "old_version", "new_version"),
-    [
-        pytest.param(EQUIPMENT_IDENTIFIER, "5", "5EONHU", id="to_unidentified"),
-        pytest.param(None, "5EONHU", "5", id="from_unidentified"),
-    ],
-)
-async def test_reconfigure_profile_without_identifier(
-    hass: HomeAssistant,
-    telegrams: TelegramQueue,
-    telegram_data: str,
-    unique_id: str | None,
-    old_version: str,
-    new_version: str,
-) -> None:
-    """Test switching to or from a profile without identifier keeps the entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=unique_id,
-        data={
-            CONF_HOST: "192.168.1.88",
-            CONF_PORT: 80,
-            CONF_WS_PATH: "/ws",
-            CONF_DSMR_VERSION: old_version,
-        },
-    )
-    entry.add_to_hass(hass)
-    result = await entry.start_reconfigure_flow(hass)
-
-    telegrams.put_nowait(telegram_data)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_HOST: "192.168.1.88", CONF_DSMR_VERSION: new_version},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert entry.data[CONF_DSMR_VERSION] == new_version
-    assert entry.unique_id == unique_id
-
-
-async def test_reconfigure_to_host_of_unidentified_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    telegrams: TelegramQueue,
-    telegram_data: str,
-) -> None:
-    """Test an entry can't move to the dongle an entry without unique ID reads."""
+    """Test an entry can't move to the address of another entry's dongle."""
     mock_config_entry.add_to_hass(hass)
     MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.99"}).add_to_hass(hass)
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    telegrams.put_nowait(telegram_data)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -771,62 +501,4 @@ async def test_reconfigure_to_host_of_unidentified_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.88"
-
-
-async def test_reconfigure_identifies_meter_of_other_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    telegrams: TelegramQueue,
-    telegram_data: str,
-) -> None:
-    """Test an unidentified entry can't switch to a meter another entry reads."""
-    mock_config_entry.add_to_hass(hass)
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.99",
-            CONF_PORT: 80,
-            CONF_WS_PATH: "/ws",
-            CONF_DSMR_VERSION: "5EONHU",
-        },
-    )
-    entry.add_to_hass(hass)
-    result = await entry.start_reconfigure_flow(hass)
-
-    telegrams.put_nowait(telegram_data)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_HOST: "192.168.1.99", CONF_DSMR_VERSION: "5"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert entry.data[CONF_DSMR_VERSION] == "5EONHU"
-
-
-async def test_reconfigure_without_equipment_identifier_host_in_use(
-    hass: HomeAssistant, telegrams: TelegramQueue, telegram_data: str
-) -> None:
-    """Test a meter without an identifier can't move to another entry's host."""
-    data = {
-        CONF_HOST: "192.168.1.88",
-        CONF_PORT: 80,
-        CONF_WS_PATH: "/ws",
-        CONF_DSMR_VERSION: "5S",
-    }
-    entry = MockConfigEntry(domain=DOMAIN, data=data)
-    entry.add_to_hass(hass)
-    MockConfigEntry(
-        domain=DOMAIN, data={**data, CONF_HOST: "192.168.1.99"}
-    ).add_to_hass(hass)
-    result = await entry.start_reconfigure_flow(hass)
-
-    telegrams.put_nowait(_without_equipment_id(telegram_data))
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_HOST: "192.168.1.99", CONF_DSMR_VERSION: "5S"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert entry.data[CONF_HOST] == "192.168.1.88"
+    mock_client.assert_not_called()

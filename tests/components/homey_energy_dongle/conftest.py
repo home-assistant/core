@@ -16,7 +16,7 @@ from homeassistant.components.homey_energy_dongle.const import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from . import EQUIPMENT_IDENTIFIER, TELEGRAM_V5, parse
+from . import DONGLE_ID, TELEGRAM_V5, parse
 
 type TelegramQueue = asyncio.Queue[Telegram | str | Exception]
 
@@ -105,7 +105,7 @@ def mock_config_entry(dsmr_version: str) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Homey Energy Dongle",
-        unique_id=EQUIPMENT_IDENTIFIER,
+        unique_id=DONGLE_ID,
         data={
             CONF_HOST: "192.168.1.88",
             CONF_PORT: 80,

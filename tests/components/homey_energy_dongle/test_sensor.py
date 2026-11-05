@@ -28,6 +28,7 @@ from . import (
     EQUIPMENT_IDENTIFIER,
     GAS_METER_IDENTIFIER,
     TELEGRAM_MBUS,
+    TELEGRAM_OTHER_METER,
     TELEGRAM_Q3D,
     TELEGRAM_V2_2,
     TELEGRAM_V5,
@@ -141,15 +142,32 @@ async def test_mbus_meter_recreated_after_removal(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_mbus_meter_replaced_on_same_channel(
-    hass: HomeAssistant, telegrams: TelegramQueue
+@pytest.mark.parametrize(
+    ("replacement", "entity_id", "state"),
+    [
+        pytest.param(
+            TELEGRAM_V5.replace(GAS_METER_IDENTIFIER, "3131313131"),
+            GAS_ENTITY_ID,
+            "0.107",
+            id="mbus_same_channel",
+        ),
+        # Also what a different dongle on the old address of this one looks like.
+        pytest.param(TELEGRAM_OTHER_METER, POWER_ENTITY_ID, "244", id="electricity"),
+    ],
+)
+async def test_meter_replaced(
+    hass: HomeAssistant,
+    telegrams: TelegramQueue,
+    replacement: str,
+    entity_id: str,
+    state: str,
 ) -> None:
-    """Test a replacement meter on the same channel does not feed the old sensor."""
-    telegrams.put_nowait(parse(TELEGRAM_V5.replace(GAS_METER_IDENTIFIER, "3131313131")))
+    """Test a replacement meter gets its own sensors and never feeds the old ones."""
+    telegrams.put_nowait(parse(replacement))
     await hass.async_block_till_done()
 
-    assert hass.states.get(GAS_ENTITY_ID).state == STATE_UNKNOWN
-    assert hass.states.get(f"{GAS_ENTITY_ID}_2").state == "0.107"
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    assert hass.states.get(f"{entity_id}_2").state == state
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -216,6 +234,25 @@ async def test_belgian_demand(
 async def test_legacy_gas_meter(hass: HomeAssistant, state: str) -> None:
     """Test DSMR 4 and 2.2 gas meters get a meter reading sensor."""
     assert hass.states.get(GAS_ENTITY_ID).state == state
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("dsmr_version", "telegram_data"),
+    [pytest.param("2.2", TELEGRAM_V2_2, id="dsmr2.2")],
+)
+async def test_identifier_without_checksum(
+    hass: HomeAssistant, telegrams: TelegramQueue
+) -> None:
+    """Test an identifier a checksum doesn't protect can't create another meter."""
+    corrupted = TELEGRAM_V2_2.replace(EQUIPMENT_IDENTIFIER, "4B38" + "0" * 28).replace(
+        "0001.01*kW", "0002.02*kW"
+    )
+    telegrams.put_nowait(parse(corrupted, "2.2"))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(POWER_ENTITY_ID).state == "2020"
+    assert hass.states.get(f"{POWER_ENTITY_ID}_2") is None
 
 
 @pytest.mark.usefixtures("init_integration")

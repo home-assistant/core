@@ -4,8 +4,11 @@ from dsmr_parser.objects import Telegram
 from homey_energy_dongle_ws import parse_telegram
 from homey_energy_dongle_ws.parser import TELEGRAM_SPECIFICATIONS
 
+DONGLE_ID = "37e4"
 EQUIPMENT_IDENTIFIER = "4B384547303034303436333935353037"
 GAS_METER_IDENTIFIER = "3232323241424344313233343536373839"
+EON_HU_IDENTIFIER = "53414733303832323030303032313630"
+EON_HU_SERIAL_NUMBER = "383930303832323030303032313630"
 
 
 def parse(telegram: str, dsmr_version: str = "5") -> Telegram:
@@ -55,6 +58,22 @@ TELEGRAM_V5 = (
     f"0-1:96.1.0({GAS_METER_IDENTIFIER})\r\n"
     "0-1:24.2.1(170102161005W)(00000.107*m3)\r\n"
     "!EFF0\r\n"
+)
+
+# The same dongle address now reads another electricity meter.
+TELEGRAM_OTHER_METER = TELEGRAM_V5.replace(EQUIPMENT_IDENTIFIER, "1" * 32)
+
+# E.ON Hungary telegram, which names the meter's identifiers differently.
+TELEGRAM_EON_HU = (
+    "/SAG5SAG-METER\r\n"
+    "\r\n"
+    "0-0:1.0.0(230724150730S)\r\n"
+    f"0-0:42.0.0({EON_HU_IDENTIFIER})\r\n"
+    f"0-0:96.1.0({EON_HU_SERIAL_NUMBER})\r\n"
+    "1-0:1.8.0(000173.640*kWh)\r\n"
+    "1-0:1.7.0(00.000*kW)\r\n"
+    "1-0:2.7.0(02.601*kW)\r\n"
+    "!0000\r\n"
 )
 
 # DSMR 2.2 telegram, which reports the gas meter in the older profile format.

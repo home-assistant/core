@@ -23,7 +23,16 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 
-from . import EQUIPMENT_IDENTIFIER, GAS_METER_IDENTIFIER, TELEGRAM_MBUS, TELEGRAM_V5
+from . import (
+    EON_HU_IDENTIFIER,
+    EQUIPMENT_IDENTIFIER,
+    GAS_METER_IDENTIFIER,
+    TELEGRAM_EON_HU,
+    TELEGRAM_MBUS,
+    TELEGRAM_OTHER_METER,
+    TELEGRAM_V5,
+    parse,
+)
 from .conftest import TelegramQueue
 
 REPAIR_ISSUES = [
@@ -132,9 +141,15 @@ async def test_repair_issue_cleared(
 @pytest.mark.parametrize(
     ("identifier", "pushed", "removable"),
     [
-        pytest.param(GAS_METER_IDENTIFIER, [], False, id="meter_present"),
-        pytest.param(GAS_METER_IDENTIFIER, [Telegram()], True, id="meter_missing"),
-        pytest.param(EQUIPMENT_IDENTIFIER, [Telegram()], False, id="electricity_meter"),
+        pytest.param(GAS_METER_IDENTIFIER, [], False, id="mbus_present"),
+        pytest.param(GAS_METER_IDENTIFIER, [Telegram()], True, id="mbus_missing"),
+        pytest.param(EQUIPMENT_IDENTIFIER, [], False, id="electricity_present"),
+        pytest.param(
+            EQUIPMENT_IDENTIFIER,
+            [parse(TELEGRAM_OTHER_METER)],
+            True,
+            id="electricity_replaced",
+        ),
     ],
 )
 async def test_remove_device(
@@ -146,7 +161,7 @@ async def test_remove_device(
     pushed: list[Telegram],
     removable: bool,
 ) -> None:
-    """Test only M-Bus meters missing from the telegram can be removed."""
+    """Test only meters missing from the telegram can be removed."""
     for telegram in pushed:
         telegrams.put_nowait(telegram)
     await hass.async_block_till_done()
@@ -162,10 +177,10 @@ async def test_remove_device(
 
 
 @pytest.mark.parametrize(
-    ("identifier", "removable"),
+    "identifier",
     [
-        pytest.param(GAS_METER_IDENTIFIER, True, id="mbus_meter"),
-        pytest.param(EQUIPMENT_IDENTIFIER, False, id="electricity_meter"),
+        pytest.param(GAS_METER_IDENTIFIER, id="mbus_meter"),
+        pytest.param(EQUIPMENT_IDENTIFIER, id="electricity_meter"),
     ],
 )
 async def test_remove_device_unloaded(
@@ -173,37 +188,43 @@ async def test_remove_device_unloaded(
     device_registry: dr.DeviceRegistry,
     init_integration: MockConfigEntry,
     identifier: str,
-    removable: bool,
 ) -> None:
-    """Test M-Bus meters can be removed while the entry is unloaded."""
+    """Test meters can be removed while the entry is unloaded."""
     await hass.config_entries.async_unload(init_integration.entry_id)
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, identifier), init_integration.entry_id
     )
     assert device
 
-    assert (
-        await async_remove_config_entry_device(hass, init_integration, device)
-        is removable
-    )
+    assert await async_remove_config_entry_device(hass, init_integration, device)
 
 
 @pytest.mark.parametrize(
-    ("telegram_data", "identifier", "serial_number"),
+    ("dsmr_version", "telegram_data", "identifier", "serial_number"),
     [
         pytest.param(
+            "5",
             TELEGRAM_V5,
             EQUIPMENT_IDENTIFIER,
             EQUIPMENT_IDENTIFIER,
             id="electricity",
         ),
         pytest.param(
+            "5EONHU",
+            TELEGRAM_EON_HU,
+            EON_HU_IDENTIFIER,
+            EON_HU_IDENTIFIER,
+            id="electricity_hungary",
+        ),
+        pytest.param(
+            "5",
             TELEGRAM_V5,
             GAS_METER_IDENTIFIER,
             GAS_METER_IDENTIFIER,
             id="gas",
         ),
         pytest.param(
+            "5",
             TELEGRAM_MBUS,
             f"{EQUIPMENT_IDENTIFIER}_mbus3",
             None,

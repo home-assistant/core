@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 from contextlib import aclosing
 import logging
-from typing import TYPE_CHECKING, Any, Self, override
+from typing import TYPE_CHECKING, Any, override
 
 from homey_energy_dongle_ws import (
     DSMR_VERSIONS,
@@ -20,13 +20,8 @@ from homey_energy_dongle_ws.parser import TELEGRAM_SPECIFICATIONS
 import probatio
 
 from homeassistant.components import onboarding
-from homeassistant.config_entries import (
-    SOURCE_RECONFIGURE,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -41,13 +36,10 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_WS_PATH,
     DOMAIN,
-    IDENTIFIER_FIELDS,
 )
 from .coordinator import TELEGRAM_TIMEOUT, create_client
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DONGLE_ID = "dongle_id"
 
 # Values such as "2.2" are not valid translation keys.
 _DSMR_VERSION_LABELS = {
@@ -79,7 +71,12 @@ STEP_RECONFIGURE_SCHEMA = probatio.Schema(
 
 
 class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Homey Energy Dongle."""
+    """Handle a config flow for Homey Energy Dongle.
+
+    An entry is identified by the dongle ID it advertises over mDNS. Dongles
+    added by address have no unique ID until they are discovered. The meters
+    are identified per telegram by the sensors, not by the entry.
+    """
 
     VERSION = 1
 
@@ -87,7 +84,6 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
     _title = "Homey Energy Dongle"
     _telegram: str | None = None
     _detected_version: str | None = None
-    _meter_identified = False
 
     async def _async_read_telegram(self, data: Mapping[str, Any]) -> str | None:
         """Store one raw telegram. Return an error key on failure."""
@@ -112,67 +108,24 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         self._detected_version = detect_dsmr_version(self._telegram)
         return None
 
-    def _abort_if_unidentified_entry_on_host(self, data: Mapping[str, Any]) -> None:
-        """Abort when an entry without unique ID already reads this dongle.
-
-        Those entries can only be recognized by their host, also when this meter
-        does report an identifier.
-        """
-        if any(
-            entry.unique_id is None
-            and entry.data[CONF_HOST] == data[CONF_HOST]
-            and entry.entry_id != self.context.get("entry_id")
-            for entry in self._async_current_entries(include_ignore=False)
-        ):
-            raise AbortFlow("already_configured")
-
-    async def _async_identify(
-        self, data: Mapping[str, Any], version: str
-    ) -> str | None:
-        """Parse the cached telegram with ``version`` and set the unique id.
-
-        Swedish and Hungarian meters don't send an identifier, so those are
-        matched on host.
-        """
+    def _version_error(self, version: str) -> str | None:
+        """Return an error key when the cached telegram doesn't parse with ``version``."""
         if TYPE_CHECKING:
             assert self._telegram is not None
         try:
-            telegram = parse_telegram(
-                self._telegram,
-                telegram_specification=TELEGRAM_SPECIFICATIONS[version],
+            parse_telegram(
+                self._telegram, telegram_specification=TELEGRAM_SPECIFICATIONS[version]
             )
         except TelegramParseError:
             return "invalid_dsmr_version"
-        identifier = next(
-            (
-                obj
-                for field in IDENTIFIER_FIELDS
-                if (obj := getattr(telegram, field, None)) is not None
-            ),
-            None,
-        )
-        self._meter_identified = identifier is not None
-        if identifier is None:
-            self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
-            return None
-        await self.async_set_unique_id(str(identifier.value))
-        if self.source != SOURCE_RECONFIGURE:
-            self._abort_if_unique_id_configured(updates=dict(data))
-        elif self._get_reconfigure_entry().unique_id:
-            self._abort_if_unique_id_mismatch()
-            self._abort_if_unidentified_entry_on_host(data)
-        else:
-            # The entry's profile had no identifier, so there is none to compare.
-            self._abort_if_unique_id_configured()
-            self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
         return None
 
     async def _async_probe(self, data: Mapping[str, Any]) -> str | None:
-        """Read one telegram and identify the meter when its profile is known."""
+        """Read one telegram and keep the detected profile if it parses."""
         if error := await self._async_read_telegram(data):
             return error
-        if self._detected_version is not None and await self._async_identify(
-            data, self._detected_version
+        if self._detected_version is not None and self._version_error(
+            self._detected_version
         ):
             # The profile matched, but this frame does not parse. Ask instead.
             self._detected_version = None
@@ -182,11 +135,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the entry from the discovered address and meter profile."""
         if TYPE_CHECKING:
             assert self._discovered is not None
-        if not self._meter_identified:
-            # The dongle-based discovery ID only makes the discovery ignorable;
-            # entries of meters without an identifier are matched on host.
-            await self.async_set_unique_id(None)
-        self._abort_if_unidentified_entry_on_host(self._discovered)
+        self._async_abort_entries_match({CONF_HOST: self._discovered[CONF_HOST]})
         return self.async_create_entry(
             title=self._title,
             data={**self._discovered, CONF_DSMR_VERSION: version},
@@ -222,13 +171,10 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask for the meter profile when the telegram did not identify it."""
-        if TYPE_CHECKING:
-            assert self._discovered is not None
-
         errors: dict[str, str] = {}
         if user_input is not None:
             version = user_input[CONF_DSMR_VERSION]
-            if (error := await self._async_identify(self._discovered, version)) is None:
+            if (error := self._version_error(version)) is None:
                 return await self._async_create_entry(version)
             errors["base"] = error
 
@@ -245,41 +191,28 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle Zeroconf discovery of an Energy Dongle."""
-        # The dongle advertises itself as "Homey Energy Dongle <id>".
-        dongle_id = service_instance_display_name(discovery_info.name).rpartition(" ")[
-            2
-        ]
         self._discovered = {
             CONF_HOST: discovery_info.host,
             CONF_PORT: discovery_info.port or DEFAULT_PORT,
             CONF_WS_PATH: discovery_info.properties.get("p") or DEFAULT_WS_PATH,
-            CONF_DONGLE_ID: dongle_id,
         }
+        # The dongle advertises itself as "Homey Energy Dongle <id>".
+        dongle_id = service_instance_display_name(discovery_info.name).rpartition(" ")[
+            2
+        ]
+        await self.async_set_unique_id(dongle_id)
+        self._abort_if_unique_id_configured(updates=self._discovered)
         for entry in self._async_current_entries(include_ignore=False):
-            # Without a meter identifier, the dongle ID is the entry's identity
-            # once known; the address can belong to another dongle by now.
-            if entry.unique_id is None and CONF_DONGLE_ID in entry.data:
-                matches = entry.data[CONF_DONGLE_ID] == dongle_id
-            else:
-                matches = entry.data[CONF_HOST] == discovery_info.host
-            if matches:
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data_updates=self._discovered,
-                    reason="already_configured",
-                    reload_even_if_entry_is_unchanged=False,
-                )
-        if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="already_in_progress")
+            if entry.data[CONF_HOST] == discovery_info.host:
+                # Added by address, so it learns its ID now to follow the dongle.
+                if entry.unique_id is None:
+                    self.hass.config_entries.async_update_entry(
+                        entry, unique_id=dongle_id
+                    )
+                return self.async_abort(reason="already_configured")
         self._title = f"Homey Energy Dongle ({dongle_id})"
         self.context["title_placeholders"] = {"name": self._title}
-        # Lets the user ignore a dongle that can't be read yet. Reading a
-        # telegram replaces it with the meter's identifier.
-        await self.async_set_unique_id(f"dongle_{dongle_id}")
-        self._abort_if_unique_id_configured()
-        # The meter's identifier is only in telegrams, so read one to recognize a
-        # configured dongle on a new address. Connection errors are shown when
-        # the user confirms.
+        # Detect the meter profile now; connection errors are shown on confirm.
         await self._async_probe(self._discovered)
         if self._telegram is None:
             return await self.async_step_zeroconf_meter()
@@ -289,22 +222,11 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._async_create_entry(self._detected_version)
         return await self.async_step_zeroconf_confirm()
 
-    @override
-    def is_matching(self, other_flow: Self) -> bool:
-        """Return True if the other flow discovered the same dongle."""
-        if TYPE_CHECKING:
-            assert self._discovered is not None
-        return (
-            other_flow._discovered is not None
-            and other_flow._discovered[CONF_HOST] == self._discovered[CONF_HOST]
-        )
-
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovered dongle whose meter profile was detected."""
         if TYPE_CHECKING:
-            assert self._discovered is not None
             assert self._detected_version is not None
 
         if user_input is not None:
@@ -346,13 +268,21 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             data = {**entry.data, **user_input}
-            error = await self._async_read_telegram(data) or await self._async_identify(
-                data, data[CONF_DSMR_VERSION]
+            error = await self._async_read_telegram(data) or self._version_error(
+                data[CONF_DSMR_VERSION]
             )
             if error is None:
+                # Only discovery tells which dongle answers on a new address.
                 return self.async_update_reload_and_abort(
-                    entry, data_updates=user_input
+                    entry,
+                    unique_id=(
+                        entry.unique_id
+                        if user_input[CONF_HOST] == entry.data[CONF_HOST]
+                        else None
+                    ),
+                    data_updates=user_input,
                 )
             errors["base"] = error
 

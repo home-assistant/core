@@ -11,7 +11,15 @@ from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
-from . import EQUIPMENT_IDENTIFIER, GAS_METER_IDENTIFIER, TELEGRAM_Q3D, TELEGRAM_V5
+from . import (
+    EON_HU_IDENTIFIER,
+    EON_HU_SERIAL_NUMBER,
+    EQUIPMENT_IDENTIFIER,
+    GAS_METER_IDENTIFIER,
+    TELEGRAM_EON_HU,
+    TELEGRAM_Q3D,
+    TELEGRAM_V5,
+)
 
 
 async def test_diagnostics(
@@ -35,6 +43,12 @@ async def test_diagnostics(
         ),
         pytest.param(
             "Q3D", TELEGRAM_Q3D, ["0272031312565", "1ESY1313002565"], id="q3d"
+        ),
+        pytest.param(
+            "5EONHU",
+            TELEGRAM_EON_HU,
+            [EON_HU_IDENTIFIER, EON_HU_SERIAL_NUMBER],
+            id="hungary",
         ),
     ],
 )

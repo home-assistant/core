@@ -12,6 +12,7 @@ from homey_energy_dongle_ws import (
     HomeyWebSocketError,
     LocalApiDisabledError,
 )
+from homey_energy_dongle_ws.parser import TELEGRAM_SPECIFICATIONS
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -19,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_DSMR_VERSION, CONF_WS_PATH, DOMAIN
+from .const import CONF_DSMR_VERSION, CONF_WS_PATH, DOMAIN, IDENTIFIER_FIELDS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +42,16 @@ def create_client(data: Mapping[str, Any]) -> EnergyDongleClient:
     )
 
 
-def electricity_serial(unique_id: str | None, entry_id: str) -> str:
-    """Return the electricity meter's identifier, else one derived from the entry."""
-    return unique_id or f"{entry_id}_electricity"
+def meter_identifier(telegram: Telegram) -> str | None:
+    """Return the electricity meter's identifier, if its profile reports one."""
+    return next(
+        (
+            str(obj.value)
+            for field in IDENTIFIER_FIELDS
+            if (obj := getattr(telegram, field, None)) is not None
+        ),
+        None,
+    )
 
 
 def mbus_equipment_identifier(device: MbusDevice) -> str | None:
@@ -53,9 +61,28 @@ def mbus_equipment_identifier(device: MbusDevice) -> str | None:
     return None
 
 
-def mbus_serial(uid: str, device: MbusDevice) -> str:
-    """Return the M-Bus meter's identifier, else one derived from its channel."""
-    return mbus_equipment_identifier(device) or f"{uid}_mbus{device.channel_id}"
+def meters(
+    telegram: Telegram, entry: HomeyEnergyDongleConfigEntry
+) -> dict[str, Telegram | MbusDevice]:
+    """Map the serial of each meter in the telegram to its readings.
+
+    A meter is its own identity, so a replaced meter or another dongle on the
+    same address shows up as another meter. Only telegrams with a checksum
+    are trusted for that, as a corrupted identifier would look like another
+    meter. Otherwise meters fall back to the entry and their M-Bus channel.
+    """
+    version = entry.data[CONF_DSMR_VERSION]
+    checked = TELEGRAM_SPECIFICATIONS[version]["checksum_support"]
+    electricity = (checked and meter_identifier(telegram)) or (
+        f"{entry.entry_id}_electricity"
+    )
+    readings: dict[str, Telegram | MbusDevice] = {electricity: telegram}
+    for device in getattr(telegram, "MBUS_DEVICES", []):
+        serial = (checked and mbus_equipment_identifier(device)) or (
+            f"{electricity}_mbus{device.channel_id}"
+        )
+        readings[serial] = device
+    return readings
 
 
 class HomeyEnergyDongleCoordinator(DataUpdateCoordinator[Telegram]):

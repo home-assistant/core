@@ -33,9 +33,9 @@ from .const import CONF_DSMR_VERSION, DOMAIN
 from .coordinator import (
     HomeyEnergyDongleConfigEntry,
     HomeyEnergyDongleCoordinator,
-    electricity_serial,
     mbus_equipment_identifier,
-    mbus_serial,
+    meter_identifier,
+    meters,
 )
 
 PARALLEL_UPDATES = 0
@@ -375,12 +375,10 @@ async def async_setup_entry(
     entry: HomeyEnergyDongleConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add a sensor for each register and M-Bus meter once it is in a telegram."""
+    """Add a sensor for each register of each meter once it is in a telegram."""
     coordinator = entry.runtime_data
     dsmr_version = entry.data[CONF_DSMR_VERSION]
     high_first = dsmr_version in _TARIFF_HIGH_FIRST
-    # Meters without an equipment identifier have no unique ID.
-    uid = entry.unique_id or entry.entry_id
 
     dongle_id = dr.async_get_device_id_by_identifier(
         hass, (DOMAIN, entry.entry_id), config_entry_id=entry.entry_id
@@ -391,59 +389,47 @@ async def async_setup_entry(
         if description.dsmr_versions is None
         or dsmr_version in description.dsmr_versions
     ]
-    electricity_id = electricity_serial(entry.unique_id, entry.entry_id)
-    electricity = dr.DeviceInfo(
-        identifiers={(DOMAIN, electricity_id)},
-        serial_number=entry.unique_id,
-        translation_key="electricity_meter",
-        via_device_id=dongle_id,
-    )
-    added_keys: set[str] = set()
-    added_meters: set[str] = set()
+    added: dict[str, set[str]] = {}
 
     @callback
     def _async_add_new_entities() -> None:
-        telegram = coordinator.data
-        numbered = len(_tariff_registers(telegram)) > 2
-        entities = [
-            HomeyEnergyDongleSensor(
-                coordinator,
-                _with_tariff_name(
-                    description, numbered=numbered, high_first=high_first
-                ),
-                electricity_id,
-                electricity,
-            )
-            for description in descriptions
-            if description.key not in added_keys
-            and description.value_fn(telegram) is not None
-        ]
-        added_keys.update(entity.entity_description.key for entity in entities)
-
-        mbus_devices: list[MbusDevice] = getattr(telegram, "MBUS_DEVICES", [])
-        for device in mbus_devices:
-            if (mbus := MBUS_SENSORS.get(_value(device, "MBUS_DEVICE_TYPE"))) is None:
-                continue
-            device_key, description = mbus
-            serial = mbus_serial(uid, device)
-            if serial in added_meters or description.value_fn(device) is None:
-                continue
-            added_meters.add(serial)
+        entities: list[HomeyEnergyDongleSensor] = []
+        for serial, data in meters(coordinator.data, entry).items():
+            if isinstance(data, MbusDevice):
+                mbus = MBUS_SENSORS.get(_value(data, "MBUS_DEVICE_TYPE"))
+                if mbus is None:
+                    continue
+                device_key, description = mbus
+                identifier = mbus_equipment_identifier(data)
+                candidates = (
+                    [_with_mbus_unit(description, data)]
+                    if description.value_fn(data) is not None
+                    else []
+                )
+            else:
+                device_key = "electricity_meter"
+                identifier = meter_identifier(data)
+                numbered = len(_tariff_registers(data)) > 2
+                candidates = [
+                    _with_tariff_name(d, numbered=numbered, high_first=high_first)
+                    for d in descriptions
+                ]
+            keys = added.setdefault(serial, set())
             device_info = dr.DeviceInfo(
                 identifiers={(DOMAIN, serial)},
-                serial_number=mbus_equipment_identifier(device),
+                serial_number=identifier,
                 translation_key=device_key,
                 via_device_id=dongle_id,
             )
-            entities.append(
-                HomeyEnergyDongleSensor(
-                    coordinator,
-                    _with_mbus_unit(description, device),
-                    serial,
-                    device_info,
-                    uid,
+            for description in candidates:
+                if description.key in keys or description.value_fn(data) is None:
+                    continue
+                keys.add(description.key)
+                entities.append(
+                    HomeyEnergyDongleSensor(
+                        coordinator, description, serial, device_info
+                    )
                 )
-            )
 
         if entities:
             async_add_entities(entities)
@@ -452,13 +438,11 @@ async def async_setup_entry(
     def _async_forget_removed_meter(
         event: Event[dr.EventDeviceRegistryUpdatedData],
     ) -> None:
-        """Let a deleted M-Bus meter be added again when it reappears."""
+        """Let a deleted meter be added again when it reappears."""
         if event.data["action"] == "remove":
-            added_meters.difference_update(
-                identifier
-                for domain, identifier in event.data["device"]["identifiers"]
-                if domain == DOMAIN
-            )
+            for domain, identifier in event.data["device"]["identifiers"]:
+                if domain == DOMAIN:
+                    added.pop(identifier, None)
 
     _async_add_new_entities()
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
@@ -483,7 +467,6 @@ class HomeyEnergyDongleSensor(
         description: HomeyEnergyDongleSensorEntityDescription,
         serial: str,
         device_info: dr.DeviceInfo,
-        mbus_uid: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -491,23 +474,14 @@ class HomeyEnergyDongleSensor(
         self._attr_unique_id = f"{serial}_{description.key}"
         self._attr_device_info = device_info
         self._serial = serial
-        self._mbus_uid = mbus_uid
 
     @property
     @override
     def native_value(self) -> StateType | datetime | Decimal:
-        """Return the value from the latest telegram."""
-        data: Telegram | MbusDevice | None = self.coordinator.data
-        if self._mbus_uid is not None:
-            # A replacement meter can take over the channel of this one.
-            data = next(
-                (
-                    device
-                    for device in getattr(data, "MBUS_DEVICES", [])
-                    if mbus_serial(self._mbus_uid, device) == self._serial
-                ),
-                None,
-            )
+        """Return the value of this sensor's meter in the latest telegram."""
+        data = meters(self.coordinator.data, self.coordinator.config_entry).get(
+            self._serial
+        )
         if data is None:
             return None
         value = self.entity_description.value_fn(data)
