@@ -288,6 +288,15 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         value_lambda=lambda e: e.coordinator.data.externalTemperature,
     ),
     RenaultSensorEntityDescription[KamereonVehicleHvacStatusData](
+        key="inside_temperature",
+        coordinator="hvac_status",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="inside_temperature",
+        value_lambda=lambda e: e.coordinator.data.internalTemperature,
+    ),
+    RenaultSensorEntityDescription[KamereonVehicleHvacStatusData](
         key="hvac_soc_threshold",
         entity_category=EntityCategory.DIAGNOSTIC,
         coordinator="hvac_status",
