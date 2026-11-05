@@ -6,16 +6,18 @@ import datetime as dt
 from functools import lru_cache, partial
 from pathlib import Path
 import re
-from typing import TYPE_CHECKING, Any, Literal, overload
+from typing import Any, Literal, overload
 import zoneinfo
 
 from aiozoneinfo import async_get_time_zone as _async_get_time_zone
 import ciso8601
 import tzdata.zoneinfo
 
-if TYPE_CHECKING:
-    assert tzdata.zoneinfo.__file__ is not None
-
+# Prepend the bundled Python tzdata package to zoneinfo.TZPATH and clear any
+# already-cached ZoneInfo instances so Home Assistant always resolves the
+# pinned tzdata definitions ahead of potentially stale OS /usr/share/zoneinfo
+# files (https://github.com/home-assistant/core/issues/180953,
+# https://github.com/home-assistant/core/issues/190078).
 TZDATA_ZONEINFO_DIR = str(Path(tzdata.zoneinfo.__file__).parent)
 zoneinfo.reset_tzpath(
     (
