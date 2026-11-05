@@ -13,15 +13,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 
-from .const import REDACT_HUB_ADDRESS, REDACT_MAC_ADDRESS, REDACT_SERIAL_NUMBER
 from .model import PowerviewConfigEntry
 
 REDACT_CONFIG = {
     CONF_HOST,
-    REDACT_HUB_ADDRESS,
-    REDACT_MAC_ADDRESS,
-    REDACT_SERIAL_NUMBER,
     "configuration_url",
+    "hub_address",
+    "mac_address",
+    "serial_number",
 }
 
 
