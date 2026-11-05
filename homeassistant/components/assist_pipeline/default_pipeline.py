@@ -652,22 +652,26 @@ class _DefaultPipelineProcessor:
             self.host.capture_audio(chunk.audio)
 
             if run_endpointing and (run is not None):
+                # What it said is read before whether it is still there: an
+                # app that says where the command ended closes straight
+                # afterwards, so its last word always arrives with its
+                # departure.
+                if (not sent_vad_start) and (run.speech_started_ms is not None):
+                    self._async_stt_vad_start(run.speech_started_ms)
+                    sent_vad_start = True
+
+                if run.speech_ended_ms is not None:
+                    self._async_stt_vad_end(run.speech_ended_ms)
+                    break
+
                 if run.listening:
-                    if (not sent_vad_start) and (run.speech_started_ms is not None):
-                        self._async_stt_vad_start(run.speech_started_ms)
-                        sent_vad_start = True
-
-                    if run.speech_ended_ms is not None:
-                        self._async_stt_vad_end(run.speech_ended_ms)
-                        break
-
                     self._stt_last_timestamp_ms = chunk.timestamp_ms
                     yield chunk.audio
                     continue
 
                 _LOGGER.debug(
-                    "The app stopped watching the run at %s ms;"
-                    " finding the end of the command here",
+                    "The app stopped watching the run at %s ms without saying"
+                    " where the command ended; finding it here",
                     chunk.timestamp_ms,
                 )
                 run_endpointing = False

@@ -369,13 +369,45 @@ async def test_the_provider_says_where_the_command_begins_and_ends(
 
 
 @pytest.mark.usefixtures("init_components")
-async def test_a_provider_that_goes_away_stops_being_listened_to(
+async def test_its_last_word_arrives_with_its_departure(
     hass: HomeAssistant, mock_stt_provider_entity: MockSTTProviderEntity
 ) -> None:
-    """Test nothing it says after it has gone ends the command.
+    """Test the end of the command is honoured even as the app goes.
 
-    The app dropping out must neither cut a command short nor leave one
-    that never ends: the segmenter is already built and takes over.
+    The app says where the command ended and closes straight afterwards, so
+    both land before the pipeline looks again. Reading whether it is still
+    there first would throw away the thing it was waiting for, and leave the
+    command to a segmenter that never heard the speech.
+    """
+    run = MockRun([(0, WakeWordAccepted(MS_PER_CHUNK))])
+
+    async def _stream() -> AsyncGenerator[bytes]:
+        yield WAKE
+        for _ in range(3):
+            yield COMMAND
+        run.speech_ended_ms = 30
+        run.stop_listening()
+        for _ in range(3):
+            yield TAIL
+
+    events = await _async_run_pipeline(
+        hass, _stream(), is_vad_enabled=True, client=MockClient(run=run)
+    )
+
+    assert [event.type for event in events].count(PipelineEventType.STT_VAD_END) == 1
+    assert events[-3].data == {"timestamp": 30}
+    # And nothing after the boundary reaches speech-to-text
+    assert b"".join(mock_stt_provider_entity.received) == COMMAND * 3
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_an_app_that_goes_without_saying_leaves_it_to_the_segmenter(
+    hass: HomeAssistant, mock_stt_provider_entity: MockSTTProviderEntity
+) -> None:
+    """Test the command is not cut short when the app said nothing.
+
+    It must not leave one that never ends either: Home Assistant's own
+    segmenter is already built and takes over from here.
     """
     run = MockRun([(0, WakeWordAccepted(MS_PER_CHUNK))])
 
@@ -384,7 +416,6 @@ async def test_a_provider_that_goes_away_stops_being_listened_to(
         for _ in range(3):
             yield COMMAND
         run.stop_listening()
-        run.speech_ended_ms = 30
         for _ in range(3):
             yield TAIL
 
@@ -393,5 +424,4 @@ async def test_a_provider_that_goes_away_stops_being_listened_to(
     )
 
     assert PipelineEventType.STT_VAD_END not in [event.type for event in events]
-    # The command was not cut where the provider said, after it had gone
     assert b"".join(mock_stt_provider_entity.received) == (COMMAND * 3) + (TAIL * 3)
