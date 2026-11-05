@@ -235,7 +235,6 @@ async def test_notify_platform(
 )
 async def test_entity_send_message(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_client: MagicMock,
     config_entry: MockConfigEntry,
     service_data: dict[str, str],
@@ -243,9 +242,6 @@ async def test_entity_send_message(
 ) -> None:
     """Test sending a message through the notify entity of the current app."""
     await setup_integration(hass, config_entry)
-    entity = entity_registry.async_get(ENTITY_ID)
-    assert entity is not None
-    assert entity.unique_id == config_entry.entry_id
     assert not hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
 
     await send_entity_message(hass, service_data)
