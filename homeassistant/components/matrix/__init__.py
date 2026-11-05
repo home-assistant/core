@@ -26,7 +26,6 @@ from nio.responses import (
 from PIL import Image
 import probatio
 
-from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -45,13 +44,11 @@ from homeassistant.util.json import JsonObjectType, load_json_object
 from .const import (
     ATTR_FORMAT,
     ATTR_IMAGES,
-    ATTR_MESSAGE_ID,
-    ATTR_REACTION,
-    ATTR_ROOM,
     ATTR_THREAD_ID,
     CONF_ROOMS_REGEX,
     DOMAIN,
     FORMAT_HTML,
+    MatrixServiceArgument,
 )
 from .services import async_setup_services
 
@@ -613,15 +610,15 @@ class MatrixBot:
     async def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
         await self._send_message(
-            service.data[ATTR_MESSAGE],
-            service.data[ATTR_TARGET],
-            service.data.get(ATTR_DATA),
+            service.data[MatrixServiceArgument.MESSAGE],
+            service.data[MatrixServiceArgument.TARGET],
+            service.data.get(MatrixServiceArgument.DATA),
         )
 
     async def handle_send_reaction(self, service: ServiceCall) -> None:
         """Handle the react service."""
         await self._send_reaction(
-            service.data[ATTR_REACTION],
-            service.data[ATTR_ROOM],
-            service.data[ATTR_MESSAGE_ID],
+            service.data[MatrixServiceArgument.REACTION],
+            service.data[MatrixServiceArgument.ROOM],
+            service.data[MatrixServiceArgument.MESSAGE_ID],
         )
