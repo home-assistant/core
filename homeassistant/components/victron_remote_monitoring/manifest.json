@@ -4,6 +4,7 @@
   "categories": ["energy.solar_batteries"],
   "codeowners": ["@AndyTempel"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/victron_remote_monitoring",
   "integration_type": "service",
   "iot_class": "cloud_polling",

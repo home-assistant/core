@@ -5,6 +5,7 @@ To update, run python3 -m script.hassfest
 
 FLOWS = {
     "helper": [
+        "compensation",
         "derivative",
         "filter",
         "generic_hygrostat",
@@ -26,6 +27,7 @@ FLOWS = {
     ],
     "integration": [
         "abode",
+        "abrp",
         "acaia",
         "accuweather",
         "acmeda",
@@ -155,7 +157,7 @@ FLOWS = {
         "cookidoo",
         "coolmaster",
         "cpuspeed",
-        "crownstone",
+        "croma_infrared",
         "cync",
         "daikin",
         "data_grand_lyon",
@@ -195,6 +197,7 @@ FLOWS = {
         "dwd_weather_warnings",
         "dynalite",
         "dyson_infrared",
+        "e3dc",
         "eafm",
         "earn_e_p1",
         "easyenergy",
@@ -240,6 +243,7 @@ FLOWS = {
         "eufylife_ble",
         "eurotronic_cometblue",
         "evil_genius_labs",
+        "exicom_spin_ble",
         "ezviz",
         "faa_delays",
         "fastdotcom",
@@ -653,6 +657,7 @@ FLOWS = {
         "portainer",
         "powerfox",
         "powerfox_local",
+        "powersensor_au",
         "powerwall",
         "prana",
         "private_ble_device",
@@ -794,7 +799,6 @@ FLOWS = {
         "soundtouch",
         "specialized_turbo",
         "speedtestdotnet",
-        "spin_ble",
         "splunk",
         "spotify",
         "sql",
