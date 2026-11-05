@@ -6,7 +6,7 @@
       "no_local_address": "The power station announced itself, but on no network Home Assistant is connected to.",
       "no_serial_number": "[%key:component::e3dc::config::error::no_serial_number%]",
       "not_e3dc": "[%key:component::e3dc::config::error::not_e3dc%]",
-      "unique_id_mismatch": "Please reconfigure the same power station you originally set up.",
+      "unique_id_mismatch": "Reconfigure the same power station you originally set up.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
