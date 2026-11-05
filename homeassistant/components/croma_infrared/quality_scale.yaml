@@ -118,4 +118,4 @@ rules:
     status: exempt
     comment: |
       This integration does not make HTTP requests.
-  strict-typing: todo
+  strict-typing: done
