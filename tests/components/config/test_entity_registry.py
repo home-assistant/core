@@ -1698,30 +1698,53 @@ async def test_get_automatic_entity_ids(
 
 
 @pytest.mark.parametrize(
-    ("overrides", "expected_entity_id"),
+    ("stored", "overrides", "expected_entity_id"),
     [
-        pytest.param({}, "sensor.living_room_lamp_power", id="no_overrides"),
+        pytest.param({}, {}, "sensor.living_room_lamp_power", id="no_overrides"),
         pytest.param(
+            {"name": "Stored", "area_id": "kitchen"},
+            {},
+            "sensor.kitchen_stored",
+            id="stored_without_overrides",
+        ),
+        pytest.param(
+            {},
             {"sensor.lamp": {"name": "Energy"}},
             "sensor.living_room_lamp_energy",
             id="name",
         ),
         pytest.param(
+            {"name": "Stored"},
             {"sensor.lamp": {"name": None}},
             "sensor.living_room_lamp_power",
             id="name_removed",
         ),
         pytest.param(
+            {},
             {"sensor.lamp": {"area_id": "kitchen"}},
             "sensor.kitchen_power",
             id="area",
         ),
         pytest.param(
+            {"area_id": "kitchen"},
+            {"sensor.lamp": {"area_id": None}},
+            "sensor.living_room_lamp_power",
+            id="area_removed",
+        ),
+        pytest.param(
+            {},
             {"sensor.lamp": {"area_id": "kitchen", "name": "Energy"}},
             "sensor.kitchen_energy",
             id="name_and_area",
         ),
         pytest.param(
+            {"name": "Stored", "area_id": "kitchen"},
+            {"sensor.lamp": {"area_id": None, "name": None}},
+            "sensor.living_room_lamp_power",
+            id="name_and_area_removed",
+        ),
+        pytest.param(
+            {},
             {"sensor.other": {"name": "Energy"}},
             "sensor.living_room_lamp_power",
             id="other_entity",
@@ -1734,6 +1757,7 @@ async def test_get_automatic_entity_ids_overrides(
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    stored: dict[str, str],
     overrides: dict[str, dict[str, str | None]],
     expected_entity_id: str,
 ) -> None:
@@ -1756,8 +1780,11 @@ async def test_get_automatic_entity_ids_overrides(
         device_id=device.id,
         has_entity_name=True,
         object_id_base="Power",
+        original_name="Power",
     )
-    entity_registry.async_update_entity(entry.entity_id, new_entity_id="sensor.lamp")
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="sensor.lamp", **stored
+    )
 
     await client.send_json_auto_id(
         {
@@ -1773,8 +1800,8 @@ async def test_get_automatic_entity_ids_overrides(
     # overrides are not stored
     entry = entity_registry.async_get("sensor.lamp")
     assert entry is not None
-    assert entry.name is None
-    assert entry.area_id is None
+    assert entry.name == stored.get("name")
+    assert entry.area_id == stored.get("area_id")
 
 
 async def test_get_settings(client: MockHAClientWebSocket) -> None:
