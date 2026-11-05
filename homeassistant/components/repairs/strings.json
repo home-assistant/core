@@ -1,0 +1,15 @@
+{
+  "issues": {
+    "update_report": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Compared with the last run of Home Assistant {from_version}:\n\n- Integrations that no longer load: {config_entries}\n- Entities that became unavailable, were renamed or were removed: {entities}\n- New repairs: {issues}\n\nSelect **Submit** to dismiss this report.",
+            "title": "[%key:component::repairs::issues::update_report::title%]"
+          }
+        }
+      },
+      "title": "Changes after updating to {to_version}"
+    }
+  }
+}
