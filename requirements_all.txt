@@ -1089,7 +1089,7 @@ fjaraskupan==2.3.4
 flexit-modbus==0.1.0
 
 # homeassistant.components.flexit_bacnet
-flexit_bacnet==2.3.0
+flexit_bacnet==2.3.2
 
 # homeassistant.components.flow_it
 flow-it-api==0.0.1.1
