@@ -2200,3 +2200,158 @@ async def test_renamed_main_lock_owns_activity_events(
 
     assert len(activity_events) == 1
     assert activity_events[0].data["entity_id"] == new_entity_id
+
+
+@pytest.mark.usefixtures("entry")
+async def test_unknown_source_newest_match_discards_candidate(
+    hass: HomeAssistant, mock_lock: MockLock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test an unattributable newest match does not leave an older one as the cause."""
+    activity_events = async_capture_events(hass, EVENT_LOCK_ACTIVITY)
+    mock_lock.push(LockStatus.UNLOCKED)
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.PIN, 3))
+    mock_lock.fire(_activity(LockStatus.LOCKED, LockOperationSource.MANUAL))
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.UNKNOWN))
+    await _settle(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state == "locked"
+
+    await _expire_hold(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "unlocked"
+    assert "changed_by" not in state.attributes
+    assert not activity_events
+
+
+@pytest.mark.usefixtures("entry")
+async def test_unlock_keeps_its_context_across_credential_action(
+    hass: HomeAssistant, hass_admin_user: MockUser, mock_lock: MockLock
+) -> None:
+    """Test a credential action during an unlock does not drop the unlock's user."""
+    release = asyncio.Event()
+    started = asyncio.Event()
+
+    async def slow_unlock() -> None:
+        started.set()
+        await release.wait()
+
+    mock_lock.push_lock.unlock.side_effect = slow_unlock
+    unlock_context = Context(user_id=hass_admin_user.id)
+    unlock_task = hass.async_create_task(
+        hass.services.async_call(
+            "lock",
+            "unlock",
+            {"entity_id": ENTITY_ID},
+            blocking=True,
+            context=unlock_context,
+        )
+    )
+    await started.wait()
+
+    await _call(
+        hass,
+        "get_lock_credential_status",
+        {"credential_index": 3},
+        return_response=True,
+    )
+    release.set()
+    await unlock_task
+    mock_lock.push(LockStatus.UNLOCKED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "unlocked"
+    assert state.context.id == unlock_context.id
+    assert state.context.user_id == hass_admin_user.id
+
+
+async def test_unload_cancels_credential_operation_and_removal_deletes_store(
+    hass: HomeAssistant,
+    mock_lock: MockLock,
+    entry: MockConfigEntry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test an in-flight credential operation ends on unload and cannot recreate storage."""
+    entry.runtime_data.credential_names._names["3"] = "Guest"
+    started = asyncio.Event()
+
+    async def hang(slot: int, pin: str) -> None:
+        started.set()
+        await asyncio.Event().wait()
+
+    mock_lock.push_lock.set_keycode.side_effect = hang
+    task = hass.async_create_task(
+        _call(
+            hass,
+            "set_lock_credential",
+            {"credential_data": "1234", "credential_index": 3, "name": "New"},
+        )
+    )
+    await started.wait()
+    operations = entry.runtime_data.credential_operations
+    assert len(operations) == 1
+    (operation,) = operations.values()
+
+    await hass.config_entries.async_unload(entry.entry_id)
+
+    assert operation.cancelled()
+    assert not operations
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert STORAGE_KEY.format(entry.entry_id) not in hass_storage
+
+
+@pytest.mark.usefixtures("entry")
+async def test_cancelled_clear_credential_removes_name(
+    hass: HomeAssistant, mock_lock: MockLock, entry: MockConfigEntry
+) -> None:
+    """Test cancelling a clear after it started drops the old name."""
+    entry.runtime_data.credential_names._names["3"] = "Guest"
+    started = asyncio.Event()
+
+    async def hang(slot: int) -> None:
+        started.set()
+        await asyncio.Event().wait()
+
+    mock_lock.push_lock.clear_keycode.side_effect = hang
+    task = hass.async_create_task(
+        _call(hass, "clear_lock_credential", {"credential_index": 3})
+    )
+    await started.wait()
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    assert entry.runtime_data.credential_names.get(3) is None
+    assert not entry.runtime_data.credential_operations
+
+
+@pytest.mark.usefixtures("entry")
+@pytest.mark.parametrize(
+    ("error", "expected_name"),
+    [
+        pytest.param(
+            KeycodeError("clear_keycode", OperationError.KEYCODE_NOSPACE),
+            "Guest",
+            id="clear_failed",
+        ),
+        pytest.param(RuntimeError("not running"), "Guest", id="not_running"),
+        pytest.param(BleakError("gone"), None, id="bleak"),
+    ],
+)
+async def test_failed_clear_credential_name_handling(
+    hass: HomeAssistant,
+    mock_lock: MockLock,
+    entry: MockConfigEntry,
+    error: Exception,
+    expected_name: str | None,
+) -> None:
+    """Test a failed clear keeps the name only when the slot is unchanged."""
+    entry.runtime_data.credential_names._names["3"] = "Guest"
+    mock_lock.push_lock.clear_keycode.side_effect = error
+    with pytest.raises(HomeAssistantError):
+        await _call(hass, "clear_lock_credential", {"credential_index": 3})
+    assert entry.runtime_data.credential_names.get(3) == expected_name

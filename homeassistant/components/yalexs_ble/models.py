@@ -18,6 +18,7 @@ class ExpectedOperation:
 
     statuses: frozenset[LockStatus]
     deadline: float
+    context: Context
     matched_state: LockState | None = None
 
 

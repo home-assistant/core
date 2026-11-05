@@ -199,18 +199,25 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         return not self._matches_expected_operation(new_state)
 
     def _matches_expected_operation(self, new_state: LockState) -> bool:
-        """Return if the state is the outcome of a pending Home Assistant operation."""
+        """Return if the state is the outcome of a pending Home Assistant operation.
+
+        A match also restores the context that started the operation, which a
+        credential action running meanwhile may have replaced.
+        """
         operations = self._data.expected_operations
         now = time.monotonic()
         operations[:] = [op for op in operations if now <= op.deadline]
-        if any(op.matched_state is new_state for op in operations):
-            return True
+        for operation in operations:
+            if operation.matched_state is new_state:
+                self.async_set_context(operation.context)
+                return True
         operations[:] = [op for op in operations if op.matched_state is None]
         for index, operation in enumerate(operations):
             if new_state.lock in operation.statuses:
                 operation.matched_state = new_state
                 # Older commands were superseded by this outcome.
                 del operations[:index]
+                self.async_set_context(operation.context)
                 return True
         operations.clear()
         return False
@@ -225,9 +232,12 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         return before its state arrives, so expectations queue up in order.
         """
         data = self._data
+        # Taken before waiting for the lock, which another action may use to replace it.
+        assert self._context is not None
+        context = self._context
         async with data.operation_lock:
             expected = ExpectedOperation(
-                statuses, time.monotonic() + HA_OPERATION_TIMEOUT_SECONDS
+                statuses, time.monotonic() + HA_OPERATION_TIMEOUT_SECONDS, context
             )
             data.expected_operations.append(expected)
             try:
@@ -370,18 +380,21 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
             self._async_arm_settle()
         if not isinstance(activity, LockActivity):
             return
-        if (changed_by := self._changed_by_for(activity)) is None:
-            return
         activity_status = MATCH_STATUS.get(activity.status)
         if activity_status is None:
             return
+        changed_by = self._changed_by_for(activity)
         if self._pending is not None:
             if activity_status is not MATCH_STATUS[self._pending[0].lock]:
+                return
+            if changed_by is None:
+                # The newest match has no known cause, so an older one is not it.
+                self._async_cancel_candidate()
                 return
             self._candidate = activity
             self._async_arm_settle()
             return
-        if activity_status != MATCH_STATUS.get(self._lock_status):
+        if changed_by is None or activity_status != MATCH_STATUS.get(self._lock_status):
             return
         self._attr_changed_by = changed_by
         self.async_write_ha_state()
@@ -408,7 +421,12 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
         self._context_set = None
         operations = self._data.credential_operations
         if (task := operations.get(key)) is None:
-            task = self.hass.async_create_task(operation())
+            config_entry = self.platform.config_entry
+            assert config_entry is not None
+            # Cancelled on unload, which always precedes removing the stored names.
+            task = config_entry.async_create_background_task(
+                self.hass, operation(), f"{DOMAIN} credential {name}"
+            )
             operations[key] = task
             task.add_done_callback(lambda _: operations.pop(key, None))
         result: T = await task
@@ -451,8 +469,17 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     async def _clear_credential(self, **kwargs: Any) -> None:
         """Clear a keypad PIN on the lock."""
         slot: int = kwargs[YaleXSBLEServiceArgument.CREDENTIAL_INDEX]
-        with _translate_keycode_errors():
-            await self._device.clear_keycode(slot)
+        try:
+            with _translate_keycode_errors():
+                await self._device.clear_keycode(slot)
+        except HomeAssistantError as err:
+            if not _keycode_slot_unchanged(err.__cause__):
+                await self._data.credential_names.async_remove(slot)
+            raise
+        except asyncio.CancelledError:
+            # The PIN may already be gone, so the old label might be wrong.
+            await self._data.credential_names.async_remove(slot)
+            raise
         await self._data.credential_names.async_remove(slot)
 
     async def async_get_lock_credential_status(
