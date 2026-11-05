@@ -270,6 +270,9 @@ def outdoor_siren_device(
     device_id: str = "hdm:ZigBee:outdoorsiren1",
     name: str = "Outdoor Siren",
     sound_level: OutdoorSirenService.SoundLevel = OutdoorSirenService.SoundLevel.MEDIUM,
+    acoustic_alarm_on: bool = False,
+    visual_alarm_on: bool = False,
+    tamper_activated: bool = False,
 ) -> SHCOutdoorSiren:
     """Build a minimal device double for the outdoor_sirens bucket."""
     device = create_autospec(SHCOutdoorSiren, instance=True, spec_set=True)
@@ -284,6 +287,9 @@ def outdoor_siren_device(
     device.status = "AVAILABLE"
     siren_service = create_autospec(OutdoorSirenService, instance=True)
     siren_service.sound_level = sound_level
+    siren_service.acoustic_alarm_on = acoustic_alarm_on
+    siren_service.visual_alarm_on = visual_alarm_on
+    siren_service.tamper_activated = tamper_activated
     device.siren = siren_service
     return device
 

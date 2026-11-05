@@ -15,6 +15,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     climate_control_device,
+    outdoor_siren_device,
     setup_integration,
     shutter_contact_device,
     smoke_detection_system_device,
@@ -288,3 +289,39 @@ async def test_climate_control_binary_sensors(
     device = device_registry.async_get(entry.device_id)
     assert device is not None
     assert device.name == "Living Room"
+
+
+@pytest.mark.parametrize(
+    ("device_kwargs", "entity_id", "expected"),
+    [
+        (
+            {"acoustic_alarm_on": True},
+            "binary_sensor.outdoor_siren_acoustic_alarm",
+            STATE_ON,
+        ),
+        ({}, "binary_sensor.outdoor_siren_acoustic_alarm", STATE_OFF),
+        (
+            {"visual_alarm_on": True},
+            "binary_sensor.outdoor_siren_visual_alarm",
+            STATE_ON,
+        ),
+        ({"tamper_activated": True}, "binary_sensor.outdoor_siren_tamper", STATE_ON),
+        ({}, "binary_sensor.outdoor_siren_tamper", STATE_OFF),
+    ],
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_outdoor_siren_binary_sensors(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_kwargs: dict[str, bool],
+    entity_id: str,
+    expected: str,
+) -> None:
+    """An outdoor siren exposes its alarm and tamper state."""
+    mock_session.device_helper.outdoor_sirens = [outdoor_siren_device(**device_kwargs)]
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected

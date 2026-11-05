@@ -10,6 +10,7 @@ from boschshcpy import (
     BatteryLevelService,
     SHCBatteryDevice,
     SHCClimateControl,
+    SHCOutdoorSiren,
     SHCShutterContact,
     SHCSmokeDetectionSystem,
     SHCTwinguard,
@@ -23,6 +24,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
@@ -74,6 +76,29 @@ CLIMATE_CONTROL_DESCRIPTIONS: tuple[
         key="ventilation_mode",
         translation_key="ventilation_mode",
         is_on_fn=lambda device: device.ventilation_mode,
+    ),
+)
+
+OUTDOOR_SIREN_DESCRIPTIONS: tuple[
+    SHCBinarySensorEntityDescription[SHCOutdoorSiren], ...
+] = (
+    SHCBinarySensorEntityDescription(
+        key="siren_acoustic_alarm",
+        translation_key="siren_acoustic_alarm",
+        device_class=BinarySensorDeviceClass.SOUND,
+        is_on_fn=lambda device: device.siren.acoustic_alarm_on,
+    ),
+    SHCBinarySensorEntityDescription(
+        key="siren_visual_alarm",
+        translation_key="siren_visual_alarm",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        is_on_fn=lambda device: device.siren.visual_alarm_on,
+    ),
+    SHCBinarySensorEntityDescription(
+        key="siren_tamper",
+        device_class=BinarySensorDeviceClass.TAMPER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.siren.tamper_activated,
     ),
 )
 
@@ -155,6 +180,18 @@ async def async_setup_entry(
         )
         for device in session.device_helper.climate_controls
         for description in CLIMATE_CONTROL_DESCRIPTIONS
+    )
+
+    entities.extend(
+        SHCBinarySensor(
+            hass=hass,
+            device=siren,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            entity_description=description,
+        )
+        for siren in session.device_helper.outdoor_sirens
+        for description in OUTDOOR_SIREN_DESCRIPTIONS
     )
 
     async_add_entities(entities)
