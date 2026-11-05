@@ -15,7 +15,12 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.smartthings import MAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -125,6 +130,107 @@ async def test_select_option_map(
         Command.SET_BRIGHTNESS_LEVEL,
         MAIN,
         argument="extraHigh",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+@pytest.mark.parametrize(
+    ("entity_id", "option", "capability", "command", "argument"),
+    [
+        pytest.param(
+            "select.theater_tv_samsung_8_series_49_picture_mode",
+            "movie",
+            Capability.CUSTOM_PICTURE_MODE,
+            Command.SET_PICTURE_MODE,
+            "Movie",
+            id="picture_mode",
+        ),
+    ],
+)
+async def test_select_tv_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    option: str,
+    capability: Capability,
+    command: Command,
+    argument: str,
+) -> None:
+    """Test selecting a TV picture mode sends the device's own name."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+        capability,
+        command,
+        MAIN,
+        argument=argument,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+async def test_tv_picture_mode_unmapped_name(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a picture mode name without a mapping, like a localized one, passes through."""
+    set_attribute_value(
+        devices,
+        Capability.CUSTOM_PICTURE_MODE,
+        Attribute.SUPPORTED_PICTURE_MODES,
+        ["Dynamisch", "Film"],
+    )
+    set_attribute_value(
+        devices, Capability.CUSTOM_PICTURE_MODE, Attribute.PICTURE_MODE, "Film"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("select.theater_tv_samsung_8_series_49_picture_mode")
+    assert state
+    assert state.state == "Film"
+    assert state.attributes[ATTR_OPTIONS] == ["Dynamisch", "Film"]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.theater_tv_samsung_8_series_49_picture_mode",
+            ATTR_OPTION: "Dynamisch",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+        Capability.CUSTOM_PICTURE_MODE,
+        Command.SET_PICTURE_MODE,
+        MAIN,
+        argument="Dynamisch",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+async def test_tv_picture_mode_not_in_supported_list(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a picture mode the TV does not list, like its art mode one, is unknown."""
+    set_attribute_value(
+        devices, Capability.CUSTOM_PICTURE_MODE, Attribute.PICTURE_MODE, "Optimised"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("select.theater_tv_samsung_8_series_49_picture_mode").state
+        == STATE_UNKNOWN
     )
 
 

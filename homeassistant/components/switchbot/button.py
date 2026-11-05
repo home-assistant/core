@@ -30,13 +30,16 @@ async def async_setup_entry(
     entities: list[ButtonEntity] = []
 
     if isinstance(coordinator.device, switchbot.SwitchbotAirPurifier):
-        entities.append(LightSensorButton(coordinator))
+        entities.extend(
+            [LightSensorButton(coordinator), ResetFilterUsageButton(coordinator)]
+        )
 
     if isinstance(coordinator.device, switchbot.SwitchbotArtFrame):
         entities.extend(
             [
                 SwitchBotArtFrameNextButton(coordinator, "next_image"),
                 SwitchBotArtFramePrevButton(coordinator, "previous_image"),
+                SwitchBotArtFrameRandomButton(coordinator, "random_image"),
             ]
         )
 
@@ -73,6 +76,28 @@ class LightSensorButton(SwitchbotEntity, ButtonEntity):
         await self._device.open_light_sensitive_switch()
 
 
+class ResetFilterUsageButton(SwitchbotEntity, ButtonEntity):
+    """Reset the purifier filter counter and verify the reported usage."""
+
+    _attr_translation_key = "reset_filter_usage"
+    _attr_entity_category = EntityCategory.CONFIG
+    _device: switchbot.SwitchbotAirPurifier
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the filter reset button."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}_reset_filter_usage"
+
+    @exception_handler
+    @override
+    async def async_press(self) -> None:
+        """Reset the filter counter through the device's public API."""
+        self._last_run_success = False
+        self.async_write_ha_state()
+        self._last_run_success = await self._device.reset_filter_usage()
+        self.async_write_ha_state()
+
+
 class SwitchBotArtFrameButtonBase(SwitchbotEntity, ButtonEntity):
     """Base class for Art Frame buttons."""
 
@@ -107,6 +132,17 @@ class SwitchBotArtFramePrevButton(SwitchBotArtFrameButtonBase):
         """Handle the button press."""
         _LOGGER.debug("Pressing previous image button %s", self._address)
         await self._device.prev_image()
+
+
+class SwitchBotArtFrameRandomButton(SwitchBotArtFrameButtonBase):
+    """Representation of a random image button."""
+
+    @exception_handler
+    @override
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        _LOGGER.debug("Pressing random image button %s", self._address)
+        await self._device.random_image()
 
 
 class SwitchBotMeterProSyncDateTimeButton(SwitchbotEntity, ButtonEntity):

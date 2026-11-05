@@ -55,7 +55,7 @@ async def test_form(hass: HomeAssistant, send_wakeup_prompt: bool) -> None:
         ),
         patch(
             "homeassistant.components.coolmaster.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -112,7 +112,7 @@ async def test_form_errors(
         ),
         patch(
             "homeassistant.components.coolmaster.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -179,7 +179,7 @@ async def test_reconfigure(
         ),
         patch(
             "homeassistant.components.coolmaster.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -245,7 +245,7 @@ async def test_reconfigure_errors(
         ),
         patch(
             "homeassistant.components.coolmaster.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -272,7 +272,7 @@ async def test_reconfigure_uses_stored_port(
         ) as mock_coolmaster,
         patch(
             "homeassistant.components.coolmaster.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         mock_coolmaster.return_value.status.return_value = {"test_id": "test_unit"}
@@ -344,7 +344,7 @@ async def test_reconfigure_toggles_swing_support(
         ),
         patch(
             "homeassistant.components.coolmaster.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

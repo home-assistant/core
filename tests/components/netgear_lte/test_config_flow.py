@@ -17,7 +17,7 @@ from .conftest import CONF_DATA, HOST
 
 def _patch_setup():
     return patch(
-        "homeassistant.components.netgear_lte.async_setup_entry", return_value=True
+        "homeassistant.components.netgear_lte.async_setup_entry", return_value=None
     )
 
 

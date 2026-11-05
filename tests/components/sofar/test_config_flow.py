@@ -9,6 +9,7 @@ from modbus_connection import ModbusSerialParams, ModbusTcpParams, ModbusTimeout
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.sofar.config_flow import (
@@ -20,6 +21,9 @@ from homeassistant.components.sofar.const import (
     CONF_UNIT_ID,
     DEFAULT_NAME,
     DOMAIN,
+    FAULT_LOG,
+    LAST_HANDLED_FAULT,
+    SERVED_COMPONENTS,
     TYPE_SERIAL,
     TYPE_TCP,
 )
@@ -315,11 +319,26 @@ async def _start_reconfigure(
     return result
 
 
+@pytest.mark.parametrize(
+    "stored",
+    [
+        pytest.param({}, id="nothing_stored"),
+        pytest.param(
+            {
+                SERVED_COMPONENTS: [FAULT_LOG],
+                LAST_HANDLED_FAULT: [3, "2026-10-09T18:30:05"],
+            },
+            id="handled_fault_stored",
+        ),
+    ],
+)
 async def test_reconfigure_updates_the_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, stored: dict[str, Any]
 ) -> None:
-    """Test reconfigure updates the entry and reloads it."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_ENTRY_DATA)
+    """Test reconfigure updates the entry, keeping what it detected."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=MOCK_SERIAL, data={**MOCK_ENTRY_DATA, **stored}
+    )
     entry.add_to_hass(hass)
     result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_TCP)
 
@@ -333,7 +352,47 @@ async def test_reconfigure_updates_the_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data == {CONF_TYPE: TYPE_TCP, **_NEW_TCP_INPUT}
+    assert entry.data == {CONF_TYPE: TYPE_TCP, **_NEW_TCP_INPUT, **stored}
+
+
+async def test_reconfigure_keeps_a_fault_handled_while_probing(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a fault the entry handles during the probe stays handled."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_SERIAL,
+        data={**MOCK_ENTRY_DATA, LAST_HANDLED_FAULT: [3, "2026-10-09T18:30:05"]},
+    )
+    entry.add_to_hass(hass)
+    result = await _start_reconfigure(hass, entry, STEP_RECONFIGURE_TCP)
+
+    mock_conn = MockModbusConnection()
+    seed_pv_inverter(mock_conn.for_unit(1))
+
+    @asynccontextmanager
+    async def _get_temporary_unit(
+        hass: HomeAssistant,
+        params: ModbusSerialParams | ModbusTcpParams,
+        unit_id: int,
+    ) -> AsyncIterator[MockModbusUnit]:
+        # The loaded entry keeps polling while the new link is probed.
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, LAST_HANDLED_FAULT: [1, "2026-10-10T07:45:00"]},
+        )
+        yield mock_conn.for_unit(unit_id)
+
+    with patch(
+        "homeassistant.components.sofar.config_flow.async_get_temporary_unit",
+        side_effect=_get_temporary_unit,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], _NEW_TCP_INPUT
+        )
+
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[LAST_HANDLED_FAULT] == [1, "2026-10-10T07:45:00"]
 
 
 async def test_reconfigure_offers_the_current_settings(
@@ -533,7 +592,9 @@ async def test_reconfigure_new_line_settings(
 
 @pytest.mark.usefixtures("mock_get_unit")
 async def test_reconfigure_new_line_settings_silent_inverter(
-    hass: HomeAssistant, mock_connection: MockModbusConnection
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test a failed probe puts the entry back on the bus it was taken off."""
     entry = _serial_entry()
@@ -553,7 +614,7 @@ async def test_reconfigure_new_line_settings_silent_inverter(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "inverter_silent"}
-    assert entry.data == MOCK_SERIAL_ENTRY_DATA
+    assert entry.data == snapshot
     assert entry.unique_id == MOCK_SERIAL
     assert entry.state is ConfigEntryState.LOADED
 
@@ -569,7 +630,9 @@ async def test_reconfigure_new_line_settings_silent_inverter(
 
 
 @pytest.mark.usefixtures("mock_get_unit")
-async def test_reconfigure_new_line_settings_wrong_device(hass: HomeAssistant) -> None:
+async def test_reconfigure_new_line_settings_wrong_device(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test a different inverter on the new settings restores the entry."""
     entry = _serial_entry()
     entry.add_to_hass(hass)
@@ -589,7 +652,7 @@ async def test_reconfigure_new_line_settings_wrong_device(hass: HomeAssistant) -
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
-    assert entry.data == MOCK_SERIAL_ENTRY_DATA
+    assert entry.data == snapshot
     assert entry.unique_id == MOCK_SERIAL
     assert entry.state is ConfigEntryState.LOADED
 

@@ -155,7 +155,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(data_schema=user_schema)
+        return self.async_show_form(step_id="user", data_schema=user_schema)
 
     async def async_step_options(
         self, user_input: dict[str, Any] | None = None
@@ -183,7 +183,7 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="options",
             data_schema=options_schema,
-            description_placeholders={CONF_COUNTRY: self.data[CONF_COUNTRY]},
+            description_placeholders={"country": self.data[CONF_COUNTRY]},
         )
 
     async def async_step_reconfigure(
@@ -220,10 +220,9 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
+            step_id="reconfigure",
             data_schema=options_schema,
-            description_placeholders={
-                CONF_COUNTRY: reconfigure_entry.data[CONF_COUNTRY]
-            },
+            description_placeholders={"country": reconfigure_entry.data[CONF_COUNTRY]},
         )
 
 
@@ -261,10 +260,9 @@ class HolidayOptionsFlowHandler(OptionsFlowWithReload):
         )
 
         return self.async_show_form(
+            step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 schema, self.config_entry.options
             ),
-            description_placeholders={
-                CONF_COUNTRY: self.config_entry.data[CONF_COUNTRY]
-            },
+            description_placeholders={"country": self.config_entry.data[CONF_COUNTRY]},
         )

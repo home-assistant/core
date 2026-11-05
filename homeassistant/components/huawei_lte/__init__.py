@@ -386,9 +386,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HuaweiLteConfigEntry) ->
         if sw_version:
             device_info.sw_version = sw_version
         device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=entry.entry_id,
-            **device_info,
+            device_info=device_info,
         )
 
     # Forward config entry setup to platforms

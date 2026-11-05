@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import jwt
 import probatio
 import pytest
@@ -24,6 +25,7 @@ from pytest_homeassistant.common import (
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
     EVENT_USER_UPDATED,
+    DuplicateCredentialsError,
     InvalidAuthError,
     auth_store,
     const as auth_const,
@@ -31,7 +33,7 @@ from homeassistant.auth import (
 )
 from homeassistant.auth.const import GROUP_ID_ADMIN, MFA_SESSION_EXPIRATION
 from homeassistant.auth.models import Credentials
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CoreState, HassJob, HassJobType, HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
@@ -195,6 +197,74 @@ async def test_create_new_user(hass: HomeAssistant) -> None:
     assert events[0].data["user_id"] == user.id
 
 
+async def _async_sign_in(manager: auth.AuthManager) -> Credentials:
+    """Finish a login flow as test-user and return its credentials."""
+    step = await manager.login_flow.async_init(("insecure_example", None))
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"username": "test-user", "password": "test-pass"}
+    )
+    return step["result"]
+
+
+async def test_new_credentials_signed_in_twice(hass: HomeAssistant) -> None:
+    """Test two first sign ins of one account create one user."""
+    manager = await auth.auth_manager_from_config(
+        hass,
+        [
+            {
+                "type": "insecure_example",
+                "users": [{"username": "test-user", "password": "test-pass"}],
+            }
+        ],
+        [],
+    )
+    first = await _async_sign_in(manager)
+    second = await _async_sign_in(manager)
+    assert first.is_new
+    assert second.is_new
+
+    user = await manager.async_get_or_create_user(first)
+    with pytest.raises(DuplicateCredentialsError):
+        await manager.async_get_or_create_user(second)
+
+    assert await manager.async_get_users() == [user]
+
+
+async def test_new_credentials_redeemed_concurrently(hass: HomeAssistant) -> None:
+    """Test concurrent first sign ins of one account create one user."""
+    manager = await auth.auth_manager_from_config(
+        hass,
+        [
+            {
+                "type": "insecure_example",
+                "users": [{"username": "test-user", "password": "test-pass"}],
+            }
+        ],
+        [],
+    )
+    provider = manager.auth_providers[0]
+    first = await _async_sign_in(manager)
+    second = await _async_sign_in(manager)
+    release = asyncio.Event()
+    user_meta = provider.async_user_meta_for_credentials
+
+    async def slow_user_meta(credentials: Credentials) -> auth_models.UserMeta:
+        await release.wait()
+        return await user_meta(credentials)
+
+    with patch.object(provider, "async_user_meta_for_credentials", slow_user_meta):
+        tasks = [
+            hass.async_create_task(manager.async_get_or_create_user(credentials))
+            for credentials in (first, second)
+        ]
+        await asyncio.sleep(0)
+        release.set()
+        user, error = await asyncio.gather(*tasks, return_exceptions=True)
+
+    assert isinstance(error, DuplicateCredentialsError)
+    assert await manager.async_get_users() == [user]
+
+
 async def test_login_as_existing_user(mock_hass) -> None:
     """Test login as existing user."""
     manager = await auth.auth_manager_from_config(
@@ -307,6 +377,50 @@ async def test_linking_user_to_two_auth_providers(
     with pytest.raises(ValueError):
         await manager.async_link_user(user_2, new_credential)
     assert len(user_2.credentials) == 0
+
+
+async def test_removing_credentials_ends_their_sessions(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test removing credentials revokes only the sessions that signed in with them."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {"type": "insecure_example", "users": []},
+            {"type": "insecure_example", "id": "another-provider", "users": []},
+        ],
+        [],
+    )
+    provider = manager.get_auth_provider("insecure_example", None)
+    other_provider = manager.get_auth_provider("insecure_example", "another-provider")
+    assert provider is not None
+    assert other_provider is not None
+    user = await manager.async_create_user("Alice")
+    removed = provider.async_create_credentials({"username": "alice"})
+    kept = other_provider.async_create_credentials({"username": "alice"})
+    await manager.async_link_user(user, removed)
+    await manager.async_link_user(user, kept)
+    removed_session = await manager.async_create_refresh_token(
+        user, CLIENT_ID, credential=removed
+    )
+    kept_session = await manager.async_create_refresh_token(
+        user, "https://other.example.com/", credential=kept
+    )
+    unrelated = await manager.async_create_refresh_token(
+        user, "https://unrelated.example.com/"
+    )
+    revoked: list[str] = []
+    manager.async_register_revoke_token_callback(
+        removed_session.id, lambda: revoked.append(removed_session.id)
+    )
+
+    await manager.async_remove_credentials(removed)
+
+    assert user.credentials == [kept]
+    assert manager.async_get_refresh_token(removed_session.id) is None
+    assert revoked == [removed_session.id]
+    assert manager.async_get_refresh_token(kept_session.id) is kept_session
+    assert manager.async_get_refresh_token(unrelated.id) is unrelated
 
 
 async def test_saving_loading(
@@ -758,6 +872,168 @@ async def test_create_long_lived_access_token(mock_hass) -> None:
     assert (
         jwt_payload["exp"] - jwt_payload["iat"] == timedelta(days=300).total_seconds()
     )
+
+
+async def test_log_access_token_usage_long_lived_access_token(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test long-lived access token usage is saved once after a delay."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    token_1 = await manager.async_create_refresh_token(
+        user,
+        client_name="Script 1",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    token_2 = await manager.async_create_refresh_token(
+        user,
+        client_name="Script 2",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    store = manager._store._store
+    await flush_store(store)
+
+    with patch.object(
+        store, "async_delay_save", wraps=store.async_delay_save
+    ) as mock_delay_save:
+        freezer.tick(timedelta(seconds=1))
+        manager.async_log_access_token_usage(token_1, "192.168.0.1")
+        manager.async_log_access_token_usage(token_2, "192.168.0.2")
+        freezer.tick(timedelta(seconds=1))
+        manager.async_log_access_token_usage(token_1, "192.168.0.3")
+        assert token_1.last_used_at == dt_util.utcnow()
+        assert token_1.last_used_ip == "192.168.0.3"
+        assert mock_delay_save.call_count == 0
+
+        freezer.tick(auth_store.LONG_LIVED_ACCESS_TOKEN_USAGE_SAVE_DELAY)
+        async_fire_time_changed(hass)
+        assert mock_delay_save.call_count == 1
+
+    await flush_store(store)
+    store2 = auth_store.AuthStore(hass)
+    await store2.async_load()
+    stored_token_1 = store2.async_get_refresh_token(token_1.id)
+    assert stored_token_1.last_used_at == token_1.last_used_at
+    assert stored_token_1.last_used_ip == "192.168.0.3"
+    assert token_1.expire_at is None
+    assert store2.async_get_refresh_token(token_2.id).last_used_ip == "192.168.0.2"
+
+
+async def test_log_access_token_usage_saved_by_other_save(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a save landing before the delay also saves the token usage."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Script",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    store = manager._store._store
+    await flush_store(store)
+
+    manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
+    await manager.async_update_user(user, name="Updated")
+    await flush_store(store)
+
+    with patch.object(store, "async_delay_save") as mock_delay_save:
+        freezer.tick(auth_store.LONG_LIVED_ACCESS_TOKEN_USAGE_SAVE_DELAY)
+        async_fire_time_changed(hass)
+        mock_delay_save.assert_not_called()
+
+    store2 = auth_store.AuthStore(hass)
+    await store2.async_load()
+    assert store2.async_get_refresh_token(refresh_token.id).last_used_ip == (
+        "192.168.0.1"
+    )
+
+
+async def test_log_access_token_usage_saved_on_stop(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test pending token usage is saved when Home Assistant stops."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Script",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    await flush_store(manager._store._store)
+
+    manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
+    await hass.async_stop(force=True)
+
+    stored_tokens = {
+        token["id"]: token for token in hass_storage["auth"]["data"]["refresh_tokens"]
+    }
+    assert stored_tokens[refresh_token.id]["last_used_ip"] == "192.168.0.1"
+
+
+async def test_log_access_token_usage_in_shutdown_job_saved_on_stop(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test token usage logged by a later shutdown job is saved on stop."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Script",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    await flush_store(manager._store._store)
+
+    # Requests are still authenticated while shutdown jobs run
+    remove_job = hass.async_add_shutdown_job(
+        HassJob(
+            lambda: manager.async_log_access_token_usage(refresh_token, "192.168.0.1"),
+            job_type=HassJobType.Callback,
+        )
+    )
+    await hass.async_stop(force=True)
+    # The hass fixture stops Home Assistant again on teardown
+    remove_job()
+
+    stored_tokens = {
+        token["id"]: token for token in hass_storage["auth"]["data"]["refresh_tokens"]
+    }
+    assert stored_tokens[refresh_token.id]["last_used_ip"] == "192.168.0.1"
+
+
+async def test_log_access_token_usage_while_stopping(hass: HomeAssistant) -> None:
+    """Test token usage logged while stopping is saved without a delay."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(
+        user,
+        client_name="Script",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    store = manager._store._store
+    await flush_store(store)
+
+    hass.set_state(CoreState.stopping)
+    with patch.object(store, "async_delay_save") as mock_delay_save:
+        manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
+    mock_delay_save.assert_called_once()
+    assert manager._store._usage_save_timer is None
+
+
+async def test_log_access_token_usage_ignores_normal_token(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test usage of a normal refresh token is only logged on token refresh."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+    manager.async_create_access_token(refresh_token)
+    last_used_at = refresh_token.last_used_at
+
+    freezer.tick(timedelta(hours=1))
+    manager.async_log_access_token_usage(refresh_token, "192.168.0.1")
+    assert refresh_token.last_used_at == last_used_at
+    assert refresh_token.last_used_ip is None
 
 
 async def test_one_long_lived_access_token_per_refresh_token(mock_hass) -> None:

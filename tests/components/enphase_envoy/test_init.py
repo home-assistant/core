@@ -48,6 +48,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -1026,7 +1027,7 @@ async def test_coordinator_background_tasks_session_is_closed_not_loaded(
         ),
         patch(
             "homeassistant.components.enphase_envoy.async_unload_entry",
-            return_value=False,
+            side_effect=ConfigEntryError,
         ) as mock_unload,
     ):
         await hass.config_entries.async_unload(config_entry.entry_id)

@@ -14,7 +14,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import (
-    PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
     ProtectSettableKeysMixin,
@@ -52,7 +51,6 @@ CAMERA: tuple[ProtectTextEntityDescription, ...] = (
         ufp_public_value_fn=_get_doorbell_current,
         ufp_set_method_fn=_set_doorbell_message,
         ufp_required_field="feature_flags.has_lcd_screen",
-        ufp_perm=PermRequired.WRITE,
     ),
 )
 

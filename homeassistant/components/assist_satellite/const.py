@@ -1,7 +1,7 @@
 """Constants for assist satellite."""
 
 import asyncio
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
@@ -30,3 +30,27 @@ class AssistSatelliteEntityFeature(IntFlag):
 
     START_CONVERSATION = 2
     """Device supports starting conversations."""
+
+
+class AssistSatelliteService(StrEnum):
+    """Store keys for assist satellite services."""
+
+    ANNOUNCE = "announce"
+    ASK_QUESTION = "ask_question"
+    START_CONVERSATION = "start_conversation"
+
+
+class AssistSatelliteServiceArgument(StrEnum):
+    """Store keys for assist satellite service arguments."""
+
+    ANSWERS = "answers"
+    ENTITY_ID = "entity_id"
+    EXTRA_SYSTEM_PROMPT = "extra_system_prompt"
+    MEDIA_ID = "media_id"
+    MESSAGE = "message"
+    PREANNOUNCE = "preannounce"
+    PREANNOUNCE_MEDIA_ID = "preannounce_media_id"
+    QUESTION = "question"
+    QUESTION_MEDIA_ID = "question_media_id"
+    START_MEDIA_ID = "start_media_id"
+    START_MESSAGE = "start_message"

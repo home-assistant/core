@@ -37,7 +37,7 @@ async def test_user(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.pegel_online.async_setup_entry", return_value=True
+            "homeassistant.components.pegel_online.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.pegel_online.config_flow.PegelOnline",
@@ -105,7 +105,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.pegel_online.async_setup_entry", return_value=True
+            "homeassistant.components.pegel_online.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.pegel_online.config_flow.PegelOnline",
@@ -150,7 +150,7 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.pegel_online.async_setup_entry", return_value=True
+            "homeassistant.components.pegel_online.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.pegel_online.config_flow.PegelOnline",

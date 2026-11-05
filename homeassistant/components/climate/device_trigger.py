@@ -7,6 +7,10 @@ from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
     state as state_trigger,
 )
+from homeassistant.components.homeassistant.triggers.numeric_state import (
+    NumericStateTriggerArgument,
+)
+from homeassistant.components.homeassistant.triggers.state import StateTriggerArgument
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -23,8 +27,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import const
-from .const import DOMAIN
+from .const import DOMAIN, HVAC_MODES, ClimateEntityStateAttribute
 
 TRIGGER_TYPES = {
     "current_temperature_changed",
@@ -36,7 +39,7 @@ HVAC_MODE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         probatio.Required(CONF_TYPE): "hvac_mode_changed",
-        probatio.Required(state_trigger.CONF_TO): probatio.In(const.HVAC_MODES),
+        probatio.Required(StateTriggerArgument.TO): probatio.In(HVAC_MODES),
         probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
@@ -97,8 +100,7 @@ async def async_get_triggers(
 
         if (
             state
-            and const.ClimateEntityStateAttribute.CURRENT_TEMPERATURE
-            in state.attributes
+            and ClimateEntityStateAttribute.CURRENT_TEMPERATURE in state.attributes
         ):
             triggers.append(
                 {
@@ -107,10 +109,7 @@ async def async_get_triggers(
                 }
             )
 
-        if (
-            state
-            and const.ClimateEntityStateAttribute.CURRENT_HUMIDITY in state.attributes
-        ):
+        if state and ClimateEntityStateAttribute.CURRENT_HUMIDITY in state.attributes:
             triggers.append(
                 {
                     **base_trigger,
@@ -129,18 +128,16 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if (trigger_type := config[CONF_TYPE]) == "hvac_mode_changed":
-        state_config = {
-            state_trigger.CONF_PLATFORM: "state",
-            state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            state_trigger.CONF_TO: config[state_trigger.CONF_TO],
-            state_trigger.CONF_FROM: [
-                mode
-                for mode in const.HVAC_MODES
-                if mode != config[state_trigger.CONF_TO]
+        state_config: ConfigType = {
+            StateTriggerArgument.PLATFORM: "state",
+            StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
+            StateTriggerArgument.TO: config[StateTriggerArgument.TO],
+            StateTriggerArgument.FROM: [
+                mode for mode in HVAC_MODES if mode != config[StateTriggerArgument.TO]
             ],
         }
         if CONF_FOR in config:
-            state_config[CONF_FOR] = config[CONF_FOR]
+            state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
         state_config = await state_trigger.async_validate_trigger_config(
             hass, state_config
         )
@@ -148,26 +145,26 @@ async def async_attach_trigger(
             hass, state_config, action, trigger_info, platform_type="device"
         )
 
-    numeric_state_config = {
-        numeric_state_trigger.CONF_PLATFORM: "numeric_state",
-        numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+    numeric_state_config: ConfigType = {
+        NumericStateTriggerArgument.PLATFORM: "numeric_state",
+        NumericStateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
     }
 
     if trigger_type == "current_temperature_changed":
-        numeric_state_config[numeric_state_trigger.CONF_VALUE_TEMPLATE] = (
+        numeric_state_config[NumericStateTriggerArgument.VALUE_TEMPLATE] = (
             "{{ state.attributes.current_temperature }}"
         )
     else:  # trigger_type == "current_humidity_changed"
-        numeric_state_config[numeric_state_trigger.CONF_VALUE_TEMPLATE] = (
+        numeric_state_config[NumericStateTriggerArgument.VALUE_TEMPLATE] = (
             "{{ state.attributes.current_humidity }}"
         )
 
     if CONF_ABOVE in config:
-        numeric_state_config[CONF_ABOVE] = config[CONF_ABOVE]
+        numeric_state_config[NumericStateTriggerArgument.ABOVE] = config[CONF_ABOVE]
     if CONF_BELOW in config:
-        numeric_state_config[CONF_BELOW] = config[CONF_BELOW]
+        numeric_state_config[NumericStateTriggerArgument.BELOW] = config[CONF_BELOW]
     if CONF_FOR in config:
-        numeric_state_config[CONF_FOR] = config[CONF_FOR]
+        numeric_state_config[NumericStateTriggerArgument.FOR] = config[CONF_FOR]
 
     numeric_state_config = await numeric_state_trigger.async_validate_trigger_config(
         hass, numeric_state_config
@@ -190,9 +187,7 @@ async def async_get_trigger_capabilities(
         return {
             "extra_fields": probatio.Schema(
                 {
-                    probatio.Required(state_trigger.CONF_TO): probatio.In(
-                        const.HVAC_MODES
-                    ),
+                    probatio.Required(StateTriggerArgument.TO): probatio.In(HVAC_MODES),
                     probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
                 }
             )

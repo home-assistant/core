@@ -61,16 +61,17 @@ async def async_setup_entry(
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
 
-    async_add_entities(
+    entities: list[SofarSensor | SofarTotalSensor] = [
         SofarSensor(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
         if description.component in served and not _is_battery_pack(description)
-    )
-    async_add_entities(
+    ]
+    entities.extend(
         SofarTotalSensor(runtime_data, description)
         for description in TOTAL_SENSOR_DESCRIPTIONS
         if description.component in served
     )
+    async_add_entities(entities)
 
     @callback
     def _async_add_wired_packs() -> None:

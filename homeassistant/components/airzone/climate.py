@@ -43,7 +43,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -138,7 +137,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_zone_id: str,
         zone_data: dict,
     ) -> None:

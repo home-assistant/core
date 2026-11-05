@@ -60,7 +60,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
-from . import KnxEntityGenerator
+from . import KnxEntityGenerator, KnxSuggestionGetter
 
 
 class _TestTelegramStore(BufferedMemoryStore):
@@ -149,12 +149,17 @@ class KNXTestKit:
         add_entry_to_hass: bool = True,
         state_updater: bool = True,
         real_telegram_store: bool = False,
+        wait_for_telegram_store: bool = True,
     ) -> None:
         """Create the KNX integration.
 
         By default a fast in-memory telegram store is used. Tests that exercise
         the SQLite/PostgreSQL telegram backends pass ``real_telegram_store=True``
         to build the real SQLite store (kept in-memory).
+
+        The telegram store initializes in a background task. By default setup
+        waits for it so tests see an initialized store; tests that exercise
+        that window pass ``wait_for_telegram_store=False``.
         """
 
         async def patch_xknx_start():
@@ -217,7 +222,9 @@ class KNXTestKit:
                 state_updater_patcher.start()
 
             await async_setup_component(self.hass, DOMAIN, knx_config)
-            await self.hass.async_block_till_done()
+            await self.hass.async_block_till_done(
+                wait_background_tasks=wait_for_telegram_store
+            )
             # remove patch after setup so state_updater can be tested
             state_updater_patcher.stop()
 
@@ -508,6 +515,28 @@ async def create_ui_entity(
         return entity
 
     return _create_ui_entity
+
+
+@pytest.fixture
+async def get_entity_suggestions(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> KnxSuggestionGetter:
+    """Return a helper to query entity suggestions via WS.
+
+    The KNX integration must be set up before using the helper.
+    """
+    ws_client = await hass_ws_client(hass)
+
+    async def _get_entity_suggestions(**filters: Any) -> dict[str, Any]:
+        """Return the result of `knx/get_entity_suggestions` with given filters."""
+        await ws_client.send_json_auto_id(
+            {"type": "knx/get_entity_suggestions"} | filters
+        )
+        res = await ws_client.receive_json()
+        assert res["success"], res
+        return res["result"]
+
+    return _get_entity_suggestions
 
 
 @pytest.fixture(autouse=True)

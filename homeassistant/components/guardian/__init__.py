@@ -228,6 +228,7 @@ class PairedSensorManager:
         # clean up entities and the entity registry):
         dev_reg = dr.async_get(self._hass)
         device = dev_reg.async_get_or_create(
-            config_entry_id=self._entry.entry_id, identifiers={(DOMAIN, uid)}
+            config_entry_id=self._entry.entry_id,
+            identifiers={(DOMAIN, uid)},
         )
         dev_reg.async_remove_device(device.id)

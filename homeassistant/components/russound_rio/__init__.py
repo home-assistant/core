@@ -72,7 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
             controller.mac_address
             or f"{client.controllers[1].mac_address}-{controller_id}"
         )
-        connections = None
         via_device_id: str | None = None
         configuration_url = None
         if controller_id != 1:
@@ -82,21 +81,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
                 (DOMAIN, client.controllers[1].mac_address),
                 config_entry_id=entry.entry_id,
             )
-        else:
-            assert controller.mac_address
-            connections = {(CONNECTION_NETWORK_MAC, controller.mac_address)}
         if isinstance(client.connection_handler, RussoundTcpConnectionHandler):
             configuration_url = f"http://{client.connection_handler.host}"
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
+        device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, _device_identifier)},
             manufacturer="Russound",
             name=controller.controller_type,
             model=controller.controller_type,
             sw_version=controller.firmware_version,
-            connections=connections,
             via_device_id=via_device_id,
             configuration_url=configuration_url,
+        )
+        if controller_id == 1:
+            assert controller.mac_address
+            device_info.connections = {(CONNECTION_NETWORK_MAC, controller.mac_address)}
+        device_registry.async_get_or_create_from_info(
+            config_entry_id=entry.entry_id, device_info=device_info
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

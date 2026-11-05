@@ -73,7 +73,7 @@ async def test_migrate_entry_from_v1_1_to_v1_4(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -142,7 +142,7 @@ async def test_migrate_entry_from_v1_2_to_v1_4(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -193,7 +193,7 @@ async def test_migrate_entry_web_search_not_reapplied(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -235,7 +235,7 @@ async def test_migrate_entry_v1_3_to_v1_4_unknown_model(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -275,7 +275,7 @@ async def test_migrate_entry_v1_3_to_v1_4_keeps_existing_modalities(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

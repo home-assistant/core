@@ -11,7 +11,7 @@ from homeassistant.components.repairs import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import CONF_TOPIC, DOMAIN
+from .const import DOMAIN
 
 
 class TopicProtectedRepairFlow(RepairsFlow):
@@ -21,6 +21,7 @@ class TopicProtectedRepairFlow(RepairsFlow):
         """Initialize."""
         self.unique_id = data["unique_id"]
         self.topic = data["topic"]
+        self.name = data["name"]
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -48,7 +49,7 @@ class TopicProtectedRepairFlow(RepairsFlow):
         return self.async_show_form(
             step_id="confirm",
             data_schema=probatio.Schema({}),
-            description_placeholders={CONF_TOPIC: self.topic},
+            description_placeholders={"topic": self.topic, "name": self.name},
         )
 
 

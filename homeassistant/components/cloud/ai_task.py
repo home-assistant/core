@@ -16,12 +16,12 @@ from hass_nabucasa.llm import (
 from PIL import Image
 
 from homeassistant.components import ai_task, conversation
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
+from . import CloudConfigEntry
 from .const import AI_TASK_ENTITY_UNIQUE_ID, DATA_CLOUD
 from .entity import BaseCloudLLMEntity
 
@@ -89,7 +89,7 @@ async def async_prepare_image_generation_attachments(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: CloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud AI Task entity."""

@@ -448,6 +448,11 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.ENUM,
         options=["dead", "low_battery", "maintenance_required", "no_defect"],
     ),
+    OverkizSensorDescription(
+        key=OverkizState.CORE_ERROR_CODE,
+        name="Error code",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     # DomesticHotWaterProduction/WaterHeatingSystem
     OverkizSensorDescription(
         key=OverkizState.IO_HEAT_PUMP_OPERATING_TIME,
