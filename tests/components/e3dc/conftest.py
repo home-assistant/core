@@ -7,6 +7,7 @@ from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.e3dc import PLATFORMS
 from homeassistant.components.e3dc.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -65,7 +66,7 @@ def mock_get_unit(mock_connection: MockModbusConnection) -> Generator[MagicMock]
 @pytest.fixture
 def platforms() -> list[Platform]:
     """The platforms to set up; all of them unless a test narrows it."""
-    return [Platform.BINARY_SENSOR, Platform.SENSOR]
+    return PLATFORMS
 
 
 @pytest.fixture
