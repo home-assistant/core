@@ -73,6 +73,10 @@
         "item": {
           "description": "The name that represents the to-do item.",
           "name": "Item name"
+        },
+        "section": {
+          "description": "The section (group or category) the to-do item belongs to.",
+          "name": "Section"
         }
       },
       "name": "Add to-do list item"
@@ -123,6 +127,10 @@
         "rename": {
           "description": "The new name for the to-do item",
           "name": "Rename item"
+        },
+        "section": {
+          "description": "[%key:component::todo::services::add_item::fields::section::description%]",
+          "name": "[%key:component::todo::services::add_item::fields::section::name%]"
         },
         "status": {
           "description": "A status for the to-do item.",

@@ -36,6 +36,9 @@ class TodoItem:
     completed: dt.datetime | None = None
     """The date and time that a to-do item was marked completed."""
 
+    section: str | None = None
+    """The name of the section (group, category) the item belongs to, if any."""
+
 
 _TODO_ITEM_FIELD_NAMES: tuple[str, ...] = tuple(
     field.name for field in dataclasses.fields(TodoItem)

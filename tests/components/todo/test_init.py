@@ -19,6 +19,7 @@ from homeassistant.components.todo import (
     ATTR_DUE_DATETIME,
     ATTR_ITEM,
     ATTR_RENAME,
+    ATTR_SECTION,
     ATTR_STATUS,
     DOMAIN,
     TodoItem,
@@ -244,6 +245,11 @@ async def test_add_item_service_raises(
             ServiceValidationError,
             "does not support setting field: due_datetime",
         ),
+        (
+            {ATTR_ITEM: "Submit forms", ATTR_SECTION: "Paperwork"},
+            ServiceValidationError,
+            "does not support setting field: section",
+        ),
     ],
 )
 async def test_add_item_service_invalid_input(
@@ -318,6 +324,15 @@ async def test_add_item_service_invalid_input(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
                 description="Submit revised draft",
+            ),
+        ),
+        (
+            TodoListEntityFeature.SET_SECTION_ON_ITEM,
+            {ATTR_ITEM: "New item", ATTR_SECTION: "Fresh produce"},
+            TodoItem(
+                summary="New item",
+                status=TodoItemStatus.NEEDS_ACTION,
+                section="Fresh produce",
             ),
         ),
     ],
@@ -566,6 +581,7 @@ async def test_update_item_service_invalid_input(
         ({ATTR_DUE_DATETIME: f"2023-11-13T17:00:00{TEST_OFFSET}"}),
         ({ATTR_DUE_DATE: "2023-11-13"}),
         ({ATTR_DESCRIPTION: "Submit revised draft"}),
+        ({ATTR_SECTION: "Fresh produce"}),
     ],
 )
 async def test_update_todo_item_field_unsupported(
@@ -618,6 +634,16 @@ async def test_update_todo_item_field_unsupported(
                 summary="Item #1",
                 status=TodoItemStatus.NEEDS_ACTION,
                 description="Submit revised draft",
+            ),
+        ),
+        (
+            TodoListEntityFeature.SET_SECTION_ON_ITEM,
+            {"section": "Fresh produce"},
+            TodoItem(
+                uid="1",
+                summary="Item #1",
+                status=TodoItemStatus.NEEDS_ACTION,
+                section="Fresh produce",
             ),
         ),
     ],
@@ -699,6 +725,16 @@ async def test_update_todo_item_extended_fields(
             {ATTR_DUE_DATETIME: None},
             TodoItem(uid="1", summary="Summary"),
         ),
+        (
+            [TodoItem(uid="1", summary="Summary", section="Grocery")],
+            {ATTR_SECTION: "Fresh produce"},
+            TodoItem(uid="1", summary="Summary", section="Fresh produce"),
+        ),
+        (
+            [TodoItem(uid="1", summary="Summary", section="Grocery")],
+            {ATTR_SECTION: None},
+            TodoItem(uid="1", summary="Summary"),
+        ),
     ],
     ids=[
         "overwrite_description",
@@ -708,6 +744,8 @@ async def test_update_todo_item_extended_fields(
         "clear_due_date",
         "overwrite_due_date_with_time",
         "clear_due_date_time",
+        "overwrite_section",
+        "clear_section",
     ],
 )
 async def test_update_todo_item_extended_fields_overwrite_existing_values(
@@ -723,6 +761,7 @@ async def test_update_todo_item_extended_fields_overwrite_existing_values(
         TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
+        | TodoListEntityFeature.SET_SECTION_ON_ITEM
     )
     await create_mock_platform(hass, [test_entity])
 
@@ -1095,6 +1134,7 @@ async def test_subscribe(
                 "due": None,
                 "description": None,
                 "completed": None,
+                "section": None,
             },
             {
                 "summary": "Item #2",
@@ -1103,6 +1143,7 @@ async def test_subscribe(
                 "due": None,
                 "description": None,
                 "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
+                "section": None,
             },
         ]
     }
@@ -1123,6 +1164,7 @@ async def test_subscribe(
                 "due": None,
                 "description": None,
                 "completed": None,
+                "section": None,
             },
             {
                 "summary": "Item #2",
@@ -1131,6 +1173,7 @@ async def test_subscribe(
                 "due": None,
                 "description": None,
                 "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
+                "section": None,
             },
             {
                 "summary": "Item #3",
@@ -1139,6 +1182,7 @@ async def test_subscribe(
                 "due": None,
                 "description": None,
                 "completed": None,
+                "section": None,
             },
         ]
     }
@@ -1257,6 +1301,7 @@ def test_todo_item_fields(snapshot: SnapshotAssertion) -> None:
             {"due": f"2023-11-17T17:00:00{TEST_OFFSET}"},
         ),
         ({"description": "Some description"}, {"description": "Some description"}),
+        ({"section": "Fresh produce"}, {"section": "Fresh produce"}),
     ],
 )
 async def test_list_todo_items_extended_fields(

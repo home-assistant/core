@@ -19,6 +19,7 @@ ATTR_DUE_DATETIME = "due_datetime"
 ATTR_DESCRIPTION = "description"
 ATTR_ITEM = "item"
 ATTR_RENAME = "rename"
+ATTR_SECTION = "section"
 ATTR_STATUS = "status"
 
 
@@ -42,6 +43,7 @@ class TodoListEntityFeature(IntFlag):
     SET_DUE_DATE_ON_ITEM = 16
     SET_DUE_DATETIME_ON_ITEM = 32
     SET_DESCRIPTION_ON_ITEM = 64
+    SET_SECTION_ON_ITEM = 128
 
 
 class TodoItemStatus(StrEnum):
@@ -62,4 +64,5 @@ class TodoServiceArgument(StrEnum):
     DUE_DATETIME = "due_datetime"
     ITEM = "item"
     RENAME = "rename"
+    SECTION = "section"
     STATUS = "status"

@@ -14,6 +14,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTR_DESCRIPTION,
     ATTR_DUE,
+    ATTR_SECTION,
     DATA_COMPONENT,
     DOMAIN,
     TodoItemStatus,
@@ -59,6 +60,12 @@ TODO_ITEM_FIELDS = [
         validation=probatio.Any(cv.string, None),
         todo_item_field=ATTR_DESCRIPTION,
         required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
+    ),
+    TodoItemFieldDescription(
+        service_field=TodoServiceArgument.SECTION,
+        validation=probatio.Any(cv.string, None),
+        todo_item_field=ATTR_SECTION,
+        required_feature=TodoListEntityFeature.SET_SECTION_ON_ITEM,
     ),
 ]
 
