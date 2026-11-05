@@ -60,6 +60,9 @@ CONFIG_IMAGE = "example-image:1.0"
 INSTALLED_DIGEST = (
     "sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb"
 )
+OTHER_REPO_DIGEST = (
+    "sha256:b69959407d21e8a062e0416bf13405bb2b71ed7a84dde4158ebafacfa06f5578"
+)
 RECREATED_CONTAINER_ID = (
     "0011facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"
 )
@@ -628,3 +631,38 @@ async def test_server_update_unavailable(
 
     assert (state := hass.states.get(SERVER_UPDATE_ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_update_registry_digest_matches_other_repo_digest(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test no update is shown when the registry digest is not the first repo digest."""
+    mock_portainer_watcher.results = {
+        (
+            1,
+            "aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+        ): PortainerImageWatcherResult(
+            endpoint_id=1,
+            container_id="aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+            status=PortainerImageUpdateStatus(
+                update_available=False,
+                local_digest=INSTALLED_DIGEST,
+                registry_digest=OTHER_REPO_DIGEST,
+            ),
+        )
+    }
+
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.UPDATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "sha256:b69959407d21"
+    assert state.attributes[ATTR_LATEST_VERSION] == "sha256:b69959407d21"

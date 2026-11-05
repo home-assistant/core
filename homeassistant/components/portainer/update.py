@@ -43,7 +43,9 @@ _LOGGER = logging.getLogger(__name__)
 class PortainerContainerUpdateEntityDescription(UpdateEntityDescription):
     """Describes Portainer container update entity."""
 
-    installed_version: Callable[[LocalImageInformation], str | None]
+    installed_version: Callable[
+        [LocalImageInformation, PortainerImageUpdateStatus | None], str | None
+    ]
     latest_version: Callable[[PortainerImageUpdateStatus | None], str | None]
 
 
@@ -59,16 +61,25 @@ def _short_digest(digest: str) -> str:
     return f"{algorithm}{separator}{hex_digest[:12]}"
 
 
+def _installed_digest(
+    local_image: LocalImageInformation,
+    image_status: PortainerImageUpdateStatus | None,
+) -> str | None:
+    """Return the installed digest, preferring the one the registry reports."""
+    if not local_image.repo_digests:
+        return None
+    digests = [digest.partition("@")[2] for digest in local_image.repo_digests]
+    if image_status is not None and image_status.registry_digest in digests:
+        return _short_digest(image_status.registry_digest)
+    return _short_digest(digests[0])
+
+
 CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
     PortainerContainerUpdateEntityDescription(
         key="container_image_update",
         translation_key="container_image_update",
         entity_category=EntityCategory.CONFIG,
-        installed_version=lambda data: (
-            _short_digest(data.repo_digests[0].partition("@")[2])
-            if data.repo_digests
-            else None
-        ),
+        installed_version=_installed_digest,
         latest_version=lambda data: (
             _short_digest(digest)
             if data is not None and (digest := data.registry_digest)
@@ -182,7 +193,7 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
     def installed_version(self) -> str | None:
         """Return installed version."""
         return self.entity_description.installed_version(
-            self.container_data.local_image
+            self.container_data.local_image, self.container_data.image_status
         )
 
     @override
