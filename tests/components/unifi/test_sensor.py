@@ -1500,6 +1500,14 @@ async def test_device_system_stats_update_interval(
     await send(11.1, 37.7)
     assert_states("9.9", "35.5")
 
+    # A large change is shown at once, small changes are still held
+    freezer.tick(timedelta(seconds=1))
+    await send(21.0, 37.7)
+    assert_states("21.0", "35.5")
+    freezer.tick(timedelta(seconds=1))
+    await send(22.2, 37.7)
+    assert_states("21.0", "35.5")
+
     # Unavailable is shown at once, and so is the first value afterwards
     await send(12.2, 38.8, disabled=True)
     assert_states(STATE_UNAVAILABLE, STATE_UNAVAILABLE)

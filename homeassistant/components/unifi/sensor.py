@@ -72,6 +72,8 @@ PARALLEL_UPDATES = 0
 
 # UniFi pushes device telemetry every few seconds; limit state changes
 TELEMETRY_UPDATE_INTERVAL = timedelta(seconds=15)
+# A change this large is shown at once, so short peaks are kept
+TELEMETRY_IMMEDIATE_CHANGE = 10.0
 
 # UniFi names the first WAN "WAN", not "WAN1".
 type WanName = Literal["WAN", "WAN2", "WAN3"]
@@ -430,6 +432,7 @@ def make_device_temperatur_sensors() -> tuple[UnifiSensorEntityDescription, ...]
             unique_id_fn=lambda hub, obj_id: f"temperature-{slugify(name)}-{obj_id}",
             value_fn=partial(async_device_temperatures_value_fn, name),
             min_update_interval=TELEMETRY_UPDATE_INTERVAL,
+            immediate_change=TELEMETRY_IMMEDIATE_CHANGE,
         )
 
     return tuple(
@@ -462,6 +465,8 @@ class UnifiSensorEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     """Calculate whether a state change should be recorded."""
     min_update_interval: timedelta | None = None
     """Minimum time between accepted value changes, for noisy telemetry."""
+    immediate_change: float | None = None
+    """Change from the shown value that is accepted within min_update_interval."""
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
@@ -889,6 +894,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         unique_id_fn=lambda hub, obj_id: f"cpu_utilization-{obj_id}",
         value_fn=partial(async_device_system_stats_value_fn, 0),
         min_update_interval=TELEMETRY_UPDATE_INTERVAL,
+        immediate_change=TELEMETRY_IMMEDIATE_CHANGE,
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device memory utilization",
@@ -904,6 +910,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         unique_id_fn=lambda hub, obj_id: f"memory_utilization-{obj_id}",
         value_fn=partial(async_device_system_stats_value_fn, 1),
         min_update_interval=TELEMETRY_UPDATE_INTERVAL,
+        immediate_change=TELEMETRY_IMMEDIATE_CHANGE,
     ),
 )
 
@@ -1044,10 +1051,23 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             or self.native_value is None
             or self._value_accepted_at is None
             or now - self._value_accepted_at >= interval
+            or self._async_immediate_change(value)
         ):
             self._value_accepted_at = now
             return True
         return False
+
+    @callback
+    def _async_immediate_change(self, value: datetime | float | str) -> bool:
+        """Return True if value differs enough to skip min_update_interval."""
+        threshold = self.entity_description.immediate_change
+        old = self.native_value
+        return (
+            threshold is not None
+            and isinstance(value, (int, float))
+            and isinstance(old, (int, float))
+            and abs(value - old) >= threshold
+        )
 
     @override
     async def async_added_to_hass(self) -> None:
