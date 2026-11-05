@@ -1,0 +1,20 @@
+set_sleep_timer:
+  target:
+    entity:
+      integration: yoto
+      domain: media_player
+  fields:
+    duration:
+      example: "00:30:00"
+      selector:
+        duration:
+    end_of_track:
+      selector:
+        constant:
+          value: true
+
+clear_sleep_timer:
+  target:
+    entity:
+      integration: yoto
+      domain: media_player

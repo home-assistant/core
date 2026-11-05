@@ -4,11 +4,12 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
-from yoto_api import Chapter, Track, YotoError
+from yoto_api import Chapter, PlaybackStatus, Track, YotoError
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_SEEK_POSITION,
@@ -24,6 +25,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_SET,
     MediaPlayerState,
 )
+from homeassistant.components.yoto.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -717,5 +719,138 @@ async def test_command_error_raises(
             MEDIA_PLAYER_DOMAIN,
             service,
             {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "expected_seconds"),
+    [
+        pytest.param(
+            "set_sleep_timer", {"duration": {"minutes": 30}}, 1800, id="duration"
+        ),
+        pytest.param("clear_sleep_timer", {}, 0, id="clear"),
+    ],
+)
+async def test_sleep_timer_actions(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    service_data: dict[str, Any],
+    expected_seconds: int,
+) -> None:
+    """Sleep timer actions send the duration in seconds."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        blocking=True,
+    )
+
+    mock_yoto_client.set_sleep_timer.assert_called_once_with(
+        "player-test", expected_seconds
+    )
+
+
+@pytest.mark.parametrize(
+    ("playback_status", "expected_seconds"),
+    [
+        pytest.param(PlaybackStatus.PLAYING, 150, id="playing"),
+        pytest.param(PlaybackStatus.PAUSED, 180, id="paused"),
+    ],
+)
+async def test_set_sleep_timer_end_of_track(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    playback_status: PlaybackStatus,
+    expected_seconds: int,
+) -> None:
+    """The end of track option uses the time left in the current track."""
+    mock_yoto_client.players["player-test"].last_event.playback_status = playback_status
+    await setup_integration(hass, mock_config_entry)
+    freezer.move_to("2026-05-08T12:00:30+00:00")
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_sleep_timer",
+        {ATTR_ENTITY_ID: ENTITY_ID, "end_of_track": True},
+        blocking=True,
+    )
+
+    mock_yoto_client.set_sleep_timer.assert_called_once_with(
+        "player-test", expected_seconds
+    )
+
+
+@pytest.mark.parametrize("field", ["card_id", "track_length", "position"])
+async def test_set_sleep_timer_end_of_track_without_track(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    field: str,
+) -> None:
+    """The end of track option raises when no track is playing."""
+    setattr(mock_yoto_client.players["player-test"].last_event, field, None)
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sleep_timer",
+            {ATTR_ENTITY_ID: ENTITY_ID, "end_of_track": True},
+            blocking=True,
+        )
+
+    mock_yoto_client.set_sleep_timer.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        pytest.param({}, id="missing"),
+        pytest.param({"duration": {"seconds": 0}}, id="zero_duration"),
+        pytest.param({"end_of_track": False}, id="end_of_track_false"),
+        pytest.param({"duration": {"minutes": 5}, "end_of_track": True}, id="both"),
+    ],
+)
+async def test_set_sleep_timer_invalid(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    service_data: dict[str, Any],
+) -> None:
+    """Invalid sleep timer requests are rejected."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sleep_timer",
+            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            blocking=True,
+        )
+
+    mock_yoto_client.set_sleep_timer.assert_not_called()
+
+
+async def test_sleep_timer_command_error(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A failing sleep timer command surfaces as HomeAssistantError."""
+    await setup_integration(hass, mock_config_entry)
+    mock_yoto_client.set_sleep_timer.side_effect = YotoError("nope")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sleep_timer",
+            {ATTR_ENTITY_ID: ENTITY_ID, "duration": {"minutes": 5}},
             blocking=True,
         )
