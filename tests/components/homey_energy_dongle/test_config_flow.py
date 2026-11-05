@@ -403,6 +403,7 @@ async def test_zeroconf_unknown_version(
         result["flow_id"], user_input={CONF_DSMR_VERSION: "5"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Homey Energy Dongle (37e4)"
     assert result["data"] == {
         CONF_HOST: "192.168.1.50",
         CONF_PORT: 80,

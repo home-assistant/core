@@ -89,6 +89,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _discovered: dict[str, str | int] | None = None
+    _title = "Homey Energy Dongle"
     _telegram: str | None = None
     _detected_version: str | None = None
     _meter_identified = False
@@ -184,7 +185,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             self._detected_version = None
         return None
 
-    async def _async_create_entry(self, title: str, version: str) -> ConfigFlowResult:
+    async def _async_create_entry(self, version: str) -> ConfigFlowResult:
         """Create the entry from the discovered address and meter profile."""
         if TYPE_CHECKING:
             assert self._discovered is not None
@@ -194,7 +195,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(None)
         self._abort_if_unidentified_entry_on_host(self._discovered)
         return self.async_create_entry(
-            title=title,
+            title=self._title,
             data={**self._discovered, CONF_DSMR_VERSION: version},
         )
 
@@ -212,9 +213,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             }
             if (error := await self._async_probe(self._discovered)) is None:
                 if self._detected_version is not None:
-                    return await self._async_create_entry(
-                        "Homey Energy Dongle", self._detected_version
-                    )
+                    return await self._async_create_entry(self._detected_version)
                 return await self.async_step_dsmr_version()
             errors["base"] = error
 
@@ -237,7 +236,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             version = user_input[CONF_DSMR_VERSION]
             if (error := await self._async_identify(self._discovered, version)) is None:
-                return await self._async_create_entry("Homey Energy Dongle", version)
+                return await self._async_create_entry(version)
             errors["base"] = error
 
         return self.async_show_form(
@@ -265,8 +264,8 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         dongle_id = service_instance_display_name(discovery_info.name).rpartition(" ")[
             2
         ]
-        name = f"Homey Energy Dongle ({dongle_id})"
-        self.context["title_placeholders"] = {"name": name}
+        self._title = f"Homey Energy Dongle ({dongle_id})"
+        self.context["title_placeholders"] = {"name": self._title}
         # Lets the user ignore a dongle that can't be read yet. Reading a
         # telegram replaces it with the meter's identifier.
         await self.async_set_unique_id(f"dongle_{dongle_id}")
@@ -280,7 +279,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._detected_version is None:
             return await self.async_step_dsmr_version()
         if not onboarding.async_is_onboarded(self.hass):
-            return await self._async_create_entry(name, self._detected_version)
+            return await self._async_create_entry(self._detected_version)
         return await self.async_step_zeroconf_confirm()
 
     @override
@@ -301,13 +300,12 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._discovered is not None
             assert self._detected_version is not None
 
-        name = self.context["title_placeholders"]["name"]
         if user_input is not None:
-            return await self._async_create_entry(name, self._detected_version)
+            return await self._async_create_entry(self._detected_version)
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                "name": name,
+                "name": self._title,
                 "version": _DSMR_VERSION_LABELS[self._detected_version],
             },
         )
@@ -320,18 +318,17 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self._discovered is not None
 
         errors: dict[str, str] = {}
-        name = self.context["title_placeholders"]["name"]
         if user_input is not None:
             if (error := await self._async_probe(self._discovered)) is not None:
                 errors["base"] = error
             elif self._detected_version is not None:
-                return await self._async_create_entry(name, self._detected_version)
+                return await self._async_create_entry(self._detected_version)
             else:
                 return await self.async_step_dsmr_version()
 
         return self.async_show_form(
             step_id="zeroconf_meter",
-            description_placeholders={"name": name},
+            description_placeholders={"name": self._title},
             errors=errors,
         )
 
