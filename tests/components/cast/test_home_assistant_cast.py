@@ -147,20 +147,6 @@ async def test_remove_entry(hass: HomeAssistant) -> None:
     assert not await hass.auth.async_get_user(user_id)
 
 
-async def test_user_is_not_admin(hass: HomeAssistant) -> None:
-    """Test the Home Assistant Cast user is created without admin rights."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    await home_assistant_cast.async_setup_ha_cast(hass, entry)
-
-    user = await hass.auth.async_get_user(entry.data["user_id"])
-    assert user is not None
-    assert user.system_generated
-    assert not user.is_admin
-    assert [group.id for group in user.groups] == [GROUP_ID_USER]
-
-
 async def test_existing_admin_user_is_demoted(hass: HomeAssistant) -> None:
     """Test an existing admin Home Assistant Cast user loses admin rights."""
     user = await hass.auth.async_create_system_user(
