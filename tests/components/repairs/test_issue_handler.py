@@ -191,10 +191,29 @@ async def test_delete_stale_issues_at_started(
     }
 
 
+@pytest.mark.parametrize(
+    ("safe_mode", "expected_issues"),
+    [
+        pytest.param(False, {("automation", "current")}, id="normal"),
+        pytest.param(
+            True,
+            {("automation", "current"), ("automation", "stale")},
+            id="safe_mode",
+        ),
+    ],
+)
 async def test_delete_stale_issues_when_started(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    safe_mode: bool,
+    expected_issues: set[tuple[str, str]],
 ) -> None:
-    """Test stale issues are deleted when repairs is set up after start."""
+    """Test stale issues are deleted when repairs is set up after start.
+
+    In safe mode, a custom integration overriding a built-in one isn't loaded, so
+    the translations of the built-in integration can't be used.
+    """
+    hass.config.safe_mode = safe_mode
     hass_storage[ir.STORAGE_KEY] = {
         "version": ir.STORAGE_VERSION_MAJOR,
         "minor_version": ir.STORAGE_VERSION_MINOR,
@@ -210,4 +229,4 @@ async def test_delete_stale_issues_when_started(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    assert set(ir.async_get(hass).issues) == {("automation", "current")}
+    assert set(ir.async_get(hass).issues) == expected_issues

@@ -142,6 +142,9 @@ async def _async_delete_stale_issues(hass: HomeAssistant) -> None:
     The code which created such an issue was removed together with its strings, so
     nothing else deletes it, and the frontend can't show it.
     """
+    # Custom integrations overriding a built-in integration are not loaded
+    if hass.config.safe_mode:
+        return
     issue_registry = ir.async_get(hass)
     if not (
         domains := {
