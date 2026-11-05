@@ -389,6 +389,7 @@ class _DefaultPipelineProcessor:
             )
 
         metadata.language = self.host.pipeline.stt_language or self.host.language
+        metadata.satellite_id = self.host.satellite_id
 
         if not stt_provider.check_metadata(metadata):
             raise SpeechToTextError(

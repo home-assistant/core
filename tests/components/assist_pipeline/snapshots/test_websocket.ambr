@@ -31,6 +31,7 @@
       'format': 'wav',
       'language': 'en-US',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
   })
 # ---
@@ -130,6 +131,7 @@
       'format': 'wav',
       'language': 'en-US',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
   })
 # ---
@@ -241,6 +243,7 @@
       'format': 'wav',
       'language': 'en-US',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
   })
 # ---
@@ -334,6 +337,7 @@
       'codec': 'pcm',
       'format': 'wav',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
     'timeout': 0,
   })
@@ -362,6 +366,7 @@
       'format': 'wav',
       'language': 'en-US',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
   })
 # ---
@@ -455,6 +460,7 @@
       'codec': 'pcm',
       'format': 'wav',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
     'timeout': 1,
   })
@@ -494,6 +500,7 @@
       'format': 'wav',
       'language': 'en-US',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
   })
 # ---
@@ -526,6 +533,7 @@
       'format': 'wav',
       'language': 'en-US',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
   })
 # ---
@@ -580,6 +588,7 @@
       'format': 'wav',
       'language': 'en-US',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
   })
 # ---
@@ -809,6 +818,7 @@
       'format': 'wav',
       'language': 'en-US',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
   })
 # ---
@@ -962,6 +972,7 @@
       'codec': 'pcm',
       'format': 'wav',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
     'timeout': 3,
   })
@@ -975,6 +986,7 @@
       'codec': 'pcm',
       'format': 'wav',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
     'timeout': 3,
   })
@@ -1037,6 +1049,7 @@
       'codec': 'pcm',
       'format': 'wav',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
     'timeout': 3,
   })
@@ -1050,6 +1063,7 @@
       'codec': 'pcm',
       'format': 'wav',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
     'timeout': 3,
   })
@@ -1115,6 +1129,7 @@
       'codec': 'pcm',
       'format': 'wav',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
     'timeout': 3,
   })
@@ -1128,6 +1143,7 @@
       'codec': 'pcm',
       'format': 'wav',
       'sample_rate': 16000,
+      'satellite_id': None,
     }),
     'timeout': 3,
   })

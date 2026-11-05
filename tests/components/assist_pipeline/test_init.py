@@ -94,6 +94,41 @@ async def test_pipeline_from_audio_stream_auto(
     assert mock_stt_provider_entity.received[1].startswith(b"part2")
 
 
+async def test_pipeline_from_audio_stream_satellite_id(
+    hass: HomeAssistant,
+    mock_stt_provider_entity: MockSTTProviderEntity,
+    init_components,
+) -> None:
+    """Test that speech-to-text is told the satellite the audio comes from."""
+
+    async def audio_data():
+        yield make_10ms_chunk(b"part1")
+        yield b""
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=Mock(),
+            stt_metadata=stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            satellite_id="assist_satellite.test",
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
+
+    metadata, _stream = mock_stt_provider_entity.calls[0]
+    assert metadata.satellite_id == "assist_satellite.test"
+
+
 @pytest.mark.usefixtures("init_components")
 async def test_pipeline_from_audio_stream_volume_multiplier(
     hass: HomeAssistant,

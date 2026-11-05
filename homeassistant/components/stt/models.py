@@ -22,6 +22,8 @@ class SpeechMetadata:
     bit_rate: AudioBitRates
     sample_rate: AudioSampleRates
     channel: AudioChannels
+    satellite_id: str | None = None
+    """Entity id of the satellite the audio comes from, if any."""
 
 
 @dataclass

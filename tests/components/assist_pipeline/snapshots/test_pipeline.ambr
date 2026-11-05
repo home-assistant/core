@@ -1167,6 +1167,7 @@
           'codec': <AudioCodecs.PCM: 'pcm'>,
           'format': <AudioFormats.WAV: 'wav'>,
           'sample_rate': <AudioSampleRates.SAMPLERATE_16000: 16000>,
+          'satellite_id': None,
         }),
         'timeout': 0,
       }),
