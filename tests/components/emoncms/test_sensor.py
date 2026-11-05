@@ -13,6 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.emoncms.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -145,3 +146,33 @@ async def test_upgrade_prefixes_custom_name_with_tag(
 
     assert entity_registry.async_get(entity.entity_id).device_id is not None
     assert hass.states.get(entity.entity_id).name == "tag Kitchen power"
+
+
+async def test_untagged_device_survives_url_change(
+    hass: HomeAssistant,
+    config_entry_unique_id: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    emoncms_client: AsyncMock,
+) -> None:
+    """Test the untagged feeds device is kept when the server address changes."""
+    emoncms_client.async_request.return_value = {
+        "success": True,
+        "message": [{**get_feed(1), "tag": ""}],
+    }
+    await setup_integration(hass, config_entry_unique_id)
+    (device,) = dr.async_entries_for_config_entry(
+        device_registry, config_entry_unique_id.entry_id
+    )
+
+    hass.config_entries.async_update_entry(
+        config_entry_unique_id,
+        data={**config_entry_unique_id.data, CONF_URL: "http://1.1.1.3"},
+    )
+    await hass.config_entries.async_reload(config_entry_unique_id.entry_id)
+    await hass.async_block_till_done()
+
+    (reloaded,) = dr.async_entries_for_config_entry(
+        device_registry, config_entry_unique_id.entry_id
+    )
+    assert reloaded.id == device.id
+    assert reloaded.name == "emoncms@1.1.1.3"
