@@ -126,6 +126,8 @@ RECORDING_STALL_FRAGMENTS = 3
 # Covers connecting to the camera, and a copied stream waiting for a keyframe.
 RECORDING_MIN_STALL_SECONDS = 30
 RECORDING_STDERR_LINES = 10
+# ffmpeg exits right after its output ends, a hang must not block the recording.
+RECORDING_EXIT_TIMEOUT = 5
 # ffmpeg errors can quote the input URL, which may carry credentials or tokens.
 RECORDING_STDERR_URL = re.compile(rb"[A-Za-z][A-Za-z0-9+.-]*://\S*[^\s:]")
 
@@ -693,13 +695,18 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             stall_timeout = max(stall_timeout, RECORDING_MIN_STALL_SECONDS)
         timeout = max(stall_timeout, RECORDING_MIN_STALL_SECONDS)
         packets = fmp4_recording_packets(await stream.get_reader())
+        # The first packet is the init segment, video starts with the second.
+        sent_packets = 0
         try:
             while True:
                 try:
                     async with asyncio.timeout(timeout):
                         packet = await anext(packets)
                 except StopAsyncIteration:
-                    await self._async_recording_failed(stream, stderr_task, stderr)
+                    if not await self._async_recording_failed(
+                        stream, stderr_task, stderr
+                    ):
+                        self._log_recording_without_video(stderr)
                     return
                 except TimeoutError:
                     _LOGGER.warning(
@@ -716,6 +723,10 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                     stream, stderr_task, stderr
                 ):
                     return
+                if packet.is_last and sent_packets < 2:
+                    self._log_recording_without_video(stderr)
+                    return
+                sent_packets += 1
                 yield packet
         finally:
             await packets.aclose()
@@ -727,6 +738,13 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 stream.kill()
                 await stream.process.wait()
 
+    def _log_recording_without_video(self, stderr: deque[bytes]) -> None:
+        _LOGGER.warning(
+            "[%s] Recording ffmpeg ended without video: %s",
+            self.entity_id,
+            b" ".join(stderr).decode(errors="replace"),
+        )
+
     async def _async_recording_failed(
         self,
         stream: HAFFmpeg,
@@ -734,7 +752,16 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         stderr: deque[bytes],
     ) -> bool:
         """Log and return if the recording ffmpeg exited with an error."""
-        if not (returncode := await stream.process.wait()):
+        try:
+            async with asyncio.timeout(RECORDING_EXIT_TIMEOUT):
+                returncode = await stream.process.wait()
+        except TimeoutError:
+            _LOGGER.warning(
+                "[%s] Recording ffmpeg did not exit after its output ended",
+                self.entity_id,
+            )
+            return True
+        if not returncode:
             return False
         await asyncio.wait({stderr_task}, timeout=1)
         _LOGGER.error(

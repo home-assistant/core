@@ -1819,6 +1819,73 @@ async def test_camera_secure_video_recording_ffmpeg_fails(
     assert "token" not in caplog.text
 
 
+@pytest.mark.parametrize(
+    "output",
+    [pytest.param(b"", id="no_output"), pytest.param(INIT_SEGMENT, id="init_only")],
+)
+@pytest.mark.usefixtures("no_state_file")
+async def test_camera_secure_video_recording_without_video(
+    hass: HomeAssistant,
+    run_driver: HomeDriver,
+    recording_transport: tuple[AsyncMock, AsyncMock],
+    recording_ffmpeg: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    output: bytes,
+) -> None:
+    """Test a recording without video is logged and not ended as complete."""
+    stdout = asyncio.StreamReader()
+    stdout.feed_data(output)
+    stdout.feed_eof()
+    stderr = asyncio.StreamReader()
+    stderr.feed_eof()
+    recording_ffmpeg.get_reader = AsyncMock(
+        side_effect=lambda source="stdout": stderr if source == "stderr" else stdout
+    )
+    acc = await _secure_video_camera(hass, run_driver)
+    acc.set_selected_recording_configuration(
+        to_base64_str(RECORDING_SELECTION.encode())
+    )
+
+    packets = await _collect(acc)
+
+    assert not any(packet.is_last for packet in packets)
+    assert "Recording ffmpeg ended without video" in caplog.text
+
+
+@pytest.mark.usefixtures("no_state_file")
+async def test_camera_secure_video_recording_ffmpeg_hangs(
+    hass: HomeAssistant,
+    run_driver: HomeDriver,
+    recording_transport: tuple[AsyncMock, AsyncMock],
+    recording_ffmpeg: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ffmpeg that does not exit after its output ends is killed."""
+    waits: list[bool] = []
+
+    async def wait() -> int:
+        # Hang until killed, the second wait is the one after the kill.
+        if not waits:
+            waits.append(True)
+            await asyncio.Event().wait()
+        return 0
+
+    recording_ffmpeg.process.wait = wait
+    acc = await _secure_video_camera(hass, run_driver)
+    acc.set_selected_recording_configuration(
+        to_base64_str(RECORDING_SELECTION.encode())
+    )
+
+    with patch(
+        "homeassistant.components.homekit.type_cameras.RECORDING_EXIT_TIMEOUT", 0.01
+    ):
+        packets = await _collect(acc)
+
+    assert not any(packet.is_last for packet in packets)
+    assert "did not exit after its output ended" in caplog.text
+    recording_ffmpeg.kill.assert_called_once_with()
+
+
 @pytest.mark.usefixtures("no_state_file")
 async def test_camera_secure_video_recording_stalls(
     hass: HomeAssistant,
