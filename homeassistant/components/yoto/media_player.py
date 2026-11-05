@@ -4,7 +4,16 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, override
 
-from yoto_api import Card, Chapter, Group, PlaybackStatus, Track, YotoError, YotoPlayer
+from yoto_api import (
+    Card,
+    Chapter,
+    Group,
+    NoTrackPlayingError,
+    PlaybackStatus,
+    Track,
+    YotoError,
+    YotoPlayer,
+)
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -207,20 +216,29 @@ class YotoMediaPlayer(YotoPlayerEntity, MediaPlayerEntity):
         self, mode: SleepTimerMode, duration: timedelta | None = None
     ) -> None:
         """Stop playback after ``duration`` or at the end of the current track."""
-        if mode is SleepTimerMode.END_OF_TRACK:
-            seconds = self.player.track_time_left
-            if seconds is None:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="no_current_track",
-                )
-        else:
+        client = self.coordinator.client
+        if mode is SleepTimerMode.DURATION:
             if TYPE_CHECKING:
                 assert duration is not None
-            seconds = int(duration.total_seconds())
-        await self._async_run(
-            self.coordinator.client.set_sleep_timer, self._player_id, seconds
-        )
+            await self._async_run(
+                client.set_sleep_timer,
+                self._player_id,
+                int(duration.total_seconds()),
+            )
+            return
+        try:
+            await client.set_sleep_timer_end_of_track(self._player_id)
+        except NoTrackPlayingError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_current_track",
+            ) from err
+        except YotoError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_clear_sleep_timer(self) -> None:
         """Cancel the running sleep timer."""

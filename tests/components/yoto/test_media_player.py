@@ -9,7 +9,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
-from yoto_api import Chapter, PlaybackStatus, Track, YotoError
+from yoto_api import Chapter, NoTrackPlayingError, Track, YotoError
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_SEEK_POSITION,
@@ -761,25 +761,13 @@ async def test_sleep_timer_actions(
     )
 
 
-@pytest.mark.parametrize(
-    ("playback_status", "expected_seconds"),
-    [
-        pytest.param(PlaybackStatus.PLAYING, 150, id="playing"),
-        pytest.param(PlaybackStatus.PAUSED, 180, id="paused"),
-    ],
-)
 async def test_set_sleep_timer_end_of_track(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    playback_status: PlaybackStatus,
-    expected_seconds: int,
 ) -> None:
-    """End of track mode uses the time left in the current track."""
-    mock_yoto_client.players["player-test"].last_event.playback_status = playback_status
+    """End of track mode lets the library time the current track."""
     await setup_integration(hass, mock_config_entry)
-    freezer.move_to("2026-05-08T12:00:30+00:00")
 
     await hass.services.async_call(
         DOMAIN,
@@ -788,31 +776,37 @@ async def test_set_sleep_timer_end_of_track(
         blocking=True,
     )
 
-    mock_yoto_client.set_sleep_timer.assert_called_once_with(
-        "player-test", expected_seconds
-    )
+    mock_yoto_client.set_sleep_timer_end_of_track.assert_called_once_with("player-test")
+    mock_yoto_client.set_sleep_timer.assert_not_called()
 
 
-@pytest.mark.parametrize("field", ["card_id", "track_length", "position"])
-async def test_set_sleep_timer_end_of_track_without_track(
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(
+            NoTrackPlayingError("no track"), ServiceValidationError, id="no_track"
+        ),
+        pytest.param(YotoError("nope"), HomeAssistantError, id="command_failed"),
+    ],
+)
+async def test_set_sleep_timer_end_of_track_error(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    field: str,
+    side_effect: Exception,
+    expected_error: type[Exception],
 ) -> None:
-    """End of track mode raises when no track is playing."""
-    setattr(mock_yoto_client.players["player-test"].last_event, field, None)
+    """End of track errors surface as Home Assistant errors."""
     await setup_integration(hass, mock_config_entry)
+    mock_yoto_client.set_sleep_timer_end_of_track.side_effect = side_effect
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(expected_error):
         await hass.services.async_call(
             DOMAIN,
             "set_sleep_timer",
             {ATTR_ENTITY_ID: ENTITY_ID, "mode": "end_of_track"},
             blocking=True,
         )
-
-    mock_yoto_client.set_sleep_timer.assert_not_called()
 
 
 @pytest.mark.parametrize(
