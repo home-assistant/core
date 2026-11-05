@@ -29,7 +29,25 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "shower_running": {
+        "name": "Shower running"
+      },
+      "steam_running": {
+        "name": "Steam running"
+      }
+    },
     "sensor": {
+      "active_profile": {
+        "name": "Active profile",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "shower_profile_1": "Shower profile 1",
+          "shower_profile_2": "Shower profile 2",
+          "steam_profile_1": "Steam profile 1",
+          "steam_profile_2": "Steam profile 2"
+        }
+      },
       "steam_minutes_remain": {
         "name": "Steam minutes remain"
       },
@@ -38,8 +56,23 @@
       }
     },
     "switch": {
+      "shower_active": {
+        "name": "Shower active"
+      },
+      "shower_profile_1": {
+        "name": "Shower profile 1"
+      },
+      "shower_profile_2": {
+        "name": "Shower profile 2"
+      },
       "steam_active": {
         "name": "Steam active"
+      },
+      "steam_profile_1": {
+        "name": "Steam profile 1"
+      },
+      "steam_profile_2": {
+        "name": "Steam profile 2"
       }
     }
   }
