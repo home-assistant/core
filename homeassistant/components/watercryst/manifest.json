@@ -2,7 +2,7 @@
   "domain": "watercryst",
   "name": "WATERCryst",
   "categories": ["water.water_treatment", "water.meters_leak_detection"],
-  "codeowners": ["@WATERCryst"],
+  "codeowners": ["@WATERCrystDevs"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/watercryst",
   "integration_type": "device",
