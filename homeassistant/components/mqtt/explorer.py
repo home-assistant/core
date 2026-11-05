@@ -1,5 +1,6 @@
 """Explore the topics and payloads on the MQTT broker while someone is watching."""
 
+from codecs import getincrementaldecoder
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -18,6 +19,7 @@ from .models import DATA_MQTT, ReceiveMessage
 from .util import valid_subscribe_topic
 
 DEFAULT_INTERVAL = 2
+MAX_INTERVAL = 60
 MAX_PAYLOAD_SIZE = 16384
 MESSAGES_PER_TOPIC = 5
 MAX_TOPICS = 10000
@@ -56,6 +58,7 @@ class TopicExplorer:
                 return
             stats = self.topics[msg.topic] = TopicStats()
         received = dt_util.utcnow().timestamp()
+        truncated = size > MAX_PAYLOAD_SIZE
         stats.messages += 1
         stats.bytes += size
         stats.interval_messages += 1
@@ -68,8 +71,8 @@ class TopicExplorer:
         messages.append(
             {
                 "topic": msg.topic,
-                "payload": _decode(payload[:MAX_PAYLOAD_SIZE]),
-                "truncated": size > MAX_PAYLOAD_SIZE,
+                "payload": _decode(payload, truncated),
+                "truncated": truncated,
                 "size": size,
                 "timestamp": received,
                 "retain": msg.retain,
@@ -125,12 +128,16 @@ class TopicExplorer:
         }
 
 
-def _decode(payload: str | bytes | bytearray) -> str:
+def _decode(payload: str | bytes | bytearray, truncated: bool) -> str:
     """Return the payload as text, or its repr if it is not UTF-8."""
+    payload = payload[:MAX_PAYLOAD_SIZE]
     if isinstance(payload, str):
         return payload
     try:
-        return payload.decode(DEFAULT_ENCODING)
+        # Not final when truncated, so a code point cut in half is dropped.
+        return getincrementaldecoder(DEFAULT_ENCODING)().decode(
+            payload, final=not truncated
+        )
     except UnicodeDecodeError:
         return str(payload)
 
@@ -141,7 +148,7 @@ def _decode(payload: str | bytes | bytearray) -> str:
         probatio.Required("type"): "mqtt/explorer/subscribe",
         probatio.Optional("topic", default="#"): valid_subscribe_topic,
         probatio.Optional("interval", default=DEFAULT_INTERVAL): probatio.All(
-            probatio.Coerce(float), probatio.Range(min=1)
+            probatio.Coerce(float), probatio.Range(min=1, max=MAX_INTERVAL)
         ),
     }
 )
@@ -155,7 +162,8 @@ def websocket_subscribe_explorer(
         return
 
     interval: float = msg["interval"]
-    client = hass.data[DATA_MQTT].client
+    mqtt_data = hass.data[DATA_MQTT]
+    client = mqtt_data.client
     explorer = TopicExplorer()
     remove_subscription = async_subscribe_internal(
         hass, msg["topic"], explorer.async_add_message, encoding=None
@@ -179,10 +187,19 @@ def websocket_subscribe_explorer(
     )
 
     @callback
-    def unsubscribe() -> None:
+    def stop() -> None:
         remove_timer()
         remove_subscription()
 
+    @callback
+    def unsubscribe() -> None:
+        # Already stopped when MQTT was unloaded or reloaded.
+        if stop in mqtt_data.reload_dispatchers:
+            mqtt_data.reload_dispatchers.remove(stop)
+            stop()
+
+    # Stop before an unload stores the subscription to restore it on a new client.
+    mqtt_data.reload_dispatchers.append(stop)
     connection.subscriptions[msg["id"]] = unsubscribe
     connection.send_result(msg["id"])
     send_snapshot(None)

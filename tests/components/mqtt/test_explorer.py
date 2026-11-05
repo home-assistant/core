@@ -4,11 +4,17 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pytest_homeassistant.common import async_fire_mqtt_message, async_fire_time_changed
+import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+)
 from pytest_homeassistant.typing import MqttMockHAClientGenerator, WebSocketGenerator
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.explorer import MAX_PAYLOAD_SIZE
+from homeassistant.components.mqtt.models import DATA_MQTT, ReceiveMessage
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -110,11 +116,24 @@ async def test_explorer(
     assert (await client.receive_json())["success"]
 
 
+@pytest.mark.parametrize(
+    ("payload", "expected"),
+    [
+        pytest.param("x" * (MAX_PAYLOAD_SIZE + 10), "x" * MAX_PAYLOAD_SIZE, id="ascii"),
+        pytest.param(
+            "x" * (MAX_PAYLOAD_SIZE - 1) + "é",
+            "x" * (MAX_PAYLOAD_SIZE - 1),
+            id="split_code_point",
+        ),
+    ],
+)
 async def test_explorer_truncates_large_payload(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     freezer: FrozenDateTimeFactory,
+    payload: str,
+    expected: str,
 ) -> None:
     """Test a large payload is cut off and marked as truncated."""
     await mqtt_mock_entry()
@@ -123,15 +142,93 @@ async def test_explorer_truncates_large_payload(
     assert (await client.receive_json())["success"]
     await client.receive_json()
 
-    async_fire_mqtt_message(hass, "big", "x" * (MAX_PAYLOAD_SIZE + 10))
+    async_fire_mqtt_message(hass, "big", payload.encode())
     await hass.async_block_till_done()
     freezer.tick(timedelta(seconds=2))
     async_fire_time_changed(hass)
 
     message = (await client.receive_json())["event"]["messages"][0]
-    assert message["payload"] == "x" * MAX_PAYLOAD_SIZE
+    assert message["payload"] == expected
     assert message["truncated"] is True
-    assert message["size"] == MAX_PAYLOAD_SIZE + 10
+    assert message["size"] == len(payload.encode())
+
+
+async def test_explorer_shares_topic_with_text_subscriber(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the explorer and a text subscriber on the same filter get their own payload."""
+    await mqtt_mock_entry()
+    received: list[ReceiveMessage] = []
+
+    @callback
+    def record(msg: ReceiveMessage) -> None:
+        received.append(msg)
+
+    await mqtt.async_subscribe(hass, "sensor/kitchen", record)
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "mqtt/explorer/subscribe", "topic": "sensor/kitchen"}
+    )
+    assert (await client.receive_json())["success"]
+    await client.receive_json()
+
+    async_fire_mqtt_message(hass, "sensor/kitchen", "é".encode())
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=2))
+    async_fire_time_changed(hass)
+
+    assert received[0].payload == "é"
+    message = (await client.receive_json())["event"]["messages"][0]
+    assert message["payload"] == "é"
+    assert message["size"] == 2
+
+
+@pytest.mark.parametrize("interval", [0.5, 61, 1e20])
+async def test_explorer_invalid_interval(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    interval: float,
+) -> None:
+    """Test an interval out of range is rejected before subscribing."""
+    await mqtt_mock_entry()
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "mqtt/explorer/subscribe", "interval": interval}
+    )
+    response = await client.receive_json()
+    assert response["error"]["code"] == "invalid_format"
+    assert hass.data[DATA_MQTT].client.async_count_matching_subscriptions("a") == 0
+
+
+@pytest.mark.usefixtures("mqtt_client_mock")
+async def test_explorer_stops_on_reload(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the explorer subscription is not restored after an MQTT reload."""
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, mqtt.DOMAIN, {})
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "mqtt/explorer/subscribe"})
+    assert (await client.receive_json())["success"]
+    await client.receive_json()
+    assert hass.data[DATA_MQTT].client.async_count_matching_subscriptions("a") == 1
+
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+    assert hass.data[DATA_MQTT].client.async_count_matching_subscriptions("a") == 0
+
+    await client.send_json({"id": 6, "type": "unsubscribe_events", "subscription": 5})
+    assert (await client.receive_json())["success"]
 
 
 async def test_explorer_not_admin(
