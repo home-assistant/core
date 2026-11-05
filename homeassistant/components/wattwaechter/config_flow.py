@@ -12,7 +12,7 @@ from aio_wattwaechter import (
 from aio_wattwaechter.models import SystemInfo
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_HOST,
@@ -96,8 +96,8 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _abort_if_set_up_through_mqtt(self) -> None:
-        """Abort if the device is already set up through MQTT discovery."""
-        if not self._mqtt_client_id:
+        """Abort a discovery of a device that is already set up through MQTT."""
+        if self.source != SOURCE_ZEROCONF or not self._mqtt_client_id:
             return
         device_registry = dr.async_get(self.hass)
         if any(
@@ -232,7 +232,6 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 await self.async_set_unique_id(self._device_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
-                self._abort_if_set_up_through_mqtt()
 
                 return self._create_entry()
 

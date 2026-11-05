@@ -772,9 +772,9 @@ def mqtt_device(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -> None
     )
 
 
-@pytest.mark.usefixtures("mock_client", "mqtt_device")
+@pytest.mark.usefixtures("mock_client", "mock_setup_entry", "mqtt_device")
 async def test_user_flow_set_up_through_mqtt(hass: HomeAssistant) -> None:
-    """Test the user flow aborts for a device set up through MQTT."""
+    """Test the user flow also sets up a device set up through MQTT."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -782,15 +782,15 @@ async def test_user_flow_set_up_through_mqtt(hass: HomeAssistant) -> None:
         result["flow_id"], {CONF_HOST: MOCK_HOST}
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured_mqtt"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_DEVICE_ID
 
 
-@pytest.mark.usefixtures("mqtt_device")
-async def test_auth_step_set_up_through_mqtt(
+@pytest.mark.usefixtures("mock_setup_entry", "mqtt_device")
+async def test_user_flow_auth_step_set_up_through_mqtt(
     hass: HomeAssistant, mock_client: AsyncMock
 ) -> None:
-    """Test the auth step aborts for a device set up through MQTT."""
+    """Test the user flow with a token also sets up a device set up through MQTT."""
     mock_client.system_info.side_effect = WattwaechterAuthenticationError(
         "Auth required"
     )
@@ -807,8 +807,8 @@ async def test_auth_step_set_up_through_mqtt(
         result["flow_id"], {CONF_TOKEN: MOCK_TOKEN}
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured_mqtt"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_DEVICE_ID
 
 
 @pytest.mark.usefixtures("mock_client", "mqtt_device")
@@ -818,6 +818,31 @@ async def test_zeroconf_flow_set_up_through_mqtt(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured_mqtt"
+
+
+@pytest.mark.usefixtures("mqtt_device")
+async def test_zeroconf_auth_step_set_up_through_mqtt(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
+    """Test discovery of a device needing a token aborts once MQTT is known."""
+    mock_client.system_info.side_effect = WattwaechterAuthenticationError(
+        "Auth required"
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY,
+    )
+    assert result["step_id"] == "auth"
+
+    # The MQTT client ID can only be read with the token
+    mock_client.system_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TOKEN: MOCK_TOKEN}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -837,16 +862,15 @@ async def test_zeroconf_flow_set_up_through_mqtt(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test_user_flow_other_mqtt_device(
+@pytest.mark.usefixtures("mock_client")
+async def test_zeroconf_flow_other_mqtt_device(
     hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     device_registry: dr.DeviceRegistry,
     config_entry_domain: str,
     client_id: str,
     disabled_by: ConfigEntryDisabler | None,
 ) -> None:
-    """Test only a device of an enabled MQTT entry aborts the flow."""
+    """Test only a device of an enabled MQTT entry skips the discovery."""
     MockConfigEntry(domain="mqtt").add_to_hass(hass)
     owner_entry = MockConfigEntry(domain=config_entry_domain, disabled_by=disabled_by)
     owner_entry.add_to_hass(hass)
@@ -855,14 +879,13 @@ async def test_user_flow_other_mqtt_device(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: MOCK_HOST}
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY,
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == MOCK_DEVICE_ID
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
 
 
 @pytest.mark.usefixtures("mock_client")
