@@ -6,6 +6,7 @@ import logging
 from typing import override
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.const import TemperatureUnits
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.sensor import (
@@ -211,7 +212,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="cook_set_time",
         translation_key="cook_set_time",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda device: device.state.cook_set_time,
         exists_fn=is_air_fryer,
     ),
@@ -219,7 +220,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="preheat_set_time",
         translation_key="preheat_set_time",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda device: device.state.preheat_set_time,
         exists_fn=is_air_fryer,
     ),
@@ -295,8 +296,8 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value was reported in by the sensor."""
         if self.entity_description.use_device_temperature_unit:
-            if self.device.temp_unit == "celsius":
+            if self.device.temp_unit == TemperatureUnits.CELSIUS:
                 return UnitOfTemperature.CELSIUS
-            if self.device.temp_unit == "fahrenheit":
+            if self.device.temp_unit == TemperatureUnits.FAHRENHEIT:
                 return UnitOfTemperature.FAHRENHEIT
         return super().native_unit_of_measurement
