@@ -45,5 +45,15 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "precipitation_probability": {
+        "name": "Precipitation probability"
+      },
+      "thunderstorm_probability": {
+        "name": "Thunderstorm probability"
+      }
+    }
   }
 }

@@ -9,7 +9,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import SUBENTRY_TYPE_LOCATION
 from .coordinator import ForecaConfigEntry, ForecaUpdateCoordinator
 
-PLATFORMS = [Platform.WEATHER]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> None:
