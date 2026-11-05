@@ -122,12 +122,21 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
             if existing_entry is not None and existing_entry.entry_id != entry.entry_id:
                 self._abort_if_unique_id_configured()
 
+            # Another Cloud ID is a different gateway, so its meters are
+            # unrelated to the meter already configured
+            preferred_hardware_address = (
+                entry.data[CONF_HARDWARE_ADDRESS]
+                if user_input[CONF_CLOUD_ID] == entry.data[CONF_CLOUD_ID]
+                else None
+            )
+
             try:
                 eagle_type, hardware_address = await async_get_type(
                     self.hass,
                     user_input[CONF_CLOUD_ID],
                     user_input[CONF_INSTALL_CODE],
                     user_input[CONF_HOST],
+                    preferred_hardware_address,
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"

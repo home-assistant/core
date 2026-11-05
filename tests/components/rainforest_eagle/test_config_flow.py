@@ -42,6 +42,13 @@ def _mock_reconfigure_entry(
     return entry
 
 
+def _meter(hardware_address: str, connection_status: str) -> MagicMock:
+    """Return a meter as reported by EagleHub.get_device_list."""
+    return MagicMock(
+        hardware_address=hardware_address, connection_status=connection_status
+    )
+
+
 async def _async_configure_success(
     hass: HomeAssistant, flow_id: str
 ) -> ConfigFlowResult:
@@ -721,3 +728,59 @@ async def test_reconfigure_connection_errors(
     result = await _async_reconfigure_success(hass, result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.parametrize(
+    ("new_cloud_id", "meters", "expected_hardware_address"),
+    [
+        pytest.param(
+            "abcdef",
+            [_meter("meter-2", "Connected"), _meter("meter-1", "Connected")],
+            "meter-1",
+            id="keeps_configured_meter",
+        ),
+        pytest.param(
+            "abcdef",
+            [_meter("meter-1", "Not Joined"), _meter("meter-2", "Connected")],
+            "meter-2",
+            id="falls_back_when_configured_meter_unavailable",
+        ),
+        pytest.param(
+            "fedcba",
+            [_meter("meter-2", "Connected"), _meter("meter-1", "Connected")],
+            "meter-2",
+            id="other_cloud_id_ignores_configured_meter",
+        ),
+    ],
+)
+async def test_reconfigure_meter_selection(
+    hass: HomeAssistant,
+    new_cloud_id: str,
+    meters: list[MagicMock],
+    expected_hardware_address: str,
+) -> None:
+    """Test reconfigure prefers the configured meter over the first connected one."""
+    entry = _mock_reconfigure_entry(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch("aioeagle.EagleHub.get_device_list", return_value=meters),
+        patch(
+            "homeassistant.components.rainforest_eagle.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: new_cloud_id,
+                CONF_INSTALL_CODE: "654321",
+                CONF_HOST: "192.168.1.56",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_CLOUD_ID] == new_cloud_id
+    assert entry.data[CONF_HARDWARE_ADDRESS] == expected_hardware_address

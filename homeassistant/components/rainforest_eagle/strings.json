@@ -21,7 +21,7 @@
         "data_description": {
           "host": "The hostname or IP address of your Rainforest gateway."
         },
-        "description": "Your existing entities are kept as long as the Cloud ID and the detected meter stay the same.\n\nChanging the Cloud ID, or having a different meter detected, creates new devices and entities because Home Assistant identifies this device by its Cloud ID and meter address.\n\nIf you are replacing the Rainforest Eagle device, we recommend removing this integration and adding it again."
+        "description": "Your existing entities are kept as long as the Cloud ID and the detected meter stay the same.\n\nHome Assistant identifies this device by its Cloud ID, and its entities by the Cloud ID and meter address. Changing the Cloud ID creates a new device and new entities, while a different detected meter creates new entities on the existing device.\n\nIf you are replacing the Rainforest Eagle device, we recommend removing this integration and adding it again."
       },
       "user": {
         "data": {
