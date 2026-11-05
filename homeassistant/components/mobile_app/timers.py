@@ -32,20 +32,16 @@ def async_handle_timer_event(
     """Handle timer events."""
     if _supports_live_activity(entry):
         _async_handle_live_activity(hass, entry, event_type, timer_info)
+        return
 
     if event_type != TimerEventType.FINISHED:
         return
-
-    if timer_info.name:
-        message = f"{timer_info.name} finished"
-    else:
-        message = f"{timedelta(seconds=timer_info.created_seconds)} timer finished"
 
     _async_send(
         hass,
         entry,
         timer_info,
-        message,
+        _finished_message(timer_info),
         {
             "group": "timers",
             # Android
@@ -59,6 +55,13 @@ def async_handle_timer_event(
             },
         },
     )
+
+
+def _finished_message(timer_info: TimerInfo) -> str:
+    """Return the message for a finished timer."""
+    if timer_info.name:
+        return f"{timer_info.name} finished"
+    return f"{timedelta(seconds=timer_info.created_seconds)} timer finished"
 
 
 def _supports_live_activity(entry: ConfigEntry) -> bool:
@@ -75,42 +78,49 @@ def _async_handle_live_activity(
 ) -> None:
     """Mirror the timer in a Live Activity on the device."""
     tag = f"timer-{timer_info.id}"
+    title = timer_info.name or "Timer"
 
-    # The finished notification is sent separately so it alerts like it always has.
-    if event_type in (TimerEventType.CANCELLED, TimerEventType.FINISHED):
+    if event_type == TimerEventType.CANCELLED:
         _async_send(hass, entry, timer_info, CLEAR_NOTIFICATION, {ATTR_TAG: tag})
         return
 
-    seconds_left = timer_info.seconds_left
-    if timer_info.is_active and not seconds_left:
-        # Finished is about to follow and ends the activity.
-        return
-
-    duration = str(timedelta(seconds=timer_info.created_seconds))
     data: dict[str, Any] = {
         ATTR_TAG: tag,
         ATTR_LIVE_UPDATE: True,
-        # The user just asked for this, so don't chime.
-        "silent": True,
         "notification_icon": TIMER_LIVE_ACTIVITY_ICON,
     }
-    if timer_info.is_active:
-        data["chronometer"] = True
-        data["when"] = dt_util.utcnow().timestamp() + seconds_left
-        data["when_relative"] = False
-        message = f"{duration} timer"
-    else:
-        # The app draws a progress bar in place of the ticking one, so only send it
-        # while paused.
+    if event_type == TimerEventType.FINISHED:
+        message = _finished_message(timer_info)
         data["chronometer"] = False
-        data["critical_text"] = "Paused"
-        data["progress"] = seconds_left
-        data["progress_max"] = timer_info.created_seconds
-        message = f"Paused, {timedelta(seconds=seconds_left)} left"
+        data["critical_text"] = "Finished"
+        # Not silent, so the end state alerts in place of the finished notification.
+        # The push relay only adds a sound to an alert it is given.
+        data["alert"] = {"title": title, "body": message}
+        data["alert_sound"] = "default"
+    else:
+        seconds_left = timer_info.seconds_left
+        if timer_info.is_active and not seconds_left:
+            # Finished follows right away with the end state.
+            return
 
-    _async_send(
-        hass, entry, timer_info, message, data, title=timer_info.name or "Timer"
-    )
+        # The user just asked for this, so don't chime.
+        data["silent"] = True
+        duration = str(timedelta(seconds=timer_info.created_seconds))
+        if timer_info.is_active:
+            data["chronometer"] = True
+            data["when"] = dt_util.utcnow().timestamp() + seconds_left
+            data["when_relative"] = False
+            message = f"{duration} timer"
+        else:
+            # The app draws a progress bar in place of the ticking one, so only send
+            # it while paused.
+            data["chronometer"] = False
+            data["critical_text"] = "Paused"
+            data["progress"] = seconds_left
+            data["progress_max"] = timer_info.created_seconds
+            message = f"Paused, {timedelta(seconds=seconds_left)} left"
+
+    _async_send(hass, entry, timer_info, message, data, title=title)
 
 
 @callback

@@ -235,7 +235,7 @@ async def test_timer_live_activity(
 async def test_timer_live_activity_finished(
     hass: HomeAssistant, live_activity_registration: dict[str, Any]
 ) -> None:
-    """Test a finished timer ends its Live Activity and still notifies."""
+    """Test a finished timer shows an alerting end state in its Live Activity."""
     webhook_id = live_activity_registration["webhook_id"]
     device_id = hass.data[DOMAIN][DATA_DEVICES][webhook_id].id
 
@@ -257,15 +257,20 @@ async def test_timer_live_activity_finished(
             {"minutes": {"value": 2}},
         )
 
+    # No separate finished notification: the end state replaces it.
     assert _sent(mock_send_message) == [
         {
             "target": [webhook_id],
-            "message": "clear_notification",
-            "data": {"tag": tag},
-        },
-        {
-            "target": [webhook_id],
+            "title": "Timer",
             "message": "0:02:00 timer finished",
-            "data": FINISHED_DATA,
+            "data": {
+                "tag": tag,
+                "live_update": True,
+                "notification_icon": "mdi:timer-outline",
+                "chronometer": False,
+                "critical_text": "Finished",
+                "alert": {"title": "Timer", "body": "0:02:00 timer finished"},
+                "alert_sound": "default",
+            },
         },
     ]
