@@ -563,41 +563,19 @@ ZONE_CONTROL_ZONE_REFRESH = [
 
 @pytest.mark.usefixtures("mock_zone_control_zone_sleep")
 @pytest.mark.parametrize(
-    ("service_data", "expected_commands"),
+    ("target_temp_low", "target_temp_high"),
     [
-        pytest.param(
-            {ATTR_TARGET_TEMP_LOW: 19.0, ATTR_TARGET_TEMP_HIGH: 25.0},
-            [
-                ("setHeatingTargetTemperature", [19.0]),
-                ("setCoolingTargetTemperature", [25.0]),
-                ("setDerogationOnOffState", ["on"]),
-            ],
-            id="both_changed",
-        ),
-        pytest.param(
-            {ATTR_TARGET_TEMP_LOW: 19.0, ATTR_TARGET_TEMP_HIGH: 26.0},
-            [
-                ("setHeatingTargetTemperature", [19.0]),
-                ("setDerogationOnOffState", ["on"]),
-            ],
-            id="heating_changed",
-        ),
-        pytest.param(
-            {ATTR_TARGET_TEMP_LOW: 20.0, ATTR_TARGET_TEMP_HIGH: 27.0},
-            [
-                ("setCoolingTargetTemperature", [27.0]),
-                ("setDerogationOnOffState", ["on"]),
-            ],
-            id="cooling_changed",
-        ),
+        pytest.param(19.0, 25.0, id="both_changed"),
+        # The unchanged cooling setpoint is still sent, in the same execution.
+        pytest.param(19.0, 26.0, id="heating_changed"),
     ],
 )
 async def test_zone_control_zone_set_temperature(
     hass: HomeAssistant,
     mock_client: MockOverkizClient,
     setup_overkiz_integration: SetupOverkizIntegration,
-    service_data: dict[str, float],
-    expected_commands: list[tuple[str, list[Any]]],
+    target_temp_low: float,
+    target_temp_high: float,
 ) -> None:
     """Test a setpoint change sends one execution, then one refresh execution."""
     await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
@@ -605,37 +583,61 @@ async def test_zone_control_zone_set_temperature(
     await hass.services.async_call(
         "climate",
         "set_temperature",
-        {"entity_id": ZONE_CONTROL_ZONE.entity_id, **service_data},
+        {
+            "entity_id": ZONE_CONTROL_ZONE.entity_id,
+            ATTR_TARGET_TEMP_LOW: target_temp_low,
+            ATTR_TARGET_TEMP_HIGH: target_temp_high,
+        },
         blocking=True,
     )
 
     assert executed_commands(mock_client) == [
-        expected_commands,
+        [
+            ("setHeatingTargetTemperature", [target_temp_low]),
+            ("setCoolingTargetTemperature", [target_temp_high]),
+            ("setDerogationOnOffState", ["on"]),
+        ],
         ZONE_CONTROL_ZONE_REFRESH,
     ]
 
 
 @pytest.mark.usefixtures("mock_zone_control_zone_sleep")
-async def test_zone_control_zone_set_unchanged_temperature(
+async def test_zone_control_zone_set_temperature_back_before_state_update(
     hass: HomeAssistant,
     mock_client: MockOverkizClient,
     setup_overkiz_integration: SetupOverkizIntegration,
 ) -> None:
-    """Test setting the current setpoints sends no execution."""
+    """Test reverting a setpoint before the device reports it is still sent."""
     await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
 
-    await hass.services.async_call(
-        "climate",
-        "set_temperature",
-        {
-            "entity_id": ZONE_CONTROL_ZONE.entity_id,
-            ATTR_TARGET_TEMP_LOW: 20.0,
-            ATTR_TARGET_TEMP_HIGH: 26.0,
-        },
-        blocking=True,
-    )
+    # No state event is delivered between the calls, so the cached heating
+    # setpoint stays at 20.0 while the device was asked for 19.0.
+    for target_temp_low in (19.0, 20.0):
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {
+                "entity_id": ZONE_CONTROL_ZONE.entity_id,
+                ATTR_TARGET_TEMP_LOW: target_temp_low,
+                ATTR_TARGET_TEMP_HIGH: 26.0,
+            },
+            blocking=True,
+        )
 
-    mock_client.execute_action_group.assert_not_awaited()
+    assert executed_commands(mock_client) == [
+        [
+            ("setHeatingTargetTemperature", [19.0]),
+            ("setCoolingTargetTemperature", [26.0]),
+            ("setDerogationOnOffState", ["on"]),
+        ],
+        ZONE_CONTROL_ZONE_REFRESH,
+        [
+            ("setHeatingTargetTemperature", [20.0]),
+            ("setCoolingTargetTemperature", [26.0]),
+            ("setDerogationOnOffState", ["on"]),
+        ],
+        ZONE_CONTROL_ZONE_REFRESH,
+    ]
 
 
 @pytest.mark.usefixtures("mock_zone_control_zone_sleep")

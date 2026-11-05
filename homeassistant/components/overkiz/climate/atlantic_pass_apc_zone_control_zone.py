@@ -407,22 +407,21 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         commands: list[Command] = []
 
-        # Only send changed setpoints: each execution counts against the
-        # Overkiz cloud rate limit.
-        for target, state, command in (
-            (
-                heating_target,
-                OverkizState.CORE_HEATING_TARGET_TEMPERATURE,
-                OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
-            ),
-            (
-                cooling_target,
-                OverkizState.CORE_COOLING_TARGET_TEMPERATURE,
-                OverkizCommand.SET_COOLING_TARGET_TEMPERATURE,
-            ),
-        ):
-            if target is not None and target != self.device.states.get_value(state):
-                commands.append(Command(name=command, parameters=[target]))
+        if heating_target is not None:
+            commands.append(
+                Command(
+                    name=OverkizCommand.SET_HEATING_TARGET_TEMPERATURE,
+                    parameters=[heating_target],
+                )
+            )
+
+        if cooling_target is not None:
+            commands.append(
+                Command(
+                    name=OverkizCommand.SET_COOLING_TARGET_TEMPERATURE,
+                    parameters=[cooling_target],
+                )
+            )
 
         if not commands:
             return
