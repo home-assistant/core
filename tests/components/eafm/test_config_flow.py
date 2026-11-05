@@ -56,7 +56,7 @@ async def test_flow_works(
     )
     assert result["type"] is FlowResultType.FORM
 
-    with patch("homeassistant.components.eafm.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.eafm.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"station": "My station - R12345"}
         )

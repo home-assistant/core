@@ -222,18 +222,16 @@ class PGLabDiscovery:
 
             # Create a new device.
             device_registry = dr.async_get(hass)
-            device_registry.async_get_or_create_device(
+            device_registry.async_get_or_create(
                 config_entry_id=config_entry.entry_id,
-                device_info=dr.DeviceInfo(
-                    configuration_url=f"http://{pglab_device.ip}/",
-                    connections={(CONNECTION_NETWORK_MAC, pglab_device.mac)},
-                    identifiers={(DOMAIN, pglab_device.id)},
-                    manufacturer=pglab_device.manufacturer,
-                    model=pglab_device.type,
-                    name=pglab_device.name,
-                    sw_version=pglab_device.firmware_version,
-                    hw_version=pglab_device.hardware_version,
-                ),
+                configuration_url=f"http://{pglab_device.ip}/",
+                connections={(CONNECTION_NETWORK_MAC, pglab_device.mac)},
+                identifiers={(DOMAIN, pglab_device.id)},
+                manufacturer=pglab_device.manufacturer,
+                model=pglab_device.type,
+                name=pglab_device.name,
+                sw_version=pglab_device.firmware_version,
+                hw_version=pglab_device.hardware_version,
             )
 
             # Do some checking if previous entities must be updated.

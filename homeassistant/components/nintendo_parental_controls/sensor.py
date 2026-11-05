@@ -6,6 +6,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import override
 
+from pynintendoparental.device import Device
 from pynintendoparental.player import Player
 
 from homeassistant.components.sensor import (
@@ -19,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
-from .entity import Device, NintendoDevice
+from .entity import NintendoDevice
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0

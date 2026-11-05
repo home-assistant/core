@@ -22,7 +22,7 @@ def mock_async_setup_entry(mock_samsung_tv: MagicMock) -> Generator[AsyncMock]:
 
     with patch(
         "homeassistant.components.samsung_exlink.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

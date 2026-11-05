@@ -59,7 +59,7 @@ async def test_user_flow(
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.proximity.async_setup_entry", return_value=True
+        "homeassistant.components.proximity.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -93,7 +93,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     mock_config.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.proximity.async_setup_entry", return_value=True
+        "homeassistant.components.proximity.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         await hass.config_entries.async_setup(mock_config.entry_id)
         await hass.async_block_till_done()
@@ -139,7 +139,7 @@ async def test_abort_duplicated_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.proximity.async_setup_entry", return_value=True
+        "homeassistant.components.proximity.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -178,7 +178,7 @@ async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.proximity.async_setup_entry", return_value=True
+        "homeassistant.components.proximity.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}

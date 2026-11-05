@@ -10,10 +10,12 @@ LOGGER = logging.getLogger(__package__)
 
 DATA_API_CLIENT: Final = "api_client"
 DATA_MODULES_COORDINATOR: Final = "modules_coordinator"
+DATA_SERVICES: Final = "data_services"
 
 API_BASE_URL = "https://monitoringapi.solaredge.com/v2"
 OAUTH2_AUTHORIZE = "https://connect.solaredge.com/authorize"
 OAUTH2_TOKEN = f"{API_BASE_URL}/oauth2/token"
+OAUTH2_AUTHORIZE_PATH = "/api/solaredge/oauth/authorize"
 OAUTH2_CALLBACK_PATH = "/api/solaredge/oauth/callback"
 
 CONF_SITE_ID = "site_id"

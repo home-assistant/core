@@ -39,13 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoonConfigEntry) -> None
 
     entry.runtime_data = roonserver
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer="Roonlabs",
-            name=f"Roon Core ({name})",
-        ),
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Roonlabs",
+        name=f"Roon Core ({name})",
     )
 
     # initialize media_player platform

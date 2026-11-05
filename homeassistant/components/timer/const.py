@@ -17,7 +17,6 @@ DATA_TIMER: HassKey[TimerData] = HassKey(DOMAIN)
 DEFAULT_DURATION: Final = 0
 DEFAULT_RESTORE = False
 
-ATTR_DURATION: Final = "duration"
 ATTR_FINISHED_AT = "finished_at"
 
 CONF_DURATION = "duration"
@@ -50,3 +49,20 @@ class TimerEntityStateAttribute(StrEnum):
     FINISHES_AT = "finishes_at"
     REMAINING = "remaining"
     RESTORE = "restore"
+
+
+class TimerService(StrEnum):
+    """Store keys for timer services."""
+
+    CANCEL = "cancel"
+    CHANGE = "change"
+    FINISH = "finish"
+    PAUSE = "pause"
+    RELOAD = "reload"
+    START = "start"
+
+
+class TimerServiceArgument(StrEnum):
+    """Store keys for timer service arguments."""
+
+    DURATION = "duration"

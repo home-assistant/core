@@ -644,9 +644,8 @@ async def test_storage_service_deferred_after_inventory_failure(
     [
         # Empty batteries list → data service returns early, aggregate stays unset.
         ({"storageData": {"batteries": []}}, STATE_UNKNOWN),
-        # Battery missing the serialNumber key → skipped in the loop, aggregate
-        # falls through with the initial 0.0 totals.
-        ({"storageData": {"batteries": [{"telemetries": []}]}}, "0.0"),
+        # Battery missing the serialNumber key → skipped in the loop.
+        ({"storageData": {"batteries": [{"telemetries": []}]}}, STATE_UNKNOWN),
         # Battery with no telemetries → skipped after the serial check.
         (
             {
@@ -654,10 +653,9 @@ async def test_storage_service_deferred_after_inventory_failure(
                     "batteries": [{"serialNumber": "BAT001", "telemetries": []}]
                 }
             },
-            "0.0",
+            STATE_UNKNOWN,
         ),
-        # Battery with a single telemetry → can't compute a delta, contributes
-        # 0.0 to the aggregate via the len < 2 branch.
+        # Battery with a single telemetry → can't compute a delta.
         (
             {
                 "storageData": {
@@ -677,7 +675,7 @@ async def test_storage_service_deferred_after_inventory_failure(
                     ]
                 }
             },
-            "0.0",
+            STATE_UNKNOWN,
         ),
     ],
     ids=[

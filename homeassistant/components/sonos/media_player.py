@@ -70,7 +70,8 @@ from .const import (
 )
 from .entity import SonosEntity
 from .helpers import UnjoinData, soco_error
-from .speaker import SonosMedia, SonosSpeaker
+from .media import SonosMedia
+from .speaker import SonosSpeaker
 
 if TYPE_CHECKING:
     from .helpers import SonosConfigEntry
@@ -533,7 +534,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 )
             except SonosWebsocketError as exc:
                 raise HomeAssistantError(
-                    f"Error when calling Sonos websocket: {exc}"
+                    translation_domain=DOMAIN,
+                    translation_key="websocket_error",
                 ) from exc
             if response.get("success"):
                 if data:

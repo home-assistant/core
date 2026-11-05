@@ -1,7 +1,8 @@
 """SolarEdge Developer Platform V2 API client."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from http import HTTPStatus
 import time
 from typing import Any
@@ -59,8 +60,12 @@ class SolarEdgeV2:
         self._session = session
         self._access_token_provider = access_token_provider
         self._cache: dict[str, tuple[float, dict[str, Any] | list[Any]]] = {}
+        self._cache_locks: dict[str, asyncio.Lock] = {}
         self._monthly_limit_until: datetime | None = None
         self._meter_supported: bool | None = None
+        self._lifetime_output: float | None = None
+        self._lifetime_day: date | None = None
+        self._lifetime_day_energy = 0.0
 
     async def _request(
         self,
@@ -81,7 +86,7 @@ class SolarEdgeV2:
                 headers={"Authorization": f"Bearer {access_token}"},
                 params=params,
             )
-        except ClientError as err:
+        except (ClientError, TimeoutError) as err:
             raise SolarEdgeConnectionError from err
 
         if response.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
@@ -113,7 +118,7 @@ class SolarEdgeV2:
         try:
             response.raise_for_status()
             result = await response.json()
-        except (ClientError, ValueError) as err:
+        except (ClientError, TimeoutError, ValueError) as err:
             raise SolarEdgeConnectionError from err
         if not isinstance(result, dict | list):
             raise SolarEdgeApiError("Unexpected API response")
@@ -128,14 +133,29 @@ class SolarEdgeV2:
         params: dict[str, str | list[str]] | None = None,
     ) -> dict[str, Any] | list[Any]:
         """Return a cached API response when it is fresh enough."""
-        now = time.monotonic()
-        if (cached := self._cache.get(cache_key)) and now - cached[
-            0
-        ] < max_age.total_seconds():
-            return cached[1]
-        result = await self._request(path, params=params)
-        self._cache[cache_key] = (now, result)
+        result, _ = await self._cached_request_with_status(
+            cache_key, max_age, path, params=params
+        )
         return result
+
+    async def _cached_request_with_status(
+        self,
+        cache_key: str,
+        max_age: timedelta,
+        path: str,
+        *,
+        params: dict[str, str | list[str]] | None = None,
+    ) -> tuple[dict[str, Any] | list[Any], bool]:
+        """Return a response and whether it was fetched from the API."""
+        async with self._cache_locks.setdefault(cache_key, asyncio.Lock()):
+            now = time.monotonic()
+            if (cached := self._cache.get(cache_key)) and now - cached[
+                0
+            ] < max_age.total_seconds():
+                return cached[1], False
+            result = await self._request(path, params=params)
+            self._cache[cache_key] = (now, result)
+            return result, True
 
     async def get_details(self, site_id: str) -> dict[str, Any]:
         """Return site details in the V1-compatible shape."""
@@ -170,48 +190,72 @@ class SolarEdgeV2:
         daily = await self._get_overview(site_id, day_start, now, "day")
         monthly = await self._get_energy(site_id, month_start, now, "month")
         yearly = await self._get_energy(site_id, year_start, now, "year")
-        lifetime = await self._cached_request(
+        lifetime, lifetime_refreshed = await self._cached_request_with_status(
             f"lifetime:{site_id}",
             timedelta(hours=24),
             f"/sites/{site_id}/lifetime-energy",
         )
+        if not isinstance(lifetime, dict):
+            raise SolarEdgeApiError("Unexpected lifetime energy response")
         meter = await self._get_meter_telemetry(site_id, now)
 
-        if not all(
-            isinstance(response, dict)
-            for response in (daily, monthly, yearly, lifetime, meter)
-        ):
-            raise SolarEdgeApiError("Unexpected energy response")
         production = _mapping(daily.get("production"))
+        daily_energy = _energy_wh(
+            _find_number(production, "total"),
+            _find_string(production, "units", "unit"),
+        )
+        lifetime_energy = self._estimated_lifetime_energy(
+            _energy_wh(
+                _find_number(lifetime, "energy", "lifetimeEnergy"),
+                _find_string(lifetime, "units", "unit"),
+            ),
+            daily_energy,
+            day_start.date(),
+            lifetime_refreshed,
+        )
         current_power = _latest_meter_value(meter, "productionPower")
         if current_power is None:
             power = await self._get_site_power(site_id, now)
-            values = _find_list(power, "values")
-            current_power = (
-                _find_number(values[-1], "value")
-                if values
-                else _find_number(power, "value")
-            )
+            current_power = _latest_value(_find_list(power, "values"))
+            if current_power is None:
+                current_power = _find_number(power, "value") or 0.0
         return {
             "overview": {
-                "lifeTimeData": {
-                    "energy": _energy_wh(
-                        _find_number(lifetime, "energy", "lifetimeEnergy"),
-                        _find_string(lifetime, "units", "unit"),
-                    )
-                },
+                "lifeTimeData": {"energy": lifetime_energy},
                 "lastYearData": {"energy": _energy_total_wh(yearly)},
                 "lastMonthData": {"energy": _energy_total_wh(monthly)},
-                "lastDayData": {
-                    "energy": _energy_wh(
-                        _find_number(production, "total"),
-                        _find_string(production, "units", "unit"),
-                    )
-                },
+                "lastDayData": {"energy": daily_energy},
                 "currentPower": {"power": current_power},
-                "lastUpdateTime": _find_string(daily, "lastUpdateTime", "timestamp"),
+                "lastUpdateTime": _find_string(daily, "lastUpdateTime", "timestamp")
+                or _find_string(lifetime, "lastUpdateTime", "timestamp"),
             }
         }
+
+    def _estimated_lifetime_energy(
+        self,
+        api_lifetime: float | None,
+        daily_energy: float | None,
+        current_day: date,
+        refreshed: bool,
+    ) -> float | None:
+        """Estimate lifetime energy between quota-saving API refreshes."""
+        if api_lifetime is None:
+            return self._lifetime_output
+
+        current_daily = daily_energy or 0.0
+        if refreshed or self._lifetime_output is None:
+            self._lifetime_output = max(self._lifetime_output or 0.0, api_lifetime)
+        else:
+            delta = (
+                max(0.0, current_daily - self._lifetime_day_energy)
+                if self._lifetime_day == current_day
+                else current_daily
+            )
+            self._lifetime_output += delta
+
+        self._lifetime_day = current_day
+        self._lifetime_day_energy = current_daily
+        return self._lifetime_output
 
     async def _get_overview(
         self,
@@ -219,14 +263,17 @@ class SolarEdgeV2:
         start: datetime,
         end: datetime,
         period: str,
-    ) -> dict[str, Any] | list[Any]:
+    ) -> dict[str, Any]:
         """Get a site overview for a time period."""
-        return await self._cached_request(
+        result = await self._cached_request(
             f"overview:{site_id}:{period}:{start.date().isoformat()}",
             timedelta(minutes=55) if period == "day" else timedelta(hours=24),
             f"/sites/{site_id}/overview",
             params={"from": start.isoformat(), "to": end.isoformat()},
         )
+        if not isinstance(result, dict):
+            raise SolarEdgeApiError("Unexpected overview response")
+        return result
 
     async def _get_energy(
         self,
@@ -234,9 +281,9 @@ class SolarEdgeV2:
         start: datetime,
         end: datetime,
         period: str,
-    ) -> dict[str, Any] | list[Any]:
+    ) -> dict[str, Any]:
         """Get total production energy for a time period."""
-        return await self._cached_request(
+        result = await self._cached_request(
             f"energy:{site_id}:{period}:{start.date().isoformat()}",
             timedelta(hours=24),
             f"/sites/{site_id}/energy",
@@ -246,6 +293,9 @@ class SolarEdgeV2:
                 "resolution": "TOTAL",
             },
         )
+        if not isinstance(result, dict):
+            raise SolarEdgeApiError("Unexpected energy response")
+        return result
 
     async def get_inventory(self, site_id: str) -> dict[str, Any]:
         """Return device inventory in the V1-compatible shape."""
@@ -270,6 +320,7 @@ class SolarEdgeV2:
             "sensors": [],
         }
         devices = _device_list(response)
+        seen_devices: set[tuple[str, str]] = set()
         for device in devices:
             device_type = str(device.get("type", "")).lower()
             key = {
@@ -282,6 +333,12 @@ class SolarEdgeV2:
             if key is None:
                 continue
             serial = device.get("serialNumber")
+            if key == "meters" and serial is None:
+                continue
+            identity = (key, str(serial))
+            if identity in seen_devices:
+                continue
+            seen_devices.add(identity)
             inventory[key].append({**device, "SN": serial})
         return {"Inventory": inventory}
 
@@ -305,12 +362,7 @@ class SolarEdgeV2:
             return {}
         if not isinstance(result, dict):
             raise SolarEdgeApiError("Unexpected meter telemetry response")
-        meters = result.get("meters")
-        self._meter_supported = (
-            bool(meters)
-            if isinstance(meters, dict)
-            else bool(_find_list(result, "meters", "meter"))
-        )
+        self._meter_supported = True
         return result
 
     async def _get_site_power(self, site_id: str, now: datetime) -> dict[str, Any]:
@@ -349,6 +401,11 @@ class SolarEdgeV2:
         consumption = _latest_meter_value(meter, "consumptionPower")
         imported = _latest_meter_value(meter, "importPower")
         exported = _latest_meter_value(meter, "exportPower")
+        if production is None:
+            power = await self._get_site_power(site_id, now)
+            production = _latest_value(_find_list(power, "values"))
+            if production is None:
+                production = _find_number(power, "value") or 0.0
 
         exporting = exported is not None and (imported is None or exported > imported)
         grid = exported if exporting else imported
@@ -460,12 +517,10 @@ class SolarEdgeV2:
                             ),
                             "lifeTimeEnergyCharged": _find_number(
                                 item, "chargeEnergy", "lifetimeEnergyCharged"
-                            )
-                            or 0,
+                            ),
                             "lifeTimeEnergyDischarged": _find_number(
                                 item, "dischargeEnergy", "lifetimeEnergyDischarged"
-                            )
-                            or 0,
+                            ),
                         }
                         for item in telemetry
                     ],
@@ -564,12 +619,21 @@ def _energy_total_wh(data: dict[str, Any]) -> float | None:
     source = production or data
     unit = _find_string(source, "units", "unit")
     values = _find_list(source, "values")
-    if values:
-        source = values[-1]
+    latest_value = _latest_value(values)
     return _energy_wh(
-        _find_number(source, "total", "energy", "value"),
+        latest_value
+        if latest_value is not None
+        else _find_number(source, "total", "energy", "value"),
         unit or _find_string(source, "units", "unit"),
     )
+
+
+def _latest_value(values: list[dict[str, Any]]) -> float | None:
+    """Return the last non-null value."""
+    for item in reversed(values):
+        if (value := _find_number(item, "value")) is not None:
+            return value
+    return None
 
 
 def _latest_meter_value(data: dict[str, Any], key: str) -> float | None:
@@ -585,13 +649,33 @@ def _latest_meter_value(data: dict[str, Any], key: str) -> float | None:
         return latest
     for meter in _find_list(data, "meters"):
         telemetry = _find_list(meter, "telemetry", "telemetries", "data", "values")
-        if telemetry and (value := _find_number(telemetry[-1], key)) is not None:
+        if (
+            telemetry
+            and (
+                value := next(
+                    (
+                        value
+                        for item in reversed(telemetry)
+                        if (value := _find_number(item, key)) is not None
+                    ),
+                    None,
+                )
+            )
+            is not None
+        ):
             latest = (latest or 0) + value
     if latest is not None:
         return latest
     telemetry = _find_list(data, "telemetry", "telemetries", "data", "values")
     if telemetry:
-        return _find_number(telemetry[-1], key)
+        return next(
+            (
+                value
+                for item in reversed(telemetry)
+                if (value := _find_number(item, key)) is not None
+            ),
+            None,
+        )
     return _find_number(data, key)
 
 
@@ -611,9 +695,7 @@ def _latest_metric_value(metric: Any) -> float | None:
     if not isinstance(metric, dict):
         return None
     values = _find_list(metric, "values")
-    if values:
-        return _find_number(values[-1], "value")
-    return _find_number(metric, "value")
+    return _latest_value(values) if values else _find_number(metric, "value")
 
 
 def _storage_devices(data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -647,7 +729,13 @@ def _storage_devices(data: dict[str, Any]) -> list[dict[str, Any]]:
         batteries.append(
             {
                 "serialNumber": serial,
-                "telemetry": list(telemetry_by_timestamp.values()),
+                "telemetry": sorted(
+                    telemetry_by_timestamp.values(),
+                    key=lambda item: (
+                        item["timestamp"] is not None,
+                        item["timestamp"] or "",
+                    ),
+                ),
             }
         )
     return batteries
@@ -659,7 +747,7 @@ def _latest_storage_values(
     """Return aggregate latest storage telemetry."""
     charge_power: float | None = None
     discharge_power: float | None = None
-    state_of_energy: float | None = None
+    state_of_energy_values: list[float] = []
     for battery in _storage_devices(data):
         telemetry = _find_list(battery, "telemetry", "telemetries", "data", "values")
         if not telemetry:
@@ -672,5 +760,9 @@ def _latest_storage_values(
         if (
             value := _find_number(latest, "stateOfEnergy", "stateOfCharge")
         ) is not None:
-            state_of_energy = value
-    return charge_power, discharge_power, state_of_energy
+            state_of_energy_values.append(value)
+    return (
+        charge_power,
+        discharge_power,
+        state_of_energy_values[0] if len(state_of_energy_values) == 1 else None,
+    )

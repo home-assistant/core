@@ -54,6 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) ->
                 translation_key=(
                     "monthly_credit_limit" if ex.monthly_limit else "rate_limit"
                 ),
+                retry_after=ex.retry_after,
             ) from ex
         except SolarEdgeApiError as ex:
             raise ConfigEntryNotReady(
@@ -78,11 +79,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) ->
         # Register the site device up front so per-battery devices can resolve it
         # as their via_device when their entities are created.
         device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, site_id)}, manufacturer="SolarEdge"
-            ),
+            identifiers={(DOMAIN, site_id)},
+            manufacturer="SolarEdge",
         )
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -107,7 +107,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate legacy API-key entries to the OAuth-capable entry version."""
     if config_entry.version == 1:
         hass.config_entries.async_update_entry(
@@ -115,4 +115,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             unique_id=config_entry.unique_id or config_entry.data[CONF_SITE_ID],
             version=2,
         )
-    return True

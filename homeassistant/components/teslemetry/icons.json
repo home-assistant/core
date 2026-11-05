@@ -758,6 +758,9 @@
       "vin": {
         "default": "mdi:car-electric"
       },
+      "wall_connector_energy": {
+        "default": "mdi:ev-station"
+      },
       "wall_connector_fault_state": {
         "default": "mdi:ev-station"
       },
@@ -769,6 +772,12 @@
       }
     },
     "switch": {
+      "charge_on_solar": {
+        "default": "mdi:solar-power",
+        "state": {
+          "off": "mdi:solar-power-variant-outline"
+        }
+      },
       "charge_state_charging_state": {
         "default": "mdi:ev-station"
       },
@@ -814,6 +823,9 @@
     "add_precondition_schedule": {
       "service": "mdi:hvac"
     },
+    "dispatch_battery_power": {
+      "service": "mdi:home-battery"
+    },
     "navigation_gps_request": {
       "service": "mdi:crosshairs-gps"
     },
@@ -822,6 +834,9 @@
     },
     "remove_precondition_schedule": {
       "service": "mdi:hvac-off"
+    },
+    "resume_battery_operation": {
+      "service": "mdi:home-battery-outline"
     },
     "set_scheduled_charging": {
       "service": "mdi:timeline-clock-outline"

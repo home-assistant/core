@@ -48,6 +48,7 @@ from homeassistant.components.knx.storage.entity_store_validation import (
 )
 from homeassistant.components.knx.storage.expose_controller import validate_expose_data
 from homeassistant.components.knx.storage.serialize import get_serialized_schema
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_PLATFORM, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -87,6 +88,7 @@ async def test_create_entity(
     assert identifiers[0]["unique_id"] == test_entity.unique_id
     assert identifiers[0]["platform"] == Platform.SWITCH
     assert identifiers[0]["ui"] is True
+    assert identifiers[0]["disabled"] is False
     # Test if entity is correctly stored in config store
     test_storage_data = next(
         iter(
@@ -375,6 +377,147 @@ async def test_delete_entity(
 
     assert not entity_registry.async_get(test_entity_id)
     assert not hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["entities"].get("switch")
+
+
+async def test_disabled_ui_entity_at_setup(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a stored entity disabled before setup is tracked for its group addresses."""
+    entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        "knx_es_9d97829f47f1a2a3176a7c5b4216070c",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await knx.setup_integration(config_store_fixture="config_store_light_switch.json")
+    assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
+    assert hass.states.get("light.test") is not None
+    # only the light reads its state - the disabled switch is not set up
+    await knx.assert_read("1/0/21", response=True)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    switch_identifier = {
+        "platform": "switch",
+        "unique_id": "knx_es_9d97829f47f1a2a3176a7c5b4216070c",
+        "ui": True,
+        "disabled": True,
+    }
+    light_identifier = {
+        "platform": "light",
+        "unique_id": "knx_es_01J85ZKTFHSZNG4X9DYBE592TF",
+        "ui": True,
+        "disabled": False,
+    }
+    assert res["result"] == {
+        "1/1/45": [switch_identifier],
+        "1/0/45": [switch_identifier],
+        "1/1/21": [light_identifier],
+        "1/0/21": [light_identifier],
+    }
+
+
+async def test_update_disabled_entity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test updating a disabled entity replaces its tracked group addresses."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    test_entity = await create_ui_entity(
+        platform=Platform.SWITCH,
+        knx_data={"ga_switch": {"write": "1/2/3"}},
+        entity_data={"name": "Test"},
+    )
+    test_entity_id = test_entity.entity_id
+    entity_registry.async_update_entity(
+        test_entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(test_entity_id) is None
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/update_entity",
+            "platform": Platform.SWITCH,
+            "entity_id": test_entity_id,
+            "data": {
+                "entity": {"name": "Updated name"},
+                "knx": {"ga_switch": {"write": "4/5/6"}},
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"]
+    assert hass.states.get(test_entity_id) is None
+    assert (
+        hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["entities"]["switch"][
+            test_entity.unique_id
+        ]["knx"]["ga_switch"]["write"]
+        == "4/5/6"
+    )
+
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"] == {
+        "4/5/6": [
+            {
+                "platform": "switch",
+                "unique_id": test_entity.unique_id,
+                "ui": True,
+                "disabled": True,
+            }
+        ]
+    }
+
+
+async def test_delete_disabled_entity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test deleting a disabled entity drops its tracked group addresses."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    test_entity = await create_ui_entity(
+        platform=Platform.SWITCH,
+        knx_data={"ga_switch": {"write": "1/2/3"}},
+        entity_data={"name": "Test"},
+    )
+    test_entity_id = test_entity.entity_id
+    entity_registry.async_update_entity(
+        test_entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {"type": "knx/delete_entity", "entity_id": test_entity_id}
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert not entity_registry.async_get(test_entity_id)
+    assert not hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["entities"].get("switch")
+
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"] == {}
 
 
 async def test_delete_entity_error(

@@ -1,0 +1,87 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_local_address": "The power station announced itself, but on no network Home Assistant is connected to.",
+      "no_serial_number": "[%key:component::e3dc::config::error::no_serial_number%]",
+      "not_e3dc": "[%key:component::e3dc::config::error::not_e3dc%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_serial_number": "The power station answered, but reports no serial number.",
+      "not_e3dc": "The device answered, but it is not an E3/DC power station in E3/DC protocol mode. Set the Modbus protocol to E3DC in the power station's Smart Home menu.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the power station.",
+          "port": "The Modbus TCP port set in the power station's Smart Home menu."
+        },
+        "description": "Set up an E3/DC home power station over Modbus TCP. Turn Modbus on in the power station's Smart Home menu and set its protocol to E3DC first."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up {name} at {host}?"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "additional_power": {
+        "name": "Additional feeder power"
+      },
+      "autarky": {
+        "name": "Self-sufficiency"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "emergency_power_status": {
+        "name": "Emergency power",
+        "state": {
+          "active": "Active",
+          "inactive": "Inactive",
+          "motor_switch_off": "Motor switch off",
+          "not_available": "Not available",
+          "not_supported": "Not supported"
+        }
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "house_power": {
+        "name": "House power"
+      },
+      "pv_power": {
+        "name": "PV power"
+      },
+      "self_consumption": {
+        "name": "Self-consumption"
+      },
+      "wallbox_power": {
+        "name": "Wallbox power"
+      },
+      "wallbox_solar_power": {
+        "name": "Wallbox solar power"
+      }
+    }
+  },
+  "exceptions": {
+    "modbus_error": {
+      "message": "Error communicating with the power station."
+    },
+    "not_e3dc": {
+      "message": "The device is not an E3/DC power station in E3/DC protocol mode."
+    },
+    "serial_mismatch": {
+      "message": "The device at this address has serial number {found}, not {expected}."
+    }
+  }
+}

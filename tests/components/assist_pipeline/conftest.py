@@ -214,21 +214,19 @@ async def init_supporting_components(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.STT, Platform.TTS, Platform.WAKE_WORD]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload up test config entry."""
         await hass.config_entries.async_unload_platforms(
             config_entry, [Platform.STT, Platform.WAKE_WORD]
         )
-        return True
 
     async def async_setup_entry_stt_platform(
         hass: HomeAssistant,
@@ -328,21 +326,19 @@ async def assist_device(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.SELECT]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload up test config entry."""
         await hass.config_entries.async_unload_platforms(
             config_entry, [Platform.SELECT]
         )
-        return True
 
     async def async_setup_entry_select_platform(
         hass: HomeAssistant,
@@ -409,6 +405,6 @@ def mock_chat_session(hass: HomeAssistant) -> Generator[chat_session.ChatSession
     # pylint: disable-next=contextmanager-generator-missing-cleanup
     with (
         patch("homeassistant.helpers.chat_session.ulid_now", return_value="mock-ulid"),
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
     ):
         yield session

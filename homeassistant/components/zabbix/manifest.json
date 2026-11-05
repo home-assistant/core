@@ -3,6 +3,7 @@
   "name": "Zabbix",
   "categories": ["computers_network.monitoring"],
   "codeowners": ["@kruton"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/zabbix",
   "iot_class": "local_polling",
   "loggers": ["zabbix_utils"],

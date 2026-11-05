@@ -82,7 +82,7 @@ async def test_full_flow(
     approval_api.user_account.accounts.side_effect = check_approval
     with (
         patch(
-            "homeassistant.components.monzo.async_setup_entry", return_value=True
+            "homeassistant.components.monzo.async_setup_entry", return_value=None
         ) as mock_setup,
         patch(
             "homeassistant.components.monzo.config_flow.async_generate_id",
@@ -173,7 +173,7 @@ async def test_approval_error_retry(
         await approval_granted.wait()
 
     with (
-        patch("homeassistant.components.monzo.async_setup_entry", return_value=True),
+        patch("homeassistant.components.monzo.async_setup_entry", return_value=None),
         patch(
             "homeassistant.components.monzo.config_flow.MonzoFlowHandler._async_wait_for_approval",
             side_effect=fail_approval_check,

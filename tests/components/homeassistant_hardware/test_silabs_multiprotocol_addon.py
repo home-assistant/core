@@ -17,7 +17,7 @@ from pytest_homeassistant.common import (
     mock_platform,
 )
 
-from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
+from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
 from homeassistant.components.homeassistant_hardware.util import FlasherType
 from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
@@ -159,7 +159,6 @@ def mock_firmware_client() -> Generator[tuple[AsyncMock, AsyncMock]]:
 def hassio_integration(hass: HomeAssistant) -> Generator[None]:
     """Fixture to mock the `hassio` integration."""
     mock_component(hass, "hassio")
-    hass.data["hassio"] = Mock(spec_set=HassIO)
 
 
 class MockMultiprotocolPlatform(MockPlatform):
