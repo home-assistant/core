@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN, LOGGER
 
 if TYPE_CHECKING:
-    from . import AcmedaConfigEntry
+    from .hub import AcmedaConfigEntry
 
 
 @callback
