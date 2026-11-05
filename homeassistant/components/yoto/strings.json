@@ -160,21 +160,29 @@
       "message": "Error communicating with Yoto: {error}"
     }
   },
+  "selector": {
+    "sleep_timer_mode": {
+      "options": {
+        "duration": "Duration",
+        "end_of_track": "End of current track"
+      }
+    }
+  },
   "services": {
     "clear_sleep_timer": {
       "description": "Cancels the sleep timer of a Yoto player.",
       "name": "Clear sleep timer"
     },
     "set_sleep_timer": {
-      "description": "Stops playback on a Yoto player after a set amount of time.",
+      "description": "Stops playback on a Yoto player after a set duration or at the end of the current track.",
       "fields": {
         "duration": {
-          "description": "Time before playback stops. Choose this or 'End of track'.",
+          "description": "How long playback continues before it stops.",
           "name": "Duration"
         },
-        "end_of_track": {
-          "description": "Stops playback when the current track ends. Choose this or 'Duration'.",
-          "name": "End of track"
+        "mode": {
+          "description": "Whether playback stops after a duration or at the end of the current track.",
+          "name": "Mode"
         }
       },
       "name": "Set sleep timer"

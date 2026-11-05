@@ -1,6 +1,7 @@
 """Service actions for the Yoto integration."""
 
 from datetime import timedelta
+from typing import Any
 
 import probatio
 
@@ -8,24 +9,41 @@ from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import DOMAIN
+from .const import DOMAIN, SleepTimerMode
 
 SERVICE_SET_SLEEP_TIMER = "set_sleep_timer"
 SERVICE_CLEAR_SLEEP_TIMER = "clear_sleep_timer"
 
+ATTR_MODE = "mode"
 ATTR_DURATION = "duration"
-ATTR_END_OF_TRACK = "end_of_track"
+
+
+def _validate_duration(data: dict[str, Any]) -> dict[str, Any]:
+    """Require a duration in duration mode, and only there."""
+    if data[ATTR_MODE] is SleepTimerMode.DURATION:
+        if ATTR_DURATION not in data:
+            raise probatio.Invalid(
+                "duration is required in duration mode", [ATTR_DURATION]
+            )
+    elif ATTR_DURATION in data:
+        raise probatio.Invalid(
+            "duration cannot be used in end of track mode", [ATTR_DURATION]
+        )
+    return data
+
 
 SET_SLEEP_TIMER_SCHEMA = probatio.All(
-    probatio.AtLeastOne(ATTR_DURATION, ATTR_END_OF_TRACK),
     cv.make_entity_service_schema(
         {
-            probatio.Exclusive(ATTR_DURATION, "sleep_timer"): probatio.All(
+            probatio.Optional(
+                ATTR_MODE, default=SleepTimerMode.DURATION
+            ): probatio.Coerce(SleepTimerMode),
+            probatio.Optional(ATTR_DURATION): probatio.All(
                 cv.time_period, probatio.Range(min=timedelta(seconds=1))
             ),
-            probatio.Exclusive(ATTR_END_OF_TRACK, "sleep_timer"): True,
         }
     ),
+    _validate_duration,
 )
 
 

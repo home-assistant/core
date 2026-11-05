@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, SleepTimerMode
 from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
 from .entity import YotoPlayerEntity
 
@@ -204,10 +204,10 @@ class YotoMediaPlayer(YotoPlayerEntity, MediaPlayerEntity):
         await self._async_run(self.coordinator.client.previous_track, self._player_id)
 
     async def async_set_sleep_timer(
-        self, duration: timedelta | None = None, end_of_track: bool = False
+        self, mode: SleepTimerMode, duration: timedelta | None = None
     ) -> None:
         """Stop playback after ``duration`` or at the end of the current track."""
-        if end_of_track:
+        if mode is SleepTimerMode.END_OF_TRACK:
             seconds = self.player.track_time_left
             if seconds is None:
                 raise ServiceValidationError(

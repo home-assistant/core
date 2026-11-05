@@ -729,6 +729,12 @@ async def test_command_error_raises(
         pytest.param(
             "set_sleep_timer", {"duration": {"minutes": 30}}, 1800, id="duration"
         ),
+        pytest.param(
+            "set_sleep_timer",
+            {"mode": "duration", "duration": {"minutes": 30}},
+            1800,
+            id="duration_mode",
+        ),
         pytest.param("clear_sleep_timer", {}, 0, id="clear"),
     ],
 )
@@ -770,7 +776,7 @@ async def test_set_sleep_timer_end_of_track(
     playback_status: PlaybackStatus,
     expected_seconds: int,
 ) -> None:
-    """The end of track option uses the time left in the current track."""
+    """End of track mode uses the time left in the current track."""
     mock_yoto_client.players["player-test"].last_event.playback_status = playback_status
     await setup_integration(hass, mock_config_entry)
     freezer.move_to("2026-05-08T12:00:30+00:00")
@@ -778,7 +784,7 @@ async def test_set_sleep_timer_end_of_track(
     await hass.services.async_call(
         DOMAIN,
         "set_sleep_timer",
-        {ATTR_ENTITY_ID: ENTITY_ID, "end_of_track": True},
+        {ATTR_ENTITY_ID: ENTITY_ID, "mode": "end_of_track"},
         blocking=True,
     )
 
@@ -794,7 +800,7 @@ async def test_set_sleep_timer_end_of_track_without_track(
     mock_config_entry: MockConfigEntry,
     field: str,
 ) -> None:
-    """The end of track option raises when no track is playing."""
+    """End of track mode raises when no track is playing."""
     setattr(mock_yoto_client.players["player-test"].last_event, field, None)
     await setup_integration(hass, mock_config_entry)
 
@@ -802,7 +808,7 @@ async def test_set_sleep_timer_end_of_track_without_track(
         await hass.services.async_call(
             DOMAIN,
             "set_sleep_timer",
-            {ATTR_ENTITY_ID: ENTITY_ID, "end_of_track": True},
+            {ATTR_ENTITY_ID: ENTITY_ID, "mode": "end_of_track"},
             blocking=True,
         )
 
@@ -812,10 +818,14 @@ async def test_set_sleep_timer_end_of_track_without_track(
 @pytest.mark.parametrize(
     "service_data",
     [
-        pytest.param({}, id="missing"),
+        pytest.param({}, id="missing_duration"),
+        pytest.param({"mode": "duration"}, id="duration_mode_without_duration"),
         pytest.param({"duration": {"seconds": 0}}, id="zero_duration"),
-        pytest.param({"end_of_track": False}, id="end_of_track_false"),
-        pytest.param({"duration": {"minutes": 5}, "end_of_track": True}, id="both"),
+        pytest.param(
+            {"mode": "end_of_track", "duration": {"minutes": 5}},
+            id="end_of_track_with_duration",
+        ),
+        pytest.param({"mode": "unknown"}, id="unknown_mode"),
     ],
 )
 async def test_set_sleep_timer_invalid(
