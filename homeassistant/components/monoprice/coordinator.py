@@ -10,12 +10,8 @@ from typing import TYPE_CHECKING, Any, override
 from pymonoprice import Monoprice, ZoneStatus
 from serialx import SerialException
 
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import MonopriceConfigEntry
@@ -27,13 +23,12 @@ ZONE_IDS = tuple(unit * 10 + zone for unit in range(1, 4) for zone in range(1, 7
 class MonopriceCoordinator(DataUpdateCoordinator[dict[int, ZoneStatus | None]]):
     """Poll active zones, retaining failures separately for each zone."""
 
-    config_entry: MonopriceConfigEntry
-
     def __init__(
         self,
         hass: HomeAssistant,
         entry: MonopriceConfigEntry,
         client: Monoprice,
+        startup_zones: tuple[int, ...],
     ) -> None:
         """Initialize the amplifier coordinator."""
         super().__init__(
@@ -44,34 +39,10 @@ class MonopriceCoordinator(DataUpdateCoordinator[dict[int, ZoneStatus | None]]):
             update_interval=timedelta(seconds=10),
         )
         self.client = client
-        self._startup_zones: tuple[int, ...] | None = None
+        self._startup_zones: tuple[int, ...] | None = startup_zones
         # pymonoprice only locks single calls. Hold this lock for a whole poll or
         # a whole command with its read-back, so they cannot interleave.
         self._operation_lock = asyncio.Lock()
-
-    @override
-    async def _async_setup(self) -> None:
-        """Select the zones the first refresh reads, before any entity listens.
-
-        A zone is selected when its media player is enabled or not registered
-        yet, so the first setup reads all of them. The selection stays in
-        _startup_zones until the first refresh has returned. After that, polls
-        follow the entities that listen.
-        """
-        registry = er.async_get(self.hass)
-        self._startup_zones = tuple(
-            zone
-            for zone in ZONE_IDS
-            if (
-                entity_id := registry.async_get_entity_id(
-                    Platform.MEDIA_PLAYER,
-                    DOMAIN,
-                    f"{self.config_entry.entry_id}_{zone}",
-                )
-            )
-            is None
-            or not registry.entities[entity_id].disabled
-        )
 
     def _read_zone(self, zone: int) -> ZoneStatus | None:
         """Read one zone, returning None when it does not answer."""

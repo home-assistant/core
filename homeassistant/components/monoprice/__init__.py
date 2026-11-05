@@ -9,11 +9,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_NOT_FIRST_RUN, DOMAIN
-from .coordinator import MonopriceCoordinator
+from .coordinator import ZONE_IDS, MonopriceCoordinator
 from .services import async_setup_services
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -31,6 +31,14 @@ class MonopriceRuntimeData:
     client: Monoprice
     coordinator: MonopriceCoordinator
     discovered_zones: set[int] | None
+
+
+def _is_read_at_startup(registry: er.EntityRegistry, entry_id: str, zone: int) -> bool:
+    """Return whether a zone is new or has an enabled media player."""
+    entity_id = registry.async_get_entity_id(
+        Platform.MEDIA_PLAYER, DOMAIN, f"{entry_id}_{zone}"
+    )
+    return entity_id is None or not registry.entities[entity_id].disabled
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -60,7 +68,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) ->
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
 
-    coordinator = MonopriceCoordinator(hass, entry, monoprice)
+    registry = er.async_get(hass)
+    zones = tuple(
+        zone for zone in ZONE_IDS if _is_read_at_startup(registry, entry.entry_id, zone)
+    )
+    coordinator = MonopriceCoordinator(hass, entry, monoprice, zones)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = MonopriceRuntimeData(
         client=monoprice,

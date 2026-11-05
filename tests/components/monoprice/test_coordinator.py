@@ -505,6 +505,103 @@ async def test_queued_command_runs_after_cancelled_poll(
     assert hass.states.get("media_player.zone_12").state == "off"
 
 
+async def test_poll_queued_when_last_entities_are_disabled_reads_nothing(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A poll waiting for a command's lock reads nothing once no entity listens."""
+    started = Event()
+    release = Event()
+
+    def command() -> None:
+        started.set()
+        assert release.wait(5)
+
+    coordinator = entry.runtime_data.coordinator
+    client.zone_status.reset_mock()
+    task = asyncio.create_task(coordinator.async_command(11, command))
+    try:
+        await _wait_for(hass, started, "the command's worker starting")
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        for _ in range(10):
+            await asyncio.sleep(0)
+        poll = _poll_task()
+        for entity_id in ("media_player.zone_11", "media_player.zone_12"):
+            entity_registry.async_update_entity(
+                entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+        for _ in range(50):
+            await asyncio.sleep(0)
+        assert not list(coordinator.async_contexts())
+        assert not poll.done()
+    finally:
+        release.set()
+    await task
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert poll.done()
+    # Only the command's own read-back, and later timers read nothing either.
+    assert client.zone_status.call_args_list == [call(11)]
+    await _poll(hass, freezer)
+    assert client.zone_status.call_args_list == [call(11)]
+
+
+async def test_failed_first_refresh_keeps_the_startup_zones(
+    hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Only a first refresh that returned uses up the startup zones."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+    coordinator = MonopriceCoordinator(hass, config_entry, client, (11, 12))
+    # A listener without a context runs the timer but selects no zones.
+    remove = coordinator.async_add_listener(lambda: None)
+    client.zone_status.side_effect = RuntimeError
+    await _poll(hass, freezer)
+    assert not coordinator.last_update_success
+    client.zone_status.side_effect = None
+    client.zone_status.reset_mock()
+    await _poll(hass, freezer)
+    assert coordinator.last_update_success
+    assert client.zone_status.call_args_list == [call(11), call(12)]
+    client.zone_status.reset_mock()
+    await _poll(hass, freezer)
+    remove()
+    client.zone_status.assert_not_called()
+
+
+async def test_cancelled_first_refresh_keeps_the_startup_zones(
+    hass: HomeAssistant, client: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """A cancelled first refresh does not use up the startup zones."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    config_entry.add_to_hass(hass)
+    coordinator = MonopriceCoordinator(hass, config_entry, client, (11, 12))
+    # A listener without a context runs the timer but selects no zones.
+    remove = coordinator.async_add_listener(lambda: None)
+    entered = Event()
+    release = Event()
+    _hold_first_read(client, entered, release)
+    with _tracked_poll_jobs(hass) as jobs:
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        try:
+            await _wait_for(hass, entered, "the first read")
+            task = _poll_task()
+            task.cancel()
+            await asyncio.wait([task])
+        finally:
+            release.set()
+        await _wait_for(hass, jobs[0], "the worker returning")
+        assert client.zone_status.call_args_list == [call(11)]
+        client.zone_status.reset_mock()
+        await _poll(hass, freezer)
+    remove()
+    assert client.zone_status.call_args_list == [call(11), call(12)]
+
+
 async def test_startup_reads_enabled_and_new_zones_once(
     hass: HomeAssistant, client: MagicMock, entity_registry: er.EntityRegistry
 ) -> None:
