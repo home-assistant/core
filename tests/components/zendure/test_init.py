@@ -10,7 +10,7 @@ from zendure import ZendureConnectionError, ZendureProtocolError
 
 from homeassistant.components.zendure.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -65,6 +65,31 @@ async def test_device(
     assert device.model == "SolarFlow 2400 AC+"
     assert device.model_id == "solarFlow2400AC+"
     assert device.serial_number == SERIAL_NUMBER
+    assert device.configuration_url == "http://192.168.1.50"
+
+
+@pytest.mark.usefixtures("mock_zendure")
+async def test_device_with_ipv6_host(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a device set up with an IPv6 address gets a valid configuration URL."""
+    entry = MockConfigEntry(
+        title="SolarFlow 2400 AC+",
+        domain=DOMAIN,
+        data={CONF_HOST: "2001:db8::1"},
+        unique_id=SERIAL_NUMBER,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL_NUMBER), entry.entry_id
+    )
+    assert device
+    assert device.configuration_url == "http://[2001:db8::1]"
+    assert hass.states.get("sensor.solarflow_2400_ac_battery").state == "57"
 
 
 @pytest.mark.parametrize("side_effect", [ZendureConnectionError, ZendureProtocolError])
