@@ -34,7 +34,7 @@ class BeoBase:
         self._client = client
 
         # get the input from the config entry.
-        self.entry: BeoConfigEntry = entry
+        self.entry = entry
 
         # Set the configuration variables.
         self._host: str = self.entry.data[CONF_HOST]
