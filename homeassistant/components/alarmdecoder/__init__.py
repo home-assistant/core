@@ -200,9 +200,16 @@ async def _async_shutdown(hass: HomeAssistant, data: AlarmDecoderData) -> None:
     if data.opening is not None and not data.opening.done():
         # close() can't interrupt a connect() in progress, which would then
         # leave the connection open. Close once the attempt finishes instead.
-        data.opening.add_done_callback(
-            lambda _: hass.async_add_executor_job(data.client.close)
-        )
+        def close_after_open(opening: asyncio.Future[Any]) -> None:
+            """Retrieve the open result and close the controller."""
+            try:
+                opening.result()
+            except (asyncio.CancelledError, NoDeviceError):
+                pass
+            finally:
+                hass.async_add_executor_job(data.client.close)
+
+        data.opening.add_done_callback(close_after_open)
         return
     await hass.async_add_executor_job(data.client.close)
 
