@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from .accessories import HomeAccessory, HomeBridge
 from .models import HomeKitConfigEntry
+from .type_cameras import Camera
 
 TO_REDACT = {"access_token", "entity_picture"}
 
@@ -76,4 +77,6 @@ def _get_accessory_diagnostics(
     }
     if entity_state:
         data["entity_state"] = async_redact_data(entity_state, TO_REDACT)
+    if isinstance(accessory, Camera) and accessory.secure_video:
+        data["secure_video"] = accessory.recording_diagnostics()
     return data

@@ -14,7 +14,7 @@ from homeassistant.components.homekit.const import (
     DOMAIN,
     SHORT_BRIDGE_NAME,
 )
-from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PORT, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -956,6 +956,48 @@ async def test_options_flow_include_mode_with_cameras(hass: HomeAssistant) -> No
     }
     await hass.async_block_till_done()
     await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def _async_options_flow_to_cameras(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> ConfigFlowResult:
+    """Walk the options flow up to the camera step."""
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"domains": ["camera"], "mode": "accessory"},
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"entities": "camera.front"}
+    )
+    assert result["step_id"] == "cameras"
+    return result
+
+
+async def test_options_flow_with_camera_secure_video(hass: HomeAssistant) -> None:
+    """Test cameras in accessory mode can record to HomeKit Secure Video."""
+    config_entry = _mock_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+    hass.states.async_set("camera.front", "idle")
+
+    result = await _async_options_flow_to_cameras(hass, config_entry)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"camera_secure_video": ["camera.front"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options["entity_config"] == {
+        "camera.front": {"secure_video": True}
+    }
+
+    result = await _async_options_flow_to_cameras(hass, config_entry)
+    assert _get_schema_default(result["data_schema"].schema, "camera_secure_video") == [
+        "camera.front"
+    ]
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"camera_secure_video": []}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options["entity_config"] == {}
 
 
 async def test_options_flow_with_camera_audio(hass: HomeAssistant) -> None:
