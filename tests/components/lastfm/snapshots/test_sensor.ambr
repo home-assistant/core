@@ -1,9 +1,435 @@
 # serializer version: 1
+# name: test_all_entities[sensor.lastfm_testaccount1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lastfm', '01JLASTFMTESTENTRY00000000_30cd8f28759494fba7ad5414065c0264360693748550dd054c66823fbd304fe6')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lastfm_testaccount1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'lastfm',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lastfm',
+    'unique_id': '30cd8f28759494fba7ad5414065c0264360693748550dd054c66823fbd304fe6',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Last.fm',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LastFM testaccount1',
+      'last_played': 'artist - title',
+      'play_count': 1,
+      'top_played': 'artist - title',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lastfm_testaccount1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'artist - title',
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount1_last_played-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lastfm', '01JLASTFMTESTENTRY00000000_30cd8f28759494fba7ad5414065c0264360693748550dd054c66823fbd304fe6')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lastfm_testaccount1_last_played',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last played',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last played',
+    'platform': 'lastfm',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_played',
+    'unique_id': '30cd8f28759494fba7ad5414065c0264360693748550dd054c66823fbd304fe6_last_played',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount1_last_played-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Last.fm',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LastFM testaccount1 Last played',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lastfm_testaccount1_last_played',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'artist - title',
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount1_play_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lastfm', '01JLASTFMTESTENTRY00000000_30cd8f28759494fba7ad5414065c0264360693748550dd054c66823fbd304fe6')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lastfm_testaccount1_play_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Play count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Play count',
+    'platform': 'lastfm',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'play_count',
+    'unique_id': '30cd8f28759494fba7ad5414065c0264360693748550dd054c66823fbd304fe6_play_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount1_play_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Last.fm',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LastFM testaccount1 Play count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lastfm_testaccount1_play_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount1_top_track-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lastfm', '01JLASTFMTESTENTRY00000000_30cd8f28759494fba7ad5414065c0264360693748550dd054c66823fbd304fe6')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lastfm_testaccount1_top_track',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Top track',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Top track',
+    'platform': 'lastfm',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'top_track',
+    'unique_id': '30cd8f28759494fba7ad5414065c0264360693748550dd054c66823fbd304fe6_top_track',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount1_top_track-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Last.fm',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LastFM testaccount1 Top track',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lastfm_testaccount1_top_track',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'artist - title',
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lastfm', '01JLASTFMTESTENTRY00000000_51d309e113dad5c9a98f050a7cc48f2077b327b7c016881ad28a18403c379950')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lastfm_testaccount2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'lastfm',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lastfm',
+    'unique_id': '51d309e113dad5c9a98f050a7cc48f2077b327b7c016881ad28a18403c379950',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Last.fm',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LastFM testaccount2',
+      'last_played': 'artist - title',
+      'play_count': 1,
+      'top_played': 'artist - title',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lastfm_testaccount2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'artist - title',
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount2_last_played-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lastfm', '01JLASTFMTESTENTRY00000000_51d309e113dad5c9a98f050a7cc48f2077b327b7c016881ad28a18403c379950')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lastfm_testaccount2_last_played',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last played',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last played',
+    'platform': 'lastfm',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_played',
+    'unique_id': '51d309e113dad5c9a98f050a7cc48f2077b327b7c016881ad28a18403c379950_last_played',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount2_last_played-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Last.fm',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LastFM testaccount2 Last played',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lastfm_testaccount2_last_played',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'artist - title',
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount2_play_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lastfm', '01JLASTFMTESTENTRY00000000_51d309e113dad5c9a98f050a7cc48f2077b327b7c016881ad28a18403c379950')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lastfm_testaccount2_play_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Play count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Play count',
+    'platform': 'lastfm',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'play_count',
+    'unique_id': '51d309e113dad5c9a98f050a7cc48f2077b327b7c016881ad28a18403c379950_play_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount2_play_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Last.fm',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LastFM testaccount2 Play count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lastfm_testaccount2_play_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount2_top_track-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('lastfm', '01JLASTFMTESTENTRY00000000_51d309e113dad5c9a98f050a7cc48f2077b327b7c016881ad28a18403c379950')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lastfm_testaccount2_top_track',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Top track',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Top track',
+    'platform': 'lastfm',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'top_track',
+    'unique_id': '51d309e113dad5c9a98f050a7cc48f2077b327b7c016881ad28a18403c379950_top_track',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.lastfm_testaccount2_top_track-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Last.fm',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LastFM testaccount2 Top track',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lastfm_testaccount2_top_track',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'artist - title',
+  })
+# ---
 # name: test_sensors[default_user]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Last.fm',
-      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'image',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LastFM testaccount1',
       'last_played': 'artist - title',
       'play_count': 1,

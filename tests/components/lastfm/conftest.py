@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import MagicMock, patch
 
-from pylast import Track, WSError
+from pylast import WSError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -20,8 +20,8 @@ from . import (
     SESSION_KEY,
     USERNAME_1,
     USERNAME_2,
-    MockNetwork,
     MockUser,
+    mock_track,
 )
 
 type ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
@@ -51,6 +51,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Create LastFM entry in Home Assistant."""
     return MockConfigEntry(
         domain=DOMAIN,
+        entry_id="01JLASTFMTESTENTRY00000000",
         data={},
         options={
             CONF_API_KEY: API_KEY,
@@ -99,9 +100,9 @@ async def mock_setup_integration(
 def mock_default_user() -> MockUser:
     """Return default mock user."""
     return MockUser(
-        now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
-        top_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        now_playing_result=mock_track(),
+        top_tracks=[mock_track()],
+        recent_tracks=[mock_track()],
         friends=[MockUser()],
     )
 
@@ -110,9 +111,19 @@ def mock_default_user() -> MockUser:
 def mock_default_user_no_friends() -> MockUser:
     """Return default mock user without friends."""
     return MockUser(
-        now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
-        top_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        now_playing_result=mock_track(),
+        top_tracks=[mock_track()],
+        recent_tracks=[mock_track()],
+    )
+
+
+@pytest.fixture(name="no_cover_user")
+def mock_no_cover_user() -> MockUser:
+    """Return mock user whose tracks have no album art."""
+    return MockUser(
+        now_playing_result=mock_track([]),
+        top_tracks=[mock_track([])],
+        recent_tracks=[mock_track([])],
     )
 
 
@@ -132,7 +143,7 @@ def mock_not_found_user() -> MockUser:
 def mock_hidden_user() -> MockUser:
     """Return mock user who hides their recent listening information."""
     return MockUser(
-        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        recent_tracks=[mock_track()],
         recent_tracks_error=LOGIN_REQUIRED_ERROR,
     )
 
@@ -141,7 +152,7 @@ def mock_hidden_user() -> MockUser:
 def mock_recent_tracks_error_user() -> MockUser:
     """Return mock user whose recent tracks request fails."""
     return MockUser(
-        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        recent_tracks=[mock_track()],
         recent_tracks_error=WSError("network", "status", "Something strange"),
     )
 
@@ -150,7 +161,7 @@ def mock_recent_tracks_error_user() -> MockUser:
 def mock_hidden_now_playing_user() -> MockUser:
     """Return mock user with now playing available but hidden listening info."""
     return MockUser(
-        now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
-        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        now_playing_result=mock_track(),
+        recent_tracks=[mock_track()],
         recent_tracks_error=LOGIN_REQUIRED_ERROR,
     )

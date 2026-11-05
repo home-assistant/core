@@ -1,8 +1,17 @@
 {
   "entity": {
     "sensor": {
+      "last_played": {
+        "default": "mdi:history"
+      },
       "lastfm": {
         "default": "mdi:radio-fm"
+      },
+      "play_count": {
+        "default": "mdi:counter"
+      },
+      "top_track": {
+        "default": "mdi:trophy"
       }
     }
   }

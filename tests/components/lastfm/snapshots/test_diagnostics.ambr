@@ -5,16 +5,22 @@
       dict({
         'image': 'image',
         'last_track': 'artist - title',
+        'last_track_image': 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
         'now_playing': 'artist - title',
+        'now_playing_image': 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
         'play_count': 1,
         'top_track': 'artist - title',
+        'top_track_image': 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
       }),
       dict({
         'image': 'image',
         'last_track': 'artist - title',
+        'last_track_image': 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
         'now_playing': 'artist - title',
+        'now_playing_image': 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
         'play_count': 1,
         'top_track': 'artist - title',
+        'top_track_image': 'https://lastfm.freetls.fastly.net/i/u/300x300/cover.png',
       }),
     ]),
   })

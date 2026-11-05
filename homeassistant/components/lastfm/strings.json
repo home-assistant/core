@@ -55,6 +55,19 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "last_played": {
+        "name": "Last played"
+      },
+      "play_count": {
+        "name": "Play count"
+      },
+      "top_track": {
+        "name": "Top track"
+      }
+    }
+  },
   "exceptions": {
     "update_failed": {
       "message": "Could not retrieve data from Last.fm for any of the configured users"

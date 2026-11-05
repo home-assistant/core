@@ -4,9 +4,13 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pylast import LastFMNetwork, PyLastError, WSError
+from pylast import LastFMNetwork, PyLastError, Track, WSError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lastfm.const import (
@@ -20,7 +24,7 @@ from homeassistant.const import ATTR_ENTITY_PICTURE, CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import API_KEY, API_SECRET, SESSION_KEY, MockUser
+from . import API_KEY, API_SECRET, COVER_IMAGE, SESSION_KEY, MockUser
 from .conftest import ComponentSetup
 
 
@@ -57,11 +61,11 @@ async def test_sensor_without_avatar(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
-    default_user: MockUser,
+    no_cover_user: MockUser,
 ) -> None:
-    """Test a user without an avatar has no entity picture."""
-    with patch.object(default_user, "get_image", return_value=None):
-        await setup_integration(config_entry, default_user)
+    """Test a user without an avatar or album art has no entity picture."""
+    with patch.object(no_cover_user, "get_image", return_value=None):
+        await setup_integration(config_entry, no_cover_user)
 
     state = hass.states.get("sensor.lastfm_testaccount1")
     assert state.state == "artist - title"
@@ -221,3 +225,86 @@ async def test_error_log_does_not_include_credentials(
     assert API_KEY not in caplog.text
     assert API_SECRET not in caplog.text
     assert SESSION_KEY not in caplog.text
+
+
+async def test_all_entities(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    default_user: MockUser,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test all entities."""
+    await setup_integration(config_entry, default_user)
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("fixture", "entity_id", "picture"),
+    [
+        pytest.param(
+            "default_user", "sensor.lastfm_testaccount1", COVER_IMAGE, id="playing"
+        ),
+        pytest.param(
+            "first_time_user", "sensor.lastfm_testaccount1", "image", id="not_playing"
+        ),
+        pytest.param(
+            "no_cover_user", "sensor.lastfm_testaccount1", "image", id="no_cover"
+        ),
+        pytest.param(
+            "default_user",
+            "sensor.lastfm_testaccount1_last_played",
+            COVER_IMAGE,
+            id="last_played",
+        ),
+        pytest.param(
+            "no_cover_user",
+            "sensor.lastfm_testaccount1_last_played",
+            None,
+            id="last_played_no_cover",
+        ),
+        pytest.param(
+            "default_user",
+            "sensor.lastfm_testaccount1_top_track",
+            COVER_IMAGE,
+            id="top_track",
+        ),
+    ],
+)
+async def test_entity_picture(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    fixture: str,
+    entity_id: str,
+    picture: str | None,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test the album art is used as entity picture."""
+    await setup_integration(config_entry, request.getfixturevalue(fixture))
+
+    assert hass.states.get(entity_id).attributes.get(ATTR_ENTITY_PICTURE) == picture
+
+
+async def test_cover_image_requested_once(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    default_user: MockUser,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the album art is only requested when the track changes."""
+    with patch.object(
+        Track, "get_cover_image", autospec=True, return_value=COVER_IMAGE
+    ) as mock_cover:
+        await setup_integration(config_entry, default_user)
+        assert mock_cover.call_count == 1
+
+        with patch("pylast.User", return_value=default_user):
+            freezer.tick(timedelta(seconds=30))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_cover.call_count == 1
