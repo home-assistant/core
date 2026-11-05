@@ -12,6 +12,7 @@ from aiohasupervisor.models import UpdateChannel
 from awesomeversion import AwesomeVersion
 import probatio
 
+from homeassistant.components.repairs import async_snapshot_before_update
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
@@ -471,7 +472,9 @@ class AutoUpdateManager:
 
                 await backup_core_before_update(self._hass)
 
-            # Checked again, with nothing awaited until the request: the save
+            await async_snapshot_before_update(self._hass)
+
+            # Checked again, with nothing awaited until the request: the saves
             # and the backup let the version be skipped or pulled, the data go
             # stale or another update or backup start. The window only bounds
             # the start, so a long backup may run past its end. After our own
@@ -491,7 +494,7 @@ class AutoUpdateManager:
                 return
 
             _LOGGER.info("Installing Home Assistant %s automatically", version)
-            await update_core(self._hass, version, False)
+            await update_core(self._hass, version, False, snapshot=False)
         except HomeAssistantError as err:
             _LOGGER.error(
                 "Automatic update to Home Assistant %s failed: %s", version, err

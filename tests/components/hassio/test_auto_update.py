@@ -46,6 +46,7 @@ from homeassistant.util import dt as dt_util
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 STORAGE_KEY = "hassio.auto_update"
+UPDATE_REPORT_STORAGE_KEY = "repairs.update_report"
 
 
 @pytest.fixture(autouse=True)
@@ -1185,18 +1186,29 @@ async def test_withdrawn_then_replaced(
     assert _installed(supervisor_client) == ["2026.10.3"]
 
 
+@pytest.mark.parametrize(
+    ("store_key", "saved_key"),
+    [
+        pytest.param(STORAGE_KEY, "attempted_window", id="attempted_window"),
+        pytest.param(
+            UPDATE_REPORT_STORAGE_KEY, "before_update", id="update_report_snapshot"
+        ),
+    ],
+)
 async def test_turned_off_while_saving(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
     supervisor_client: AsyncMock,
+    store_key: str,
+    saved_key: str,
 ) -> None:
-    """Test turning automatic updates off during the last save stops the update."""
+    """Test turning automatic updates off during a save stops the update."""
     save = Store.async_save
 
     async def save_and_turn_off(store: Store, data: Any) -> None:
         await save(store, data)
-        if store.key == STORAGE_KEY and data["attempted_window"] is not None:
+        if store.key == store_key and data[saved_key] is not None:
             entry = hass.config_entries.async_entries(DOMAIN)[0]
             hass.config_entries.async_update_entry(
                 entry, options={**entry.options, "core_auto_update": False}

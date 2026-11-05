@@ -142,14 +142,17 @@ async def test_update_report(
     entity_ids[entities["renamed"].id] = "sensor.old_name"
     entity_ids["gone"] = "sensor.gone"
 
-    for issue_id, issue_domain, breaks_in_ha_version in (
-        ("new_issue", None, None),
-        ("old_issue", None, None),
-        ("ignored_issue", None, None),
-        ("breaks_later", "repairs", "2027.5.0"),
-        ("breaks_sooner", "repairs", "2026.12.0"),
-        ("breaks_dismissed", "http", "2027.1.0"),
-        ("breaks_not_set_up", "not_set_up", "2026.12.0"),
+    for issue_id, issue_domain, breaks_in_ha_version, config_entry_id in (
+        ("new_issue", None, None, None),
+        ("old_issue", None, None, None),
+        ("ignored_issue", None, None, None),
+        ("hidden_issue", None, None, "disabled"),
+        ("breaks_later", "repairs", "2099.5.0", None),
+        ("breaks_sooner", "repairs", "2099.1.0", None),
+        ("breaks_dismissed", "http", "2099.3.0", None),
+        ("breaks_not_set_up", "not_set_up", "2099.1.0", None),
+        ("breaks_reached", "repairs", "2026.1.0", None),
+        ("breaks_hidden", "repairs", "2099.1.0", "disabled"),
     ):
         ir.async_create_issue(
             hass,
@@ -158,6 +161,7 @@ async def test_update_report(
             is_fixable=False,
             issue_domain=issue_domain,
             breaks_in_ha_version=breaks_in_ha_version,
+            config_entry_id=config_entry_id,
             severity=ir.IssueSeverity.WARNING,
             translation_key="country_not_configured",
         )
@@ -178,6 +182,7 @@ async def test_update_report(
                 "breaks_later",
                 "breaks_sooner",
                 "breaks_not_set_up",
+                "breaks_reached",
             )
         ],
     )
@@ -376,6 +381,30 @@ async def test_dismiss(
     assert hass_storage[STORAGE_KEY]["data"]["baseline"] is None
     assert not issue_registry.async_get_issue(DOMAIN, UPDATE_REPORT_ISSUE_ID)
     assert await _get_report(hass, hass_ws_client) is None
+
+
+async def test_dismiss_keeps_pending_snapshot(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test dismissing the report keeps the snapshot of an update in progress."""
+    _store(hass_storage, _snapshot())
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_snapshot_before_update(hass)
+    pending = hass_storage[STORAGE_KEY]["data"]["before_update"]
+    assert pending is not None
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "repairs/update_report/dismiss"})
+    assert (await client.receive_json())["success"]
+    await _tick(hass, freezer, timedelta(seconds=1))
+
+    assert hass_storage[STORAGE_KEY]["data"] == {
+        "baseline": None,
+        "before_update": pending,
+    }
 
 
 @pytest.mark.parametrize(

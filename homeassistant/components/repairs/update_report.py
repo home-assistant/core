@@ -56,6 +56,7 @@ class UpdateReport:
         """Initialize the update report."""
         self.hass = hass
         self.baseline: RunSnapshot | None = None
+        self._before_update: RunSnapshot | None = None
         self._store: Store[StoredData] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
     async def async_load(self) -> None:
@@ -68,7 +69,7 @@ class UpdateReport:
         # A failed update leaves the version unchanged; drop its snapshot.
         if before_update["version"] != __version__:
             self.baseline = before_update
-        await self._async_save(None)
+        await self._async_save()
 
     @callback
     def async_start(self) -> None:
@@ -103,11 +104,12 @@ class UpdateReport:
 
     async def async_before_update(self) -> None:
         """Save a snapshot of the running instance before Core is updated."""
-        await self._async_save(async_take_snapshot(self.hass))
+        self._before_update = async_take_snapshot(self.hass)
+        await self._async_save()
 
-    async def _async_save(self, before_update: RunSnapshot | None) -> None:
+    async def _async_save(self) -> None:
         await self._store.async_save(
-            {"baseline": self.baseline, "before_update": before_update}
+            {"baseline": self.baseline, "before_update": self._before_update}
         )
 
     @callback
@@ -121,7 +123,7 @@ class UpdateReport:
         """Forget the baseline."""
         self.baseline = None
         ir.async_delete_issue(self.hass, DOMAIN, UPDATE_REPORT_ISSUE_ID)
-        await self._async_save(None)
+        await self._async_save()
 
 
 def _counts(report: dict[str, Any]) -> dict[str, int]:
@@ -145,10 +147,12 @@ def _async_is_unhealthy(hass: HomeAssistant, entity_id: str) -> bool:
 
 @callback
 def _async_active_issues(hass: HomeAssistant) -> list[tuple[str, str]]:
+    issue_registry = ir.async_get(hass)
     return [
         key
-        for key, issue in ir.async_get(hass).issues.items()
+        for key, issue in issue_registry.issues.items()
         if issue.active
+        and not issue_registry.async_is_hidden(issue)
         and issue.dismissed_version is None
         and key != (DOMAIN, UPDATE_REPORT_ISSUE_ID)
     ]
@@ -276,6 +280,8 @@ def async_diff(hass: HomeAssistant, baseline: RunSnapshot) -> dict[str, Any]:
 @callback
 def _async_upcoming(hass: HomeAssistant) -> list[dict[str, Any]]:
     """Return issues of set up integrations that break in a future version."""
+    issue_registry = ir.async_get(hass)
+    current = AwesomeVersion(__version__)
     upcoming = [
         {
             "domain": issue.domain,
@@ -284,9 +290,11 @@ def _async_upcoming(hass: HomeAssistant) -> list[dict[str, Any]]:
             "breaks_in_ha_version": issue.breaks_in_ha_version,
             "dismissed": issue.dismissed_version is not None,
         }
-        for issue in ir.async_get(hass).issues.values()
+        for issue in issue_registry.issues.values()
         if issue.active
+        and not issue_registry.async_is_hidden(issue)
         and issue.breaks_in_ha_version
+        and AwesomeVersion(issue.breaks_in_ha_version) > current
         and (issue.issue_domain or issue.domain) in hass.config.components
     ]
     return sorted(

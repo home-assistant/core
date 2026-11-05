@@ -40,10 +40,17 @@ async def update_addon(
         ) from err
 
 
-async def update_core(hass: HomeAssistant, version: str | None, backup: bool) -> None:
+async def update_core(
+    hass: HomeAssistant,
+    version: str | None,
+    backup: bool,
+    *,
+    snapshot: bool = True,
+) -> None:
     """Update core.
 
-    Optionally make a backup before updating.
+    Optionally make a backup before updating. Callers that pass snapshot=False
+    save the update report snapshot themselves.
     """
     client = get_supervisor_client(hass)
 
@@ -52,7 +59,8 @@ async def update_core(hass: HomeAssistant, version: str | None, backup: bool) ->
 
         await backup_core_before_update(hass)
 
-    await async_snapshot_before_update(hass)
+    if snapshot:
+        await async_snapshot_before_update(hass)
     try:
         await client.homeassistant.update(
             HomeAssistantUpdateOptions(version=version, backup=False)

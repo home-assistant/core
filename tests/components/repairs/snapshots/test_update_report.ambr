@@ -58,21 +58,21 @@
     'to_version': '2026.12.0.dev0',
     'upcoming': list([
       dict({
-        'breaks_in_ha_version': '2026.12.0',
+        'breaks_in_ha_version': '2099.1.0',
         'dismissed': False,
         'domain': 'homeassistant',
         'issue_domain': 'repairs',
         'issue_id': 'breaks_sooner',
       }),
       dict({
-        'breaks_in_ha_version': '2027.1.0',
+        'breaks_in_ha_version': '2099.3.0',
         'dismissed': True,
         'domain': 'homeassistant',
         'issue_domain': 'http',
         'issue_id': 'breaks_dismissed',
       }),
       dict({
-        'breaks_in_ha_version': '2027.5.0',
+        'breaks_in_ha_version': '2099.5.0',
         'dismissed': False,
         'domain': 'homeassistant',
         'issue_domain': 'repairs',
@@ -140,21 +140,21 @@
     'to_version': '2026.12.0.dev0',
     'upcoming': list([
       dict({
-        'breaks_in_ha_version': '2026.12.0',
+        'breaks_in_ha_version': '2099.1.0',
         'dismissed': False,
         'domain': 'homeassistant',
         'issue_domain': 'repairs',
         'issue_id': 'breaks_sooner',
       }),
       dict({
-        'breaks_in_ha_version': '2027.1.0',
+        'breaks_in_ha_version': '2099.3.0',
         'dismissed': True,
         'domain': 'homeassistant',
         'issue_domain': 'http',
         'issue_id': 'breaks_dismissed',
       }),
       dict({
-        'breaks_in_ha_version': '2027.5.0',
+        'breaks_in_ha_version': '2099.5.0',
         'dismissed': False,
         'domain': 'homeassistant',
         'issue_domain': 'repairs',
