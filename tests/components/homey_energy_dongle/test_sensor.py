@@ -14,12 +14,7 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.homey_energy_dongle.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    UnitOfPower,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -87,21 +82,16 @@ async def test_new_mbus_device(hass: HomeAssistant, telegrams: TelegramQueue) ->
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_total_without_all_tariff_registers(
-    hass: HomeAssistant, telegrams: TelegramQueue, telegram: Telegram
-) -> None:
-    """Test a telegram missing a tariff register doesn't lower the summed total."""
-    assert hass.states.get(IMPORTED_ENTITY_ID).state == "6.825"
+async def test_no_total_from_tariff_registers(hass: HomeAssistant) -> None:
+    """Test tariff registers are not summed into a total the meter doesn't send.
 
-    telegrams.put_nowait(
-        parse(TELEGRAM_V5.replace("1-0:1.8.2(000002.399*kWh)\r\n", ""))
+    One register briefly reading 0 would make the sum look like a meter reset.
+    """
+    assert hass.states.get(IMPORTED_ENTITY_ID) is None
+    assert (
+        hass.states.get("sensor.electricity_meter_total_energy_imported_low_tariff")
+        is not None
     )
-    await hass.async_block_till_done()
-    assert hass.states.get(IMPORTED_ENTITY_ID).state == STATE_UNKNOWN
-
-    telegrams.put_nowait(telegram)
-    await hass.async_block_till_done()
-    assert hass.states.get(IMPORTED_ENTITY_ID).state == "6.825"
 
 
 @pytest.mark.usefixtures("init_integration")

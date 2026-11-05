@@ -83,22 +83,6 @@ def _power(data: Telegram | MbusDevice, positive: str, negative: str) -> Decimal
     return ((pos or Decimal(0)) - (neg or Decimal(0))).to_integral_value()
 
 
-def _total(
-    data: Telegram | MbusDevice, total: str, tariffs: tuple[str, ...]
-) -> Decimal | None:
-    """Prefer the meter's total register, else sum the tariff registers.
-
-    A sum without one of the registers drops, and the statistics count a drop
-    as a meter reset, so a telegram missing one gives no value.
-    """
-    if (value := _value(data, total)) is not None:
-        return Decimal(value)
-    values = [_value(data, ref) for ref in tariffs]
-    if None in values:
-        return None
-    return Decimal(sum(values))
-
-
 def _tariff(data: Telegram | MbusDevice, states: dict[str, str]) -> str | None:
     """Map the active tariff code to its state."""
     return states.get(_value(data, "ELECTRICITY_ACTIVE_TARIFF"))
@@ -192,8 +176,8 @@ SENSORS: tuple[HomeyEnergyDongleSensorEntityDescription, ...] = (
         value_fn=partial(_tariff, states={"0001": "high", "0002": "low"}),
         dsmr_versions=_TARIFF_HIGH_FIRST,
     ),
-    # Only meters without a total register sum their tariffs, and those profiles
-    # (DSMR 2.2, 4 and 5B) have exactly two.
+    # Only the meter's own total register; a sum of tariff registers turns one
+    # register briefly reading 0 into a meter reset in the statistics.
     HomeyEnergyDongleSensorEntityDescription(
         key="total_energy_imported",
         translation_key="total_energy_imported",
@@ -201,11 +185,7 @@ SENSORS: tuple[HomeyEnergyDongleSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=3,
-        value_fn=partial(
-            _total,
-            total="ELECTRICITY_IMPORTED_TOTAL",
-            tariffs=("ELECTRICITY_USED_TARIFF_1", "ELECTRICITY_USED_TARIFF_2"),
-        ),
+        value_fn=partial(_value, ref="ELECTRICITY_IMPORTED_TOTAL"),
     ),
     HomeyEnergyDongleSensorEntityDescription(
         key="total_energy_exported",
@@ -214,14 +194,7 @@ SENSORS: tuple[HomeyEnergyDongleSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=3,
-        value_fn=partial(
-            _total,
-            total="ELECTRICITY_EXPORTED_TOTAL",
-            tariffs=(
-                "ELECTRICITY_DELIVERED_TARIFF_1",
-                "ELECTRICITY_DELIVERED_TARIFF_2",
-            ),
-        ),
+        value_fn=partial(_value, ref="ELECTRICITY_EXPORTED_TOTAL"),
     ),
     *(
         HomeyEnergyDongleSensorEntityDescription(
