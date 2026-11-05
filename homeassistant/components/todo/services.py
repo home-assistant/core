@@ -42,6 +42,11 @@ class TodoItemFieldDescription:
     """Entity feature that enables this field."""
 
 
+def _empty_to_none(value: str) -> str | None:
+    """Treat an empty string as no value."""
+    return value or None
+
+
 TODO_ITEM_FIELDS = [
     TodoItemFieldDescription(
         service_field=TodoServiceArgument.DUE_DATE,
@@ -63,7 +68,7 @@ TODO_ITEM_FIELDS = [
     ),
     TodoItemFieldDescription(
         service_field=TodoServiceArgument.SECTION,
-        validation=probatio.Any(cv.string, None),
+        validation=probatio.Any(probatio.All(cv.string, _empty_to_none), None),
         todo_item_field=ATTR_SECTION,
         required_feature=TodoListEntityFeature.SET_SECTION_ON_ITEM,
     ),

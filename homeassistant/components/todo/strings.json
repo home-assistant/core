@@ -129,7 +129,7 @@
           "name": "Rename item"
         },
         "section": {
-          "description": "[%key:component::todo::services::add_item::fields::section::description%]",
+          "description": "The section (group or category) the to-do item belongs to. Leave empty to remove the item from its section.",
           "name": "[%key:component::todo::services::add_item::fields::section::name%]"
         },
         "status": {
