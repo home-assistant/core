@@ -15,7 +15,7 @@ from aiontfy.exceptions import (
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_MESSAGE, CONF_PRIORITY, CONF_TAGS, CONF_TITLE, DOMAIN
@@ -89,9 +89,19 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
         )
 
     @override
+    async def async_removed_from_registry(self) -> None:
+        """Run when entity has been removed from the entity registry."""
+        ir.async_delete_issue(self.hass, DOMAIN, self._topic_protected_issue_id)
+
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
-        ir.async_delete_issue(self.hass, DOMAIN, self._topic_protected_issue_id)
+        # Core hides issues of a disabled config entry, keep them and their ignore
+        if self.registry_entry is not None and self.registry_entry.disabled_by not in (
+            None,
+            er.RegistryEntryDisabler.CONFIG_ENTRY,
+        ):
+            ir.async_delete_issue(self.hass, DOMAIN, self._topic_protected_issue_id)
 
     async def ws_connect(self) -> None:
         """Connect websocket."""
