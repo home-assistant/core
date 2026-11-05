@@ -338,6 +338,20 @@ async def test_unsupported_attachment(
             id="missing-option",
         ),
         pytest.param(
+            [
+                ANSWERS[0],
+                {
+                    **ANSWERS[1],
+                    "probabilities": [
+                        *ANSWERS[1]["probabilities"],
+                        ANSWERS[1]["probabilities"][0],
+                    ],
+                },
+            ],
+            "invalid choice probabilities",
+            id="repeated-option",
+        ),
+        pytest.param(
             [ANSWERS[0], {**ANSWERS[1], "choice": "roof"}],
             "unknown choice",
             id="unknown-choice",

@@ -49,7 +49,7 @@ def _convert_choice(
     probabilities = {
         str(option.value): option.probability for option in answer.probabilities
     }
-    if set(probabilities) != options:
+    if len(probabilities) != len(answer.probabilities) or set(probabilities) != options:
         raise HomeAssistantError("LiteLLM returned invalid choice probabilities")
     if answer.choice not in options:
         raise HomeAssistantError("LiteLLM returned an unknown choice")
