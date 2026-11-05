@@ -401,6 +401,18 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
         """Turn the entity on."""
         await self._async_run_and_update(self.controller.set_on(True))
 
+    async def async_set_airflow_min(self, airflow: int) -> None:
+        """Reject airflow minimum, which only applies to zones."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="airflow_zone_only"
+        )
+
+    async def async_set_airflow_max(self, airflow: int) -> None:
+        """Reject airflow maximum, which only applies to zones."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="airflow_zone_only"
+        )
+
 
 class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
     """Representation of iZone Zone."""
