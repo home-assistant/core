@@ -46,4 +46,11 @@ LABS_PREVIEW_FEATURES = {
             "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_link=https://www.home-assistant.io/integrations/teslemetry&integration_name=Teslemetry",
         },
     },
+    "voice_support": {
+        "wake_word_verification": {
+            "feedback_url": "",
+            "learn_more_url": "https://www.home-assistant.io/integrations/voice_support",
+            "report_issue_url": "",
+        },
+    },
 }

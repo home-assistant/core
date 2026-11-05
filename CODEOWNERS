@@ -2149,6 +2149,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/vlc_telnet/ @rodripf @MartinHjelmare
 /homeassistant/components/vodafone_station/ @paoloantinori @chemelli74
 /tests/components/vodafone_station/ @paoloantinori @chemelli74
+/homeassistant/components/voice_support/ @synesthesiam
+/tests/components/voice_support/ @synesthesiam
 /homeassistant/components/voip/ @home-assistant/core @jaminh
 /tests/components/voip/ @home-assistant/core @jaminh
 /homeassistant/components/volkszaehler/ @StefanSchoof

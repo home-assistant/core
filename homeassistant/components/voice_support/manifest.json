@@ -1,0 +1,18 @@
+{
+  "domain": "voice_support",
+  "name": "Voice support",
+  "after_dependencies": ["hassio"],
+  "categories": ["ai_voice.voice_assistants"],
+  "codeowners": ["@synesthesiam"],
+  "config_flow": true,
+  "dependencies": ["labs"],
+  "documentation": "https://www.home-assistant.io/integrations/voice_support",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "preview_features": {
+    "wake_word_verification": {
+      "learn_more_url": "https://www.home-assistant.io/integrations/voice_support"
+    }
+  },
+  "quality_scale": "bronze"
+}
