@@ -44,9 +44,11 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .common import (
@@ -504,13 +506,17 @@ async def test_setpoint_thermostat_fahrenheit_range_rounding(
     assert args["value"] == 78.5
 
 
-async def test_setpoint_thermostat_celsius_rounding(
+async def test_setpoint_thermostat_celsius_not_rounded(
     hass: HomeAssistant,
     client: MagicMock,
     climate_heatit_z_trm3: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test setpoints on a Celsius device are rounded to a tenth of a degree."""
+    """Test setpoints on a Celsius device are sent without rounding.
+
+    Rounding Celsius values to the precision the device supports is left to
+    Z-Wave JS.
+    """
     hass.config.units = US_CUSTOMARY_SYSTEM
     client.async_send_command.reset_mock()
 
@@ -527,7 +533,9 @@ async def test_setpoint_thermostat_celsius_rounding(
     args = client.async_send_command.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["valueId"]["commandClass"] == 67
-    assert args["value"] == 21.1
+    assert args["value"] == TemperatureConverter.convert(
+        70, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+    )
 
 
 async def test_thermostat_v2_turn_on_after_off(

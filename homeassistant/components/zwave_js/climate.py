@@ -481,18 +481,18 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         await self._async_set_value(self._fan_mode, new_state)
 
     def _round_setpoint(self, temp: float) -> float:
-        """Round to a resolution the device can encode.
+        """Round Fahrenheit setpoints to the nearest half degree.
 
         Z-Wave derives the encoded precision from the float itself, so an
         unrounded unit conversion becomes a 4-byte payload some nodes
         mis-parse. Fahrenheit thermostats step in half degrees at best.
-        Clamp afterwards in case rounding pushed an already-validated value
-        outside the device's range.
+        Precision for other units is left to Z-Wave JS. Clamp afterwards in
+        case rounding pushed an already-validated value outside the device's
+        range.
         """
-        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
-            rounded = round(temp * 2) / 2
-        else:
-            rounded = round(temp, 1)
+        if self.temperature_unit != UnitOfTemperature.FAHRENHEIT:
+            return temp
+        rounded = round(temp * 2) / 2
         return min(max(rounded, self.min_temp), self.max_temp)
 
     @override
