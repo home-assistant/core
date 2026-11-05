@@ -32,7 +32,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .config_flow import sensor_name
-from .const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN, FEED_ID, FEED_NAME, FEED_TAG
+from .const import (
+    CONF_ONLY_INCLUDE_FEEDID,
+    DOMAIN,
+    FEED_ID,
+    FEED_NAME,
+    FEED_TAG,
+    MANUFACTURER,
+)
 from .coordinator import EmonCMSConfigEntry, EmoncmsCoordinator
 
 SENSORS: dict[str | None, SensorEntityDescription] = {
@@ -248,7 +255,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{unique_id}-{elem[FEED_TAG]}")},
-            manufacturer="OpenEnergyMonitor",
+            manufacturer=MANUFACTURER,
             name=elem[FEED_TAG] or name,
         )
         description = SENSORS.get(unit_of_measurement)
