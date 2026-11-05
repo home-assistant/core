@@ -175,6 +175,7 @@ Every check has a code following the
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
 | `W7454` | [`home-assistant-sequential-add-entities`](#w7454-home-assistant-sequential-add-entities) | Sequential `async_add_entities` calls should be grouped |
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
+| `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
 
 ## `home_assistant_logger` checker
 
@@ -432,6 +433,26 @@ When the alias lives in `__init__.py`, import it in the coordinator under
 coordinator that passes `config_entry` to `super().__init__` doesn't need to
 assign `self.config_entry` itself. To narrow its type, annotate it on the
 class instead.
+
+
+## `home_assistant_runtime_data_typed_entry` checker
+
+Checks that config entries that set `runtime_data` are typed.
+
+### `W7460`: `home-assistant-runtime-data-untyped-config-entry`
+
+`ConfigEntry` is generic over its `runtime_data`. When `runtime_data` is set
+on a config entry that is annotated as a plain `ConfigEntry`, that
+`runtime_data` is `Any` and isn't type checked. Define a typed config entry and
+use it instead:
+
+```python
+type MyConfigEntry = ConfigEntry[MyData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MyConfigEntry) -> bool:
+    entry.runtime_data = MyData(...)
+```
 
 
 ## `home_assistant_coordinator_entity_available` checker
