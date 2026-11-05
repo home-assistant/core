@@ -1282,6 +1282,11 @@ class MQTT:
             queue_only=True,
         )
 
+    @callback
+    def async_count_matching_subscriptions(self, topic: str) -> int:
+        """Return how many subscriptions receive messages on a topic."""
+        return len(self._matching_subscriptions(topic, None))
+
     @lru_cache(None)  # pylint: disable=method-cache-max-size-none
     def _matching_subscriptions(
         self, topic: str, identifiers: tuple[int, ...] | None

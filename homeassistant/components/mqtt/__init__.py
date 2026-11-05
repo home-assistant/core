@@ -86,6 +86,7 @@ from .const import (
     MqttService,
     MqttServiceArgument,
 )
+from .explorer import websocket_subscribe_explorer
 from .models import (
     DATA_MQTT,
     DATA_MQTT_AVAILABLE,
@@ -276,6 +277,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
+    websocket_api.async_register_command(hass, websocket_subscribe_explorer)
 
     async_setup_services(hass)
 
