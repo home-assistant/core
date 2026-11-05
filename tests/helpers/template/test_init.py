@@ -452,6 +452,12 @@ def test_render_with_possible_json_value_json_path_legacy_templates(
             id="crlf_in_key",
         ),
         pytest.param(
+            "{{ value_json['a\\nb'] }}",
+            {"value": '{"a\\\\nb": 1, "a\\nb": 2}'},
+            "2",
+            id="backslash_escape_in_key",
+        ),
+        pytest.param(
             "{{ value_json.a }}",
             {"value": "raw", "value_json": {"a": CYCLIC}, "error_value": "fallback"},
             "fallback",
