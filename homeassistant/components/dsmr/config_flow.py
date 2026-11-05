@@ -12,17 +12,13 @@ from dsmr_parser.objects import DSMRObject
 import probatio
 from serialx import SerialException
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SerialPortSelector
 
+from . import DsmrConfigEntry
 from .const import (
     CONF_DSMR_VERSION,
     CONF_ENCRYPTION_KEY,
@@ -190,7 +186,7 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: DsmrConfigEntry,
     ) -> DSMROptionFlowHandler:
         """Get the options flow for this handler."""
         return DSMROptionFlowHandler()

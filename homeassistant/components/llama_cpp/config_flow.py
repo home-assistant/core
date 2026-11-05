@@ -9,7 +9,6 @@ import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -31,6 +30,7 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
 )
 
+from . import LlamaCppConfigEntry
 from .api import (
     async_create_client,
     async_list_models,
@@ -144,7 +144,7 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA,
-            description_placeholders={CONF_BASE_URL: reauth_entry.data[CONF_BASE_URL]},
+            description_placeholders={"base_url": reauth_entry.data[CONF_BASE_URL]},
             errors=errors,
         )
 
@@ -231,7 +231,7 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: LlamaCppConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {

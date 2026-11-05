@@ -10,7 +10,6 @@ import probatio
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -18,6 +17,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 
+from . import FritzBoxCallMonitorConfigEntry
 from .base import FritzBoxPhonebook
 from .const import (
     CONF_PHONEBOOK,
@@ -57,7 +57,7 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _entry: ConfigEntry
+    _entry: FritzBoxCallMonitorConfigEntry
     _host: str
     _port: int
     _username: str
@@ -130,7 +130,7 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: FritzBoxCallMonitorConfigEntry,
     ) -> FritzBoxCallMonitorOptionsFlowHandler:
         """Get the options flow for this handler."""
         return FritzBoxCallMonitorOptionsFlowHandler()
@@ -265,6 +265,44 @@ class FritzBoxCallMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         await self.hass.config_entries.async_reload(self._entry.entry_id)
         return self.async_abort(reason="reauth_successful")
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the FRITZ!Box connection."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self._host = user_input[CONF_HOST]
+            self._password = user_input[CONF_PASSWORD]
+            self._username = user_input[CONF_USERNAME]
+
+            if (
+                error := await self.hass.async_add_executor_job(self._try_connect)
+            ) is ConnectResult.SUCCESS:
+                await self.async_set_unique_id(
+                    f"{self._serial_number}-{entry.data[CONF_PHONEBOOK]}"
+                )
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={**user_input, SERIAL_NUMBER: self._serial_number},
+                )
+            errors["base"] = error
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA_USER,
+                {
+                    key: value
+                    for key, value in (user_input or entry.data).items()
+                    if key != CONF_PASSWORD
+                },
+            ),
+            errors=errors,
+        )
 
 
 class FritzBoxCallMonitorOptionsFlowHandler(OptionsFlowWithReload):

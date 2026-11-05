@@ -501,10 +501,10 @@ async def test_rpc_ircode_buttons(
     await init_integration(hass, 4)
 
     for entity_id in (
-        "button.fan_speed_1",
-        "button.light_turn_on",
-        "button.light_turn_off",
-        "button.fan_turn_off",
+        "button.test_name_fan_speed_1",
+        "button.test_name_light_turn_on",
+        "button.test_name_light_turn_off",
+        "button.test_name_fan_turn_off",
     ):
         assert (state := hass.states.get(entity_id))
         assert state == snapshot(name=f"{entity_id}-state")
@@ -555,7 +555,7 @@ async def test_rpc_ircode_button_no_custom_name(
     # With no custom name:
     # translated name -> IR code 20
     # device fallback name -> IR Device 30
-    entity_id = "button.ir_device_30_ir_code_20"
+    entity_id = "button.test_name_ir_device_30_ir_code_20"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
@@ -564,7 +564,7 @@ async def test_rpc_ircode_button_no_custom_name(
     assert entry.unique_id == "123456789ABC-ircode:20-ircode"
 
     # Verify IR device with fallback name
-    ir_device = device_registry.async_get_device_by_identifier(
+    ir_device = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, "123456789ABC-irdevice:30"), config_entry.entry_id
     )
     assert ir_device is not None
@@ -573,9 +573,9 @@ async def test_rpc_ircode_button_no_custom_name(
     # Verify entity belongs to the IR device
     assert entry.device_id == ir_device.id
 
-    # Verify via_device points to main device
+    # Verify the IR device is a child of the main device
     main_device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "123456789ABC"), config_entry.entry_id
     )
     assert main_device is not None
-    assert ir_device.via_device_id == main_device.id
+    assert ir_device.parent_device_id == main_device.id

@@ -4,11 +4,12 @@
   "categories": ["energy.meters_monitoring"],
   "codeowners": ["@tronikos"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/opower",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["opower"],
   "quality_scale": "platinum",
-  "requirements": ["opower==0.22.4"]
+  "requirements": ["opower==0.23.0"]
 }
