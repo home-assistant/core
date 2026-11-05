@@ -4,11 +4,13 @@ from unittest.mock import MagicMock
 
 from boschshcpy import SHCRoomThermostat2
 from boschshcpy.services_impl import (
+    DimmerConfigurationService,
     DisplayDirection,
     DisplayedTemperatureConfiguration,
     OutdoorSirenService,
     PirSensorConfigurationService,
     PowerSwitchConfigurationService,
+    SmartSensitivityControlService,
     SmokeSensitivityService,
     SwitchConfiguration,
     TerminalConfiguration,
@@ -23,6 +25,7 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION, STATE_UNK
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
+    micromodule_dimmer_device,
     micromodule_relay_device,
     motion_detector2_device,
     outdoor_siren_device,
@@ -42,6 +45,7 @@ DISPLAYED_TEMPERATURE_ENTITY_ID = "select.thermostat_gen2_displayed_temperature"
 STATE_AFTER_OUTAGE_ENTITY_ID = "select.smart_plug_state_after_power_outage"
 VALVE_TYPE_ENTITY_ID = "select.thermostat_gen2_valve_type"
 HEATER_TYPE_ENTITY_ID = "select.thermostat_gen2_heater_type"
+PHASE_CONTROL_ENTITY_ID = "select.dimmer_dimmer_phase_control"
 TERMINAL_TYPE_ENTITY_ID = "select.thermostat_gen2_sensor_connection"
 SMOKE_SENSITIVITY_ENTITY_ID = "select.smoke_detector_smoke_sensitivity"
 VIBRATION_SENSITIVITY_ENTITY_ID = "select.shutter_contact_vibration_sensitivity"
@@ -844,3 +848,134 @@ async def test_relay_output_mode_unsupported(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(OUTPUT_MODE_ENTITY_ID) is None
+
+
+SECURITY_LEVEL_ENTITY_ID = "select.motion_detector_sensitivity_for_alarm_system"
+COMFORT_LEVEL_ENTITY_ID = "select.motion_detector_sensitivity_for_other_cases"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "motion_detectors2": [
+                motion_detector2_device(
+                    supports_smart_sensitivity=True,
+                    smart_sensitivity={"SECURITY": "HIGH", "COMFORT": "LOW"},
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_sensitivity_levels(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The smart sensitivity levels are reported and written per context."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.motion_detectors2[0]
+
+    assert hass.states.get(SECURITY_LEVEL_ENTITY_ID).state == "high"
+    assert hass.states.get(COMFORT_LEVEL_ENTITY_ID).state == "low"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: COMFORT_LEVEL_ENTITY_ID, "option": "middle"},
+        blocking=True,
+    )
+    device.set_smart_sensitivity_manual_level.assert_called_once_with(
+        SmartSensitivityControlService.SmartSensitivityContext.COMFORT,
+        SmartSensitivityControlService.MotionSensitivity.MIDDLE,
+    )
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_sensitivity_levels_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No smart sensitivity selects are created without support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SECURITY_LEVEL_ENTITY_ID) is None
+    assert hass.states.get(COMFORT_LEVEL_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors2": [motion_detector2_device(supports_smart_sensitivity=True)]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_smart_sensitivity_levels_not_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The levels stay unknown while the controller reports none."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SECURITY_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(COMFORT_LEVEL_ENTITY_ID).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_dimmers": [
+                micromodule_dimmer_device(
+                    supports_dimmer_configuration=True,
+                    edge_phase_control_mode=DimmerConfigurationService.EdgePhaseControlMode.TRAILING,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_dimmer_phase_control(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The dimmer phase-control mode is reported and written to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.micromodule_dimmers[0]
+
+    assert hass.states.get(PHASE_CONTROL_ENTITY_ID).state == "trailing"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: PHASE_CONTROL_ENTITY_ID, "option": "leading"},
+        blocking=True,
+    )
+    assert (
+        device.edge_phase_control_mode
+        == DimmerConfigurationService.EdgePhaseControlMode.LEADING
+    )
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"micromodule_dimmers": [micromodule_dimmer_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_dimmer_phase_control_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No phase control select is created without dimmer configuration support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(PHASE_CONTROL_ENTITY_ID) is None

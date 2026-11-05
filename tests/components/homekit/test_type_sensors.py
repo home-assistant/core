@@ -2,8 +2,11 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homekit import get_accessory
+from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
     CONF_THRESHOLD_CO,
     CONF_THRESHOLD_CO2,
@@ -17,11 +20,14 @@ from homeassistant.components.homekit.type_sensors import (
     BinarySensor,
     CarbonDioxideSensor,
     CarbonMonoxideSensor,
+    GasConcentrationSensor,
     HumiditySensor,
     LightSensor,
     NitrogenDioxideSensor,
+    OzoneSensor,
     PM10Sensor,
     PM25Sensor,
+    SulphurDioxideSensor,
     TemperatureSensor,
     VolatileOrganicCompoundsSensor,
 )
@@ -344,6 +350,58 @@ async def test_voc(hass: HomeAssistant, hk_driver) -> None:
     await hass.async_block_till_done()
     assert acc.char_density.value == 5000
     assert acc.char_quality.value == 5
+
+
+@pytest.mark.parametrize(
+    ("accessory_cls", "unit", "state", "density", "air_quality"),
+    [
+        pytest.param(OzoneSensor, "ppb", "54", 108, 1, id="ozone_excellent"),
+        pytest.param(OzoneSensor, "ppb", "70", 140, 2, id="ozone_good"),
+        pytest.param(OzoneSensor, "ppb", "85", 170, 3, id="ozone_fair"),
+        pytest.param(OzoneSensor, "ppb", "105", 210, 4, id="ozone_inferior"),
+        pytest.param(OzoneSensor, "ppb", "106", 212, 5, id="ozone_poor"),
+        pytest.param(OzoneSensor, "ppm", "0.06", 120, 2, id="ozone_ppm"),
+        pytest.param(OzoneSensor, "μg/m³", "150", 150, 3, id="ozone_ug_m3"),
+        pytest.param(OzoneSensor, None, "100", 100, 1, id="ozone_no_unit"),
+        pytest.param(OzoneSensor, "μg/m³", "2000", 1000, 5, id="ozone_above_max"),
+        pytest.param(SulphurDioxideSensor, "ppb", "35", 93, 1, id="so2_excellent"),
+        pytest.param(SulphurDioxideSensor, "ppb", "75", 200, 2, id="so2_good"),
+        pytest.param(SulphurDioxideSensor, "ppb", "185", 493, 3, id="so2_fair"),
+        pytest.param(SulphurDioxideSensor, "ppb", "304", 810, 4, id="so2_inferior"),
+        pytest.param(SulphurDioxideSensor, "ppb", "305", 812, 5, id="so2_poor"),
+        pytest.param(SulphurDioxideSensor, "μg/m³", "150", 150, 2, id="so2_ug_m3"),
+        pytest.param(
+            SulphurDioxideSensor, "ppm", "150", 150, 2, id="so2_unsupported_unit"
+        ),
+    ],
+)
+async def test_gas_concentration_sensor(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    accessory_cls: type[GasConcentrationSensor],
+    unit: str | None,
+    state: str,
+    density: int,
+    air_quality: int,
+) -> None:
+    """Test ozone and sulphur dioxide accessories convert units and map levels."""
+    entity_id = "sensor.air_quality_gas"
+
+    hass.states.async_set(entity_id, STATE_UNKNOWN, {ATTR_UNIT_OF_MEASUREMENT: unit})
+    await hass.async_block_till_done()
+    acc = accessory_cls(hass, hk_driver, "Air Quality", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+    assert acc.char_density.value == 0
+    assert acc.char_quality.value == 0
+
+    hass.states.async_set(entity_id, state, {ATTR_UNIT_OF_MEASUREMENT: unit})
+    await hass.async_block_till_done()
+    assert acc.char_density.value == density
+    assert acc.char_quality.value == air_quality
 
 
 async def test_co(hass: HomeAssistant, hk_driver) -> None:

@@ -21,7 +21,7 @@ from .normalized_name_base_registry import (
 from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 DATA_REGISTRY: HassKey[FloorRegistry] = HassKey("floor_registry")
 EVENT_FLOOR_REGISTRY_UPDATED: EventType[EventFloorRegistryUpdatedData] = EventType(
@@ -248,10 +248,10 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         self,
         floor_id: str,
         *,
-        aliases: set[str] | UndefinedType = UNDEFINED,
-        icon: str | UndefinedType | None = UNDEFINED,
-        level: int | UndefinedType = UNDEFINED,
-        name: str | UndefinedType = UNDEFINED,
+        aliases: set[str] | Undefined = Undefined,
+        icon: str | Undefined | None = Undefined,
+        level: int | Undefined = Undefined,
+        name: str | Undefined = Undefined,
     ) -> FloorEntry:
         """Update name of the floor."""
         old = self.floors[floor_id]
@@ -262,9 +262,9 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
                 ("icon", icon),
                 ("level", level),
             )
-            if value is not UNDEFINED and value != getattr(old, attr_name)
+            if value is not Undefined and value != getattr(old, attr_name)
         }
-        if name is not UNDEFINED and name != old.name:
+        if name is not Undefined and name != old.name:
             changes["name"] = name
 
         if not changes:

@@ -1,0 +1,93 @@
+# serializer version: 1
+# name: test_diagnostics[air_pollution]
+  dict({
+    'data': dict({
+      'current': dict({
+        'aqi': 3,
+        'co': 125.55,
+        'nh3': 4.62,
+        'no': 0.11,
+        'no2': 0.78,
+        'o3': 101.98,
+        'pm10': 4.77,
+        'pm2_5': 4.48,
+        'so2': 0.59,
+      }),
+    }),
+    'language': 'en',
+    'last_update_success': True,
+    'mode': 'air_pollution',
+  })
+# ---
+# name: test_diagnostics[v3.0]
+  dict({
+    'data': dict({
+      'current': dict({
+        'clouds': 75,
+        'condition': 'cloudy',
+        'dew_point': 3.99,
+        'feels_like_temperature': 2.07,
+        'humidity': 82,
+        'precipitation_kind': 'Rain',
+        'pressure': 1000,
+        'rain': 1.21,
+        'snow': 0,
+        'temperature': 6.84,
+        'uv_index': 0.13,
+        'visibility_distance': 10000,
+        'weather': 'broken clouds',
+        'weather_code': 803,
+        'wind_bearing': 199,
+        'wind_gust': 11.81,
+        'wind_speed': 9.83,
+      }),
+      'daily_forecast': list([
+        dict({
+          'cloud_coverage': 84,
+          'condition': 'cloudy',
+          'datetime': '2024-04-25T16:45:36+00:00',
+          'humidity': 62,
+          'native_apparent_temperature': dict({
+            '__type': "<class 'pyopenweathermap.weather.DailyTemperature'>",
+            'repr': 'DailyTemperature(day=18.76, min=8.11, max=21.26, night=13.06, evening=20.51, morning=8.47)',
+          }),
+          'native_dew_point': 11.34,
+          'native_wind_gust_speed': 11.81,
+          'precipitation': 0,
+          'precipitation_probability': 0,
+          'pressure': 1015,
+          'temperature': 21.26,
+          'templow': 8.11,
+          'uv_index': 4.06,
+          'wind_bearing': 168,
+          'wind_speed': 8.14,
+        }),
+      ]),
+      'hourly_forecast': list([
+      ]),
+      'minute_forecast': dict({
+        'forecast': list([
+          dict({
+            'datetime': 1728672360,
+            'precipitation': 0,
+          }),
+          dict({
+            'datetime': 1728672420,
+            'precipitation': 1.23,
+          }),
+          dict({
+            'datetime': 1728672480,
+            'precipitation': 4.5,
+          }),
+          dict({
+            'datetime': 1728672540,
+            'precipitation': 0,
+          }),
+        ]),
+      }),
+    }),
+    'language': 'en',
+    'last_update_success': True,
+    'mode': 'v3.0',
+  })
+# ---

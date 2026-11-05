@@ -35,7 +35,6 @@ from homeassistant.helpers.selector import (
 from .bot import TelegramBotConfigEntry, TelegramNotificationService, initialize_bot
 from .const import (
     ATTR_PARSER,
-    BOT_NAME,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
@@ -354,7 +353,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {BOT_NAME: self._bot_name}
+        description_placeholders: dict[str, str] = {"telegram_bot": self._bot_name}
         self._validate_webhooks(user_input, errors, description_placeholders)
         if errors:
             return self.async_show_form(
