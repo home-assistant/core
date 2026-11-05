@@ -1,6 +1,8 @@
 """Test ZHA repairs."""
 
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -245,7 +247,10 @@ async def test_multipan_firmware_retry_on_probe_ezsp(
     assert issue is None
 
 
-async def _detect_wrong_firmware(hass: HomeAssistant) -> None:
+async def _detect_wrong_firmware(
+    hass: HomeAssistant,
+    probe_side_effect: Callable[..., Awaitable[ApplicationType]] | None = None,
+) -> None:
     """Run radio type detection as a flow would, probing multi-PAN firmware."""
     radio_manager = ZhaRadioManager()
     radio_manager.hass = hass
@@ -256,6 +261,7 @@ async def _detect_wrong_firmware(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.zha.repairs.wrong_silabs_firmware.probe_silabs_firmware_type",
             return_value=ApplicationType.CPC,
+            side_effect=probe_side_effect,
         ),
         patch(
             "homeassistant.components.zha.repairs.wrong_silabs_firmware._detect_radio_hardware",
@@ -288,6 +294,25 @@ async def test_wrong_firmware_flow_issue_linked_to_entry(
         issue_registry.async_get_issue(DOMAIN, ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED)
         is None
     )
+
+
+async def test_wrong_firmware_flow_entry_removed_while_probing(
+    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the flow's wrong firmware issue is unlinked if the entry is removed."""
+    config_entry.add_to_hass(hass)
+
+    async def remove_entry_and_probe(*args: Any, **kwargs: Any) -> ApplicationType:
+        await hass.config_entries.async_remove(config_entry.entry_id)
+        return ApplicationType.CPC
+
+    await _detect_wrong_firmware(hass, remove_entry_and_probe)
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED
+    )
+    assert issue is not None
+    assert issue.config_entry_id is None
 
 
 @pytest.mark.parametrize(

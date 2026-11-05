@@ -99,6 +99,13 @@ async def warn_on_wrong_silabs_firmware(
         # ZHA uses this firmware through the Ziggurat radio type
         return False
 
+    # The entry may have been removed while probing
+    if (
+        config_entry_id is not None
+        and hass.config_entries.async_get_entry(config_entry_id) is None
+    ):
+        config_entry_id = None
+
     hardware_type = _detect_radio_hardware(hass, device)
     ir.async_create_issue(
         hass,
