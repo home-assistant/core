@@ -145,6 +145,10 @@ class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
             raise HomeAssistantError(f"Error evaluating LiteLLM task: {err}") from err
         coordinator.async_set_updated_data(None)
 
+        question_types = {
+            question_id: "predicate" if question["type"] == "noul" else question["type"]
+            for question_id, question in task.questions.items()
+        }
         answers: dict[str, ai_task.EvaluationAnswer] = {}
         for answer in response.answers:
             if answer.name is None:
@@ -156,6 +160,8 @@ class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
                 raise HomeAssistantError(
                     f"LiteLLM refused evaluation question {question_id}"
                 )
+            if answer.type != question_types[question_id]:
+                raise HomeAssistantError("LiteLLM returned an answer of the wrong type")
             if answer.type == "predicate":
                 answers[question_id] = ai_task.NoulAnswer(noul=answer.probability)
             elif answer.type == "choice":
@@ -184,8 +190,6 @@ class LiteLLMEvaluationEntity(LiteLLMEntity, ai_task.AITaskEntity):
                     score=answer.score,
                     probabilities=[level.probability for level in levels],
                 )
-            else:
-                raise HomeAssistantError("LiteLLM returned an unsupported answer type")
         if set(answers) != set(task.questions):
             raise HomeAssistantError("LiteLLM did not answer all questions")
         return ai_task.EvaluationTaskResult(answers=answers)

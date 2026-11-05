@@ -1,7 +1,6 @@
 """Test AI task platform of the LiteLLM integration."""
 
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import httpx2
@@ -354,6 +353,16 @@ async def test_unsupported_attachment(
             "invalid score levels",
             id="missing-level",
         ),
+        pytest.param(
+            [{**ANSWERS[0], "name": "attention"}, ANSWERS[1], ANSWERS[2]],
+            "answer of the wrong type",
+            id="predicate-for-score",
+        ),
+        pytest.param(
+            [{**ANSWERS[2], "name": "delivered"}, ANSWERS[1], ANSWERS[2]],
+            "answer of the wrong type",
+            id="score-for-noul",
+        ),
     ],
 )
 async def test_invalid_responses(
@@ -478,23 +487,6 @@ async def test_missing_answers(
     """Reject responses that do not answer every question."""
     mock_decisions.return_value = decision(answers)
     with pytest.raises(HomeAssistantError, match="did not answer all questions"):
-        await ai_task.async_evaluate(
-            hass,
-            task_name="Delivery",
-            entity_id=evaluation_entity,
-            state="Delivered",
-            questions=QUESTIONS,
-        )
-
-
-async def test_unsupported_answer_type(
-    hass: HomeAssistant, evaluation_entity: str, mock_decisions: AsyncMock
-) -> None:
-    """Reject answer types unknown to the integration."""
-    mock_decisions.return_value = SimpleNamespace(
-        answers=[SimpleNamespace(name="delivered", type="mystery")]
-    )
-    with pytest.raises(HomeAssistantError, match="unsupported answer type"):
         await ai_task.async_evaluate(
             hass,
             task_name="Delivery",
