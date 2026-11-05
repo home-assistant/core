@@ -1,0 +1,165 @@
+# serializer version: 1
+# name: test_update_report[baseline_kept_after_second_restart]
+  dict({
+    'config_entries': list([
+      dict({
+        'domain': 'demo',
+        'entry_id': 'failed',
+        'reason': 'Timeout',
+        'state': 'setup_retry',
+        'title': 'Failed',
+      }),
+      dict({
+        'domain': 'old',
+        'entry_id': 'gone_entry',
+        'reason': None,
+        'state': None,
+        'title': 'Gone',
+      }),
+    ]),
+    'created': '2026-10-31T12:00:00+00:00',
+    'entities_removed': list([
+      dict({
+        'entity_id': 'sensor.gone',
+        'platform': 'demo',
+      }),
+    ]),
+    'entities_renamed': list([
+      dict({
+        'entity_id': 'sensor.renamed',
+        'old_entity_id': 'sensor.old_name',
+        'platform': 'demo',
+      }),
+    ]),
+    'entities_unavailable': list([
+      dict({
+        'entity_id': 'sensor.no_state',
+        'platform': 'demo',
+        'state': None,
+      }),
+      dict({
+        'entity_id': 'sensor.unavailable',
+        'platform': 'demo',
+        'state': 'unavailable',
+      }),
+      dict({
+        'entity_id': 'sensor.unknown',
+        'platform': 'demo',
+        'state': 'unknown',
+      }),
+    ]),
+    'from_version': '2026.10.0',
+    'issues': list([
+      dict({
+        'domain': 'homeassistant',
+        'issue_id': 'new_issue',
+      }),
+    ]),
+    'to_version': '2026.12.0.dev0',
+    'upcoming': list([
+      dict({
+        'breaks_in_ha_version': '2026.12.0',
+        'dismissed': False,
+        'domain': 'homeassistant',
+        'issue_domain': 'repairs',
+        'issue_id': 'breaks_sooner',
+      }),
+      dict({
+        'breaks_in_ha_version': '2027.1.0',
+        'dismissed': True,
+        'domain': 'homeassistant',
+        'issue_domain': 'http',
+        'issue_id': 'breaks_dismissed',
+      }),
+      dict({
+        'breaks_in_ha_version': '2027.5.0',
+        'dismissed': False,
+        'domain': 'homeassistant',
+        'issue_domain': 'repairs',
+        'issue_id': 'breaks_later',
+      }),
+    ]),
+  })
+# ---
+# name: test_update_report[previous_run_was_older_version]
+  dict({
+    'config_entries': list([
+      dict({
+        'domain': 'demo',
+        'entry_id': 'failed',
+        'reason': 'Timeout',
+        'state': 'setup_retry',
+        'title': 'Failed',
+      }),
+      dict({
+        'domain': 'old',
+        'entry_id': 'gone_entry',
+        'reason': None,
+        'state': None,
+        'title': 'Gone',
+      }),
+    ]),
+    'created': '2026-10-31T12:00:00+00:00',
+    'entities_removed': list([
+      dict({
+        'entity_id': 'sensor.gone',
+        'platform': 'demo',
+      }),
+    ]),
+    'entities_renamed': list([
+      dict({
+        'entity_id': 'sensor.renamed',
+        'old_entity_id': 'sensor.old_name',
+        'platform': 'demo',
+      }),
+    ]),
+    'entities_unavailable': list([
+      dict({
+        'entity_id': 'sensor.no_state',
+        'platform': 'demo',
+        'state': None,
+      }),
+      dict({
+        'entity_id': 'sensor.unavailable',
+        'platform': 'demo',
+        'state': 'unavailable',
+      }),
+      dict({
+        'entity_id': 'sensor.unknown',
+        'platform': 'demo',
+        'state': 'unknown',
+      }),
+    ]),
+    'from_version': '2026.10.0',
+    'issues': list([
+      dict({
+        'domain': 'homeassistant',
+        'issue_id': 'new_issue',
+      }),
+    ]),
+    'to_version': '2026.12.0.dev0',
+    'upcoming': list([
+      dict({
+        'breaks_in_ha_version': '2026.12.0',
+        'dismissed': False,
+        'domain': 'homeassistant',
+        'issue_domain': 'repairs',
+        'issue_id': 'breaks_sooner',
+      }),
+      dict({
+        'breaks_in_ha_version': '2027.1.0',
+        'dismissed': True,
+        'domain': 'homeassistant',
+        'issue_domain': 'http',
+        'issue_id': 'breaks_dismissed',
+      }),
+      dict({
+        'breaks_in_ha_version': '2027.5.0',
+        'dismissed': False,
+        'domain': 'homeassistant',
+        'issue_domain': 'repairs',
+        'issue_id': 'breaks_later',
+      }),
+    ]),
+  })
+# ---

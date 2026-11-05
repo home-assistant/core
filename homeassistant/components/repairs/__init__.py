@@ -5,7 +5,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from . import issue_handler, websocket_api
+from . import issue_handler, update_report, websocket_api
 from .const import DOMAIN, FlowType
 from .issue_handler import ConfirmRepairFlow, RepairsFlowManager
 from .models import RepairsFlow, RepairsFlowContext, RepairsFlowResult
@@ -41,5 +41,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     issue_handler.async_setup(hass)
     websocket_api.async_setup(hass)
+    await update_report.async_setup(hass)
 
     return True
