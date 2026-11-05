@@ -1,7 +1,7 @@
 """Coordinator to handle Opower connections."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta, tzinfo
 import logging
 from typing import Any, cast, override
 
@@ -523,16 +523,24 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         return True
 
     async def _async_has_hourly_statistics(
-        self, statistic_id: str, hourly_cost_reads: list[CostRead]
+        self, statistic_id: str, hourly_cost_reads: list[CostRead], tz: tzinfo
     ) -> bool:
         """Return whether the existing statistics at the hourly reads are hourly.
 
-        Day statistics only exist at local midnight, so having one at the second
-        hourly read means that the statistics there are hourly.
+        Day statistics only exist at local midnight, so having one at an hourly
+        read that doesn't start at local midnight means that the statistics there
+        are hourly.
         """
-        if len(hourly_cost_reads) < 2:
+        start = next(
+            (
+                local_start
+                for cost_read in hourly_cost_reads
+                if (local_start := cost_read.start_time.astimezone(tz)).time() != time()
+            ),
+            None,
+        )
+        if start is None:
             return False
-        start = hourly_cost_reads[1].start_time
         stats = await get_instance(self.hass).async_add_executor_job(
             statistics_during_period,
             self.hass,
@@ -651,8 +659,11 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         if (
             start_time is not None
             and statistic_id is not None
+            and tz is not None
             and hourly_cost_reads[0].start_time.timestamp() <= start_time
-            and await self._async_has_hourly_statistics(statistic_id, hourly_cost_reads)
+            and await self._async_has_hourly_statistics(
+                statistic_id, hourly_cost_reads, tz
+            )
         ):
             # The bill and daily reads start where the billing period containing
             # start_time - 30 days starts, which can be before the hourly reads

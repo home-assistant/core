@@ -974,8 +974,15 @@ _DAY_STARTS = [dt_util.as_utc(datetime(2023, 1, day, 8)) for day in range(1, 6)]
 _CONSUMPTION_STATISTIC_ID = "opower:pge_elec_111111_energy_consumption"
 
 
-def _mock_reads(mock_opower_api: AsyncMock, first_hourly_day: int | None) -> None:
-    """Mock a bill and daily reads for all days, and hourly reads from a day on."""
+def _mock_reads(
+    mock_opower_api: AsyncMock,
+    first_hourly_day: int | None,
+    starts_at_23: bool = False,
+) -> None:
+    """Mock a bill and daily reads for all days, and hourly reads from a day on.
+
+    The hourly reads start with the last hour of the previous day if starts_at_23.
+    """
     mock_opower_api.async_get_accounts.return_value = (
         mock_opower_api.async_get_accounts.return_value[:1]
     )
@@ -991,18 +998,26 @@ def _mock_reads(mock_opower_api: AsyncMock, first_hourly_day: int | None) -> Non
         CostRead(start_time=start, end_time=end, consumption=30.0, provided_cost=6.0)
         for start, end in pairwise(_DAY_STARTS)
     ]
-    hourly_reads = [
-        CostRead(
-            start_time=day + timedelta(hours=hour),
-            end_time=day + timedelta(hours=hour + 1),
+
+    def hourly_read(start: datetime) -> CostRead:
+        return CostRead(
+            start_time=start,
+            end_time=start + timedelta(hours=1),
             consumption=1.5,
             provided_cost=0.3,
         )
+
+    hourly_reads = [
+        hourly_read(day + timedelta(hours=hour))
         for day in (
             [] if first_hourly_day is None else _DAY_STARTS[first_hourly_day:-1]
         )
-        for hour in range(3)
+        for hour in (0, 1, 2, 23)
     ]
+    if starts_at_23 and first_hourly_day:
+        hourly_reads.insert(
+            0, hourly_read(_DAY_STARTS[first_hourly_day] - timedelta(hours=1))
+        )
 
     async def reads(account, aggregate_type, start, end):
         return {
@@ -1031,12 +1046,14 @@ async def _async_get_consumption_stats(hass: HomeAssistant) -> list[dict[str, An
 
 
 @pytest.mark.parametrize("first_hourly_day", [1, 2])
+@pytest.mark.parametrize("starts_at_23", [False, True])
 async def test_coordinator_keeps_hourly_statistics_when_older_reads_are_coarser(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
     first_hourly_day: int,
+    starts_at_23: bool,
 ) -> None:
     """Test that day reads before the hourly reads don't corrupt hourly statistics.
 
@@ -1052,11 +1069,11 @@ async def test_coordinator_keeps_hourly_statistics_when_older_reads_are_coarser(
     _mock_reads(mock_opower_api, 0)
     await coordinator._async_update_data()
     before = await _async_get_consumption_stats(hass)
-    assert len(before) == 12
+    assert len(before) == 16
 
     # A later update has hourly reads from a later day only, but the daily reads
     # still start on the first day.
-    _mock_reads(mock_opower_api, first_hourly_day)
+    _mock_reads(mock_opower_api, first_hourly_day, starts_at_23)
     await coordinator._async_update_data()
 
     after = await _async_get_consumption_stats(hass)
@@ -1068,12 +1085,14 @@ async def test_coordinator_keeps_hourly_statistics_when_older_reads_are_coarser(
 
 
 @pytest.mark.parametrize("first_hourly_day", [1, 2])
+@pytest.mark.parametrize("starts_at_23", [False, True])
 async def test_coordinator_replaces_daily_statistics_with_hourly_ones(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
     first_hourly_day: int,
+    starts_at_23: bool,
 ) -> None:
     """Test that hourly reads that show up after a daily only import are counted once.
 
@@ -1090,13 +1109,13 @@ async def test_coordinator_replaces_daily_statistics_with_hourly_ones(
     assert [stat["sum"] for stat in before] == [30.0, 60.0, 90.0, 120.0]
 
     # The hourly reads are available later.
-    _mock_reads(mock_opower_api, first_hourly_day)
+    _mock_reads(mock_opower_api, first_hourly_day, starts_at_23)
     await coordinator._async_update_data()
 
     after = await _async_get_consumption_stats(hass)
     # The days before the hourly reads stay daily, the rest are hourly.
     assert after[:first_hourly_day] == before[:first_hourly_day]
-    assert len(after) == first_hourly_day + 3 * (4 - first_hourly_day)
+    assert len(after) == first_hourly_day + 4 * (4 - first_hourly_day)
     hourly_after = after[first_hourly_day:]
     assert [stat["state"] for stat in hourly_after] == [1.5] * len(hourly_after)
     assert hourly_after[0]["sum"] == pytest.approx(30.0 * first_hourly_day + 1.5)
