@@ -62,8 +62,8 @@ def async_handle_timer_event(
 
 
 def _supports_live_activity(entry: ConfigEntry) -> bool:
-    """Return whether the app registered support for starting Live Activities."""
-    return ATTR_START_LIVE_ACTIVITY_TOKEN in entry.data[ATTR_APP_DATA]
+    """Return whether the app registered a token for starting Live Activities."""
+    return bool(entry.data[ATTR_APP_DATA].get(ATTR_START_LIVE_ACTIVITY_TOKEN))
 
 
 @callback

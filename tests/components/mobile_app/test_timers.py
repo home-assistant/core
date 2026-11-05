@@ -33,11 +33,10 @@ FINISHED_DATA = {
 }
 
 
-@pytest.fixture
-async def live_activity_registration(
-    hass: HomeAssistant, webhook_client: TestClient
+async def _async_register(
+    hass: HomeAssistant, webhook_client: TestClient, app_data: dict[str, Any]
 ) -> dict[str, Any]:
-    """Return a registration that can start Live Activities."""
+    """Register a push capable device with extra app data."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     reg = await webhook_client.post(
@@ -47,13 +46,25 @@ async def live_activity_registration(
             "app_data": {
                 "push_url": "http://localhost/mock-push",
                 "push_token": "abcd",
-                "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+                **app_data,
             },
         },
     )
 
     assert reg.status == HTTPStatus.CREATED
     return await reg.json()
+
+
+@pytest.fixture
+async def live_activity_registration(
+    hass: HomeAssistant, webhook_client: TestClient
+) -> dict[str, Any]:
+    """Return a registration that can start Live Activities."""
+    return await _async_register(
+        hass,
+        webhook_client,
+        {"start_live_activity_token": "PUSH_TO_START_HEX_TOKEN"},
+    )
 
 
 async def _async_handle_timer_intent(
@@ -65,6 +76,15 @@ async def _async_handle_timer_intent(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    "app_data",
+    [
+        pytest.param({}, id="no_start_live_activity_token"),
+        pytest.param(
+            {"start_live_activity_token": ""}, id="empty_start_live_activity_token"
+        ),
+    ],
+)
 @pytest.mark.parametrize(
     ("intent_args", "message"),
     [
@@ -79,10 +99,15 @@ async def _async_handle_timer_intent(
     ],
 )
 async def test_timer_events(
-    hass: HomeAssistant, push_registration, intent_args: dict, message: str
+    hass: HomeAssistant,
+    webhook_client: TestClient,
+    app_data: dict[str, Any],
+    intent_args: dict,
+    message: str,
 ) -> None:
     """Test for timer events."""
-    webhook_id = push_registration["webhook_id"]
+    registration = await _async_register(hass, webhook_client, app_data)
+    webhook_id = registration["webhook_id"]
     device_id = hass.data[DOMAIN][DATA_DEVICES][webhook_id].id
 
     with patch(SEND_MESSAGE) as mock_send_message:
