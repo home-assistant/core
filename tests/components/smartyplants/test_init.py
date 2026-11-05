@@ -12,10 +12,12 @@ from pysmartyplants import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.smartyplants.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
@@ -115,3 +117,58 @@ async def test_entry_without_webhook_polls(
 
     assert entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.monstera_temperature").state == "22.5"
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client")
+async def test_legacy_unique_id_is_migrated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity left by the custom integration keeps its entity id."""
+    mock_config_entry.add_to_hass(hass)
+    legacy = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "sensor-1_fertilise_days",
+        config_entry=mock_config_entry,
+        suggested_object_id="monstera_fertilise_in",
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    entry = entity_registry.async_get(legacy.entity_id)
+    assert entry.unique_id == "sensor-1_fertilize"
+    assert hass.states.get("sensor.monstera_fertilise_in").state == "21"
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client")
+async def test_legacy_unique_id_kept_when_new_one_exists(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the old entry is left alone when the new id is already taken."""
+    mock_config_entry.add_to_hass(hass)
+    legacy = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "sensor-1_fertilise_days",
+        config_entry=mock_config_entry,
+        suggested_object_id="monstera_fertilise_in",
+    )
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "sensor-1_fertilize",
+        config_entry=mock_config_entry,
+        suggested_object_id="monstera_fertilize_in",
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        entity_registry.async_get(legacy.entity_id).unique_id
+        == "sensor-1_fertilise_days"
+    )
