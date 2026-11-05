@@ -14,7 +14,7 @@ class TypeHintMatch:
 
     function_name: str
     return_type: list[str | _Undefined | None] | str | _Undefined | None
-    arg_types: dict[int, str] | None = None
+    arg_types: dict[int, str] | dict[int, list[str]] | None = None
     """arg_types is for positional arguments"""
     named_arg_types: dict[str, str] | dict[str, list[str]] | None = None
     """named_arg_types is for named or keyword arguments"""

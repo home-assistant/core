@@ -606,7 +606,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
-    "repairs": [
+    Module.REPAIRS: [
         ClassTypeHintMatch(
             base_class="RepairsFlow",
             matches=[
