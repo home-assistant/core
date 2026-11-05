@@ -122,18 +122,35 @@ async def test_setup_builds_client(
     )
 
 
-async def test_designer_fault_keeps_served_objects(
+@pytest.mark.parametrize(
+    ("error", "warning"),
+    [
+        pytest.param(
+            AmpioNotConfigured(leafless=((61, "Podlewanie"),)),
+            "objects 61 without a bus address",
+            id="leafless",
+        ),
+        pytest.param(
+            AmpioNotConfigured(unrecognized=((61, "Podlewanie"),)),
+            "objects 61 have a bus address this version of ampio-mqtt cannot read",
+            id="unrecognized",
+        ),
+    ],
+)
+async def test_refused_rows_keep_served_objects(
     hass: HomeAssistant,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
+    error: AmpioNotConfigured,
+    warning: str,
 ) -> None:
-    """A Designer fault that the library reports still loads every served object.
+    """Rows the library refuses still load every served object.
 
     The warning names the object ids and no Designer name.
     """
-    mock_client.connect.side_effect = AmpioNotConfigured(objects=((61, "Podlewanie"),))
+    mock_client.connect.side_effect = error
 
     await setup_integration(hass, mock_config_entry)
 
@@ -146,7 +163,7 @@ async def test_designer_fault_keeps_served_objects(
         )
         == 8
     )
-    assert "objects 61 without a bus address" in caplog.text
+    assert warning in caplog.text
     assert "Podlewanie" not in caplog.text
 
 
@@ -237,34 +254,6 @@ async def test_connection_died_reloads_and_recovers(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_client.connect.await_count == 2
-
-
-@pytest.mark.parametrize(
-    "discovered",
-    [
-        pytest.param(True, id="after-discovery"),
-        pytest.param(False, id="before-discovery"),
-    ],
-)
-async def test_connection_died_while_connecting_retries_setup(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    discovered: bool,
-) -> None:
-    """A connection-loop crash inside connect() fails setup into a retry."""
-
-    def die_while_connecting() -> bool:
-        emit(mock_client, ConnectionDied(reason="internal error"))
-        return discovered
-
-    mock_client.connect.side_effect = die_while_connecting
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
-    assert mock_client.connect.await_count == 1
 
 
 async def test_availability_transitions_log_once_per_edge(

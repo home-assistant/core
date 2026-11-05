@@ -39,6 +39,11 @@ class AmpioData:
     hub_device_id: str
 
 
+def _object_ids(rows: tuple[tuple[int, str | None], ...]) -> str:
+    """Join the ids of (id, name) object rows, leaving the names out."""
+    return ", ".join(str(oid) for oid in sorted(oid for oid, _ in rows))
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> None:
     """Set up Ampio from a config entry."""
     client = AmpioClient(
@@ -55,14 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> Non
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect)
     )
 
-    # The library dispatches terminal events from the first session on, inside
-    # connect(), and does not replay them.
-    ended_while_connecting: list[AuthFailed | ConnectionDied] = []
-    stop_collecting = client.subscribe(
-        ended_while_connecting.append, of=(AuthFailed, ConnectionDied)
-    )
-    entry.async_on_unload(stop_collecting)
-
     try:
         discovered = await client.connect()
     except AmpioAuthError as err:
@@ -72,22 +69,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> Non
     except AmpioNotConfigured as err:
         # The library still serves every other row. Its message embeds
         # Designer names, so only ids reach the log.
-        if err.objects:
+        if err.leafless:
             _LOGGER.warning(
                 "Ampio Designer leaves objects %s without a bus address; fix "
                 "them in Ampio Designer",
-                ", ".join(str(oid) for oid in sorted(oid for oid, _ in err.objects)),
+                _object_ids(err.leafless),
+            )
+        if err.unrecognized:
+            _LOGGER.warning(
+                "Ampio objects %s have a bus address this version of "
+                "ampio-mqtt cannot read",
+                _object_ids(err.unrecognized),
             )
         discovered = True
     except AmpioConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="cannot_connect"
         ) from err
-    stop_collecting()
-    if ended_while_connecting:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="cannot_connect"
-        )
     # A True connect() guarantees the server identity; the None check narrows the type.
     if not discovered or (info := client.server_info) is None:
         raise ConfigEntryNotReady(
