@@ -990,6 +990,7 @@ FLOWS = {
         "zimi",
         "zinvolt",
         "zodiac",
+        "zoneminder",
         "zonneplan",
         "zwave_js",
         "zwave_me",
