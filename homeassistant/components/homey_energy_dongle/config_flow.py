@@ -22,7 +22,6 @@ import probatio
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
-    SOURCE_ZEROCONF,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -160,8 +159,6 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self._meter_identified = identifier is not None
         if identifier is None:
-            if self.source != SOURCE_ZEROCONF:
-                await self.async_set_unique_id(None)
             self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
             return None
         await self.async_set_unique_id(str(identifier.value))
