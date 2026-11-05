@@ -16,7 +16,7 @@ async def test_reject_access_token_with_impossible_large_size() -> None:
         jwt_wrapper.unverified_hs256_token_decode("a" * 10000)
 
 
-async def test_verify_and_decode_with_cached_key() -> None:
+def test_verify_and_decode_with_cached_key() -> None:
     """Test a valid HMAC key keeps working once its check is cached."""
     prepare_key = jwt_wrapper._HMACAlgorithmWithKeyCache.prepare_key
     prepare_key.cache_clear()
@@ -42,10 +42,14 @@ async def test_verify_and_decode_with_cached_key() -> None:
         pytest.param('{"kty": "oct", "k": "c2VjcmV0"}', id="jwk"),
     ],
 )
-async def test_verify_and_decode_rejects_invalid_key(key: str) -> None:
+def test_verify_and_decode_rejects_invalid_key(key: str) -> None:
     """Test invalid HMAC keys are rejected on every call, not cached."""
+    prepare_key = jwt_wrapper._HMACAlgorithmWithKeyCache.prepare_key
+    prepare_key.cache_clear()
     for _ in range(2):
         with pytest.raises(jwt.InvalidKeyError):
             jwt_wrapper.verify_and_decode(
                 TOKEN, key, algorithms=["HS256"], issuer="issuer"
             )
+    assert prepare_key.cache_info().misses == 2
+    assert prepare_key.cache_info().currsize == 0
