@@ -1468,7 +1468,9 @@ async def test_device_system_stats_update_interval(
 ) -> None:
     """Verify device stats sensors limit how often their value changes."""
 
-    async def send(cpu: float | None, mem: float | None, **changes: Any) -> None:
+    async def send(
+        cpu: float | str | None, mem: float | str | None, **changes: Any
+    ) -> None:
         device = deepcopy(device_payload[0])
         if cpu is None:
             device.pop("system-stats")
@@ -1507,6 +1509,11 @@ async def test_device_system_stats_update_interval(
     freezer.tick(timedelta(seconds=1))
     await send(22.2, 37.7)
     assert_states("21.0", "35.5")
+
+    # UniFi reports CPU and memory as numeric strings
+    freezer.tick(timedelta(seconds=1))
+    await send("33.3", "37.7")
+    assert_states("33.3", "35.5")
 
     # Unavailable is shown at once, and so is the first value afterwards
     await send(12.2, 38.8, disabled=True)

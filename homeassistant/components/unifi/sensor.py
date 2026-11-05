@@ -1062,12 +1062,17 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         """Return True if value differs enough to skip min_update_interval."""
         threshold = self.entity_description.immediate_change
         old = self.native_value
-        return (
-            threshold is not None
-            and isinstance(value, (int, float))
-            and isinstance(old, (int, float))
-            and abs(value - old) >= threshold
-        )
+        if (
+            threshold is None
+            or not isinstance(value, (float, int, str))
+            or not isinstance(old, (float, int, str))
+        ):
+            return False
+        # UniFi reports CPU and memory as numeric strings
+        try:
+            return abs(float(value) - float(old)) >= threshold
+        except ValueError:
+            return False
 
     @override
     async def async_added_to_hass(self) -> None:
