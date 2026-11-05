@@ -12,7 +12,6 @@ from pyrisco import (
 )
 from pyrisco.common import Partition, System, Zone
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -58,7 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 CLOCK_TIMEOUT_ERROR_FRAGMENT = "Timeout in command: CLOCK"
 
 
-def is_local(entry: ConfigEntry) -> bool:
+def is_local(entry: RiscoConfigEntry) -> bool:
     """Return whether the entry represents an instance with local communication."""
     return entry.data.get(CONF_TYPE) == TYPE_LOCAL
 

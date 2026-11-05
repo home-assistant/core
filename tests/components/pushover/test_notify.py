@@ -275,20 +275,47 @@ async def test_cancel_multiple_receipts_same_tag(
     assert called_receipts == {RECEIPT_A, RECEIPT_B}
 
 
-async def test_cancel_unknown_entry_id(
+@pytest.mark.parametrize(
+    ("other_entry_domain", "entry_id", "translation_key"),
+    [
+        pytest.param(
+            "other", "nonexistent", "service_config_entry_not_found", id="not_found"
+        ),
+        pytest.param(
+            "other",
+            "other_entry",
+            "service_config_entry_wrong_domain",
+            id="wrong_domain",
+        ),
+        pytest.param(
+            DOMAIN,
+            "other_entry",
+            "service_config_entry_not_loaded",
+            id="not_loaded",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_pushover")
+async def test_cancel_invalid_entry_id(
     hass: HomeAssistant,
-    mock_pushover: MagicMock,
+    other_entry_domain: str,
+    entry_id: str,
+    translation_key: str,
 ) -> None:
-    """Test cancel with an entry_id that does not exist."""
+    """Test cancel with an entry_id that can't be used."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    # Added but not set up
+    MockConfigEntry(domain=other_entry_domain, entry_id="other_entry").add_to_hass(hass)
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
-            DOMAIN, "cancel", {"entry_id": "nonexistent"}, blocking=True
+            DOMAIN, "cancel", {"entry_id": entry_id}, blocking=True
         )
+
+    assert exc_info.value.translation_key == translation_key
 
 
 async def test_cancel_empty_receipt_tags(

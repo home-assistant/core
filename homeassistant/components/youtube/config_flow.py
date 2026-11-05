@@ -10,7 +10,6 @@ from youtubeaio.youtube import YouTube
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlowResult,
     ConfigSubentryData,
     ConfigSubentryFlow,
@@ -103,7 +102,7 @@ class OAuth2FlowHandler(
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: YouTubeConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_CHANNEL: ChannelFlowHandler}

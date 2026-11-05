@@ -44,6 +44,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CLIENT_NAME,
+    CONF_PROFILE,
     CONF_WARNING_ACCEPTED,
     DOMAIN,
     LEGACY_HACS_INTEGRATION_REPOSITORY,
@@ -73,6 +74,13 @@ from .exceptions import (
     RepositoryArchivedError,
     RepositoryExistsError,
 )
+from .profiles import (
+    DownloadProfile,
+    ProfileEndpoints,
+    async_suggest_profile,
+    async_withdraw_profile_suggestions,
+    get_profile,
+)
 from .repositories import REPOSITORY_CLASSES
 from .repositories.base import (
     REPOSITORY_KEYS_TO_EXPORT,
@@ -88,6 +96,7 @@ from .utils.logger import LOGGER
 from .utils.queue_manager import QueueManager
 from .utils.response import async_read_limited
 from .utils.storage import async_load_from_storage, async_save_to_storage
+from .utils.url import RemoteFile
 
 if TYPE_CHECKING:
     from .repositories.base import Repository
@@ -136,6 +145,7 @@ class MarketplaceConfiguration:
     """Configuration of the Marketplace, read from its config entry."""
 
     config_entry: MarketplaceConfigEntry
+    profile: DownloadProfile
     token: str | None = None
     plugin_path: str = "www/community/"
     theme_path: str = "themes/"
@@ -147,7 +157,15 @@ class MarketplaceConfiguration:
         Entries the custom integration created can carry keys that mean
         nothing here, the paths the Marketplace writes to are not settable.
         """
-        return cls(config_entry=config_entry, token=config_entry.data.get(CONF_TOKEN))
+        profile = get_profile(config_entry.options.get(CONF_PROFILE))
+        return cls(
+            config_entry=config_entry,
+            profile=profile,
+            # Kept in the entry for when the user switches back
+            token=config_entry.data.get(CONF_TOKEN)
+            if profile.uses_github_account
+            else None,
+        )
 
 
 @dataclass
@@ -309,6 +327,16 @@ class Repositories:
 
         self._default_repositories.add(repo_id)
 
+    def unmark_unlisted_defaults(
+        self, category: RepositoryCategory, listed: set[str]
+    ) -> None:
+        """Unmark the defaults of a category the catalog no longer lists."""
+        self._default_repositories -= {
+            repository.data.id
+            for repository in self._repositories
+            if repository.data.category == category and repository.data.id not in listed
+        }
+
     def set_repository_id(self, repository: Repository, repo_id: str) -> None:
         """Update a repository id."""
         existing_repo_id = repository.data.id
@@ -391,14 +419,18 @@ class MarketplaceManager:
         self.version = AwesomeVersion(HAVERSION)
 
         self.session: ClientSession = async_get_clientsession(hass)
+        self.endpoints = ProfileEndpoints(self.configuration.profile)
         # An empty token keeps aiogithubapi from reading GITHUB_TOKEN from the
         # environment, without a connected account the calls are anonymous.
         self.githubapi = GitHubAPI(
             token=self.configuration.token or "",
             session=self.session,
             client_name=CLIENT_NAME,
+            base_url=self.configuration.profile.api,
         )
-        self.data_client = CatalogClient(session=self.session, client_name=CLIENT_NAME)
+        self.data_client = CatalogClient(
+            session=self.session, client_name=CLIENT_NAME, endpoints=self.endpoints
+        )
 
         self.data = MarketplaceData(marketplace=self)
         self.queue = QueueManager()
@@ -937,16 +969,56 @@ class MarketplaceManager:
 
     async def async_download_file(
         self,
-        url: str | None,
+        remote_file: RemoteFile | None,
         *,
         nolog: bool = False,
         handle_rate_limit: bool = False,
         limit: int | None = None,
     ) -> bytes | None:
-        """Download a file, retrying on timeouts and rate limits."""
-        if url is None:
+        """Download a file, from the first endpoint of the profile that has it.
+
+        A mirror can be down or lag behind, any failure tries the next
+        endpoint. Only the last one retries, and reports what went wrong.
+        """
+        if remote_file is None:
             return None
 
+        bases = self.endpoints.bases(remote_file.endpoint)
+        last_base = bases[-1]
+        failed: list[str] = []
+
+        for base in bases:
+            # Trying the next endpoint is quicker than retrying this one
+            final = base == last_base
+            filecontent = await self._async_download_url(
+                f"{base}/{remote_file.path}",
+                final=final,
+                nolog=nolog or not final,
+                handle_rate_limit=handle_rate_limit,
+                limit=limit,
+            )
+
+            if filecontent is not None:
+                self.endpoints.worked(remote_file.endpoint, base, failed)
+                return filecontent
+
+            failed.append(base)
+
+        return None
+
+    async def _async_download_url(
+        self,
+        url: str,
+        *,
+        final: bool,
+        nolog: bool,
+        handle_rate_limit: bool,
+        limit: int | None,
+    ) -> bytes | None:
+        """Download a file from a URL, retrying on timeouts and rate limits.
+
+        Not when another endpoint is left to try, that one is quicker.
+        """
         LOGGER.debug("Trying to download %s", url)
         attempt_count = 0
 
@@ -961,6 +1033,10 @@ class MarketplaceManager:
                     status = response.status
                     retry_after_header = response.headers.get("retry-after")
             except TimeoutError:
+                if not final:
+                    LOGGER.debug("Downloading %s timed out", url)
+                    return None
+
                 LOGGER.warning(
                     "Downloading %s timed out, %s tries left",
                     url,
@@ -974,7 +1050,7 @@ class MarketplaceManager:
                     LOGGER.exception("Download of %s failed", url)
                 return None
 
-            if handle_rate_limit and status == 429:
+            if final and handle_rate_limit and status == 429:
                 try:
                     header = int(retry_after_header or 10)
                 except ValueError, TypeError:
@@ -1060,6 +1136,7 @@ class MarketplaceManager:
         LOGGER.info("The catalog of %s can not be reached: %s", category, exception)
         self.unreachable_categories.add(category)
         self.coordinators[category].async_update_listeners()
+        async_suggest_profile(self.hass, self.configuration.profile)
 
     @callback
     def _async_catalog_reached(self, category: RepositoryCategory) -> None:
@@ -1070,6 +1147,8 @@ class MarketplaceManager:
         LOGGER.info("The catalog of %s can be reached again", category)
         self.unreachable_categories.discard(category)
         self.coordinators[category].async_update_listeners()
+        if not self.unreachable_categories:
+            async_withdraw_profile_suggestions(self.hass)
 
     @callback
     def _async_feed_not_reached(self, feed: str, exception: MarketplaceError) -> None:
@@ -1122,6 +1201,9 @@ class MarketplaceManager:
 
         # An answer without one usable entry says nothing about what is stale
         if self.stage == MarketplaceStage.STARTUP and category_data:
+            # Restored from storage, a repository stays default until the
+            # catalog no longer lists it
+            self.repositories.unmark_unlisted_defaults(category, set(category_data))
             self._async_unregister_stale_custom_repositories(category)
 
         self.async_dispatch(MarketplaceSignal.REPOSITORY, {})
