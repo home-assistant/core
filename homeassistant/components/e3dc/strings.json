@@ -34,6 +34,9 @@
   },
   "entity": {
     "sensor": {
+      "active_power_failsafe_timeout": {
+        "name": "Active power failsafe timeout"
+      },
       "additional_power": {
         "name": "Additional feeder power"
       },
@@ -53,17 +56,39 @@
           "not_supported": "Not supported"
         }
       },
+      "full_charge_energy": {
+        "name": "Battery capacity"
+      },
       "grid_power": {
         "name": "Grid power"
       },
       "house_power": {
         "name": "House power"
       },
+      "inverter_mode": {
+        "name": "Inverter mode",
+        "state": {
+          "idle_off_grid_power_save": "Idle, off-grid power save",
+          "normal": "Normal operation"
+        }
+      },
+      "max_charge_power": {
+        "name": "Maximum charge power"
+      },
+      "max_discharge_power": {
+        "name": "Maximum discharge power"
+      },
       "pv_power": {
         "name": "PV power"
       },
+      "reactive_power_failsafe_timeout": {
+        "name": "Reactive power failsafe timeout"
+      },
       "self_consumption": {
         "name": "Self-consumption"
+      },
+      "sg_ready_status": {
+        "name": "SG Ready status"
       },
       "wallbox_power": {
         "name": "Wallbox power"
