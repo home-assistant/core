@@ -490,6 +490,9 @@ class Stream:
                 self._thread_quit.clear()
                 if self._stopping:
                     break
+                # Back through wait(0), which catches a stop() that lands
+                # after the check above
+                continue
             start_time = time.time()
             self._set_state(True)
             self._diagnostics.set_value(

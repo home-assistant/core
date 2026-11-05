@@ -979,11 +979,11 @@ async def test_stop_after_update_source_while_stopped(
 class FailFirstStreamWorker:
     """Stub for stream_worker whose first run fails, then runs until quit."""
 
-    def __init__(self) -> None:
+    def __init__(self, quit_on_restart: bool = False) -> None:
         """Initialize FailFirstStreamWorker."""
         self.sources: list[str] = []
-        self.failed = threading.Event()
         self.restarted = threading.Event()
+        self.quit_on_restart = quit_on_restart
 
     def __call__(
         self,
@@ -997,11 +997,36 @@ class FailFirstStreamWorker:
         """Fail on the first run, then run until the quit event is set."""
         self.sources.append(source)
         if len(self.sources) == 1:
-            self.failed.set()
             raise StreamWorkerError("Unable to open the source")
         self.restarted.set()
+        if self.quit_on_restart:
+            # A restart that should not happen then ends the worker, so the
+            # test fails instead of hanging in the next wait to retry
+            quit_event.set()
+            return
         # Bounded, so that a leaked worker still ends
         quit_event.wait(TIMEOUT)
+
+
+class RetryWaitQuitEvent(threading.Event):
+    """Quit event that tells when the worker waits to retry, and can hold it there."""
+
+    def __init__(self) -> None:
+        """Initialize RetryWaitQuitEvent."""
+        super().__init__()
+        self.retry_wait = threading.Event()
+        self.release = threading.Event()
+        self.release.set()
+
+    def wait(self, timeout: float | None = None) -> bool:
+        """Wait, and for a wait with a timeout, signal it and hold until released."""
+        if not timeout:
+            return super().wait(timeout)
+        self.retry_wait.set()
+        result = super().wait(timeout)
+        # Bounded, so that a failing test still ends
+        self.release.wait(TIMEOUT)
+        return result
 
 
 async def test_update_source_while_waiting_to_retry(
@@ -1022,8 +1047,9 @@ async def test_update_source_while_waiting_to_retry(
             hass.data[DOMAIN][ATTR_SETTINGS],
             dynamic_stream_settings(),
         )
+        quit_event = stream._thread_quit = RetryWaitQuitEvent()
         await stream.start()
-        assert await hass.async_add_executor_job(worker.failed.wait, TIMEOUT)
+        assert await hass.async_add_executor_job(quit_event.retry_wait.wait, TIMEOUT)
 
         stream.update_source(STREAM_SOURCE + "-updated-source")
         assert await hass.async_add_executor_job(worker.restarted.wait, TIMEOUT)
@@ -1038,7 +1064,7 @@ async def test_stop_while_waiting_to_retry_with_update_pending(
 ) -> None:
     """Test that stop() during the wait before a retry ends the worker, restart pending or not."""
     should_retry.return_value = True
-    worker = FailFirstStreamWorker()
+    worker = FailFirstStreamWorker(quit_on_restart=True)
     with (
         patch("homeassistant.components.stream.worker.stream_worker", worker),
         patch("homeassistant.components.stream.STREAM_RESTART_INCREMENT", 3600),
@@ -1050,13 +1076,23 @@ async def test_stop_while_waiting_to_retry_with_update_pending(
             hass.data[DOMAIN][ATTR_SETTINGS],
             dynamic_stream_settings(),
         )
+        quit_event = stream._thread_quit = RetryWaitQuitEvent()
+        quit_event.release.clear()
         await stream.start()
-        assert await hass.async_add_executor_job(worker.failed.wait, TIMEOUT)
+        assert await hass.async_add_executor_job(quit_event.retry_wait.wait, TIMEOUT)
 
+        # The update ends the wait, and the worker is held there until the
+        # stop is pending
         stream.update_source(STREAM_SOURCE + "-updated-source")
+        stop_task = hass.async_create_task(stream.stop())
         async with asyncio.timeout(TIMEOUT):
-            await stream.stop()
+            while not stream._stopping:
+                await asyncio.sleep(0)
+        quit_event.release.set()
+        async with asyncio.timeout(TIMEOUT):
+            await stop_task
         assert stream._thread is None
+        assert worker.sources == [STREAM_SOURCE]
 
 
 test_worker_log_cases = (
