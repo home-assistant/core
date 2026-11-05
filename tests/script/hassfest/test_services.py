@@ -120,6 +120,21 @@ def test_valid_visible(services_yaml: str) -> None:
             """
             set_timer:
               fields:
+                options:
+                  visible:
+                    field: options
+                    operator: exists
+                  fields:
+                    options:
+                      selector:
+                        text:
+            """,
+            id="section_and_field_with_the_same_name",
+        ),
+        pytest.param(
+            """
+            set_timer:
+              fields:
                 duration:
                   visible:
                     field: mode

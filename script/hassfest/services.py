@@ -48,26 +48,22 @@ def visible_field_validator(fields: Any) -> Any:
     once hidden.
     """
     names = set()
-    own_fields: dict[str, set[str]] = {}
-    visible_by_name = {}
+    records: list[tuple[str, Any, set[str]]] = []
     for key, value in fields.items():
         if value and "fields" in value:
-            own_fields[key] = set(value["fields"])
-            visible_by_name[key] = value.get("visible")
+            records.append((key, value.get("visible"), set(value["fields"])))
             for field_key, field in value["fields"].items():
                 names.add(field_key)
-                own_fields[field_key] = {field_key}
-                visible_by_name[field_key] = (field or {}).get("visible")
+                records.append((field_key, (field or {}).get("visible"), {field_key}))
         else:
             names.add(key)
-            own_fields[key] = {key}
-            visible_by_name[key] = (value or {}).get("visible")
+            records.append((key, (value or {}).get("visible"), {key}))
 
-    for key, visible in visible_by_name.items():
+    for key, visible, own_fields in records:
         if not isinstance(visible, (dict, list)):
             continue
         for condition in visible if isinstance(visible, list) else [visible]:
-            if condition["field"] in own_fields[key]:
+            if condition["field"] in own_fields:
                 raise probatio.Invalid(
                     f"Visible condition of {key} cannot refer to its own field"
                     f" {condition['field']}."
