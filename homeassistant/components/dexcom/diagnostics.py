@@ -17,26 +17,15 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: DexcomConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    config_entry = async_redact_data(entry.as_dict(), TO_REDACT)
-    # runtime_data is not set when setup failed, which is when diagnostics help most
-    if (coordinator := getattr(entry, "runtime_data", None)) is None:
-        return {
-            "config_entry": config_entry,
-            "last_update_success": None,
-            "reading": None,
-        }
+    coordinator = entry.runtime_data
     reading: dict[str, Any] | None = None
     if (glucose := coordinator.data) is not None:
         reading = {
-            "value": glucose.value,
-            "mmol_l": glucose.mmol_l,
-            "trend": glucose.trend,
-            "trend_description": glucose.trend_description,
             "timestamp": glucose.datetime.isoformat(),
             "age_seconds": round((dt_util.utcnow() - glucose.datetime).total_seconds()),
         }
     return {
-        "config_entry": config_entry,
+        "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "last_update_success": coordinator.last_update_success,
         "reading": reading,
     }

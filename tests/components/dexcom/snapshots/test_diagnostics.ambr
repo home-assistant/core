@@ -26,11 +26,7 @@
     'last_update_success': True,
     'reading': dict({
       'age_seconds': 300,
-      'mmol_l': 5.5,
       'timestamp': '2025-04-19T12:58:33.085000-04:00',
-      'trend': 4,
-      'trend_description': 'steady',
-      'value': 100,
     }),
   })
 # ---
