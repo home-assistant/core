@@ -85,7 +85,7 @@ _CLOUD_ERRORS: dict[
 ] = {
     TimeoutError: (
         HTTPStatus.BAD_GATEWAY,
-        "Unable to reach the Home Assistant Cloud.",
+        "Unable to reach Home Assistant Link.",
     ),
     auth.AuthTimeoutError: (
         HTTPStatus.GATEWAY_TIMEOUT,

@@ -27,7 +27,7 @@ PIPELINE_DATA = {
             "conversation_language": "language_1",
             "id": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
             "language": "language_1",
-            "name": "Home Assistant Cloud",
+            "name": "Home Assistant Link",
             "stt_engine": "cloud",
             "stt_language": "language_1",
             "tts_engine": "cloud",

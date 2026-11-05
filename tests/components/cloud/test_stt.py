@@ -31,7 +31,7 @@ from homeassistant.setup import async_setup_component
 
 from . import PIPELINE_DATA
 
-ENTITY_ID = "stt.home_assistant_cloud"
+ENTITY_ID = "stt.home_assistant_link"
 
 
 @pytest.fixture(autouse=True)
@@ -67,14 +67,14 @@ async def test_cloud_speech(
     on_start_callback = cloud.register_on_start.call_args[0][0]
     await on_start_callback()
 
-    state = hass.states.get("stt.home_assistant_cloud")
+    state = hass.states.get("stt.home_assistant_link")
     assert state
     assert state.state == STATE_UNKNOWN
 
     client = await hass_client()
 
     response = await client.post(
-        "/api/stt/stt.home_assistant_cloud",
+        "/api/stt/stt.home_assistant_link",
         headers={
             "X-Speech-Content": (
                 "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
@@ -94,7 +94,7 @@ async def test_cloud_speech(
     assert response.status == HTTPStatus.OK
     assert response_data == expected_response_data
 
-    state = hass.states.get("stt.home_assistant_cloud")
+    state = hass.states.get("stt.home_assistant_link")
     assert state
     assert state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
@@ -106,7 +106,7 @@ async def test_migrating_pipelines(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test migrating pipelines when cloud stt entity is added."""
-    entity_id = "stt.home_assistant_cloud"
+    entity_id = "stt.home_assistant_link"
     cloud.voice.process_stt = AsyncMock(
         return_value=STTResponse(True, "Turn the Kitchen Lights on")
     )
@@ -132,7 +132,7 @@ async def test_migrating_pipelines(
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["stt_engine"] == entity_id
     assert (
         hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_engine"]
-        == "tts.home_assistant_cloud"
+        == "tts.home_assistant_link"
     )
 
     # The other items should stay the same.
@@ -150,7 +150,7 @@ async def test_migrating_pipelines(
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["language"] == "language_1"
     assert (
-        hass_storage[STORAGE_KEY]["data"]["items"][0]["name"] == "Home Assistant Cloud"
+        hass_storage[STORAGE_KEY]["data"]["items"][0]["name"] == "Home Assistant Link"
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["stt_language"] == "language_1"
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_language"] == "language_1"
