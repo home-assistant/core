@@ -1,5 +1,7 @@
 """Tests for the aerosmart number platform."""
 
+from unittest.mock import patch
+
 from modbus_connection import ModbusConnectionError
 from modbus_connection.mock import MockModbusUnit
 import pytest
@@ -9,6 +11,7 @@ from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 ROOM_SETPOINT = "number.aerosmart_room_temperature_setpoint"
 HOT_WATER_SETPOINT = "number.aerosmart_domestic_hot_water_temperature_setpoint"
@@ -33,12 +36,24 @@ async def test_number_entities_and_writes(
     assert hot_water is not None
     assert hot_water.state == "50.0"
 
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ROOM_SETPOINT, "value": 21.5},
-        blocking=True,
-    )
+    coordinator = mock_config_entry.runtime_data.readings
+    with (
+        patch.object(coordinator, "async_set_updated_data") as set_updated_data,
+        patch.object(
+            coordinator,
+            "async_update_listeners",
+            wraps=coordinator.async_update_listeners,
+        ) as update_listeners,
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: ROOM_SETPOINT, "value": 21.5},
+            blocking=True,
+        )
+
+    set_updated_data.assert_not_called()
+    update_listeners.assert_called_once_with()
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -58,6 +73,32 @@ async def test_number_entities_and_writes(
     hot_water = hass.states.get(HOT_WATER_SETPOINT)
     assert hot_water is not None
     assert hot_water.state == "51.5"
+
+
+async def test_fahrenheit_write_is_normalized_to_register_precision(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit_ventilation: MockModbusUnit,
+) -> None:
+    """Test a Fahrenheit setpoint can be confirmed at register precision."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: ROOM_SETPOINT, "value": 70},
+        blocking=True,
+    )
+
+    assert [
+        mock_modbus_unit_ventilation.holding[address] for address in (5016, 5017)
+    ] == [0, 21111]
+    state = hass.states.get(ROOM_SETPOINT)
+    assert state is not None
+    assert state.state == "70.0"
 
 
 async def test_number_write_error_is_translated(

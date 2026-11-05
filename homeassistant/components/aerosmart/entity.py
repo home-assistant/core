@@ -80,4 +80,4 @@ class AerosmartEntity(CoordinatorEntity[AerosmartCoordinator]):
                     "error": str(err),
                 },
             ) from err
-        self.coordinator.async_set_updated_data(self.coordinator.data)
+        self.coordinator.async_update_listeners()
