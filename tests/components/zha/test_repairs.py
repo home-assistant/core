@@ -296,23 +296,42 @@ async def test_wrong_firmware_flow_issue_linked_to_entry(
     )
 
 
-async def test_wrong_firmware_flow_entry_removed_while_probing(
-    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
+@pytest.mark.parametrize(
+    "change_entry",
+    [
+        pytest.param(
+            lambda hass, entry: hass.config_entries.async_remove(entry.entry_id),
+            id="removed",
+        ),
+        pytest.param(
+            lambda hass, entry: hass.config_entries.async_set_disabled_by(
+                entry.entry_id, ConfigEntryDisabler.USER
+            ),
+            id="disabled",
+        ),
+    ],
+)
+async def test_wrong_firmware_flow_entry_changed_while_probing(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    change_entry: Callable[[HomeAssistant, MockConfigEntry], Awaitable[Any]],
 ) -> None:
-    """Test the flow's wrong firmware issue is unlinked if the entry is removed."""
+    """Test the flow's issue is unlinked if the entry is removed or disabled."""
     config_entry.add_to_hass(hass)
 
-    async def remove_entry_and_probe(*args: Any, **kwargs: Any) -> ApplicationType:
-        await hass.config_entries.async_remove(config_entry.entry_id)
+    async def change_entry_and_probe(*args: Any, **kwargs: Any) -> ApplicationType:
+        await change_entry(hass, config_entry)
         return ApplicationType.CPC
 
-    await _detect_wrong_firmware(hass, remove_entry_and_probe)
+    await _detect_wrong_firmware(hass, change_entry_and_probe)
 
     issue = issue_registry.async_get_issue(
         DOMAIN, ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED
     )
     assert issue is not None
     assert issue.config_entry_id is None
+    assert not issue_registry.async_is_hidden(issue)
 
 
 @pytest.mark.parametrize(
