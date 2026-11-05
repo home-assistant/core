@@ -479,7 +479,17 @@ class Stream:
 
         stream_state = StreamState(self.hass, self.outputs, self._diagnostics)
         wait_timeout = 0
-        while not self._thread_quit.wait(timeout=wait_timeout):
+        while True:
+            if self._thread_quit.wait(timeout=wait_timeout):
+                # update_source() while waiting to retry asks for a restart
+                # with the new source, not for the worker to end
+                if not self._fast_restart_once:
+                    break
+                wait_timeout = 0
+                self._fast_restart_once = False
+                self._thread_quit.clear()
+                if self._stopping:
+                    break
             start_time = time.time()
             self._set_state(True)
             self._diagnostics.set_value(
