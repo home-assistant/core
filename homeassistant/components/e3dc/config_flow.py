@@ -64,7 +64,8 @@ async def _async_local_ipv4(
     hass: HomeAssistant, addresses: Iterable[IPv4Address | IPv6Address]
 ) -> str | None:
     """Return the first IPv4 address on a subnet Home Assistant is connected to."""
-    # The power station also announces an address on a network it keeps to itself
+    # The power station announces multiple IP addresses on multiple networks.
+    # Find one that HA can connect to.
     subnets = [
         ip_interface(f"{ipv4['address']}/{ipv4['network_prefix']}").network
         for adapter in await network.async_get_adapters(hass)
