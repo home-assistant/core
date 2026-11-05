@@ -36,6 +36,12 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string,
     }
 )
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PORT): cv.string,
+    }
+)
 
 
 async def _validate_input(
@@ -198,15 +204,45 @@ class SystemBridgeConfigFlow(
 
         # Check if already configured
         await self.async_set_unique_id(uuid)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        updates = {CONF_HOST: host}
+        if (port := properties.get("port")) is not None:
+            updates[CONF_PORT] = port
+        self._abort_if_unique_id_configured(updates=updates)
 
         self._name = host
         self._input = {
             CONF_HOST: host,
-            CONF_PORT: properties.get("port"),
+            CONF_PORT: port,
         }
 
         return await self.async_step_authenticate()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host and port."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            errors, info = await _async_get_info(
+                self.hass, {**reconfigure_entry.data, **user_input}
+            )
+            if not errors and info is not None:
+                await self.async_set_unique_id(info["uuid"])
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_RECONFIGURE_DATA_SCHEMA,
+                user_input or reconfigure_entry.data,
+            ),
+            errors=errors,
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

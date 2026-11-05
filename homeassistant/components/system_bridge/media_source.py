@@ -33,7 +33,11 @@ def _get_loaded_entry(
     entry: SystemBridgeConfigEntry | None = hass.config_entries.async_get_entry(
         entry_id
     )
-    if entry is None or entry.state is not ConfigEntryState.LOADED:
+    if (
+        entry is None
+        or entry.domain != DOMAIN
+        or entry.state is not ConfigEntryState.LOADED
+    ):
         raise error(
             translation_domain=DOMAIN,
             translation_key="entry_not_loaded",

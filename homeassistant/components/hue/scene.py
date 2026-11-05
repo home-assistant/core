@@ -17,7 +17,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .bridge import HueBridge, HueConfigEntry
-from .const import ATTR_BRIGHTNESS, ATTR_DYNAMIC, ATTR_SPEED, DOMAIN
+from .const import DOMAIN, HueServiceArgument
 from .v2.entity import HueBaseEntity
 from .v2.helpers import normalize_hue_brightness, normalize_hue_transition
 
@@ -144,9 +144,9 @@ class HueSceneEntity(HueSceneEntityBase):
         # the options below are advanced only
         # as we're not allowed to override the default scene turn_on service
         # we've implemented a `activate_scene` entity service
-        dynamic = kwargs.get(ATTR_DYNAMIC, False)
-        speed = kwargs.get(ATTR_SPEED)
-        brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
+        dynamic = kwargs.get(HueServiceArgument.DYNAMIC, False)
+        speed = kwargs.get(HueServiceArgument.SPEED)
+        brightness = normalize_hue_brightness(kwargs.get(HueServiceArgument.BRIGHTNESS))
 
         if speed is not None:
             await self.bridge.async_request_call(

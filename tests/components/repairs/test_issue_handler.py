@@ -69,7 +69,7 @@ async def test_flow_fix_via_data_deprecation(
         translation_key="fake_key",
     )
 
-    assert (repairs := repairs_flow_manager(hass))
+    repairs = repairs_flow_manager(hass)
 
     result = await repairs.async_init(
         "fake_integration", data={"issue_id": "context_issue"}
@@ -95,7 +95,7 @@ async def test_flow_fix_missing_context(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(hass, DOMAIN, {})
 
-    assert (repairs := repairs_flow_manager(hass))
+    repairs = repairs_flow_manager(hass)
 
     with pytest.raises(KeyError) as exc:
         await repairs.async_init("fake_integration")

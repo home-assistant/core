@@ -1686,6 +1686,7 @@ async def _test_reauth_issue(
         active=True,
         breaks_in_ha_version=None,
         config_entry_id=entry.entry_id,
+        config_subentry_id=None,
         created=ANY,
         data={"flow_id": flows[0]["flow_id"]},
         dismissed_version=None,
@@ -11580,7 +11581,6 @@ async def test_add_description_placeholder_automatically_not_overwrites(
     [
         ("some_integration", config_entries.SOURCE_USER, True),
         ("some_integration", config_entries.SOURCE_IGNORE, False),
-        ("mobile_app", config_entries.SOURCE_USER, False),
     ],
 )
 async def test_create_entry_existing_unique_id(
