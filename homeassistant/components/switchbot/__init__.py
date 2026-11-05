@@ -7,7 +7,6 @@ import switchbot
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_MAC,
@@ -550,12 +549,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
         _LOGGER.debug("Migration to version 2.1 successful")
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: SwitchbotConfigEntry
+) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> None:
     """Unload a config entry."""
     sensor_type = entry.data[CONF_SENSOR_TYPE]
     await hass.config_entries.async_unload_platforms_or_raise(

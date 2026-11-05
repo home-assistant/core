@@ -143,7 +143,7 @@ type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 _RETRY_DELAY = 1  # 1 second delay between retries
 
 
-def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
+def _get_bot_info(bot: Bot, config_entry: TelegramBotConfigEntry) -> dict[str, Any]:
     return {
         "config_entry_id": config_entry.entry_id,
         "id": bot.id,

@@ -322,7 +322,7 @@ aiohpprinter==3.1.0
 aiohttp_sse==2.2.0
 
 # homeassistant.components.hue
-aiohue==4.9.0
+aiohue==4.9.1
 
 # homeassistant.components.imap
 aioimaplib==2.0.3
@@ -771,7 +771,7 @@ boto3==1.43.117
 bring-api==1.1.2
 
 # homeassistant.components.broadlink
-broadlink-async==1.1.1
+broadlink-async==1.2.1
 
 # homeassistant.components.brother
 brother==6.2.0
@@ -1254,7 +1254,7 @@ gps3==0.33.3
 grandstream-home-api==0.1.7
 
 # homeassistant.components.gree
-greeclimate==3.5.2
+greeclimate==3.6.2
 
 # homeassistant.components.greencell
 greencell_client==1.0.3
@@ -1917,7 +1917,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.3
 
 # homeassistant.components.opower
-opower==0.22.4
+opower==0.23.0
 
 # homeassistant.components.oralb
 oralb-ble==1.1.3

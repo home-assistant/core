@@ -12,7 +12,6 @@ import yarl
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -31,6 +30,7 @@ from .const import (
     DEFAULT_WANTED_MAX_ITEMS,
     DOMAIN,
 )
+from .coordinator import SonarrConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +84,9 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> SonarrOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: SonarrConfigEntry,
+    ) -> SonarrOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SonarrOptionsFlowHandler()
 
