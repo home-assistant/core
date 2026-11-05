@@ -15,6 +15,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.watercryst.coordinator import (
     MEASUREMENTS_POLLING_INTERVAL,
+    STATE_POLLING_INTERVAL,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -71,12 +72,11 @@ async def test_availability(
     mock_api_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test all sensor entities."""
+    """Test state sensor entities availability."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.watercryst._PLATFORMS", [Platform.SENSOR]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_device_pressure")
 
@@ -115,9 +115,8 @@ async def test_missing_measurement_data(
     """Test missing sensor values."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.watercryst._PLATFORMS", [Platform.SENSOR]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_device_pressure")
 
@@ -153,12 +152,11 @@ async def test_missing_state_data(
     mock_api_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test missing sensor values."""
+    """Test missing state values."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.watercryst._PLATFORMS", [Platform.SENSOR]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_device_device_mode")
 
@@ -167,7 +165,7 @@ async def test_missing_state_data(
 
     mock_api_client.get_state.return_value = None
 
-    freezer.tick(MEASUREMENTS_POLLING_INTERVAL)
+    freezer.tick(STATE_POLLING_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -178,7 +176,7 @@ async def test_missing_state_data(
 
     mock_api_client.get_state.return_value = default_state_response()
 
-    freezer.tick(MEASUREMENTS_POLLING_INTERVAL)
+    freezer.tick(STATE_POLLING_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

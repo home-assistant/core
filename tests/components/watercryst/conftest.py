@@ -85,6 +85,35 @@ def basic_info_response() -> DeviceResponse:
     )
 
 
+ALT_DEVICE_NAME = "HA Device 2"
+ALT_DEVICE_TYPE_NUMBER = "12000274"
+ALT_DEVICE_TYPE_SERIES = "KLS 4000-C"
+ALT_FW_VERSION = "V01.08.04"
+ALT_HW_VERSION = "3"
+
+
+def alternative_info_response() -> DeviceResponse:
+    """Default device info response."""
+    return DeviceResponse(
+        biocat_serial=BIOCAT_SERIAL,
+        electronics_serial=BIOCAT_ELECTRONICS_SERIAL,
+        device_type_number=ALT_DEVICE_TYPE_NUMBER,
+        line=DEVICE_TYPE_LINE,
+        series=ALT_DEVICE_TYPE_SERIES,
+        has_flow_rate_sensor=True,
+        has_leakage_protection_system=True,
+        has_lime_scale_protection=True,
+        has_pressure_sensor=True,
+        has_temperature_sensor=True,
+        has_wireless_sensor_option=True,
+        name=ALT_DEVICE_NAME,
+        current_firmware_version=ALT_FW_VERSION,
+        current_hardware_version=ALT_HW_VERSION,
+        latest_firmware_version=LATEST_FW_VERSION,
+        system_mac_address=SYSTEM_MAC,
+    )
+
+
 def default_measurement_response() -> MeasurementResponse:
     """Default measurements response."""
     return MeasurementResponse(
@@ -95,6 +124,19 @@ def default_measurement_response() -> MeasurementResponse:
         total_consumption=532.34,
         last_water_tap_volume=4.23,
         last_water_tap_duration=15,
+    )
+
+
+def alternative_measurement_response() -> MeasurementResponse:
+    """Default measurements response."""
+    return MeasurementResponse(
+        water_temp=23,
+        pressure=3.86,
+        flow_rate=4.22,
+        todays_consumption=33.45,
+        total_consumption=542.67,
+        last_water_tap_volume=2.11,
+        last_water_tap_duration=7,
     )
 
 
@@ -114,6 +156,29 @@ def default_state_response() -> StateResponse:
         water_protection=WaterProtectionResponse(
             absence_mode_enabled=False,
             pause_leakage_protection_until_utc=datetime(2026, 6, 8, 13, 13, tzinfo=UTC),
+        ),
+        ml_state="success",
+    )
+
+
+def alternative_state_response() -> StateResponse:
+    """Default state response."""
+    return StateResponse(
+        online=True,
+        mode=ModeResponse(id=ModeId.ERROR_MODE, name="Error Mode"),
+        event=EventResponse(
+            type="event",
+            event_id=3,
+            category="error",
+            title="Some Error",
+            description="Some Error",
+            timestamp=datetime(2026, 11, 5, 10, 56, tzinfo=UTC),
+        ),
+        water_protection=WaterProtectionResponse(
+            absence_mode_enabled=True,
+            pause_leakage_protection_until_utc=datetime(
+                2026, 11, 8, 10, 56, tzinfo=UTC
+            ),
         ),
         ml_state="success",
     )
