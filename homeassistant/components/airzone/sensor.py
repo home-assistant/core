@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -178,7 +177,7 @@ class AirzoneHotWaterSensor(AirzoneHotWaterEntity, AirzoneSensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
@@ -200,7 +199,7 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
@@ -216,7 +215,7 @@ class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: SensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:
