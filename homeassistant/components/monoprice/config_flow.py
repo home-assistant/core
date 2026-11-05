@@ -7,18 +7,14 @@ import probatio
 from pymonoprice import get_monoprice
 from serialx import SerialException
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import SerialPortSelector
 from homeassistant.helpers.typing import VolDictType
 
+from . import MonopriceConfigEntry
 from .const import (
     CONF_SOURCE_1,
     CONF_SOURCE_2,
@@ -108,7 +104,7 @@ class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MonopriceConfigEntry,
     ) -> MonopriceOptionsFlowHandler:
         """Define the config flow to handle options."""
         return MonopriceOptionsFlowHandler()
