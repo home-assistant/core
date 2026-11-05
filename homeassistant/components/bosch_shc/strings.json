@@ -76,6 +76,9 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "dimmer_speed": {
+        "name": "Dimming speed"
+      },
       "display_brightness": {
         "name": "Display brightness"
       },
