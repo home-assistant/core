@@ -11,7 +11,14 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 import audioop  # pylint: disable=deprecated-module
 import hass_nabucasa
 
-from homeassistant.components import conversation, media_player, stt, tts, wake_word
+from homeassistant.components import (
+    conversation,
+    media_player,
+    stt,
+    tts,
+    voice_support,
+    wake_word,
+)
 from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import MATCH_ALL, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, callback
@@ -67,18 +74,109 @@ KEY_PIPELINE_CONVERSATION_DATA: HassKey[dict[str, PipelineConversationData]] = H
 )
 STREAM_RESPONSE_CHARS = 60
 
+WAKE_WORD_VERDICT_SECONDS = 2.0
+"""How long the app may take over a wake word before it is accepted anyway.
 
-async def _skip_audio(
-    audio_stream: AsyncIterable[bytes], num_bytes: int
-) -> AsyncGenerator[bytes]:
-    """Yield the audio after the first num_bytes."""
-    async for chunk in audio_stream:
-        if num_bytes > 0:
-            skipped = min(num_bytes, len(chunk))
-            chunk = chunk[skipped:]
-            num_bytes -= skipped
-        if chunk:
+Latency the person waits through with the wake word already spoken, so it
+is short on purpose.
+"""
+
+
+def _ms_to_bytes(ms: int) -> int:
+    """Whole 10 ms chunks worth of audio, since partial chunks are dropped."""
+    return (ms // MS_PER_CHUNK) * BYTES_PER_CHUNK
+
+
+class _RunAudio:
+    """The run's audio, on its way to the rest of the pipeline.
+
+    Everything passes through here, the wake word audio speech-to-text never
+    hears included, because the app's boundaries are offsets into all of it.
+    With no app this is a stream with its first few chunks skipped.
+    """
+
+    def __init__(
+        self, source: AsyncIterable[bytes], run: voice_support.AudioRun | None
+    ) -> None:
+        """Wrap the stream that starts with the wake word."""
+        self._source = source.__aiter__()
+        self._run = run
+        self._buffer = bytearray()
+        self._ended = False
+
+    def __len__(self) -> int:
+        """How much of the run has been read so far."""
+        return len(self._buffer)
+
+    async def async_fill(self, num_bytes: int) -> bool:
+        """Read until this much has been read. False if the stream ended."""
+        while (len(self._buffer) < num_bytes) and not self._ended:
+            try:
+                chunk = await anext(self._source)
+            except StopAsyncIteration:
+                self._ended = True
+                await self._async_end()
+            else:
+                self._buffer.extend(chunk)
+                await self._async_write(chunk)
+        return len(self._buffer) >= num_bytes
+
+    async def async_wake_word(
+        self, run: voice_support.AudioRun
+    ) -> voice_support.WakeWordAccepted | voice_support.WakeWordRejected | None:
+        """Keep feeding audio until the app has a verdict.
+
+        An app that needs to hear past the detection -- a detector that
+        fired early leaves the last phoneme outside the window -- gets that
+        by this going on, rather than by asking.
+        """
+        try:
+            async with asyncio.timeout(WAKE_WORD_VERDICT_SECONDS):
+                while (run.wake_word is None) and run.listening:
+                    if not await self.async_fill(len(self._buffer) + BYTES_PER_CHUNK):
+                        # Nothing more to feed it, but it may still answer.
+                        return await run.async_wake_word(WAKE_WORD_VERDICT_SECONDS)
+        except TimeoutError:
+            _LOGGER.debug("No wake word verdict within %ss", WAKE_WORD_VERDICT_SECONDS)
+            return None
+        return run.wake_word
+
+    async def async_stream(self, skip_ms: int) -> AsyncGenerator[bytes]:
+        """The audio from skip_ms onwards: what was read, then the rest."""
+        skip_bytes = _ms_to_bytes(skip_ms)
+        await self.async_fill(skip_bytes)
+        if len(self._buffer) > skip_bytes:
+            yield bytes(self._buffer[skip_bytes:])
+        self._buffer.clear()
+
+        async for chunk in self._source:
+            await self._async_write(chunk)
             yield chunk
+
+        if not self._ended:
+            self._ended = True
+            await self._async_end()
+
+    async def _async_write(self, chunk: bytes) -> None:
+        """Give the app the audio, or stop having one."""
+        if self._run is None:
+            return
+        try:
+            await self._run.async_write(chunk)
+        except Exception:
+            _LOGGER.debug("The app went away mid-run", exc_info=True)
+            self._run.stop_listening()
+            self._run = None
+
+    async def _async_end(self) -> None:
+        if self._run is None:
+            return
+        try:
+            await self._run.async_end_audio()
+        except Exception:
+            _LOGGER.debug("The app went away mid-run", exc_info=True)
+            self._run.stop_listening()
+            self._run = None
 
 
 @callback
@@ -174,6 +272,10 @@ class _DefaultPipelineProcessor:
     _streamed_response_text: bool = field(init=False, default=False)
     _invalidated: bool = field(init=False, default=False)
     _stt_last_timestamp_ms: int | None = field(init=False, default=None)
+    _audio_run: voice_support.AudioRun | None = field(
+        init=False, default=None, repr=False
+    )
+    _sent_stt_vad_end: bool = field(init=False, default=False)
     intent_agent: conversation.AgentInfo | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
@@ -434,9 +536,15 @@ class _DefaultPipelineProcessor:
             engine = self.stt_provider.entity_id
 
         audio_processing = self.stt_provider.async_get_audio_processing(metadata)
-        provider_vad = (
-            self.host.audio_settings.is_vad_enabled
-            and not audio_processing.requires_external_vad
+        is_vad_enabled = self.host.audio_settings.is_vad_enabled
+        provider_vad = is_vad_enabled and not audio_processing.requires_external_vad
+
+        # The app hears the whole of the audio; the segmenter below sees one
+        # chunk at a time.
+        run_endpointing = (
+            is_vad_enabled
+            and (self._audio_run is not None)
+            and self._audio_run.listening
         )
 
         self.host.process_event(
@@ -454,10 +562,11 @@ class _DefaultPipelineProcessor:
 
         try:
             # Transcribe audio stream
+            # Built even when the app endpoints, as the fallback if it goes
+            # away mid-command.
             stt_vad: VoiceCommandSegmenter | None = None
-            if (
-                self.host.audio_settings.is_vad_enabled
-                and audio_processing.requires_external_vad
+            if is_vad_enabled and (
+                audio_processing.requires_external_vad or run_endpointing
             ):
                 stt_vad = VoiceCommandSegmenter(
                     silence_seconds=self.host.audio_settings.silence_seconds
@@ -470,7 +579,11 @@ class _DefaultPipelineProcessor:
             )
             result = await process_audio_stream(
                 metadata,
-                self._speech_to_text_stream(audio_stream=stream, stt_vad=stt_vad),
+                self._speech_to_text_stream(
+                    audio_stream=stream,
+                    stt_vad=stt_vad,
+                    run_endpointing=run_endpointing,
+                ),
             )
         except asyncio.CancelledError, TimeoutError:
             raise  # expected
@@ -488,14 +601,10 @@ class _DefaultPipelineProcessor:
 
         _LOGGER.debug("speech-to-text result %s", result)
 
-        # The provider detected the end of speech by returning the transcribed text
-        if provider_vad:
-            self.host.process_event(
-                PipelineEvent(
-                    PipelineEventType.STT_VAD_END,
-                    {"timestamp": self._stt_last_timestamp_ms or 0},
-                )
-            )
+        # The provider found the end of speech by returning the transcript --
+        # unless something already said where the command ended.
+        if provider_vad and not self._sent_stt_vad_end:
+            self._async_stt_vad_end(self._stt_last_timestamp_ms or 0)
 
         if result.result != stt.SpeechResultState.SUCCESS:
             raise SpeechToTextError(
@@ -525,62 +634,179 @@ class _DefaultPipelineProcessor:
         self,
         audio_stream: AsyncIterable[EnhancedAudioChunk],
         stt_vad: VoiceCommandSegmenter | None,
+        run_endpointing: bool = False,
         sample_rate: int = SAMPLE_RATE,
         sample_width: int = SAMPLE_WIDTH,
     ) -> AsyncGenerator[bytes]:
-        """Yield audio chunks until VAD detects silence or speech-to-text completes."""
+        """Yield audio chunks until the command ends or speech-to-text completes.
+
+        Two things can say where the command ends and must not both say it.
+        The app has the say while it is listening; the segmenter takes over
+        the moment it stops, so an app going away cannot leave a command
+        that never ends.
+        """
         sent_vad_start = False
+        run = self._audio_run
+
         async for chunk in audio_stream:
             self.host.capture_audio(chunk.audio)
+
+            if run_endpointing and (run is not None):
+                # What it said is read before whether it is still there: an
+                # app that says where the command ended closes straight
+                # afterwards, so its last word always arrives with its
+                # departure.
+                if (not sent_vad_start) and (run.speech_started_ms is not None):
+                    self._async_stt_vad_start(run.speech_started_ms)
+                    sent_vad_start = True
+
+                if run.speech_ended_ms is not None:
+                    self._async_stt_vad_end(run.speech_ended_ms)
+                    break
+
+                if run.listening:
+                    self._stt_last_timestamp_ms = chunk.timestamp_ms
+                    yield chunk.audio
+                    continue
+
+                _LOGGER.debug(
+                    "The app stopped watching the run at %s ms without saying"
+                    " where the command ended; finding it here",
+                    chunk.timestamp_ms,
+                )
+                run_endpointing = False
 
             if stt_vad is not None:
                 chunk_seconds = (len(chunk.audio) // sample_width) / sample_rate
                 if not stt_vad.process(chunk_seconds, chunk.speech_probability):
                     # Silence detected at the end of voice command
-                    self.host.process_event(
-                        PipelineEvent(
-                            PipelineEventType.STT_VAD_END,
-                            {"timestamp": chunk.timestamp_ms},
-                        )
-                    )
+                    self._async_stt_vad_end(chunk.timestamp_ms)
                     break
 
                 if stt_vad.in_command and (not sent_vad_start):
                     # Speech detected at start of voice command
-                    self.host.process_event(
-                        PipelineEvent(
-                            PipelineEventType.STT_VAD_START,
-                            {"timestamp": chunk.timestamp_ms},
-                        )
-                    )
+                    self._async_stt_vad_start(chunk.timestamp_ms)
                     sent_vad_start = True
 
             self._stt_last_timestamp_ms = chunk.timestamp_ms
             yield chunk.audio
 
     @callback
-    def _accept_wake_word_audio(
-        self, wake_word_phrase: str, wake_word_audio_ms: int
-    ) -> bool:
-        """Accept the wake word at the start of the stream, unless a duplicate."""
+    def _async_stt_vad_start(self, timestamp_ms: int) -> None:
+        """Say that the command has begun. Satellites animate on this."""
+        self.host.process_event(
+            PipelineEvent(PipelineEventType.STT_VAD_START, {"timestamp": timestamp_ms})
+        )
+
+    @callback
+    def _async_stt_vad_end(self, timestamp_ms: int) -> None:
+        """Say that it is over, once, whoever worked that out."""
+        self._sent_stt_vad_end = True
+        self.host.process_event(
+            PipelineEvent(PipelineEventType.STT_VAD_END, {"timestamp": timestamp_ms})
+        )
+
+    async def _async_start_audio_run(
+        self, request: _PipelineProcessorRequest
+    ) -> voice_support.AudioRun | None:
+        """Open the run with the Voice app, if there is one to open it with.
+
+        There is not when no app is installed, its entry is not loaded, or
+        the preview feature is off. One that will not open a run, or raises
+        trying, leaves the run exactly as it would have been.
+        """
+        client = voice_support.async_get_client(self.host.hass)
+        if client is None:
+            return None
+
+        audio_settings = self.host.audio_settings
         try:
-            self.host.accept_wake_word(wake_word_phrase)
-        except DuplicateWakeUpDetectedError:
+            return await client.async_start_run(
+                voice_support.AudioRunRequest(
+                    satellite_id=self.host.satellite_id,
+                    wake_word_phrase=request.wake_word_phrase,
+                    wake_word_audio_ms=request.wake_word_audio_ms,
+                    silence_seconds=(
+                        audio_settings.silence_seconds
+                        if audio_settings.is_vad_enabled
+                        else None
+                    ),
+                )
+            )
+        except Exception:
+            _LOGGER.debug("Could not start a run with the app", exc_info=True)
+            return None
+
+    async def _async_wake_word(
+        self, run_audio: _RunAudio, run: voice_support.AudioRun, wake_word_phrase: str
+    ) -> voice_support.WakeWordAccepted | voice_support.WakeWordRejected | None:
+        """Wait for a verdict on the detection, if anything can give one.
+
+        A wake word the app has never heard of waits for nothing: the run is
+        still watched, it just is not second-guessed.
+        """
+        client = voice_support.async_get_client(self.host.hass)
+        if (client is None) or not client.supports_wake_word(wake_word_phrase):
+            return None
+
+        verdict = await run_audio.async_wake_word(run)
+        if verdict is None:
+            return None
+
+        _LOGGER.debug(
+            "Wake word %s %s%s",
+            wake_word_phrase,
+            "accepted"
+            if isinstance(verdict, voice_support.WakeWordAccepted)
+            else "rejected",
+            ""
+            if isinstance(verdict, voice_support.WakeWordAccepted)
+            or (verdict.reason is None)
+            else f" ({verdict.reason})",
+        )
+        return verdict
+
+    @callback
+    def _accept_wake_word_audio(
+        self,
+        wake_word_phrase: str,
+        wake_word_audio_ms: int,
+        verdict: voice_support.WakeWordAccepted
+        | voice_support.WakeWordRejected
+        | None = None,
+    ) -> bool:
+        """Accept the wake word at the start of the stream.
+
+        The app is asked before this, because accepting starts the cooldown
+        that rejects the next one as a duplicate -- which a refused
+        detection should not do.
+        """
+        reason: str | None = None
+        if isinstance(verdict, voice_support.WakeWordRejected):
             accepted = False
+            reason = verdict.reason or "unverified"
         else:
-            accepted = True
+            try:
+                self.host.accept_wake_word(wake_word_phrase)
+            except DuplicateWakeUpDetectedError:
+                accepted = False
+                reason = "duplicate"
+            else:
+                accepted = True
+
+        wake_word_output: dict[str, Any] = {
+            "wake_word_phrase": wake_word_phrase,
+            "wake_word_audio_ms": wake_word_audio_ms,
+        }
+        if reason is not None:
+            wake_word_output["reason"] = reason
 
         self.host.process_event(
             PipelineEvent(
                 PipelineEventType.WAKE_WORD_END
                 if accepted
                 else PipelineEventType.WAKE_WORD_REJECTED,
-                {
-                    "wake_word_output": {
-                        "wake_word_phrase": wake_word_phrase,
-                        "wake_word_audio_ms": wake_word_audio_ms,
-                    }
-                },
+                {"wake_word_output": wake_word_output},
             )
         )
         return accepted
@@ -1144,21 +1370,43 @@ class _DefaultPipelineProcessor:
 
     async def async_execute(self, request: _PipelineProcessorRequest) -> None:
         """Run the configured default pipeline stages."""
+        try:
+            await self._async_execute(request)
+        finally:
+            if self._audio_run is not None:
+                await self._audio_run.async_close()
+                self._audio_run = None
+
+    async def _async_execute(self, request: _PipelineProcessorRequest) -> None:
+        """Run the stages, with whatever watches the audio open over them."""
         current_stage: PipelineStage | None = self.host.start_stage
         stt_audio_buffer: list[EnhancedAudioChunk] = []
         stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
         stt_stream = request.stt_stream
 
-        if (
-            (stt_stream is not None)
-            and (request.wake_word_audio_ms is not None)
-            and (current_stage == PipelineStage.STT)
-        ):
-            # Whole chunks only, since the partial chunk at the end is dropped
-            stt_stream = _skip_audio(
-                stt_stream,
-                (request.wake_word_audio_ms // MS_PER_CHUNK) * BYTES_PER_CHUNK,
-            )
+        wake_word_verdict: (
+            voice_support.WakeWordAccepted | voice_support.WakeWordRejected | None
+        ) = None
+        wake_word_audio_ms = request.wake_word_audio_ms
+
+        if (stt_stream is not None) and (current_stage == PipelineStage.STT):
+            self._audio_run = await self._async_start_audio_run(request)
+
+            if (self._audio_run is not None) or (wake_word_audio_ms is not None):
+                run_audio = _RunAudio(stt_stream, self._audio_run)
+
+                if (self._audio_run is not None) and (
+                    request.wake_word_phrase is not None
+                ):
+                    wake_word_verdict = await self._async_wake_word(
+                        run_audio, self._audio_run, request.wake_word_phrase
+                    )
+                    if isinstance(wake_word_verdict, voice_support.WakeWordAccepted):
+                        # Something that found the wake word knows where it
+                        # ends better than the threshold a device crossed.
+                        wake_word_audio_ms = wake_word_verdict.wake_word_audio_ms
+
+                stt_stream = run_audio.async_stream(wake_word_audio_ms or 0)
 
         if stt_stream is not None:
             if self.host.audio_settings.needs_processor:
@@ -1190,9 +1438,11 @@ class _DefaultPipelineProcessor:
             if (self.host.start_stage == PipelineStage.STT) and (
                 request.wake_word_phrase is not None
             ):
-                if request.wake_word_audio_ms is not None:
+                if wake_word_audio_ms is not None:
                     if not self._accept_wake_word_audio(
-                        request.wake_word_phrase, request.wake_word_audio_ms
+                        request.wake_word_phrase,
+                        wake_word_audio_ms,
+                        wake_word_verdict,
                     ):
                         self.cleanup()
                         return
