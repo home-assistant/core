@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_mock_signal
 
+from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_USER
 from homeassistant.components.cast import DOMAIN, CastRuntimeData, home_assistant_cast
 from homeassistant.components.cast.const import SIGNAL_HASS_CAST_SHOW_VIEW
 from homeassistant.components.cast.services import async_setup_services
@@ -144,6 +145,37 @@ async def test_remove_entry(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_remove(entry.entry_id)
     assert not await hass.auth.async_get_user(user_id)
+
+
+async def test_user_is_not_admin(hass: HomeAssistant) -> None:
+    """Test the Home Assistant Cast user is created without admin rights."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    await home_assistant_cast.async_setup_ha_cast(hass, entry)
+
+    user = await hass.auth.async_get_user(entry.data["user_id"])
+    assert user is not None
+    assert user.system_generated
+    assert not user.is_admin
+    assert [group.id for group in user.groups] == [GROUP_ID_USER]
+
+
+async def test_existing_admin_user_is_demoted(hass: HomeAssistant) -> None:
+    """Test an existing admin Home Assistant Cast user loses admin rights."""
+    user = await hass.auth.async_create_system_user(
+        home_assistant_cast.CAST_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+    )
+    assert user.is_admin
+    entry = MockConfigEntry(domain=DOMAIN, data={"user_id": user.id})
+    entry.add_to_hass(hass)
+
+    await home_assistant_cast.async_setup_ha_cast(hass, entry)
+
+    user = await hass.auth.async_get_user(user.id)
+    assert user is not None
+    assert not user.is_admin
+    assert [group.id for group in user.groups] == [GROUP_ID_USER]
 
 
 async def test_service_show_view_not_loaded(hass: HomeAssistant) -> None:
