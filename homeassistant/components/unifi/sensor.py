@@ -1051,6 +1051,8 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             or self.native_value is None
             or self._value_accepted_at is None
             or now - self._value_accepted_at >= interval
+            # The clock was set back
+            or now < self._value_accepted_at
             or self._async_immediate_change(value)
         ):
             self._value_accepted_at = now

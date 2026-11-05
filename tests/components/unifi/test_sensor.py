@@ -1515,6 +1515,11 @@ async def test_device_system_stats_update_interval(
     await send("33.3", "37.7")
     assert_states("33.3", "35.5")
 
+    # A clock set back does not hold values until it catches up
+    freezer.tick(-timedelta(hours=1))
+    await send("34.4", "38.8")
+    assert_states("34.4", "38.8")
+
     # Unavailable is shown at once, and so is the first value afterwards
     await send(12.2, 38.8, disabled=True)
     assert_states(STATE_UNAVAILABLE, STATE_UNAVAILABLE)
