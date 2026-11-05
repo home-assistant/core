@@ -118,7 +118,10 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): bool,
                     probatio.Optional(
                         CONF_CA_CERTIFICATES,
-                        default=user_input.get(CONF_CA_CERTIFICATES, ""),
+                        default="",
+                        description={
+                            "suggested_value": user_input.get(CONF_CA_CERTIFICATES, "")
+                        },
                     ): TextSelector(TextSelectorConfig(multiline=True)),
                 }
             ),
