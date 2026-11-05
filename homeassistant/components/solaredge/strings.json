@@ -16,6 +16,13 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "SolarEdge retired site API keys. Reconnect site {site_id} with a Site Access OAuth application.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "reconfigure": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -61,13 +68,6 @@
           }
         },
         "title": "Set up your SolarEdge integration"
-      },
-      "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
-      },
-      "reauth_confirm": {
-        "description": "SolarEdge retired site API keys. Reconnect site {site_id} with a Site Access OAuth application.",
-        "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
   },
@@ -81,9 +81,6 @@
       },
       "battery_discharge_energy": {
         "name": "Discharge energy today"
-      },
-      "battery_power": {
-        "name": "Power"
       },
       "battery_state_of_charge": {
         "name": "State of charge"
@@ -183,20 +180,20 @@
     "missing_data": {
       "message": "Missing {service} data, skipping update"
     },
-    "monthly_credit_limit": {
-      "message": "The SolarEdge Developer Platform monthly API credit limit has been reached."
-    },
     "missing_details": {
       "message": "Missing details data in SolarEdge response"
     },
-    "site_not_active": {
-      "message": "The SolarEdge site is not active"
+    "monthly_credit_limit": {
+      "message": "The SolarEdge Developer Platform monthly API credit limit has been reached."
     },
     "oauth_migration_required": {
       "message": "Reconnect SolarEdge to migrate this site from the retired API key to OAuth."
     },
     "rate_limit": {
       "message": "The SolarEdge Developer Platform per-minute API limit has been reached."
+    },
+    "site_not_active": {
+      "message": "The SolarEdge site is not active"
     }
   }
 }

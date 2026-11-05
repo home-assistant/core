@@ -140,7 +140,7 @@ class SolarEdgeConfigFlow(
             return self.async_show_form(
                 step_id="reauth_confirm",
                 description_placeholders={
-                    CONF_SITE_ID: self._get_reauth_entry().data[CONF_SITE_ID]
+                    "site_id": self._get_reauth_entry().data[CONF_SITE_ID]
                 },
             )
         async_register_pending_oauth_flow(
@@ -203,7 +203,7 @@ class SolarEdgeConfigFlow(
                 schema, user_input or suggested
             ),
             errors=errors,
-            description_placeholders={CONF_SITE_ID: entry.data[CONF_SITE_ID]},
+            description_placeholders={"site_id": entry.data[CONF_SITE_ID]},
         )
 
     @override

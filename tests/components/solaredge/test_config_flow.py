@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
@@ -15,7 +16,7 @@ from homeassistant.components.solaredge.const import (
     OAUTH2_CALLBACK_PATH,
     OAUTH2_TOKEN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -55,12 +56,12 @@ async def _complete_oauth(
     return await hass.config_entries.flow.async_configure(flow_id)
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     mock_setup_entry: AsyncMock,
     solaredge_api: AsyncMock,
@@ -93,12 +94,12 @@ async def test_full_flow(
     assert aioclient_mock.mock_calls[-1][2]["code_verifier"]
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_site_not_active(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     mock_setup_entry: AsyncMock,
     solaredge_api: AsyncMock,
@@ -124,11 +125,11 @@ async def test_site_not_active(
     assert result["reason"] == "site_not_active"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_callback_requires_authorizing_browser(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    current_request_with_host: None,
     setup_credentials: None,
 ) -> None:
     """Test a callback cannot consume a flow started in another browser."""
@@ -152,12 +153,12 @@ async def test_callback_requires_authorizing_browser(
     assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_invalid_code_does_not_consume_pending_flow(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
 ) -> None:
     """Test a rejected code can be retried without restarting the flow."""
@@ -181,12 +182,12 @@ async def test_invalid_code_does_not_consume_pending_flow(
     assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_migrates_api_key_entry(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     mock_setup_entry: AsyncMock,
     solaredge_api: AsyncMock,
@@ -240,13 +241,7 @@ async def test_reconfigure_keeps_oauth_token(
         version=2,
     )
     entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-    )
+    result = await entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"

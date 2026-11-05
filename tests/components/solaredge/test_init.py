@@ -7,7 +7,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.solaredge import async_setup_entry
 from homeassistant.components.solaredge.api import (
     SolarEdgeConnectionError,
     SolarEdgeRateLimitError,
@@ -16,7 +15,6 @@ from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import setup_integration
 from .conftest import PASSWORD, SITE_ID, TOKEN, USERNAME
@@ -145,6 +143,7 @@ async def test_api_key_config_not_ready(
 
 
 async def test_rate_limit_retry_after_is_preserved(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     solaredge_api: Mock,
@@ -153,11 +152,13 @@ async def test_rate_limit_retry_after_is_preserved(
     solaredge_api.get_details.side_effect = SolarEdgeRateLimitError(
         retry_after=120, monthly_limit=False
     )
+    mock_config_entry.add_to_hass(hass)
 
-    with pytest.raises(ConfigEntryNotReady) as exc_info:
-        await async_setup_entry(hass, mock_config_entry)
+    with patch("homeassistant.config_entries.async_call_later") as mock_call:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert exc_info.value.retry_after == 120
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert int(mock_call.call_args.args[1]) == 120
 
 
 async def test_web_login_config_not_ready(
