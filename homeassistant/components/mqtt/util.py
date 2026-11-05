@@ -337,6 +337,19 @@ def valid_publish_topic(topic: Any) -> str:
     return validated_topic
 
 
+def valid_encoding(value: Any) -> str:
+    """Validate a payload encoding, an empty string passes the raw payload."""
+    encoding = cv.string(value)
+    if not encoding:
+        return encoding
+    # An empty string skips the codec lookup, so encode a character
+    try:
+        "a".encode(encoding)
+    except LookupError as err:
+        raise probatio.Invalid(f"Unknown payload encoding '{encoding}'") from err
+    return encoding
+
+
 def entity_category_without_config(value: Any) -> EntityCategory:
     """Validate the entity category of a platform not supporting `CONFIG`.
 
