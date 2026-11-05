@@ -12,7 +12,11 @@ from aiontfy.exceptions import (
     NtfyTimeoutError,
 )
 
-from homeassistant.components.event import EventEntity, EventEntityDescription
+from homeassistant.components.event import (
+    DOMAIN as EVENT_DOMAIN,
+    EventEntity,
+    EventEntityDescription,
+)
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -35,10 +39,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up the event platform."""
 
+    # Entities disabled while the entry was not loaded didn't delete their issue
+    for entity_entry in er.async_entries_for_config_entry(
+        er.async_get(hass), config_entry.entry_id
+    ):
+        if (
+            entity_entry.domain == EVENT_DOMAIN
+            and entity_entry.disabled
+            and entity_entry.config_subentry_id is not None
+        ):
+            ir.async_delete_issue(
+                hass,
+                DOMAIN,
+                _topic_protected_issue_id(
+                    config_entry.entry_id, entity_entry.config_subentry_id
+                ),
+            )
+
     for subentry_id, subentry in config_entry.subentries.items():
         async_add_entities(
             [NtfyEventEntity(config_entry, subentry)], config_subentry_id=subentry_id
         )
+
+
+def _topic_protected_issue_id(entry_id: str, subentry_id: str) -> str:
+    """Return the id of the protected topic issue of a topic subentry."""
+    return f"topic_protected_{entry_id}_{subentry_id}"
 
 
 class NtfyEventEntity(NtfyBaseEntity, EventEntity):
@@ -59,8 +85,8 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
         """Initialize the entity."""
         super().__init__(config_entry, subentry)
         self._ws: asyncio.Task | None = None
-        self._topic_protected_issue_id = (
-            f"topic_protected_{config_entry.entry_id}_{subentry.subentry_id}"
+        self._topic_protected_issue_id = _topic_protected_issue_id(
+            config_entry.entry_id, subentry.subentry_id
         )
 
     @callback

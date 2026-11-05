@@ -575,3 +575,47 @@ async def test_event_topic_protected_issue_ignore_kept_on_reload(
     assert issue.config_subentry_id == "ABCDEF"
     assert issue.dismissed_version is not None
     assert mock_aiontfy.subscribe.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "disable_entity",
+    [
+        pytest.param(_disable_entity, id="entity_disabled"),
+        pytest.param(_disable_device, id="device_disabled"),
+    ],
+)
+async def test_event_topic_protected_issue_deleted_on_disable_while_entry_disabled(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    disable_entity: Callable[[HomeAssistant], Coroutine[None, None, None]],
+) -> None:
+    """Test the issue is deleted if the entity is disabled while the entry is."""
+    mock_aiontfy.subscribe.side_effect = NtfyForbiddenError(403, 403, "forbidden")
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_set_disabled_by(
+        config_entry.entry_id, ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
+
+    await disable_entity(hass)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
+
+    assert await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("event.mytopic") is None
+    assert not issue_registry.async_get_issue(DOMAIN, TOPIC_PROTECTED_ISSUE_ID)
