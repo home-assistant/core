@@ -6,15 +6,26 @@ from pysmartyplants import Sensor
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, MANUFACTURER, MODEL
+from .const import DOMAIN, MANUFACTURER, MODEL, STALE_AFTER
 from .coordinator import SmartyPlantsCoordinator
+
+
+def is_stale(sensor: Sensor) -> bool:
+    """Return True when the last reading is too old to describe the plant."""
+    if sensor.last_data_received is None:
+        return True
+    return dt_util.utcnow() - sensor.last_data_received > STALE_AFTER
 
 
 class SmartyPlantsEntity(CoordinatorEntity[SmartyPlantsCoordinator]):
     """Common device wiring for every SmartyPlants entity."""
 
     _attr_has_entity_name = True
+    # Cleared by the entities that report on the sensor itself, which have to
+    # keep answering once it goes offline.
+    _requires_online = True
 
     def __init__(self, coordinator: SmartyPlantsCoordinator, sensor_id: str) -> None:
         """Bind this entity to one physical sensor."""
@@ -41,8 +52,6 @@ class SmartyPlantsEntity(CoordinatorEntity[SmartyPlantsCoordinator]):
     @override
     def available(self) -> bool:
         """Report unavailable once the sensor stops reporting."""
-        return (
-            super().available
-            and self._sensor_id in self.coordinator.data
-            and self.sensor.is_online
-        )
+        if not super().available or self._sensor_id not in self.coordinator.data:
+            return False
+        return self.sensor.is_online or not self._requires_online
