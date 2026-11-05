@@ -11,6 +11,10 @@ DOMAIN: Final = "smartyplants"
 # 304, so a poll that finds nothing new is cheap.
 DEFAULT_SCAN_INTERVAL: Final = timedelta(minutes=1)
 
+# The sensors wake hourly, so three missed reports mean the readings no
+# longer describe the plant even while the backend still calls it online.
+STALE_AFTER: Final = timedelta(hours=3)
+
 CONF_WEBHOOK_SECRET: Final = "webhook_secret"
 
 SIGNATURE_HEADER: Final = "X-Smartyplants-Signature"

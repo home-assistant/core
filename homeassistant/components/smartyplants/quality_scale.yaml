@@ -82,10 +82,10 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
-    status: exempt
+    status: done
     comment: |
-      Every entity is a distinct measurement of the plant's condition, so none
-      of them is noise that should start out disabled.
+      The last reported timestamp starts disabled. Every other entity is a
+      distinct measurement of the plant's condition.
   entity-translations: done
   exception-translations: done
   icon-translations: done
