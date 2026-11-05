@@ -116,7 +116,6 @@ def _patch_fritz_connection(fc_class_mock: MagicMock) -> Generator[None]:
                 **MOCK_USER_INPUT_SIMPLE,
                 CONF_SSL: True,
                 CONF_FEATURE_DEVICE_TRACKING: False,
-                CONF_ALLOW_MESH_INFO_NON_ADMIN: DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
             },
             {
                 CONF_HOST: "fake_host",

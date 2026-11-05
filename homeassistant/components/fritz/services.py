@@ -1,10 +1,7 @@
 """Services for Fritz integration."""
 
-<<<<<<< HEAD
 from enum import StrEnum
-=======
 from typing import cast
->>>>>>> 3e598991084 (next round of rebase improvements for review comments)
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
@@ -23,7 +20,11 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_get_device_and_config_entry,
@@ -33,6 +34,7 @@ from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import (
     CONF_ALLOW_MESH_INFO_NON_ADMIN,
+    DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
     DOMAIN,
     FRITZ_EXCEPTIONS,
     LOGGER,
@@ -46,6 +48,7 @@ class FritzService(StrEnum):
 
     SET_GUEST_WIFI_PASSWORD = "set_guest_wifi_password"
     DIAL = "dial"
+    GET_MESH_INFO = "get_mesh_info"
 
 
 class FritzServiceArgument(StrEnum):
@@ -76,10 +79,9 @@ SERVICE_SCHEMA_DIAL = probatio.Schema(
     }
 )
 
-SERVICE_GET_MESH_INFO = "get_mesh_info"
 SERVICE_SCHEMA_GET_MESH_INFO = probatio.Schema(
     {
-        probatio.Required("device_id"): str,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): str,
     }
 )
 
@@ -169,31 +171,25 @@ async def _async_get_mesh_info(service_call: ServiceCall) -> ServiceResponse:
     _, target_entry = async_get_device_and_config_entry(
         service_call.hass, DOMAIN, service_call.data["device_id"]
     )
-
+    hass = service_call.hass
     user_id = service_call.context.user_id
-    if user_id is None:
-        is_admin = True
+    if user_id is not None:
+        user = await hass.auth.async_get_user(user_id)
+        is_admin = user is not None and user.is_admin
     else:
-        is_admin = False
-        user = await service_call.hass.auth.async_get_user(user_id)
-        if user is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="service_mesh_info_not_permitted",
-            )
-        is_admin = user.is_admin
+        is_admin = True
+    allow_non_admin = target_entry.options.get(
+        CONF_ALLOW_MESH_INFO_NON_ADMIN, DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN
+    )
 
-    if not is_admin and not target_entry.options.get(
-        CONF_ALLOW_MESH_INFO_NON_ADMIN, False
-    ):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="service_mesh_info_not_permitted",
+    if not is_admin and not allow_non_admin:
+        raise Unauthorized(
+            context=service_call.context,
+            permission="call_service",
+            user_id=service_call.context.user_id,
         )
 
     avm_wrapper = target_entry.runtime_data
-    hass = service_call.hass
-
     if avm_wrapper.mesh_role == MeshRoles.SLAVE:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -262,10 +258,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN, FritzService.DIAL, _async_dial, SERVICE_SCHEMA_DIAL
     )
-    hass.services.async_register(DOMAIN, SERVICE_DIAL, _async_dial, SERVICE_SCHEMA_DIAL)
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_MESH_INFO,
+        FritzService.GET_MESH_INFO,
         _async_get_mesh_info,
         SERVICE_SCHEMA_GET_MESH_INFO,
         supports_response=SupportsResponse.ONLY,

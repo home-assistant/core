@@ -242,7 +242,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
         self._use_tls = user_input[CONF_SSL]
         self._feature_device_discovery = user_input[CONF_FEATURE_DEVICE_TRACKING]
-        self._allow_mesh_info_non_admin = user_input[CONF_ALLOW_MESH_INFO_NON_ADMIN]
         self._port = self._determine_port(user_input)
 
         error = await self.async_fritz_tools_init()
@@ -277,10 +276,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_FEATURE_DEVICE_TRACKING,
                         default=DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
                     ): bool,
-                    probatio.Required(
-                        CONF_ALLOW_MESH_INFO_NON_ADMIN,
-                        default=DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
-                    ): bool,
                 }
             ),
             errors=errors or {},
@@ -308,10 +303,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_FEATURE_DEVICE_TRACKING,
                         default=DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
                     ): bool,
-                    probatio.Required(
-                        CONF_ALLOW_MESH_INFO_NON_ADMIN,
-                        default=DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
-                    ): bool,
                 }
             ),
             description_placeholders={"name": self._name},
@@ -330,7 +321,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
         self._use_tls = user_input[CONF_SSL]
         self._feature_device_discovery = user_input[CONF_FEATURE_DEVICE_TRACKING]
-        self._allow_mesh_info_non_admin = user_input[CONF_ALLOW_MESH_INFO_NON_ADMIN]
         self._port = self._determine_port(user_input)
 
         if not (error := await self.async_fritz_tools_init()):
