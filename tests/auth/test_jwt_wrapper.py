@@ -18,6 +18,8 @@ async def test_reject_access_token_with_impossible_large_size() -> None:
 
 async def test_verify_and_decode_with_cached_key() -> None:
     """Test a valid HMAC key keeps working once its check is cached."""
+    prepare_key = jwt_wrapper._HMACAlgorithmWithKeyCache.prepare_key
+    prepare_key.cache_clear()
     for _ in range(2):
         assert (
             jwt_wrapper.verify_and_decode(
@@ -25,6 +27,8 @@ async def test_verify_and_decode_with_cached_key() -> None:
             )
             == CLAIMS
         )
+    assert prepare_key.cache_info().misses == 1
+    assert prepare_key.cache_info().hits == 1
 
 
 @pytest.mark.parametrize(
