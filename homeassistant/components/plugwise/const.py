@@ -49,38 +49,38 @@ ZEROCONF_MAP: Final[dict[str, str]] = {
 
 type BinarySensorType = Literal["dhw_state"]
 
-type PresetTemperatureType = Literal[
-    "home_preset_temperature",
+type NumberDataType = Literal[
     "asleep_preset_temperature",
     "away_preset_temperature",
-    "vacation_preset_temperature",
+    "boiler_temperature",
+    "dhw_temperature",
+    "home_preset_temperature",
     "no_frost_preset_temperature",
+    "temperature_offset",
+    "vacation_preset_temperature",
+]
+
+type PresetTemperatureType = Literal[
+    "asleep_preset_temperature",
+    "away_preset_temperature",
+    "home_preset_temperature",
+    "no_frost_preset_temperature",
+    "vacation_preset_temperature",
 ]
 PRESET_TEMPERATURE_KEYS: Final[tuple[PresetTemperatureType, ...]] = get_args(
     PresetTemperatureType.__value__
 )
+
 type PresetCoolingTemperatureType = Literal[
-    "home_preset_cooling_temperature",
     "asleep_preset_cooling_temperature",
     "away_preset_cooling_temperature",
-    "vacation_preset_cooling_temperature",
+    "home_preset_cooling_temperature",
     "no_frost_preset_cooling_temperature",
+    "vacation_preset_cooling_temperature",
 ]
 PRESET_COOLING_TEMPERATURE_KEYS: Final[tuple[PresetCoolingTemperatureType, ...]] = (
     get_args(PresetCoolingTemperatureType.__value__)
 )
-type SetpointType = Literal["setpoint", "setpoint_low", "setpoint_high"]
-
-type NumberDataType = Literal[
-    "boiler_temperature",
-    "dhw_temperature",
-    "temperature_offset",
-    "home_preset_temperature",
-    "asleep_preset_temperature",
-    "away_preset_temperature",
-    "vacation_preset_temperature",
-    "no_frost_preset_temperature",
-]
 type NumberType = NumberDataType | PresetCoolingTemperatureType
 
 type SelectType = Literal[
@@ -98,6 +98,9 @@ type SelectOptionsType = Literal[
     "regulation_modes",
     "zone_profiles",
 ]
+
+type SetpointType = Literal["setpoint", "setpoint_high", "setpoint_low"]
+
 type WaterHeaterType = Literal["dhw_temperature"]
 
 # Default directives
