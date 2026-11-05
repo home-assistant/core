@@ -28,13 +28,15 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.izone.climate import ATTR_CONTROL_ZONE_SOURCE
-from homeassistant.components.izone.const import ATTR_AIRFLOW, DOMAIN
+from homeassistant.components.izone.const import DOMAIN
 from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
-from homeassistant.components.izone.services import (
-    IZONE_SERVICE_AIRFLOW_MAX,
-    IZONE_SERVICE_AIRFLOW_MIN,
+from homeassistant.components.izone.services import IZoneService, IZoneServiceArgument
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.device_registry as dr
@@ -930,10 +932,10 @@ async def test_command_connection_error_recovers_on_coordinator_refresh(
 @pytest.mark.parametrize(
     ("service", "airflow"),
     [
-        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 41, id="min-int"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 41, id="max-int"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 40.9, id="min-float"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 40.9, id="max-float"),
+        pytest.param(IZoneService.AIRFLOW_MIN, 41, id="min-int"),
+        pytest.param(IZoneService.AIRFLOW_MAX, 41, id="max-int"),
+        pytest.param(IZoneService.AIRFLOW_MIN, 40.9, id="min-float"),
+        pytest.param(IZoneService.AIRFLOW_MAX, 40.9, id="max-float"),
     ],
 )
 async def test_airflow_rejects_non_multiples_of_five(
@@ -947,9 +949,42 @@ async def test_airflow_rejects_non_multiples_of_five(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ZONE_ENTITY, ATTR_AIRFLOW: airflow},
+            {
+                CommonServiceArgument.ENTITY_ID: ZONE_ENTITY,
+                IZoneServiceArgument.AIRFLOW: airflow,
+            },
             blocking=True,
         )
 
+    mock_zones[0].set_airflow_min.assert_not_called()
+    mock_zones[0].set_airflow_max.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "service",
+    [
+        pytest.param(IZoneService.AIRFLOW_MIN, id="min"),
+        pytest.param(IZoneService.AIRFLOW_MAX, id="max"),
+    ],
+)
+async def test_airflow_rejects_controller(
+    hass: HomeAssistant,
+    mock_zones: list[Mock],
+    service: str,
+) -> None:
+    """Airflow services reject the controller entity."""
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                CommonServiceArgument.ENTITY_ID: CONTROLLER_ENTITY,
+                IZoneServiceArgument.AIRFLOW: 40,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "airflow_zone_only"
     mock_zones[0].set_airflow_min.assert_not_called()
     mock_zones[0].set_airflow_max.assert_not_called()

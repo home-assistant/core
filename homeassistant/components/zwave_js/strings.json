@@ -464,6 +464,9 @@
     "no_available_user_slots": {
       "message": "No available user slots on this device"
     },
+    "no_entities_found": {
+      "message": "None of the given entities are Z-Wave entities."
+    },
     "no_nodes_found": {
       "message": "No Z-Wave devices found for the given targets."
     },

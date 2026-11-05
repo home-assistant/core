@@ -8,7 +8,6 @@ from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeni
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -26,7 +25,7 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
 )
 
-from . import _create_client, _validate_api_key
+from . import OVHcloudAIEndpointsConfigEntry, _create_client, _validate_api_key
 from .const import DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +45,7 @@ class OVHcloudAIEndpointsConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: OVHcloudAIEndpointsConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {"conversation": ConversationFlowHandler}

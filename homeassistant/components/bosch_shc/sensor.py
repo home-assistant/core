@@ -154,6 +154,7 @@ _WALLTHERMOSTAT_HUMIDITY_DESCRIPTION: SHCSensorEntityDescription[SHCWallThermost
     SHCSensorEntityDescription(
         key=HUMIDITY_SENSOR,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda device: device.humidity,
     )
@@ -181,6 +182,7 @@ _TWINGUARD_HUMIDITY_DESCRIPTION: SHCSensorEntityDescription[SHCTwinguard] = (
     SHCSensorEntityDescription(
         key=HUMIDITY_SENSOR,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda device: device.humidity,
     )
