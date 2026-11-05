@@ -96,8 +96,9 @@ def async_handle_source_entity_changes(
         if "device_id" not in data["changes"]:
             return
 
-        if source_device_id is not None and not device_registry.async_get(
-            source_device_id
+        if (
+            source_device_id is not None
+            and device_registry.async_get(source_device_id) is None
         ):
             source_device_id = None
 
@@ -111,7 +112,8 @@ def async_handle_source_entity_changes(
             return
 
         # The source entity has been moved to a different device; relink the helper
-        # entities to the new device.
+        # The source entity was added to, moved to or removed from a device.
+        # Relink the helper entities accordingly.
         for helper_entity in entity_registry.entities.get_entries_for_config_entry_id(
             helper_config_entry_id
         ):
