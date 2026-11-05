@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+import logging
 from typing import Any, cast, override
 
 from pysmartthings import (
@@ -36,6 +37,8 @@ from homeassistant.util.percentage import (
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
 from .entity import SmartThingsEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 CAPABILITIES = (
     Capability.SWITCH_LEVEL,
@@ -322,6 +325,12 @@ class SmartThingsLamp(SmartThingsEntity, LightEntity):
             and Capability.SAMSUNG_CE_CONNECTION_STATE in device.status[component]
             and Capability.EXECUTE in device.status[MAIN]
         )
+        if self._use_execute:
+            _LOGGER.debug(
+                "Controlling the hood lamp of %s through execute on %s",
+                device.device.device_id,
+                MAIN,
+            )
         color_modes = set()
         if self._use_execute:
             color_modes.add(ColorMode.ONOFF)

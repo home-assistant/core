@@ -1,5 +1,6 @@
 """Test for the SmartThings light platform."""
 
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, call
 
@@ -594,10 +595,16 @@ async def test_cooktop_hood_lamp(
     mock_config_entry: MockConfigEntry,
     service: str,
     option: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the lamp of a hood paired with a cooktop uses the execute capability."""
     connect_cooktop_hood(devices)
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.smartthings")
     await setup_integration(hass, mock_config_entry)
+    assert (
+        "Controlling the hood lamp of 5c202ad1-d112-d746-50b8-bd76a554b362 "
+        "through execute on main" in caplog.text
+    )
 
     state = hass.states.get("light.table_de_cuisson_light")
     assert state.state == STATE_OFF
