@@ -226,6 +226,10 @@ async def test_form_exceptions(
     ("exception", "reason"),
     [
         (
+            ProxmoxAuthError("Invalid credentials"),
+            "invalid_auth",
+        ),
+        (
             ProxmoxAPIError(404, "status_message", "nodes/pve1/qemu"),
             "no_vmlxc_found",
         ),
