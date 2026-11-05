@@ -38,6 +38,25 @@ CONFIG = {
 }
 
 
+def _create_options_entry() -> MockConfigEntry:
+    """Create a config entry with an API key date and options."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="40.30403754--3.72935236",
+        data={
+            CONF_API_KEY: "foo",
+            CONF_API_KEY_DATE: "2021-01-01",
+            CONF_LATITUDE: 40.30403754,
+            CONF_LONGITUDE: -3.72935236,
+        },
+        options={
+            CONF_API_KEY_REMINDER: True,
+            CONF_RADAR_UPDATES: False,
+            CONF_STATION_UPDATES: True,
+        },
+    )
+
+
 async def test_form(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -149,6 +168,172 @@ async def test_form_options(
         await hass.async_block_till_done()
 
         assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("api_key_input", "date_input", "expected_key", "expected_date"),
+    [
+        ("foo", "2021-01-01", "foo", "2021-01-01"),
+        ("new-key", "2021-01-01", "new-key", "2021-02-01"),
+        ("new-key", "2021-01-15", "new-key", "2021-01-15"),
+        (None, "", "foo", "2021-01-01"),
+    ],
+)
+async def test_options_api_key_and_date(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    api_key_input: str | None,
+    date_input: str,
+    expected_key: str,
+    expected_date: str,
+) -> None:
+    """Test API key and generation date handling in the options flow."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2021-02-01 12:00:00+00:00")
+    entry = _create_options_entry()
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.aemet.AEMET.api_call",
+        side_effect=mock_api_call,
+    ):
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        user_input = {
+            CONF_API_KEY_REMINDER: True,
+            CONF_RADAR_UPDATES: False,
+            CONF_STATION_UPDATES: True,
+            CONF_API_KEY_DATE: date_input,
+        }
+        if api_key_input is not None:
+            user_input[CONF_API_KEY] = api_key_input
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.data[CONF_API_KEY] == expected_key
+    assert entry.data[CONF_API_KEY_DATE] == expected_date
+    assert entry.options == {
+        CONF_API_KEY_REMINDER: True,
+        CONF_RADAR_UPDATES: False,
+        CONF_STATION_UPDATES: True,
+    }
+
+
+async def test_options_invalid_api_key(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an invalid API key does not update the config entry."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2021-02-01 12:00:00+00:00")
+    entry = _create_options_entry()
+    entry.add_to_hass(hass)
+
+    mocked_aemet = MagicMock()
+    mocked_aemet.select_coordinates.side_effect = AuthError
+
+    with patch(
+        "homeassistant.components.aemet.config_flow.AEMET",
+        return_value=mocked_aemet,
+    ):
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "invalid-key",
+                CONF_API_KEY_DATE: "2021-01-01",
+                CONF_API_KEY_REMINDER: True,
+                CONF_RADAR_UPDATES: False,
+                CONF_STATION_UPDATES: True,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_api_key"}
+    assert entry.data[CONF_API_KEY] == "foo"
+    assert entry.data[CONF_API_KEY_DATE] == "2021-01-01"
+    assert entry.options == {
+        CONF_API_KEY_REMINDER: True,
+        CONF_RADAR_UPDATES: False,
+        CONF_STATION_UPDATES: True,
+    }
+
+    with patch(
+        "homeassistant.components.aemet.AEMET.api_call",
+        side_effect=mock_api_call,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "new-key",
+                CONF_API_KEY_DATE: "2021-01-15",
+                CONF_API_KEY_REMINDER: True,
+                CONF_RADAR_UPDATES: False,
+                CONF_STATION_UPDATES: True,
+            },
+        )
+
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.data[CONF_API_KEY] == "new-key"
+    assert entry.data[CONF_API_KEY_DATE] == "2021-01-15"
+
+
+async def test_options_invalid_future_date(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a future generation date does not update the config entry."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2021-02-01 12:00:00+00:00")
+    entry = _create_options_entry()
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY_DATE: "2021-02-02",
+            CONF_API_KEY_REMINDER: True,
+            CONF_RADAR_UPDATES: False,
+            CONF_STATION_UPDATES: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_API_KEY_DATE: "invalid_date"}
+    assert entry.data[CONF_API_KEY] == "foo"
+    assert entry.data[CONF_API_KEY_DATE] == "2021-01-01"
+    assert entry.options == {
+        CONF_API_KEY_REMINDER: True,
+        CONF_RADAR_UPDATES: False,
+        CONF_STATION_UPDATES: True,
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY_DATE: "2021-01-15",
+            CONF_API_KEY_REMINDER: True,
+            CONF_RADAR_UPDATES: False,
+            CONF_STATION_UPDATES: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.data[CONF_API_KEY] == "foo"
+    assert entry.data[CONF_API_KEY_DATE] == "2021-01-15"
 
 
 async def test_form_duplicated_id(

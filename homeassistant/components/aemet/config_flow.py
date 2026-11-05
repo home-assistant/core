@@ -99,7 +99,7 @@ class AemetOptionsFlow(OptionsFlow):
             ):
                 errors[CONF_API_KEY_DATE] = "invalid_date"
 
-            if new_api_key:
+            if new_api_key and new_api_key != entry.data[CONF_API_KEY]:
                 error = await _async_validate_api_key(
                     self.hass,
                     new_api_key,
@@ -111,7 +111,7 @@ class AemetOptionsFlow(OptionsFlow):
 
             if not errors:
                 data_updates: dict[str, Any] = {}
-                if new_api_key:
+                if new_api_key and new_api_key != entry.data[CONF_API_KEY]:
                     data_updates[CONF_API_KEY] = new_api_key
 
                 existing_issue_date = parse_issue_date(
@@ -122,7 +122,7 @@ class AemetOptionsFlow(OptionsFlow):
                 )
                 issue_date_iso: str | None
 
-                if new_api_key:
+                if new_api_key and new_api_key != entry.data[CONF_API_KEY]:
                     # A new key starts a new validity period. If the date was
                     # not changed, use the date the key was saved instead of
                     # the issue date of the previous key.
