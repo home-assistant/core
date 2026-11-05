@@ -68,7 +68,6 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         self._idle_timeout: int = entry.options.get(
             CONF_IDLE_TIMEOUT, DEFAULT_IDLE_TIMEOUT
         )
-        self._stopped = False
         self._last_weight: float | None = None
         self._last_activity = dt_util.utcnow()
         self._idle_disconnected = False
@@ -91,8 +90,7 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         )
 
     async def async_stop(self) -> None:
-        """Disconnect from the scale and stop connecting to it."""
-        self._stopped = True
+        """Disconnect from the scale."""
         if self._scale.connected:
             await self._scale.disconnect()
 
@@ -122,10 +120,6 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
             self._idle_disconnected = False
         self._last_seen = service_info.time
 
-    def _should_connect(self) -> bool:
-        """Return whether the scale should currently be connected."""
-        return not self._idle_disconnected and not self._stopped
-
     @override
     async def _async_update_data(self) -> None:
         """Fetch data."""
@@ -145,7 +139,8 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
             self._last_seen = MONOTONIC_TIME()
             await self._scale.disconnect()
 
-        if not self._should_connect():
+        # waiting for the scale to turn off and on again, return
+        if self._idle_disconnected:
             return
 
         # scale is already connected, return
@@ -162,11 +157,6 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
                 ex,
             )
             self._scale.device_disconnected_handler(notify=False)
-            return
-
-        # the entry may have been unloaded while connecting
-        if not self._should_connect():
-            await self._scale.disconnect()
             return
 
         self._last_activity = dt_util.utcnow()
