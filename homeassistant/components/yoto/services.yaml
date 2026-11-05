@@ -18,8 +18,7 @@ set_sleep_timer:
       example: "00:30:00"
       visible:
         field: mode
-        operator: not_eq
-        value: end_of_track
+        value: duration
       selector:
         duration:
 
