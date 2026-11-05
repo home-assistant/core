@@ -203,16 +203,14 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         else:
             hours, remainder = divmod(timer_info.created_seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
-            duration = " ".join(
-                f"{value} {unit}"
-                for value, unit in (
-                    (hours, "hour"),
-                    (minutes, "minute"),
-                    (seconds, "second"),
-                )
-                if value
-            )
-            message = f"{duration} timer finished"
+            parts = []
+            if hours:
+                parts.append(f"{hours} hour")
+            if minutes:
+                parts.append(f"{minutes} minute")
+            if seconds or not parts:
+                parts.append(f"{seconds} second")
+            message = f"{' '.join(parts)} timer finished"
 
         async def announce_message():
             announcement = await self._resolve_announcement_media_id(message, None)

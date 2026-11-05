@@ -23,6 +23,11 @@ from homeassistant.helpers import intent as intent_helper
             "1 hour 30 second timer finished",
         ),
         (
+            {"hours": {"value": 1}},
+            {},
+            "1 hour timer finished",
+        ),
+        (
             {"minutes": {"value": 2}},
             {"name": {"value": "pizza"}},
             "pizza finished",
