@@ -129,4 +129,4 @@ class SonosPollingEntity(SonosEntity):
         try:
             self.poll_state()
         except SonosUpdateError as err:
-            _LOGGER.debug("Could not poll: %s", err)
+            _LOGGER.debug("Could not poll: %s", err.__cause__)

@@ -69,7 +69,7 @@ async def test_selected_domain_never_sets_up_locally(
 ) -> None:
     """Both setup paths are blocked, including YAML, while config entries run remotely."""
     local_setup = Mock(return_value=True)
-    local_entry_setup = AsyncMock(return_value=True)
+    local_entry_setup = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -105,14 +105,14 @@ async def test_unselected_domain_runs_locally(
 ) -> None:
     """Enabling sandbox does not intercept another domain's YAML or config entries."""
     local_setup = AsyncMock(return_value=True)
-    local_entry_setup = AsyncMock(return_value=True)
+    local_entry_setup = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
             "unselected",
             async_setup=local_setup,
             async_setup_entry=local_entry_setup,
-            async_unload_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=None),
         ),
     )
     entry = MockConfigEntry(domain="unselected")
@@ -179,7 +179,7 @@ async def test_remote_failure_does_not_fall_back_to_local(
 ) -> None:
     """A selected entry stays in error when its worker cannot set it up."""
     local_setup = AsyncMock(return_value=True)
-    local_entry_setup = AsyncMock(return_value=True)
+    local_entry_setup = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -203,7 +203,7 @@ async def test_bootstrap_installs_routing_before_selected_domain(
 ) -> None:
     """Normal startup blocks local setup even before any entry has a placement tag."""
     local_setup = AsyncMock(return_value=True)
-    local_entry_setup = AsyncMock(return_value=True)
+    local_entry_setup = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(

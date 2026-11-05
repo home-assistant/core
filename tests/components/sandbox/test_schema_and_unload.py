@@ -460,8 +460,8 @@ async def test_async_unload_falls_through_for_non_sandboxed_entry(
 ) -> None:
     """The router returns None for plain entries — normal unload runs."""
 
-    async def _async_unload_entry(_hass: HomeAssistant, _entry: Any) -> bool:
-        return True
+    async def _async_unload_entry(_hass: HomeAssistant, _entry: Any) -> None:
+        return
 
     mock_integration(
         hass,

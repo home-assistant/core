@@ -129,7 +129,9 @@ IS_CURRENT_SOURCE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.exten
 class MediaPlayerIsCurrentSourceCondition(EntityStateConditionBase):
     """Condition for the media player's selected source."""
 
-    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_INPUT_SOURCE)}
+    _domain_specs = {
+        DOMAIN: DomainSpec(value_source=MediaPlayerEntityStateAttribute.INPUT_SOURCE)
+    }
     _schema = IS_CURRENT_SOURCE_CONDITION_SCHEMA
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
@@ -144,7 +146,8 @@ class MediaPlayerIsCurrentSourceCondition(EntityStateConditionBase):
         """Skip media players that do not expose a source attribute."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ATTR_INPUT_SOURCE) is not None
+            and state.attributes.get(MediaPlayerEntityStateAttribute.INPUT_SOURCE)
+            is not None
         )
 
 

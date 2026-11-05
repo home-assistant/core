@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from pyialarm import IAlarm
+from pyasyncialarm import IAlarm
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.config_entries import ConfigEntry
@@ -47,18 +47,14 @@ class IAlarmDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=SCAN_INTERVAL,
         )
 
-    def _update_data(self) -> None:
-        """Fetch data from iAlarm via sync functions."""
-        status = self.ialarm.get_status()
-        _LOGGER.debug("iAlarm status: %s", status)
-
-        self.state = IALARM_TO_HASS.get(status)
-
     @override
     async def _async_update_data(self) -> None:
         """Fetch data from iAlarm."""
         try:
             async with asyncio.timeout(10):
-                await self.hass.async_add_executor_job(self._update_data)
+                status = await self.ialarm.get_status()
         except ConnectionError as error:
             raise UpdateFailed(error) from error
+        _LOGGER.debug("iAlarm status: %s", status)
+
+        self.state = IALARM_TO_HASS.get(status["status_value"])

@@ -92,6 +92,8 @@ class ToloSelectEntity(ToloSaunaCoordinatorEntity, SelectEntity):
         return self.entity_description.getter(self.coordinator.data.settings)
 
     @override
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Select a select option."""
-        self.entity_description.setter(self.coordinator.client, option)
+        await self._async_send_command(
+            lambda client: self.entity_description.setter(client, option)
+        )

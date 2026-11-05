@@ -81,6 +81,7 @@ class SwitchbotCloudData:
 
     api: SwitchBotAPI
     devices: SwitchbotDevices
+    webhook_registered: bool = False
 
 
 type SwitchbotCloudConfigEntry = ConfigEntry[SwitchbotCloudData]
@@ -395,6 +396,7 @@ async def _initialize_webhook(
 
         # check if webhook is configured in switchbot cloud
 
+        entry.runtime_data.webhook_registered = False
         try:
             check_webhook_result = None
             with contextlib.suppress(Exception):
@@ -429,6 +431,7 @@ async def _initialize_webhook(
                 )
 
             _LOGGER.debug("Registered Switchbot cloud webhook at: %s", webhook_url)
+            entry.runtime_data.webhook_registered = True
         except SwitchBotDeviceOfflineError as e:
             _LOGGER.error("Failed to connect Switchbot cloud device: %s", e)
         except SwitchBotConnectionError as e:

@@ -1,6 +1,6 @@
 """Sandbox proxy for ``calendar`` entities."""
 
-import datetime
+import datetime as dt
 from typing import Any, override
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -8,12 +8,12 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from . import SandboxProxyEntity
 
 
-def _parse_calendar_date(value: Any) -> datetime.date | datetime.datetime | Any:
+def _parse_calendar_date(value: Any) -> dt.date | dt.datetime | Any:
     """Parse an ISO date/datetime string back into a date or datetime."""
     if isinstance(value, str):
         if "T" in value:
-            return datetime.datetime.fromisoformat(value)
-        return datetime.date.fromisoformat(value)
+            return dt.datetime.fromisoformat(value)
+        return dt.date.fromisoformat(value)
     return value
 
 

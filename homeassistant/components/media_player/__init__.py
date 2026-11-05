@@ -465,6 +465,7 @@ async def websocket_search_media(
     query = str(msg.get(ATTR_MEDIA_SEARCH_QUERY))
     media_filter_classes = msg.get(ATTR_MEDIA_FILTER_CLASSES, [])
 
+    player.async_set_context(connection.context(msg))
     try:
         payload = await player.async_internal_search_media(
             query,

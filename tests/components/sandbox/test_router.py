@@ -283,9 +283,8 @@ async def test_component_setup_path_routes_tagged_entries(
 
     local_setup_calls: list[str] = []
 
-    async def _local_setup_entry(hass_: HomeAssistant, entry_: ConfigEntry) -> bool:
+    async def _local_setup_entry(hass_: HomeAssistant, entry_: ConfigEntry) -> None:
         local_setup_calls.append(entry_.entry_id)
-        return True
 
     mock_integration(
         hass,

@@ -12,7 +12,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.blink.const import DOMAIN
 from homeassistant.components.blink.coordinator import SCAN_INTERVAL
-from homeassistant.components.blink.services import SERVICE_SAVE_VIDEO
+from homeassistant.components.blink.services import BlinkService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -78,7 +78,7 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert hass.services.has_service(DOMAIN, SERVICE_SAVE_VIDEO)
+    assert hass.services.has_service(DOMAIN, BlinkService.SAVE_VIDEO)
 
 
 async def test_scheduled_refresh_is_not_forced(

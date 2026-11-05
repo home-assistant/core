@@ -90,11 +90,10 @@ async def test_started_worker_config_and_subentries(
                         "subentry_id": entry.subentries["device"].subentry_id, "subentries": {key: sub.as_dict() for key, sub in entry.subentries.items()}}
             hass.services.async_register("sandbox_runtime_test", "probe", probe, supports_response=SupportsResponse.ONLY)
             await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
-            return True
 
         async def async_unload_entry(hass, entry):
             hass.services.async_remove("sandbox_runtime_test", "probe")
-            return await hass.config_entries.async_unload_platforms(entry, ["sensor"])
+            await hass.config_entries.async_unload_platforms_or_raise(entry, ["sensor"])
     """)
     )
     (integration_dir / "config_flow.py").write_text(

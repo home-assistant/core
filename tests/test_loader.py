@@ -591,6 +591,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
             "version": "1.0.0",
             "quality_scale": "gold",
             "categories": ["lighting.bulbs_lamps", "hubs_protocols"],
+            "connectivity": ["zigbee", "network"],
         },
     )
     assert integration.name == "Philips Hue"
@@ -631,6 +632,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.version == "1.0.0"
     assert integration.quality_scale == "gold"
     assert integration.categories == ["lighting.bulbs_lamps", "hubs_protocols"]
+    assert integration.connectivity == ["zigbee", "network"]
 
     integration = loader.Integration(
         hass,
@@ -656,6 +658,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.version is None
     assert integration.quality_scale == "custom"
     assert integration.categories == []
+    assert integration.connectivity == []
 
     integration = loader.Integration(
         hass,
@@ -887,6 +890,8 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
             {
                 "domain": "sandboxed_custom",
                 "name": "Sandboxed Custom",
+                "categories": ["energy.solar_batteries"],
+                "connectivity": ["cloud"],
                 "config_flow": True,
                 "integration_type": "integration",
                 "iot_class": "cloud_polling",
@@ -898,6 +903,8 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
                 "integration_type": "integration",
                 "iot_class": "cloud_polling",
                 "name": "Sandboxed Custom",
+                "categories": ["energy.solar_batteries"],
+                "connectivity": ["cloud"],
                 "single_config_entry": True,
                 "overwrites_built_in": False,
             },
@@ -915,6 +922,8 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
                 "integration_type": "helper",
                 "iot_class": None,
                 "name": "Sandboxed Helper",
+                "categories": [],
+                "connectivity": [],
                 "single_config_entry": False,
                 "overwrites_built_in": False,
             },
@@ -966,6 +975,63 @@ async def test_sandbox_catalog_does_not_override_on_disk_custom(
         descriptions["custom"]["integration"]["sandboxed_custom"]["name"]
         == "sandboxed_custom"
     )
+
+
+async def test_integration_descriptions_custom_categories(
+    hass: HomeAssistant,
+) -> None:
+    """Test the descriptions give the categories of custom integrations."""
+    custom_components = {
+        domain: loader.Integration(
+            hass,
+            f"custom_components.{domain}",
+            None,
+            {"domain": domain, "name": domain, **manifest},
+        )
+        for domain, manifest in (
+            ("custom_solar", {"categories": ["energy.solar_batteries"]}),
+            ("custom_plain", {}),
+        )
+    }
+
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value=custom_components,
+    ):
+        descriptions = await loader.async_get_integration_descriptions(hass)
+
+    custom = descriptions["custom"]["integration"]
+    assert custom["custom_solar"]["categories"] == ["energy.solar_batteries"]
+    # Without categories it is an empty list, like the built-in integrations
+    assert custom["custom_plain"]["categories"] == []
+
+
+async def test_integration_descriptions_custom_connectivity(
+    hass: HomeAssistant,
+) -> None:
+    """Test the descriptions give the connectivity of custom integrations."""
+    custom_components = {
+        domain: loader.Integration(
+            hass,
+            f"custom_components.{domain}",
+            None,
+            {"domain": domain, "name": domain, **manifest},
+        )
+        for domain, manifest in (
+            ("custom_zigbee", {"connectivity": ["zigbee", "cloud"]}),
+            ("custom_plain", {}),
+        )
+    }
+
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value=custom_components,
+    ):
+        descriptions = await loader.async_get_integration_descriptions(hass)
+
+    custom = descriptions["custom"]["integration"]
+    assert custom["custom_zigbee"]["connectivity"] == ["zigbee", "cloud"]
+    assert custom["custom_plain"]["connectivity"] == []
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")

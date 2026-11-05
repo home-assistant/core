@@ -15,7 +15,7 @@ import pytest
 
 from homeassistant import config_entries as ha_config_entries, loader as ha_loader
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import ConfigEntryError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.util import dt as dt_util
@@ -82,12 +82,12 @@ async def test_entry_setup_calls_integration_setup_entry(
 
     setup_calls: list[ConfigEntry] = []
 
-    async def _async_setup_entry(hass: Any, entry: ConfigEntry) -> bool:
+    async def _async_setup_entry(hass: Any, entry: ConfigEntry) -> None:
         setup_calls.append(entry)
-        return True
 
-    async def _async_unload_entry(_hass: Any, _entry: ConfigEntry) -> bool:
-        return unload_ok
+    async def _async_unload_entry(_hass: Any, _entry: ConfigEntry) -> None:
+        if not unload_ok:
+            raise ConfigEntryError("Cannot unload")
 
     class _DemoFlow(ConfigFlow, domain="demo_setup"):
         VERSION = 1
@@ -195,13 +195,13 @@ async def test_failed_entry_setup_is_retryable(
 
     attempts: list[str] = []
 
-    async def _async_setup_entry(hass: Any, entry: ConfigEntry) -> bool:
+    async def _async_setup_entry(hass: Any, entry: ConfigEntry) -> None:
         attempts.append(entry.entry_id)
-        # Fail the first attempt, succeed the second.
-        return len(attempts) >= 2
+        if len(attempts) == 1:
+            raise ConfigEntryError("First setup failed")
 
-    async def _async_unload_entry(_hass: Any, _entry: ConfigEntry) -> bool:
-        return True
+    async def _async_unload_entry(_hass: Any, _entry: ConfigEntry) -> None:
+        return
 
     class _DemoFlow(ConfigFlow, domain="demo_retry"):
         VERSION = 1
