@@ -2888,7 +2888,12 @@ async def test_mqtt_protocol_failed_migration_to_v5(
         not in caplog.text
     )
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert issue.config_entry_id == entry.entry_id
     assert entry.data.get(mqtt.CONF_PROTOCOL, mqtt.PROTOCOL_311) == current_protocol
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "protocol_5_migration") is None
 
 
 INVALID_SENSOR_1 = {
