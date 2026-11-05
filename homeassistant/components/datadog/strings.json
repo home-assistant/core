@@ -37,11 +37,13 @@
       "init": {
         "data": {
           "prefix": "[%key:component::datadog::config::step::user::data::prefix%]",
-          "rate": "[%key:component::datadog::config::step::user::data::rate%]"
+          "rate": "[%key:component::datadog::config::step::user::data::rate%]",
+          "resend_unchanged": "Resend unchanged states"
         },
         "data_description": {
           "prefix": "[%key:component::datadog::config::step::user::data_description::prefix%]",
-          "rate": "[%key:component::datadog::config::step::user::data_description::rate%]"
+          "rate": "[%key:component::datadog::config::step::user::data_description::rate%]",
+          "resend_unchanged": "Send every entity's current state each minute, even if it hasn't changed, so stable values don't show gaps in Datadog. This sends more data and can increase your Datadog usage."
         },
         "description": "Update the Datadog configuration."
       }
