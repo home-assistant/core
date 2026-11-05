@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 from unittest.mock import patch
 
+from bluetti_modbus_lib import AGGREGATE_SLAVE_ID
 from modbus_connection import ModbusUnit
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
@@ -75,10 +76,14 @@ def mock_modbus_unit(mock_modbus_connection: MockModbusConnection) -> MockModbus
     """A seeded BLUETTI power station on unit ``UNIT_ID``.
 
     Overrides the library plugin's ``mock_modbus_unit`` to preload every
-    register this device type's fields cover.
+    register this device type's fields cover, and the pack summary at the
+    aggregate unit ID.
     """
     unit = mock_modbus_connection.for_unit(UNIT_ID)
     seed_unit(unit)
+    mock_modbus_connection.for_unit(AGGREGATE_SLAVE_ID).load_raw(
+        load_json_object_fixture("balco260_pack_summary_registers.json", DOMAIN)
+    )
     return unit
 
 
