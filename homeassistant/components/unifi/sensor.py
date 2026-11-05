@@ -1053,26 +1053,24 @@ class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             or now - self._value_accepted_at >= interval
             # The clock was set back
             or now < self._value_accepted_at
-            or self._async_immediate_change(value)
+            or (
+                (threshold := self.entity_description.immediate_change) is not None
+                and self._async_immediate_change(value, threshold)
+            )
         ):
             self._value_accepted_at = now
             return True
         return False
 
     @callback
-    def _async_immediate_change(self, value: datetime | float | str) -> bool:
+    def _async_immediate_change(
+        self, value: datetime | float | str, threshold: float
+    ) -> bool:
         """Return True if value differs enough to skip min_update_interval."""
-        threshold = self.entity_description.immediate_change
-        old = self.native_value
-        if (
-            threshold is None
-            or not isinstance(value, (float, int, str))
-            or not isinstance(old, (float, int, str))
-        ):
-            return False
-        # UniFi reports CPU and memory as numeric strings
+        # UniFi reports CPU and memory as numeric strings; str() lets any
+        # non-numeric value fail the same way
         try:
-            return abs(float(value) - float(old)) >= threshold
+            return abs(float(str(value)) - float(str(self.native_value))) >= threshold
         except ValueError:
             return False
 

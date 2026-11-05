@@ -1515,6 +1515,11 @@ async def test_device_system_stats_update_interval(
     await send("33.3", "37.7")
     assert_states("33.3", "35.5")
 
+    # A non-numeric reading within the interval is held
+    freezer.tick(timedelta(seconds=1))
+    await send("n/a", "37.7")
+    assert_states("33.3", "35.5")
+
     # A clock set back does not hold values until it catches up
     freezer.tick(-timedelta(hours=1))
     await send("34.4", "38.8")
