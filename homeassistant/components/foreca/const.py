@@ -1,6 +1,7 @@
 """Constants for the Foreca integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 
 from pyforeca import Symbol
 
@@ -23,6 +24,13 @@ SUBENTRY_TYPE_LOCATION = "location"
 UPDATE_INTERVAL = timedelta(minutes=30)
 HOURLY_PERIODS = 168
 DAILY_PERIODS = 14
+
+
+class OptionalRequest(StrEnum):
+    """A request whose failure leaves only the sensors that read it unavailable."""
+
+    OBSERVATION = "observation"
+
 
 _CLOUDINESS_CONDITIONS = {
     0: ATTR_CONDITION_SUNNY,
