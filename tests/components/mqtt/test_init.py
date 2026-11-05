@@ -937,7 +937,8 @@ async def test_receiving_message_with_unknown_encoding_gets_logged(
     """Test a subscription with an unknown encoding does not block other subscribers."""
     await mqtt_mock_entry()
     await mqtt.async_subscribe(hass, "#", record_calls, encoding="unknown-encoding")
-    await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    # A wildcard keeps registration order, so this subscriber is served after "#"
+    await mqtt.async_subscribe(hass, "+", record_calls)
 
     async_fire_mqtt_message(hass, "test-topic", b"payload")
 
