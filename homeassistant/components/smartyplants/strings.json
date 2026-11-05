@@ -19,6 +19,18 @@
         },
         "description": "SmartyPlants rejected the stored API key. Create a new key in the SmartyPlants app, under Settings, and enter it below."
       },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "webhook_secret": "[%key:component::smartyplants::config::step::webhook::data::webhook_secret%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::smartyplants::config::step::user::data_description::api_key%]",
+          "webhook_secret": "The signing secret from the SmartyPlants app. Leave it empty to use polling only."
+        },
+        "description": "Update the API key, or the signing secret used to verify pushed updates. The webhook URL does not change.",
+        "title": "Reconfigure SmartyPlants"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"

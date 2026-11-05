@@ -34,6 +34,13 @@ STEP_WEBHOOK_SCHEMA = probatio.Schema(
     {probatio.Optional(CONF_WEBHOOK_SECRET): SECRET_SELECTOR}
 )
 
+RECONFIGURE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_API_KEY): SECRET_SELECTOR,
+        probatio.Optional(CONF_WEBHOOK_SECRET): SECRET_SELECTOR,
+    }
+)
+
 
 class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the UI setup dialog."""
@@ -123,6 +130,38 @@ class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="webhook",
             data_schema=STEP_WEBHOOK_SCHEMA,
             description_placeholders={"webhook_url": webhook_url},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the API key or the signing secret of an existing entry."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            error, account_id = await self._async_validate(user_input[CONF_API_KEY])
+            if error:
+                errors["base"] = error
+            else:
+                await self.async_set_unique_id(account_id)
+                self._abort_if_unique_id_mismatch()
+
+                data = {**entry.data, CONF_API_KEY: user_input[CONF_API_KEY]}
+                # The webhook id is left alone: it is the URL already sitting
+                # in the user's SmartyPlants app.
+                if secret := user_input.get(CONF_WEBHOOK_SECRET):
+                    data[CONF_WEBHOOK_SECRET] = secret
+                else:
+                    data.pop(CONF_WEBHOOK_SECRET, None)
+                return self.async_update_reload_and_abort(entry, data=data)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA, entry.data
+            ),
+            errors=errors,
         )
 
     async def async_step_reauth(
