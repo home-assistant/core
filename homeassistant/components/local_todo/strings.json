@@ -21,5 +21,18 @@
       "message": "Failed to load file {path}"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "sections": "Sections"
+        },
+        "data_description": {
+          "sections": "Sections (groups or categories) available for the items of this list, in display order. Removing a section leaves its items without a section."
+        },
+        "description": "Define how the items of this to-do list can be grouped."
+      }
+    }
+  },
   "title": "Local to-do"
 }

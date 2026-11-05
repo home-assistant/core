@@ -17,6 +17,7 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -24,7 +25,7 @@ from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util
 
 from . import LocalTodoConfigEntry
-from .const import CONF_TODO_LIST_NAME, DOMAIN
+from .const import CONF_SECTIONS, CONF_TODO_LIST_NAME, DOMAIN
 from .store import LocalTodoListStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -112,8 +113,17 @@ async def async_setup_entry(
         migrated = True
     calendar.prodid = PRODID
 
-    entity = LocalTodoListEntity(store, calendar, name, unique_id=config_entry.entry_id)
+    entity = LocalTodoListEntity(
+        store,
+        calendar,
+        name,
+        unique_id=config_entry.entry_id,
+        sections=config_entry.options.get(CONF_SECTIONS, []),
+    )
     async_add_entities([entity], True)
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(entity.async_update_sections)
+    )
 
     if migrated:
         await entity.async_save()
@@ -169,6 +179,7 @@ class LocalTodoListEntity(TodoListEntity):
         calendar: Calendar,
         name: str,
         unique_id: str,
+        sections: list[str],
     ) -> None:
         """Initialize LocalTodoListEntity."""
         self._store = store
@@ -176,6 +187,7 @@ class LocalTodoListEntity(TodoListEntity):
         self._calendar_lock = asyncio.Lock()
         self._attr_name = name
         self._attr_unique_id = unique_id
+        self._attr_todo_sections = sections or None
 
     def _new_todo_store(self) -> TodoStore:
         return TodoStore(self._calendar, tzinfo=dt_util.get_default_time_zone())
@@ -267,6 +279,26 @@ class LocalTodoListEntity(TodoListEntity):
                 dst_idx -= 1
             todos.insert(dst_idx, src_item)
             await self.async_save()
+        await self.async_update_ha_state(force_refresh=True)
+
+    async def async_update_sections(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Apply new sections, removing removed sections from their items."""
+        sections: list[str] = entry.options.get(CONF_SECTIONS, [])
+        removed = set(self._attr_todo_sections or ()) - set(sections)
+        async with self._calendar_lock:
+            uids = [
+                todo.uid
+                for todo in self._calendar.todos
+                if todo.categories and todo.categories[0] in removed
+            ]
+            if uids:
+                todo_store = self._new_todo_store()
+                for uid in uids:
+                    todo_store.edit(uid, Todo(categories=[]))
+                await self.async_save()
+        self._attr_todo_sections = sections or None
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_save(self) -> None:

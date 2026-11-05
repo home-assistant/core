@@ -1225,3 +1225,95 @@ async def test_update_section_keeps_other_categories(
     store = hass.config_entries.async_entries("local_todo")[0].runtime_data
     calendar = IcsCalendarStream.calendar_from_ics(await store.async_load())
     assert calendar.todos[0].categories == expected_categories
+
+
+@pytest.mark.parametrize(
+    "config_entry",
+    [
+        MockConfigEntry(
+            domain="local_todo",
+            data={"storage_key": STORAGE_KEY, "todo_list_name": TODO_NAME},
+            options={"sections": ["Fresh produce", "Grocery", "Household"]},
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "ics_content",
+    [
+        textwrap.dedent(
+            """\
+                BEGIN:VCALENDAR
+                PRODID:-//homeassistant.io//local_todo 2.0//EN
+                VERSION:2.0
+                BEGIN:VTODO
+                DTSTAMP:20231024T014011
+                UID:apples
+                SEQUENCE:1
+                STATUS:NEEDS-ACTION
+                SUMMARY:Apples
+                CATEGORIES:Fresh produce,Organic
+                END:VTODO
+                BEGIN:VTODO
+                DTSTAMP:20231024T014011
+                UID:pasta
+                SEQUENCE:1
+                STATUS:NEEDS-ACTION
+                SUMMARY:Pasta
+                CATEGORIES:Grocery
+                END:VTODO
+                BEGIN:VTODO
+                DTSTAMP:20231024T014011
+                UID:soap
+                SEQUENCE:1
+                STATUS:NEEDS-ACTION
+                SUMMARY:Soap
+                CATEGORIES:Bathroom,Fresh produce
+                END:VTODO
+                END:VCALENDAR
+            """
+        )
+    ],
+)
+async def test_sections_from_options(
+    hass: HomeAssistant,
+    setup_integration: None,
+    config_entry: MockConfigEntry,
+    ws_get_items: WsGetItemsType,
+) -> None:
+    """Test the sections come from the options and removed ones are cleared."""
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.attributes["sections"] == ["Fresh produce", "Grocery", "Household"]
+
+    hass.config_entries.async_update_entry(
+        config_entry, options={"sections": ["Grocery", "Household"]}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.attributes["sections"] == ["Grocery", "Household"]
+
+    items = await ws_get_items()
+    # Only items whose section was removed are cleared, not other categories.
+    assert {item["summary"]: item.get("section") for item in items} == {
+        "Apples": None,
+        "Pasta": "Grocery",
+        "Soap": "Bathroom",
+    }
+
+    store = config_entry.runtime_data
+    calendar = IcsCalendarStream.calendar_from_ics(await store.async_load())
+    assert [todo.categories for todo in calendar.todos] == [
+        [],
+        ["Grocery"],
+        ["Bathroom", "Fresh produce"],
+    ]
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_no_sections_attribute_without_options(hass: HomeAssistant) -> None:
+    """Test the sections attribute is not set when no section is configured."""
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert "sections" not in state.attributes
