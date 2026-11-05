@@ -94,7 +94,6 @@ class E3dcConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_host: str
     _discovered_name: str
-    _discovery_errors: dict[str, str]
 
     @override
     async def async_step_user(
@@ -105,9 +104,7 @@ class E3dcConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             device, errors = await self._async_validate(user_input)
             if device is not None:
-                await self.async_set_unique_id(
-                    device.serial_number, raise_on_progress=False
-                )
+                await self.async_set_unique_id(device.serial_number)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=_title(device.model), data=user_input
@@ -135,27 +132,27 @@ class E3dcConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
-        self._discovered_host = host
-        # The announced model is generic, so name the card after the probed one
-        device, self._discovery_errors = await self._async_validate(
+        device, errors = await self._async_validate(
             {CONF_HOST: host, CONF_PORT: DEFAULT_PORT}
         )
-        self._discovered_name = _title(device.model) if device else serial_number
+        if device is None:
+            return self.async_abort(reason=errors["base"])
+
+        self._discovered_host = host
+        # The announced model is generic, so name the card after the probed one
+        self._discovered_name = _title(device.model)
         self.context["title_placeholders"] = {"name": self._discovered_name}
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm setting up the discovered power station, then probe it."""
-        errors = self._discovery_errors
+        """Confirm setting up the discovered power station."""
         if user_input is not None:
-            data = {CONF_HOST: self._discovered_host, CONF_PORT: DEFAULT_PORT}
-            device, errors = await self._async_validate(data)
-            if device is not None:
-                await self.async_set_unique_id(device.serial_number)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=_title(device.model), data=data)
+            return self.async_create_entry(
+                title=self._discovered_name,
+                data={CONF_HOST: self._discovered_host, CONF_PORT: DEFAULT_PORT},
+            )
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
@@ -163,7 +160,6 @@ class E3dcConfigFlow(ConfigFlow, domain=DOMAIN):
                 "name": self._discovered_name,
                 "host": self._discovered_host,
             },
-            errors=errors,
         )
 
     async def _async_validate(

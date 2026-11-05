@@ -251,7 +251,6 @@ async def test_zeroconf(hass: HomeAssistant, identified: MockModbusConnection) -
             "name": MOCK_TITLE,
             "host": "192.168.1.100",
         }
-        assert result["errors"] == {}
         # The discovery card is named after the probed model
         flow = hass.config_entries.flow.async_get(result["flow_id"])
         assert flow["context"]["title_placeholders"] == {"name": MOCK_TITLE}
@@ -267,30 +266,39 @@ async def test_zeroconf(hass: HomeAssistant, identified: MockModbusConnection) -
     assert result["result"].unique_id == MOCK_SERIAL
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_cannot_connect(
     hass: HomeAssistant, identified: MockModbusConnection
 ) -> None:
-    """Test discovery of an unreachable power station shows an error and recovers."""
+    """Test discovery of a power station that does not answer aborts."""
     identified.for_unit(1).fail_requests(ModbusTimeoutError())
     with _patch_temporary_unit(identified):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
         )
-        # Without a probed model, the discovery card falls back to the serial number
-        flow = hass.config_entries.flow.async_get(result["flow_id"])
-        assert flow["context"]["title_placeholders"] == {"name": MOCK_SERIAL}
-        # The confirm form shows why the probe failed right away
-        assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
 
-    identified.for_unit(1).fail_requests(None)
-    with _patch_temporary_unit(identified):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+@pytest.mark.parametrize(
+    ("holding", "expected"),
+    [
+        # SunSpec mode replaces the E3/DC marker in register 40001 with "Su"
+        pytest.param({40001: 0x5375}, "not_e3dc", id="sunspec_mode"),
+        pytest.param({40001: 0xE3DC}, "no_serial_number", id="no_serial"),
+    ],
+)
+async def test_zeroconf_wrong_device(
+    hass: HomeAssistant, holding: dict[int, int | list[int]], expected: str
+) -> None:
+    """Test discovery aborts for a device in SunSpec mode or without a serial number."""
+    connection = MockModbusConnection()
+    seed(connection.for_unit(1), holding)
+    with _patch_temporary_unit(connection):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected
 
 
 async def test_zeroconf_updates_host(
@@ -317,31 +325,3 @@ async def test_zeroconf_no_local_address(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_local_address"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_step_after_failed_discovery(
-    hass: HomeAssistant, identified: MockModbusConnection
-) -> None:
-    """Test manual setup on a custom port succeeds while discovery is pending."""
-    identified.for_unit(1).fail_requests(ModbusTimeoutError())
-    with _patch_temporary_unit(identified):
-        discovery = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_zeroconf_info()
-        )
-    assert discovery["step_id"] == "zeroconf_confirm"
-
-    identified.for_unit(1).fail_requests(None)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    with _patch_temporary_unit(identified):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: "192.168.1.100", CONF_PORT: 1502}
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_HOST: "192.168.1.100", CONF_PORT: 1502}
-    assert result["result"].unique_id == MOCK_SERIAL
-    # Creating the entry ends the discovery flow for the same power station
-    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)

@@ -2,7 +2,11 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_local_address": "The power station announced itself, but on no network Home Assistant is connected to."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_local_address": "The power station announced itself, but on no network Home Assistant is connected to.",
+      "no_serial_number": "[%key:component::e3dc::config::error::no_serial_number%]",
+      "not_e3dc": "[%key:component::e3dc::config::error::not_e3dc%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
