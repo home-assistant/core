@@ -4,11 +4,14 @@ from copy import deepcopy
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
-from pytest_homeassistant.common import async_fire_time_changed
+import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 from .const import (
@@ -18,14 +21,23 @@ from .const import (
 )
 
 
+@pytest.mark.usefixtures("router")
+async def test_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test all sensor entities."""
+    entry = await setup_platform(hass, SENSOR_DOMAIN)
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+
 async def test_network_speed(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
 ) -> None:
     """Test missed call sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
-
-    assert hass.states.get("sensor.freebox_server_r2_download_speed").state == "198.9"
-    assert hass.states.get("sensor.freebox_server_r2_upload_speed").state == "1440.0"
 
     # Simulate a changed speed
     data_connection_get_status_changed = deepcopy(DATA_CONNECTION_GET_STATUS)
@@ -46,8 +58,6 @@ async def test_call(
 ) -> None:
     """Test missed call sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
-
-    assert hass.states.get("sensor.freebox_server_r2_missed_calls").state == "3"
 
     # Simulate we marked calls as read
     data_call_get_calls_marked_as_read = []
@@ -77,8 +87,6 @@ async def test_disk(
         == 1730000000000
     )
 
-    assert hass.states.get("sensor.disk_3000_freebox_free_space").state == "88.27"
-
     # Simulate a changed storage size
     data_storage_get_disks_changed = deepcopy(DATA_STORAGE_GET_DISKS)
     data_storage_get_disks_changed[2]["partitions"][0]["free_bytes"] = 880000000000
@@ -91,32 +99,11 @@ async def test_disk(
     assert hass.states.get("sensor.disk_3000_freebox_free_space").state == "44.9"
 
 
-async def test_temperature(hass: HomeAssistant, router: Mock) -> None:
-    """Test temperature sensors expose API names and values."""
-    await setup_platform(hass, SENSOR_DOMAIN)
-
-    assert hass.states.get("sensor.freebox_server_r2_disque_dur").state == "40"
-    assert hass.states.get("sensor.freebox_server_r2_temperature_switch").state == "50"
-    assert hass.states.get("sensor.freebox_server_r2_temperature_cpu_m").state == "60"
-    assert hass.states.get("sensor.freebox_server_r2_temperature_cpu_b").state == "56"
-
-
-async def test_fan(hass: HomeAssistant, router: Mock) -> None:
-    """Test fan speed sensors expose API names and values."""
-    await setup_platform(hass, SENSOR_DOMAIN)
-
-    assert hass.states.get("sensor.freebox_server_r2_ventilateur_1").state == "2130"
-
-
 async def test_battery(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
 ) -> None:
     """Test battery sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
-
-    assert hass.states.get("sensor.telecommande_battery").state == "100"
-    assert hass.states.get("sensor.ouverture_porte_battery").state == "100"
-    assert hass.states.get("sensor.detecteur_battery").state == "100"
 
     # Simulate a changed battery
     data_home_get_nodes_changed = deepcopy(DATA_HOME_GET_NODES)
