@@ -20,7 +20,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN, INVALID_COMMAND_CHARS
+from .const import CONF_CHARSET, DOMAIN, INVALID_COMMAND_CHARS
 from .coordinator import ImapMessage, connect_to_server, get_parts
 from .errors import InvalidAuth, InvalidFolder
 
@@ -31,6 +31,7 @@ CONF_SEEN = "seen"
 CONF_PART = "part"
 CONF_UID = "uid"
 CONF_TARGET_FOLDER = "target_folder"
+CONF_SEARCH_COMMAND = "search_command"
 
 
 def _command_argument(value: Any) -> str:
@@ -60,6 +61,12 @@ SERVICE_FETCH_TEXT_SCHEMA = _SERVICE_UID_SCHEMA
 SERVICE_FETCH_PART_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     {
         probatio.Required(CONF_PART): cv.string,
+    }
+)
+SERVICE_SEARCH_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_ENTRY): cv.string,
+        probatio.Required(CONF_SEARCH_COMMAND): _command_argument,
     }
 )
 
@@ -283,6 +290,42 @@ async def _async_fetch_part(call: ServiceCall) -> ServiceResponse:
     }
 
 
+async def _async_search(call: ServiceCall) -> ServiceResponse:
+    """Process search email service call."""
+    entry_id: str = call.data[CONF_ENTRY]
+    search_command: str = call.data[CONF_SEARCH_COMMAND]
+    if (entry := call.hass.config_entries.async_get_entry(entry_id)) is None or (
+        entry.state is not ConfigEntryState.LOADED
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_entry",
+        )
+    charset = entry.data[CONF_CHARSET]
+    _LOGGER.debug(
+        "Search for message with search command: %s. Entry: %s. Charset: %s",
+        search_command,
+        entry_id,
+        charset,
+    )
+    async with async_get_imap_client(call.hass, entry_id) as client:
+        try:
+            response = await client.search(search_command, charset=charset)
+            raise_on_error(response, "search_failed")
+        except (TimeoutError, AioImapException) as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="imap_server_fail",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+    return {
+        # Index 0 of of the response lines contains the bytearray of uids of the matching messages
+        "uids": response.lines[0].decode(charset).split()
+        if len(response.lines) == 2
+        else []
+    }
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the imap services."""
@@ -301,5 +344,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "fetch_part",
         _async_fetch_part,
         SERVICE_FETCH_PART_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "search",
+        _async_search,
+        SERVICE_SEARCH_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

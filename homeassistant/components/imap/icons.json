@@ -22,6 +22,9 @@
     "move": {
       "service": "mdi:email-arrow-right-outline"
     },
+    "search": {
+      "service": "mdi:email-search"
+    },
     "seen": {
       "service": "mdi:email-open-outline"
     }
