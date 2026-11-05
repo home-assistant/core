@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.recorder.statistics import statistics_during_period
@@ -24,9 +26,6 @@ import homeassistant.util.dt as dt_util
 
 from . import setup_integration
 from .conftest import MOCK_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_initialization_setup_api_error(

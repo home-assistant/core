@@ -1,5 +1,6 @@
 """Tests for the Marketplace repositories."""
 
+from asyncio import CancelledError, Future, sleep
 from collections.abc import AsyncIterator
 from http import HTTPStatus
 import io
@@ -15,10 +16,22 @@ from aiogithubapi.models.git_tree import GitHubGitTreeEntryModel
 from aiogithubapi.models.release import GitHubReleaseModel
 from awesomeversion import AwesomeVersion
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_mock_service,
+    mock_integration,
+)
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 from yarl import URL
 
+from homeassistant import loader
 from homeassistant.components.frontend import DATA_EXTRA_MODULE_URL, UrlManager
 from homeassistant.components.marketplace.base import (
     MarketplaceManager,
@@ -50,9 +63,10 @@ from homeassistant.components.marketplace.repositories.integration import (
 )
 from homeassistant.components.marketplace.repositories.plugin import PluginRepository
 from homeassistant.components.marketplace.repositories.theme import ThemeRepository
+from homeassistant.components.marketplace.utils.url import github_raw_file
 from homeassistant.components.marketplace.utils.validate import Validate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import issue_registry as ir, translation
 from homeassistant.loader import IntegrationNotLoaded
 
 from . import (
@@ -65,11 +79,17 @@ from . import (
 from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
 
-from tests.common import MockConfigEntry, async_mock_service
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-from tests.typing import WebSocketGenerator
-
 RATE_LIMITED = {"message": "API rate limit exceeded for 127.0.0.1."}
+BIG_FILE = github_raw_file(repository="owner/repository", ref="main", path="big")
+
+
+@pytest.fixture
+def _isolated_translations(
+    disable_translations_once: None, hass: HomeAssistant
+) -> None:
+    """Isolate data created before the shared translation fixture is disabled."""
+    cache = translation._async_get_translations_cache(hass)
+    cache.cache_data = translation._TranslationsCacheData({}, {})
 
 
 def _tree(*paths: tuple[str, bool]) -> list[GitHubGitTreeEntryModel]:
@@ -131,6 +151,8 @@ def test_manifest_defaults() -> None:
         pytest.param("filename", 123, id="filename-number"),
         pytest.param("persistent_directory", 5, id="persistent-directory-number"),
         pytest.param("zip_release", "yes", id="zip-release-string"),
+        pytest.param("content_in_root", 1, id="content-in-root-number"),
+        pytest.param("filename", True, id="filename-true"),
         pytest.param("name", {"en": "TEST"}, id="name-object"),
     ],
 )
@@ -140,6 +162,73 @@ def test_manifest_leaves_out_values_of_the_wrong_type(key: str, value: Any) -> N
 
     assert manifest.manifest == {"hacs": "1.0.0"}
     assert getattr(manifest, key) == getattr(RepositoryManifest(), key)
+
+
+@pytest.mark.parametrize(
+    ("key", "value", "expected"),
+    [
+        pytest.param("content_in_root", "true", True, id="content-in-root-true"),
+        pytest.param("content_in_root", "True", True, id="content-in-root-title"),
+        pytest.param("zip_release", "true", True, id="zip-release-true"),
+        pytest.param(
+            "hide_default_branch", " TRUE ", True, id="hide-default-branch-padded"
+        ),
+    ],
+)
+def test_manifest_reads_boolean_strings(
+    key: str, value: str, expected: bool, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a boolean written as a string, which HACS accepted, is read as one."""
+    manifest = RepositoryManifest.from_dict({"hacs": "1.0.0", key: value})
+
+    assert manifest.manifest == {"hacs": "1.0.0", key: expected}
+    assert getattr(manifest, key) is expected
+    assert "Ignoring" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "key",
+    ["content_in_root", "zip_release", "hide_default_branch"],
+)
+def test_manifest_reads_false_string_as_default(
+    key: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test "false" written as a string keeps the default without a warning."""
+    manifest = RepositoryManifest.from_dict({"hacs": "1.0.0", key: "false"})
+
+    assert manifest.manifest == {"hacs": "1.0.0"}
+    assert getattr(manifest, key) is False
+    assert "Ignoring" not in caplog.text
+
+
+@pytest.mark.parametrize("key", ["filename", "persistent_directory"])
+@pytest.mark.parametrize("value", [False, None])
+def test_manifest_reads_unset_string_as_not_set(
+    key: str, value: Any, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test false or null for a string, which HACS accepted, is read as not set."""
+    manifest = RepositoryManifest.from_dict({"hacs": "1.0.0", key: value})
+
+    assert manifest.manifest == {"hacs": "1.0.0"}
+    assert getattr(manifest, key) is None
+    assert "Ignoring" not in caplog.text
+
+
+def test_manifest_with_legacy_values_from_issue() -> None:
+    """Test the hacs.json values from the issue keep their HACS meaning."""
+    manifest = RepositoryManifest.from_dict(
+        {
+            "name": "TEST",
+            "filename": False,
+            "persistent_directory": False,
+            "content_in_root": "true",
+        }
+    )
+
+    assert manifest.manifest == {"name": "TEST", "content_in_root": True}
+    assert manifest.content_in_root is True
+    assert manifest.filename is None
+    assert manifest.persistent_directory is None
 
 
 def test_repository_data_guards_generated_fields() -> None:
@@ -1146,6 +1235,7 @@ async def test_update_repository(
     assert repository.data.installed_version == category_test_data["version_update"]
 
 
+@pytest.mark.usefixtures("_isolated_translations")
 @pytest.mark.parametrize("category_test_data", category_test_data_parametrized())
 async def test_uninstall_repository(
     hass: HomeAssistant,
@@ -1171,6 +1261,9 @@ async def test_uninstall_repository(
 
     assert _installed_files(config_dir)
 
+    mock_integration(hass, MockModule("example"), built_in=False)
+    assert await translation.async_get_translations(hass, "en", "title", {"example"})
+
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {"type": "marketplace/repository/uninstall", "repository": repository.data.id}
@@ -1180,6 +1273,150 @@ async def test_uninstall_repository(
     assert repository.data.installed is False
     assert marketplace.repositories.list_installed == []
     assert _installed_files(config_dir) == []
+    assert bool(
+        translation.async_get_cached_translations(hass, "en", "title", "example")
+    ) is (category_test_data["category"] != RepositoryCategory.INTEGRATION)
+    assert bool(
+        await translation.async_get_translations(hass, "en", "title", {"example"})
+    ) is (category_test_data["category"] != RepositoryCategory.INTEGRATION)
+
+
+@pytest.mark.usefixtures("_isolated_translations")
+@pytest.mark.parametrize("config_flow", [False, True], ids=["yaml", "config_flow"])
+@pytest.mark.parametrize(
+    ("old_files", "new_files", "old_title", "new_title"),
+    [
+        pytest.param({}, {}, "Old name", "New name", id="manifest_title"),
+        pytest.param(
+            {"translations/en.json": {"title": "Old title"}},
+            {"translations/en.json": {"title": "New title"}},
+            "Old title",
+            "New title",
+            id="updated_translations",
+        ),
+        pytest.param(
+            {},
+            {"translations/en.json": {"title": "New title"}},
+            "Old name",
+            "New title",
+            id="added_translations",
+        ),
+        pytest.param(
+            {"translations/en.json": {"title": "Old title"}},
+            {},
+            "Old title",
+            "New name",
+            id="removed_translations",
+        ),
+    ],
+)
+async def test_update_integration_translations(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    monkeypatch: pytest.MonkeyPatch,
+    config_flow: bool,
+    old_files: dict[str, dict[str, str]],
+    new_files: dict[str, dict[str, str]],
+    old_title: str,
+    new_title: str,
+) -> None:
+    """Updated files and manifest metadata replace previously cached translations."""
+    monkeypatch.delitem(sys.modules, "custom_components", raising=False)
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    assert isinstance(repository, IntegrationRepository)
+    check_content = repository.async_check_written_content
+    name, files = "Old name", old_files
+
+    async def check_content_with_translations() -> None:
+        path = Path(repository.localpath)
+        manifest_path = path / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest.update(name=name, config_flow=config_flow)
+        manifest_path.write_text(json.dumps(manifest))
+        repository.data.config_flow = config_flow
+        for filename, content in files.items():
+            file = path / filename
+            file.parent.mkdir(parents=True, exist_ok=True)
+            file.write_text(json.dumps(content))
+        await check_content()
+
+    with patch.object(
+        repository, "async_check_written_content", check_content_with_translations
+    ):
+        await repository.async_install_repository(ref="1.0.0")
+        assert await translation.async_get_translations(
+            hass, "en", "title", {"example"}
+        ) == {"component.example.title": old_title}
+        loaded = await loader.async_get_integration(hass, "example")
+
+        name, files = "New name", new_files
+        await repository.async_install_repository(ref="2.0.0")
+
+    assert await loader.async_get_integration(hass, "example") is loaded
+    assert await translation.async_get_translations(
+        hass, "en", "title", {"example"}
+    ) == {"component.example.title": new_title}
+
+
+@pytest.mark.usefixtures("_isolated_translations")
+@pytest.mark.parametrize("hook", ["async_post_installation", "async_post_uninstall"])
+async def test_translation_invalidation_during_rescan(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hook: str,
+) -> None:
+    """Translation requests wait for discovery instead of returning stale strings."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    mock_integration(hass, MockModule("example"), built_in=False)
+    assert await translation.async_get_translations(hass, "en", "title", {"example"})
+
+    scan: Future[dict[str, loader.Integration]] = hass.loop.create_future()
+    with patch.object(hass, "async_add_executor_job", return_value=scan):
+        reload_task = hass.async_create_task(getattr(repository, hook)())
+        await sleep(0)
+        cached_during_scan = translation.async_get_cached_translations(
+            hass, "en", "title", "example"
+        )
+        request = hass.async_create_task(
+            translation.async_get_translations(hass, "en", "title", {"example"})
+        )
+        await sleep(0)
+        request_finished_during_scan = request.done()
+
+    scan.set_result({})
+    await reload_task
+    result = await request
+
+    assert not cached_during_scan
+    assert not request_finished_during_scan
+    assert not result
+
+
+@pytest.mark.usefixtures("_isolated_translations")
+@pytest.mark.parametrize("hook", ["async_post_installation", "async_post_uninstall"])
+@pytest.mark.parametrize("error", [OSError, CancelledError])
+async def test_translation_invalidation_after_failed_rescan(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hook: str,
+    error: type[BaseException],
+) -> None:
+    """Changed resources invalidate translations even when discovery fails."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    mock_integration(hass, MockModule("example"), built_in=False)
+    assert await translation.async_get_translations(hass, "en", "title", {"example"})
+
+    with (
+        patch("homeassistant.loader._get_custom_components", side_effect=error),
+        pytest.raises(error),
+    ):
+        await getattr(repository, hook)()
+
+    assert not translation.async_get_cached_translations(hass, "en", "title", "example")
+    assert loader.DATA_CUSTOM_COMPONENTS not in hass.data
+    assert not await translation.async_get_translations(
+        hass, "en", "title", {"example"}
+    )
 
 
 @pytest.mark.parametrize("github_token", [None])
@@ -1396,7 +1633,12 @@ async def test_download_zip_release_failure(
     assert [
         (error.translation_key, error.translation_placeholders)
         for error in validate.errors
-    ] == [("file_not_downloaded", {"file": url})]
+    ] == [
+        (
+            "file_not_downloaded",
+            {"file": f"{REPOSITORY_INTEGRATION}/releases/download/1.0.0/release.zip"},
+        )
+    ]
 
 
 async def test_download_repository_zip_without_ref(
@@ -1506,7 +1748,13 @@ async def test_download_content_outside_the_repository(
     response_mocker.add(url, mocked_response(url, content=b""))
 
     await repository.download_repository_file(
-        FileInformation(url, "escaped.py", "../../escaped.py")
+        FileInformation(
+            github_raw_file(
+                repository=REPOSITORY_INTEGRATION, ref="1.0.0", path="escaped.py"
+            ),
+            "escaped.py",
+            "../../escaped.py",
+        )
     )
 
     assert repository.validate.errors[0].translation_key == "path_outside_directory"
@@ -1613,14 +1861,21 @@ async def test_download_keeps_tags_in_the_url(
     url = "https://raw.githubusercontent.com/owner/hashtags/1.0.0/tags/card.js"
     response_mocker.add(url, mocked_response(url, content=b"card"))
 
-    assert await marketplace.async_download_file(url) == b"card"
+    assert (
+        await marketplace.async_download_file(
+            github_raw_file(
+                repository="owner/hashtags", ref="1.0.0", path="tags/card.js"
+            )
+        )
+        == b"card"
+    )
 
 
 async def test_download_declines_a_declared_size_over_the_limit(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test that a response declaring more than the limit is not read."""
-    url = "https://example.com/big"
+    url = f"https://raw.githubusercontent.com/{BIG_FILE.path}"
     response_mocker.add(
         url,
         mocked_response(
@@ -1628,20 +1883,20 @@ async def test_download_declines_a_declared_size_over_the_limit(
         ),
     )
 
-    assert await marketplace.async_download_file(url) is None
+    assert await marketplace.async_download_file(BIG_FILE) is None
 
 
 async def test_download_discards_content_over_the_limit(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test that a response larger than the limit is thrown away."""
-    url = "https://example.com/big"
+    url = f"https://raw.githubusercontent.com/{BIG_FILE.path}"
     response_mocker.add(url, mocked_response(url, content=b"0123456789"))
 
     with patch(
         "homeassistant.components.marketplace.utils.response.MAX_DOWNLOAD_SIZE", 5
     ):
-        assert await marketplace.async_download_file(url) is None
+        assert await marketplace.async_download_file(BIG_FILE) is None
 
 
 class _EndlessStream:
@@ -1676,7 +1931,7 @@ async def test_download_stops_reading_at_the_limit(
     marketplace: MarketplaceManager, response_mocker: MarketplaceResponses
 ) -> None:
     """Test a body without a Content-Length is not read past the limit."""
-    url = "https://example.com/endless"
+    url = f"https://raw.githubusercontent.com/{BIG_FILE.path}"
     stream = _EndlessStream()
     response_mocker.add(url, _EndlessResponse(url, stream))
 
@@ -1690,7 +1945,7 @@ async def test_download_stops_reading_at_the_limit(
             100,
         ),
     ):
-        assert await marketplace.async_download_file(url) is None
+        assert await marketplace.async_download_file(BIG_FILE) is None
 
     # The chunk that passes the limit is the last one read
     assert stream.chunks_read == 11

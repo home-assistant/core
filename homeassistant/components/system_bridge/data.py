@@ -5,11 +5,13 @@ from dataclasses import dataclass, field
 from systembridgeconnector.models.modules import (
     CPU,
     GPU,
+    Audio,
     Battery,
     Disks,
     Display,
     Media,
     Memory,
+    Networks,
     Process,
     System,
 )
@@ -19,12 +21,14 @@ from systembridgeconnector.models.modules import (
 class SystemBridgeData:
     """System Bridge Data."""
 
+    audio: Audio | None = None
     battery: Battery = field(default_factory=Battery)
     cpu: CPU = field(default_factory=CPU)
-    disks: Disks = None
+    disks: Disks | None = None
     displays: list[Display] = field(default_factory=list[Display])
     gpus: list[GPU] = field(default_factory=list[GPU])
     media: Media = field(default_factory=Media)
-    memory: Memory = None
+    memory: Memory | None = None
+    networks: Networks | None = None
     processes: list[Process] = field(default_factory=list[Process])
-    system: System = None
+    system: System | None = None

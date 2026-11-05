@@ -33,13 +33,15 @@
       }
     }
   },
-
   "exceptions": {
     "invalid_entity_id": {
       "message": "Unknown Genius Hub entity: {entity_id}"
     },
     "invalid_zone": {
       "message": "Unknown Genius Hub zone: {entity_id}"
+    },
+    "setup_failed": {
+      "message": "Setup failed, check your configuration"
     }
   },
   "services": {

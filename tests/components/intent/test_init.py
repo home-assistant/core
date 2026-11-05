@@ -3,6 +3,8 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockUser, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import conversation
 from homeassistant.components.button import SERVICE_PRESS
@@ -33,9 +35,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, entity_registry as er, intent
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser, async_mock_service
-from tests.typing import ClientSessionGenerator
 
 
 async def test_http_handle_intent(

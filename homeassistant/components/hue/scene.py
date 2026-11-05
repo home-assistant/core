@@ -10,25 +10,16 @@ from aiohue.v2.models.room import Room
 from aiohue.v2.models.scene import Scene as HueScene, ScenePut as HueScenePut
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartSceneState
 from aiohue.v2.models.zone import Zone
-import probatio
 
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .bridge import HueBridge, HueConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, HueServiceArgument
 from .v2.entity import HueBaseEntity
 from .v2.helpers import normalize_hue_brightness, normalize_hue_transition
-
-SERVICE_ACTIVATE_SCENE = "activate_scene"
-ATTR_DYNAMIC = "dynamic"
-ATTR_SPEED = "speed"
-ATTR_BRIGHTNESS = "brightness"
 
 LOGGER = logging.getLogger(__name__)
 
@@ -80,25 +71,6 @@ async def async_setup_entry(
     # register listener for new items only
     config_entry.async_on_unload(
         api.scenes.subscribe(async_add_entity, event_filter=EventType.RESOURCE_ADDED)
-    )
-
-    # add platform service to turn_on/activate scene with advanced options
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_ACTIVATE_SCENE,
-        {
-            probatio.Optional(ATTR_DYNAMIC): probatio.Coerce(bool),
-            probatio.Optional(ATTR_SPEED): probatio.All(
-                probatio.Coerce(int), probatio.Percentage()
-            ),
-            probatio.Optional(ATTR_TRANSITION): probatio.All(
-                probatio.Coerce(float), probatio.Range(min=0, max=3600)
-            ),
-            probatio.Optional(ATTR_BRIGHTNESS): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=1, max=255)
-            ),
-        },
-        "_async_activate",
     )
 
 
@@ -172,9 +144,9 @@ class HueSceneEntity(HueSceneEntityBase):
         # the options below are advanced only
         # as we're not allowed to override the default scene turn_on service
         # we've implemented a `activate_scene` entity service
-        dynamic = kwargs.get(ATTR_DYNAMIC, False)
-        speed = kwargs.get(ATTR_SPEED)
-        brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
+        dynamic = kwargs.get(HueServiceArgument.DYNAMIC, False)
+        speed = kwargs.get(HueServiceArgument.SPEED)
+        brightness = normalize_hue_brightness(kwargs.get(HueServiceArgument.BRIGHTNESS))
 
         if speed is not None:
             await self.bridge.async_request_call(

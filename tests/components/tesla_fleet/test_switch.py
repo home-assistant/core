@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import AutoSeat
 from tesla_fleet_api.exceptions import VehicleOffline
@@ -25,8 +26,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, assert_entities_alt, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA_ALT
-
-from tests.common import MockConfigEntry
 
 
 async def test_switch(

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from hatasmota.discovery import get_status_sensor_entities
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tasmota.const import (
     CONF_DISCOVERY_PREFIX,
@@ -12,7 +13,6 @@ from homeassistant.components.tasmota.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 

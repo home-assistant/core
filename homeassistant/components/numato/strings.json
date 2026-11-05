@@ -1,0 +1,10 @@
+{
+  "exceptions": {
+    "turn_off_failed": {
+      "message": "Failed to turn off port {port} of Numato device {device_id}."
+    },
+    "turn_on_failed": {
+      "message": "Failed to turn on port {port} of Numato device {device_id}."
+    }
+  }
+}

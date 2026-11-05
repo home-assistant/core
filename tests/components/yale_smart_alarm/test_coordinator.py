@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from yalesmartalarmclient import (
     YALE_STATE_ARM_FULL,
     AuthenticationError,
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .conftest import ENTRY_CONFIG, OPTIONS_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

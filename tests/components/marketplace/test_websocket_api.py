@@ -9,6 +9,9 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -56,10 +59,6 @@ from .const import (
     TOKEN,
     WARNING_ACCEPTANCE,
 )
-
-from tests.common import MockConfigEntry, MockUser
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 CRITICAL_REPOSITORY = {
     "repository": "critical/repository",

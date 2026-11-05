@@ -35,7 +35,7 @@ class PulseHub:
         """Return the host of this hub."""
         return self.config_entry.data["host"]  # type: ignore[no-any-return]
 
-    async def async_setup(self, tries: int = 0) -> bool:
+    async def async_setup(self, tries: int = 0) -> None:
         """Set up a hub based on host parameter."""
         self.api = hub = aiopulse.Hub(self.host)
 
@@ -43,7 +43,6 @@ class PulseHub:
         self.tasks.append(asyncio.create_task(hub.run()))
 
         LOGGER.debug("Hub setup complete")
-        return True
 
     async def async_reset(self) -> bool:
         """Reset this hub to default state."""

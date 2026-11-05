@@ -8,6 +8,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError, ClientResponseError, RequestInfo
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_platform,
+)
 from yarl import URL
 
 from homeassistant import config_entries
@@ -23,8 +28,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
 

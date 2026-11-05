@@ -49,7 +49,7 @@ from .const import (
     LearningScheduleEventType,
     YearlyCalendarEventType,
 )
-from .entity import JewishCalendarConfigEntry
+from .coordinator import JewishCalendarConfigEntry
 
 OPTIONS_SCHEMA = probatio.Schema(
     {
@@ -129,7 +129,7 @@ async def _get_data_schema(hass: HomeAssistant) -> probatio.Schema:
 class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Jewish calendar."""
 
-    VERSION = 3
+    VERSION = 4
 
     @staticmethod
     @callback

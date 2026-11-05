@@ -77,27 +77,3 @@ class DecoraWifiConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, user_input),
             errors=errors,
         )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML configuration."""
-        self._async_abort_entries_match({CONF_USERNAME: import_data[CONF_USERNAME]})
-
-        try:
-            user_id = await self.hass.async_add_executor_job(
-                _try_login,
-                import_data[CONF_USERNAME],
-                import_data[CONF_PASSWORD],
-            )
-        except ValueError:
-            return self.async_abort(reason="cannot_connect")
-
-        if user_id is None:
-            return self.async_abort(reason="invalid_auth")
-
-        await self.async_set_unique_id(user_id)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=import_data[CONF_USERNAME],
-            data=import_data,
-        )

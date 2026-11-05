@@ -1,11 +1,12 @@
 """Config flow for Local file."""
 
 from collections.abc import Mapping
-from typing import Any, cast, override
+from pathlib import Path
+from typing import Any, override
 
 import probatio
 
-from homeassistant.const import CONF_FILE_PATH, CONF_NAME
+from homeassistant.const import CONF_FILE_PATH
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -40,17 +41,9 @@ DATA_SCHEMA_OPTIONS = probatio.Schema(
         probatio.Required(CONF_FILE_PATH): TextSelector(),
     }
 )
-DATA_SCHEMA_SETUP = probatio.Schema(
-    {
-        # Approved exemption: user names the local file camera
-        # pylint: disable-next=home-assistant-config-flow-name-field
-        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-    }
-).extend(DATA_SCHEMA_OPTIONS.schema)
-
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
-        schema=DATA_SCHEMA_SETUP, validate_user_input=validate_options
+        schema=DATA_SCHEMA_OPTIONS, validate_user_input=validate_options
     )
 }
 OPTIONS_FLOW = {
@@ -70,4 +63,4 @@ class LocalFileConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return cast(str, options[CONF_NAME])
+        return Path(options[CONF_FILE_PATH]).stem or DEFAULT_NAME

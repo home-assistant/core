@@ -1,17 +1,10 @@
 """Utility functions for the Portainer integration."""
 
-from collections.abc import Coroutine
-from typing import Any
+from collections import defaultdict
+from collections.abc import Callable, Iterable
 
-from pyportainer import (
-    PortainerAuthenticationError,
-    PortainerConnectionError,
-    PortainerTimeoutError,
-)
-
-from homeassistant.exceptions import HomeAssistantError
-
-from .const import DOMAIN
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 
 def sanitize_container_name(container_name: str) -> str:
@@ -19,22 +12,16 @@ def sanitize_container_name(container_name: str) -> str:
     return container_name.replace("/", " ").strip()
 
 
-async def async_call_portainer(coroutine: Coroutine[Any, Any, Any]) -> None:
-    """Await a Portainer call, mapping library errors to HomeAssistantError."""
-    try:
-        await coroutine
-    except PortainerAuthenticationError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_auth",
-        ) from err
-    except PortainerConnectionError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from err
-    except PortainerTimeoutError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="timeout_connect",
-        ) from err
+def async_add_entities_by_subentry(
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    subentry_id_for_endpoint: Callable[[int], str | None],
+    entities: Iterable[tuple[Entity, int]],
+) -> None:
+    """Add entities to Home Assistant, grouped by their endpoint's subentry."""
+    grouped: dict[str, list[Entity]] = defaultdict(list)
+    for entity, endpoint_id in entities:
+        if (subentry_id := subentry_id_for_endpoint(endpoint_id)) is not None:
+            grouped[subentry_id].append(entity)
+
+    for subentry_id, group in grouped.items():
+        async_add_entities(group, config_subentry_id=subentry_id)

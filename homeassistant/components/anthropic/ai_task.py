@@ -14,7 +14,7 @@ from .const import DOMAIN
 from .entity import AnthropicBaseLLMEntity
 
 if TYPE_CHECKING:
-    from . import AnthropicConfigEntry
+    from .coordinator import AnthropicConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -73,6 +73,7 @@ class AnthropicTaskEntity(
         try:
             data = json_loads(text)
         except JSONDecodeError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Failed to parse JSON response: %s. Response: %s",
                 err,

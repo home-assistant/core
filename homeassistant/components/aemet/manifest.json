@@ -1,8 +1,10 @@
 {
   "domain": "aemet",
   "name": "AEMET OpenData",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@Noltari"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/aemet",
   "integration_type": "service",
   "iot_class": "cloud_polling",

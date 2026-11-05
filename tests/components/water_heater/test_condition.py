@@ -3,6 +3,21 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.components.common import (
+    ConditionStateDescription,
+    TargetSupport,
+    assert_condition_behavior_all,
+    assert_condition_behavior_any,
+    assert_condition_options_supported,
+    assert_conditions_target_support,
+    assert_numerical_condition_unit_conversion,
+    parametrize_condition_states_all,
+    parametrize_condition_states_any,
+    parametrize_numerical_attribute_condition_above_below_all,
+    parametrize_numerical_attribute_condition_above_below_any,
+    parametrize_target_entities,
+    target_entities,
+)
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -21,22 +36,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
-    ConditionStateDescription,
-    TargetSupport,
-    assert_condition_behavior_all,
-    assert_condition_behavior_any,
-    assert_condition_options_supported,
-    assert_conditions_target_support,
-    assert_numerical_condition_unit_conversion,
-    parametrize_condition_states_all,
-    parametrize_condition_states_any,
-    parametrize_numerical_attribute_condition_above_below_all,
-    parametrize_numerical_attribute_condition_above_below_any,
-    parametrize_target_entities,
-    target_entities,
-)
 
 _ALL_STATES = [
     STATE_ECO,

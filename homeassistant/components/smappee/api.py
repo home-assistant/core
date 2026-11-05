@@ -18,14 +18,12 @@ class ConfigEntrySmappeeApi(api.SmappeeApi):
         self,
         hass: core.HomeAssistant,
         config_entry: config_entries.ConfigEntry,
-        implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
+        session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
         """Initialize Smappee Auth."""
         self.hass = hass
         self.config_entry = config_entry
-        self.session = config_entry_oauth2_flow.OAuth2Session(
-            hass, config_entry, implementation
-        )
+        self.session = session
 
         platform_to_farm = {
             "PRODUCTION": 1,

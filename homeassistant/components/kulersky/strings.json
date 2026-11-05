@@ -18,6 +18,9 @@
   "exceptions": {
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "no_devices_registered": {
+      "message": "Cannot migrate the configuration because no devices are registered"
     }
   }
 }

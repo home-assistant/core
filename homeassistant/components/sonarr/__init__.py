@@ -5,7 +5,6 @@ from dataclasses import fields
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.sonarr_client import SonarrClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -53,7 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SonarrConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SonarrConfigEntry) -> None:
     """Set up Sonarr from a config entry."""
     if not entry.options:
         options = {
@@ -97,10 +96,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SonarrConfigEntry) -> bo
     entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: SonarrConfigEntry) -> None:
     """Migrate old entry."""
     LOGGER.debug("Migrating from version %s", entry.version)
 
@@ -121,9 +118,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     LOGGER.debug("Migration to version %s successful", entry.version)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SonarrConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SonarrConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

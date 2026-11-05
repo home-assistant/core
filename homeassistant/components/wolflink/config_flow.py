@@ -3,7 +3,7 @@
 import logging
 from typing import override
 
-from httpx import RequestError
+from httpx2 import RequestError
 import probatio
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, WolfClient

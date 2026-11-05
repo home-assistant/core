@@ -2,14 +2,14 @@
 
 from unittest.mock import Mock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import media_player
 from homeassistant.components.dlna_dmr.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_resource_lifecycle(

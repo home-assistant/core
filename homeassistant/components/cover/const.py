@@ -10,7 +10,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import CoverEntity
+    from .entity import CoverEntity
 
 DOMAIN: Final = "cover"
 DATA_COMPONENT: HassKey[EntityComponent[CoverEntity]] = HassKey(DOMAIN)
@@ -55,6 +55,22 @@ class CoverEntityFeature(IntFlag):
     SPEED = 256
 
 
+class CoverSpeed(StrEnum):
+    """Standard speeds for cover entities.
+
+    Without a speed, the cover moves at the device's default speed.
+    """
+
+    # Move fast
+    FAST = "fast"
+
+    # Move at a speed between slow and fast
+    MEDIUM = "medium"
+
+    # Move slowly, e.g. to be quieter
+    SLOW = "slow"
+
+
 class CoverState(StrEnum):
     """State of Cover entities."""
 
@@ -81,3 +97,26 @@ class CoverDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(CoverDeviceClass))
+
+
+class CoverService(StrEnum):
+    """Store keys for cover services."""
+
+    CLOSE = "close_cover"
+    CLOSE_TILT = "close_cover_tilt"
+    OPEN = "open_cover"
+    OPEN_TILT = "open_cover_tilt"
+    SET_POSITION = "set_cover_position"
+    SET_TILT_POSITION = "set_cover_tilt_position"
+    STOP = "stop_cover"
+    STOP_TILT = "stop_cover_tilt"
+    TOGGLE = "toggle"
+    TOGGLE_TILT = "toggle_cover_tilt"
+
+
+class CoverServiceArgument(StrEnum):
+    """Store keys for cover service arguments."""
+
+    POSITION = "position"
+    SPEED = "speed"
+    TILT_POSITION = "tilt_position"
