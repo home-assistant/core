@@ -958,3 +958,33 @@ async def test_airflow_rejects_non_multiples_of_five(
 
     mock_zones[0].set_airflow_min.assert_not_called()
     mock_zones[0].set_airflow_max.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "service",
+    [
+        pytest.param(IZoneService.AIRFLOW_MIN, id="min"),
+        pytest.param(IZoneService.AIRFLOW_MAX, id="max"),
+    ],
+)
+async def test_airflow_rejects_controller(
+    hass: HomeAssistant,
+    mock_zones: list[Mock],
+    service: str,
+) -> None:
+    """Airflow services reject the controller entity."""
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                CommonServiceArgument.ENTITY_ID: CONTROLLER_ENTITY,
+                IZoneServiceArgument.AIRFLOW: 40,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "airflow_zone_only"
+    mock_zones[0].set_airflow_min.assert_not_called()
+    mock_zones[0].set_airflow_max.assert_not_called()
