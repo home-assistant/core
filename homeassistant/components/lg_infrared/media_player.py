@@ -2,6 +2,7 @@
 
 from typing import override
 
+from infrared_protocols.codes.lg.home_theater import LGHomeTheaterCode
 from infrared_protocols.codes.lg.tv import LGTVCode
 
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
@@ -33,6 +34,8 @@ async def async_setup_entry(
     device_type = entry.data[CONF_DEVICE_TYPE]
     if device_type == LGDeviceType.TV:
         async_add_entities([LgIrTvMediaPlayer(entry, infrared_entity_id)])
+    elif device_type == LGDeviceType.HOME_THEATER:
+        async_add_entities([LgIrHomeTheaterMediaPlayer(entry, infrared_entity_id)])
 
 
 class LgIrTvMediaPlayer(LgIrEntity, InfraredEmitterConsumerEntity, MediaPlayerEntity):
@@ -108,3 +111,82 @@ class LgIrTvMediaPlayer(LgIrEntity, InfraredEmitterConsumerEntity, MediaPlayerEn
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._send_command(LGTVCode.STOP.to_command())
+
+
+class LgIrHomeTheaterMediaPlayer(
+    LgIrEntity, InfraredEmitterConsumerEntity, MediaPlayerEntity
+):
+    """LG IR home theater media player entity."""
+
+    _attr_name = None
+    _attr_assumed_state = True
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+    )
+
+    def __init__(self, entry: ConfigEntry, infrared_entity_id: str) -> None:
+        """Initialize LG IR home theater media player."""
+        super().__init__(
+            entry, unique_id_suffix="media_player", device_name="LG Home Theater"
+        )
+        self._infrared_emitter_entity_id = infrared_entity_id
+        self._attr_state = MediaPlayerState.ON
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn on the home theater."""
+        await self._send_command(LGHomeTheaterCode.POWER.to_command())
+
+    @override
+    async def async_turn_off(self) -> None:
+        """Turn off the home theater."""
+        await self._send_command(LGHomeTheaterCode.POWER.to_command())
+
+    @override
+    async def async_volume_up(self) -> None:
+        """Send volume up command."""
+        await self._send_command(LGHomeTheaterCode.VOLUME_UP.to_command())
+
+    @override
+    async def async_volume_down(self) -> None:
+        """Send volume down command."""
+        await self._send_command(LGHomeTheaterCode.VOLUME_DOWN.to_command())
+
+    @override
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Send mute command."""
+        await self._send_command(LGHomeTheaterCode.MUTE.to_command())
+
+    @override
+    async def async_media_next_track(self) -> None:
+        """Send skip next command."""
+        await self._send_command(LGHomeTheaterCode.SKIP_FORWARD.to_command())
+
+    @override
+    async def async_media_previous_track(self) -> None:
+        """Send skip previous command."""
+        await self._send_command(LGHomeTheaterCode.SKIP_BACKWARD.to_command())
+
+    @override
+    async def async_media_play(self) -> None:
+        """Send play command."""
+        await self._send_command(LGHomeTheaterCode.PLAY.to_command())
+
+    @override
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        await self._send_command(LGHomeTheaterCode.PAUSE.to_command())
+
+    @override
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        await self._send_command(LGHomeTheaterCode.STOP.to_command())

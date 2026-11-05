@@ -328,7 +328,11 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         },
                     ): TemplateSelector(),
                     probatio.Optional(CONF_LLM_HASS_API): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                 }
             )
@@ -579,7 +583,6 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         "gpt-image-2.5-flare",
                         "gpt-image-2",
                         "gpt-image-1.5",
-                        "gpt-image-1",
                         "gpt-image-1-mini",
                     ],
                     mode=SelectSelectorMode.DROPDOWN,
@@ -789,6 +792,7 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=[
+                            "gpt-transcribe",
                             "gpt-4o-transcribe",
                             "gpt-4o-mini-transcribe",
                             "whisper-1",

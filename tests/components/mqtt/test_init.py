@@ -2464,6 +2464,51 @@ async def test_reload_config_entry(
     assert state.state is STATE_UNAVAILABLE
 
 
+async def test_reload_config_entry_with_tag_and_device_trigger(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test reloading the entry with a discovered tag and device trigger."""
+    # The tag and device_automation integrations are normally loaded by
+    # default_config, they do not support unloading a forwarded config entry
+    assert await async_setup_component(hass, "tag", {})
+    assert await async_setup_component(hass, "device_automation", {})
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    device = {"identifiers": ["0AFFD2"]}
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/tag/0AFFD2/config",
+        json.dumps({"topic": "test-topic/tag_scanned", "device": device}),
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_automation/0AFFD2/action/config",
+        json.dumps(
+            {
+                "automation_type": "trigger",
+                "topic": "test-topic/action",
+                "type": "action",
+                "subtype": "click",
+                "device": device,
+            }
+        ),
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/0AFFD2/config",
+        json.dumps({"state_topic": "test-topic/sensor", "device": device}),
+    )
+    await hass.async_block_till_done()
+    assert {"tag", "device_automation", "sensor"} <= hass.data[
+        mqtt.DATA_MQTT
+    ].platforms_loaded
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(
     "hass_config",
     [

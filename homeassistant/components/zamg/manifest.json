@@ -4,6 +4,7 @@
   "categories": ["weather_alerts"],
   "codeowners": ["@killer0071234"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/zamg",
   "integration_type": "service",
   "iot_class": "cloud_polling",
