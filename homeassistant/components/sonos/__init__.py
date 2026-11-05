@@ -168,6 +168,14 @@ async def async_unload_entry(
         _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
 
 
+@callback
+def _async_disabled_by_changed_filter(
+    event_data: dr.EventDeviceRegistryUpdatedData,
+) -> bool:
+    """Filter device registry events for disabled_by changes."""
+    return event_data["action"] == "update" and "disabled_by" in event_data["changes"]
+
+
 class SonosDiscoveryManager:
     """Manage sonos discovery."""
 
@@ -189,6 +197,37 @@ class SonosDiscoveryManager:
         self._known_invisible: set[SoCo] = set()
         self._manual_config_required = bool(hosts)
         self._stop_event = threading.Event()
+
+    @callback
+    def _async_device_registry_updated(
+        self, event: Event[dr.EventDeviceRegistryUpdatedData]
+    ) -> None:
+        """Take a speaker offline when its device is disabled."""
+        device = dr.async_get(self.hass).async_get(event.data["device_id"])
+        if (
+            device is None
+            or not device.disabled
+            or device.config_entry_id != self.entry.entry_id
+        ):
+            return
+
+        speaker = next(
+            (
+                self.data.discovered[identifier]
+                for domain, identifier in device.identifiers
+                if domain == DOMAIN and identifier in self.data.discovered
+            ),
+            None,
+        )
+        if speaker is None:
+            return
+
+        _LOGGER.debug("%s disabled, taking speaker offline", speaker.zone_name)
+        self.entry.async_create_background_task(
+            self.hass,
+            speaker.async_offline(),
+            f"sonos {speaker.uid} device disabled",
+        )
 
     async def async_shutdown(self) -> None:
         """Stop all running tasks."""
@@ -707,6 +746,13 @@ class SonosDiscoveryManager:
     async def setup_platforms_and_discovery(self) -> None:
         """Set up platforms and discovery."""
         await self.hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
+        self.entry.async_on_unload(
+            self.hass.bus.async_listen(
+                dr.EVENT_DEVICE_REGISTRY_UPDATED,
+                self._async_device_registry_updated,
+                event_filter=_async_disabled_by_changed_filter,
+            )
+        )
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP,
