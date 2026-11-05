@@ -1,5 +1,7 @@
 """Services for FRITZ!Box SmartHome integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID
@@ -13,26 +15,36 @@ from homeassistant.helpers.service import (
 from .const import DOMAIN, LOGGER
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
 
-ATTR_DURATION = "duration"
 
-SERVICE_SET_WINDOW_OPEN = "set_window_open"
+class FritzboxService(StrEnum):
+    """Fritzbox services."""
+
+    SET_WINDOW_OPEN = "set_window_open"
+    SET_WINDOW_CLOSE = "set_window_close"
+
+
+class FritzboxServiceArgument(StrEnum):
+    """Fritzbox services arguments."""
+
+    DURATION = "duration"
+
+
 SERVICE_SET_WINDOW_OPEN_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_DEVICE_ID): str,
-        probatio.Required(ATTR_DURATION): probatio.All(
+        probatio.Required(FritzboxServiceArgument.DURATION): probatio.All(
             probatio.Coerce(int), probatio.Range(min=1, max=24 * 60 * 60)
         ),
     }
 )
-SERVICE_SET_WINDOW_CLOSE = "set_window_close"
 SERVICE_SET_WINDOW_CLOSE_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_DEVICE_ID): str,
     }
 )
 SERVICES = {
-    SERVICE_SET_WINDOW_OPEN: SERVICE_SET_WINDOW_OPEN_SCHEMA,
-    SERVICE_SET_WINDOW_CLOSE: SERVICE_SET_WINDOW_CLOSE_SCHEMA,
+    FritzboxService.SET_WINDOW_OPEN: SERVICE_SET_WINDOW_OPEN_SCHEMA,
+    FritzboxService.SET_WINDOW_CLOSE: SERVICE_SET_WINDOW_CLOSE_SCHEMA,
 }
 
 
@@ -54,14 +66,14 @@ async def _service_handler(call: ServiceCall) -> None:
             for domain, ain in device_entry.identifiers:
                 if domain == DOMAIN:
                     if call.service in [
-                        SERVICE_SET_WINDOW_OPEN,
-                        SERVICE_SET_WINDOW_CLOSE,
+                        FritzboxService.SET_WINDOW_OPEN,
+                        FritzboxService.SET_WINDOW_CLOSE,
                     ]:
                         LOGGER.debug("Executing service %s", call.service)
                         await call.hass.async_add_executor_job(
                             coordinator.fritz.set_window_open,
                             ain,
-                            call.data.get(ATTR_DURATION, 0),
+                            call.data.get(FritzboxServiceArgument.DURATION, 0),
                             True,
                         )
                         return
