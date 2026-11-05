@@ -11,7 +11,7 @@ from propcache.api import cached_property
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.entity import Entity
 
-from .const import TodoItemStatus
+from .const import ATTR_SECTIONS, TodoItemStatus
 
 
 @dataclasses.dataclass
@@ -58,13 +58,17 @@ def serialize_todo_item(item: TodoItem) -> dict[str, Any]:
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "todo_items",
+    "todo_sections",
 }
 
 
 class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """An entity that represents a To-do list."""
 
+    _entity_component_unrecorded_attributes = frozenset({ATTR_SECTIONS})
+
     _attr_todo_items: list[TodoItem] | None = None
+    _attr_todo_sections: list[str] | None = None
     _update_listeners: list[Callable[[list[TodoItem] | None], None]] | None = None
     _last_broadcast_items: list[TodoItem] | None = None
 
@@ -77,10 +81,26 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return None
         return sum([item.status == TodoItemStatus.NEEDS_ACTION for item in items])
 
+    @property
+    @override
+    def capability_attributes(self) -> dict[str, list[str]] | None:
+        """Return capability attributes."""
+        if (sections := self.todo_sections) is None:
+            return None
+        return {ATTR_SECTIONS: sections}
+
     @cached_property
     def todo_items(self) -> list[TodoItem] | None:
         """Return the To-do items in the To-do list."""
         return self._attr_todo_items
+
+    @cached_property
+    def todo_sections(self) -> list[str] | None:
+        """Return the sections of the To-do list, in display order.
+
+        Items may also have a section that is not in this list.
+        """
+        return self._attr_todo_sections
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""

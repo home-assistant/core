@@ -106,6 +106,22 @@ async def test_list_todo_items(
     }
 
 
+async def test_todo_sections_capability_attribute(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test the sections of a To-do list are exposed as a capability attribute."""
+    test_entity._attr_todo_sections = ["Fresh produce", "Grocery"]
+    await create_mock_platform(hass, [test_entity])
+
+    state = hass.states.get("todo.entity1")
+    assert state
+    assert state.attributes == {
+        ATTR_SUPPORTED_FEATURES: 15,
+        "sections": ["Fresh produce", "Grocery"],
+    }
+
+
 @pytest.mark.parametrize(
     ("service_data", "expected_items"),
     [

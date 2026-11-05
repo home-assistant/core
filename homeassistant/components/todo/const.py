@@ -20,6 +20,7 @@ ATTR_DESCRIPTION = "description"
 ATTR_ITEM = "item"
 ATTR_RENAME = "rename"
 ATTR_SECTION = "section"
+ATTR_SECTIONS = "sections"
 ATTR_STATUS = "status"
 
 
