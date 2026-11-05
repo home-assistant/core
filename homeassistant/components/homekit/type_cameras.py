@@ -7,6 +7,7 @@ from dataclasses import asdict
 from datetime import datetime, timedelta
 import logging
 import math
+import re
 import shlex
 from typing import TYPE_CHECKING, Any, override
 
@@ -125,6 +126,8 @@ RECORDING_STALL_FRAGMENTS = 3
 # Covers connecting to the camera, and a copied stream waiting for a keyframe.
 RECORDING_MIN_STALL_SECONDS = 30
 RECORDING_STDERR_LINES = 10
+# ffmpeg errors can quote the input URL, which may carry credentials or tokens.
+RECORDING_STDERR_URL = re.compile(rb"[A-Za-z][A-Za-z0-9+.-]*://\S*[^\s:]")
 
 RECORDING_OUTPUT = (
     "-f mp4 -movflags frag_keyframe+empty_moov+default_base_moof+skip_trailer -"
@@ -747,8 +750,9 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
     ) -> None:
         """Keep the last ffmpeg output lines of a recording."""
         while line := await reader.readline():
-            _LOGGER.debug("%s: recording ffmpeg: %s", self.display_name, line.rstrip())
-            lines.append(line.rstrip())
+            line = RECORDING_STDERR_URL.sub(b"<url>", line.rstrip())
+            _LOGGER.debug("%s: recording ffmpeg: %s", self.display_name, line)
+            lines.append(line)
 
     async def stop_stream(self, session_info: dict[str, Any]) -> None:
         """Stop the stream for the given ``session_id``."""

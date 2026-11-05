@@ -1800,7 +1800,7 @@ async def test_camera_secure_video_recording_ffmpeg_fails(
     stdout.feed_data(output)
     stdout.feed_eof()
     stderr = asyncio.StreamReader()
-    stderr.feed_data(b"Connection refused\n")
+    stderr.feed_data(b"rtsps://user:secret@cam:7441/token: Connection refused\n")
     stderr.feed_eof()
     recording_ffmpeg.get_reader = AsyncMock(
         side_effect=lambda source="stdout": stderr if source == "stderr" else stdout
@@ -1814,7 +1814,9 @@ async def test_camera_secure_video_recording_ffmpeg_fails(
     packets = await _collect(acc)
 
     assert [packet.is_last for packet in packets] == expected_last
-    assert "Recording ffmpeg exited with 1: Connection refused" in caplog.text
+    assert "Recording ffmpeg exited with 1: <url>: Connection refused" in caplog.text
+    assert "secret" not in caplog.text
+    assert "token" not in caplog.text
 
 
 @pytest.mark.usefixtures("no_state_file")
