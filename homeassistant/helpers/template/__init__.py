@@ -102,6 +102,18 @@ _HASS_LOADER = "template.hass_loader"
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$", re.ASCII)
 
+# A template that only outputs a value from the JSON payload,
+# e.g. {{ value_json.temperature }} or {{ value_json['ENERGY'].Power }}
+_JSON_PATH_TEMPLATE = re.compile(
+    r"\{\{-?\s*value_json"
+    r"((?:\.[A-Za-z_][A-Za-z0-9_]*|\['[^'\\]*'\]|\[\"[^\"\\]*\"\])+)"
+    r"\s*-?\}\}",
+    re.ASCII,
+)
+_JSON_PATH_STEP = re.compile(
+    r"\.([A-Za-z_][A-Za-z0-9_]*)|\['([^'\\]*)'\]|\[\"([^\"\\]*)\"\]", re.ASCII
+)
+
 EVAL_CACHE_SIZE = 512
 
 # Number of recently compiled template code objects to keep alive per
@@ -353,6 +365,27 @@ def _finalize_output(value: Any, _nested: bool = False) -> Any:
     return value
 
 
+def _render_json_path(
+    value_json: Any, json_path: tuple[tuple[str, bool], ...]
+) -> str | None:
+    """Render a plain value_json template like jinja does, None if it can't.
+
+    Only plain dicts that hold the key are handled, and attribute access only
+    for keys that are not a dict attribute (jinja tries the attribute first).
+    """
+    value = value_json
+    for key, is_attribute in json_path:
+        if type(value) is not dict or key not in value:
+            return None
+        if is_attribute and hasattr(dict, key):
+            return None
+        value = value[key]
+    try:
+        return str(_finalize_output(value)).strip()
+    except RecursionError:
+        return None
+
+
 class Template:
     """Class to hold a template and manage caching and rendering."""
 
@@ -362,6 +395,7 @@ class Template:
         "_compiled_code",
         "_exc_info",
         "_hash_cache",
+        "_json_path",
         "_limited",
         "_log_fn",
         "_renders",
@@ -387,6 +421,7 @@ class Template:
         self._log_fn: Callable[[int, str], None] | None = None
         self._hash_cache: int = hash(self.template)
         self._renders: int = 0
+        self._json_path: tuple[tuple[str, bool], ...] | None = None
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -642,15 +677,24 @@ class Template:
 
         compiled = self._compiled or self._ensure_compiled()
 
+        if value_json is _SENTINEL:
+            try:
+                value_json = json_loads(value)
+            except JSON_DECODE_EXCEPTIONS:
+                value_json = Undefined
+
+        if (
+            value_json is not Undefined
+            and (json_path := self._get_json_path())
+            and (render_result := _render_json_path(value_json, json_path)) is not None
+        ):
+            if not parse_result or (self.hass and self.hass.config.legacy_templates):
+                return render_result
+            return _parse_result(render_result)
+
         variables = dict(variables or {})
         variables["value"] = value
-
-        if value_json is _SENTINEL:
-            try:  # noqa: SIM105 - suppress is much slower
-                variables["value_json"] = json_loads(value)
-            except JSON_DECODE_EXCEPTIONS:
-                pass
-        elif value_json is not Undefined:
+        if value_json is not Undefined:
             variables["value_json"] = value_json
 
         try:
@@ -672,6 +716,23 @@ class Template:
             return render_result
 
         return _parse_result(render_result)
+
+    def _get_json_path(self) -> tuple[tuple[str, bool], ...]:
+        """Return the keys a plain value_json template outputs, empty otherwise.
+
+        Each key comes with True when it is accessed as an attribute.
+        """
+        if (json_path := self._json_path) is None:
+            match = _JSON_PATH_TEMPLATE.fullmatch(self.template)
+            json_path = self._json_path = (
+                tuple(
+                    (attr, True) if attr else (single or double, False)
+                    for attr, single, double in _JSON_PATH_STEP.findall(match[1])
+                )
+                if match
+                else ()
+            )
+        return json_path
 
     def _ensure_compiled(
         self,

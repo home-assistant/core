@@ -309,6 +309,108 @@ def test_render_with_possible_json_value_and_dont_parse_result(
     assert isinstance(result, str)
 
 
+@pytest.mark.parametrize(
+    ("template_str", "value", "parse_result", "expected"),
+    [
+        pytest.param(
+            "{{ value_json.temp }}", '{"temp": 21.5}', False, "21.5", id="attribute"
+        ),
+        pytest.param(
+            "{{value_json.temp}}", '{"temp": 21.5}', True, 21.5, id="parse_result"
+        ),
+        pytest.param(
+            "{{- value_json.temp -}}",
+            '{"temp": " padded "}',
+            False,
+            "padded",
+            id="whitespace_control",
+        ),
+        pytest.param(
+            "{{ value_json['a b'] }}",
+            '{"a b": true}',
+            False,
+            "True",
+            id="item_single_quotes",
+        ),
+        pytest.param(
+            '{{ value_json["temp"] }}',
+            '{"temp": null}',
+            False,
+            "None",
+            id="item_double_quotes",
+        ),
+        pytest.param(
+            "{{ value_json.ENERGY['Power'] }}",
+            '{"ENERGY": {"Power": 12}}',
+            True,
+            12,
+            id="nested_key",
+        ),
+        pytest.param(
+            "{{ value_json.nested }}",
+            '{"nested": {"a": [1, "x"]}}',
+            False,
+            "{'a': [1, 'x']}",
+            id="container",
+        ),
+    ],
+)
+def test_render_with_possible_json_value_json_path(
+    hass: HomeAssistant,
+    template_str: str,
+    value: str,
+    parse_result: bool,
+    expected: Any,
+) -> None:
+    """A template that only outputs a value_json key is rendered without jinja."""
+    tpl = template.Template(template_str, hass)
+    with patch("homeassistant.helpers.template.render_with_context") as mock_render:
+        assert (
+            tpl.async_render_with_possible_json_value(value, parse_result=parse_result)
+            == expected
+        )
+    mock_render.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("template_str", "value", "expected"),
+    [
+        pytest.param("{{ value_json.goodbye }}", '{"hello": 1}', "", id="missing_key"),
+        pytest.param("{{ value_json.hello }}", "[1, 2]", "", id="not_a_dict"),
+        pytest.param("{{ value_json.hello }}", "not json", "not json", id="not_json"),
+        pytest.param(
+            "{{ value_json.hello | int }}", '{"hello": "1"}', "1", id="filter"
+        ),
+    ],
+)
+def test_render_with_possible_json_value_json_path_fallback(
+    hass: HomeAssistant, template_str: str, value: str, expected: str
+) -> None:
+    """Anything the fast path can't render exactly like jinja is rendered by jinja."""
+    tpl = template.Template(template_str, hass)
+    with patch(
+        "homeassistant.helpers.template.render_with_context",
+        wraps=template.render_with_context,
+    ) as mock_render:
+        result = tpl.async_render_with_possible_json_value(value)
+    mock_render.assert_called_once()
+    assert result == expected
+
+
+def test_render_with_possible_json_value_json_path_dict_attribute(
+    hass: HomeAssistant,
+) -> None:
+    """A key named like a dict attribute is rendered by jinja, which prefers the attribute."""
+    tpl = template.Template("{{ value_json.items }}", hass)
+    with patch(
+        "homeassistant.helpers.template.render_with_context",
+        wraps=template.render_with_context,
+    ) as mock_render:
+        result = tpl.async_render_with_possible_json_value('{"items": 1}')
+    mock_render.assert_called_once()
+    assert result.startswith("<built-in method items of dict object")
+
+
 @patch(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
