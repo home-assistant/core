@@ -5,6 +5,8 @@ from typing import Any
 
 from elkm1_lib import Elk
 
+from homeassistant.config_entries import ConfigEntry
+
 
 @dataclass(slots=True)
 class ELKM1Data:
@@ -16,3 +18,6 @@ class ELKM1Data:
     auto_configure: bool
     config: dict[str, Any]
     keypads: dict[str, Any]
+
+
+type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
