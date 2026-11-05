@@ -7,16 +7,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, FERTILIZE_SUFFIX, LEGACY_FERTILISE_SUFFIX
 from .coordinator import SmartyPlantsConfigEntry, SmartyPlantsCoordinator
+from .repairs import async_manage_legacy_entity_issue
 from .webhook import async_register_webhook, async_unregister_webhook
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-# The custom integration this one replaces named the fertiliser countdown
-# differently. Renaming its registry entry keeps the user's entity id alive.
-_LEGACY_SUFFIX = "_fertilise_days"
-_NEW_SUFFIX = "_fertilize"
 
 
 async def async_setup_entry(
@@ -24,6 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up SmartyPlants from a config entry."""
     await _async_migrate_legacy_unique_ids(hass, entry)
+    async_manage_legacy_entity_issue(hass, entry)
 
     client = SmartyPlantsClient(
         entry.data[CONF_API_KEY],
@@ -49,10 +46,11 @@ async def _async_migrate_legacy_unique_ids(
 
     @callback
     def _migrate(registry_entry: er.RegistryEntry) -> dict[str, str] | None:
-        if not registry_entry.unique_id.endswith(_LEGACY_SUFFIX):
+        if not registry_entry.unique_id.endswith(LEGACY_FERTILISE_SUFFIX):
             return None
         new_unique_id = (
-            registry_entry.unique_id.removesuffix(_LEGACY_SUFFIX) + _NEW_SUFFIX
+            registry_entry.unique_id.removesuffix(LEGACY_FERTILISE_SUFFIX)
+            + FERTILIZE_SUFFIX
         )
         # Both ids exist when the user already ran this integration once, and
         # claiming a taken unique id would abort setup.
