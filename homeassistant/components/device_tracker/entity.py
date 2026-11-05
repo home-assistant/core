@@ -600,7 +600,7 @@ class ScannerEntity(
     def _async_set_default_device_info(self) -> None:
         """Describe the tracked device for an integration which does not.
 
-        To be removed in HA Core 2028.11, integrations should provide device info
+        To be removed in HA Core 2027.11, integrations should provide device info
         with the MAC address of the tracked device as a connection, or an empty
         device info for a tracker without a device.
         """
@@ -619,7 +619,7 @@ class ScannerEntity(
             "it should provide device info with the MAC address of the tracked "
             "device in its connections, or an empty DeviceInfo() if the tracker "
             "should not have a device",
-            breaks_in_ha_version="2028.11.0",
+            breaks_in_ha_version="2027.11.0",
             core_integration_behavior=ReportBehavior.ERROR,
             integration_domain=self.platform.platform_name,
         )

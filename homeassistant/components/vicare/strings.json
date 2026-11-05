@@ -40,6 +40,9 @@
       "compressor": {
         "name": "Compressor"
       },
+      "condensation_risk": {
+        "name": "Condensation risk"
+      },
       "domestic_hot_water_charging": {
         "name": "DHW charging"
       },

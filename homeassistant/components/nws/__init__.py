@@ -61,7 +61,7 @@ def base_unique_id(latitude: float, longitude: float) -> str:
     return f"{latitude}_{longitude}"
 
 
-def get_base_unique_id(entry: ConfigEntry) -> str:
+def get_base_unique_id(entry: NWSConfigEntry) -> str:
     """Return base unique id from config entry."""
     if entry.data.get(CONF_LOCATION_ENTITY):
         return entry.entry_id
@@ -291,7 +291,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> None
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-def device_info(entry: ConfigEntry, nws_data: NWSData) -> DeviceInfo:
+def device_info(entry: NWSConfigEntry, nws_data: NWSData) -> DeviceInfo:
     """Return device registry information."""
     uid = get_base_unique_id(entry)
     if nws_data.location_entity_id:

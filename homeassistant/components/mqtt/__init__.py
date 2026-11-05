@@ -525,9 +525,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # Stop the discovery
     await discovery.async_stop(hass)
     try:
-        # Unload the platforms
+        # Unload the entity platforms
+        loaded_entity_platforms = mqtt_data.platforms_loaded - {
+            "device_automation",
+            "tag",
+        }
         await hass.config_entries.async_unload_platforms_or_raise(
-            entry, mqtt_data.platforms_loaded
+            entry, loaded_entity_platforms
         )
     finally:
         mqtt_data.platforms_loaded = set()

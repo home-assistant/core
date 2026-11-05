@@ -506,6 +506,8 @@ jobs:
           # when build locally for testing!
           pip install build
           python -m build
+          python3 -m packages.package_release
+          python -m build packages/pytest-homeassistant --outdir dist
 
       - name: Upload package to PyPI
         uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3

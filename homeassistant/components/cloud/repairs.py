@@ -73,8 +73,6 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
 
         async def _async_wait_for_plan_change() -> None:
             flow_manager = repairs_flow_manager(self.hass)
-            # We cannot get here without a flow manager
-            assert flow_manager is not None
 
             retries = 0
             while retries < MAX_RETRIES:

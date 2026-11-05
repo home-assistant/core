@@ -11,7 +11,7 @@ rather than containing dispatch logic.
 """
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import logging
 from typing import Any, override
 
@@ -78,11 +78,6 @@ def _volts_to_battery_pct(volts: float) -> float:
     return max(min(100.0 * (volts - 3.3) / 0.85, 100.0), 0.0)
 
 
-def _joules_to_kwh(joules: float) -> float:
-    """Convert watt-seconds (joules) to kilowatt-hours."""
-    return joules / 3_600_000.0
-
-
 # States of the device_role ENUM entities.  Wire roles are snake_cased to match.
 _DEVICE_ROLE_OPTIONS = ["appliance", "house_net", "solar", "unknown", "water"]
 
@@ -127,14 +122,14 @@ class PowersensorVirtualHouseholdSensorEntityDescription(SensorEntityDescription
     """Entity description for a Virtual Household aggregated sensor.
 
     Attributes:
-        formatter:   Function applied to the raw value before storing as state.
+        formatter:   Optional transform applied to the raw value before storing as state.
         event:       The VirtualHousehold event name this entity subscribes to.
         message_key: The key inside the VirtualHousehold event payload.
     """
 
     event: str
     message_key: str
-    formatter: Callable[[float], int | float] = field(default=int)
+    formatter: Callable[[float], int] | None = None
 
 
 SENSOR_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
@@ -165,11 +160,11 @@ SENSOR_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
         # metering, so the cumulative joule value can decrease (e.g. a solar
         # sensor exporting more than it imports).
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.JOULE,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         event="summation_energy",
         message_key="summation_joules",
-        conversion_function=_joules_to_kwh,
         last_reset_key="summation_resettime_utc",
         supported_roles=frozenset({ROLE_HOUSENET, ROLE_SOLAR, ROLE_APPLIANCE}),
     ),
@@ -283,11 +278,11 @@ PLUG_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
         # it would log a warning for every dip, treat a dip of more than 10% as
         # a meter reset, and reject negative values.
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.JOULE,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         event="summation_energy",
         message_key="summation_joules",
-        conversion_function=_joules_to_kwh,
         last_reset_key="summation_resettime_utc",
     ),
     PowersensorSensorEntityDescription(
@@ -334,14 +329,14 @@ CONSUMPTION_DESCRIPTIONS: tuple[
         key="energy_home_use",
         translation_key="energy_home_use",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.JOULE,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         # TOTAL_INCREASING: VirtualHousehold's totals only increase, and restart
         # from zero when it is created (each HA start or integration reload) or
         # a contributing sensor's counter resets.  This state class treats a
         # drop as the start of a new meter cycle.
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        formatter=_joules_to_kwh,
         event="home_usage_summation",
         message_key="summation_joules",
     ),
@@ -354,9 +349,9 @@ CONSUMPTION_DESCRIPTIONS: tuple[
         # a contributing sensor's counter resets.  This state class treats a
         # drop as the start of a new meter cycle.
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.JOULE,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=3,
-        formatter=_joules_to_kwh,
         event="from_grid_summation",
         message_key="summation_joules",
     ),
@@ -397,9 +392,9 @@ PRODUCTION_DESCRIPTIONS: tuple[
         # a contributing sensor's counter resets.  This state class treats a
         # drop as the start of a new meter cycle.
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.JOULE,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=3,
-        formatter=_joules_to_kwh,
         event="to_grid_summation",
         message_key="summation_joules",
     ),
@@ -412,9 +407,9 @@ PRODUCTION_DESCRIPTIONS: tuple[
         # a contributing sensor's counter resets.  This state class treats a
         # drop as the start of a new meter cycle.
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.JOULE,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=3,
-        formatter=_joules_to_kwh,
         event="solar_generation_summation",
         message_key="summation_joules",
     ),
@@ -806,5 +801,5 @@ class PowersensorHouseholdEntity(SensorEntity):
         """
         desc = self.entity_description
         if (val := msg.get(desc.message_key)) is not None:
-            self._attr_native_value = desc.formatter(val)
+            self._attr_native_value = desc.formatter(val) if desc.formatter else val
             self.async_write_ha_state()
