@@ -1138,10 +1138,13 @@ async def test_multiple_config_entries_error(
         domain=DOMAIN,
         unique_id="mock api key 2",
         data={**mock_broadcast_config_entry.data, CONF_API_KEY: "mock api key 2"},
+        options=mock_broadcast_config_entry.options,
+        minor_version=mock_broadcast_config_entry.minor_version,
     )
     second_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(second_entry.entry_id)
     await hass.async_block_till_done()
+    assert second_entry.state is ConfigEntryState.LOADED
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
