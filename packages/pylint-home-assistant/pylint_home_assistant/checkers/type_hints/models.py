@@ -16,7 +16,7 @@ class TypeHintMatch:
     return_type: list[str | _Undefined | None] | str | _Undefined | None
     arg_types: dict[int, str] | None = None
     """arg_types is for positional arguments"""
-    named_arg_types: dict[str, str] | None = None
+    named_arg_types: dict[str, str] | dict[str, list[str]] | None = None
     """named_arg_types is for named or keyword arguments"""
     kwargs_type: str | None = None
     """kwargs_type is for the special case `**kwargs`"""

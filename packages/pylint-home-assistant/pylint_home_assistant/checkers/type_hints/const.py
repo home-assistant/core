@@ -611,6 +611,14 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="RepairsFlow",
             matches=[
                 TypeHintMatch(
+                    function_name="async_step_init",
+                    named_arg_types={
+                        "user_input": ["dict[str, Any] | None", "dict[str, str] | None"]
+                    },
+                    return_type="RepairsFlowResult",
+                    mandatory=True,
+                ),
+                TypeHintMatch(
                     function_name="async_step_*",
                     arg_types={},
                     return_type="RepairsFlowResult",
