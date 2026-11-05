@@ -950,7 +950,7 @@ def _async_should_add_sensor(
     if not description.allowed_fn(hub, obj_id):
         return False
     supported = description.supported_fn(hub, obj_id)
-    if (description.key, obj_id) in hub.entity_loader.known_objects and (
+    if hub.entity_loader.is_known(description, obj_id) and (
         supported or description.discovery_fn is None
     ):
         return False
@@ -969,7 +969,6 @@ def _async_should_add_sensor(
         return False
     if not supported:
         registry.async_remove(entity_id)
-        hub.entity_loader.known_objects.discard((description.key, obj_id))
     return supported
 
 
