@@ -27,9 +27,12 @@ from pytest_homeassistant.common import MockConfigEntry
 import respx
 
 from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
-from homeassistant.components.mcp.coordinator import create_mcp_httpx_client
+from homeassistant.components.mcp.coordinator import (
+    META_USER_ID,
+    create_mcp_httpx_client,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_API_TOKEN, CONF_URL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -121,6 +124,7 @@ class FakeMcpServer:
         self.sse_error: httpx2.Response | Exception | ErrorData | None = None
         self.list_tools_error: httpx2.Response | Exception | ErrorData | None = None
         self.call_tool_error: httpx2.Response | Exception | ErrorData | None = None
+        self.call_tool_params: dict[str, Any] | None = None
         self._sse_queue: asyncio.Queue[bytes] = asyncio.Queue()
 
     def handle_request(self, request: httpx2.Request) -> httpx2.Response:
@@ -177,6 +181,7 @@ class FakeMcpServer:
             return self._jsonrpc_result(request_id, ListToolsResult(tools=self.tools))
 
         if method == "tools/call":
+            self.call_tool_params = body["params"]
             if self.call_tool_error is not None:
                 return self._resolve_error(request, self.call_tool_error)
             return self._jsonrpc_result(request_id, self.call_tool_result)
@@ -404,6 +409,56 @@ async def test_mcp_server_authentication_failure(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+@pytest.mark.usefixtures("fake_mcp_server")
+async def test_api_token(hass: HomeAssistant) -> None:
+    """Test the token provided by the app discovery is sent on every request."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: "test-api-token"},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    api = next(
+        iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    await api_instance.tools[0].async_call(
+        hass,
+        llm.ToolInput(tool_name="search_memory", tool_args={"query": "frogs"}),
+        create_llm_context(),
+    )
+
+    assert {call.request.headers.get("Authorization") for call in respx.calls} == {
+        "Bearer test-api-token"
+    }
+
+
+@respx.mock
+async def test_api_token_authentication_failure(hass: HomeAssistant) -> None:
+    """Test a server rejecting the token from the app discovery starts reauth."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: "test-api-token"},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
+    post_route = respx.post(MCP_SERVER_URL).mock(return_value=httpx2.Response(401))
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert post_route.calls.last.request.headers["Authorization"] == (
+        "Bearer test-api-token"
+    )
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
 @pytest.mark.parametrize(
     "error",
     [
@@ -572,6 +627,49 @@ async def test_call_tool(
         create_llm_context(),
     )
     assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    ("context", "expected_meta"),
+    [
+        pytest.param(
+            Context(user_id="test-user-id"),
+            {META_USER_ID: "test-user-id"},
+            id="user",
+        ),
+        pytest.param(Context(), None, id="no_user"),
+        pytest.param(None, None, id="no_context"),
+    ],
+)
+async def test_call_tool_user_meta(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fake_mcp_server: FakeMcpServer,
+    context: Context | None,
+    expected_meta: dict[str, str] | None,
+) -> None:
+    """Test the Home Assistant user is passed to the MCP server on a tool call."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    api = next(
+        iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    await api_instance.tools[0].async_call(
+        hass,
+        llm.ToolInput(tool_name="search_memory", tool_args={"query": "frogs"}),
+        llm.LLMContext(
+            platform="test_platform",
+            context=context,
+            language="*",
+            assistant="conversation",
+            device_id=None,
+        ),
+    )
+
+    assert fake_mcp_server.call_tool_params is not None
+    assert fake_mcp_server.call_tool_params.get("_meta") == expected_meta
 
 
 @pytest.mark.parametrize(

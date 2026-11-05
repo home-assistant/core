@@ -13,7 +13,7 @@ from yarl import URL
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, UnknownImplementationError
 from homeassistant.helpers import config_validation as cv
@@ -27,7 +27,12 @@ from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
 from .auth import AuthenticateHeader
 from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
-from .coordinator import TokenManager, create_mcp_httpx_client, mcp_client
+from .coordinator import (
+    TokenManager,
+    create_mcp_httpx_client,
+    mcp_client,
+    static_token_manager,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -209,10 +214,15 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
             return self.async_abort(reason="invalid_discovery_info")
 
+        updates = {CONF_URL: url}
+        # Stored apart from the OAuth token dict, which uses CONF_TOKEN
+        if token := discovery_info.config.get(CONF_TOKEN):
+            updates[CONF_API_TOKEN] = token
+
         await self.async_set_unique_id(discovery_info.uuid)
-        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+        self._abort_if_unique_id_configured(updates=updates)
         self._async_abort_entries_match({CONF_URL: url})
-        self.data[CONF_URL] = url
+        self.data.update(updates)
         self.data[CONF_SLUG] = discovery_info.slug
         self.addon_name = discovery_info.name
         self.context["title_placeholders"] = {"name": self.addon_name}
@@ -228,8 +238,11 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 description_placeholders={"addon": self.addon_name},
             )
 
+        token_manager = None
+        if CONF_API_TOKEN in self.data:
+            token_manager = static_token_manager(self.data[CONF_API_TOKEN])
         try:
-            info = await validate_input(self.hass, self.data)
+            info = await validate_input(self.hass, self.data, token_manager)
         except TimeoutConnectError:
             return self.async_abort(reason="timeout_connect")
         except CannotConnect:
