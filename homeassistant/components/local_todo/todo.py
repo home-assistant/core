@@ -122,8 +122,8 @@ async def async_setup_entry(
 def _convert_item(item: TodoItem, other_categories: list[str] | None = None) -> Todo:
     """Convert a HomeAssistant TodoItem to an ical Todo.
 
-    The section is stored as the first category; other categories set outside
-    of Home Assistant are kept after it.
+    The section is stored as the first category. Other categories set outside
+    of Home Assistant are kept after it, unless the section is cleared.
     """
     todo = Todo()
     if item.uid:
@@ -136,9 +136,13 @@ def _convert_item(item: TodoItem, other_categories: list[str] | None = None) -> 
     if todo.due and not isinstance(todo.due, dt.datetime):
         todo.due += dt.timedelta(days=1)
     todo.description = item.description
-    todo.categories = [item.section] if item.section else []
-    todo.categories.extend(
-        category for category in other_categories or () if category != item.section
+    todo.categories = (
+        [
+            item.section,
+            *(cat for cat in other_categories or () if cat != item.section),
+        ]
+        if item.section
+        else []
     )
     return todo
 

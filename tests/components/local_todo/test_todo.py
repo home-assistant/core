@@ -1170,8 +1170,8 @@ async def test_crlf_description_preserved_on_reload(
         ),
         pytest.param(
             {ATTR_SECTION: None},
-            "Organic",
-            ["Organic"],
+            None,
+            [],
             id="clear_section",
         ),
     ],
@@ -1204,10 +1204,10 @@ async def test_update_section_keeps_other_categories(
     setup_integration: None,
     ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
-    expected_section: str,
+    expected_section: str | None,
     expected_categories: list[str],
 ) -> None:
-    """Test the section maps to the first category and other categories are kept."""
+    """Test the section maps to the first category and clearing it clears them all."""
     items = await ws_get_items()
     assert items[0]["section"] == "Fresh produce"
 
@@ -1220,7 +1220,7 @@ async def test_update_section_keeps_other_categories(
     )
 
     items = await ws_get_items()
-    assert items[0]["section"] == expected_section
+    assert items[0].get("section") == expected_section
 
     store = hass.config_entries.async_entries("local_todo")[0].runtime_data
     calendar = IcsCalendarStream.calendar_from_ics(await store.async_load())
