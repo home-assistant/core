@@ -101,7 +101,7 @@ GITHUB = DownloadProfile(
 # third-party relay is the last resort for downloads, it takes the full URL.
 CHINA_MIRRORS = DownloadProfile(
     id="hasscn",
-    operator="the Home Assistant community in China (hasscn.top)",
+    operator="the Home Assistant China community (hasscn.top)",
     api="https://ghapi.hacs.vip",
     github=(
         "https://ghrp2.hacs.vip",
