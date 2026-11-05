@@ -183,19 +183,35 @@ async def test_user_flow_invalid_checksum_asks_then_rejects_same_profile(
 
 
 async def test_user_flow_known_host(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    telegrams: TelegramQueue,
-    telegram_data: str,
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test a dongle can't be added twice by its address."""
+    """Test a dongle can't be added twice by its address, without connecting."""
     mock_config_entry.add_to_hass(hass)
-    telegrams.put_nowait(telegram_data)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_client.assert_not_called()
+
+
+async def test_zeroconf_host_added_during_confirm(
+    hass: HomeAssistant, telegrams: TelegramQueue, telegram_data: str
+) -> None:
+    """Test a dongle added by address while discovery waits doesn't get added twice."""
+    telegrams.put_nowait(telegram_data)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY
+    )
+    assert result["step_id"] == "zeroconf_confirm"
+    MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.50"}).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
     )
 
     assert result["type"] is FlowResultType.ABORT

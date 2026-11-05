@@ -148,6 +148,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle manual setup with the IP address from the Homey app."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             self._discovered = {
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: DEFAULT_PORT,
