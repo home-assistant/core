@@ -150,7 +150,15 @@ def _async_get_system_for_service_call(call: ServiceCall) -> SystemType:
         if identity[0] == DOMAIN
     ]
 
-    return config_entry.runtime_data.systems[int(system_id_str)]
+    system_id = int(system_id_str)
+    if (system := config_entry.runtime_data.systems.get(system_id)) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="system_not_selected",
+            translation_placeholders={"system_id": system_id_str},
+        )
+
+    return system
 
 
 @callback

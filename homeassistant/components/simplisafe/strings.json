@@ -72,6 +72,9 @@
     },
     "set_system_properties_not_v3": {
       "message": "System properties can only be set on V3 systems."
+    },
+    "system_not_selected": {
+      "message": "The SimpliSafe system {system_id} is not included in this Home Assistant instance."
     }
   },
   "options": {

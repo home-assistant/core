@@ -1,6 +1,7 @@
 """Support for SimpliSafe alarm systems."""
 
 import asyncio
+from collections.abc import Mapping
 from typing import Any
 
 from simplipy import API
@@ -104,7 +105,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 def _filter_systems(
-    systems: dict[int, SystemType],
+    systems: Mapping[int, SystemType],
     included_systems: list[str],
     excluded_systems: list[str],
 ) -> dict[int, SystemType]:
@@ -399,6 +400,9 @@ class SimpliSafe:
     @callback
     def _async_websocket_on_event(self, event: WebsocketEvent) -> None:
         """Define a callback for receiving a websocket event."""
+        if event.system_id not in self.systems:
+            return
+
         LOGGER.debug("New websocket event: %s", event)
 
         async_dispatcher_send(
@@ -437,7 +441,6 @@ class SimpliSafe:
         assert self._api.websocket
 
         self._api.websocket.add_event_callback(self._async_websocket_on_event)
-        self._async_start_websocket_if_needed()
 
         self.all_systems = await self._api.async_get_systems()
         self.systems = _filter_systems(
@@ -445,6 +448,7 @@ class SimpliSafe:
             self.entry.options.get(CONF_INCLUDE_SYSTEMS, []),
             self.entry.options.get(CONF_EXCLUDE_SYSTEMS, []),
         )
+        self._async_start_websocket_if_needed()
         for system in self.systems.values():
             self._system_notifications[system.system_id] = set()
 
