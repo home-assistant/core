@@ -47,6 +47,8 @@ from .coordinator import TELEGRAM_TIMEOUT, create_client
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_DONGLE_ID = "dongle_id"
+
 # Values such as "2.2" are not valid translation keys.
 _DSMR_VERSION_LABELS = {
     "5": "DSMR 5",
@@ -252,18 +254,32 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle Zeroconf discovery of an Energy Dongle."""
-        self._async_abort_entries_match({CONF_HOST: discovery_info.host})
-        self._discovered = {
-            CONF_HOST: discovery_info.host,
-            CONF_PORT: discovery_info.port or DEFAULT_PORT,
-            CONF_WS_PATH: discovery_info.properties.get("p") or DEFAULT_WS_PATH,
-        }
-        if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="already_in_progress")
         # The dongle advertises itself as "Homey Energy Dongle <id>".
         dongle_id = service_instance_display_name(discovery_info.name).rpartition(" ")[
             2
         ]
+        self._discovered = {
+            CONF_HOST: discovery_info.host,
+            CONF_PORT: discovery_info.port or DEFAULT_PORT,
+            CONF_WS_PATH: discovery_info.properties.get("p") or DEFAULT_WS_PATH,
+            CONF_DONGLE_ID: dongle_id,
+        }
+        for entry in self._async_current_entries(include_ignore=False):
+            # Without a meter identifier, the dongle ID is the entry's identity
+            # once known; the address can belong to another dongle by now.
+            if entry.unique_id is None and CONF_DONGLE_ID in entry.data:
+                matches = entry.data[CONF_DONGLE_ID] == dongle_id
+            else:
+                matches = entry.data[CONF_HOST] == discovery_info.host
+            if matches:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates=self._discovered,
+                    reason="already_configured",
+                    reload_even_if_entry_is_unchanged=False,
+                )
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
         self._title = f"Homey Energy Dongle ({dongle_id})"
         self.context["title_placeholders"] = {"name": self._title}
         # Lets the user ignore a dongle that can't be read yet. Reading a
