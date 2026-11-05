@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from modbus_connection.mock import MockModbusUnit
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,6 +16,7 @@ KEY = "general_relaykontakt_ext_lu"
 RELAYKONTAKT_ADDRESS = 252
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -80,12 +82,12 @@ async def test_is_on_false_for_zero_register(
     assert state.state == "off"
 
 
-async def test_diagnostic_entity_is_enabled_by_default(
+async def test_static_capability_entity_is_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Diagnostic binary sensors are available for automations by default."""
+    """Static capability binary sensors are disabled by default."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -93,6 +95,27 @@ async def test_diagnostic_entity_is_enabled_by_default(
     unique_id = (
         f"{mock_config_entry.entry_id}_outside_temperature_aussenluftfuehler_vorhanden"
     )
+    entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", "aerosmart", unique_id
+    )
+    assert entity_id is not None
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None
+
+
+async def test_dynamic_diagnostic_entity_is_enabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Dynamic diagnostic states remain available for automations by default."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    unique_id = f"{mock_config_entry.entry_id}_ventilation_anforderung_abtauen"
     entity_id = entity_registry.async_get_entity_id(
         "binary_sensor", "aerosmart", unique_id
     )
