@@ -521,6 +521,9 @@
       "cooler_temperature": {
         "name": "Fridge temperature"
       },
+      "dishwasher_detailed_job_state": {
+        "name": "Detailed job state"
+      },
       "dishwasher_job_state": {
         "name": "Job state",
         "state": {
@@ -543,6 +546,12 @@
           "run": "Running",
           "stop": "[%key:common::state::stopped%]"
         }
+      },
+      "dishwasher_remaining_cycle_time": {
+        "name": "Remaining cycle time"
+      },
+      "dishwasher_time_left_to_start": {
+        "name": "Time left to start"
       },
       "diverter_valve_position": {
         "name": "Valve position",
