@@ -4,35 +4,31 @@ from unittest.mock import MagicMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.zoneminder.const import DOMAIN
-from homeassistant.const import ATTR_ID, ATTR_NAME
+from homeassistant.const import ATTR_ID, ATTR_NAME, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.exceptions import ServiceValidationError
 
-from .conftest import MOCK_HOST, MOCK_HOST_2, create_mock_zm_client
+from . import setup_integration
+from .conftest import (
+    MOCK_CONFIG_DATA,
+    MOCK_HOST,
+    MOCK_HOST_2,
+    MOCK_OPTIONS,
+    create_mock_monitor,
+    create_mock_zm_client,
+)
 
 
-async def test_set_run_state_service_registered(
+async def test_set_run_state(
     hass: HomeAssistant,
     mock_zoneminder_client: MagicMock,
-    single_server_config: dict,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test set_run_state service is registered after setup."""
-    assert await async_setup_component(hass, DOMAIN, single_server_config)
-    await hass.async_block_till_done()
-
-    assert hass.services.has_service(DOMAIN, "set_run_state")
-
-
-async def test_set_run_state_valid_call(
-    hass: HomeAssistant,
-    mock_zoneminder_client: MagicMock,
-    single_server_config: dict,
-) -> None:
-    """Test valid set_run_state call sets state on correct ZM client."""
-    assert await async_setup_component(hass, DOMAIN, single_server_config)
-    await hass.async_block_till_done()
+    """Test set_run_state sets the state on the ZoneMinder server."""
+    await setup_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
 
     await hass.services.async_call(
         DOMAIN,
@@ -40,31 +36,29 @@ async def test_set_run_state_valid_call(
         {ATTR_ID: MOCK_HOST, ATTR_NAME: "Away"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mock_zoneminder_client.set_active_state.assert_called_once_with("Away")
 
 
-async def test_set_run_state_multi_server_targets_correct_server(
-    hass: HomeAssistant, multi_server_config: dict
-) -> None:
-    """Test set_run_state targets specific server by id."""
-    clients: dict[str, MagicMock] = {}
-
-    def make_client(*args, **kwargs):
-        client = create_mock_zm_client()
-        # Extract hostname from the server_origin (first positional arg)
-        origin = args[0]
-        hostname = origin.split("://")[1]
-        clients[hostname] = client
-        return client
+async def test_set_run_state_multi_server(hass: HomeAssistant) -> None:
+    """Test set_run_state targets the server matching the host."""
+    client_1 = create_mock_zm_client([create_mock_monitor()])
+    client_2 = create_mock_zm_client([create_mock_monitor()])
+    entry_1 = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG_DATA, options=MOCK_OPTIONS
+    )
+    entry_2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG_DATA, CONF_HOST: MOCK_HOST_2},
+        options=MOCK_OPTIONS,
+    )
 
     with patch(
         "homeassistant.components.zoneminder.ZoneMinder",
-        side_effect=make_client,
+        side_effect=[client_1, client_2],
     ):
-        assert await async_setup_component(hass, DOMAIN, multi_server_config)
-        await hass.async_block_till_done()
+        await setup_integration(hass, entry_1, [Platform.BINARY_SENSOR])
+        await setup_integration(hass, entry_2, [Platform.BINARY_SENSOR])
 
     await hass.services.async_call(
         DOMAIN,
@@ -72,46 +66,32 @@ async def test_set_run_state_multi_server_targets_correct_server(
         {ATTR_ID: MOCK_HOST_2, ATTR_NAME: "Home"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
-    # Only the second server should have been called
-    clients[MOCK_HOST_2].set_active_state.assert_called_once_with("Home")
-    clients[MOCK_HOST].set_active_state.assert_not_called()
+    client_2.set_active_state.assert_called_once_with("Home")
+    client_1.set_active_state.assert_not_called()
 
 
-async def test_set_run_state_missing_fields_rejected(
-    hass: HomeAssistant,
-    mock_zoneminder_client: MagicMock,
-    single_server_config: dict,
+@pytest.mark.usefixtures("mock_zoneminder_client")
+async def test_set_run_state_missing_fields(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test service call with missing required fields is rejected."""
-    assert await async_setup_component(hass, DOMAIN, single_server_config)
-    await hass.async_block_till_done()
+    """Test a service call with missing required fields is rejected."""
+    await setup_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
 
     with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
-            DOMAIN,
-            "set_run_state",
-            {ATTR_ID: MOCK_HOST},  # Missing ATTR_NAME
-            blocking=True,
+            DOMAIN, "set_run_state", {ATTR_ID: MOCK_HOST}, blocking=True
         )
 
 
+@pytest.mark.usefixtures("mock_zoneminder_client")
 async def test_set_run_state_invalid_host(
-    hass: HomeAssistant,
-    mock_zoneminder_client: MagicMock,
-    single_server_config: dict,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test service call with invalid host logs error.
+    """Test a service call for an unknown host raises a validation error."""
+    await setup_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
 
-    Regression: services.py logs error but doesn't return early,
-    so it also raises KeyError when trying to access the invalid host.
-    """
-    assert await async_setup_component(hass, DOMAIN, single_server_config)
-    await hass.async_block_till_done()
-
-    with pytest.raises(KeyError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             "set_run_state",
@@ -119,4 +99,24 @@ async def test_set_run_state_invalid_host(
             blocking=True,
         )
 
-    assert "Invalid ZoneMinder host provided" in caplog.text
+    assert exc_info.value.translation_key == "invalid_host"
+
+
+async def test_set_run_state_failure_logged(
+    hass: HomeAssistant,
+    mock_zoneminder_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed state change is logged."""
+    mock_zoneminder_client.set_active_state.return_value = {}
+    await setup_integration(hass, mock_config_entry, [Platform.BINARY_SENSOR])
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_run_state",
+        {ATTR_ID: MOCK_HOST, ATTR_NAME: "Away"},
+        blocking=True,
+    )
+
+    assert "Unable to change ZoneMinder state" in caplog.text

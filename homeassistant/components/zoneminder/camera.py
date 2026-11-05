@@ -3,39 +3,28 @@
 import logging
 
 from zoneminder.monitor import Monitor
-from zoneminder.zm import ZoneMinder
 
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import ZoneMinderConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ZoneMinderConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ZoneMinder cameras."""
     filter_urllib3_logging()
-    cameras = []
-    zm_client: ZoneMinder
-    for zm_client in hass.data[DOMAIN].values():
-        if not (monitors := zm_client.get_monitors()):
-            raise PlatformNotReady(
-                "Camera could not fetch any monitors from ZoneMinder"
-            )
-
-        for monitor in monitors:
-            _LOGGER.debug("Initializing camera %s", monitor.id)
-            cameras.append(ZoneMinderCamera(monitor, zm_client.verify_ssl))
-    add_entities(cameras)
+    verify_ssl = entry.runtime_data.client.verify_ssl
+    async_add_entities(
+        ZoneMinderCamera(monitor, entry.entry_id, verify_ssl)
+        for monitor in entry.runtime_data.monitors
+    )
 
 
 class ZoneMinderCamera(MjpegCamera):
@@ -43,13 +32,14 @@ class ZoneMinderCamera(MjpegCamera):
 
     _attr_should_poll = True  # Cameras default to False
 
-    def __init__(self, monitor: Monitor, verify_ssl: bool) -> None:
+    def __init__(self, monitor: Monitor, entry_id: str, verify_ssl: bool) -> None:
         """Initialize as a subclass of MjpegCamera."""
         super().__init__(
             name=monitor.name,
             mjpeg_url=monitor.mjpeg_image_url,
             still_image_url=monitor.still_image_url,
             verify_ssl=verify_ssl,
+            unique_id=f"{entry_id}_{monitor.id}",
         )
         self._attr_is_recording = False
         self._attr_available = False
