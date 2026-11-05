@@ -1,6 +1,6 @@
 """Test Homey Energy Dongle setup and unload."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from dsmr_parser.objects import Telegram
 from homey_energy_dongle_ws import (
@@ -43,13 +43,14 @@ REPAIR_ISSUES = [
 
 
 async def test_setup_and_unload(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant, mock_client: MagicMock, init_integration: MockConfigEntry
 ) -> None:
     """Test the entry loads after the first telegram and unloads."""
     assert init_integration.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(init_integration.entry_id)
     assert init_integration.state is ConfigEntryState.NOT_LOADED
+    mock_client.return_value.aclose.assert_awaited_once()
 
 
 async def test_setup_retry_on_connection_error(

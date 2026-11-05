@@ -134,6 +134,12 @@ class HomeyEnergyDongleCoordinator(DataUpdateCoordinator[Telegram]):
             self.async_set_updated_data(telegram)
 
     @override
+    async def async_shutdown(self) -> None:
+        """Close the WebSocket, as the dongle only allows two connections."""
+        await super().async_shutdown()
+        await self._client.aclose()
+
+    @override
     async def _async_update_data(self) -> Telegram:
         """Wait for the first telegram, then keep the pushed one on requests."""
         if self.data is None:
