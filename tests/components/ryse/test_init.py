@@ -7,7 +7,7 @@ from bleak import BleakError
 from bleak.backends.device import BLEDevice
 import pytest
 
-from homeassistant.components.ryse.const import DATA_LOCAL_WAITERS, SERVICE_UUID
+from homeassistant.components.ryse.const import SERVICE_UUID
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -282,31 +282,4 @@ async def test_ble_device_callback_logs_lost_and_restored_local_route(
             mock_device.set_ble_device.assert_called_with(local_ble_device)
     finally:
         cancel_local()
-        cancel_remote()
-
-
-async def test_setup_cancels_proxy_waiter(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setting up an entry drops a leftover proxy waiter."""
-    device = make_ble_device()
-    advertisement = make_advertisement()
-    remote, cancel_remote = register_remote_scanner(hass)
-    cancel_local = None
-    try:
-        remote.inject_advertisement(device, advertisement)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert DEVICE_ADDRESS in hass.data[DATA_LOCAL_WAITERS]
-
-        cancel_local = register_local_scanner(hass, device, advertisement)
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert mock_config_entry.state is ConfigEntryState.LOADED
-        assert DEVICE_ADDRESS not in hass.data[DATA_LOCAL_WAITERS]
-    finally:
-        if cancel_local is not None:
-            cancel_local()
         cancel_remote()

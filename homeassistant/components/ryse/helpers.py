@@ -5,9 +5,7 @@ from homeassistant.components.bluetooth import (
     BluetoothScannerDevice,
     async_scanner_devices_by_address,
 )
-from homeassistant.core import HomeAssistant, callback
-
-from .const import DATA_LOCAL_WAITERS
+from homeassistant.core import HomeAssistant
 
 
 def async_local_scanner_devices(
@@ -25,13 +23,3 @@ def async_local_scanner_devices(
         )
         if not isinstance(scanner_device.scanner, BaseHaRemoteScanner)
     ]
-
-
-@callback
-def async_cancel_local_waiter(hass: HomeAssistant, address: str) -> None:
-    """Stop watching *address* for a local adapter."""
-    waiters = hass.data.get(DATA_LOCAL_WAITERS)
-    if not waiters:
-        return
-    if unsub := waiters.pop(address, None):
-        unsub()

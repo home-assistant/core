@@ -2,9 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "No RYSE BLE device found in pairing mode. Please press the PAIR button and retry.",
-      "not_in_pairing_mode": "The device is not in pairing mode. Press and hold the PAIR button, then try again.",
-      "not_local_source": "RYSE pairing requires a local Bluetooth adapter. Devices seen only through a Bluetooth proxy cannot be paired."
+      "no_devices_found": "No RYSE BLE device found in pairing mode. Please press the PAIR button and retry."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

@@ -9,14 +9,9 @@ from bleak.exc import BleakError
 import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.ryse.const import (
-    DATA_LOCAL_WAITERS,
-    DOMAIN,
-    MANUFACTURER_ID,
-    SERVICE_UUID,
-)
-from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE, SOURCE_USER
-from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP
+from homeassistant.components.ryse.const import DOMAIN, MANUFACTURER_ID
+from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -561,123 +556,52 @@ async def test_async_step_bluetooth_not_in_pairing_mode(
 async def test_async_step_bluetooth_rejects_proxy_source(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
-    """Test proxy-only discoveries are aborted before the confirmation form."""
+    """Test a proxy-only discovery stays confirmable and cannot pair."""
     device = make_ble_device()
     advertisement = make_advertisement()
     scanner, cancel = register_remote_scanner(hass)
     scanner.inject_advertisement(device, advertisement)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    result = await hass.config_entries.flow.async_configure(
+        flows[0]["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "not_local_source"}
     mock_device.pair.assert_not_called()
-    assert DEVICE_ADDRESS in hass.data[DATA_LOCAL_WAITERS]
     cancel()
 
 
-async def test_proxy_local_waiter_unsubscribes_on_hass_stop(
-    hass: HomeAssistant,
-) -> None:
-    """Test leftover proxy waiters are released when Home Assistant stops."""
-    device = make_ble_device()
-    advertisement = make_advertisement()
-    scanner, cancel = register_remote_scanner(hass)
-    scanner.inject_advertisement(device, advertisement)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert DEVICE_ADDRESS in hass.data[DATA_LOCAL_WAITERS]
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-
-    assert DEVICE_ADDRESS not in hass.data[DATA_LOCAL_WAITERS]
-    cancel()
-
-
-async def test_user_setup_cancels_proxy_waiter(
-    hass: HomeAssistant, mock_device: MagicMock
-) -> None:
-    """Test creating an entry another way drops a leftover proxy waiter."""
-    device = make_ble_device()
-    advertisement = make_advertisement()
-    remote, cancel_remote = register_remote_scanner(hass)
-    cancel_local: Callable[[], None] | None = None
-    try:
-        remote.inject_advertisement(device, advertisement)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert DEVICE_ADDRESS in hass.data[DATA_LOCAL_WAITERS]
-
-        cancel_local = register_local_scanner(hass, device, advertisement)
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], USER_INPUT
-        )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert DEVICE_ADDRESS not in hass.data[DATA_LOCAL_WAITERS]
-    finally:
-        if cancel_local is not None:
-            cancel_local()
-        cancel_remote()
-
-
-async def test_ignore_cancels_proxy_waiter(hass: HomeAssistant) -> None:
-    """Test ignoring a shade drops a leftover proxy waiter."""
-    device = make_ble_device()
-    advertisement = make_advertisement()
-    scanner, cancel = register_remote_scanner(hass)
-    try:
-        scanner.inject_advertisement(device, advertisement)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert DEVICE_ADDRESS in hass.data[DATA_LOCAL_WAITERS]
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IGNORE},
-            data={"unique_id": DEVICE_ADDRESS, "title": DEVICE_NAME},
-        )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert DEVICE_ADDRESS not in hass.data[DATA_LOCAL_WAITERS]
-    finally:
-        cancel()
-
-
-async def test_already_configured_cancels_proxy_waiter(
+async def test_async_step_bluetooth_proxy_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a later discovery of an existing entry drops a leftover proxy waiter."""
+    """Test a proxy discovery of an existing entry aborts."""
     device = make_ble_device()
     advertisement = make_advertisement()
-    scanner, cancel = register_remote_scanner(hass)
-    try:
-        scanner.inject_advertisement(device, advertisement)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert DEVICE_ADDRESS in hass.data[DATA_LOCAL_WAITERS]
-
-        mock_config_entry.add_to_hass(hass)
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_BLUETOOTH},
-            data=BluetoothServiceInfoBleak(
-                name=DEVICE_NAME,
-                address=DEVICE_ADDRESS,
-                rssi=-40,
-                manufacturer_data=advertisement.manufacturer_data,
-                service_data={},
-                service_uuids=advertisement.service_uuids,
-                source=PROXY_SOURCE,
-                device=device,
-                advertisement=advertisement,
-                time=0,
-                connectable=True,
-                tx_power=-127,
-            ),
-        )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
-        assert DEVICE_ADDRESS not in hass.data[DATA_LOCAL_WAITERS]
-    finally:
-        cancel()
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=BluetoothServiceInfoBleak(
+            name=DEVICE_NAME,
+            address=DEVICE_ADDRESS,
+            rssi=-40,
+            manufacturer_data=advertisement.manufacturer_data,
+            service_data={},
+            service_uuids=advertisement.service_uuids,
+            source=PROXY_SOURCE,
+            device=device,
+            advertisement=advertisement,
+            time=0,
+            connectable=True,
+            tx_power=-127,
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_async_step_bluetooth_proxy_selected_when_also_local(
@@ -755,10 +679,10 @@ async def test_async_step_bluetooth_rejects_idle_local_when_proxy_is_pairing(
         cancel_remote()
 
 
-async def test_async_step_bluetooth_pairing_overrides_stale_idle(
+async def test_async_step_bluetooth_uses_scanner_not_manager_history(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
-    """Test submit uses a fresh PAIR advertisement when the scanner cache is still idle."""
+    """Test submit follows the local scanner, not a newer manager advertisement."""
     device = make_ble_device()
     idle = make_advertisement(pairing=False)
     pairing = make_advertisement()
@@ -774,6 +698,13 @@ async def test_async_step_bluetooth_pairing_overrides_stale_idle(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
 
+    result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "not_in_pairing_mode"}
+    mock_device.pair.assert_not_called()
+
+    cancel()
+    cancel = register_local_scanner(hass, device, pairing)
     result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     mock_device.pair.assert_awaited_once()
@@ -858,6 +789,8 @@ async def test_async_step_bluetooth_idle_then_pair(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
 
+    cancel()
+    cancel = register_local_scanner(hass, device, make_advertisement())
     result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     mock_device.pair.assert_awaited_once()
@@ -867,7 +800,7 @@ async def test_async_step_bluetooth_idle_then_pair(
 async def test_async_step_bluetooth_proxy_then_local(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
-    """Test a proxy-only abort rediscovers once a local adapter sees the shade."""
+    """Test an open proxy discovery pairs once a local adapter sees the shade."""
     device = make_ble_device()
     advertisement = make_advertisement()
     remote, cancel_remote = register_remote_scanner(hass)
@@ -875,27 +808,21 @@ async def test_async_step_bluetooth_proxy_then_local(
     try:
         remote.inject_advertisement(device, advertisement)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-        mock_device.pair.assert_not_called()
-        assert DEVICE_ADDRESS in hass.data[DATA_LOCAL_WAITERS]
-
-        remote.inject_advertisement(device, advertisement)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-
-        cancel_local = register_local_scanner(hass, device, advertisement)
-        # Identical ads are dropped by the Bluetooth manager; a payload change
-        # is required to notify BluetoothCallbackMatcher subscribers.
-        later = make_advertisement(service_data={SERVICE_UUID: b"\x01"})
-        remote.inject_advertisement(device, later)
-        await hass.async_block_till_done(wait_background_tasks=True)
 
         flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
         assert len(flows) == 1
-        assert DEVICE_ADDRESS not in hass.data.get(DATA_LOCAL_WAITERS, {})
-        result = await hass.config_entries.flow.async_configure(
-            flows[0]["flow_id"], user_input={}
-        )
+        flow_id = flows[0]["flow_id"]
+        result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "not_local_source"}
+        mock_device.pair.assert_not_called()
+
+        remote.inject_advertisement(device, advertisement)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
+
+        cancel_local = register_local_scanner(hass, device, advertisement)
+        result = await hass.config_entries.flow.async_configure(flow_id, user_input={})
         assert result["type"] is FlowResultType.CREATE_ENTRY
         mock_device.pair.assert_awaited_once()
     finally:

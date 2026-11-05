@@ -19,7 +19,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .helpers import async_cancel_local_waiter, async_local_scanner_devices
+from .helpers import async_local_scanner_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,8 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
     """Set up RYSE."""
     address = entry.unique_id
     assert address is not None
-
-    async_cancel_local_waiter(hass, address)
 
     ble_device = _async_local_ble_device(hass, address)
     if not ble_device:
