@@ -1125,6 +1125,7 @@ async def test_migrate_legacy_removed_tracked_entity_issue(
                 {
                     "breaks_in_ha_version": None,
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created": "2026-01-01T00:00:00+00:00",
                     "data": None,
                     "dismissed_version": legacy_dismissed_version,
