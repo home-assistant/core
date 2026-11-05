@@ -5,6 +5,7 @@
   "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@JohNan"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/plaato",
   "integration_type": "hub",

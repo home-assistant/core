@@ -31,6 +31,7 @@ from teslemetry_stream.const import EnergyTotalsEvent, WallConnectorTotalsEvent
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -39,7 +40,7 @@ if TYPE_CHECKING:
     from . import TeslemetryConfigEntry
 
 from .const import DOMAIN, LOGGER
-from .helpers import async_update_device_sw_version, flatten
+from .helpers import async_update_device_sw_version, flatten, gateway_issue_id
 
 RETRY_EXCEPTIONS = (
     InvalidResponse,
@@ -247,6 +248,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self._local_poll_in_progress = False
         self._local_backoff_ticks = 1
         self._local_ticks_to_skip = 0
+        self._local_reached = False
         self.data = _index_wall_connectors(data)
 
     def enable_local_polling(self, local: PowerwallEnergySite) -> None:
@@ -299,6 +301,11 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
                         "Local live poll for %s recovered", self.api.energy_site_id
                     )
                 self._local_backoff_ticks = 1
+                if not self._local_reached:
+                    self._local_reached = True
+                    ir.async_delete_issue(
+                        self.hass, DOMAIN, gateway_issue_id(self.api.energy_site_id)
+                    )
             self.data = self._merged()
             # Not async_set_updated_data: availability stays with the stream.
             self.async_update_listeners()

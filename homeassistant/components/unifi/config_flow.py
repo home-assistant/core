@@ -22,13 +22,13 @@ import probatio
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -159,8 +159,8 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         """Trigger a reauthentication flow."""
         reauth_entry = self._get_reauth_entry()
         self.context["title_placeholders"] = {
-            CONF_HOST: reauth_entry.data[CONF_HOST],
-            CONF_NAME: reauth_entry.title,
+            "host": reauth_entry.data[CONF_HOST],
+            "name": reauth_entry.title,
         }
 
         return await self.async_step_reconfigure()
@@ -188,6 +188,15 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                     (unique_id := config_entry.unique_id) is not None
                 ) and unique_id in sites:
                     config_data[CONF_SITE_ID] = sites[unique_id].name
+                    if config_entry.state is ConfigEntryState.LOADED:
+                        # The update listener reloads a loaded entry on data changes
+                        if config_data.items() <= config_entry.data.items():
+                            self.hass.config_entries.async_schedule_reload(
+                                config_entry.entry_id
+                            )
+                        return self.async_update_and_abort(
+                            config_entry, data_updates=config_data
+                        )
                     return self.async_update_reload_and_abort(
                         config_entry, data_updates=config_data
                     )
@@ -248,13 +257,13 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         self.context["title_placeholders"] = {
-            CONF_NAME: (
+            "name": (
                 discovery_info.get("name")
                 or discovery_info.get("hostname")
                 or discovery_info.get("product_name")
                 or "UniFi Network"
             ),
-            CONF_HOST: source_ip,
+            "host": source_ip,
         }
         self.context["configuration_url"] = f"https://{host}"
 

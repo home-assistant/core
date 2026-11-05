@@ -46,6 +46,10 @@ from typing import (
 import probatio
 from propcache.api import cached_property, under_cached_property
 
+# 'typing_extensions.sentinel' is not supported by Pylance yet, requires >2026.4.1
+# Use temporary alias to make the switch easier later.
+from typing_extensions import Sentinel as sentinel
+
 from . import util
 from .const import (
     ATTR_DOMAIN,
@@ -116,7 +120,7 @@ FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
 CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 _DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=Mapping[str, Any])
 type CALLBACK_TYPE = Callable[[], None]
 
@@ -1767,7 +1771,7 @@ class EventBus:
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
         event_filter: Callable[[_DataT], bool] | None = None,
-        run_immediately: bool | object = _SENTINEL,
+        run_immediately: bool | _SENTINEL = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -1784,7 +1788,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if run_immediately in (True, False):
+        if run_immediately is not _SENTINEL:
             # late import to avoid circular imports
             from .helpers import frame  # noqa: PLC0415
 
@@ -1844,7 +1848,7 @@ class EventBus:
         self,
         event_type: EventType[_DataT] | str,
         listener: Callable[[Event[_DataT]], Coroutine[Any, Any, None] | None],
-        run_immediately: bool | object = _SENTINEL,
+        run_immediately: bool | _SENTINEL = _SENTINEL,
     ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
@@ -1855,7 +1859,7 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if run_immediately in (True, False):
+        if run_immediately is not _SENTINEL:
             # late import to avoid circular imports
             from .helpers import frame  # noqa: PLC0415
 

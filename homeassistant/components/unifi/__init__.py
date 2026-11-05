@@ -16,6 +16,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
+from .entity import async_device_supported_fn
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
 from .services import async_setup_services
@@ -90,9 +91,15 @@ async def async_remove_config_entry_device(
         for domain, identifier in device_entry.identifiers
     ):
         return False
-    return not any(
-        identifier in hub.api.devices for _, identifier in device_entry.connections
-    )
+    if any(
+        identifier in hub.api.devices and async_device_supported_fn(hub, identifier)
+        for _, identifier in device_entry.connections
+    ):
+        return False
+    for _, identifier in device_entry.connections:
+        hub.entity_loader.async_forget_objects(identifier)
+        hub.adoption.async_follow_if_unadopted(identifier)
+    return True
 
 
 class UnifiWirelessClients:

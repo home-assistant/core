@@ -22,7 +22,7 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
 )
-from homeassistant.const import ATTR_ICON, CONF_HOST, CONF_NAME
+from homeassistant.const import ATTR_ICON, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -102,7 +102,7 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_connection_error",
-                translation_placeholders={CONF_NAME: self.entry.title},
+                translation_placeholders={"name": self.entry.title},
             ) from e
 
     async def nfandroidtv_send_message(self, message: str, **kwargs: Any) -> None:
@@ -130,13 +130,13 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_connection_error",
-                translation_placeholders={CONF_NAME: self.entry.title},
+                translation_placeholders={"name": self.entry.title},
             ) from e
         if not sent:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_failed",
-                translation_placeholders={CONF_NAME: self.entry.title},
+                translation_placeholders={"name": self.entry.title},
             )
         self._async_record_notification()
 
@@ -201,7 +201,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="connection_failed",
-                    translation_placeholders={CONF_HOST: self.host},
+                    translation_placeholders={"host": self.host},
                 ) from err
 
         data: dict | None = kwargs.get(ATTR_DATA)
@@ -327,7 +327,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_failed",
-                translation_placeholders={CONF_HOST: self.host},
+                translation_placeholders={"host": self.host},
             ) from err
 
     def load_file(

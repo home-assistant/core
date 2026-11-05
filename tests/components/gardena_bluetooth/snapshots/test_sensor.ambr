@@ -771,11 +771,8 @@
     'area_id': None,
     'capabilities': dict({
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'none',
         'manual',
         'schedule',
-        'external',
-        'setup',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -814,11 +811,8 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Activation reason',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'none',
         'manual',
         'schedule',
-        'external',
-        'setup',
       ]),
     }),
     'context': <ANY>,
