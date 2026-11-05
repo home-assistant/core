@@ -65,7 +65,7 @@
       "message": "Could not back up {path}, it is protected."
     },
     "catalog_content_unresolved": {
-      "message": "The archive of the catalog version can not be installed as is: {error}"
+      "message": "The archive of the catalog version cannot be installed as is: {error}"
     },
     "catalog_invalid_json": {
       "message": "The catalog returned invalid JSON for {endpoint}: {error}"
@@ -98,7 +98,7 @@
       "message": "The catalog names no domain."
     },
     "catalog_zip_release": {
-      "message": "A ZIP release can not be installed from the catalog."
+      "message": "A ZIP release cannot be installed from the catalog."
     },
     "content_empty": {
       "message": "There is no content to download."
@@ -281,7 +281,7 @@
       "message": "{repository} has no content the Marketplace can install in version {version}."
     },
     "template_from_zip": {
-      "message": "{repository} is a template, which is one file and can not come from a ZIP release."
+      "message": "{repository} is a template, which is one file and cannot come from a ZIP release."
     },
     "template_not_utf8": {
       "message": "{file} is not UTF-8 encoded."
@@ -346,16 +346,16 @@
         },
         "step": {
           "init": {
-            "description": "The Marketplace can not reach its catalog. A Community Relay run by {operator} is available for your country.\n\nEverything the Marketplace downloads, the catalog and the content you install, then goes through this relay instead of GitHub. When the relay can not be reached, downloads fall back to third-party relays. Your GitHub account is not used with the relay or the relays it falls back to. You can switch back at any time from the menu in the Marketplace.",
+            "description": "The Marketplace cannot reach its catalog. An unofficial relay run by {operator} is available for your country.\n\nEverything the Marketplace downloads, the catalog and the content you install, then goes through this relay instead of GitHub. When the relay cannot be reached, downloads fall back to third-party relays. Your GitHub account is not used with the relay or the relays it falls back to. You can switch back at any time from the menu in the Marketplace.",
             "menu_options": {
               "ignore": "Keep using GitHub, stop suggesting this",
               "use_profile": "Use the relay"
             },
-            "title": "Use the Community Relay for the Marketplace?"
+            "title": "Use the unofficial relay for the Marketplace?"
           }
         }
       },
-      "title": "The Marketplace can not reach its catalog"
+      "title": "The Marketplace cannot reach its catalog"
     },
     "legacy_dashboard_resources": {
       "description": "Your dashboard resources in YAML still load from `/hacsfiles`, the path HACS used. The Marketplace keeps serving it for compatibility, but installed resources use `/local/community`. Change these resources in your YAML configuration:\n\n{resources}",
