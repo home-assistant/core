@@ -140,12 +140,12 @@ def _async_adopt_options(hass: HomeAssistant, entry: MarketplaceConfigEntry) -> 
 
     if LEGACY_HACS_CHINA_OPTION in entry.options:
         options.setdefault(CONF_PROFILE, LEGACY_HACS_CHINA_PROFILE)
-        # A shared token came from a pool on the mirrors, it belongs to
+        # A shared token came from a pool on the relays, it belongs to
         # someone else
         if entry.options[LEGACY_HACS_CHINA_OPTION]:
             data.pop(CONF_TOKEN, None)
         LOGGER.info(
-            "Switched to the %s download profile, the previous install used the China mirrors",
+            "Switched to the %s download profile, the previous install used the Unofficial China relays",
             LEGACY_HACS_CHINA_PROFILE,
         )
 

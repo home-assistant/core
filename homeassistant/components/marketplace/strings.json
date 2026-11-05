@@ -65,7 +65,7 @@
       "message": "Could not back up {path}, it is protected."
     },
     "catalog_content_unresolved": {
-      "message": "The archive of the catalog version can not be installed as is: {error}"
+      "message": "The archive of the catalog version cannot be installed as is: {error}"
     },
     "catalog_invalid_json": {
       "message": "The catalog returned invalid JSON for {endpoint}: {error}"
@@ -98,7 +98,7 @@
       "message": "The catalog names no domain."
     },
     "catalog_zip_release": {
-      "message": "A ZIP release can not be installed from the catalog."
+      "message": "A ZIP release cannot be installed from the catalog."
     },
     "content_empty": {
       "message": "There is no content to download."
@@ -281,7 +281,7 @@
       "message": "{repository} has no content the Marketplace can install in version {version}."
     },
     "template_from_zip": {
-      "message": "{repository} is a template, which is one file and can not come from a ZIP release."
+      "message": "{repository} is a template, which is one file and cannot come from a ZIP release."
     },
     "template_not_utf8": {
       "message": "{file} is not UTF-8 encoded."
@@ -342,20 +342,20 @@
     "download_profile": {
       "fix_flow": {
         "abort": {
-          "issue_ignored": "The Marketplace keeps using GitHub and stops suggesting the mirrors. You can switch at any time from the menu in the Marketplace."
+          "issue_ignored": "The Marketplace keeps using GitHub and stops suggesting the relay. You can switch at any time from the menu in the Marketplace."
         },
         "step": {
           "init": {
-            "description": "The Marketplace can not reach its catalog. Unofficial mirrors run by {operator} are available for your country.\n\nEverything the Marketplace downloads, the catalog and the content you install, then goes through these mirrors instead of GitHub. When the mirrors can not be reached, downloads fall back to third-party proxies. Your GitHub account is not used with the mirrors or the proxies. You can switch back at any time from the menu in the Marketplace.",
+            "description": "The Marketplace cannot reach its catalog. An unofficial relay run by {operator} is available for your country.\n\nEverything the Marketplace downloads, the catalog and the content you install, then goes through this relay instead of GitHub. When the relay cannot be reached, downloads fall back to third-party relays. Your GitHub account is not used with the relay or the relays it falls back to. You can switch back at any time from the menu in the Marketplace.",
             "menu_options": {
               "ignore": "Keep using GitHub, stop suggesting this",
-              "use_profile": "Use the mirrors"
+              "use_profile": "Use the relay"
             },
-            "title": "Use unofficial mirrors for the Marketplace?"
+            "title": "Use the unofficial relay for the Marketplace?"
           }
         }
       },
-      "title": "The Marketplace can not reach its catalog"
+      "title": "The Marketplace cannot reach its catalog"
     },
     "legacy_dashboard_resources": {
       "description": "Your dashboard resources in YAML still load from `/hacsfiles`, the path HACS used. The Marketplace keeps serving it for compatibility, but installed resources use `/local/community`. Change these resources in your YAML configuration:\n\n{resources}",
@@ -405,7 +405,7 @@
           "profile": "Download from"
         },
         "data_description": {
-          "profile": "Routes Marketplace traffic, the catalog and content you install, through the selected source. Third-party mirrors and proxies do not use your GitHub account, and you can switch back to GitHub at any time."
+          "profile": "Routes Marketplace traffic, the catalog and content you install, through the selected source. Third-party relays do not use your GitHub account, and you can switch back to GitHub at any time."
         },
         "title": "Download source"
       }
@@ -415,7 +415,7 @@
     "profile": {
       "options": {
         "default": "GitHub (run by GitHub and the Open Home Foundation)",
-        "hasscn": "Unofficial China mirrors (run by the Home Assistant China community, hasscn.top, with third-party proxies as a fallback)"
+        "hasscn": "Unofficial China relays (run by the Home Assistant China community, hasscn.top, with third-party relays as a fallback)"
       }
     }
   },
