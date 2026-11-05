@@ -9,6 +9,7 @@ from telegram.error import TelegramError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -586,7 +587,7 @@ def _build_targets(
     for notify_entity_id in notify_entity_ids:
         # get config entry from notify entity
         entity_entry = entity_registry.async_get(notify_entity_id)
-        if not entity_entry:
+        if not entity_entry or entity_entry.platform != DOMAIN:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_notify_entity",
@@ -615,6 +616,15 @@ def _build_targets(
         config_entry = service.hass.config_entries.async_get_known_entry(
             config_entry_id
         )
+        if config_entry.domain != DOMAIN:
+            raise ServiceValidationError(
+                translation_domain=HOMEASSISTANT_DOMAIN,
+                translation_key="service_config_entry_wrong_domain",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "entry_title": config_entry.title,
+                },
+            )
     else:
         # config entry not provided so we try to determine the default
         config_entries: list[TelegramBotConfigEntry] = (
