@@ -634,7 +634,7 @@ asyncinotify==4.4.4
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.7.2
+asyncsleepiq==1.8.0
 
 # homeassistant.components.sftp_storage
 asyncssh==2.24.0
@@ -1229,7 +1229,7 @@ google-photos-library-api==0.12.1
 google_air_quality_api==3.0.1
 
 # homeassistant.components.google_wifi
-googlewifiapi==0.1.2
+googlewifiapi==0.1.3
 
 # homeassistant.components.slide
 # homeassistant.components.slide_local
