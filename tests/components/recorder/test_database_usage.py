@@ -12,11 +12,16 @@ from pytest_homeassistant.components.recorder.common import (
     async_wait_recording_done,
     do_adhoc_statistics,
 )
-from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
+from pytest_homeassistant.typing import (
+    MockHAClientWebSocket,
+    RecorderInstanceContextManager,
+    WebSocketGenerator,
+)
 from sqlalchemy.exc import SQLAlchemyError
 from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
 
+from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.database_usage import (
     DATA_DATABASE_USAGE,
@@ -27,6 +32,7 @@ from homeassistant.components.recorder.statistics import (
     async_import_statistics,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 
 START = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
@@ -149,6 +155,24 @@ async def test_database_usage_empty(
     assert result["generated_at"] == START.isoformat()
 
 
+async def test_database_usage_counts_json_bytes(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test attributes are weighted by their size in bytes, not characters."""
+    hass.states.async_set("sensor.ascii", "1", {"text": "a" * 500})
+    hass.states.async_set("sensor.multibyte", "1", {"text": "é" * 500})
+    await async_wait_recording_done(hass)
+
+    usage = await recorder_mock.async_add_executor_job(
+        get_database_usage, recorder_mock
+    )
+
+    entity_bytes = {
+        entity["entity_id"]: entity["bytes"] for entity in usage["entities"]
+    }
+    assert entity_bytes["sensor.multibyte"] > entity_bytes["sensor.ascii"]
+
+
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_usage_without_dbstat(
@@ -252,3 +276,48 @@ async def test_database_usage_requires_admin(
 
     assert not response["success"]
     assert response["error"]["code"] == "unauthorized"
+
+
+async def test_database_usage_waits_for_database_ready(
+    async_test_recorder: RecorderInstanceContextManager,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a request during startup waits until the database is ready."""
+    client = await hass_ws_client()
+    recorder_helper.async_initialize_recorder(hass)
+
+    async with async_test_recorder(
+        hass, wait_recorder=False, wait_recorder_setup=False
+    ):
+        await client.send_json_auto_id({"type": "recorder/database_usage"})
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["total_bytes"] > 0
+
+
+async def test_database_usage_recorder_failed(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test an error is returned when the recorder failed to start."""
+    client = await hass_ws_client()
+    with patch("homeassistant.components.recorder.migration._migrate_schema"):
+        recorder_helper.async_initialize_recorder(hass)
+        assert not await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {
+                recorder.DOMAIN: {
+                    recorder.CONF_DB_URL: "sqlite:////no_dir/no_file.db",
+                    recorder.CONF_DB_RETRY_WAIT: 0,
+                }
+            },
+        )
+    await hass.async_add_executor_job(recorder.get_instance(hass).join)
+
+    await client.send_json_auto_id({"type": "recorder/database_usage"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "recorder_not_ready"

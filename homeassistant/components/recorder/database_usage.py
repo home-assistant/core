@@ -6,13 +6,12 @@ import logging
 from typing import TYPE_CHECKING, Any, Final, TypedDict
 
 import probatio
-from sqlalchemy import func, select, text
+from sqlalchemy import LargeBinary, cast, func, select, text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.helpers.recorder import get_instance, session_scope
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
@@ -177,19 +176,28 @@ def _names(session: Session, key: Any, name: Any) -> dict[int, str]:
     }
 
 
+def _byte_length(dialect: SupportedDialect | None, column: Any) -> Any:
+    """Return the length of a text column in bytes, not characters."""
+    match dialect:
+        case SupportedDialect.MYSQL:
+            return func.length(column)
+        case SupportedDialect.POSTGRESQL:
+            return func.octet_length(column)
+        case _:
+            return func.length(cast(column, LargeBinary))
+
+
 def _first_owner_lengths(
-    session: Session, owner: Any, owner_ref: Any, shared: Any, shared_id: Any
+    session: Session, owner: Any, owner_ref: Any, byte_length: Any, shared_id: Any
 ) -> dict[int, int]:
-    """Return the shared data length per owner.
+    """Return the shared data length in bytes per owner.
 
     Each shared row goes to the first owner found through the index on the
     referencing column, which is exact unless several owners share a row.
     Rows without an owner are left out.
     """
     first_owner = select(owner).where(owner_ref == shared_id).limit(1).scalar_subquery()
-    sub = select(
-        first_owner.label("owner"), func.length(shared).label("length")
-    ).subquery()
+    sub = select(first_owner.label("owner"), byte_length.label("length")).subquery()
     return {
         owner_id: int(length)
         for owner_id, length in session.execute(
@@ -208,13 +216,14 @@ def get_database_usage(instance: Recorder) -> DatabaseUsage:
     the length of the JSON each entity or event type owns.
     """
     generated_at = dt_util.utcnow()
+    dialect = instance.dialect_name
     with session_scope(session=instance.get_session(), read_only=True) as session:
         states = _counts(session, States.metadata_id)
         attributes = _first_owner_lengths(
             session,
             States.metadata_id,
             States.attributes_id,
-            StateAttributes.shared_attrs,
+            _byte_length(dialect, StateAttributes.shared_attrs),
             StateAttributes.attributes_id,
         )
         statistics = _counts(session, Statistics.metadata_id)
@@ -224,7 +233,7 @@ def get_database_usage(instance: Recorder) -> DatabaseUsage:
             session,
             Events.event_type_id,
             Events.data_id,
-            EventData.shared_data,
+            _byte_length(dialect, EventData.shared_data),
             EventData.data_id,
         )
         totals = {
@@ -235,7 +244,7 @@ def get_database_usage(instance: Recorder) -> DatabaseUsage:
             TABLE_EVENTS: sum(events.values()),
             TABLE_EVENT_DATA: sum(event_data.values()),
         }
-        match instance.dialect_name:
+        match dialect:
             case SupportedDialect.MYSQL:
                 table_bytes, total_bytes = _mysql_table_bytes(session)
             case SupportedDialect.POSTGRESQL:
@@ -362,10 +371,14 @@ async def ws_database_usage(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return the space entities and event types use in the database."""
-    await hass.data[recorder_helper.DATA_RECORDER].db_connected
+    instance = get_instance(hass)
+    # Offline migrations finish and the recorder executor starts once ready
+    if not await instance.async_db_ready:
+        connection.send_error(
+            msg["id"], "recorder_not_ready", "The recorder database is not available"
+        )
+        return
     connection.send_result(
         msg["id"],
-        await hass.data[DATA_DATABASE_USAGE].async_get(
-            get_instance(hass), msg["refresh"]
-        ),
+        await hass.data[DATA_DATABASE_USAGE].async_get(instance, msg["refresh"]),
     )
