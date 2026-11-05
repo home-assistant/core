@@ -22,6 +22,7 @@ PROFILE_ISSUE_PREFIX = "download_profile_"
 class Endpoint(StrEnum):
     """The kinds of content a profile has endpoints for."""
 
+    API = "api"
     GITHUB = "github"
     RAW = "raw"
     CATALOG = "catalog"
@@ -42,8 +43,9 @@ class DownloadProfile:
     # traffic, so the options and the repair name them.
     operator: str
 
-    # The GitHub REST API. A single URL, aiogithubapi takes one base URL.
-    api: str
+    # The GitHub REST API. aiogithubapi holds one base URL at a time, so the
+    # client moves over when the first endpoint can not be reached
+    api: Sequence[str]
 
     # Only GitHub itself gets the token of a connected GitHub account
     uses_github_account: bool = False
@@ -97,24 +99,31 @@ GITHUB = DownloadProfile(
     },
 )
 
-# The relays serve the same paths as GitHub, raw content below /raw. A public
-# third-party relay is the last resort for downloads, it takes the full URL.
+# hamrelay.hasscn.top takes the full GitHub URL after its own host, the ghrp
+# mirrors serve the same paths as GitHub, raw content below /raw. A public
+# third-party relay is the last resort for downloads, it takes the full URL
+# as well.
 CHINA_MIRRORS = DownloadProfile(
     id="hasscn",
     operator="the Home Assistant community in China (hasscn.top)",
-    api="https://ghapi.hacs.vip",
+    api=(
+        "https://hamrelay.hasscn.top/https://api.github.com",
+        "https://ghapi.hacs.vip",
+    ),
     github=(
+        "https://hamrelay.hasscn.top/https://github.com",
         "https://ghrp2.hacs.vip",
         "https://ghrp.hacs.vip",
         "https://gh-proxy.org/https://github.com",
     ),
     raw=(
+        "https://hamrelay.hasscn.top/https://raw.githubusercontent.com",
         "https://ghrp2.hacs.vip/raw",
         "https://ghrp.hacs.vip/raw",
         "https://gh-proxy.org/https://raw.githubusercontent.com",
     ),
-    # data-v2.hasscn.top only answers requests that carry the User-Agent of
-    # the Marketplace. The original is the last fallback.
+    # data-v2.hasscn.top only answers requests whose User-Agent contains
+    # HomeAssistantMarketplace. The original is the last fallback.
     catalog=(
         "https://data-v2.hasscn.top",
         "https://data-v2.hacs.vip",

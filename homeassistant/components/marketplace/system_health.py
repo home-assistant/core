@@ -30,6 +30,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     # The endpoints the downloads start with
     endpoints = marketplace.endpoints
     profile = endpoints.profile
+    api = endpoints.bases(Endpoint.API)[0]
     raw = endpoints.bases(Endpoint.RAW)[0]
     github = endpoints.bases(Endpoint.GITHUB)[0]
     catalog = endpoints.bases(Endpoint.CATALOG)[0]
@@ -37,7 +38,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     data: dict[str, Any] = {
         "download_profile": profile.id,
         "github_api": system_health.async_check_can_reach_url(
-            hass, profile.api, profile.status_pages.get("api")
+            hass, api, profile.status_pages.get("api")
         ),
         "github_content": system_health.async_check_can_reach_url(
             hass, f"{raw}/{CATALOG_REPOSITORY}/main/integration"

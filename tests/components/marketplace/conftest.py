@@ -88,8 +88,8 @@ def _fixture_key(url: URL) -> str:
     host = MIRRORED_HOSTS.get(url.host, url.host)
     path = url.path
 
-    # A public proxy takes the full URL as its path
-    if host == "gh-proxy.org":
+    # hamrelay and the public proxy take the full URL as their path
+    if host in ("gh-proxy.org", "hamrelay.hasscn.top"):
         proxied = URL(path.removeprefix("/"))
         host, path = proxied.host, proxied.path
     if host in GITHUB_MIRRORS:

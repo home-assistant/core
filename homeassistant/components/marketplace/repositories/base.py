@@ -946,11 +946,12 @@ class Repository:
         """Get the content of the hacs.json file."""
         try:
             response = await self.marketplace.async_github_api_method(
-                method=self.marketplace.githubapi.repos.contents.get,
+                lambda api: api.repos.contents.get(
+                    repository=self.data.full_name,
+                    path=RepositoryFile.REPOSITORY_MANIFEST,
+                    params={"ref": self.version_to_install()},
+                ),
                 raise_exception=False,
-                repository=self.data.full_name,
-                path=RepositoryFile.REPOSITORY_MANIFEST,
-                params={"ref": self.version_to_install()},
             )
             if response:
                 return json_loads_object(decode_content(response.data.content))
@@ -1449,10 +1450,11 @@ class Repository:
         """Return the repository tree."""
         try:
             response = await self.marketplace.async_github_api_method(
-                method=self.marketplace.githubapi.repos.git.get_tree,
-                repository=self.data.full_name,
-                tree_sha=ref,
-                params={"recursive": "true"},
+                lambda api: api.repos.git.get_tree(
+                    repository=self.data.full_name,
+                    tree_sha=ref,
+                    params={"recursive": "true"},
+                )
             )
         except GitHubException as exception:
             raise MarketplaceError(
@@ -1468,8 +1470,7 @@ class Repository:
     ) -> list[GitHubReleaseModel]:
         """Return the repository releases."""
         response = await self.marketplace.async_github_api_method(
-            method=self.marketplace.githubapi.repos.releases.list,
-            repository=self.data.full_name,
+            lambda api: api.repos.releases.list(repository=self.data.full_name)
         )
         releases: list[GitHubReleaseModel] = []
         for release in response.data or []:
@@ -1732,8 +1733,9 @@ class Repository:
     ) -> list[FileInformation] | None:
         """Gather the contents of a release."""
         release = await self.marketplace.async_github_api_method(
-            method=self.marketplace.githubapi.generic,
-            endpoint=f"/repos/{self.data.full_name}/releases/tags/{version}",
+            lambda api: api.generic(
+                endpoint=f"/repos/{self.data.full_name}/releases/tags/{version}"
+            ),
             raise_exception=False,
         )
         if release is None:
@@ -2296,9 +2298,9 @@ class Repository:
     async def async_get_releases(self) -> list[GitHubReleaseModel]:
         """Get the last 30 releases of a repository."""
         response = await self.marketplace.async_github_api_method(
-            method=self.marketplace.githubapi.repos.releases.list,
-            repository=self.data.full_name,
-            kwargs={"per_page": 30},
+            lambda api: api.repos.releases.list(
+                repository=self.data.full_name, kwargs={"per_page": 30}
+            )
         )
         # A tag ends up in the URLs the version is installed by
         releases: list[GitHubReleaseModel] = [
@@ -2309,8 +2311,9 @@ class Repository:
     async def async_set_last_commits(self) -> None:
         """Set the last commit for the repository."""
         response = await self.marketplace.async_github_api_method(
-            method=self.marketplace.githubapi.generic,
-            endpoint=f"/repos/{self.data.full_name}/branches/{self.data.default_branch}",
+            lambda api: api.generic(
+                endpoint=f"/repos/{self.data.full_name}/branches/{self.data.default_branch}"
+            )
         )
         if response is not None and response.data:
             last_commit = response.data["commit"]["sha"]

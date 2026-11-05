@@ -443,10 +443,11 @@ class IntegrationRepository(Repository):
         )
 
         response = await self.marketplace.async_github_api_method(
-            method=self.marketplace.githubapi.repos.contents.get,
-            repository=self.data.full_name,
-            path=manifest_path,
-            params={"ref": target_ref},
+            lambda api: api.repos.contents.get(
+                repository=self.data.full_name,
+                path=manifest_path,
+                params={"ref": target_ref},
+            )
         )
         if response:
             return json_loads_object(decode_content(response.data.content))

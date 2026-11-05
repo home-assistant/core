@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any, Literal, Self, overload
 from aiogithubapi import (
     GitHubAPI,
     GitHubAuthenticationException,
+    GitHubConnectionException,
     GitHubException,
     GitHubNotModifiedException,
     GitHubRatelimitException,
@@ -76,6 +77,7 @@ from .exceptions import (
 )
 from .profiles import (
     DownloadProfile,
+    Endpoint,
     ProfileEndpoints,
     async_suggest_profile,
     async_withdraw_profile_suggestions,
@@ -420,14 +422,8 @@ class MarketplaceManager:
 
         self.session: ClientSession = async_get_clientsession(hass)
         self.endpoints = ProfileEndpoints(self.configuration.profile)
-        # An empty token keeps aiogithubapi from reading GITHUB_TOKEN from the
-        # environment, without a connected account the calls are anonymous.
-        self.githubapi = GitHubAPI(
-            token=self.configuration.token or "",
-            session=self.session,
-            client_name=CLIENT_NAME,
-            base_url=self.configuration.profile.api,
-        )
+        self._api_base: str | None = None
+        self.githubapi = self._api_client(self.endpoints.bases(Endpoint.API)[0])
         self.data_client = CatalogClient(
             session=self.session, client_name=CLIENT_NAME, endpoints=self.endpoints
         )
@@ -615,7 +611,7 @@ class MarketplaceManager:
             return 0
 
         try:
-            response = await self.async_github_api_method(self.githubapi.rate_limit)
+            response = await self.async_github_api_method(lambda api: api.rate_limit())
             if ((limit := response.data.resources.core.remaining or 0) - 1000) >= 10:
                 return math.floor((limit - 1000) / 10)
             reset = dt_util.as_local(
@@ -632,10 +628,24 @@ class MarketplaceManager:
 
         return 0
 
+    def _api_client(self, base: str) -> GitHubAPI:
+        """Return the API client for the endpoint, rebuilt when it moves."""
+        if base != self._api_base:
+            # An empty token keeps aiogithubapi from reading GITHUB_TOKEN from
+            # the environment, without a connected account calls are anonymous
+            self.githubapi = GitHubAPI(
+                token=self.configuration.token or "",
+                session=self.session,
+                client_name=CLIENT_NAME,
+                base_url=base,
+            )
+            self._api_base = base
+        return self.githubapi
+
     @overload
     async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[T]],
+        method: Callable[[GitHubAPI], Awaitable[T]],
         *args: Any,
         raise_exception: Literal[True] = True,
         **kwargs: Any,
@@ -644,7 +654,7 @@ class MarketplaceManager:
     @overload
     async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[T]],
+        method: Callable[[GitHubAPI], Awaitable[T]],
         *args: Any,
         raise_exception: bool,
         **kwargs: Any,
@@ -652,7 +662,7 @@ class MarketplaceManager:
 
     async def async_github_api_method[T](
         self,
-        method: Callable[..., Awaitable[T]],
+        method: Callable[[GitHubAPI], Awaitable[T]],
         *args: Any,
         raise_exception: bool = True,
         **kwargs: Any,
@@ -662,29 +672,43 @@ class MarketplaceManager:
         Without a connected account the call is anonymous, a refusal then only
         fails the call that hit it. An anonymous rate limit always raises, so
         the action that hit it fails instead of carrying on with stale data.
+        An endpoint that can not be reached hands the API over to the next one
+        and the call is tried there.
         """
-        _exception = None
+        _exception: Exception | None = None
+        failed: list[str] = []
 
-        try:
-            return await method(*args, **kwargs)
-        except GitHubAuthenticationException as exception:
-            if self.github_connected:
-                self.disable(DisabledReason.INVALID_TOKEN)
-            _exception = exception
-        except GitHubRatelimitException as exception:
-            if not self.github_connected:
-                raise GitHubAnonymousRateLimitError from exception
-            self.disable(DisabledReason.RATE_LIMIT)
-            if raise_exception:
-                raise GitHubRateLimitError from exception
-            return None
-        except GitHubNotModifiedException:
-            raise
-        except GitHubException as exception:
-            _exception = exception
-        except Exception as exception:  # noqa: BLE001
-            LOGGER.exception("Unexpected error calling the GitHub API")
-            _exception = exception
+        for base in self.endpoints.bases(Endpoint.API):
+            try:
+                response = await method(self._api_client(base), *args, **kwargs)
+            except GitHubConnectionException as exception:
+                # The endpoint can not be reached, the next one takes over
+                failed.append(base)
+                _exception = exception
+                continue
+            except GitHubAuthenticationException as exception:
+                if self.github_connected:
+                    self.disable(DisabledReason.INVALID_TOKEN)
+                _exception = exception
+            except GitHubRatelimitException as exception:
+                if not self.github_connected:
+                    raise GitHubAnonymousRateLimitError from exception
+                self.disable(DisabledReason.RATE_LIMIT)
+                if raise_exception:
+                    raise GitHubRateLimitError from exception
+                return None
+            except GitHubNotModifiedException:
+                raise
+            except GitHubException as exception:
+                _exception = exception
+            except Exception as exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected error calling the GitHub API")
+                _exception = exception
+            else:
+                self.endpoints.worked(Endpoint.API, base, failed)
+                return response
+            # An error the call reports itself, another endpoint can not help
+            break
 
         if raise_exception and _exception is not None:
             raise MarketplaceError(
