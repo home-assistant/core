@@ -723,17 +723,18 @@ async def test_set_preset_mode_raises_home_assistant_error_on_api_errors(
         "max_temperature",
         "expected_max_temperature",
         "temperature_stepsize",
+        "expected_temperature_stepsize",
         "temperature_unit",
         "target_temperature",
         "expected_temperature_call",
     ),
     [
-        (None, DEFAULT_MIN_TEMP, None, DEFAULT_MAX_TEMP, None, None, 20, 20),
-        (None, DEFAULT_MIN_TEMP, None, DEFAULT_MAX_TEMP, None, "°C", 20, 20.0),
-        (None, DEFAULT_MIN_TEMP, None, DEFAULT_MAX_TEMP, None, "°F", 20, 68.0),
-        (16, 16, 30, 30, 1, "°C", 20, 20.0),
-        (15.5, 15.5, 25.5, 25.5, 0.5, "°C", 20.5, 20.5),
-        (20, -6.7, 80, 26.7, 1, "°F", 20, 68.0),
+        (None, DEFAULT_MIN_TEMP, None, DEFAULT_MAX_TEMP, None, None, None, 20, 20),
+        (None, DEFAULT_MIN_TEMP, None, DEFAULT_MAX_TEMP, None, None, "°C", 20, 20.0),
+        (None, DEFAULT_MIN_TEMP, None, DEFAULT_MAX_TEMP, None, None, "°F", 20, 68.0),
+        (16, 16, 30, 30, 1, 1, "°C", 20, 20.0),
+        (15.5, 15.5, 25.5, 25.5, 0.5, 0.5, "°C", 20.5, 20.5),
+        (20, -6.7, 80, 26.7, 1, 0.555556, "°F", 20, 68.0),
     ],
 )
 async def test_set_temperature_functionality(
@@ -746,6 +747,7 @@ async def test_set_temperature_functionality(
     max_temperature: float | None,
     expected_max_temperature: float | None,
     temperature_stepsize: float | None,
+    expected_temperature_stepsize: float | None,
     temperature_unit: str | None,
     target_temperature: float,
     expected_temperature_call: float,
@@ -791,7 +793,10 @@ async def test_set_temperature_functionality(
     assert entity_state
     assert entity_state.attributes[ATTR_MIN_TEMP] == expected_min_temperature
     assert entity_state.attributes[ATTR_MAX_TEMP] == expected_max_temperature
-    assert entity_state.attributes.get(ATTR_TARGET_TEMP_STEP) == temperature_stepsize
+    assert (
+        entity_state.attributes.get(ATTR_TARGET_TEMP_STEP)
+        == expected_temperature_stepsize
+    )
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,

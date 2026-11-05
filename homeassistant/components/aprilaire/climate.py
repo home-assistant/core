@@ -188,11 +188,11 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
     @property
     @override
     def target_temperature_step(self) -> float | None:
-        """Get the step for the target temperature based on the unit."""
+        """Get the native (Celsius) step: 0.5 °C, or 1 °F on Fahrenheit systems."""
         return (
             0.5
             if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS
-            else 1
+            else 5 / 9
         )
 
     @property

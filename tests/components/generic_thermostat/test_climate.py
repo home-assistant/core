@@ -1489,6 +1489,7 @@ async def test_recheck_scheduled_for_remaining_time(
 @pytest.fixture
 async def setup_comp_9(hass: HomeAssistant) -> None:
     """Initialize components."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
     assert await async_setup_component(
         hass,
         CLIMATE_DOMAIN,
@@ -1515,7 +1516,6 @@ async def setup_comp_9(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_comp_9")
 async def test_precision(hass: HomeAssistant) -> None:
     """Test that setting precision to tenths works as intended."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
     await common.async_set_temperature(hass, 55.27)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 55.3

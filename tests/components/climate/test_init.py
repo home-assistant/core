@@ -1171,7 +1171,7 @@ async def test_default_min_max_temp_use_native_unit(
             METRIC_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
             1.0,
-            1 / 1.8,
+            0.555556,
             id="metric-native-fahrenheit",
         ),
         pytest.param(
@@ -1187,6 +1187,13 @@ async def test_default_min_max_temp_use_native_unit(
             0.001,
             0.0018,
             id="us-customary-native-celsius-small-step",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperature.CELSIUS,
+            0.1,
+            0.18,
+            id="us-customary-native-celsius-no-float-noise",
         ),
         pytest.param(
             US_CUSTOMARY_SYSTEM,
@@ -1218,9 +1225,10 @@ async def test_target_temp_step_converts_to_unit_system(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
-    assert state.attributes[
-        ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP
-    ] == pytest.approx(expected_step)
+    assert (
+        state.attributes[ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP]
+        == expected_step
+    )
     assert entity.target_temperature_step == native_step
 
 

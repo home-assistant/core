@@ -1575,7 +1575,7 @@
   ReadOnlyDict({
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.8,
   })
 # ---
 # name: test_us_customary_system[climate.bathroom_radiator]
@@ -1583,7 +1583,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 67,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 158,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 34,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.9,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 54,
   })
 # ---
@@ -1592,7 +1592,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 136,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 45,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.8,
   })
 # ---
 # name: test_us_customary_system[climate.clima_cucina]
@@ -1600,7 +1600,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 81,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.8,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 77,
   })
 # ---
@@ -1609,7 +1609,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 113,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 45,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 34,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.9,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 40,
   })
 # ---
@@ -1618,7 +1618,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 66,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.8,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 95,
   })
 # ---
@@ -1636,7 +1636,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 140,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 45,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.8,
   })
 # ---
 # name: test_us_customary_system[climate.itc_308_wifi_thermostat]
@@ -1644,7 +1644,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 93,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 414,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -40,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.9,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 95,
   })
 # ---
@@ -1653,7 +1653,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 67,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 203,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.9,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 71,
   })
 # ---
@@ -1662,7 +1662,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 79,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 190,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 61,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.9,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 167,
   })
 # ---
@@ -1697,7 +1697,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 69,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 43,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 32,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.9,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 43,
   })
 # ---
@@ -1706,7 +1706,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 71,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 194,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.8,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 54,
   })
 # ---
@@ -1715,7 +1715,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 75,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 187,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 61,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.8,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 61,
   })
 # ---
@@ -1724,7 +1724,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 73,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 158,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 33,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.18,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 73,
   })
 # ---
@@ -1742,7 +1742,7 @@
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 77,
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.9,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 72,
   })
 # ---
