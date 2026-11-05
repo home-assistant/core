@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-from .conftest import EMONCMS_FAILURE, get_feed
+from .conftest import EMONCMS_FAILURE, UNIQUE_ID, get_feed
 
 
 async def test_no_feed_selected(
@@ -121,3 +121,27 @@ async def test_feeds_grouped_by_tag(
     garage_device = next(device for device in devices if device.name == "garage")
     assert len(er.async_entries_for_device(entity_registry, garage_device.id)) == 2
     assert hass.states.get("sensor.tag_parameter_3").name == "tag parameter 3"
+
+
+async def test_upgrade_prefixes_custom_name_with_tag(
+    hass: HomeAssistant,
+    config_entry_unique_id: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    emoncms_client: AsyncMock,
+) -> None:
+    """Test a renamed entity from before tag devices keeps its id and gains the tag."""
+    config_entry_unique_id.add_to_hass(hass)
+    entity = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{UNIQUE_ID}-1",
+        config_entry=config_entry_unique_id,
+        suggested_object_id="kitchen_power",
+    )
+    entity_registry.async_update_entity(entity.entity_id, name="Kitchen power")
+    assert entity.device_id is None
+
+    await setup_integration(hass, config_entry_unique_id)
+
+    assert entity_registry.async_get(entity.entity_id).device_id is not None
+    assert hass.states.get(entity.entity_id).name == "tag Kitchen power"
