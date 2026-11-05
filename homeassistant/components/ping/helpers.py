@@ -3,6 +3,7 @@
 import asyncio
 from contextlib import suppress
 import logging
+import os
 import re
 from typing import TYPE_CHECKING, Any
 
@@ -119,6 +120,8 @@ class PingDataSubProcess(PingData):
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             close_fds=False,  # required for posix_spawn
+            # The output is parsed, so force the untranslated C locale
+            env={**os.environ, "LC_ALL": "C"},
         )
         try:
             async with asyncio.timeout(self._count + PING_TIMEOUT):
