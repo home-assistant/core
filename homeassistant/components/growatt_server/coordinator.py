@@ -279,6 +279,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     }
                     for device in devices
                 ]
+            except RequestsJSONDecodeError:
+                # Let the session handling treat a web page as for any request.
+                raise
             except (
                 RequestException,
                 json.JSONDecodeError,

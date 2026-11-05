@@ -367,17 +367,7 @@ async def async_setup_entry(
                 hass, username, password, url
             )
         api = classic_session.api
-
-        # Get plant_id and devices using the authenticated session
         plant_id = config[CONF_PLANT_ID]
-        try:
-            devices = await hass.async_add_executor_job(api.device_list, plant_id)
-        except (RequestException, JSONDecodeError) as ex:
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(ex)},
-            ) from ex
     else:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
@@ -388,6 +378,18 @@ async def async_setup_entry(
     total_coordinator = GrowattCoordinator(
         hass, config_entry, plant_id, "total", plant_id, api, classic_session
     )
+
+    if classic_session is not None:
+        # Fetch the device list in the first refresh, so an expired session or
+        # a web page gets the same renewal and repair handling as a poll.
+        total_coordinator.request_device_list_scan()
+        await total_coordinator.async_config_entry_first_refresh()
+        if total_coordinator.device_list is None:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="device_list_failed",
+            )
+        devices = total_coordinator.device_list
 
     # Create coordinators for each device
     device_coordinators = {
@@ -404,8 +406,8 @@ async def async_setup_entry(
         if device["deviceType"] in SUPPORTED_DEVICE_TYPES
     }
 
-    # Perform the first refresh for the total coordinator
-    await total_coordinator.async_config_entry_first_refresh()
+    if classic_session is None:
+        await total_coordinator.async_config_entry_first_refresh()
 
     # Perform the first refresh for each device coordinator
     for device_coordinator in device_coordinators.values():

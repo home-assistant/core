@@ -559,9 +559,8 @@ async def test_classic_api_web_page_at_setup_raises_issue(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a web page right after the setup login raises the repair issue."""
-    mock_growatt_classic_api.device_list.return_value = [
-        {"deviceSn": "TLX123456", "deviceType": "tlx"}
-    ]
+    # The real device_list() starts with plant_info(), so both get the page.
+    mock_growatt_classic_api.device_list.side_effect = SESSION_EXPIRED
     mock_growatt_classic_api.plant_info.side_effect = SESSION_EXPIRED
     mock_growatt_classic_api.tlx_detail.side_effect = SESSION_EXPIRED
 
@@ -583,6 +582,61 @@ async def test_classic_api_web_page_at_setup_raises_issue(
     )
     assert issue
     assert issue.config_entry_id == mock_config_entry_classic.entry_id
+
+
+async def test_classic_api_session_dies_during_setup_retries(
+    hass: HomeAssistant,
+    mock_growatt_classic_api: MagicMock,
+    mock_config_entry_classic: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a cached session that dies between setup attempts is renewed."""
+    cookie_valid = False
+
+    def login(username: str, password: str) -> dict[str, Any]:
+        nonlocal cookie_valid
+        cookie_valid = True
+        return {"success": True, "user": {"id": 12345}}
+
+    def needs_session(result: Any) -> Any:
+        def call(*args: Any) -> Any:
+            if not cookie_valid:
+                raise SESSION_EXPIRED
+            return result
+
+        return call
+
+    plant_info = mock_growatt_classic_api.plant_info.return_value
+    mock_growatt_classic_api.login.side_effect = login
+    mock_growatt_classic_api.device_list.side_effect = needs_session(
+        [{"deviceSn": "TLX123456", "deviceType": "tlx"}]
+    )
+    mock_growatt_classic_api.tlx_detail.side_effect = needs_session(tlx_detail(2200))
+    # The first refresh fails, so setup is retried with the cached session.
+    mock_growatt_classic_api.plant_info.side_effect = requests.exceptions.HTTPError(
+        "500 Server Error"
+    )
+
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
+
+    # The cookie dies before the next attempt, and a manual reload of the
+    # entry that never loaded must not get stuck on it.
+    cookie_valid = False
+    mock_growatt_classic_api.plant_info.side_effect = needs_session(plant_info)
+    await hass.config_entries.async_reload(mock_config_entry_classic.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
+
+    for _ in range(40):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+    # The setup login, then one renewal once RELOGIN_INTERVAL allowed it.
+    assert mock_growatt_classic_api.login.call_count == 2
+    assert hass.states.get(TLX_OUTPUT_POWER).state == "2200"
 
 
 async def test_classic_api_early_expiry_waits_for_relogin_interval(
@@ -912,19 +966,32 @@ async def test_classic_api_setup_skips_login_during_cooldown(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "reason"),
     [
-        requests.exceptions.RequestException("Connection error"),
-        json.decoder.JSONDecodeError("Invalid JSON", "", 0),
+        pytest.param(
+            requests.exceptions.RequestException("Connection error"),
+            "Failed to fetch the device list from Growatt, will retry",
+            id="network_error",
+        ),
+        pytest.param(
+            json.decoder.JSONDecodeError("Invalid JSON", "", 0),
+            "Failed to fetch the device list from Growatt, will retry",
+            id="json_error",
+        ),
+        pytest.param(
+            SESSION_EXPIRED,
+            "Growatt returned a web page instead of data, even right after logging in",
+            id="web_page",
+        ),
     ],
-    ids=["network_error", "json_error"],
 )
 async def test_classic_api_device_list_exceptions(
     hass: HomeAssistant,
-    mock_growatt_classic_api,
+    mock_growatt_classic_api: MagicMock,
     exception: Exception,
+    reason: str,
 ) -> None:
-    """Test Classic API setup with device_list exceptions."""
+    """Test Classic API setup retries when the device list fails."""
     # Create a config entry that won't trigger migration
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -943,7 +1010,8 @@ async def test_classic_api_device_list_exceptions(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == reason
 
 
 async def test_classic_api_device_list_no_devices(
@@ -992,7 +1060,7 @@ async def test_classic_api_device_list_errors(
 
     await setup_integration(hass, mock_config_entry_classic)
 
-    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unknown_api_version(
