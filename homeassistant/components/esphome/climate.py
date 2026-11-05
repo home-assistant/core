@@ -160,8 +160,9 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             for mode in static_info.supported_swing_modes
         ]
         # Round to one digit because of floating point math
-        self._attr_target_temperature_step = round(
-            static_info.visual_target_temperature_step, 3
+        # Significant digits keep small steps such as 0.1 °F (0.0556 °C) intact
+        self._attr_target_temperature_step = float(
+            f"{static_info.visual_target_temperature_step:.3g}"
         )
         self._attr_min_temp = static_info.visual_min_temperature
         self._attr_max_temp = static_info.visual_max_temperature

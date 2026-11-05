@@ -997,6 +997,7 @@ async def test_climate_entity_fahrenheit_unit_fahrenheit_system(
     ("unit_system", "device_step", "expected_step"),
     [
         (US_CUSTOMARY_SYSTEM, 0.556, 1.0),
+        (US_CUSTOMARY_SYSTEM, 0.0555556, 0.1),
         (METRIC_SYSTEM, 0.25, 0.25),
     ],
 )
