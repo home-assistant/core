@@ -4,10 +4,12 @@
     'device_info': list([
       dict({
         'area_id': 'spindle',
+        'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
         'config_subentry_id': None,
         'configuration_url': '**REDACTED**',
         'connections': list([
         ]),
+        'created_at': '2026-01-01T00:00:00+00:00',
         'disabled_by': None,
         'entities': list([
           dict({
@@ -18,7 +20,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -29,6 +33,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Calibrate',
             'options': dict({
@@ -44,6 +49,9 @@
                 'icon': 'mdi:swap-vertical-circle-outline',
               }),
               'entity_id': 'button.spindle_bath_east_calibrate',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -60,7 +68,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -71,6 +81,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Favorite',
             'options': dict({
@@ -86,6 +97,9 @@
                 'icon': 'mdi:heart',
               }),
               'entity_id': 'button.spindle_bath_east_favorite',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -102,7 +116,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -113,6 +129,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Identify',
             'options': dict({
@@ -128,6 +145,9 @@
                 'friendly_name': 'Bath East Identify',
               }),
               'entity_id': 'button.spindle_bath_east_identify',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -144,7 +164,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -155,6 +177,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': None,
             'options': dict({
@@ -176,6 +199,9 @@
                 'supported_features': 176,
               }),
               'entity_id': 'cover.spindle_bath_east',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'closed',
             }),
             'suggested_object_id': None,
@@ -198,7 +224,9 @@
             }),
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -209,6 +237,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Power source',
             'options': dict({
@@ -229,6 +258,9 @@
                 ]),
               }),
               'entity_id': 'select.spindle_bath_east_power_source',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -247,7 +279,9 @@
             }),
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -258,6 +292,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Battery',
             'options': dict({
@@ -275,6 +310,9 @@
                 'unit_of_measurement': '%',
               }),
               'entity_id': 'sensor.spindle_bath_east_battery',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': '52',
             }),
             'suggested_object_id': None,
@@ -297,6 +335,7 @@
         'manufacturer': 'Hunter Douglas',
         'model': 'Everwood Alternative Wood Blinds',
         'model_id': None,
+        'modified_at': '2026-01-01T00:00:00+00:00',
         'name': 'Bath East',
         'name_by_user': None,
         'serial_number': None,
@@ -304,10 +343,12 @@
       }),
       dict({
         'area_id': 'spindle',
+        'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
         'config_subentry_id': None,
         'configuration_url': '**REDACTED**',
         'connections': list([
         ]),
+        'created_at': '2026-01-01T00:00:00+00:00',
         'disabled_by': None,
         'entities': list([
           dict({
@@ -318,7 +359,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -329,6 +372,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Calibrate',
             'options': dict({
@@ -344,6 +388,9 @@
                 'icon': 'mdi:swap-vertical-circle-outline',
               }),
               'entity_id': 'button.spindle_bath_south_calibrate',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -360,7 +407,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -371,6 +420,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Favorite',
             'options': dict({
@@ -386,6 +436,9 @@
                 'icon': 'mdi:heart',
               }),
               'entity_id': 'button.spindle_bath_south_favorite',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -402,7 +455,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -413,6 +468,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Identify',
             'options': dict({
@@ -428,6 +484,9 @@
                 'friendly_name': 'Bath South Identify',
               }),
               'entity_id': 'button.spindle_bath_south_identify',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -444,7 +503,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -455,6 +516,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': None,
             'options': dict({
@@ -476,6 +538,9 @@
                 'supported_features': 176,
               }),
               'entity_id': 'cover.spindle_bath_south',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'closed',
             }),
             'suggested_object_id': None,
@@ -498,7 +563,9 @@
             }),
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -509,6 +576,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Power source',
             'options': dict({
@@ -529,6 +597,9 @@
                 ]),
               }),
               'entity_id': 'select.spindle_bath_south_power_source',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -547,7 +618,9 @@
             }),
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -558,6 +631,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Battery',
             'options': dict({
@@ -575,6 +649,9 @@
                 'unit_of_measurement': '%',
               }),
               'entity_id': 'sensor.spindle_bath_south_battery',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': '71',
             }),
             'suggested_object_id': None,
@@ -597,6 +674,7 @@
         'manufacturer': 'Hunter Douglas',
         'model': 'Everwood Alternative Wood Blinds',
         'model_id': None,
+        'modified_at': '2026-01-01T00:00:00+00:00',
         'name': 'Bath South',
         'name_by_user': None,
         'serial_number': None,
@@ -604,10 +682,12 @@
       }),
       dict({
         'area_id': 'spindle',
+        'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
         'config_subentry_id': None,
         'configuration_url': '**REDACTED**',
         'connections': list([
         ]),
+        'created_at': '2026-01-01T00:00:00+00:00',
         'disabled_by': None,
         'entities': list([
           dict({
@@ -618,7 +698,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -629,6 +711,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Calibrate',
             'options': dict({
@@ -644,6 +727,9 @@
                 'icon': 'mdi:swap-vertical-circle-outline',
               }),
               'entity_id': 'button.spindle_kitchen_north_calibrate',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -660,7 +746,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -671,6 +759,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Favorite',
             'options': dict({
@@ -686,6 +775,9 @@
                 'icon': 'mdi:heart',
               }),
               'entity_id': 'button.spindle_kitchen_north_favorite',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -702,7 +794,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -713,6 +807,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Identify',
             'options': dict({
@@ -728,6 +823,9 @@
                 'friendly_name': 'Kitchen North Identify',
               }),
               'entity_id': 'button.spindle_kitchen_north_identify',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -744,7 +842,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -755,6 +855,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': None,
             'options': dict({
@@ -776,6 +877,9 @@
                 'supported_features': 176,
               }),
               'entity_id': 'cover.spindle_kitchen_north',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'closed',
             }),
             'suggested_object_id': None,
@@ -798,7 +902,9 @@
             }),
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -809,6 +915,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Power source',
             'options': dict({
@@ -829,6 +936,9 @@
                 ]),
               }),
               'entity_id': 'select.spindle_kitchen_north_power_source',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -847,7 +957,9 @@
             }),
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -858,6 +970,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Battery',
             'options': dict({
@@ -875,6 +988,9 @@
                 'unit_of_measurement': '%',
               }),
               'entity_id': 'sensor.spindle_kitchen_north_battery',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': '64',
             }),
             'suggested_object_id': None,
@@ -897,6 +1013,7 @@
         'manufacturer': 'Hunter Douglas',
         'model': 'Everwood Alternative Wood Blinds',
         'model_id': None,
+        'modified_at': '2026-01-01T00:00:00+00:00',
         'name': 'Kitchen North',
         'name_by_user': None,
         'serial_number': None,
@@ -904,10 +1021,12 @@
       }),
       dict({
         'area_id': 'spindle',
+        'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
         'config_subentry_id': None,
         'configuration_url': '**REDACTED**',
         'connections': list([
         ]),
+        'created_at': '2026-01-01T00:00:00+00:00',
         'disabled_by': None,
         'entities': list([
           dict({
@@ -918,7 +1037,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -929,6 +1050,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Calibrate',
             'options': dict({
@@ -944,6 +1066,9 @@
                 'icon': 'mdi:swap-vertical-circle-outline',
               }),
               'entity_id': 'button.spindle_kitchen_west_calibrate',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -960,7 +1085,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -971,6 +1098,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Favorite',
             'options': dict({
@@ -986,6 +1114,9 @@
                 'icon': 'mdi:heart',
               }),
               'entity_id': 'button.spindle_kitchen_west_favorite',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1002,7 +1133,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -1013,6 +1146,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Identify',
             'options': dict({
@@ -1028,6 +1162,9 @@
                 'friendly_name': 'Kitchen West Identify',
               }),
               'entity_id': 'button.spindle_kitchen_west_identify',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1044,7 +1181,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -1055,6 +1194,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': None,
             'options': dict({
@@ -1076,6 +1216,9 @@
                 'supported_features': 176,
               }),
               'entity_id': 'cover.spindle_kitchen_west',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'closed',
             }),
             'suggested_object_id': None,
@@ -1098,7 +1241,9 @@
             }),
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -1109,6 +1254,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Power source',
             'options': dict({
@@ -1129,6 +1275,9 @@
                 ]),
               }),
               'entity_id': 'select.spindle_kitchen_west_power_source',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1147,7 +1296,9 @@
             }),
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -1158,6 +1309,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Battery',
             'options': dict({
@@ -1175,6 +1327,9 @@
                 'unit_of_measurement': '%',
               }),
               'entity_id': 'sensor.spindle_kitchen_west_battery',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': '69',
             }),
             'suggested_object_id': None,
@@ -1197,6 +1352,7 @@
         'manufacturer': 'Hunter Douglas',
         'model': 'Everwood Alternative Wood Blinds',
         'model_id': None,
+        'modified_at': '2026-01-01T00:00:00+00:00',
         'name': 'Kitchen West',
         'name_by_user': None,
         'serial_number': None,
@@ -1204,6 +1360,7 @@
       }),
       dict({
         'area_id': None,
+        'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
         'config_subentry_id': None,
         'configuration_url': '**REDACTED**',
         'connections': list([
@@ -1212,6 +1369,7 @@
             'aa:bb:cc:dd:ee:ff',
           ]),
         ]),
+        'created_at': '2026-01-01T00:00:00+00:00',
         'disabled_by': None,
         'entities': list([
           dict({
@@ -1222,7 +1380,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1233,6 +1393,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Close All',
             'options': dict({
@@ -1249,6 +1410,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_close_all',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1265,7 +1429,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1276,6 +1442,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Close Bed 2',
             'options': dict({
@@ -1292,6 +1459,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_close_bed_2',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1308,7 +1478,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1319,6 +1491,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Close Bed 3',
             'options': dict({
@@ -1335,6 +1508,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_close_bed_3',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1351,7 +1527,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1362,6 +1540,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Close Bed 4',
             'options': dict({
@@ -1378,6 +1557,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_close_bed_4',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1394,7 +1576,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1405,6 +1589,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Close Family',
             'options': dict({
@@ -1421,6 +1606,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_close_family',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1437,7 +1625,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1448,6 +1638,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Close Kitchen',
             'options': dict({
@@ -1464,6 +1655,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_close_kitchen',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1480,7 +1674,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1491,6 +1687,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Close Lounge Room',
             'options': dict({
@@ -1507,6 +1704,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_close_lounge_room',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1523,7 +1723,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1534,6 +1736,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Close Master Bed',
             'options': dict({
@@ -1550,6 +1753,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_close_master_bed',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1566,7 +1772,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1577,6 +1785,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Close Study',
             'options': dict({
@@ -1593,6 +1802,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_close_study',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1609,7 +1821,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1620,6 +1834,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Open All',
             'options': dict({
@@ -1636,6 +1851,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_open_all',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1652,7 +1870,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1663,6 +1883,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Open Bed 2',
             'options': dict({
@@ -1679,6 +1900,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_open_bed_2',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1695,7 +1919,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1706,6 +1932,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Open Bed 3',
             'options': dict({
@@ -1722,6 +1949,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_open_bed_3',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1738,7 +1968,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1749,6 +1981,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Open Bed 4',
             'options': dict({
@@ -1765,6 +1998,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_open_bed_4',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1781,7 +2017,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1792,6 +2030,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Open Family',
             'options': dict({
@@ -1808,6 +2047,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_open_family',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1824,7 +2066,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1835,6 +2079,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Open Kitchen',
             'options': dict({
@@ -1851,6 +2096,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_open_kitchen',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1867,7 +2115,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1878,6 +2128,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Open Lounge Room',
             'options': dict({
@@ -1894,6 +2145,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_open_lounge_room',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1910,7 +2164,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1921,6 +2177,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Open Master Bed',
             'options': dict({
@@ -1937,6 +2194,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_open_master_bed',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -1953,7 +2213,9 @@
             'capabilities': None,
             'categories': dict({
             }),
+            'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
             'config_subentry_id': None,
+            'created_at': '2026-01-01T00:00:00+00:00',
             'device_class': None,
             'disabled_by': None,
             'domain': 'scene',
@@ -1964,6 +2226,7 @@
             'icon': None,
             'labels': list([
             ]),
+            'modified_at': '2026-01-01T00:00:00+00:00',
             'name': None,
             'object_id_base': 'Open Study',
             'options': dict({
@@ -1980,6 +2243,9 @@
                 'room_name': '',
               }),
               'entity_id': 'scene.powerview_generation_1_open_study',
+              'last_changed': '2026-01-01T00:00:00+00:00',
+              'last_reported': '2026-01-01T00:00:00+00:00',
+              'last_updated': '2026-01-01T00:00:00+00:00',
               'state': 'unknown',
             }),
             'suggested_object_id': None,
@@ -2002,6 +2268,7 @@
         'manufacturer': 'Hunter Douglas',
         'model': 'Powerview Generation 1',
         'model_id': None,
+        'modified_at': '2026-01-01T00:00:00+00:00',
         'name': 'Powerview Generation 1',
         'name_by_user': None,
         'serial_number': None,
@@ -2080,10 +2347,12 @@
   dict({
     'device_info': dict({
       'area_id': 'spindle',
+      'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
       'config_subentry_id': None,
       'configuration_url': '**REDACTED**',
       'connections': list([
       ]),
+      'created_at': '2026-01-01T00:00:00+00:00',
       'disabled_by': None,
       'entities': list([
         dict({
@@ -2094,7 +2363,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'button',
@@ -2105,6 +2376,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Calibrate',
           'options': dict({
@@ -2120,6 +2392,9 @@
               'icon': 'mdi:swap-vertical-circle-outline',
             }),
             'entity_id': 'button.spindle_kitchen_north_calibrate',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -2136,7 +2411,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'button',
@@ -2147,6 +2424,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Favorite',
           'options': dict({
@@ -2162,6 +2440,9 @@
               'icon': 'mdi:heart',
             }),
             'entity_id': 'button.spindle_kitchen_north_favorite',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -2178,7 +2459,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'button',
@@ -2189,6 +2472,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Identify',
           'options': dict({
@@ -2204,6 +2488,9 @@
               'friendly_name': 'Kitchen North Identify',
             }),
             'entity_id': 'button.spindle_kitchen_north_identify',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -2220,7 +2507,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'cover',
@@ -2231,6 +2520,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': None,
           'options': dict({
@@ -2252,6 +2542,9 @@
               'supported_features': 176,
             }),
             'entity_id': 'cover.spindle_kitchen_north',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'closed',
           }),
           'suggested_object_id': None,
@@ -2274,7 +2567,9 @@
           }),
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'select',
@@ -2285,6 +2580,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Power source',
           'options': dict({
@@ -2305,6 +2601,9 @@
               ]),
             }),
             'entity_id': 'select.spindle_kitchen_north_power_source',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -2323,7 +2622,9 @@
           }),
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'sensor',
@@ -2334,6 +2635,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Battery',
           'options': dict({
@@ -2351,6 +2653,9 @@
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.spindle_kitchen_north_battery',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': '64',
           }),
           'suggested_object_id': None,
@@ -2373,6 +2678,7 @@
       'manufacturer': 'Hunter Douglas',
       'model': 'Everwood Alternative Wood Blinds',
       'model_id': None,
+      'modified_at': '2026-01-01T00:00:00+00:00',
       'name': 'Kitchen North',
       'name_by_user': None,
       'serial_number': None,
@@ -2406,10 +2712,12 @@
   dict({
     'device_info': dict({
       'area_id': 'family_room',
+      'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
       'config_subentry_id': None,
       'configuration_url': '**REDACTED**',
       'connections': list([
       ]),
+      'created_at': '2026-01-01T00:00:00+00:00',
       'disabled_by': None,
       'entities': list([
         dict({
@@ -2420,7 +2728,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'button',
@@ -2431,6 +2741,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Calibrate',
           'options': dict({
@@ -2446,6 +2757,9 @@
               'icon': 'mdi:swap-vertical-circle-outline',
             }),
             'entity_id': 'button.family_room_family_left_calibrate',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -2462,7 +2776,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'button',
@@ -2473,6 +2789,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Favorite',
           'options': dict({
@@ -2488,6 +2805,9 @@
               'icon': 'mdi:heart',
             }),
             'entity_id': 'button.family_room_family_left_favorite',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -2504,7 +2824,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'button',
@@ -2515,6 +2837,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Identify',
           'options': dict({
@@ -2530,6 +2853,9 @@
               'friendly_name': 'Family Left Identify',
             }),
             'entity_id': 'button.family_room_family_left_identify',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -2546,7 +2872,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'cover',
@@ -2557,6 +2885,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': None,
           'options': dict({
@@ -2577,6 +2906,9 @@
               'supported_features': 15,
             }),
             'entity_id': 'cover.family_room_family_left',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'closed',
           }),
           'suggested_object_id': None,
@@ -2599,7 +2931,9 @@
           }),
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'select',
@@ -2610,6 +2944,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Power source',
           'options': dict({
@@ -2630,6 +2965,9 @@
               ]),
             }),
             'entity_id': 'select.family_room_family_left_power_source',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -2648,7 +2986,9 @@
           }),
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'sensor',
@@ -2659,6 +2999,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Battery',
           'options': dict({
@@ -2676,6 +3017,9 @@
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.family_room_family_left_battery',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': '0',
           }),
           'suggested_object_id': None,
@@ -2694,7 +3038,9 @@
           }),
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': 'integration',
           'domain': 'sensor',
@@ -2705,6 +3051,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Signal strength',
           'options': dict({
@@ -2735,6 +3082,7 @@
       'manufacturer': 'Hunter Douglas',
       'model': 'Duette',
       'model_id': None,
+      'modified_at': '2026-01-01T00:00:00+00:00',
       'name': 'Family Left',
       'name_by_user': None,
       'serial_number': None,
@@ -2785,6 +3133,7 @@
   dict({
     'device_info': dict({
       'area_id': None,
+      'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
       'config_subentry_id': None,
       'configuration_url': '**REDACTED**',
       'connections': list([
@@ -2793,6 +3142,7 @@
           'aa:bb:cc:dd:ee:ff',
         ]),
       ]),
+      'created_at': '2026-01-01T00:00:00+00:00',
       'disabled_by': None,
       'entities': list([
         dict({
@@ -2803,7 +3153,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -2814,6 +3166,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Close All',
           'options': dict({
@@ -2830,6 +3183,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_close_all',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -2846,7 +3202,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -2857,6 +3215,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Close Bed 2',
           'options': dict({
@@ -2873,6 +3232,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_close_bed_2',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -2889,7 +3251,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -2900,6 +3264,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Close Bed 3',
           'options': dict({
@@ -2916,6 +3281,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_close_bed_3',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -2932,7 +3300,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -2943,6 +3313,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Close Bed 4',
           'options': dict({
@@ -2959,6 +3330,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_close_bed_4',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -2975,7 +3349,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -2986,6 +3362,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Close Family',
           'options': dict({
@@ -3002,6 +3379,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_close_family',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3018,7 +3398,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3029,6 +3411,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Close Kitchen',
           'options': dict({
@@ -3045,6 +3428,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_close_kitchen',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3061,7 +3447,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3072,6 +3460,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Close Lounge Room',
           'options': dict({
@@ -3088,6 +3477,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_close_lounge_room',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3104,7 +3496,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3115,6 +3509,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Close Master Bed',
           'options': dict({
@@ -3131,6 +3526,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_close_master_bed',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3147,7 +3545,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3158,6 +3558,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Close Study',
           'options': dict({
@@ -3174,6 +3575,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_close_study',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3190,7 +3594,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3201,6 +3607,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Open All',
           'options': dict({
@@ -3217,6 +3624,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_open_all',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3233,7 +3643,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3244,6 +3656,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Open Bed 2',
           'options': dict({
@@ -3260,6 +3673,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_open_bed_2',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3276,7 +3692,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3287,6 +3705,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Open Bed 3',
           'options': dict({
@@ -3303,6 +3722,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_open_bed_3',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3319,7 +3741,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3330,6 +3754,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Open Bed 4',
           'options': dict({
@@ -3346,6 +3771,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_open_bed_4',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3362,7 +3790,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3373,6 +3803,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Open Family',
           'options': dict({
@@ -3389,6 +3820,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_open_family',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3405,7 +3839,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3416,6 +3852,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Open Kitchen',
           'options': dict({
@@ -3432,6 +3869,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_open_kitchen',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3448,7 +3888,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3459,6 +3901,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Open Lounge Room',
           'options': dict({
@@ -3475,6 +3918,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_open_lounge_room',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3491,7 +3937,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3502,6 +3950,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Open Master Bed',
           'options': dict({
@@ -3518,6 +3967,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_open_master_bed',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3534,7 +3986,9 @@
           'capabilities': None,
           'categories': dict({
           }),
+          'config_entry_id': '01JHUNTERDOUGLASPOWERVIEW0',
           'config_subentry_id': None,
+          'created_at': '2026-01-01T00:00:00+00:00',
           'device_class': None,
           'disabled_by': None,
           'domain': 'scene',
@@ -3545,6 +3999,7 @@
           'icon': None,
           'labels': list([
           ]),
+          'modified_at': '2026-01-01T00:00:00+00:00',
           'name': None,
           'object_id_base': 'Open Study',
           'options': dict({
@@ -3561,6 +4016,9 @@
               'room_name': '',
             }),
             'entity_id': 'scene.powerview_generation_1_open_study',
+            'last_changed': '2026-01-01T00:00:00+00:00',
+            'last_reported': '2026-01-01T00:00:00+00:00',
+            'last_updated': '2026-01-01T00:00:00+00:00',
             'state': 'unknown',
           }),
           'suggested_object_id': None,
@@ -3583,6 +4041,7 @@
       'manufacturer': 'Hunter Douglas',
       'model': 'Powerview Generation 1',
       'model_id': None,
+      'modified_at': '2026-01-01T00:00:00+00:00',
       'name': 'Powerview Generation 1',
       'name_by_user': None,
       'serial_number': None,

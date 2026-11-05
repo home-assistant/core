@@ -18,20 +18,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import MOCK_SERIAL
 
-EXCLUDE_PROPS = props(
-    "config_entries",
-    "config_entries_subentries",
-    "config_entry_id",
-    "created_at",
-    "device_id",
-    "id",
-    "last_changed",
-    "last_reported",
-    "last_updated",
-    "modified_at",
-    "primary_config_entry",
-    "via_device_id",
-)
+EXCLUDE_PROPS = props("device_id", "id", "via_device_id")
 
 
 def _sort_entities(device: dict[str, Any]) -> None:
@@ -39,6 +26,7 @@ def _sort_entities(device: dict[str, Any]) -> None:
     device["entities"].sort(key=lambda entity: entity["entity_id"])
 
 
+@pytest.mark.freeze_time("2026-01-01T00:00:00+00:00")
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize("api_version", [1])
 async def test_config_entry_diagnostics(
@@ -62,6 +50,7 @@ async def test_config_entry_diagnostics(
     assert diagnostics == snapshot(exclude=EXCLUDE_PROPS)
 
 
+@pytest.mark.freeze_time("2026-01-01T00:00:00+00:00")
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize(
     ("api_version", "device_identifier"),
