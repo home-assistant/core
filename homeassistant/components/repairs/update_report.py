@@ -9,15 +9,10 @@ import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    __version__,
-)
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, __version__
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
@@ -28,8 +23,6 @@ STORAGE_KEY = "repairs.update_report"
 STORAGE_VERSION = 1
 # Integrations that poll a cloud service can take minutes to come up.
 STARTUP_GRACE = timedelta(minutes=5)
-# Fallback for runs that end without a clean stop.
-SNAPSHOT_INTERVAL = timedelta(hours=6)
 
 _UNHEALTHY_STATES = {STATE_UNAVAILABLE, STATE_UNKNOWN}
 
@@ -53,93 +46,44 @@ class StoredData(TypedDict):
     """Stored snapshots."""
 
     baseline: RunSnapshot | None
-    last: RunSnapshot | None
+    before_update: RunSnapshot | None
 
 
 class UpdateReport:
-    """Keep a snapshot of every run and the baseline from before an update."""
+    """Compare the run before an update with the run after it."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the update report."""
         self.hass = hass
         self.baseline: RunSnapshot | None = None
-        self._last: RunSnapshot | None = None
         self._store: Store[StoredData] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-        self._unsub_grace: CALLBACK_TYPE | None = None
 
     async def async_load(self) -> None:
-        """Load the snapshots; the last run of another version is the baseline."""
+        """Load the baseline, replaced by the snapshot from before an update."""
         if (stored := await self._store.async_load()) is None:
             return
         self.baseline = stored["baseline"]
-        self._last = stored["last"]
-        if self._last is not None and self._last["version"] != __version__:
-            self.baseline = self._last
+        if (before_update := stored["before_update"]) is None:
+            return
+        # A failed update leaves the version unchanged; drop its snapshot.
+        if before_update["version"] != __version__:
+            self.baseline = before_update
+        await self._async_save(None)
 
     @callback
     def async_start(self) -> None:
-        """Take snapshots once startup has settled."""
+        """Raise the issue once startup has settled."""
 
         @callback
         def _async_started(hass: HomeAssistant) -> None:
-            self._unsub_grace = async_call_later(
-                hass, STARTUP_GRACE, self._async_startup_settled
-            )
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
+            async_call_later(hass, STARTUP_GRACE, self._async_startup_settled)
 
         async_at_started(self.hass, _async_started)
 
     @callback
     def _async_startup_settled(self, _now: datetime) -> None:
-        self._unsub_grace = None
-        self._async_save_snapshot()
-        self._async_update_issue(create=True)
-        async_track_time_interval(
-            self.hass,
-            self._async_interval,
-            SNAPSHOT_INTERVAL,
-            cancel_on_shutdown=True,
-        )
-
-    @callback
-    def _async_interval(self, _now: datetime) -> None:
-        self._async_save_snapshot()
-        self._async_update_issue(create=False)
-
-    @callback
-    def _async_stop(self, _event: Event) -> None:
-        # A run stopped during the grace period never becomes the baseline.
-        if self._unsub_grace is not None:
-            self._unsub_grace()
-            self._unsub_grace = None
-            return
-        self._async_save_snapshot()
-
-    @callback
-    def _async_save_snapshot(self) -> None:
-        snapshot = async_take_snapshot(self.hass)
-        if self._last is not None and _without_created(self._last) == _without_created(
-            snapshot
-        ):
-            return
-        self._last = snapshot
-        self._async_save()
-
-    @callback
-    def _async_save(self) -> None:
-        data: StoredData = {"baseline": self.baseline, "last": self._last}
-        self._store.async_delay_save(lambda: data, 0)
-
-    @callback
-    def _async_update_issue(self, *, create: bool) -> None:
-        """Raise, refresh or remove the issue announcing the report."""
         if (report := self.async_get_report()) is None or not (
             counts := _counts(report)
-        ):
-            ir.async_delete_issue(self.hass, DOMAIN, UPDATE_REPORT_ISSUE_ID)
-            return
-        if not create and not ir.async_get(self.hass).async_get_issue(
-            DOMAIN, UPDATE_REPORT_ISSUE_ID
         ):
             return
         ir.async_create_issue(
@@ -157,6 +101,15 @@ class UpdateReport:
             },
         )
 
+    async def async_before_update(self) -> None:
+        """Save a snapshot of the running instance before Core is updated."""
+        await self._async_save(async_take_snapshot(self.hass))
+
+    async def _async_save(self, before_update: RunSnapshot | None) -> None:
+        await self._store.async_save(
+            {"baseline": self.baseline, "before_update": before_update}
+        )
+
     @callback
     def async_get_report(self) -> dict[str, Any] | None:
         """Return what got worse since the baseline, if there is one."""
@@ -164,16 +117,11 @@ class UpdateReport:
             return None
         return async_diff(self.hass, self.baseline)
 
-    @callback
-    def async_dismiss(self) -> None:
+    async def async_dismiss(self) -> None:
         """Forget the baseline."""
         self.baseline = None
-        self._async_save()
         ir.async_delete_issue(self.hass, DOMAIN, UPDATE_REPORT_ISSUE_ID)
-
-
-def _without_created(snapshot: RunSnapshot) -> dict[str, Any]:
-    return {key: value for key, value in snapshot.items() if key != "created"}
+        await self._async_save(None)
 
 
 def _counts(report: dict[str, Any]) -> dict[str, int]:
@@ -374,10 +322,10 @@ def ws_update_report(
 @websocket_api.websocket_command(
     {probatio.Required("type"): "repairs/update_report/dismiss"}
 )
-@callback
-def ws_dismiss_update_report(
+@websocket_api.async_response
+async def ws_dismiss_update_report(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Forget the run before the last update."""
-    hass.data[DATA_UPDATE_REPORT].async_dismiss()
+    await hass.data[DATA_UPDATE_REPORT].async_dismiss()
     connection.send_result(msg["id"])

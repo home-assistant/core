@@ -7,6 +7,7 @@ from aiohasupervisor.models import (
     StoreAddonUpdate,
 )
 
+from homeassistant.components.repairs import async_snapshot_before_update
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -51,6 +52,7 @@ async def update_core(hass: HomeAssistant, version: str | None, backup: bool) ->
 
         await backup_core_before_update(hass)
 
+    await async_snapshot_before_update(hass)
     try:
         await client.homeassistant.update(
             HomeAssistantUpdateOptions(version=version, backup=False)

@@ -10,15 +10,15 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.repairs import async_snapshot_before_update
 from homeassistant.components.repairs.const import DOMAIN, UPDATE_REPORT_ISSUE_ID
 from homeassistant.components.repairs.update_report import (
-    SNAPSHOT_INTERVAL,
     STARTUP_GRACE,
     STORAGE_KEY,
     RunSnapshot,
 )
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, __version__
+from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -41,13 +41,13 @@ def _snapshot(version: str = OLD_VERSION, **data: Any) -> RunSnapshot:
 
 def _store(
     hass_storage: dict[str, Any],
-    last: RunSnapshot | None,
+    before_update: RunSnapshot | None,
     baseline: RunSnapshot | None = None,
 ) -> None:
     hass_storage[STORAGE_KEY] = {
         "version": 1,
         "key": STORAGE_KEY,
-        "data": {"last": last, "baseline": baseline},
+        "data": {"before_update": before_update, "baseline": baseline},
     }
 
 
@@ -78,7 +78,7 @@ def sensor(entity_registry: er.EntityRegistry) -> er.RegistryEntry:
 @pytest.mark.parametrize(
     "stored",
     [
-        pytest.param("last", id="previous_run_was_older_version"),
+        pytest.param("before_update", id="first_run_after_update"),
         pytest.param("baseline", id="baseline_kept_after_second_restart"),
     ],
 )
@@ -184,8 +184,8 @@ async def test_update_report(
     _store(
         hass_storage,
         **{
-            "last": {"last": old},
-            "baseline": {"last": _snapshot(__version__), "baseline": old},
+            "before_update": {"before_update": old},
+            "baseline": {"before_update": None, "baseline": old},
         }[stored],
     )
 
@@ -203,7 +203,7 @@ async def test_update_report(
                 STORAGE_KEY: {
                     "version": 1,
                     "key": STORAGE_KEY,
-                    "data": {"last": None, "baseline": None},
+                    "data": {"before_update": None, "baseline": None},
                 }
             },
             id="nothing_stored",
@@ -213,10 +213,13 @@ async def test_update_report(
                 STORAGE_KEY: {
                     "version": 1,
                     "key": STORAGE_KEY,
-                    "data": {"last": _snapshot(__version__), "baseline": None},
+                    "data": {
+                        "before_update": _snapshot(__version__),
+                        "baseline": None,
+                    },
                 }
             },
-            id="same_version",
+            id="update_failed",
         ),
     ],
 )
@@ -237,6 +240,20 @@ async def test_no_report(
     assert not issue_registry.async_get_issue(DOMAIN, UPDATE_REPORT_ISSUE_ID)
 
 
+async def test_failed_update_snapshot_dropped(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test the snapshot of an update that kept the version is not kept."""
+    old = _snapshot()
+    _store(hass_storage, _snapshot(__version__), baseline=old)
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    assert hass_storage[STORAGE_KEY]["data"] == {
+        "baseline": old,
+        "before_update": None,
+    }
+
+
 async def test_issue_lifecycle(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -244,7 +261,7 @@ async def test_issue_lifecycle(
     sensor: er.RegistryEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the issue is raised after the grace period and follows the report."""
+    """Test the issue is raised after the grace period."""
     _store(hass_storage, _snapshot(entities={"demo": {sensor.id: SENSOR}}))
     hass.states.async_set(SENSOR, "unavailable")
     assert await async_setup_component(hass, DOMAIN, {})
@@ -263,37 +280,6 @@ async def test_issue_lifecycle(
         "entities": "1",
         "issues": "0",
     }
-
-    hass.states.async_set(SENSOR, "1")
-    await _tick(hass, freezer, SNAPSHOT_INTERVAL)
-    assert not issue_registry.async_get_issue(DOMAIN, UPDATE_REPORT_ISSUE_ID)
-
-    # Only the first check after startup raises the issue.
-    hass.states.async_set(SENSOR, "unavailable")
-    await _tick(hass, freezer, SNAPSHOT_INTERVAL)
-    assert not issue_registry.async_get_issue(DOMAIN, UPDATE_REPORT_ISSUE_ID)
-
-
-async def test_issue_refreshed(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    issue_registry: ir.IssueRegistry,
-    entity_registry: er.EntityRegistry,
-    sensor: er.RegistryEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a raised issue is updated by later snapshots."""
-    _store(hass_storage, _snapshot(entities={"demo": {sensor.id: SENSOR}}))
-    assert await async_setup_component(hass, DOMAIN, {})
-    await _tick(hass, freezer, STARTUP_GRACE)
-
-    entity_registry.async_update_entity(SENSOR, new_entity_id="sensor.new_name")
-    await _tick(hass, freezer, SNAPSHOT_INTERVAL)
-
-    issue = issue_registry.async_get_issue(DOMAIN, UPDATE_REPORT_ISSUE_ID)
-    assert issue
-    assert issue.translation_placeholders
-    assert issue.translation_placeholders["entities"] == "2"
 
 
 async def test_no_issue_when_nothing_changed(
@@ -324,14 +310,13 @@ async def test_no_issue_when_nothing_changed(
     }
 
 
-async def test_snapshots_saved(
+async def test_snapshot_before_update(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     entity_registry: er.EntityRegistry,
     sensor: er.RegistryEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test snapshots are saved after the grace period, when changed and at stop."""
+    """Test the snapshot before an update becomes the baseline and is saved anew."""
     old = _snapshot()
     _store(hass_storage, old)
     hass.states.async_set(SENSOR, "1")
@@ -350,44 +335,23 @@ async def test_snapshots_saved(
         translation_key="country_not_configured",
     )
     assert await async_setup_component(hass, DOMAIN, {})
-    await _tick(hass, freezer, STARTUP_GRACE)
-    await _tick(hass, freezer, timedelta(seconds=1))
+    assert hass_storage[STORAGE_KEY]["data"] == {
+        "baseline": old,
+        "before_update": None,
+    }
+
+    await async_snapshot_before_update(hass)
 
     data = hass_storage[STORAGE_KEY]["data"]
     assert data["baseline"] == old
-    assert data["last"] == {
+    assert data["before_update"] == {
         "version": __version__,
-        "created": data["last"]["created"],
+        "created": data["before_update"]["created"],
         "config_entries": {"demo": {"demo_entry": "Demo"}},
         "entities": {"demo": {sensor.id: SENSOR}},
         "unhealthy": [],
         "issues": [["homeassistant", "issue"]],
     }
-
-    del hass_storage[STORAGE_KEY]
-    await _tick(hass, freezer, SNAPSHOT_INTERVAL)
-    assert STORAGE_KEY not in hass_storage
-
-    hass.states.async_set(SENSOR, "unavailable")
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await _tick(hass, freezer, timedelta(seconds=1))
-    assert hass_storage[STORAGE_KEY]["data"]["last"]["unhealthy"] == [sensor.id]
-
-
-async def test_no_snapshot_when_stopped_during_grace(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a run stopped before startup settled does not replace the last run."""
-    old = _snapshot()
-    _store(hass_storage, old)
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await _tick(hass, freezer, STARTUP_GRACE)
-
-    assert hass_storage[STORAGE_KEY]["data"] == {"last": old, "baseline": None}
 
 
 async def test_dismiss(

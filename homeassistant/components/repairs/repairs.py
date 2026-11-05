@@ -18,7 +18,7 @@ class UpdateReportRepairFlow(ConfirmRepairFlow):
     ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
-            self.hass.data[DATA_UPDATE_REPORT].async_dismiss()
+            await self.hass.data[DATA_UPDATE_REPORT].async_dismiss()
         return await super().async_step_confirm(user_input)
 
 

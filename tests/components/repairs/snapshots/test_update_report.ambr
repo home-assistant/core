@@ -81,7 +81,7 @@
     ]),
   })
 # ---
-# name: test_update_report[previous_run_was_older_version]
+# name: test_update_report[first_run_after_update]
   dict({
     'config_entries': list([
       dict({

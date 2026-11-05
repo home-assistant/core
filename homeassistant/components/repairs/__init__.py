@@ -6,7 +6,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import issue_handler, update_report, websocket_api
-from .const import DOMAIN, FlowType
+from .const import DATA_UPDATE_REPORT, DOMAIN, FlowType
 from .issue_handler import ConfirmRepairFlow, RepairsFlowManager
 from .models import RepairsFlow, RepairsFlowContext, RepairsFlowResult
 
@@ -18,6 +18,7 @@ __all__ = [
     "RepairsFlowContext",
     "RepairsFlowManager",
     "RepairsFlowResult",
+    "async_snapshot_before_update",
     "repairs_flow_manager",
 ]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -33,6 +34,11 @@ def repairs_flow_manager(hass: HomeAssistant) -> RepairsFlowManager:
 
     flow_manager: RepairsFlowManager = domain_data["flow_manager"]
     return flow_manager
+
+
+async def async_snapshot_before_update(hass: HomeAssistant) -> None:
+    """Save what the running instance looks like before Core is updated."""
+    await hass.data[DATA_UPDATE_REPORT].async_before_update()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

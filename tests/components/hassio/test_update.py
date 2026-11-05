@@ -680,7 +680,11 @@ async def test_update_os_with_backup(
     supervisor_client.os.update.assert_called_once_with(OSUpdate(version=None))
 
 
-async def test_update_core(hass: HomeAssistant, supervisor_client: AsyncMock) -> None:
+async def test_update_core(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test updating core update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -708,6 +712,9 @@ async def test_update_core(hass: HomeAssistant, supervisor_client: AsyncMock) ->
     supervisor_client.homeassistant.update.assert_called_once_with(
         HomeAssistantUpdateOptions(version=None, backup=False)
     )
+    # The update report compares the next run with this snapshot.
+    before_update = hass_storage["repairs.update_report"]["data"]["before_update"]
+    assert before_update["version"] == HAVERSION
 
 
 async def test_update_core_progress(
