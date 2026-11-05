@@ -4,12 +4,26 @@ import bisect
 from contextlib import suppress
 import datetime as dt
 from functools import lru_cache, partial
+from pathlib import Path
 import re
-from typing import Any, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 import zoneinfo
 
 from aiozoneinfo import async_get_time_zone as _async_get_time_zone
 import ciso8601
+import tzdata.zoneinfo
+
+if TYPE_CHECKING:
+    assert tzdata.zoneinfo.__file__ is not None
+
+TZDATA_ZONEINFO_DIR = str(Path(tzdata.zoneinfo.__file__).parent)
+zoneinfo.reset_tzpath(
+    (
+        TZDATA_ZONEINFO_DIR,
+        *(path for path in zoneinfo.TZPATH if path != TZDATA_ZONEINFO_DIR),
+    )
+)
+zoneinfo.ZoneInfo.clear_cache()
 
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = dt.UTC
