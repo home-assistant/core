@@ -12,7 +12,12 @@ import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY  # pylint: disable=home-assistant-component-root-import
-from homeassistant.components.cloud.const import DOMAIN, PREVIEW_FEATURE_STT_V2
+from homeassistant.components.cloud.const import (
+    DOMAIN,
+    PREVIEW_FEATURE_STT_V2,
+    STT_ENTITY_UNIQUE_ID,
+    TTS_ENTITY_UNIQUE_ID,
+)
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.stt import (
     DEFAULT_AUDIO_PROCESSING,
@@ -27,6 +32,7 @@ from homeassistant.components.stt import (
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import PIPELINE_DATA
@@ -169,6 +175,83 @@ async def test_migrating_pipelines(
         "stt_engine": entity_id,
         "tts_engine": "tts.home_assistant_link",
     }
+
+
+def _pipeline(pipeline_id: str, name: str, stt_engine: str, tts_engine: str) -> dict:
+    """Return stored pipeline data."""
+    return {
+        "conversation_engine": "conversation.home_assistant",
+        "conversation_language": "en",
+        "id": pipeline_id,
+        "language": "en",
+        "name": name,
+        "stt_engine": stt_engine,
+        "stt_language": "en-US",
+        "tts_engine": tts_engine,
+        "tts_language": "en-US",
+        "tts_voice": "JennyNeural",
+        "wake_word_entity": None,
+        "wake_word_id": None,
+        "prefer_local_intents": False,
+    }
+
+
+async def test_renaming_pipelines_with_registered_entity_ids(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test renaming pipelines of an install which already uses the entity ids."""
+    stt_entity_id = entity_registry.async_get_or_create(
+        "stt", DOMAIN, STT_ENTITY_UNIQUE_ID, suggested_object_id="home_assistant_cloud"
+    ).entity_id
+    tts_entity_id = entity_registry.async_get_or_create(
+        "tts", DOMAIN, TTS_ENTITY_UNIQUE_ID, suggested_object_id="home_assistant_cloud"
+    ).entity_id
+    assert stt_entity_id == "stt.home_assistant_cloud"
+    assert tts_entity_id == "tts.home_assistant_cloud"
+    default_pipeline = _pipeline(
+        "01GX8ZWBAQYWNB1XV3EXEZ75DY",
+        "Home Assistant Cloud",
+        stt_entity_id,
+        tts_entity_id,
+    )
+    custom_pipeline = _pipeline(
+        "01GX8ZWBAQTKFQNK4W7Q4CTRCX", "My assistant", stt_entity_id, tts_entity_id
+    )
+    other_pipeline = _pipeline(
+        "01GX8ZWBAQSV1HP3WGJPFWEJ8J",
+        "Home Assistant Cloud",
+        "stt.other",
+        "tts.other",
+    )
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "assist_pipeline.pipelines",
+        "data": {
+            "items": [default_pipeline, custom_pipeline, other_pipeline],
+            "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
+        },
+    }
+
+    assert await async_setup_component(hass, "assist_pipeline", {})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+
+    await cloud.login("test-user", "test-pass")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(stt_entity_id)
+    assert hass.states.get(tts_entity_id)
+    # Only the cloud pipeline with the legacy default name is renamed, the
+    # engines keep their registered entity ids.
+    assert hass_storage[STORAGE_KEY]["data"]["items"] == [
+        {**default_pipeline, "name": "Home Assistant Link"},
+        custom_pipeline,
+        other_pipeline,
+    ]
 
 
 @pytest.fixture(name="setup_stt")
