@@ -747,6 +747,34 @@ def test_validate_publish_topic() -> None:
     mqtt.valid_publish_topic("$SYS/")
 
 
+@pytest.mark.parametrize(
+    "encoding",
+    [
+        pytest.param("utf-8", id="utf-8"),
+        pytest.param("UTF8", id="alias"),
+        pytest.param("latin-1", id="latin-1"),
+        pytest.param("", id="raw"),
+    ],
+)
+def test_validate_encoding(encoding: str) -> None:
+    """Test valid payload encodings are passed through."""
+    assert mqtt.util.valid_encoding(encoding) == encoding
+
+
+@pytest.mark.parametrize(
+    "encoding",
+    [
+        pytest.param("unknown-encoding", id="unknown"),
+        pytest.param("rot13", id="not_a_text_encoding"),
+        pytest.param(None, id="none"),
+    ],
+)
+def test_validate_invalid_encoding(encoding: str | None) -> None:
+    """Test invalid payload encodings are rejected."""
+    with pytest.raises(probatio.Invalid):
+        mqtt.util.valid_encoding(encoding)
+
+
 def test_entity_device_info_schema() -> None:
     """Test MQTT entity device info validation."""
     # just identifier
@@ -897,6 +925,30 @@ async def test_receiving_non_utf8_message_gets_logged(
     assert (
         "Can't decode payload b'\\x9a' on test-topic with encoding utf-8" in caplog.text
     )
+
+
+async def test_receiving_message_with_unknown_encoding_gets_logged(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    record_calls: MessageCallbackType,
+    recorded_calls: list[ReceiveMessage],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a subscription with an unknown encoding does not block other subscribers."""
+    await mqtt_mock_entry()
+    await mqtt.async_subscribe(hass, "#", record_calls, encoding="unknown-encoding")
+    # A wildcard keeps registration order, so this subscriber is served after "#"
+    await mqtt.async_subscribe(hass, "+", record_calls)
+
+    async_fire_mqtt_message(hass, "test-topic", b"payload")
+
+    await hass.async_block_till_done()
+    assert (
+        "Can't decode payload b'payload' on test-topic with encoding unknown-encoding"
+        in caplog.text
+    )
+    assert len(recorded_calls) == 1
+    assert recorded_calls[0].payload == "payload"
 
 
 async def test_receiving_message_with_non_utf8_topic_gets_logged(
@@ -2462,6 +2514,51 @@ async def test_reload_config_entry(
     assert state.state == "manual2_update_after_reload"
     assert (state := hass.states.get("sensor.test_manual3")) is not None
     assert state.state is STATE_UNAVAILABLE
+
+
+async def test_reload_config_entry_with_tag_and_device_trigger(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test reloading the entry with a discovered tag and device trigger."""
+    # The tag and device_automation integrations are normally loaded by
+    # default_config, they do not support unloading a forwarded config entry
+    assert await async_setup_component(hass, "tag", {})
+    assert await async_setup_component(hass, "device_automation", {})
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    device = {"identifiers": ["0AFFD2"]}
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/tag/0AFFD2/config",
+        json.dumps({"topic": "test-topic/tag_scanned", "device": device}),
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_automation/0AFFD2/action/config",
+        json.dumps(
+            {
+                "automation_type": "trigger",
+                "topic": "test-topic/action",
+                "type": "action",
+                "subtype": "click",
+                "device": device,
+            }
+        ),
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/0AFFD2/config",
+        json.dumps({"state_topic": "test-topic/sensor", "device": device}),
+    )
+    await hass.async_block_till_done()
+    assert {"tag", "device_automation", "sensor"} <= hass.data[
+        mqtt.DATA_MQTT
+    ].platforms_loaded
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(

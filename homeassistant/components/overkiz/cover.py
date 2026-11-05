@@ -122,6 +122,18 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
     ),
+    # Needs override since PositionableScreenUno only reports TargetClosureState
+    # and ignores setClosure
+    # uiClass is ExteriorScreen
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_SCREEN_UNO,
+        device_class=CoverDeviceClass.BLIND,
+        current_position_state=OverkizState.CORE_TARGET_CLOSURE,
+        set_position_command=OverkizCommand.SET_DEPLOYMENT,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+    ),
     # Needs override to support lower/upper position control
     # uiClass is RollerShutter
     OverkizCoverDescription(
@@ -809,9 +821,13 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 state_name,
             )
 
-            if fallback_state := self.device.states.get(
-                OverkizState.CORE_TARGET_CLOSURE
-            ):
+            # TargetClosureState may be 124 as well, e.g. when it is the position
+            # state itself (PositionableScreenUno)
+            if (
+                fallback_state := self.device.states.get(
+                    OverkizState.CORE_TARGET_CLOSURE
+                )
+            ) and fallback_state.value_as_int != _POSITION_UNKNOWN:
                 position = fallback_state.value_as_int
             else:
                 return None
