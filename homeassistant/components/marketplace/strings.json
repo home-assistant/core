@@ -415,7 +415,7 @@
     "profile": {
       "options": {
         "default": "GitHub (run by GitHub and the Open Home Foundation)",
-        "hasscn": "Unofficial China relay (run by the Home Assistant community in China, hasscn.top, with third-party relays as a fallback)"
+        "hasscn": "Unofficial China relays (run by the Home Assistant community in China, hasscn.top, with third-party relays as a fallback)"
       }
     }
   },
