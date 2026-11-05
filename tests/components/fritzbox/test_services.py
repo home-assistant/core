@@ -9,9 +9,8 @@ import pytest
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.components.fritzbox.services import (
-    ATTR_DURATION,
-    SERVICE_SET_WINDOW_CLOSE,
-    SERVICE_SET_WINDOW_OPEN,
+    FritzboxService,
+    FritzboxServiceArgument,
 )
 from homeassistant.const import ATTR_DEVICE_ID, CONF_DEVICES
 from homeassistant.core import HomeAssistant
@@ -26,9 +25,9 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{CONF_FAKE_NAME}"
 @pytest.mark.parametrize(
     "service_data",
     [
-        {ATTR_DURATION: 1},
-        {ATTR_DURATION: 30},
-        {ATTR_DURATION: 86400},
+        {FritzboxServiceArgument.DURATION: 1},
+        {FritzboxServiceArgument.DURATION: 30},
+        {FritzboxServiceArgument.DURATION: 86400},
     ],
 )
 async def test_set_window_open_good(
@@ -54,14 +53,14 @@ async def test_set_window_open_good(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_WINDOW_OPEN,
+        FritzboxService.SET_WINDOW_OPEN,
         {ATTR_DEVICE_ID: device_entry.id, **service_data},
         True,
     )
     assert fritz().set_window_open.call_count == 1
     assert fritz().set_window_open.call_args.args == (
         device.ain,
-        service_data[ATTR_DURATION],
+        service_data[FritzboxServiceArgument.DURATION],
         True,
     )
 
@@ -70,11 +69,11 @@ async def test_set_window_open_good(
     "service_data",
     [
         (
-            {ATTR_DURATION: 0},
+            {FritzboxServiceArgument.DURATION: 0},
             re.escape("value must be at least 1 at 'duration'"),
         ),
         (
-            {ATTR_DURATION: 86401},
+            {FritzboxServiceArgument.DURATION: 86401},
             re.escape("value must be at most 86400 at 'duration'"),
         ),
     ],
@@ -102,7 +101,7 @@ async def test_set_window_open_bad(
     with pytest.raises(MultipleInvalid, match=service_data[1]):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_WINDOW_OPEN,
+            FritzboxService.SET_WINDOW_OPEN,
             {ATTR_DEVICE_ID: device_entry.id, **service_data[0]},
             True,
         )
@@ -129,7 +128,7 @@ async def test_set_window_close(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_WINDOW_CLOSE,
+        FritzboxService.SET_WINDOW_CLOSE,
         {ATTR_DEVICE_ID: device_entry.id},
         True,
     )
