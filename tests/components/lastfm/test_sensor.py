@@ -224,3 +224,25 @@ async def test_error_log_does_not_include_credentials(
     assert API_KEY not in caplog.text
     assert API_SECRET not in caplog.text
     assert SESSION_KEY not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "error_kwarg",
+    [
+        pytest.param("thrown_error", id="user_info"),
+        pytest.param("recent_tracks_error", id="recent_tracks"),
+    ],
+)
+async def test_update_error_does_not_log_api_key(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    error_kwarg: str,
+) -> None:
+    """Test the API key in the pylast network repr is not logged."""
+    error = WSError(LastFMNetwork(api_key=API_KEY), "8", "Operation failed")
+    await setup_integration(config_entry, MockUser(**{error_kwarg: error}))
+
+    assert "LastFM update for testaccount1 failed: 8: Operation failed" in caplog.text
+    assert API_KEY not in caplog.text

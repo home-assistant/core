@@ -78,16 +78,18 @@ class OneDriveUpdateCoordinator(DataUpdateCoordinator[Drive]):
                 translation_domain=DOMAIN, translation_key="update_failed"
             ) from err
 
+        if not drive.quota:
+            return drive
+
+        entry_id = self.config_entry.entry_id
+        key: str | None = None
         # create an issue if the drive is almost full
-        if drive.quota and (state := drive.quota.state) in (
-            DriveState.CRITICAL,
-            DriveState.EXCEEDED,
-        ):
+        if (state := drive.quota.state) in (DriveState.CRITICAL, DriveState.EXCEEDED):
             key = "drive_full" if state is DriveState.EXCEEDED else "drive_almost_full"
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                key,
+                f"{key}_{entry_id}",
                 is_fixable=False,
                 severity=(
                     ir.IssueSeverity.ERROR
@@ -96,8 +98,13 @@ class OneDriveUpdateCoordinator(DataUpdateCoordinator[Drive]):
                 ),
                 translation_key=key,
                 translation_placeholders={
+                    "name": self.config_entry.title,
                     "total": f"{drive.quota.total / (1024**3):.2f}",
                     "used": f"{drive.quota.used / (1024**3):.2f}",
                 },
+                config_entry_id=entry_id,
             )
+        for stale_key in ("drive_full", "drive_almost_full"):
+            if stale_key != key:
+                ir.async_delete_issue(self.hass, DOMAIN, f"{stale_key}_{entry_id}")
         return drive

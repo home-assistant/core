@@ -48,7 +48,7 @@ from homeassistant.helpers.target import (
     async_extract_referenced_entity_ids,
     async_track_target_selector_state_change_event,
 )
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import BaseUnitConverter
@@ -85,6 +85,16 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = probatio.Schema(
         },
     }
 )
+
+
+def _references_registries(selection: TargetSelection) -> bool:
+    """Return if resolving the selection depends on the registries."""
+    return bool(
+        selection.area_ids
+        or selection.device_ids
+        or selection.floor_ids
+        or selection.label_ids
+    )
 
 
 class EntityConditionBase(Condition):
@@ -204,18 +214,17 @@ class EntityConditionBase(Condition):
             action()
 
         selection = self._target_selection
+        exclude = selection.exclude
         # Explicit entity ids don't depend on the registries, skip the target tracker
-        if not (
-            selection.area_ids
-            or selection.device_ids
-            or selection.floor_ids
-            or selection.label_ids
+        if not _references_registries(selection) and (
+            exclude is None or not _references_registries(exclude)
         ):
+            excluded_entity_ids = exclude.entity_ids if exclude else set()
             return async_track_state_change_event(
                 self._hass,
                 {
                     entity_id
-                    for entity_id in selection.entity_ids
+                    for entity_id in selection.entity_ids - excluded_entity_ids
                     if split_entity_id(entity_id)[0] in self._domain_specs
                 },
                 state_changed,
@@ -395,7 +404,7 @@ class EntityConditionBase(Condition):
                 )
         except (SQLAlchemyError, TimeoutError) as err:
             # Best effort: keep the conservative anchors rather than failing.
-            _LOGGER.debug("Error priming condition durations from history: %s", err)
+            _LOGGER.debug("Error priming condition durations from history: %r", err)
             return
 
         queued_states = queued or {}
@@ -605,7 +614,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
     """Condition for numerical state comparisons with above/below thresholds."""
 
     _schema = NUMERICAL_CONDITION_SCHEMA
-    _valid_unit: str | UndefinedType | None = UNDEFINED
+    _valid_unit: str | Undefined | None = Undefined
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize the numerical condition."""
@@ -652,7 +661,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
 
     def _is_valid_unit(self, unit: str | None) -> bool:
         """Check if the given unit is valid for this condition."""
-        if isinstance(self._valid_unit, UndefinedType):
+        if self._valid_unit is Undefined:
             return True
         return unit == self._valid_unit
 
@@ -724,7 +733,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
 
 def make_entity_numerical_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
-    valid_unit: str | UndefinedType | None = UNDEFINED,
+    valid_unit: str | Undefined | None = Undefined,
     *,
     primary_entities_only: bool = True,
 ) -> type[EntityNumericalConditionBase]:

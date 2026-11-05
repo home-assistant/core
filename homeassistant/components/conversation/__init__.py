@@ -22,6 +22,7 @@ from .chat_log import (
     Attachment,
     ChatLog,
     Content,
+    ConversationBusyError,
     ConverseError,
     SystemContent,
     ToolResultContent,
@@ -34,6 +35,8 @@ from .const import (
     DOMAIN,
     HOME_ASSISTANT_AGENT,
     ConversationEntityFeature,
+    ConversationService,
+    ConversationServiceArgument,
 )
 from .default_agent import async_setup_default_agent
 from .entity import ConversationEntity
@@ -58,10 +61,13 @@ __all__ = [
     "Attachment",
     "ChatLog",
     "Content",
+    "ConversationBusyError",
     "ConversationEntity",
     "ConversationEntityFeature",
     "ConversationInput",
     "ConversationResult",
+    "ConversationService",
+    "ConversationServiceArgument",
     "ConversationTraceEventType",
     "ConverseError",
     "SystemContent",

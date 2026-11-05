@@ -7,44 +7,43 @@ from typing import Any, override
 
 from homeassistant.components import (
     binary_sensor,
-    button,
     camera,
     climate,
     cover,
     event,
     fan,
-    humidifier,
-    input_button,
-    input_select,
     lawn_mower,
     light,
-    lock,
     media_player,
-    select,
     sensor,
     vacuum,
     valve,
-    water_heater,
 )
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelEntityStateAttribute,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
 )
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN, CameraEntityFeature
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
 )
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     CoverEntityFeature,
     CoverEntityStateAttribute,
+    CoverService,
+    CoverServiceArgument,
 )
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.fan import (
@@ -52,6 +51,8 @@ from homeassistant.components.fan import (
     FanEntityCapabilityAttribute,
     FanEntityFeature,
     FanEntityStateAttribute,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.humidifier import (
@@ -59,26 +60,40 @@ from homeassistant.components.humidifier import (
     HumidifierEntityCapabilityAttribute,
     HumidifierEntityFeature,
     HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
 from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
-from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
-from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
+from homeassistant.components.input_button import (
+    DOMAIN as INPUT_BUTTON_DOMAIN,
+    InputButtonService,
+)
+from homeassistant.components.input_select import (
+    DOMAIN as INPUT_SELECT_DOMAIN,
+    InputSelectService,
+    InputSelectServiceArgument,
+)
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
     LawnMowerEntityFeature,
+    LawnMowerService,
 )
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     LightEntityCapabilityAttribute,
     LightEntityFeature,
     LightEntityStateAttribute,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerEntityCapabilityAttribute,
     MediaPlayerEntityFeature,
     MediaPlayerEntityStateAttribute,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
@@ -86,33 +101,34 @@ from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SelectEntityCapabilityAttribute,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntityFeature
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    VacuumEntityFeature,
+    VacuumService,
+)
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
     ValveEntityFeature,
     ValveEntityStateAttribute,
+    ValveService,
+    ValveServiceArgument,
 )
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     WaterHeaterCapabilityAttribute,
     WaterHeaterEntityFeature,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
     WaterHeaterStateAttribute,
 )
 from homeassistant.const import (
-    ATTR_CODE,
     ATTR_ENTITY_ID,
-    ATTR_MODE,
-    ATTR_TEMPERATURE,
     CAST_APP_ID_HOMEASSISTANT_MEDIA,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_IDLE,
@@ -245,24 +261,24 @@ COVER_VALVE_STATES = {
 }
 
 SERVICE_STOP_COVER_VALVE = {
-    COVER_DOMAIN: cover.SERVICE_STOP_COVER,
-    VALVE_DOMAIN: valve.SERVICE_STOP_VALVE,
+    COVER_DOMAIN: CoverService.STOP,
+    VALVE_DOMAIN: ValveService.STOP,
 }
 SERVICE_OPEN_COVER_VALVE = {
-    COVER_DOMAIN: cover.SERVICE_OPEN_COVER,
-    VALVE_DOMAIN: valve.SERVICE_OPEN_VALVE,
+    COVER_DOMAIN: CoverService.OPEN,
+    VALVE_DOMAIN: ValveService.OPEN,
 }
 SERVICE_CLOSE_COVER_VALVE = {
-    COVER_DOMAIN: cover.SERVICE_CLOSE_COVER,
-    VALVE_DOMAIN: valve.SERVICE_CLOSE_VALVE,
+    COVER_DOMAIN: CoverService.CLOSE,
+    VALVE_DOMAIN: ValveService.CLOSE,
 }
 SERVICE_TOGGLE_COVER_VALVE = {
-    COVER_DOMAIN: cover.SERVICE_TOGGLE,
-    VALVE_DOMAIN: valve.SERVICE_TOGGLE,
+    COVER_DOMAIN: CoverService.TOGGLE,
+    VALVE_DOMAIN: ValveService.TOGGLE,
 }
 SERVICE_SET_POSITION_COVER_VALVE = {
-    COVER_DOMAIN: cover.SERVICE_SET_COVER_POSITION,
-    VALVE_DOMAIN: valve.SERVICE_SET_VALVE_POSITION,
+    COVER_DOMAIN: CoverService.SET_POSITION,
+    VALVE_DOMAIN: ValveService.SET_POSITION,
 }
 
 COVER_VALVE_CURRENT_POSITION = {
@@ -271,8 +287,8 @@ COVER_VALVE_CURRENT_POSITION = {
 }
 
 COVER_VALVE_POSITION = {
-    COVER_DOMAIN: cover.ATTR_POSITION,
-    VALVE_DOMAIN: valve.ATTR_POSITION,
+    COVER_DOMAIN: CoverServiceArgument.POSITION,
+    VALVE_DOMAIN: ValveServiceArgument.POSITION,
 }
 
 COVER_VALVE_SET_POSITION_FEATURE = {
@@ -410,10 +426,10 @@ class BrightnessTrait(_Trait):
         if self.state.domain == LIGHT_DOMAIN:
             await self.hass.services.async_call(
                 LIGHT_DOMAIN,
-                light.SERVICE_TURN_ON,
+                LightService.TURN_ON,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    light.ATTR_BRIGHTNESS_PCT: params["brightness"],
+                    LightServiceArgument.BRIGHTNESS_PCT: params["brightness"],
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -699,10 +715,10 @@ class ColorSettingTrait(_Trait):
 
             await self.hass.services.async_call(
                 LIGHT_DOMAIN,
-                SERVICE_TURN_ON,
+                LightService.TURN_ON,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    light.ATTR_COLOR_TEMP_KELVIN: temp,
+                    LightServiceArgument.COLOR_TEMP_KELVIN: temp,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -717,8 +733,11 @@ class ColorSettingTrait(_Trait):
 
             await self.hass.services.async_call(
                 LIGHT_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: self.state.entity_id, light.ATTR_HS_COLOR: color},
+                LightService.TURN_ON,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    LightServiceArgument.HS_COLOR: color,
+                },
                 blocking=not self.config.should_report_state,
                 context=data.context,
             )
@@ -730,11 +749,11 @@ class ColorSettingTrait(_Trait):
 
             await self.hass.services.async_call(
                 LIGHT_DOMAIN,
-                SERVICE_TURN_ON,
+                LightService.TURN_ON,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    light.ATTR_HS_COLOR: [color["hue"], saturation],
-                    light.ATTR_BRIGHTNESS: brightness,
+                    LightServiceArgument.HS_COLOR: [color["hue"], saturation],
+                    LightServiceArgument.BRIGHTNESS: brightness,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -778,9 +797,9 @@ class SceneTrait(_Trait):
         """Execute a scene command."""
         service = SERVICE_TURN_ON
         if self.state.domain == BUTTON_DOMAIN:
-            service = button.SERVICE_PRESS
+            service = ButtonService.PRESS
         elif self.state.domain == INPUT_BUTTON_DOMAIN:
-            service = input_button.SERVICE_PRESS
+            service = InputButtonService.PRESS
 
         # Don't block for scripts or buttons, as they can be slow.
         await self.hass.services.async_call(
@@ -833,9 +852,9 @@ class DockTrait(_Trait):
         service: str | None = None
 
         if domain == VACUUM_DOMAIN:
-            service = vacuum.SERVICE_RETURN_TO_BASE
+            service = VacuumService.RETURN_TO_BASE
         elif domain == LAWN_MOWER_DOMAIN:
-            service = lawn_mower.SERVICE_DOCK
+            service = LawnMowerService.DOCK
 
         if service:
             await self.hass.services.async_call(
@@ -884,7 +903,7 @@ class LocatorTrait(_Trait):
 
         await self.hass.services.async_call(
             self.state.domain,
-            vacuum.SERVICE_LOCATE,
+            VacuumService.LOCATE,
             {ATTR_ENTITY_ID: self.state.entity_id},
             blocking=not self.config.should_report_state,
             context=data.context,
@@ -1019,7 +1038,7 @@ class StartStopTrait(_Trait):
         service: str | None = None
         service_data: dict[str, Any] = {ATTR_ENTITY_ID: self.state.entity_id}
         if command == COMMAND_START_STOP:
-            service = vacuum.SERVICE_START if params["start"] else vacuum.SERVICE_STOP
+            service = VacuumService.START if params["start"] else VacuumService.STOP
             if params["start"]:
                 zones: list[str] = []
                 if "zone" in params:
@@ -1052,9 +1071,9 @@ class StartStopTrait(_Trait):
                             )
                         area_ids.append(area_id)
                     service_data["cleaning_area_id"] = area_ids
-                    service = vacuum.SERVICE_CLEAN_AREA
+                    service = VacuumService.CLEAN_AREA
         elif command == COMMAND_PAUSE_UNPAUSE:
-            service = vacuum.SERVICE_PAUSE if params["pause"] else vacuum.SERVICE_START
+            service = VacuumService.PAUSE if params["pause"] else VacuumService.START
         if service:
             await self.hass.services.async_call(
                 self.state.domain,
@@ -1069,15 +1088,15 @@ class StartStopTrait(_Trait):
         service: str | None = None
         if command == COMMAND_START_STOP:
             service = (
-                lawn_mower.SERVICE_START_MOWING
+                LawnMowerService.START_MOWING
                 if params["start"]
-                else lawn_mower.SERVICE_DOCK
+                else LawnMowerService.DOCK
             )
         elif command == COMMAND_PAUSE_UNPAUSE:
             service = (
-                lawn_mower.SERVICE_PAUSE
+                LawnMowerService.PAUSE
                 if params["pause"]
-                else lawn_mower.SERVICE_START_MOWING
+                else LawnMowerService.START_MOWING
             )
         if service:
             await self.hass.services.async_call(
@@ -1280,8 +1299,11 @@ class TemperatureControlTrait(_Trait):
 
             await self.hass.services.async_call(
                 WATER_HEATER_DOMAIN,
-                water_heater.SERVICE_SET_TEMPERATURE,
-                {ATTR_ENTITY_ID: self.state.entity_id, ATTR_TEMPERATURE: temp},
+                WaterHeaterService.SET_TEMPERATURE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    WaterHeaterServiceArgument.TEMPERATURE: temp,
+                },
                 blocking=not self.config.should_report_state,
                 context=data.context,
             )
@@ -1512,8 +1534,11 @@ class TemperatureSettingTrait(_Trait):
 
             await self.hass.services.async_call(
                 CLIMATE_DOMAIN,
-                climate.SERVICE_SET_TEMPERATURE,
-                {ATTR_ENTITY_ID: self.state.entity_id, ATTR_TEMPERATURE: temp},
+                ClimateService.SET_TEMPERATURE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    ClimateServiceArgument.TEMPERATURE: temp,
+                },
                 blocking=not self.config.should_report_state,
                 context=data.context,
             )
@@ -1559,14 +1584,16 @@ class TemperatureSettingTrait(_Trait):
             svc_data = {ATTR_ENTITY_ID: self.state.entity_id}
 
             if supported & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
-                svc_data[climate.ATTR_TARGET_TEMP_HIGH] = temp_high
-                svc_data[climate.ATTR_TARGET_TEMP_LOW] = temp_low
+                svc_data[ClimateServiceArgument.TARGET_TEMP_HIGH] = temp_high
+                svc_data[ClimateServiceArgument.TARGET_TEMP_LOW] = temp_low
             else:
-                svc_data[ATTR_TEMPERATURE] = (temp_high + temp_low) / 2
+                svc_data[ClimateServiceArgument.TEMPERATURE] = (
+                    temp_high + temp_low
+                ) / 2
 
             await self.hass.services.async_call(
                 CLIMATE_DOMAIN,
-                climate.SERVICE_SET_TEMPERATURE,
+                ClimateService.SET_TEMPERATURE,
                 svc_data,
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -1581,7 +1608,7 @@ class TemperatureSettingTrait(_Trait):
             if target_mode == "on":
                 await self.hass.services.async_call(
                     CLIMATE_DOMAIN,
-                    SERVICE_TURN_ON,
+                    ClimateService.TURN_ON,
                     {ATTR_ENTITY_ID: self.state.entity_id},
                     blocking=not self.config.should_report_state,
                     context=data.context,
@@ -1591,7 +1618,7 @@ class TemperatureSettingTrait(_Trait):
             if target_mode == "off":
                 await self.hass.services.async_call(
                     CLIMATE_DOMAIN,
-                    SERVICE_TURN_OFF,
+                    ClimateService.TURN_OFF,
                     {ATTR_ENTITY_ID: self.state.entity_id},
                     blocking=not self.config.should_report_state,
                     context=data.context,
@@ -1601,9 +1628,11 @@ class TemperatureSettingTrait(_Trait):
             if target_mode in self.google_to_preset:
                 await self.hass.services.async_call(
                     CLIMATE_DOMAIN,
-                    climate.SERVICE_SET_PRESET_MODE,
+                    ClimateService.SET_PRESET_MODE,
                     {
-                        climate.ATTR_PRESET_MODE: self.google_to_preset[target_mode],
+                        ClimateServiceArgument.PRESET_MODE: self.google_to_preset[
+                            target_mode
+                        ],
                         ATTR_ENTITY_ID: self.state.entity_id,
                     },
                     blocking=not self.config.should_report_state,
@@ -1613,10 +1642,10 @@ class TemperatureSettingTrait(_Trait):
 
             await self.hass.services.async_call(
                 CLIMATE_DOMAIN,
-                climate.SERVICE_SET_HVAC_MODE,
+                ClimateService.SET_HVAC_MODE,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    climate.ATTR_HVAC_MODE: self.google_to_hvac[target_mode],
+                    ClimateServiceArgument.HVAC_MODE: self.google_to_hvac[target_mode],
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -1716,10 +1745,10 @@ class HumiditySettingTrait(_Trait):
         if command == COMMAND_SET_HUMIDITY:
             await self.hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
-                humidifier.SERVICE_SET_HUMIDITY,
+                HumidifierService.SET_HUMIDITY,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    humidifier.ATTR_HUMIDITY: params["humidity"],
+                    HumidifierServiceArgument.HUMIDITY: params["humidity"],
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -1766,10 +1795,10 @@ class LockUnlockTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an LockUnlock command."""
         if params["lock"]:
-            service = lock.SERVICE_LOCK
+            service = LockService.LOCK
         else:
             _verify_pin_challenge(data, self.state, challenge)
-            service = lock.SERVICE_UNLOCK
+            service = LockService.UNLOCK
 
         await self.hass.services.async_call(
             LOCK_DOMAIN,
@@ -1791,11 +1820,11 @@ class ArmDisArmTrait(_Trait):
     commands = [COMMAND_ARM_DISARM]
 
     state_to_service = {
-        AlarmControlPanelState.ARMED_HOME: SERVICE_ALARM_ARM_HOME,
-        AlarmControlPanelState.ARMED_NIGHT: SERVICE_ALARM_ARM_NIGHT,
-        AlarmControlPanelState.ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
-        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-        AlarmControlPanelState.TRIGGERED: SERVICE_ALARM_TRIGGER,
+        AlarmControlPanelState.ARMED_HOME: AlarmControlPanelService.ARM_HOME,
+        AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelService.ARM_NIGHT,
+        AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelService.ARM_AWAY,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelService.ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.TRIGGERED: AlarmControlPanelService.TRIGGER,
     }
 
     state_to_support = {
@@ -1897,19 +1926,19 @@ class ArmDisArmTrait(_Trait):
             and params.get("cancel")
             and self.state.state == AlarmControlPanelState.PENDING
         ):
-            service = SERVICE_ALARM_DISARM
+            service = AlarmControlPanelService.DISARM
         else:
             if self.state.state == AlarmControlPanelState.DISARMED:
                 raise SmartHomeError(ERR_ALREADY_DISARMED, "System is already disarmed")
             _verify_pin_challenge(data, self.state, challenge)
-            service = SERVICE_ALARM_DISARM
+            service = AlarmControlPanelService.DISARM
 
         await self.hass.services.async_call(
             ALARM_CONTROL_PANEL_DOMAIN,
             service,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
-                ATTR_CODE: data.config.secure_devices_pin,
+                AlarmControlPanelServiceArgument.CODE: data.config.secure_devices_pin,
             },
             blocking=not self.config.should_report_state,
             context=data.context,
@@ -2053,10 +2082,10 @@ class FanSpeedTrait(_Trait):
         if domain == CLIMATE_DOMAIN:
             await self.hass.services.async_call(
                 CLIMATE_DOMAIN,
-                climate.SERVICE_SET_FAN_MODE,
+                ClimateService.SET_FAN_MODE,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    climate.ATTR_FAN_MODE: params["fanSpeed"],
+                    ClimateServiceArgument.FAN_MODE: params["fanSpeed"],
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -2072,10 +2101,10 @@ class FanSpeedTrait(_Trait):
 
             await self.hass.services.async_call(
                 FAN_DOMAIN,
-                fan.SERVICE_SET_PERCENTAGE,
+                FanService.SET_PERCENTAGE,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    fan.ATTR_PERCENTAGE: fan_speed_percent,
+                    FanServiceArgument.PERCENTAGE: fan_speed_percent,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -2094,8 +2123,11 @@ class FanSpeedTrait(_Trait):
 
             await self.hass.services.async_call(
                 FAN_DOMAIN,
-                fan.SERVICE_SET_DIRECTION,
-                {ATTR_ENTITY_ID: self.state.entity_id, fan.ATTR_DIRECTION: direction},
+                FanService.SET_DIRECTION,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    FanServiceArgument.DIRECTION: direction,
+                },
                 blocking=not self.config.should_report_state,
                 context=data.context,
             )
@@ -2263,10 +2295,10 @@ class ModesTrait(_Trait):
             preset_mode = settings["preset mode"]
             await self.hass.services.async_call(
                 FAN_DOMAIN,
-                fan.SERVICE_SET_PRESET_MODE,
+                FanService.SET_PRESET_MODE,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    fan.ATTR_PRESET_MODE: preset_mode,
+                    FanServiceArgument.PRESET_MODE: preset_mode,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -2277,10 +2309,10 @@ class ModesTrait(_Trait):
             option = settings["option"]
             await self.hass.services.async_call(
                 INPUT_SELECT_DOMAIN,
-                input_select.SERVICE_SELECT_OPTION,
+                InputSelectService.SELECT_OPTION,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    input_select.ATTR_OPTION: option,
+                    InputSelectServiceArgument.OPTION: option,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -2291,10 +2323,10 @@ class ModesTrait(_Trait):
             option = settings["option"]
             await self.hass.services.async_call(
                 SELECT_DOMAIN,
-                select.SERVICE_SELECT_OPTION,
+                SelectService.SELECT_OPTION,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    select.ATTR_OPTION: option,
+                    SelectServiceArgument.OPTION: option,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -2305,9 +2337,9 @@ class ModesTrait(_Trait):
             requested_mode = settings["mode"]
             await self.hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
-                humidifier.SERVICE_SET_MODE,
+                HumidifierService.SET_MODE,
                 {
-                    ATTR_MODE: requested_mode,
+                    HumidifierServiceArgument.MODE: requested_mode,
                     ATTR_ENTITY_ID: self.state.entity_id,
                 },
                 blocking=not self.config.should_report_state,
@@ -2319,9 +2351,9 @@ class ModesTrait(_Trait):
             requested_mode = settings["operation mode"]
             await self.hass.services.async_call(
                 WATER_HEATER_DOMAIN,
-                water_heater.SERVICE_SET_OPERATION_MODE,
+                WaterHeaterService.SET_OPERATION_MODE,
                 {
-                    water_heater.ATTR_OPERATION_MODE: requested_mode,
+                    WaterHeaterServiceArgument.OPERATION_MODE: requested_mode,
                     ATTR_ENTITY_ID: self.state.entity_id,
                 },
                 blocking=not self.config.should_report_state,
@@ -2336,7 +2368,7 @@ class ModesTrait(_Trait):
                 SERVICE_TURN_ON,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    light.ATTR_EFFECT: requested_effect,
+                    LightServiceArgument.EFFECT: requested_effect,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -2348,10 +2380,10 @@ class ModesTrait(_Trait):
         ):
             await self.hass.services.async_call(
                 MEDIA_PLAYER_DOMAIN,
-                media_player.SERVICE_SELECT_SOUND_MODE,
+                MediaPlayerService.SELECT_SOUND_MODE,
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    media_player.ATTR_SOUND_MODE: sound_mode,
+                    MediaPlayerServiceArgument.SOUND_MODE: sound_mode,
                 },
                 blocking=not self.config.should_report_state,
                 context=data.context,
@@ -2434,10 +2466,10 @@ class InputSelectorTrait(_Trait):
 
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            media_player.SERVICE_SELECT_SOURCE,
+            MediaPlayerService.SELECT_SOURCE,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
-                media_player.ATTR_INPUT_SOURCE: requested_source,
+                MediaPlayerServiceArgument.SOURCE: requested_source,
             },
             blocking=not self.config.should_report_state,
             context=data.context,
@@ -2674,10 +2706,10 @@ class VolumeTrait(_Trait):
     async def _set_volume_absolute(self, data, level):
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            media_player.SERVICE_VOLUME_SET,
+            MediaPlayerService.VOLUME_SET,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
-                media_player.ATTR_MEDIA_VOLUME_LEVEL: level,
+                MediaPlayerServiceArgument.VOLUME_LEVEL: level,
             },
             blocking=not self.config.should_report_state,
             context=data.context,
@@ -2707,9 +2739,9 @@ class VolumeTrait(_Trait):
             await self._set_volume_absolute(data, target)
 
         elif features & MediaPlayerEntityFeature.VOLUME_STEP:
-            svc = media_player.SERVICE_VOLUME_UP
+            svc = MediaPlayerService.VOLUME_UP
             if relative < 0:
-                svc = media_player.SERVICE_VOLUME_DOWN
+                svc = MediaPlayerService.VOLUME_DOWN
                 relative = -relative
 
             for _ in range(relative):
@@ -2734,10 +2766,10 @@ class VolumeTrait(_Trait):
 
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            media_player.SERVICE_VOLUME_MUTE,
+            MediaPlayerService.VOLUME_MUTE,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
-                media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
+                MediaPlayerServiceArgument.IS_VOLUME_MUTED: mute,
             },
             blocking=not self.config.should_report_state,
             context=data.context,
@@ -2852,7 +2884,7 @@ class TransportControlTrait(_Trait):
         service_attrs = {ATTR_ENTITY_ID: self.state.entity_id}
 
         if command == COMMAND_MEDIA_SEEK_RELATIVE:
-            service = media_player.SERVICE_MEDIA_SEEK
+            service = MediaPlayerService.MEDIA_SEEK
 
             rel_position = params["relativePositionMs"] / 1000
             seconds_since = 0  # Default to 0 seconds
@@ -2868,33 +2900,33 @@ class TransportControlTrait(_Trait):
             max_position = self.state.attributes.get(
                 MediaPlayerEntityStateAttribute.MEDIA_DURATION, 0
             )
-            service_attrs[media_player.ATTR_MEDIA_SEEK_POSITION] = min(
+            service_attrs[MediaPlayerServiceArgument.SEEK_POSITION] = min(
                 max(position + seconds_since + rel_position, 0), max_position
             )
         elif command == COMMAND_MEDIA_SEEK_TO_POSITION:
-            service = media_player.SERVICE_MEDIA_SEEK
+            service = MediaPlayerService.MEDIA_SEEK
 
             max_position = self.state.attributes.get(
                 MediaPlayerEntityStateAttribute.MEDIA_DURATION, 0
             )
-            service_attrs[media_player.ATTR_MEDIA_SEEK_POSITION] = min(
+            service_attrs[MediaPlayerServiceArgument.SEEK_POSITION] = min(
                 max(params["absPositionMs"] / 1000, 0), max_position
             )
         elif command == COMMAND_MEDIA_NEXT:
-            service = media_player.SERVICE_MEDIA_NEXT_TRACK
+            service = MediaPlayerService.MEDIA_NEXT_TRACK
         elif command == COMMAND_MEDIA_PAUSE:
-            service = media_player.SERVICE_MEDIA_PAUSE
+            service = MediaPlayerService.MEDIA_PAUSE
         elif command == COMMAND_MEDIA_PREVIOUS:
-            service = media_player.SERVICE_MEDIA_PREVIOUS_TRACK
+            service = MediaPlayerService.MEDIA_PREVIOUS_TRACK
         elif command == COMMAND_MEDIA_RESUME:
-            service = media_player.SERVICE_MEDIA_PLAY
+            service = MediaPlayerService.MEDIA_PLAY
         elif command == COMMAND_MEDIA_SHUFFLE:
-            service = media_player.SERVICE_SHUFFLE_SET
+            service = MediaPlayerService.SHUFFLE_SET
 
             # Google Assistant only supports enabling shuffle
-            service_attrs[media_player.ATTR_MEDIA_SHUFFLE] = True
+            service_attrs[MediaPlayerServiceArgument.SHUFFLE] = True
         elif command == COMMAND_MEDIA_STOP:
-            service = media_player.SERVICE_MEDIA_STOP
+            service = MediaPlayerService.MEDIA_STOP
         else:
             raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
 
@@ -3012,11 +3044,11 @@ class ChannelTrait(_Trait):
 
         await self.hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            media_player.SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: self.state.entity_id,
-                media_player.ATTR_MEDIA_CONTENT_ID: channel_number,
-                media_player.ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: channel_number,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
             },
             blocking=not self.config.should_report_state,
             context=data.context,

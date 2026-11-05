@@ -11,14 +11,12 @@ from transmission_rpc.error import (
 )
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PATH,
     CONF_PORT,
@@ -41,6 +39,7 @@ from .const import (
     MIN_REQUIRED_TRANSMISSION_VERSION,
     SUPPORTED_ORDER_MODES,
 )
+from .coordinator import TransmissionConfigEntry
 from .helpers import create_version
 
 DATA_SCHEMA = probatio.Schema(
@@ -65,7 +64,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TransmissionConfigEntry,
     ) -> TransmissionOptionsFlowHandler:
         """Get the options flow for this handler."""
         return TransmissionOptionsFlowHandler()
@@ -141,8 +140,8 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             description_placeholders={
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
-                CONF_NAME: reauth_entry.title,
+                "username": reauth_entry.data[CONF_USERNAME],
+                "name": reauth_entry.title,
             },
             step_id="reauth_confirm",
             data_schema=probatio.Schema(

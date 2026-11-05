@@ -9,12 +9,7 @@ from openwebif.error import InvalidAuthError
 import probatio
 from yarl import URL
 
-from homeassistant.config_entries import (
-    SOURCE_USER,
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -41,6 +36,7 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
+from .coordinator import Enigma2ConfigEntry
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -160,6 +156,8 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: Enigma2ConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

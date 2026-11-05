@@ -1256,7 +1256,7 @@ async def test_yaml_migration_matches_stable_no_pending(
     stored = hass_storage[DOMAIN]["data"]
     assert stored["pending"] is None
     # Without a certificate the unversioned profile moves to the current one.
-    assert stored["stable"] == {**stored_stable, "ssl_profile": "modern_v6"}
+    assert stored["stable"] == {**stored_stable, "ssl_profile": "intermediate_v6"}
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
     assert issue is not None
@@ -1281,7 +1281,7 @@ async def test_yaml_migration_matches_stable_no_pending(
                 "trusted_proxies": ["127.0.0.0/8", "10.11.12.0/24"],
                 "ip_ban_enabled": False,
                 "login_attempts_threshold": -1,
-                "ssl_profile": "modern_v6",
+                "ssl_profile": "intermediate_v6",
                 "use_x_frame_options": True,
             },
             id="other-change-creates-pending",
@@ -1376,13 +1376,13 @@ async def test_yaml_migration_differs_from_stable_creates_pending(
 
     stored = hass_storage[DOMAIN]["data"]
     # Without a certificate the unversioned profile moves to the current one.
-    assert stored["stable"] == {**stored_stable, "ssl_profile": "modern_v6"}
+    assert stored["stable"] == {**stored_stable, "ssl_profile": "intermediate_v6"}
     assert stored["pending"] == {
         "server_port": 8765,
         "cors_allowed_origins": ["https://cast.home-assistant.io"],
         "login_attempts_threshold": -1,
         "ip_ban_enabled": False,
-        "ssl_profile": "modern_v6",
+        "ssl_profile": "intermediate_v6",
         "use_x_frame_options": True,
         "created_at": dt_util.utcnow().isoformat(),
         "error": None,
@@ -1731,7 +1731,7 @@ async def test_setup_migrates_v2_2_storage_to_v3(
     ssl_conf = {"ssl_certificate": str(cert_path), "ssl_key": str(key_path)}
     hass_storage[DOMAIN] = _stable_http_storage(
         {**ssl_conf, "ssl_profile": "modern_v4"},
-        pending={"server_port": 9999, "ssl_profile": "modern_v6"},
+        pending={"server_port": 9999, "ssl_profile": "intermediate_v6"},
     )
     hass_storage[DOMAIN]["data"]["stable"]["ssl_profile"] = "modern"
     hass_storage[DOMAIN]["data"]["pending"]["ssl_profile"] = "intermediate"
@@ -1745,7 +1745,9 @@ async def test_setup_migrates_v2_2_storage_to_v3(
         "stable": _stored_config(
             {**ssl_conf, "ssl_profile": "modern_v4"}, created_at=STABLE_CREATED_AT
         ),
-        "pending": _stored_config({"server_port": 9999, "ssl_profile": "modern_v6"}),
+        "pending": _stored_config(
+            {"server_port": 9999, "ssl_profile": "intermediate_v6"}
+        ),
         "yaml_migration_done": True,
     }
 
@@ -1912,8 +1914,8 @@ async def test_ssl_profile_outdated_fix_flow(
     assert data["type"] == "menu"
     assert data["step_id"] == "init"
     assert data["menu_options"] == [
-        "confirm_modern_v6",
         "confirm_intermediate_v6",
+        "confirm_modern_v6",
         "ignore",
     ]
     assert data["description_placeholders"] == {"profile": profile_name}
@@ -2150,16 +2152,30 @@ async def test_default_config_under_supervisor_starts_redirect(
     assert hass.http._legacy_redirect_server is not None
 
 
+@pytest.mark.parametrize(
+    "stored_config",
+    [
+        pytest.param({"server_port": 80}, id="default-profile"),
+        # 2026.11.0b0 persisted modern_v6 as the default profile.
+        pytest.param(
+            {"server_port": 80, "ssl_profile": "modern_v6"},
+            id="earlier-default-profile",
+        ),
+    ],
+)
 async def test_persisted_default_config_starts_redirect(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
+    stored_config: dict[str, Any],
 ) -> None:
     """Test the redirect still starts for a default config loaded from disk.
 
     A persisted default config carries created_at/error metadata, so the
     transition gate must compare without it (not by identity or raw equality).
+    Without a certificate the SSL profile is unused, so a config persisted
+    with an earlier default profile is still the default config.
     """
-    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+    hass_storage[DOMAIN] = _stable_http_storage(stored_config)
 
     with _supervisor_default_config():
         await _setup_http_with_onboarding(hass)
