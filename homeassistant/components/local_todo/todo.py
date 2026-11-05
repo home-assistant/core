@@ -119,8 +119,12 @@ async def async_setup_entry(
         await entity.async_save()
 
 
-def _convert_item(item: TodoItem) -> Todo:
-    """Convert a HomeAssistant TodoItem to an ical Todo."""
+def _convert_item(item: TodoItem, other_categories: list[str] | None = None) -> Todo:
+    """Convert a HomeAssistant TodoItem to an ical Todo.
+
+    The section is stored as the first category; other categories set outside
+    of Home Assistant are kept after it.
+    """
     todo = Todo()
     if item.uid:
         todo.uid = item.uid
@@ -132,6 +136,10 @@ def _convert_item(item: TodoItem) -> Todo:
     if todo.due and not isinstance(todo.due, dt.datetime):
         todo.due += dt.timedelta(days=1)
     todo.description = item.description
+    todo.categories = [item.section] if item.section else []
+    todo.categories.extend(
+        category for category in other_categories or () if category != item.section
+    )
     return todo
 
 
@@ -147,6 +155,7 @@ class LocalTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+        | TodoListEntityFeature.SET_SECTION_ON_ITEM
     )
     _attr_should_poll = False
 
@@ -184,6 +193,7 @@ class LocalTodoListEntity(TodoListEntity):
                     due=due,
                     description=item.description,
                     completed=item.completed,
+                    section=next(iter(item.categories), None),
                 )
             )
         self._attr_todo_items = todo_items
@@ -201,8 +211,11 @@ class LocalTodoListEntity(TodoListEntity):
     @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list."""
-        todo = _convert_item(item)
         async with self._calendar_lock:
+            existing = next(
+                (todo for todo in self._calendar.todos if todo.uid == item.uid), None
+            )
+            todo = _convert_item(item, existing.categories[1:] if existing else None)
             todo_store = self._new_todo_store()
             await self.hass.async_add_executor_job(todo_store.edit, todo.uid, todo)
             await self.async_save()

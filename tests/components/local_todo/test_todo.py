@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from ical.calendar_stream import IcsCalendarStream
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
@@ -20,6 +21,7 @@ from homeassistant.components.todo import (
     ATTR_DUE_DATETIME,
     ATTR_ITEM,
     ATTR_RENAME,
+    ATTR_SECTION,
     ATTR_STATUS,
     DOMAIN as TODO_DOMAIN,
     TodoServices,
@@ -138,6 +140,11 @@ async def test_add_item_write_error(
         ),
         ({ATTR_DESCRIPTION: ""}, {**EXPECTED_ADD_ITEM, "description": ""}),
         ({ATTR_DESCRIPTION: None}, EXPECTED_ADD_ITEM),
+        (
+            {ATTR_SECTION: "Fresh produce"},
+            {**EXPECTED_ADD_ITEM, "section": "Fresh produce"},
+        ),
+        ({ATTR_SECTION: None}, EXPECTED_ADD_ITEM),
         (
             {ATTR_ITEM: "测试主卧清扫"},
             {**EXPECTED_ADD_ITEM, "summary": "测试主卧清扫"},
@@ -304,6 +311,11 @@ EXPECTED_UPDATE_ITEM = {
         (
             {ATTR_DESCRIPTION: "Additional detail"},
             {**EXPECTED_UPDATE_ITEM, "description": "Additional detail"},
+            "1",
+        ),
+        (
+            {ATTR_SECTION: "Fresh produce"},
+            {**EXPECTED_UPDATE_ITEM, "section": "Fresh produce"},
             "1",
         ),
     ],
@@ -1133,3 +1145,83 @@ async def test_crlf_description_preserved_on_reload(
     assert len(items) == 1
     assert items[0]["description"] == "Line 1\nLine 2\n\nLine 3"
     assert "Repaired malformed iCalendar file" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("item_data", "expected_section", "expected_categories"),
+    [
+        pytest.param(
+            {ATTR_SECTION: "Household"},
+            "Household",
+            ["Household", "Organic"],
+            id="change_section",
+        ),
+        pytest.param(
+            {ATTR_SECTION: "Organic"},
+            "Organic",
+            ["Organic"],
+            id="promote_other_category",
+        ),
+        pytest.param(
+            {ATTR_STATUS: "completed"},
+            "Fresh produce",
+            ["Fresh produce", "Organic"],
+            id="unrelated_update",
+        ),
+        pytest.param(
+            {ATTR_SECTION: None},
+            "Organic",
+            ["Organic"],
+            id="clear_section",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "ics_content",
+    [
+        textwrap.dedent(
+            """\
+                BEGIN:VCALENDAR
+                PRODID:-//homeassistant.io//local_todo 2.0//EN
+                VERSION:2.0
+                BEGIN:VTODO
+                DTSTAMP:20231024T014011
+                UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
+                CREATED:20231017T010348
+                LAST-MODIFIED:20231024T014011
+                SEQUENCE:1
+                STATUS:NEEDS-ACTION
+                SUMMARY:Apples
+                CATEGORIES:Fresh produce,Organic
+                END:VTODO
+                END:VCALENDAR
+            """
+        )
+    ],
+)
+async def test_update_section_keeps_other_categories(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ws_get_items: WsGetItemsType,
+    item_data: dict[str, Any],
+    expected_section: str,
+    expected_categories: list[str],
+) -> None:
+    """Test the section maps to the first category and other categories are kept."""
+    items = await ws_get_items()
+    assert items[0]["section"] == "Fresh produce"
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "Apples", **item_data},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    items = await ws_get_items()
+    assert items[0]["section"] == expected_section
+
+    store = hass.config_entries.async_entries("local_todo")[0].runtime_data
+    calendar = IcsCalendarStream.calendar_from_ics(await store.async_load())
+    assert calendar.todos[0].categories == expected_categories
