@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_database_usage
+  dict({
+    'entities': list([
+      dict({
+        'bytes': int,
+        'entity_id': 'sensor.busy',
+        'states': 10,
+        'statistics': 3,
+        'statistics_short_term': 1,
+      }),
+      dict({
+        'bytes': int,
+        'entity_id': 'sensor.quiet',
+        'states': 1,
+        'statistics': 0,
+        'statistics_short_term': 0,
+      }),
+      dict({
+        'bytes': int,
+        'entity_id': 'test:external',
+        'states': 0,
+        'statistics': 1,
+        'statistics_short_term': 0,
+      }),
+    ]),
+    'event_types': list([
+      dict({
+        'bytes': int,
+        'event_type': 'my_event',
+        'events': 1,
+      }),
+    ]),
+    'generated_at': '2026-01-01T12:00:00+00:00',
+  })
+# ---
