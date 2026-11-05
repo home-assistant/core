@@ -16,8 +16,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import EcovacsConfigEntry
 from .const import SUPPORTED_LIFESPANS, SUPPORTED_STATION_ACTIONS
+from .controller import EcovacsConfigEntry
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,

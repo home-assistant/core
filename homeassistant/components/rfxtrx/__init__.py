@@ -141,7 +141,7 @@ def _create_rfx(
 
 
 def _device_subentry_unique_ids(
-    entry: ConfigEntry,
+    entry: RfxtrxConfigEntry,
 ) -> frozenset[tuple[str, str | None]]:
     """Return the id and unique_id of every device subentry, to detect changes."""
     return frozenset(
@@ -150,7 +150,7 @@ def _device_subentry_unique_ids(
     )
 
 
-def _get_device_lookup(entry: ConfigEntry) -> dict[DeviceTuple, ConfigSubentry]:
+def _get_device_lookup(entry: RfxtrxConfigEntry) -> dict[DeviceTuple, ConfigSubentry]:
     """Get a lookup structure for devices."""
     lookup: dict[DeviceTuple, ConfigSubentry] = {}
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
@@ -192,7 +192,9 @@ async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) ->
     )
     entry.async_on_unload(reload_debouncer.async_shutdown)
 
-    async def _async_reload_on_update(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    async def _async_reload_on_update(
+        hass: HomeAssistant, entry: RfxtrxConfigEntry
+    ) -> None:
         """Reload the entry when it is updated through a config/subentry flow."""
         nonlocal pending_internal_updates
         if pending_internal_updates > 0:
@@ -432,7 +434,7 @@ async def async_setup_platform_entry(
     )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(hass: HomeAssistant, entry: RfxtrxConfigEntry) -> None:
     """Migrate an old config entry."""
     version = entry.version
 
@@ -686,7 +688,9 @@ def get_subentry_id_from_identifiers(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
+    hass: HomeAssistant,
+    config_entry: RfxtrxConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove config entry from a device.
 
