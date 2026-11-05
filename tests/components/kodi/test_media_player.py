@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from jsonrpc_base.jsonrpc import TransportError
@@ -35,6 +35,7 @@ from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -95,7 +96,8 @@ async def test_entity_and_device(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the registered entity and device."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.kodi.PLATFORMS", [Platform.MEDIA_PLAYER]):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
     devices = dr.async_entries_for_config_entry(

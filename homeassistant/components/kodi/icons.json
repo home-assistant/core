@@ -5,6 +5,9 @@
     },
     "call_method": {
       "service": "mdi:console"
+    },
+    "send_message": {
+      "service": "mdi:message-badge"
     }
   }
 }
