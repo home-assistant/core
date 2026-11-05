@@ -530,6 +530,7 @@
           "delay_washing": "Delayed start",
           "drying": "Drying",
           "finish": "Finish",
+          "none": "Idle",
           "pre_drain": "Pre-drain",
           "pre_wash": "Pre-wash",
           "rinse": "Rinse",
