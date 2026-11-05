@@ -1,6 +1,6 @@
 """Config flow for Datadog."""
 
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from datadog import DogStatsd
 import probatio
@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
 
+from . import DatadogConfigEntry
 from .const import (
     CONF_RATE,
     DEFAULT_HOST,
@@ -17,9 +18,6 @@ from .const import (
     DEFAULT_RATE,
     DOMAIN,
 )
-
-if TYPE_CHECKING:
-    from . import DatadogConfigEntry
 
 
 class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
