@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from wyoming.asr import Transcript
+from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioStop
 from wyoming.error import Error
 from wyoming.event import Event
@@ -101,6 +101,30 @@ async def test_streaming_audio(
     assert result.result == stt.SpeechResultState.SUCCESS
     assert result.text == "Hello world"
     assert mock_client.written == snapshot
+
+
+@pytest.mark.usefixtures("init_wyoming_stt")
+async def test_streaming_audio_satellite_id(
+    hass: HomeAssistant, metadata: stt.SpeechMetadata
+) -> None:
+    """Test that the satellite the audio comes from is sent as context."""
+    entity = stt.async_get_speech_to_text_entity(hass, "stt.test_asr")
+    assert entity is not None
+
+    async def audio_stream() -> AsyncGenerator[bytes]:
+        yield b"chunk1"
+
+    with patch(
+        "homeassistant.components.wyoming.stt.AsyncTcpClient",
+        MockAsyncTcpClient([Transcript(text="Hello world").event()]),
+    ) as mock_client:
+        result = await entity.async_process_audio_stream(
+            replace(metadata, satellite_id="assist_satellite.test"), audio_stream()
+        )
+
+    assert result.text == "Hello world"
+    transcribe = Transcribe.from_event(mock_client.written[0])
+    assert transcribe.context == {"satellite_id": "assist_satellite.test"}
 
 
 @pytest.mark.usefixtures("init_wyoming_stt")

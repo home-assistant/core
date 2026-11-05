@@ -161,8 +161,15 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
         """Process an audio stream to STT service."""
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
-                # Set transcription language
-                await client.write_event(Transcribe(language=metadata.language).event())
+                # Set transcription language and the satellite the audio comes from
+                context = (
+                    {"satellite_id": metadata.satellite_id}
+                    if metadata.satellite_id is not None
+                    else None
+                )
+                await client.write_event(
+                    Transcribe(language=metadata.language, context=context).event()
+                )
 
                 # Begin audio stream
                 await client.write_event(
