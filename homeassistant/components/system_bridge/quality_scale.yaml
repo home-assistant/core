@@ -67,7 +67,9 @@ rules:
     status: exempt
     comment: Each config entry is a single device.
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: todo
+    comment: The locked binary sensor has no device class.
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
