@@ -526,6 +526,8 @@
         "state": {
           "air_wash": "Air wash",
           "cooling": "Cooling",
+          "delay_wash": "Delayed start",
+          "delay_washing": "Delayed start",
           "drying": "Drying",
           "finish": "Finish",
           "pre_drain": "Pre-drain",
@@ -533,9 +535,7 @@
           "rinse": "Rinse",
           "spin": "Spin",
           "wash": "Wash",
-          "wrinkle_prevent": "Wrinkle prevention",
-          "delay_wash": "Delayed start",
-          "delay_washing": "Delayed start"
+          "wrinkle_prevent": "Wrinkle prevention"
         }
       },
       "dishwasher_job_state": {
