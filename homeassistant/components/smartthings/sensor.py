@@ -386,6 +386,7 @@ CAPABILITY_TO_SENSORS: dict[
                     "delay_washing",
                     "drying",
                     "finish",
+                    "none",
                     "pre_drain",
                     "pre_wash",
                     "rinse",
@@ -394,11 +395,7 @@ CAPABILITY_TO_SENSORS: dict[
                     "wrinkle_prevent",
                 ],
                 device_class=SensorDeviceClass.ENUM,
-                value_fn=lambda value: (
-                    None
-                    if value in ("none", "unknown", None)
-                    else JOB_STATE_MAP.get(value, value)
-                ),
+                value_fn=lambda value: JOB_STATE_MAP.get(value, value),
             )
         ],
     },
