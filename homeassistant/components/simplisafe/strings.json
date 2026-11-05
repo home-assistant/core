@@ -78,7 +78,13 @@
     "step": {
       "init": {
         "data": {
-          "code": "Code (used in Home Assistant UI)"
+          "code": "Code (used in Home Assistant UI)",
+          "exclude_systems": "Exclude locations",
+          "include_systems": "Include locations"
+        },
+        "data_description": {
+          "exclude_systems": "Excluded locations are ignored even if they are also included.",
+          "include_systems": "Leave empty to include all locations."
         },
         "title": "Configure SimpliSafe"
       }

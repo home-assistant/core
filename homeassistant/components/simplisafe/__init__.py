@@ -50,6 +50,8 @@ from .const import (
     ATTR_LAST_EVENT_SENSOR_TYPE,
     ATTR_LAST_EVENT_TIMESTAMP,
     ATTR_SYSTEM_ID,
+    CONF_EXCLUDE_SYSTEMS,
+    CONF_INCLUDE_SYSTEMS,
     DISPATCHER_TOPIC_WEBSOCKET_EVENT,
     DOMAIN,
     LOGGER,
@@ -99,6 +101,23 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+def _filter_systems(
+    systems: dict[int, SystemType],
+    included_systems: list[str],
+    excluded_systems: list[str],
+) -> dict[int, SystemType]:
+    """Filter systems using the configured include and exclude lists."""
+    included_ids = set(included_systems)
+    excluded_ids = set(excluded_systems)
+
+    return {
+        system_id: system
+        for system_id, system in systems.items()
+        if (not included_ids or str(system_id) in included_ids)
+        and str(system_id) not in excluded_ids
+    }
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -267,6 +286,7 @@ class SimpliSafe:
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
         self.subscription_data: dict[int, Any] = api.subscription_data
         self.systems: dict[int, SystemType] = {}
+        self.all_systems: dict[int, SystemType] = {}
 
         # This will get filled in by async_init:
         self.coordinator: SimpliSafeDataUpdateCoordinator | None = None
@@ -419,7 +439,12 @@ class SimpliSafe:
         self._api.websocket.add_event_callback(self._async_websocket_on_event)
         self._async_start_websocket_if_needed()
 
-        self.systems = await self._api.async_get_systems()
+        self.all_systems = await self._api.async_get_systems()
+        self.systems = _filter_systems(
+            self.all_systems,
+            self.entry.options.get(CONF_INCLUDE_SYSTEMS, []),
+            self.entry.options.get(CONF_EXCLUDE_SYSTEMS, []),
+        )
         for system in self.systems.values():
             self._system_notifications[system.system_id] = set()
 

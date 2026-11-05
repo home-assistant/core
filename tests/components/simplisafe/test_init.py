@@ -22,13 +22,63 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.simplisafe import DOMAIN, WEBSOCKET_RETRY_DELAY
+from homeassistant.components.simplisafe import (
+    DOMAIN,
+    WEBSOCKET_RETRY_DELAY,
+    _filter_systems,
+)
+from homeassistant.components.simplisafe.const import (
+    CONF_EXCLUDE_SYSTEMS,
+    CONF_INCLUDE_SYSTEMS,
+)
 from homeassistant.components.simplisafe.coordinator import DEFAULT_SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
+
+
+@pytest.mark.parametrize(
+    ("include_systems", "exclude_systems", "expected_system_ids"),
+    [
+        pytest.param([], [], {12345}, id="no-filter"),
+        pytest.param(["12345"], [], {12345}, id="include-selected"),
+        pytest.param([], ["12345"], set(), id="exclude-selected"),
+        pytest.param(["12345"], ["12345"], set(), id="exclude-takes-precedence"),
+    ],
+)
+async def test_configured_system_filters(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api: None,
+    include_systems: list[str],
+    exclude_systems: list[str],
+    expected_system_ids: set[int],
+) -> None:
+    """Test included and excluded systems are filtered during setup."""
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            CONF_INCLUDE_SYSTEMS: include_systems,
+            CONF_EXCLUDE_SYSTEMS: exclude_systems,
+        },
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert set(config_entry.runtime_data.systems) == expected_system_ids
+
+
+def test_filter_systems(system_v3: SystemV3) -> None:
+    """Test that include and exclude system ID filters are applied."""
+    systems = {12345: system_v3, 67890: system_v3}
+
+    assert set(_filter_systems(systems, [], [])) == {12345, 67890}
+    assert set(_filter_systems(systems, ["12345"], [])) == {12345}
+    assert set(_filter_systems(systems, [], ["67890"])) == {12345}
+    assert set(_filter_systems(systems, ["12345", "67890"], ["67890"])) == {12345}
 
 
 async def test_base_station_migration(
