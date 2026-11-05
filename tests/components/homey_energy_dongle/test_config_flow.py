@@ -695,6 +695,31 @@ async def test_reconfigure_profile_without_identifier(
     assert entry.unique_id == unique_id
 
 
+async def test_reconfigure_to_host_of_unidentified_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    telegrams: TelegramQueue,
+    telegram_data: str,
+) -> None:
+    """Test an entry can't move to the dongle an entry without unique ID reads."""
+    mock_config_entry.add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.99"}).add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    telegrams.put_nowait(telegram_data)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.1.99",
+            CONF_DSMR_VERSION: mock_config_entry.data[CONF_DSMR_VERSION],
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.88"
+
+
 async def test_reconfigure_identifies_meter_of_other_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

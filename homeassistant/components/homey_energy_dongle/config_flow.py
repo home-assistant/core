@@ -27,6 +27,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -115,6 +116,20 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         self._detected_version = detect_dsmr_version(self._telegram)
         return None
 
+    def _abort_if_unidentified_entry_on_host(self, data: Mapping[str, Any]) -> None:
+        """Abort when an entry without unique ID already reads this dongle.
+
+        Those entries can only be recognized by their host, also when this meter
+        does report an identifier.
+        """
+        if any(
+            entry.unique_id is None
+            and entry.data[CONF_HOST] == data[CONF_HOST]
+            and entry.entry_id != self.context.get("entry_id")
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            raise AbortFlow("already_configured")
+
     async def _async_identify(
         self, data: Mapping[str, Any], version: str
     ) -> str | None:
@@ -151,6 +166,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(updates=dict(data))
         elif self._get_reconfigure_entry().unique_id:
             self._abort_if_unique_id_mismatch()
+            self._abort_if_unidentified_entry_on_host(data)
         else:
             # The entry's profile had no identifier, so there is none to compare.
             self._abort_if_unique_id_configured()
@@ -176,14 +192,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             # The dongle-based discovery ID only makes the discovery ignorable;
             # entries of meters without an identifier are matched on host.
             await self.async_set_unique_id(None)
-        # Entries without a unique ID can only be recognized by their host, also
-        # when this meter does report an identifier.
-        host = self._discovered[CONF_HOST]
-        if any(
-            entry.unique_id is None and entry.data[CONF_HOST] == host
-            for entry in self._async_current_entries(include_ignore=False)
-        ):
-            return self.async_abort(reason="already_configured")
+        self._abort_if_unidentified_entry_on_host(self._discovered)
         return self.async_create_entry(
             title=title,
             data={**self._discovered, CONF_DSMR_VERSION: version},
