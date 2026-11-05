@@ -58,10 +58,7 @@
           {
             "qualifiedName": "core:ConnectivityState",
             "type": "DiscreteState",
-            "values": [
-              "offline",
-              "online"
-            ]
+            "values": ["offline", "online"]
           },
           {
             "qualifiedName": "core:CountryCodeState",
@@ -79,28 +76,19 @@
             "eventBased": true,
             "qualifiedName": "internal:Button1State",
             "type": "DiscreteState",
-            "values": [
-              "pressed",
-              "stop"
-            ]
+            "values": ["pressed", "stop"]
           },
           {
             "eventBased": true,
             "qualifiedName": "internal:Button2State",
             "type": "DiscreteState",
-            "values": [
-              "pressed",
-              "stop"
-            ]
+            "values": ["pressed", "stop"]
           },
           {
             "eventBased": true,
             "qualifiedName": "internal:Button3State",
             "type": "DiscreteState",
-            "values": [
-              "pressed",
-              "stop"
-            ]
+            "values": ["pressed", "stop"]
           },
           {
             "qualifiedName": "internal:LightingLedPodModeState",
@@ -109,9 +97,7 @@
         ],
         "type": "ACTUATOR",
         "uiClass": "Pod",
-        "uiProfiles": [
-          "UpdatableComponent"
-        ],
+        "uiProfiles": ["UpdatableComponent"],
         "widgetName": "Pod"
       },
       "deviceURL": "internal://1234-5678-5643/pod/0",
@@ -175,20 +161,12 @@
           {
             "qualifiedName": "core:StatusState",
             "type": "DiscreteState",
-            "values": [
-              "available",
-              "unavailable"
-            ]
+            "values": ["available", "unavailable"]
           },
           {
             "qualifiedName": "io:PassAPCOperatingModeState",
             "type": "DiscreteState",
-            "values": [
-              "cooling",
-              "drying",
-              "heating",
-              "stop"
-            ]
+            "values": ["cooling", "drying", "heating", "stop"]
           }
         ],
         "type": "ACTUATOR",
@@ -286,35 +264,22 @@
           {
             "qualifiedName": "core:ThermalConfigurationState",
             "type": "DiscreteState",
-            "values": [
-              "cooling",
-              "heating",
-              "heatingAndCooling"
-            ]
+            "values": ["cooling", "heating", "heatingAndCooling"]
           },
           {
             "qualifiedName": "core:CoolingOnOffState",
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ]
+            "values": ["off", "on"]
           },
           {
             "qualifiedName": "core:HeatingOnOffState",
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ]
+            "values": ["off", "on"]
           },
           {
             "qualifiedName": "core:DerogationOnOffState",
             "type": "DiscreteState",
-            "values": [
-              "off",
-              "on"
-            ]
+            "values": ["off", "on"]
           },
           {
             "qualifiedName": "core:CoolingTargetTemperatureState",
