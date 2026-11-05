@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -60,9 +60,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -113,9 +113,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -166,9 +166,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -211,7 +211,7 @@
     'state': 'closed',
   })
 # ---
-# name: test_cover[cover.test_windows-entry]
+# name: test_cover[cover.test_vent_windows-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -219,13 +219,13 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.test_windows',
+    'entity_id': 'cover.test_vent_windows',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -233,12 +233,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Windows',
+    'object_id_base': 'Vent windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
-    'original_name': 'Windows',
+    'original_name': 'Vent windows',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -248,16 +248,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover[cover.test_windows-state]
+# name: test_cover[cover.test_vent_windows-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Windows',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Vent windows',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.test_windows',
+    'entity_id': 'cover.test_vent_windows',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -272,9 +272,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -325,9 +325,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -378,9 +378,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -423,7 +423,7 @@
     'state': 'open',
   })
 # ---
-# name: test_cover_alt[cover.test_windows-entry]
+# name: test_cover_alt[cover.test_vent_windows-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -431,13 +431,13 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.test_windows',
+    'entity_id': 'cover.test_vent_windows',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -445,12 +445,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Windows',
+    'object_id_base': 'Vent windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
-    'original_name': 'Windows',
+    'original_name': 'Vent windows',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -460,16 +460,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_alt[cover.test_windows-state]
+# name: test_cover_alt[cover.test_vent_windows-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Windows',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Vent windows',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.test_windows',
+    'entity_id': 'cover.test_vent_windows',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -484,9 +484,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', '7G2CEHED0RA000000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -537,9 +537,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', '7G2CEHED0RA000000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -590,9 +590,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', '7G2CEHED0RA000000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -643,9 +643,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', '7G2CEHED0RA000000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -688,7 +688,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_cover_cybertruck[cover.test_windows-entry]
+# name: test_cover_cybertruck[cover.test_vent_windows-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -696,13 +696,13 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', '7G2CEHED0RA000000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.test_windows',
+    'entity_id': 'cover.test_vent_windows',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -710,12 +710,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Windows',
+    'object_id_base': 'Vent windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
-    'original_name': 'Windows',
+    'original_name': 'Vent windows',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -725,16 +725,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_cybertruck[cover.test_windows-state]
+# name: test_cover_cybertruck[cover.test_vent_windows-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Windows',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Vent windows',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.test_windows',
+    'entity_id': 'cover.test_vent_windows',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -749,9 +749,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -802,9 +802,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -855,9 +855,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -908,9 +908,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -953,7 +953,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_cover_none[cover.test_windows-entry]
+# name: test_cover_none[cover.test_vent_windows-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -961,13 +961,13 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.test_windows',
+    'entity_id': 'cover.test_vent_windows',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -975,12 +975,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Windows',
+    'object_id_base': 'Vent windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
-    'original_name': 'Windows',
+    'original_name': 'Vent windows',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -990,16 +990,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_none[cover.test_windows-state]
+# name: test_cover_none[cover.test_vent_windows-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Windows',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Vent windows',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.test_windows',
+    'entity_id': 'cover.test_vent_windows',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1014,9 +1014,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -1067,9 +1067,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -1120,9 +1120,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -1173,9 +1173,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
@@ -1218,7 +1218,7 @@
     'state': 'closed',
   })
 # ---
-# name: test_cover_noscope[cover.test_windows-entry]
+# name: test_cover_noscope[cover.test_vent_windows-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1226,13 +1226,13 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('teslemetry', 'LRW3F7EK4NC700000')]>,
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.test_windows',
+    'entity_id': 'cover.test_vent_windows',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1240,12 +1240,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Windows',
+    'object_id_base': 'Vent windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
-    'original_name': 'Windows',
+    'original_name': 'Vent windows',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1255,16 +1255,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_noscope[cover.test_windows-state]
+# name: test_cover_noscope[cover.test_vent_windows-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Windows',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Vent windows',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.test_windows',
+    'entity_id': 'cover.test_vent_windows',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

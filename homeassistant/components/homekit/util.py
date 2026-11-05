@@ -36,7 +36,7 @@ from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntit
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_CODE,
     CONF_NAME,
@@ -604,6 +604,32 @@ def density_to_air_quality_voc(density: float) -> int:
     return 5  # WHOA IAQ 5 (HomeKit: Poor)
 
 
+def ppb_to_air_quality_ozone(ppb: float) -> int:
+    """Map ozone ppb to HomeKit AirQuality level using US EPA 8-hour breakpoints."""
+    if ppb <= 54:  # US AQI 0-50 (HomeKit: Excellent)
+        return 1
+    if ppb <= 70:  # US AQI 51-100 (HomeKit: Good)
+        return 2
+    if ppb <= 85:  # US AQI 101-150 (HomeKit: Fair)
+        return 3
+    if ppb <= 105:  # US AQI 151-200 (HomeKit: Inferior)
+        return 4
+    return 5  # US AQI 201+ (HomeKit: Poor)
+
+
+def ppb_to_air_quality_sulphur_dioxide(ppb: float) -> int:
+    """Map sulphur dioxide ppb to HomeKit AirQuality level using US EPA 1-hour breakpoints."""
+    if ppb <= 35:  # US AQI 0-50 (HomeKit: Excellent)
+        return 1
+    if ppb <= 75:  # US AQI 51-100 (HomeKit: Good)
+        return 2
+    if ppb <= 185:  # US AQI 101-150 (HomeKit: Fair)
+        return 3
+    if ppb <= 304:  # US AQI 151-200 (HomeKit: Inferior)
+        return 4
+    return 5  # US AQI 201+ (HomeKit: Poor)
+
+
 def get_persist_filename_for_entry_id(entry_id: str) -> str:
     """Determine the filename of the homekit state file."""
     return f"{DOMAIN}.{entry_id}.state"
@@ -821,14 +847,14 @@ def async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
 
 
 def _async_get_imported_entries_indices(
-    current_entries: list[ConfigEntry],
-) -> tuple[dict[str, ConfigEntry], dict[int, ConfigEntry]]:
+    current_entries: list[HomeKitConfigEntry],
+) -> tuple[dict[str, HomeKitConfigEntry], dict[int, HomeKitConfigEntry]]:
     """Return a dicts of the entries by name and port."""
 
     # For backwards compat, its possible the first bridge is using the default
     # name.
-    entries_by_name: dict[str, ConfigEntry] = {}
-    entries_by_port: dict[int, ConfigEntry] = {}
+    entries_by_name: dict[str, HomeKitConfigEntry] = {}
+    entries_by_port: dict[int, HomeKitConfigEntry] = {}
     for entry in current_entries:
         if entry.source != SOURCE_IMPORT:
             continue
@@ -840,8 +866,8 @@ def _async_get_imported_entries_indices(
 @callback
 def _async_update_config_entry_from_yaml(
     hass: HomeAssistant,
-    entries_by_name: dict[str, ConfigEntry],
-    entries_by_port: dict[int, ConfigEntry],
+    entries_by_name: dict[str, HomeKitConfigEntry],
+    entries_by_port: dict[int, HomeKitConfigEntry],
     conf: ConfigType,
 ) -> bool:
     """Update a config entry with the latest yaml.

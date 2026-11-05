@@ -15,12 +15,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_NAME,
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
-    UnitOfTemperature,
-)
+from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -119,7 +114,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
         self._id = zone_id
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
         self._override_type = override_type
-        zone_name = hub.zones[zone_id][ATTR_NAME]
+        zone_name = hub.zones[zone_id]["name"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=zone_name,

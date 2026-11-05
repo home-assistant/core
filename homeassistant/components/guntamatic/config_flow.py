@@ -56,7 +56,6 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self._discovered_ip},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="discovery_confirm")
 
     @override

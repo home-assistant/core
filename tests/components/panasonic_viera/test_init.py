@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock, patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.panasonic_viera.const import (
@@ -11,14 +12,17 @@ from homeassistant.components.panasonic_viera.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, CONF_MAC, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
     MOCK_CONFIG_DATA,
     MOCK_DEVICE_INFO,
     MOCK_ENCRYPTION_DATA,
+    MOCK_MAC,
+    MOCK_UDN,
     get_mock_remote,
 )
 
@@ -244,3 +248,69 @@ async def test_setup_unload_entry(hass: HomeAssistant, mock_remote) -> None:
 
     assert state_tv is None
     assert state_remote is None
+
+
+@pytest.mark.parametrize(
+    ("udn", "extra_data", "expected_mac", "expected_connections"),
+    [
+        pytest.param(
+            MOCK_UDN,
+            {},
+            MOCK_MAC,
+            {(dr.CONNECTION_NETWORK_MAC, MOCK_MAC)},
+            id="mac_in_udn",
+        ),
+        pytest.param(
+            MOCK_UDN,
+            {CONF_MAC: "aa:bb:cc:dd:ee:ff"},
+            "aa:bb:cc:dd:ee:ff",
+            {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")},
+            id="mac_already_known",
+        ),
+        pytest.param(
+            "uuid:4D454930-0600-1000-8000-FFFFFFFFFFFF",
+            {},
+            None,
+            set(),
+            id="random_node",
+        ),
+        pytest.param(
+            "uuid:12345678-1234-4234-8234-123456789abc",
+            {},
+            None,
+            set(),
+            id="not_time_based",
+        ),
+        pytest.param("mock-unique-id", {}, None, set(), id="not_a_uuid"),
+    ],
+)
+@pytest.mark.usefixtures("mock_remote")
+async def test_setup_entry_device_connections(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    udn: str,
+    extra_data: dict[str, str],
+    expected_mac: str | None,
+    expected_connections: set[tuple[str, str]],
+) -> None:
+    """Test the MAC address embedded in the UDN becomes a device connection."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=udn,
+        data={
+            **MOCK_CONFIG_DATA,
+            ATTR_DEVICE_INFO: {**MOCK_DEVICE_INFO, ATTR_UDN: udn},
+            **extra_data,
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_entry.data.get(CONF_MAC) == expected_mac
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, udn), mock_entry.entry_id
+    )
+    assert device is not None
+    assert device.connections == expected_connections

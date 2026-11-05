@@ -11,25 +11,12 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SENSOR_UPDATE
 from .const import CONF_USE_WEBHOOK, SENSOR_SIGNAL
 from .coordinator import PlaatoConfigEntry, PlaatoCoordinator, PlaatoData
 from .entity import PlaatoEntity
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Plaato sensor."""
 
 
 async def async_setup_entry(

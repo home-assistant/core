@@ -32,6 +32,11 @@ class PullRequest:
         return list(self.file_statuses)
 
     @property
+    def reviewed_filenames(self) -> list[str]:
+        """Return the paths of the changed files that are not test snapshots."""
+        return [name for name in self.file_statuses if not name.endswith(".ambr")]
+
+    @property
     def changed_lines(self) -> int:
         """Return the number of added plus deleted lines."""
         return self.additions + self.deletions
