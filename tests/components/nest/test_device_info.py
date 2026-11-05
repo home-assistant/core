@@ -3,13 +3,7 @@
 from google_nest_sdm.device import Device
 
 from homeassistant.components.nest.device_info import NestDeviceInfo
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SUGGESTED_AREA,
-)
+from homeassistant.helpers.device_registry import DeviceInfo
 
 
 def test_device_custom_name() -> None:
@@ -31,13 +25,13 @@ def test_device_custom_name() -> None:
     assert device_info.device_name == "My Doorbell"
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
-    assert device_info.device_info == {
-        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
-        ATTR_NAME: "My Doorbell",
-        ATTR_MANUFACTURER: "Google Nest",
-        ATTR_MODEL: "Doorbell",
-        ATTR_SUGGESTED_AREA: None,
-    }
+    assert device_info.device_info == DeviceInfo(
+        identifiers={("nest", "some-device-id")},
+        name="My Doorbell",
+        manufacturer="Google Nest",
+        model="Doorbell",
+        suggested_area=None,
+    )
 
 
 def test_device_name_room() -> None:
@@ -57,13 +51,13 @@ def test_device_name_room() -> None:
     assert device_info.device_name == "Some Room"
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
-    assert device_info.device_info == {
-        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
-        ATTR_NAME: "Some Room",
-        ATTR_MANUFACTURER: "Google Nest",
-        ATTR_MODEL: "Doorbell",
-        ATTR_SUGGESTED_AREA: "Some Room",
-    }
+    assert device_info.device_info == DeviceInfo(
+        identifiers={("nest", "some-device-id")},
+        name="Some Room",
+        manufacturer="Google Nest",
+        model="Doorbell",
+        suggested_area="Some Room",
+    )
 
 
 def test_device_no_name() -> None:
@@ -77,13 +71,13 @@ def test_device_no_name() -> None:
     assert device_info.device_name == "Doorbell"
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
-    assert device_info.device_info == {
-        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
-        ATTR_NAME: "Doorbell",
-        ATTR_MANUFACTURER: "Google Nest",
-        ATTR_MODEL: "Doorbell",
-        ATTR_SUGGESTED_AREA: None,
-    }
+    assert device_info.device_info == DeviceInfo(
+        identifiers={("nest", "some-device-id")},
+        name="Doorbell",
+        manufacturer="Google Nest",
+        model="Doorbell",
+        suggested_area=None,
+    )
 
 
 def test_device_invalid_type() -> None:
@@ -105,13 +99,13 @@ def test_device_invalid_type() -> None:
     assert device_info.device_name == "My Doorbell"
     assert device_info.device_model is None
     assert device_info.device_brand == "Google Nest"
-    assert device_info.device_info == {
-        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
-        ATTR_NAME: "My Doorbell",
-        ATTR_MANUFACTURER: "Google Nest",
-        ATTR_MODEL: None,
-        ATTR_SUGGESTED_AREA: None,
-    }
+    assert device_info.device_info == DeviceInfo(
+        identifiers={("nest", "some-device-id")},
+        name="My Doorbell",
+        manufacturer="Google Nest",
+        model=None,
+        suggested_area=None,
+    )
 
 
 def test_suggested_area() -> None:
@@ -136,10 +130,10 @@ def test_suggested_area() -> None:
     assert device_info.device_name == "My Doorbell"
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
-    assert device_info.device_info == {
-        ATTR_IDENTIFIERS: {("nest", "some-device-id")},
-        ATTR_NAME: "My Doorbell",
-        ATTR_MANUFACTURER: "Google Nest",
-        ATTR_MODEL: "Doorbell",
-        ATTR_SUGGESTED_AREA: "Some Room",
-    }
+    assert device_info.device_info == DeviceInfo(
+        identifiers={("nest", "some-device-id")},
+        name="My Doorbell",
+        manufacturer="Google Nest",
+        model="Doorbell",
+        suggested_area="Some Room",
+    )

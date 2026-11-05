@@ -63,7 +63,7 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
@@ -118,4 +118,4 @@ rules:
     status: exempt
     comment: |
       This integration does not make HTTP requests.
-  strict-typing: todo
+  strict-typing: done

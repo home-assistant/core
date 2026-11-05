@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 
 from homeassistant.components.lock import CONF_DEFAULT_CODE, DOMAIN as LOCK_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -89,7 +88,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: VerisureConfigEntry) ->
         await hass.async_add_executor_job(os.unlink, cookie_file)
 
 
-def migrate_cookie_files(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def migrate_cookie_files(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
     """Migrate old cookie file to new location."""
     cookie_file = Path(hass.config.path(STORAGE_DIR, f"verisure_{entry.unique_id}"))
     if cookie_file.exists():
@@ -98,7 +97,7 @@ def migrate_cookie_files(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
     """Migrate old entry."""
     LOGGER.debug("Migrating from version %s", entry.version)
 
