@@ -22,7 +22,7 @@ from .entity import (
 )
 
 if TYPE_CHECKING:
-    from . import FroniusConfigEntry
+    from .solar_net import FroniusConfigEntry
 
 
 PARALLEL_UPDATES = 0

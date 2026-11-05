@@ -64,7 +64,7 @@ from .entity import (
 )
 
 if TYPE_CHECKING:
-    from . import FroniusConfigEntry
+    from .solar_net import FroniusConfigEntry
 
 _LOGGER: Final = logging.getLogger(__name__)
 

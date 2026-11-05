@@ -21,7 +21,7 @@ from .entity import (
 )
 
 if TYPE_CHECKING:
-    from . import FroniusConfigEntry
+    from .solar_net import FroniusConfigEntry
 
 # writes go to one device at a time
 PARALLEL_UPDATES: Final = 1
