@@ -243,7 +243,7 @@ class YotoMediaPlayer(YotoPlayerEntity, MediaPlayerEntity):
     async def async_clear_sleep_timer(self) -> None:
         """Cancel the running sleep timer."""
         await self._async_run(
-            self.coordinator.client.set_sleep_timer, self._player_id, 0
+            self.coordinator.client.clear_sleep_timer, self._player_id
         )
 
     @override

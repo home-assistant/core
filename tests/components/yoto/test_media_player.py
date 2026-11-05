@@ -724,41 +724,49 @@ async def test_command_error_raises(
 
 
 @pytest.mark.parametrize(
-    ("service", "service_data", "expected_seconds"),
+    "service_data",
     [
+        pytest.param({"duration": {"minutes": 30}}, id="duration"),
         pytest.param(
-            "set_sleep_timer", {"duration": {"minutes": 30}}, 1800, id="duration"
+            {"mode": "duration", "duration": {"minutes": 30}}, id="duration_mode"
         ),
-        pytest.param(
-            "set_sleep_timer",
-            {"mode": "duration", "duration": {"minutes": 30}},
-            1800,
-            id="duration_mode",
-        ),
-        pytest.param("clear_sleep_timer", {}, 0, id="clear"),
     ],
 )
-async def test_sleep_timer_actions(
+async def test_set_sleep_timer_duration(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    service: str,
     service_data: dict[str, Any],
-    expected_seconds: int,
 ) -> None:
-    """Sleep timer actions send the duration in seconds."""
+    """Duration mode sends the duration in seconds."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         DOMAIN,
-        service,
+        "set_sleep_timer",
         {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
-    mock_yoto_client.set_sleep_timer.assert_called_once_with(
-        "player-test", expected_seconds
+    mock_yoto_client.set_sleep_timer.assert_called_once_with("player-test", 1800)
+
+
+async def test_clear_sleep_timer(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Clearing the sleep timer reaches the client."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "clear_sleep_timer",
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
+
+    mock_yoto_client.clear_sleep_timer.assert_called_once_with("player-test")
 
 
 async def test_set_sleep_timer_end_of_track(
