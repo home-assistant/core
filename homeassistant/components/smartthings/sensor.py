@@ -379,6 +379,21 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.DISHWASHER_JOB_STATE,
                 translation_key="dishwasher_detailed_job_state",
+                options=[
+                    "air_wash",
+                    "cooling",
+                    "delay_wash",
+                    "delay_washing",
+                    "drying",
+                    "finish",
+                    "pre_drain",
+                    "pre_wash",
+                    "rinse",
+                    "spin",
+                    "wash",
+                    "wrinkle_prevent",
+                ],
+                device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: JOB_STATE_MAP.get(value, value),
             )
         ],
