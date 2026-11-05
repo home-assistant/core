@@ -34,8 +34,8 @@ from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, discovery, event
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_HDMI_CEC, DOMAIN, EVENT_HDMI_CEC_UNAVAILABLE, HdmiCecData
-from .services import setup_services
+from .const import DATA_HDMI_CEC, DOMAIN, EVENT_HDMI_CEC_UNAVAILABLE
+from .services import HdmiCecData, setup_services
 
 _LOGGER = logging.getLogger(__name__)
 

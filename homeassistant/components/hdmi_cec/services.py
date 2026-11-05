@@ -1,9 +1,10 @@
 """Services for the HDMI CEC integration."""
 
+from dataclasses import dataclass
 import logging
 
 import probatio
-from pycec.network import PhysicalAddress
+from pycec.network import HDMINetwork, PhysicalAddress
 
 from homeassistant.core import HomeAssistant, ServiceCall
 
@@ -22,6 +23,14 @@ SERVICE_SELECT_DEVICE = "select_device"
 
 SERVICE_POWER_ON = "power_on"
 SERVICE_STANDBY = "standby"
+
+
+@dataclass(frozen=True, slots=True)
+class HdmiCecData:
+    """HDMI CEC network and configured device aliases."""
+
+    hdmi_network: HDMINetwork
+    device_aliases: dict[str, PhysicalAddress | list[int]]
 
 
 def _standby(call: ServiceCall) -> None:
