@@ -14,7 +14,7 @@ from pyipp import (
     IPPVersionNotSupportedError,
 )
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -29,6 +29,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN, REQUEST_TIMEOUT
+from .coordinator import IPPConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -252,7 +253,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _is_same_printer(self, entry: ConfigEntry, info: dict[str, Any]) -> bool:
+    def _is_same_printer(self, entry: IPPConfigEntry, info: dict[str, Any]) -> bool:
         """Return whether the printer info belongs to the config entry."""
         if entry.unique_id == (info[CONF_UUID] or info[CONF_SERIAL]):
             return True

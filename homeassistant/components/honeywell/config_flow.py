@@ -7,7 +7,6 @@ import aiosomecomfort
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -16,6 +15,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from . import HoneywellConfigEntry
 from .const import (
     CONF_COOL_AWAY_TEMPERATURE,
     CONF_HEAT_AWAY_TEMPERATURE,
@@ -130,7 +130,7 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HoneywellConfigEntry,
     ) -> HoneywellOptionsFlowHandler:
         """Options callback for Honeywell."""
         return HoneywellOptionsFlowHandler()

@@ -9,7 +9,6 @@ import sys
 from typing import Any
 from unittest.mock import ANY, patch
 
-from _pytest.python_api import ApproxBase
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -702,7 +701,7 @@ def _circular_mean(values: Iterable[StatisticData]) -> dict[str, float]:
 
 def _circular_mean_approx(
     values: Iterable[StatisticData], tolerance: float | None = None
-) -> ApproxBase:
+) -> pytest.Approx:
     return pytest.approx(_circular_mean(values)["mean"], abs=tolerance)
 
 
@@ -3580,7 +3579,10 @@ async def test_recorder_info_bad_recorder_config(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test getting recorder status when recorder is not started."""
-    config = {recorder.CONF_DB_URL: "sqlite://no_file", recorder.CONF_DB_RETRY_WAIT: 0}
+    config = {
+        recorder.CONF_DB_URL: "sqlite:////no_dir/no_file.db",
+        recorder.CONF_DB_RETRY_WAIT: 0,
+    }
 
     client = await hass_ws_client()
 

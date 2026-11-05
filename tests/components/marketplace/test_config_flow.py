@@ -7,12 +7,14 @@ from aiogithubapi import GitHubException
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.marketplace.const import DOMAIN
+from homeassistant.components.marketplace.const import CONF_PROFILE, DOMAIN
+from homeassistant.components.marketplace.profiles import PROFILES
 from homeassistant.config_entries import SOURCE_SYSTEM
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 
+from . import get_marketplace
 from .const import TOKEN
 
 
@@ -289,6 +291,40 @@ async def test_reauth_flow(
     assert mock_config_entry.data == {CONF_TOKEN: TOKEN}
 
 
-async def test_no_options_flow(init_integration: MockConfigEntry) -> None:
-    """Test the Marketplace has no options to set."""
-    assert init_integration.supports_options is False
+async def test_options_flow_lists_every_profile(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Test the options offer every profile, the active one picked."""
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    (key,) = schema
+    assert key.description == {"suggested_value": "default"}
+    assert schema[key].config["options"] == list(PROFILES)
+
+
+@pytest.mark.parametrize(
+    ("download_profile", "chosen"),
+    [
+        pytest.param(None, "hasscn", id="to_the_mirrors"),
+        pytest.param("hasscn", "default", id="back_to_github"),
+    ],
+)
+async def test_options_flow_switches_the_profile(
+    hass: HomeAssistant, init_integration: MockConfigEntry, chosen: str
+) -> None:
+    """Test picking a profile reloads, the next request uses its endpoints."""
+    marketplace = get_marketplace(hass)
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_PROFILE: chosen}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert init_integration.options == {CONF_PROFILE: chosen}
+    assert get_marketplace(hass) is not marketplace
+    assert get_marketplace(hass).configuration.profile.id == chosen

@@ -13,12 +13,9 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bring.const import DOMAIN
-from homeassistant.components.bring.services import (
-    ATTR_REACTION,
-    SERVICE_ACTIVITY_STREAM_REACTION,
-)
+from homeassistant.components.bring.services import BringService, BringServiceArgument
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -50,10 +47,10 @@ async def test_send_reaction(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ACTIVITY_STREAM_REACTION,
+        BringService.SEND_REACTION,
         service_data={
-            ATTR_ENTITY_ID: "event.einkauf_activities",
-            ATTR_REACTION: reaction,
+            CommonServiceArgument.ENTITY_ID: "event.einkauf_activities",
+            BringServiceArgument.REACTION: reaction,
         },
         blocking=True,
     )
@@ -84,10 +81,10 @@ async def test_send_reaction_exception(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ACTIVITY_STREAM_REACTION,
+            BringService.SEND_REACTION,
             service_data={
-                ATTR_ENTITY_ID: "event.einkauf_activities",
-                ATTR_REACTION: "heart",
+                CommonServiceArgument.ENTITY_ID: "event.einkauf_activities",
+                BringServiceArgument.REACTION: "heart",
             },
             blocking=True,
         )
@@ -112,10 +109,10 @@ async def test_send_reaction_config_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ACTIVITY_STREAM_REACTION,
+            BringService.SEND_REACTION,
             service_data={
-                ATTR_ENTITY_ID: "event.einkauf_activities",
-                ATTR_REACTION: "heart",
+                CommonServiceArgument.ENTITY_ID: "event.einkauf_activities",
+                BringServiceArgument.REACTION: "heart",
             },
             blocking=True,
         )
@@ -143,10 +140,10 @@ async def test_send_reaction_unknown_entity(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ACTIVITY_STREAM_REACTION,
+            BringService.SEND_REACTION,
             service_data={
-                ATTR_ENTITY_ID: "event.einkauf_activities",
-                ATTR_REACTION: "heart",
+                CommonServiceArgument.ENTITY_ID: "event.einkauf_activities",
+                BringServiceArgument.REACTION: "heart",
             },
             blocking=True,
         )
@@ -176,10 +173,10 @@ async def test_send_reaction_not_found(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ACTIVITY_STREAM_REACTION,
+            BringService.SEND_REACTION,
             service_data={
-                ATTR_ENTITY_ID: "event.einkauf_activities",
-                ATTR_REACTION: "heart",
+                CommonServiceArgument.ENTITY_ID: "event.einkauf_activities",
+                BringServiceArgument.REACTION: "heart",
             },
             blocking=True,
         )
