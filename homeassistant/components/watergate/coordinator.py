@@ -90,10 +90,10 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
             networking = await self.api.async_get_networking()
             auto_shut_off = await self.api.async_get_auto_shut_off()
         except WatergateApiException as exc:
+            _LOGGER.debug("Error communicating with the Sonic device: %s", exc)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="device_unavailable",
-                translation_placeholders={"error": str(exc)},
             ) from exc
         if TYPE_CHECKING:
             # Every supported Sonic firmware reports auto shut-off; the client

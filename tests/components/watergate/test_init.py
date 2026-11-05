@@ -146,7 +146,8 @@ async def test_update_failure_is_translated(
     assert isinstance(error, UpdateFailed)
     assert error.translation_domain == DOMAIN
     assert error.translation_key == "device_unavailable"
-    assert error.translation_placeholders == {"error": "boom"}
+    assert not error.translation_placeholders
+    assert isinstance(error.__cause__, WatergateApiException)
 
 
 async def test_device_state_missing_from_the_v1_fallback(
