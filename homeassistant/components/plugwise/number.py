@@ -89,7 +89,7 @@ NUMBER_TYPES = (
         for key, data_key in zip(
             PRESET_COOLING_TEMPERATURE_KEYS, PRESET_TEMPERATURE_KEYS, strict=True
         )
-    )
+    ),
 )
 
 
