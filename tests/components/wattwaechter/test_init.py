@@ -12,13 +12,22 @@ from aio_wattwaechter import (
     WattwaechterError,
     WattwaechterNoDataError,
 )
+from aio_wattwaechter.models import SystemInfo, _parse_system_info
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
-from homeassistant.components.wattwaechter.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.wattwaechter.const import (
+    CONF_FW_VERSION,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_MODEL
 from homeassistant.core import HomeAssistant
@@ -213,6 +222,57 @@ async def test_device_model_follows_system_info(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert device_registry.async_get(device.id).model == "WattWächter Gas"
+
+
+def _system_info_with_version(version: str) -> SystemInfo:
+    """Return the Plus system info reporting the given firmware version."""
+    data = load_json_object_fixture("system_info.json", DOMAIN)
+    data["esp"] = [
+        {**item, "value": version} if item["name"] == "os_version" else item
+        for item in data["esp"]
+    ]
+    return _parse_system_info(data)
+
+
+async def test_device_sw_version_follows_firmware(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the firmware version is updated after a firmware update."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG_DATA, CONF_FW_VERSION: "1.1.5"},
+        unique_id=MOCK_DEVICE_ID,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The version stored at setup is replaced by the one the device reports
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_DEVICE_ID), entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "1.2.3"
+    assert entry.data[CONF_FW_VERSION] == "1.2.3"
+
+    # The device installs a firmware update
+    mock_client.system_info.return_value = _system_info_with_version("1.3.0")
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert device_registry.async_get(device.id).sw_version == "1.3.0"
+    assert entry.data[CONF_FW_VERSION] == "1.3.0"
+
+    # The stored version is kept when the system info is unavailable on reload
+    mock_client.system_info.side_effect = WattwaechterConnectionError("offline")
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert device_registry.async_get(device.id).sw_version == "1.3.0"
 
 
 async def test_migrate_gw_entry_to_bare_device_id(
