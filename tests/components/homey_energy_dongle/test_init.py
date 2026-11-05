@@ -23,10 +23,8 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 
-from . import EQUIPMENT_IDENTIFIER, TELEGRAM_MBUS, TELEGRAM_V5
+from . import EQUIPMENT_IDENTIFIER, GAS_METER_IDENTIFIER, TELEGRAM_MBUS, TELEGRAM_V5
 from .conftest import TelegramQueue
-
-GAS_METER_IDENTIFIER = "3232323241424344313233343536373839"
 
 REPAIR_ISSUES = [
     pytest.param(

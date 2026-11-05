@@ -4,9 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from dsmr_parser import telegram_specifications
 from dsmr_parser.objects import Telegram
-from dsmr_parser.parsers import TelegramParser
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -18,7 +16,7 @@ from homeassistant.components.homey_energy_dongle.const import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from . import EQUIPMENT_IDENTIFIER, TELEGRAM_V5
+from . import EQUIPMENT_IDENTIFIER, TELEGRAM_V5, parse
 
 type TelegramQueue = asyncio.Queue[Telegram | str | Exception]
 
@@ -45,16 +43,21 @@ def mock_onboarding() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def dsmr_version() -> str:
+    """Return the meter profile of the config entry."""
+    return "5"
+
+
+@pytest.fixture
 def telegram_data() -> str:
     """Return the raw telegram the dongle sends."""
     return TELEGRAM_V5
 
 
 @pytest.fixture
-def telegram(telegram_data: str) -> Telegram:
-    """Return the parsed telegram."""
-    parser = TelegramParser(telegram_specifications.V5, apply_checksum_validation=False)
-    return parser.parse(telegram_data)
+def telegram(telegram_data: str, dsmr_version: str) -> Telegram:
+    """Return the telegram parsed with the entry's profile."""
+    return parse(telegram_data, dsmr_version)
 
 
 @pytest.fixture
@@ -97,7 +100,7 @@ def telegrams(mock_client: MagicMock) -> TelegramQueue:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(dsmr_version: str) -> MockConfigEntry:
     """Return a Homey Energy Dongle config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -107,7 +110,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: "192.168.1.88",
             CONF_PORT: 80,
             CONF_WS_PATH: "/ws",
-            CONF_DSMR_VERSION: "5",
+            CONF_DSMR_VERSION: dsmr_version,
         },
     )
 

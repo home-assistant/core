@@ -321,6 +321,7 @@ async def test_zeroconf_flow(
     ]
 
 
+@pytest.mark.parametrize("dsmr_version", ["5B"])
 async def test_zeroconf_updates_host(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -329,9 +330,6 @@ async def test_zeroconf_updates_host(
 ) -> None:
     """Test discovery of a configured meter on a new address updates the entry."""
     mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry, data={**mock_config_entry.data, CONF_DSMR_VERSION: "5B"}
-    )
     telegrams.put_nowait(telegram_data)
 
     result = await hass.config_entries.flow.async_init(

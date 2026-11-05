@@ -2,11 +2,8 @@
 
 from unittest.mock import patch
 
-from dsmr_parser import telegram_specifications
 from dsmr_parser.objects import Telegram
-from dsmr_parser.parsers import TelegramParser
-from homey_energy_dongle_ws import ConnectionLostError, parse_telegram
-from homey_energy_dongle_ws.parser import TELEGRAM_SPECIFICATIONS
+from homey_energy_dongle_ws import ConnectionLostError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -15,7 +12,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.homey_energy_dongle.const import CONF_DSMR_VERSION, DOMAIN
+from homeassistant.components.homey_energy_dongle.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -29,10 +26,12 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     EQUIPMENT_IDENTIFIER,
+    GAS_METER_IDENTIFIER,
     TELEGRAM_MBUS,
     TELEGRAM_Q3D,
     TELEGRAM_V2_2,
     TELEGRAM_V5,
+    parse,
 )
 from .conftest import TelegramQueue
 
@@ -40,6 +39,11 @@ POWER_ENTITY_ID = "sensor.electricity_meter_power"
 TARIFF_ENTITY_ID = "sensor.electricity_meter_active_tariff"
 GAS_ENTITY_ID = "sensor.gas_meter_meter_reading"
 IMPORTED_ENTITY_ID = "sensor.electricity_meter_total_energy_imported"
+
+# DSMR 5 telegram with the Fluvius demand registers.
+TELEGRAM_BELGIUM = TELEGRAM_V5.replace(
+    "!", "1-0:1.4.0(01.750*kW)\r\n1-0:1.6.0(170102120000W)(04.326*kW)\r\n!"
+)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -74,9 +78,8 @@ async def test_all_entities(
 async def test_new_mbus_device(hass: HomeAssistant, telegrams: TelegramQueue) -> None:
     """Test a meter that shows up after setup gets its sensor."""
     assert hass.states.get(GAS_ENTITY_ID) is None
-    parser = TelegramParser(telegram_specifications.V5, apply_checksum_validation=False)
 
-    telegrams.put_nowait(parser.parse(TELEGRAM_V5))
+    telegrams.put_nowait(parse(TELEGRAM_V5))
     await hass.async_block_till_done()
 
     assert hass.states.get(GAS_ENTITY_ID).state == "0.107"
@@ -88,10 +91,9 @@ async def test_total_without_all_tariff_registers(
 ) -> None:
     """Test a telegram missing a tariff register doesn't lower the summed total."""
     assert hass.states.get(IMPORTED_ENTITY_ID).state == "6.825"
-    parser = TelegramParser(telegram_specifications.V5, apply_checksum_validation=False)
 
     telegrams.put_nowait(
-        parser.parse(TELEGRAM_V5.replace("1-0:1.8.2(000002.399*kWh)\r\n", ""))
+        parse(TELEGRAM_V5.replace("1-0:1.8.2(000002.399*kWh)\r\n", ""))
     )
     await hass.async_block_till_done()
     assert hass.states.get(IMPORTED_ENTITY_ID).state == STATE_UNKNOWN
@@ -125,7 +127,7 @@ async def test_mbus_meter_recreated_after_removal(
     telegrams.put_nowait(Telegram())
     await hass.async_block_till_done()
     device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "3232323241424344313233343536373839"), init_integration.entry_id
+        (DOMAIN, GAS_METER_IDENTIFIER), init_integration.entry_id
     )
     assert device
     device_registry.async_remove_device(device.id)
@@ -143,12 +145,7 @@ async def test_mbus_meter_replaced_on_same_channel(
     hass: HomeAssistant, telegrams: TelegramQueue
 ) -> None:
     """Test a replacement meter on the same channel does not feed the old sensor."""
-    parser = TelegramParser(telegram_specifications.V5, apply_checksum_validation=False)
-    telegrams.put_nowait(
-        parser.parse(
-            TELEGRAM_V5.replace("3232323241424344313233343536373839", "3131313131")
-        )
-    )
+    telegrams.put_nowait(parse(TELEGRAM_V5.replace(GAS_METER_IDENTIFIER, "3131313131")))
     await hass.async_block_till_done()
 
     assert hass.states.get(GAS_ENTITY_ID).state == STATE_UNKNOWN
@@ -185,32 +182,13 @@ async def test_update_entity_keeps_pushed_state(
     assert hass.states.get(POWER_ENTITY_ID).state == state
 
 
-def _belgium_telegram() -> str:
-    """Return a DSMR 5 telegram with the Fluvius demand registers."""
-    body = TELEGRAM_V5[: TELEGRAM_V5.rindex("!")]
-    body += "1-0:1.4.0(01.750*kW)\r\n1-0:1.6.0(170102120000W)(04.326*kW)\r\n!"
-    return f"{body}{TelegramParser.crc16(body):04X}\r\n"
-
-
+@pytest.mark.parametrize(("dsmr_version", "telegram_data"), [("5B", TELEGRAM_BELGIUM)])
 async def test_belgian_demand(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-    telegrams: TelegramQueue,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test Fluvius peak-demand registers become watt sensors."""
-    parser = TelegramParser(
-        telegram_specifications.BELGIUM_FLUVIUS, apply_checksum_validation=False
-    )
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        data={**mock_config_entry.data, CONF_DSMR_VERSION: "5B"},
-    )
-    telegrams.put_nowait(parser.parse(_belgium_telegram()))
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     average = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{EQUIPMENT_IDENTIFIER}_current_average_demand"
     )
@@ -227,6 +205,7 @@ async def test_belgian_demand(
     assert hass.states.get(month).attributes["unit_of_measurement"] == UnitOfPower.WATT
 
 
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("dsmr_version", "telegram_data", "state"),
     [
@@ -234,56 +213,20 @@ async def test_belgian_demand(
         pytest.param("2.2", TELEGRAM_V2_2, "1.001", id="dsmr2.2"),
     ],
 )
-async def test_legacy_gas_meter(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    telegrams: TelegramQueue,
-    dsmr_version: str,
-    telegram_data: str,
-    state: str,
-) -> None:
+async def test_legacy_gas_meter(hass: HomeAssistant, state: str) -> None:
     """Test DSMR 4 and 2.2 gas meters get a meter reading sensor."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        data={**mock_config_entry.data, CONF_DSMR_VERSION: dsmr_version},
-    )
-    telegrams.put_nowait(
-        parse_telegram(
-            telegram_data,
-            telegram_specification=TELEGRAM_SPECIFICATIONS[dsmr_version],
-            apply_checksum_validation=False,
-        )
-    )
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     assert hass.states.get(GAS_ENTITY_ID).state == state
 
 
-async def test_power_reported_in_watts(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    telegrams: TelegramQueue,
-) -> None:
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(("dsmr_version", "telegram_data"), [("Q3D", TELEGRAM_Q3D)])
+async def test_power_reported_in_watts(hass: HomeAssistant) -> None:
     """Test power registers a Q3D meter reports in W are not scaled again."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        data={**mock_config_entry.data, CONF_DSMR_VERSION: "Q3D"},
-    )
-    telegrams.put_nowait(
-        parse_telegram(
-            TELEGRAM_Q3D, telegram_specification=TELEGRAM_SPECIFICATIONS["Q3D"]
-        )
-    )
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     assert hass.states.get(POWER_ENTITY_ID).state == "2125"
     assert hass.states.get("sensor.electricity_meter_power_phase_1").state == "748"
 
 
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("dsmr_version", "state"),
     [
@@ -291,24 +234,8 @@ async def test_power_reported_in_watts(
         pytest.param("5B", "low", id="belgium_swapped"),
     ],
 )
-async def test_active_tariff(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    telegrams: TelegramQueue,
-    telegram: Telegram,
-    dsmr_version: str,
-    state: str,
-) -> None:
+async def test_active_tariff(hass: HomeAssistant, state: str) -> None:
     """Test tariff code 0002 maps per DSMR version."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        data={**mock_config_entry.data, CONF_DSMR_VERSION: dsmr_version},
-    )
-    telegrams.put_nowait(telegram)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     assert hass.states.get(TARIFF_ENTITY_ID).state == state
 
 

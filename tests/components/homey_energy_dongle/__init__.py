@@ -1,6 +1,21 @@
 """Tests for the Homey Energy Dongle integration."""
 
+from dsmr_parser.objects import Telegram
+from homey_energy_dongle_ws import parse_telegram
+from homey_energy_dongle_ws.parser import TELEGRAM_SPECIFICATIONS
+
 EQUIPMENT_IDENTIFIER = "4B384547303034303436333935353037"
+GAS_METER_IDENTIFIER = "3232323241424344313233343536373839"
+
+
+def parse(telegram: str, dsmr_version: str = "5") -> Telegram:
+    """Parse a test telegram, which may have been edited without a new CRC."""
+    return parse_telegram(
+        telegram,
+        telegram_specification=TELEGRAM_SPECIFICATIONS[dsmr_version],
+        apply_checksum_validation=False,
+    )
+
 
 # DSMR 5 telegram from a Dutch meter with an M-Bus gas meter on channel 1.
 TELEGRAM_V5 = (
@@ -37,7 +52,7 @@ TELEGRAM_V5 = (
     "1-0:42.7.0(00.000*kW)\r\n"
     "1-0:62.7.0(00.000*kW)\r\n"
     "0-1:24.1.0(003)\r\n"
-    "0-1:96.1.0(3232323241424344313233343536373839)\r\n"
+    f"0-1:96.1.0({GAS_METER_IDENTIFIER})\r\n"
     "0-1:24.2.1(170102161005W)(00000.107*m3)\r\n"
     "!EFF0\r\n"
 )
@@ -55,7 +70,7 @@ TELEGRAM_V2_2 = (
     "1-0:1.7.0(0001.01*kW)\r\n"
     "1-0:2.7.0(0000.00*kW)\r\n"
     "0-1:24.1.0(3)\r\n"
-    "0-1:96.1.0(3232323241424344313233343536373839)\r\n"
+    f"0-1:96.1.0({GAS_METER_IDENTIFIER})\r\n"
     "0-1:24.3.0(161107190000)(00)(60)(1)(0-1:24.2.1)(m3)\r\n"
     "(00001.001)\r\n"
     "0-1:24.4.0(1)\r\n"
