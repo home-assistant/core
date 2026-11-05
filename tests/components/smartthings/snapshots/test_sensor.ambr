@@ -14196,7 +14196,22 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'air_wash',
+        'cooling',
+        'delay_wash',
+        'delay_washing',
+        'drying',
+        'finish',
+        'pre_drain',
+        'pre_wash',
+        'rinse',
+        'spin',
+        'wash',
+        'wrinkle_prevent',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -14215,14 +14230,14 @@
     'object_id_base': 'Detailed job state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Detailed job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'detailed_job_state',
+    'translation_key': 'dishwasher_detailed_job_state',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherJobState_dishwasherJobState_dishwasherJobState',
     'unit_of_measurement': None,
   })
@@ -14230,14 +14245,29 @@
 # name: test_all_entities[da_wm_dw_000001][sensor.theater_dishwasher_detailed_job_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Detailed job state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'air_wash',
+        'cooling',
+        'delay_wash',
+        'delay_washing',
+        'drying',
+        'finish',
+        'pre_drain',
+        'pre_wash',
+        'rinse',
+        'spin',
+        'wash',
+        'wrinkle_prevent',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.theater_dishwasher_detailed_job_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'none',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[da_wm_dw_000001][sensor.theater_dishwasher_energy-entry]
@@ -14702,7 +14732,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'remaining_cycle_time',
+    'translation_key': 'dishwasher_remaining_cycle_time',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherOperation_remainingTime_remainingTime',
     'unit_of_measurement': 'min',
   })
@@ -14754,7 +14784,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'time_left_to_start',
+    'translation_key': 'dishwasher_time_left_to_start',
     'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherOperation_timeLeftToStart_timeLeftToStart',
     'unit_of_measurement': 'min',
   })
@@ -14831,7 +14861,22 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'air_wash',
+        'cooling',
+        'delay_wash',
+        'delay_washing',
+        'drying',
+        'finish',
+        'pre_drain',
+        'pre_wash',
+        'rinse',
+        'spin',
+        'wash',
+        'wrinkle_prevent',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -14850,14 +14895,14 @@
     'object_id_base': 'Detailed job state',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Detailed job state',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'detailed_job_state',
+    'translation_key': 'dishwasher_detailed_job_state',
     'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_samsungce.dishwasherJobState_dishwasherJobState_dishwasherJobState',
     'unit_of_measurement': None,
   })
@@ -14865,14 +14910,29 @@
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_detailed_job_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Detailed job state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'air_wash',
+        'cooling',
+        'delay_wash',
+        'delay_washing',
+        'drying',
+        'finish',
+        'pre_drain',
+        'pre_wash',
+        'rinse',
+        'spin',
+        'wash',
+        'wrinkle_prevent',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dishwasher_1_detailed_job_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'none',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_energy-entry]
@@ -15337,7 +15397,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'remaining_cycle_time',
+    'translation_key': 'dishwasher_remaining_cycle_time',
     'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_samsungce.dishwasherOperation_remainingTime_remainingTime',
     'unit_of_measurement': 'min',
   })
@@ -15389,7 +15449,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'time_left_to_start',
+    'translation_key': 'dishwasher_time_left_to_start',
     'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_samsungce.dishwasherOperation_timeLeftToStart_timeLeftToStart',
     'unit_of_measurement': 'min',
   })
