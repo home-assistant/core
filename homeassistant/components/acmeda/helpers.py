@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from aiopulse import Roller
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -41,7 +40,7 @@ def async_add_acmeda_entities(
 
 
 async def update_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry, api: dict[int, Roller]
+    hass: HomeAssistant, config_entry: AcmedaConfigEntry, api: dict[int, Roller]
 ) -> None:
     """Tell hass that device info has been updated."""
     dev_registry = dr.async_get(hass)

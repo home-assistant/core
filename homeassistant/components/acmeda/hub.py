@@ -2,15 +2,18 @@
 
 import asyncio
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import aiopulse
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ACMEDA_HUB_UPDATE, LOGGER
 from .helpers import update_devices
+
+if TYPE_CHECKING:
+    from . import AcmedaConfigEntry
 
 
 class PulseHub:
@@ -18,7 +21,7 @@ class PulseHub:
 
     api: aiopulse.Hub
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: AcmedaConfigEntry) -> None:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
