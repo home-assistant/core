@@ -1380,7 +1380,7 @@ homematicip==2.21.0
 homevolt==0.7.0
 
 # homeassistant.components.homey_energy_dongle
-homey-energy-dongle-ws==0.6.0
+homey-energy-dongle-ws==0.6.1
 
 # homeassistant.components.horizon
 horimote==0.4.1
