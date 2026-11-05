@@ -157,7 +157,6 @@ FLOWS = {
         "coolmaster",
         "cpuspeed",
         "croma_infrared",
-        "crownstone",
         "cync",
         "daikin",
         "daikin_onecta",

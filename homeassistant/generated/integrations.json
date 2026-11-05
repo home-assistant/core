@@ -2633,6 +2633,9 @@
       "categories": [
         "media_entertainment.tv_streaming"
       ],
+      "connectivity": [
+        "infrared"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -2646,7 +2649,7 @@
         "cloud",
         "serial"
       ],
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_push"
     },
     "currencylayer": {
