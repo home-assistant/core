@@ -14,7 +14,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "api_key_date": "API key generation date"
         },
-        "description": "The AEMET API key is no longer valid. Enter a new API key. To generate one go to {api_key_url}. The generation date defaults to today and is only used for the expiry reminder."
+        "description": "The AEMET API key is no longer valid. Enter a new API key. To generate one go to {api_key_url}. The generation date defaults to today and controls automatic reauthentication and optional expiry reminders."
       },
       "user": {
         "data": {
@@ -24,7 +24,7 @@
           "location": "[%key:common::config_flow::data::location%]",
           "name": "Name of the integration"
         },
-        "description": "To generate API key go to {api_key_url}. AEMET API keys expire every 3 months. Enter the actual generation date; it is only used for the expiry reminder."
+        "description": "To generate API key go to {api_key_url}. AEMET API keys expire every 3 months. Enter the actual generation date; it controls automatic reauthentication and optional expiry reminders."
       }
     }
   },
@@ -58,7 +58,7 @@
           "radar_updates": "Gather data from AEMET weather radar",
           "station_updates": "Gather data from AEMET weather stations"
         },
-        "description": "Enter a new API key to replace the current one, or leave it blank to keep it. AEMET API keys expire every 3 months. The generation date is used for the expiry reminder. If left empty, the existing date is kept; if the reminder is enabled and there is no existing date, today's date is used."
+        "description": "Current generation date: {current_issue_date}. Enter a new API key to replace the current one, or leave it blank to keep it. AEMET API keys expire every 3 months. The generation date controls automatic reauthentication and optional expiry reminders. For a new key, leave the date empty to use today, or enter its actual generation date."
       }
     }
   }

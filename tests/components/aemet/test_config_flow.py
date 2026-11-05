@@ -174,7 +174,8 @@ async def test_form_options(
     ("api_key_input", "date_input", "expected_key", "expected_date"),
     [
         ("foo", "2021-01-01", "foo", "2021-01-01"),
-        ("new-key", "2021-01-01", "new-key", "2021-02-01"),
+        ("new-key", "2021-01-01", "new-key", "2021-01-01"),
+        ("new-key", "", "new-key", "2021-02-01"),
         ("new-key", "2021-01-15", "new-key", "2021-01-15"),
         (None, "", "foo", "2021-01-01"),
     ],

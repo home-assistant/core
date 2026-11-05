@@ -82,9 +82,6 @@ class AemetOptionsFlow(OptionsFlow):
         current_issue_date = parse_issue_date(entry.data.get(CONF_API_KEY_DATE))
         current_values = {
             **current_options,
-            CONF_API_KEY_DATE: (
-                current_issue_date.isoformat() if current_issue_date else None
-            ),
         }
 
         if user_input is not None:
@@ -123,13 +120,11 @@ class AemetOptionsFlow(OptionsFlow):
                 issue_date_iso: str | None
 
                 if new_api_key and new_api_key != entry.data[CONF_API_KEY]:
-                    # A new key starts a new validity period. If the date was
-                    # not changed, use the date the key was saved instead of
-                    # the issue date of the previous key.
-                    if issue_date is not None and issue_date != existing_issue_date:
-                        issue_date_iso = issue_date.isoformat()
-                    else:
-                        issue_date_iso = today.isoformat()
+                    # A new key starts a new validity period. Use the supplied
+                    # date, defaulting to today when it was omitted or cleared.
+                    issue_date_iso = (
+                        issue_date.isoformat() if issue_date else today.isoformat()
+                    )
                 elif issue_date is not None:
                     issue_date_iso = issue_date.isoformat()
                 else:
@@ -182,6 +177,11 @@ class AemetOptionsFlow(OptionsFlow):
                 user_input or current_values,
             ),
             errors=errors,
+            description_placeholders={
+                "current_issue_date": (
+                    current_issue_date.isoformat() if current_issue_date else "not set"
+                ),
+            },
         )
 
 
