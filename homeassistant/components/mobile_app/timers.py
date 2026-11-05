@@ -90,17 +90,12 @@ def _async_handle_live_activity(
     if event_type == TimerEventType.FINISHED:
         message = "Finished"
         data["chronometer"] = False
-        # Not silent, and the push relay only plays a sound for an alert it is given.
-        data["alert"] = {"title": title, "body": message}
-        data["alert_sound"] = "default"
     else:
         seconds_left = timer_info.seconds_left
         if timer_info.is_active and not seconds_left:
             # Finished follows right away with the end state.
             return
 
-        # The user just asked for this, so don't chime.
-        data["silent"] = True
         if timer_info.is_active:
             data["chronometer"] = True
             data["when"] = dt_util.utcnow().timestamp() + seconds_left
@@ -114,6 +109,13 @@ def _async_handle_live_activity(
             data["progress"] = seconds_left
             data["progress_max"] = timer_info.created_seconds
             message = f"{timedelta(seconds=seconds_left)} left"
+
+    if event_type == TimerEventType.UPDATED:
+        data["silent"] = True
+    else:
+        # The push relay only plays a sound for an alert it is given.
+        data["alert"] = {"title": title, "body": message}
+        data["alert_sound"] = "default"
 
     _async_send(hass, entry, timer_info, message, data, title=title)
 

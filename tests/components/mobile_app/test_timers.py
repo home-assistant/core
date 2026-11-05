@@ -176,11 +176,12 @@ async def test_timer_live_activity(
                 "data": {
                     "tag": tag,
                     "live_update": True,
-                    "silent": True,
                     "notification_icon": "mdi:timer-outline",
                     "chronometer": True,
                     "when": now + 120,
                     "when_relative": False,
+                    "alert": {"title": "pizza", "body": "0:02:00"},
+                    "alert_sound": "default",
                 },
             }
         ]
