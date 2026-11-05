@@ -10,7 +10,6 @@ from homeassistant.components.repairs import (
     RepairsFlow,
     RepairsFlowResult,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
@@ -19,6 +18,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
+from . import WorkdayConfigEntry
 from .config_flow import validate_custom_dates
 from .const import CONF_PROVINCE, CONF_REMOVE_HOLIDAYS
 
@@ -26,7 +26,7 @@ from .const import CONF_PROVINCE, CONF_REMOVE_HOLIDAYS
 class CountryFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
-    def __init__(self, entry: ConfigEntry, country: str | None) -> None:
+    def __init__(self, entry: WorkdayConfigEntry, country: str | None) -> None:
         """Create flow."""
         self.entry = entry
         self.country: str | None = country
@@ -114,7 +114,7 @@ class HolidayFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     def __init__(
-        self, entry: ConfigEntry, country: str | None, named_holiday: str
+        self, entry: WorkdayConfigEntry, country: str | None, named_holiday: str
     ) -> None:
         """Create flow."""
         self.entry = entry
