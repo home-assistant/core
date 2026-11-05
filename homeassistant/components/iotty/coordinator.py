@@ -1,20 +1,29 @@
 """DataUpdateCoordinator for iotty."""
 
+from collections.abc import Awaitable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
 
 from iottycloud.device import Device
+from iottycloud.errors import (
+    BadRequestException,
+    CloudError,
+    ForbiddenException,
+    NotFoundException,
+    UnauthorizedException,
+)
 from iottycloud.shutter import Shutter
 from iottycloud.verbs import OPEN_PERCENTAGE, RESULT, STATUS
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import api
 from .const import DOMAIN
@@ -71,11 +80,25 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         )
         self._device_registry = dr.async_get(hass)
 
+    async def _async_call_api[_T](self, request: Awaitable[_T]) -> _T:
+        """Await an iottyCloud request, mapping its errors."""
+        try:
+            return await request
+        except UnauthorizedException as err:
+            raise ConfigEntryAuthFailed from err
+        except (
+            BadRequestException,
+            CloudError,
+            ForbiddenException,
+            NotFoundException,
+        ) as err:
+            raise UpdateFailed(f"Error communicating with iottyCloud: {err}") from err
+
     @override
     async def _async_setup(self) -> None:
         """Get devices."""
         _LOGGER.debug("Fetching devices list from iottyCloud")
-        self._devices = await self.iotty.get_devices()
+        self._devices = await self._async_call_api(self.iotty.get_devices())
         _LOGGER.debug("There are %d devices", len(self._devices))
 
     @override
@@ -83,7 +106,7 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         """Fetch data from iottyCloud device."""
         _LOGGER.debug("Fetching devices status from iottyCloud")
 
-        current_devices = await self.iotty.get_devices()
+        current_devices = await self._async_call_api(self.iotty.get_devices())
 
         removed_devices = [
             d
@@ -101,7 +124,7 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
         self._devices = current_devices
 
         for device in self._devices:
-            res = await self.iotty.get_status(device.device_id)
+            res = await self._async_call_api(self.iotty.get_status(device.device_id))
             json = res.get(RESULT, {})
             if (
                 not isinstance(res, dict)

@@ -4,10 +4,13 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 import json
 import logging
+import os
 from pathlib import Path
 import shutil
 import sys
+import tarfile
 from tempfile import TemporaryDirectory
+from typing import IO, TYPE_CHECKING
 
 from awesomeversion import AwesomeVersion
 import securetar
@@ -78,6 +81,18 @@ def _clear_configuration_directory(config_dir: Path, keep: Iterable[str]) -> Non
             shutil.rmtree(entrypath)
 
 
+def _extract_member(
+    tar: tarfile.TarFile, members: dict[str, tarfile.TarInfo], name: str
+) -> IO[bytes]:
+    """Return a stream reading a member of the outer backup tar."""
+    if (member := members.get(name)) is None or not member.isfile():
+        raise ValueError(f"Backup does not contain {name}")
+    fileobj = tar.extractfile(member)
+    if TYPE_CHECKING:
+        assert fileobj is not None
+    return fileobj
+
+
 def _extract_backup(
     config_dir: Path,
     restore_content: RestoreBackupFileContent,
@@ -90,12 +105,11 @@ def _extract_backup(
             mode="r",
         ) as ostf,
     ):
-        ostf.tar.extractall(
-            path=Path(tempdir, "extracted"),
-            filter="tar",
-        )
-        backup_meta_file = Path(tempdir, "extracted", "backup.json")
-        backup_meta = json.loads(backup_meta_file.read_text(encoding="utf8"))
+        # Member names may or may not have a leading "./"
+        members = {
+            os.path.normpath(member.name): member for member in ostf.tar.getmembers()
+        }
+        backup_meta = json.load(_extract_member(ostf.tar, members, "backup.json"))
 
         if (
             backup_meta_version := AwesomeVersion(
@@ -108,9 +122,9 @@ def _extract_backup(
             )
 
         with securetar.SecureTarFile(
-            Path(
-                tempdir,
-                "extracted",
+            fileobj=_extract_member(
+                ostf.tar,
+                members,
                 f"homeassistant.tar{'.gz' if backup_meta['compressed'] else ''}",
             ),
             gzip=backup_meta["compressed"],

@@ -17,5 +17,10 @@
       }
     }
   },
+  "exceptions": {
+    "setup_failed": {
+      "message": "Failed to set up Emulated Roku {name}"
+    }
+  },
   "title": "Emulated Roku"
 }

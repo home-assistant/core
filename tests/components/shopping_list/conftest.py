@@ -5,12 +5,11 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.shopping_list import DOMAIN, intent as sl_intent
 from homeassistant.components.shopping_list.common import PERSISTENCE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

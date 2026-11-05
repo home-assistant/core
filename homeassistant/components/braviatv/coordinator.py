@@ -20,7 +20,11 @@ from homeassistant.components.media_player import MediaType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -309,7 +313,15 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                         coarse_uri = uri
         if coarse_uri:
             return await self.async_source_start(coarse_uri, source_type)
-        raise ValueError(f"Not found {source_type}: {query}")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="source_not_found",
+            translation_placeholders={
+                "device": self.config_entry.title,
+                "source_type": str(source_type),
+                "query": query,
+            },
+        )
 
     @catch_braviatv_errors
     async def async_turn_on(self) -> None:
@@ -378,7 +390,14 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Play a piece of media."""
         if media_type not in (MediaType.APP, MediaType.CHANNEL):
-            raise ValueError(f"Invalid media type: {media_type}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_media_type",
+                translation_placeholders={
+                    "device": self.config_entry.title,
+                    "media_type": str(media_type),
+                },
+            )
         await self.async_source_find(media_id, media_type)
 
     @catch_braviatv_errors
@@ -393,14 +412,13 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             for cmd in command:
                 response = await self.client.send_command(cmd)
                 if not response:
-                    commands = await self.client.get_command_list()
-                    commands_keys = ", ".join(commands.keys())
-                    # Logging an error instead of raising a ValueError
-                    # https://github.com/home-assistant/core/pull/77329#discussion_r955768245
-                    _LOGGER.error(
-                        "Unsupported command: %s, list of available commands: %s",
-                        cmd,
-                        commands_keys,
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="unsupported_command",
+                        translation_placeholders={
+                            "device": self.config_entry.title,
+                            "command": cmd,
+                        },
                     )
 
     @catch_braviatv_errors

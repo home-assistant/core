@@ -192,7 +192,12 @@ class MatchFailedError(IntentError):
 
     @override
     def __str__(self) -> str:
-        """Return string representation."""
+        """Return why matching failed."""
+        return _match_failure_message(self.result, self.constraints)
+
+    @override
+    def __repr__(self) -> str:
+        """Return the full result and constraints, for logs and debugging."""
         return (
             f"<MatchFailedError result={self.result},"
             f" constraints={self.constraints},"
@@ -349,6 +354,65 @@ class MatchTargetsConstraints:
             or self.states
             or self.single_target
         )
+
+
+_MATCH_FAILURE_REASONS: dict[MatchFailedReason, str] = {
+    MatchFailedReason.NAME: "No entities matched the name",
+    MatchFailedReason.AREA: "No entities were in the area",
+    MatchFailedReason.FLOOR: "No entities were on the floor",
+    MatchFailedReason.DOMAIN: "No entities matched the domain",
+    MatchFailedReason.DEVICE_CLASS: "No entities matched the device class",
+    MatchFailedReason.FEATURE: "No entities supported the required features",
+    MatchFailedReason.STATE: "No entities were in the required state",
+    MatchFailedReason.ASSISTANT: "No matching entities are exposed to the assistant",
+    MatchFailedReason.INVALID_AREA: "The area does not exist",
+    MatchFailedReason.INVALID_FLOOR: "The floor does not exist",
+    MatchFailedReason.DUPLICATE_NAME: ("Multiple entities share the name"),
+    MatchFailedReason.MULTIPLE_TARGETS: (
+        "Multiple entities matched, but a single target is required"
+    ),
+}
+
+
+def _describe_constraints(constraints: MatchTargetsConstraints) -> str:
+    """List the constraints that were set, in an order that does not vary."""
+    described: list[str] = []
+
+    for label, value in (
+        ("name", constraints.name),
+        ("area", constraints.area_name),
+        ("floor", constraints.floor_name),
+    ):
+        if value:
+            described.append(f"{label} {value!r}")
+
+    # Sorted because a set's iteration order is not stable between runs
+    for label, values in (
+        ("domains", constraints.domains),
+        ("device classes", constraints.device_classes),
+        ("states", constraints.states),
+    ):
+        if values:
+            described.append(f"{label} {', '.join(sorted(values))}")
+
+    if constraints.features:
+        described.append(f"features {constraints.features}")
+
+    return ", ".join(described)
+
+
+def _match_failure_message(
+    result: MatchTargetsResult, constraints: MatchTargetsConstraints
+) -> str:
+    """Describe a failed match as a sentence naming the constraints in play."""
+    message = "No entities matched"
+    if (reason := result.no_match_reason) is not None:
+        message = _MATCH_FAILURE_REASONS.get(reason, message)
+
+    if described := _describe_constraints(constraints):
+        return f"{message} (given {described})"
+
+    return message
 
 
 @dataclass
@@ -959,23 +1023,27 @@ class DynamicServiceIntentHandler(IntentHandler):
         slot_schema = {
             probatio.Any("name", "area", "floor"): non_empty_string,
             probatio.Optional("domain"): probatio.All(
-                cv.ensure_list, [domain_validator]
+                probatio.EnsureList(), [domain_validator]
             ),
         }
         if self.device_classes:
             # The typical way to match enums is with probatio.Coerce, but we build a
             # flat list to make the API simpler to describe programmatically
+            # Sort the enums by name: this is a set of classes, whose iteration
+            # order follows object identity, so the schema would differ per run.
             flattened_device_classes = probatio.In(
                 [
                     device_class.value
-                    for device_class_enum in self.device_classes
+                    for device_class_enum in sorted(
+                        self.device_classes, key=lambda enum: enum.__name__
+                    )
                     for device_class in device_class_enum
                 ]
             )
             slot_schema.update(
                 {
                     probatio.Optional("device_class"): probatio.All(
-                        cv.ensure_list,
+                        probatio.EnsureList(),
                         [flattened_device_classes],
                     )
                 }
@@ -1131,23 +1199,27 @@ class DynamicServiceIntentHandler(IntentHandler):
                 self.async_call_service(domain, service, intent_obj, state)
             )
 
-        # Handle service calls in parallel, noting failures as they occur.
+        # Handle service calls in parallel. Results come back in the order of
+        # the states, so each failure is reported for its own entity.
         failed_results: list[IntentResponseTarget] = []
-        for state, service_coro in zip(
-            states, asyncio.as_completed(service_coros), strict=False
-        ):
+        service_results = await asyncio.gather(*service_coros, return_exceptions=True)
+        for state, result in zip(states, service_results, strict=True):
             target = IntentResponseTarget(
                 type=IntentResponseTargetType.ENTITY,
                 name=state.name,
                 id=state.entity_id,
             )
 
-            try:
-                await service_coro
-                success_results.append(target)
-            except Exception:
+            if isinstance(result, Exception):
                 failed_results.append(target)
-                _LOGGER.exception("Service call failed for %s", state.entity_id)
+                _LOGGER.error(
+                    "Service call failed for %s", state.entity_id, exc_info=result
+                )
+            elif isinstance(result, BaseException):
+                # Cancellation is not a failed call, so it must stop the intent
+                raise result
+            else:
+                success_results.append(target)
 
         if not success_results:
             # If no entities succeeded, raise an error.

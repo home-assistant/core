@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -67,7 +66,7 @@ SENSOR_KEYS: list[str] = list(SENSOR_TYPES)
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_MONITORED_CONDITIONS, default=[]): probatio.All(
-            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
+            probatio.EnsureList(), [probatio.In(SENSOR_KEYS)]
         )
     }
 )
@@ -161,6 +160,5 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
     def _update_tag_info_callback(self, new_tag: SensorTag) -> None:
         """Handle push notification sent by tag manager."""
         _LOGGER.debug("Entity to update state: %s with new tag: %s", self, new_tag)
-        self._tag = new_tag
-        self._state = self.updated_state_value()
+        self._apply_tag(new_tag)
         self.async_write_ha_state()

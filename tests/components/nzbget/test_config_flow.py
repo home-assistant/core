@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from pynzbgetapi import NZBGetAPIException
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nzbget.const import CONF_MORE_OPTIONS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -18,8 +19,6 @@ from . import (
     _patch_status,
     _patch_version,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_form(hass: HomeAssistant) -> None:
@@ -100,6 +99,20 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        _patch_version(),
+        _patch_status(),
+        _patch_history(),
+        _patch_async_setup_entry(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_form_unexpected_exception(hass: HomeAssistant) -> None:

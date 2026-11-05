@@ -1,11 +1,11 @@
 """Tests for the local_ip component."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.local_ip.const import DOMAIN
 from homeassistant.components.network import MDNS_TARGET_IP, async_get_source_ip
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_basic_setup(hass: HomeAssistant) -> None:

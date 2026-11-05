@@ -5,6 +5,7 @@ from typing import Any, override
 
 import probatio
 import pypck
+from pypck.connection import PchkConnectionManager
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -20,7 +21,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from . import PchkConnectionManager
 from .const import CONF_ACKNOWLEDGE, CONF_DIM_MODE, CONF_SK_NUM_TRIES, DIM_MODES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ CONFIG_DATA = {
     probatio.Required(CONF_IP_ADDRESS, default=""): str,
     probatio.Required(CONF_PORT, default=4114): cv.positive_int,
     probatio.Required(CONF_USERNAME, default=""): str,
-    probatio.Required(CONF_PASSWORD, default=""): str,
+    probatio.Required(probatio.Secret(CONF_PASSWORD), default=""): str,
     probatio.Required(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
     probatio.Required(CONF_DIM_MODE, default="STEPS200"): probatio.In(DIM_MODES),
     probatio.Required(CONF_ACKNOWLEDGE, default=False): cv.boolean,

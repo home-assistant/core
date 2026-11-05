@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DATA_COMPONENT, CameraEntityFeature
+from .const import DATA_COMPONENT, DOMAIN, CameraEntityFeature
 
 if TYPE_CHECKING:
     from . import Camera
@@ -53,7 +53,9 @@ async def async_stream_endpoint_url(
     stream = await camera.async_create_stream()
     if not stream:
         raise HomeAssistantError(
-            f"{camera.entity_id} does not support play stream service"
+            translation_domain=DOMAIN,
+            translation_key="stream_not_supported",
+            translation_placeholders={"entity_id": camera.entity_id},
         )
 
     stream.add_provider(fmt)

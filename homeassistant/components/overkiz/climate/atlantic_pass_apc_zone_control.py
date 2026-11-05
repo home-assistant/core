@@ -27,7 +27,7 @@ HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
 class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
     """Representation of Atlantic Pass APC Zone Control."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
     )

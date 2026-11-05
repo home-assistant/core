@@ -5,10 +5,12 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pyzonneplan import (
     Token,
     ZonneplanConnectionError,
     ZonneplanInvalidOtpError,
+    ZonneplanRateLimitError,
     ZonneplanTimeoutError,
 )
 
@@ -19,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_ACCOUNT, MOCK_EMAIL, MOCK_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 MOCK_OTHER_ACCOUNT = replace(
     MOCK_ACCOUNT,
@@ -64,6 +64,9 @@ async def test_full_flow(hass: HomeAssistant, mock_zonneplan_client: AsyncMock) 
     [
         pytest.param(ZonneplanConnectionError("offline"), "cannot_connect"),
         pytest.param(ZonneplanTimeoutError("timed out"), "timeout_connect"),
+        pytest.param(
+            ZonneplanRateLimitError("slow down", retry_after=30), "rate_limited"
+        ),
         pytest.param(Exception("unexpected"), "unknown"),
     ],
 )
@@ -114,6 +117,9 @@ async def test_step_user_exceptions(
     [
         pytest.param(ZonneplanConnectionError("offline"), "cannot_connect"),
         pytest.param(ZonneplanTimeoutError("timed out"), "timeout_connect"),
+        pytest.param(
+            ZonneplanRateLimitError("slow down", retry_after=30), "rate_limited"
+        ),
         pytest.param(ZonneplanInvalidOtpError("bad otp"), "invalid_auth"),
         pytest.param(Exception("unexpected"), "unknown"),
     ],
@@ -225,6 +231,9 @@ async def test_reauth_flow(
     [
         pytest.param(ZonneplanConnectionError("offline"), "cannot_connect"),
         pytest.param(ZonneplanTimeoutError("timed out"), "timeout_connect"),
+        pytest.param(
+            ZonneplanRateLimitError("slow down", retry_after=30), "rate_limited"
+        ),
         pytest.param(Exception("unexpected"), "unknown"),
     ],
 )
@@ -335,6 +344,9 @@ async def test_reconfigure_flow(
     [
         pytest.param(ZonneplanConnectionError("offline"), "cannot_connect"),
         pytest.param(ZonneplanTimeoutError("timed out"), "timeout_connect"),
+        pytest.param(
+            ZonneplanRateLimitError("slow down", retry_after=30), "rate_limited"
+        ),
         pytest.param(Exception("unexpected"), "unknown"),
     ],
 )

@@ -1,0 +1,14 @@
+{
+  "domain": "marketplace",
+  "name": "Marketplace",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": true,
+  "dependencies": ["frontend", "http", "lovelace", "repairs", "websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/marketplace",
+  "integration_type": "system",
+  "iot_class": "cloud_polling",
+  "loggers": ["aiogithubapi"],
+  "quality_scale": "internal",
+  "requirements": ["aiogithubapi==26.0.0"],
+  "single_config_entry": true
+}

@@ -1,5 +1,7 @@
 """The tests for the valve platform."""
 
+from pytest_homeassistant.common import async_mock_service
+
 from homeassistant.components.valve import (
     ATTR_CURRENT_POSITION,
     DOMAIN,
@@ -11,8 +13,6 @@ from homeassistant.components.valve import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 
 async def test_open_valve_intent(hass: HomeAssistant) -> None:

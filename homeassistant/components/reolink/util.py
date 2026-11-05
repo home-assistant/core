@@ -46,7 +46,7 @@ class ReolinkData:
     firmware_coordinator: ReolinkFirmwareCoordinator
 
 
-def is_connected(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) -> bool:
+def is_connected(hass: HomeAssistant, config_entry: ReolinkConfigEntry) -> bool:
     """Check if an existing entry has a proper connection."""
     return (
         hasattr(config_entry, "runtime_data")
@@ -61,9 +61,10 @@ def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
         config_entry_id
     )
     if config_entry is None:
-        # pylint: disable-next=home-assistant-exception-not-translated
         raise Unresolvable(
-            f"Could not find Reolink config entry id '{config_entry_id}'."
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={"config_entry_id": config_entry_id},
         )
     return config_entry.runtime_data.host
 

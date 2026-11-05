@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
@@ -11,8 +12,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import get_update_callback
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_binary_sensor_setup(

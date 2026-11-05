@@ -8,8 +8,16 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockPlatform,
+    flush_store,
+    mock_component,
+    mock_config_flow,
+    mock_platform,
+)
 
-from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
+from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
 from homeassistant.components.homeassistant_hardware.util import FlasherType
 from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
@@ -19,15 +27,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import ATTR_COMPONENT
-
-from tests.common import (
-    MockConfigEntry,
-    MockPlatform,
-    flush_store,
-    mock_component,
-    mock_config_flow,
-    mock_platform,
-)
 
 TEST_DOMAIN = "test"
 TEST_DOMAIN_2 = "test_2"
@@ -160,7 +159,6 @@ def mock_firmware_client() -> Generator[tuple[AsyncMock, AsyncMock]]:
 def hassio_integration(hass: HomeAssistant) -> Generator[None]:
     """Fixture to mock the `hassio` integration."""
     mock_component(hass, "hassio")
-    hass.data["hassio"] = Mock(spec_set=HassIO)
 
 
 class MockMultiprotocolPlatform(MockPlatform):

@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "light": {
-      "german_power_outlet": {
-        "default": "mdi:power-socket-de"
-      }
-    }
-  }
-}

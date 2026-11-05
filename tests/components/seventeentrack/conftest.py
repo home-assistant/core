@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from pyseventeentrack.package import Package
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.seventeentrack.const import (
     CONF_SHOW_ARCHIVED,
@@ -13,8 +14,6 @@ from homeassistant.components.seventeentrack.const import (
     DEFAULT_SHOW_DELIVERED,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 DEFAULT_SUMMARY = {
     "Not Found": 0,
@@ -77,7 +76,7 @@ VALID_PLATFORM_CONFIG_FULL = {
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.seventeentrack.async_setup_entry", return_value=True
+        "homeassistant.components.seventeentrack.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

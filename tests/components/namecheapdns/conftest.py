@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.namecheapdns.const import DOMAIN
 from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_PASSWORD
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "home"
 TEST_DOMAIN = "example.com"
@@ -25,7 +24,7 @@ TEST_USER_INPUT = {
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.namecheapdns.async_setup_entry", return_value=True
+        "homeassistant.components.namecheapdns.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
