@@ -14719,7 +14719,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '148',
+    'state': '148.0',
   })
 # ---
 # name: test_all_entities[da_wm_dw_000001][sensor.theater_dishwasher_time_left_to_start-entry]
@@ -14771,7 +14771,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_completion_time-entry]
@@ -15354,7 +15354,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '235',
+    'state': '235.0',
   })
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_time_left_to_start-entry]
@@ -15406,7 +15406,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_water_consumption-entry]
