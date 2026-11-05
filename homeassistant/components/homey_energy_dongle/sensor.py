@@ -146,7 +146,6 @@ SENSORS: tuple[HomeyEnergyDongleSensorEntityDescription, ...] = (
     ),
     HomeyEnergyDongleSensorEntityDescription(
         key="power",
-        translation_key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
