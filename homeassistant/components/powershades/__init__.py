@@ -1,5 +1,8 @@
 """The PowerShades integration."""
 
+# Derived from https://github.com/dstocking/powershades-homeassistant
+# (MIT License, see the LICENSE file in this directory).
+
 import logging
 
 from pyowershades import PowerShadesConnection
