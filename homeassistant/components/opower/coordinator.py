@@ -1,7 +1,8 @@
 """Coordinator to handle Opower connections."""
 
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta, tzinfo
+from datetime import datetime, timedelta
+from itertools import pairwise
 import logging
 from typing import Any, cast, override
 
@@ -41,6 +42,24 @@ from homeassistant.util.unit_conversion import EnergyConverter, VolumeConverter
 from .const import CONF_LOGIN_DATA, CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# How many of the newest statistics to look at to tell hourly from day statistics.
+RESOLUTION_PROBE_COUNT = 25
+# Hourly statistics are at most this far apart, day statistics are about a day apart.
+MAX_HOURLY_SPACING = timedelta(hours=2)
+
+
+def _are_hourly(statistic_starts: list[float]) -> bool:
+    """Return whether the statistics with these start timestamps are hourly.
+
+    They are if any two consecutive ones are close, which works when some are missing.
+    """
+    starts = sorted(statistic_starts)
+    return any(
+        later - earlier <= MAX_HOURLY_SPACING.total_seconds()
+        for earlier, later in pairwise(starts)
+    )
+
 
 type OpowerConfigEntry = ConfigEntry[OpowerCoordinator]
 
@@ -223,7 +242,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             )
 
             last_stat = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, consumption_statistic_id, True, set()
+                get_last_statistics,
+                self.hass,
+                RESOLUTION_PROBE_COUNT,
+                consumption_statistic_id,
+                True,
+                set(),
             )
             if not last_stat:
                 _LOGGER.debug("Updating statistic for the first time")
@@ -257,11 +281,14 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                         "Statistics migration completed. Skipping update for now"
                     )
                     continue
+                last_starts = [
+                    stat["start"] for stat in last_stat[consumption_statistic_id]
+                ]
                 cost_reads = await self._async_get_cost_reads(
                     account,
                     self.api.utility.timezone(),
-                    last_stat[consumption_statistic_id][0]["start"],
-                    consumption_statistic_id,
+                    max(last_starts),
+                    _are_hourly(last_starts),
                 )
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
@@ -522,43 +549,18 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
 
         return True
 
-    async def _async_has_hourly_statistics(
-        self, statistic_id: str, first_hourly_start_time: datetime, tz: tzinfo
-    ) -> bool:
-        """Return whether the existing statistics at the hourly reads are hourly.
-
-        Day statistics only exist at local midnight, so having one at any other
-        time during the first two days of the hourly reads means that the
-        statistics there are hourly. Checking more than one hour makes this work
-        when a single hour is missing, e.g. because the utility backfilled it.
-        """
-        stats = await get_instance(self.hass).async_add_executor_job(
-            statistics_during_period,
-            self.hass,
-            first_hourly_start_time,
-            first_hourly_start_time + timedelta(days=2),
-            {statistic_id},
-            "hour",
-            None,
-            {"sum"},
-        )
-        return any(
-            dt_util.utc_from_timestamp(stat["start"]).astimezone(tz).time() != time()
-            for stat in stats.get(statistic_id, [])
-        )
-
     async def _async_get_cost_reads(
         self,
         account: Account,
         time_zone_str: str,
         start_time: float | None = None,
-        statistic_id: str | None = None,
+        hourly_statistics: bool = False,
     ) -> list[CostRead]:
         """Get cost reads.
 
         If start_time is None, get cost reads since account activation,
         otherwise since start_time - 30 days to allow corrections in data from utilities.
-        statistic_id is the statistic that start_time is the last start time of.
+        hourly_statistics is whether the existing statistics are hourly.
 
         We read at different resolutions depending on age:
         - month resolution for all years (since account activation)
@@ -651,27 +653,19 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             _LOGGER.debug("No hourly cost reads. Skipping update")
             return []
         if (
-            start_time is not None
-            and statistic_id is not None
-            and tz is not None
+            hourly_statistics
+            and start_time is not None
             and hourly_cost_reads[0].start_time.timestamp() <= start_time
-            and await self._async_has_hourly_statistics(
-                statistic_id, hourly_cost_reads[0].start_time, tz
-            )
         ):
             # The bill and daily reads start where the billing period containing
             # start_time - 30 days starts, which can be before the hourly reads
-            # since those only cover the last two months. If the statistics that
-            # already exist there are hourly, anchoring the running sum on a day
-            # read would only count the first hour of that day and drop the rest
-            # from the sum, and the day reads that follow would replace hourly
-            # statistics with day ones. Use only the hourly reads instead. Keeping
-            # a day read that starts after the first hourly read would make the
-            # merge below drop the hourly reads before it, e.g. when they start
-            # at 23:00, and anchor the sum later, skipping corrections before it.
-            # If they are day statistics, e.g. because hourly reads were not
-            # available when they were imported, the day reads are a compatible
-            # anchor and the hourly reads that follow replace the day statistics.
+            # since those only cover the last two months. The statistics there are
+            # hourly, so anchoring the sums on a coarser read or writing it would
+            # drop most of a day from the sum or replace hourly statistics with
+            # day ones. The hourly reads start at or after the previous ones, so
+            # the first one has an hourly statistic of its own to anchor on.
+            # This does not cover the utility backfilling hourly reads from before the
+            # first hourly statistic, where the statistics are still day ones.
             cost_reads = []
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
         _LOGGER.debug("Got %s cost reads", len(cost_reads))
