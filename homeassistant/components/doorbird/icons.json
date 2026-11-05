@@ -8,5 +8,10 @@
         "default": "mdi:dip-switch"
       }
     }
+  },
+  "services": {
+    "restart": {
+      "service": "mdi:restart"
+    }
   }
 }

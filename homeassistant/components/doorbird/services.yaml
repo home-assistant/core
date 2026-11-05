@@ -1,0 +1,4 @@
+restart:
+  target:
+    device:
+      integration: doorbird
