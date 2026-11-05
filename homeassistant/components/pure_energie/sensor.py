@@ -91,7 +91,7 @@ class PureEnergieSensorEntity(
     ) -> None:
         """Initialize Pure Energie sensor."""
         super().__init__(coordinator=entry.runtime_data)
-        self.entity_id = f"{SENSOR_DOMAIN}.pem_{description.key}"  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = f"{SENSOR_DOMAIN}.pem_{description.key}"
         self.entity_description = description
         self._attr_unique_id = (
             f"{entry.runtime_data.data.device.n2g_id}_{description.key}"

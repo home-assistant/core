@@ -442,7 +442,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         self._attr_unique_id = f"alarm-{speaker.household_id}:{alarm_id}"
         self.alarm_id = alarm_id
         self.household_id = speaker.household_id
-        self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
 
     @override
     async def async_added_to_hass(self) -> None:

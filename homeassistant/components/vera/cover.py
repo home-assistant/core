@@ -37,7 +37,7 @@ class VeraCover(VeraEntity[veraApi.VeraCurtain], CoverEntity):
     ) -> None:
         """Initialize the Vera device."""
         VeraEntity.__init__(self, vera_device, controller_data)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
     @override

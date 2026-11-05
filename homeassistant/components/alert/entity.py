@@ -73,7 +73,7 @@ class AlertEntity(Entity):
         self._cancel: Callable[[], None] | None = None
         self._send_done_message = False
         self._watched_entity_id = watched_entity_id
-        self.entity_id = f"{DOMAIN}.{entity_id}"  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = f"{DOMAIN}.{entity_id}"
 
         async_track_state_change_event(
             hass, [watched_entity_id], self.watched_entity_change

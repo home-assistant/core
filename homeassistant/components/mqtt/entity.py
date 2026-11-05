@@ -1802,7 +1802,7 @@ class MqttEntity(
                     entity_domain,
                     object_id,
                 )
-            self.entity_id = async_generate_entity_id(  # pylint: disable=home-assistant-entity-sets-entity-id
+            self.entity_id = async_generate_entity_id(
                 self._entity_id_format, object_id, None, self.hass
             )
 

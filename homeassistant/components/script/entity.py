@@ -253,7 +253,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         # The key of scripts are unique and cannot be changed from the UI after creating
         self._attr_unique_id = key
 
-        self.entity_id = ENTITY_ID_FORMAT.format(key)  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = ENTITY_ID_FORMAT.format(key)
         self.script = Script(
             hass,
             cfg[CONF_SEQUENCE],

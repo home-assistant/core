@@ -21,7 +21,7 @@ class CoilEntity(CoordinatorEntity[CoilCoordinator]):
     ) -> None:
         """Initialize base entity."""
         super().__init__(coordinator, {coil.address})
-        self.entity_id = async_generate_entity_id(  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = async_generate_entity_id(
             entity_format, coil.name, hass=coordinator.hass
         )
         self._attr_name = coil.title

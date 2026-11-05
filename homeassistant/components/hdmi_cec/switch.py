@@ -41,7 +41,7 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
     def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
         CecEntity.__init__(self, device, logical)
-        self.entity_id = f"{SWITCH_DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = f"{SWITCH_DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

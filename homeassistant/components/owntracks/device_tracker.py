@@ -85,7 +85,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         """Set up OwnTracks entity."""
         self._dev_id = dev_id
         self._data = data or {}
-        self.entity_id = f"{DEVICE_TRACKER_DOMAIN}.{dev_id}"  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = f"{DEVICE_TRACKER_DOMAIN}.{dev_id}"
 
     @property
     @override

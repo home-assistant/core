@@ -225,7 +225,7 @@ class CityBikesStation(SensorEntity):
         """Initialize the sensor."""
         self._network = network
         self._station_id = station_id
-        self.entity_id = entity_id  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = entity_id
 
     async def async_update(self) -> None:
         """Update station state."""

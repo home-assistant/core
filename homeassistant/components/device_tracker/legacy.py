@@ -815,7 +815,7 @@ class Device(RestoreEntity):
     ) -> None:
         """Initialize a device."""
         self.hass = hass
-        self.entity_id = f"{DOMAIN}.{dev_id}"  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = f"{DOMAIN}.{dev_id}"
 
         # Timedelta object how long we consider a device home if it is not
         # detected anymore.

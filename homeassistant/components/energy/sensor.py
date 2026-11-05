@@ -449,7 +449,7 @@ class EnergyCostSensor(RestoreSensor):
         super().__init__()
 
         self._adapter = adapter
-        self.entity_id = f"{config[adapter.stat_energy_key]}_{adapter.entity_id_suffix}"  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = f"{config[adapter.stat_energy_key]}_{adapter.entity_id_suffix}"
         self._attr_translation_key = adapter.translation_key
         self._attr_device_class = SensorDeviceClass.MONETARY
         self._attr_state_class = SensorStateClass.TOTAL
@@ -811,7 +811,7 @@ class EnergyPowerSensor(SensorEntity):
         self._source_type = source_type
         self._config: PowerConfig = config
         self._attr_unique_id = unique_id
-        self.entity_id = entity_id  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = entity_id
         self._source_sensors: list[str] = []
         self._is_inverted = "stat_rate_inverted" in config
         self._is_combined = "stat_rate_from" in config and "stat_rate_to" in config

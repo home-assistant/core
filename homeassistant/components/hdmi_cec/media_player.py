@@ -65,7 +65,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
     def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
         CecEntity.__init__(self, device, logical)
-        self.entity_id = f"{MP_DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = f"{MP_DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
     def send_keypress(self, key):
         """Send keypress to CEC adapter."""

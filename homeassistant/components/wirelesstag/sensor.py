@@ -118,7 +118,7 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         # sensor.bedroom_2 for humidity.
         # slugify ensures the entity_id stays valid for tag names containing
         # accented/international or special characters.
-        self.entity_id = (  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = (
             f"sensor.{slugify(f'{DOMAIN}_{self._tag.name}_{self._sensor_type}')}"
         )
 

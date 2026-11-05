@@ -336,7 +336,7 @@ class GoogleCalendarEntity(
         self._offset = entity_description.offset
         self._event: CalendarEvent | None = None
         if entity_description.entity_id:
-            self.entity_id = entity_description.entity_id  # pylint: disable=home-assistant-entity-sets-entity-id
+            self.entity_id = entity_description.entity_id
         self._attr_unique_id = unique_id
         if not entity_description.read_only:
             self._attr_supported_features = (

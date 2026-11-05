@@ -124,7 +124,7 @@ class SunSensor(SensorEntity):
     ) -> None:
         """Initiate Sun Sensor."""
         self.entity_description = entity_description
-        self.entity_id = ENTITY_ID_SENSOR_FORMAT.format(entity_description.key)  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = ENTITY_ID_SENSOR_FORMAT.format(entity_description.key)
         self._attr_unique_id = f"{entry_id}-{entity_description.key}"
         self.sun = sun
         self._attr_device_info = DeviceInfo(

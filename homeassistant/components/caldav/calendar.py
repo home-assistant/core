@@ -203,7 +203,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     ) -> None:
         """Create the WebDav Calendar Event Device."""
         super().__init__(coordinator)
-        self.entity_id = entity_id  # pylint: disable=home-assistant-entity-sets-entity-id
+        self.entity_id = entity_id
         self._event: CalendarEvent | None = None
         self._attr_name = name
         if unique_id is not None:

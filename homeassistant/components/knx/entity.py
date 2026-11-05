@@ -278,7 +278,7 @@ class KnxYamlEntity(_KnxEntityBase):
 
         default_entity_id: str | None
         if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
-            self.entity_id = default_entity_id  # pylint: disable=home-assistant-entity-sets-entity-id
+            self.entity_id = default_entity_id
 
 
 class KnxUiEntity(_KnxEntityBase):

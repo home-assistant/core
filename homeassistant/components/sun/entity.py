@@ -96,7 +96,7 @@ class Sun(Entity):
     )
 
     _attr_name = "Sun"
-    entity_id = ENTITY_ID  # pylint: disable=home-assistant-entity-sets-entity-id
+    entity_id = ENTITY_ID
 
     observer: Observer
     next_rising: datetime
