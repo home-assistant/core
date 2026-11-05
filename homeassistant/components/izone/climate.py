@@ -33,7 +33,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
 
-from .const import ATTR_AIRFLOW, DOMAIN
+from .const import DOMAIN
 from .coordinator import IZoneConfigEntry, IZoneCoordinator
 from .entity import IZoneCoordinatorEntity, zone_device_info
 from .services import (
@@ -504,19 +504,15 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
         """Return the maximum air flow."""
         return self._zone.airflow_max
 
-    async def async_set_airflow_min(self, **kwargs):
-        """Set new airflow minimum for the deprecated ``izone.airflow_min`` action."""
+    async def async_set_airflow_min(self, airflow: int) -> None:
+        """Set new airflow minimum."""
         async_create_deprecated_airflow_issue(self.hass, IZONE_SERVICE_AIRFLOW_MIN)
-        await self._async_run_and_update(
-            self._zone.set_airflow_min(int(kwargs[ATTR_AIRFLOW]))
-        )
+        await self._async_run_and_update(self._zone.set_airflow_min(airflow))
 
-    async def async_set_airflow_max(self, **kwargs):
-        """Set new airflow maximum for the deprecated ``izone.airflow_max`` action."""
+    async def async_set_airflow_max(self, airflow: int) -> None:
+        """Set new airflow maximum."""
         async_create_deprecated_airflow_issue(self.hass, IZONE_SERVICE_AIRFLOW_MAX)
-        await self._async_run_and_update(
-            self._zone.set_airflow_max(int(kwargs[ATTR_AIRFLOW]))
-        )
+        await self._async_run_and_update(self._zone.set_airflow_max(airflow))
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:

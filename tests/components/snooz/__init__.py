@@ -57,6 +57,21 @@ SNOOZ_SERVICE_INFO_NOT_PAIRING = BluetoothServiceInfo(
     source="local",
 )
 
+# Some Bluetooth stacks report the name stored in the device name characteristic
+# ("Snooz") instead of the advertised name ("Snooz-XXXX") after connecting
+SNOOZ_SERVICE_INFO_CHARACTERISTIC_NAME = BluetoothServiceInfo(
+    name="Snooz",
+    address=TEST_ADDRESS,
+    rssi=-63,
+    manufacturer_data={65552: bytes([4]) + bytes([0] * 8)},
+    service_uuids=[
+        "80c37f00-cc16-11e4-8830-0800200c9a66",
+        "90759319-1668-44da-9ef3-492d593bd1e5",
+    ],
+    service_data={},
+    source="local",
+)
+
 
 @dataclass
 class SnoozFixture:

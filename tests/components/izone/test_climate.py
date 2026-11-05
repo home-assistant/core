@@ -28,13 +28,15 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.izone.climate import ATTR_CONTROL_ZONE_SOURCE
-from homeassistant.components.izone.const import ATTR_AIRFLOW, DOMAIN
+from homeassistant.components.izone.const import DOMAIN
 from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
-from homeassistant.components.izone.services import (
-    IZONE_SERVICE_AIRFLOW_MAX,
-    IZONE_SERVICE_AIRFLOW_MIN,
+from homeassistant.components.izone.services import IZoneService, IZoneServiceArgument
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.device_registry as dr
@@ -961,10 +963,10 @@ async def test_deprecated_airflow_action_still_works_and_raises_issue(
 @pytest.mark.parametrize(
     ("service", "airflow"),
     [
-        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 41, id="min-int"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 41, id="max-int"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 40.9, id="min-float"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 40.9, id="max-float"),
+        pytest.param(IZoneService.AIRFLOW_MIN, 41, id="min-int"),
+        pytest.param(IZoneService.AIRFLOW_MAX, 41, id="max-int"),
+        pytest.param(IZoneService.AIRFLOW_MIN, 40.9, id="min-float"),
+        pytest.param(IZoneService.AIRFLOW_MAX, 40.9, id="max-float"),
     ],
 )
 async def test_airflow_rejects_non_multiples_of_five(
@@ -978,7 +980,10 @@ async def test_airflow_rejects_non_multiples_of_five(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ZONE_ENTITY, ATTR_AIRFLOW: airflow},
+            {
+                CommonServiceArgument.ENTITY_ID: ZONE_ENTITY,
+                IZoneServiceArgument.AIRFLOW: airflow,
+            },
             blocking=True,
         )
 
