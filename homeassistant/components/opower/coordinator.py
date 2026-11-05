@@ -523,35 +523,29 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         return True
 
     async def _async_has_hourly_statistics(
-        self, statistic_id: str, hourly_cost_reads: list[CostRead], tz: tzinfo
+        self, statistic_id: str, first_hourly_start_time: datetime, tz: tzinfo
     ) -> bool:
         """Return whether the existing statistics at the hourly reads are hourly.
 
-        Day statistics only exist at local midnight, so having one at an hourly
-        read that doesn't start at local midnight means that the statistics there
-        are hourly.
+        Day statistics only exist at local midnight, so having one at any other
+        time during the first two days of the hourly reads means that the
+        statistics there are hourly. Checking more than one hour makes this work
+        when a single hour is missing, e.g. because the utility backfilled it.
         """
-        start = next(
-            (
-                local_start
-                for cost_read in hourly_cost_reads
-                if (local_start := cost_read.start_time.astimezone(tz)).time() != time()
-            ),
-            None,
-        )
-        if start is None:
-            return False
         stats = await get_instance(self.hass).async_add_executor_job(
             statistics_during_period,
             self.hass,
-            start,
-            start + timedelta(seconds=1),
+            first_hourly_start_time,
+            first_hourly_start_time + timedelta(days=2),
             {statistic_id},
             "hour",
             None,
             {"sum"},
         )
-        return bool(stats.get(statistic_id))
+        return any(
+            dt_util.utc_from_timestamp(stat["start"]).astimezone(tz).time() != time()
+            for stat in stats.get(statistic_id, [])
+        )
 
     async def _async_get_cost_reads(
         self,
@@ -662,7 +656,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             and tz is not None
             and hourly_cost_reads[0].start_time.timestamp() <= start_time
             and await self._async_has_hourly_statistics(
-                statistic_id, hourly_cost_reads, tz
+                statistic_id, hourly_cost_reads[0].start_time, tz
             )
         ):
             # The bill and daily reads start where the billing period containing
@@ -671,16 +665,14 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             # already exist there are hourly, anchoring the running sum on a day
             # read would only count the first hour of that day and drop the rest
             # from the sum, and the day reads that follow would replace hourly
-            # statistics with day ones. Start at the hourly reads instead.
+            # statistics with day ones. Use only the hourly reads instead. Keeping
+            # a day read that starts after the first hourly read would make the
+            # merge below drop the hourly reads before it, e.g. when they start
+            # at 23:00, and anchor the sum later, skipping corrections before it.
             # If they are day statistics, e.g. because hourly reads were not
             # available when they were imported, the day reads are a compatible
             # anchor and the hourly reads that follow replace the day statistics.
-            first_hourly_start_time = hourly_cost_reads[0].start_time
-            cost_reads = [
-                cost_read
-                for cost_read in cost_reads
-                if cost_read.start_time >= first_hourly_start_time
-            ]
+            cost_reads = []
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
         _LOGGER.debug("Got %s cost reads", len(cost_reads))
         return cost_reads

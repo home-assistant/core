@@ -978,10 +978,14 @@ def _mock_reads(
     mock_opower_api: AsyncMock,
     first_hourly_day: int | None,
     starts_at_23: bool = False,
+    skipped_hour: datetime | None = None,
+    corrected_hours: dict[datetime, float] | None = None,
 ) -> None:
     """Mock a bill and daily reads for all days, and hourly reads from a day on.
 
     The hourly reads start with the last hour of the previous day if starts_at_23.
+    The hourly read starting at skipped_hour is left out and the consumption of the
+    hourly reads in corrected_hours is the given one.
     """
     mock_opower_api.async_get_accounts.return_value = (
         mock_opower_api.async_get_accounts.return_value[:1]
@@ -1003,7 +1007,7 @@ def _mock_reads(
         return CostRead(
             start_time=start,
             end_time=start + timedelta(hours=1),
-            consumption=1.5,
+            consumption=(corrected_hours or {}).get(start, 1.5),
             provided_cost=0.3,
         )
 
@@ -1018,6 +1022,7 @@ def _mock_reads(
         hourly_reads.insert(
             0, hourly_read(_DAY_STARTS[first_hourly_day] - timedelta(hours=1))
         )
+    hourly_reads = [read for read in hourly_reads if read.start_time != skipped_hour]
 
     async def reads(account, aggregate_type, start, end):
         return {
@@ -1119,5 +1124,80 @@ async def test_coordinator_replaces_daily_statistics_with_hourly_ones(
     hourly_after = after[first_hourly_day:]
     assert [stat["state"] for stat in hourly_after] == [1.5] * len(hourly_after)
     assert hourly_after[0]["sum"] == pytest.approx(30.0 * first_hourly_day + 1.5)
+    for previous, current in pairwise(after):
+        assert current["sum"] == pytest.approx(previous["sum"] + current["state"])
+
+
+@pytest.mark.parametrize("first_hourly_day", [1, 2])
+async def test_coordinator_detects_hourly_statistics_with_a_backfilled_hour(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+    first_hourly_day: int,
+) -> None:
+    """Test that a missing statistic at the start of the hourly reads is fine.
+
+    The utility can backfill the first hour of the hourly reads after the previous
+    import. The statistics around it are still hourly, so they must not be taken
+    for day statistics and overwritten with the day reads.
+    """
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+
+    # The last hour of the day before the hourly reads is missing from the import.
+    backfilled_hour = _DAY_STARTS[first_hourly_day] - timedelta(hours=1)
+    _mock_reads(mock_opower_api, 0, skipped_hour=backfilled_hour)
+    await coordinator._async_update_data()
+    before = await _async_get_consumption_stats(hass)
+    assert len(before) == 15
+    assert backfilled_hour.timestamp() not in [stat["start"] for stat in before]
+
+    # The hourly reads start with that hour now.
+    _mock_reads(mock_opower_api, first_hourly_day, starts_at_23=True)
+    await coordinator._async_update_data()
+
+    after = await _async_get_consumption_stats(hass)
+    assert after == before
+    for previous, current in pairwise(after):
+        assert current["sum"] == pytest.approx(previous["sum"] + current["state"])
+
+
+@pytest.mark.parametrize("first_hourly_day", [1, 2])
+async def test_coordinator_applies_corrections_to_the_first_hourly_reads(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+    first_hourly_day: int,
+) -> None:
+    """Test that corrections to the first hours of the hourly reads are applied.
+
+    When the hourly reads start at 23:00, the day read of the next day must not
+    stay in the reads and make the sum anchor on local midnight, which would skip
+    the corrections to the hours before the anchor.
+    """
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+
+    _mock_reads(mock_opower_api, 0)
+    await coordinator._async_update_data()
+    before = await _async_get_consumption_stats(hass)
+
+    # The utility corrects the consumption of the hour at local midnight, which is
+    # the second hourly read.
+    corrected_hour = _DAY_STARTS[first_hourly_day]
+    _mock_reads(
+        mock_opower_api,
+        first_hourly_day,
+        starts_at_23=True,
+        corrected_hours={corrected_hour: 2.5},
+    )
+    await coordinator._async_update_data()
+
+    after = await _async_get_consumption_stats(hass)
+    index = [stat["start"] for stat in after].index(corrected_hour.timestamp())
+    assert after[:index] == before[:index]
+    assert after[index]["state"] == 2.5
+    for previous, current in zip(before[index:], after[index:], strict=True):
+        assert current["sum"] == pytest.approx(previous["sum"] + 1.0)
     for previous, current in pairwise(after):
         assert current["sum"] == pytest.approx(previous["sum"] + current["state"])
