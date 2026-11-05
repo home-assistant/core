@@ -240,7 +240,8 @@ async def test_state_off_with_upcoming_alert_picks_soonest(
         pytest.param(
             datetime(2026, 2, 1, 0, 0, tzinfo=TZ_PARIS),
             datetime(2026, 5, 1, 0, 0, tzinfo=TZ_PARIS),
-            ["Déviée dir. Cordeliers", "Fête de la Musique"],
+            # Chronological, although the API returns the April alert first.
+            ["Fête de la Musique", "Déviée dir. Cordeliers"],
             id="spans_both_alerts",
         ),
         pytest.param(
@@ -297,7 +298,7 @@ async def test_get_events(
         return_response=True,
     )
     summaries = [event["summary"] for event in response[ENTITY_ID]["events"]]
-    assert sorted(summaries) == sorted(expected)
+    assert summaries == expected
 
 
 @pytest.mark.parametrize(

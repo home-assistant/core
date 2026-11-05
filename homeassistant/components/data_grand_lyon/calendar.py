@@ -93,7 +93,10 @@ class DataGrandLyonLineCalendar(DataGrandLyonLineEntity, CalendarEntity):
         window_end = dt_util.as_utc(end_date)
         return [
             _calendar_event(alert)
-            for alert in self.coordinator.data[self._subentry_id]
+            for alert in sorted(
+                self.coordinator.data[self._subentry_id],
+                key=lambda alert: dt_util.as_utc(alert.debut.replace(tzinfo=TZ_PARIS)),
+            )
             if dt_util.as_utc(alert.debut.replace(tzinfo=TZ_PARIS)) < window_end
             and dt_util.as_utc(alert.fin.replace(tzinfo=TZ_PARIS)) > window_start
         ]
