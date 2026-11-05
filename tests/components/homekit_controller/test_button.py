@@ -9,7 +9,12 @@ from aiohomekit.model.services import Service, ServicesTypes
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import Helper, setup_test_component
+from .common import (
+    Helper,
+    setup_accessories_from_file,
+    setup_test_accessories,
+    setup_test_component,
+)
 
 
 def create_switch_with_setup_button(accessory: Accessory) -> Service:
@@ -123,3 +128,47 @@ async def test_migrate_unique_id(
         entity_registry.async_get(button_entry.entity_id).unique_id
         == f"00:00:00:00:00:00_{aid}_1_2"
     )
+
+
+EVE_SERVICE = "E863F007-079E-48FF-8F27-9C2605A29F52"
+
+
+async def test_eve_water_guard_mute_button(hass: HomeAssistant) -> None:
+    """Test the Eve Water Guard mute button writes the mute TLV."""
+    accessories = await setup_accessories_from_file(hass, "eve_water_guard.json")
+    config_entry, pairing = await setup_test_accessories(hass, accessories)
+
+    button = Helper(
+        hass,
+        "button.eve_water_guard_aa11_mute_alarm",
+        pairing,
+        accessories.aid(1),
+        config_entry,
+    )
+
+    await hass.services.async_call(
+        "button",
+        "press",
+        {"entity_id": "button.eve_water_guard_aa11_mute_alarm"},
+        blocking=True,
+    )
+    button.async_assert_service_values(
+        EVE_SERVICE,
+        {CharacteristicsTypes.VENDOR_EVE_CONFIG_WRITE: bytes.fromhex("4e0101")},
+    )
+
+
+async def test_eve_config_write_without_leak_sensor_has_no_button(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test other Eve devices with the config characteristic get no mute button."""
+    accessories = await setup_accessories_from_file(hass, "eve_energy.json")
+    config_entry, _ = await setup_test_accessories(hass, accessories)
+
+    assert not [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.translation_key == "mute_alarm"
+    ]

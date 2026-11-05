@@ -1,6 +1,9 @@
 {
   "entity": {
     "button": {
+      "mute_alarm": {
+        "default": "mdi:volume-off"
+      },
       "setup": {
         "default": "mdi:cog"
       }
