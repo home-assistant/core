@@ -16,7 +16,10 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     HVACAction,
     HVACMode,
 )
@@ -75,6 +78,12 @@ HEAT_RECOVERY_VENTILATION = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe.json",
     "io://1234-5678-6508/2840629#1",
     "climate.ventilation",
+)
+# io:AtlanticPassAPCZoneControlZoneComponent in heating and cooling configuration
+ZONE_CONTROL_ZONE = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch_zone_control.json",
+    "io://1234-5678-5643/4321987#2",
+    "climate.my_home_zone_control_bedroom",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -514,3 +523,173 @@ async def test_heat_recovery_ventilation_without_ventilation_mode(
         {"entity_id": HEAT_RECOVERY_VENTILATION.entity_id, **service_data},
         blocking=True,
     )
+
+
+@pytest.fixture
+def mock_zone_control_zone_sleep() -> Generator[None]:
+    """Skip the delay before the Zone Control zone refreshes its modes."""
+    with patch(
+        "homeassistant.components.overkiz.climate.atlantic_pass_apc_zone_control_zone.sleep"
+    ):
+        yield
+
+
+def executed_commands(
+    mock_client: MockOverkizClient,
+) -> list[list[tuple[str, list[Any]]]]:
+    """Return the commands of each execution sent to the zone, in order."""
+    executions = []
+    for call in mock_client.execute_action_group.await_args_list:
+        actions = call.kwargs["actions"]
+        assert len(actions) == 1
+        assert actions[0].device_url == ZONE_CONTROL_ZONE.device_url
+        executions.append(
+            [
+                (command.name, command.parameters or [])
+                for command in actions[0].commands
+            ]
+        )
+    return executions
+
+
+ZONE_CONTROL_ZONE_REFRESH = [
+    ("refreshPassAPCHeatingMode", []),
+    ("refreshPassAPCHeatingProfile", []),
+    ("refreshPassAPCCoolingMode", []),
+    ("refreshPassAPCCoolingProfile", []),
+    ("refreshTargetTemperature", []),
+]
+
+
+@pytest.mark.usefixtures("mock_zone_control_zone_sleep")
+@pytest.mark.parametrize(
+    ("service_data", "expected_commands"),
+    [
+        pytest.param(
+            {ATTR_TARGET_TEMP_LOW: 19.0, ATTR_TARGET_TEMP_HIGH: 25.0},
+            [
+                ("setHeatingTargetTemperature", [19.0]),
+                ("setCoolingTargetTemperature", [25.0]),
+                ("setDerogationOnOffState", ["on"]),
+            ],
+            id="both_changed",
+        ),
+        pytest.param(
+            {ATTR_TARGET_TEMP_LOW: 19.0, ATTR_TARGET_TEMP_HIGH: 26.0},
+            [
+                ("setHeatingTargetTemperature", [19.0]),
+                ("setDerogationOnOffState", ["on"]),
+            ],
+            id="heating_changed",
+        ),
+        pytest.param(
+            {ATTR_TARGET_TEMP_LOW: 20.0, ATTR_TARGET_TEMP_HIGH: 27.0},
+            [
+                ("setCoolingTargetTemperature", [27.0]),
+                ("setDerogationOnOffState", ["on"]),
+            ],
+            id="cooling_changed",
+        ),
+    ],
+)
+async def test_zone_control_zone_set_temperature(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    service_data: dict[str, float],
+    expected_commands: list[tuple[str, list[Any]]],
+) -> None:
+    """Test a setpoint change sends one execution, then one refresh execution."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": ZONE_CONTROL_ZONE.entity_id, **service_data},
+        blocking=True,
+    )
+
+    assert executed_commands(mock_client) == [
+        expected_commands,
+        ZONE_CONTROL_ZONE_REFRESH,
+    ]
+
+
+@pytest.mark.usefixtures("mock_zone_control_zone_sleep")
+async def test_zone_control_zone_set_unchanged_temperature(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test setting the current setpoints sends no execution."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": ZONE_CONTROL_ZONE.entity_id,
+            ATTR_TARGET_TEMP_LOW: 20.0,
+            ATTR_TARGET_TEMP_HIGH: 26.0,
+        },
+        blocking=True,
+    )
+
+    mock_client.execute_action_group.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_zone_control_zone_sleep")
+@pytest.mark.parametrize(
+    ("service", "service_data", "expected_commands"),
+    [
+        pytest.param(
+            "set_hvac_mode",
+            {ATTR_HVAC_MODE: HVACMode.OFF},
+            [("setCoolingOnOffState", ["off"]), ("setHeatingOnOffState", ["off"])],
+            id="hvac_mode_off",
+        ),
+        pytest.param(
+            "set_hvac_mode",
+            {ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            [("setCoolingOnOffState", ["on"]), ("setHeatingOnOffState", ["on"])],
+            id="hvac_mode_heat_cool",
+        ),
+        pytest.param(
+            "set_preset_mode",
+            {ATTR_PRESET_MODE: "manual"},
+            [("setPassAPCHeatingMode", ["manu"]), ("setPassAPCCoolingMode", ["manu"])],
+            id="preset_manual",
+        ),
+        pytest.param(
+            "set_preset_mode",
+            {ATTR_PRESET_MODE: "schedule"},
+            [
+                ("setPassAPCHeatingMode", ["internalScheduling"]),
+                ("setPassAPCCoolingMode", ["internalScheduling"]),
+            ],
+            id="preset_schedule",
+        ),
+    ],
+)
+async def test_zone_control_zone_set_mode(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    service: str,
+    service_data: dict[str, str],
+    expected_commands: list[tuple[str, list[Any]]],
+) -> None:
+    """Test a mode change sends one execution, then one refresh execution."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        service,
+        {"entity_id": ZONE_CONTROL_ZONE.entity_id, **service_data},
+        blocking=True,
+    )
+
+    assert executed_commands(mock_client) == [
+        expected_commands,
+        ZONE_CONTROL_ZONE_REFRESH,
+    ]
