@@ -39,6 +39,9 @@ async def test_network_speed(
     """Test missed call sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
 
+    assert hass.states.get("sensor.freebox_server_r2_download_speed").state == "198.9"
+    assert hass.states.get("sensor.freebox_server_r2_upload_speed").state == "1440.0"
+
     # Simulate a changed speed
     data_connection_get_status_changed = deepcopy(DATA_CONNECTION_GET_STATUS)
     data_connection_get_status_changed["rate_down"] = 123400
@@ -58,6 +61,8 @@ async def test_call(
 ) -> None:
     """Test missed call sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
+
+    assert hass.states.get("sensor.freebox_server_r2_missed_calls").state == "3"
 
     # Simulate we marked calls as read
     data_call_get_calls_marked_as_read = []
@@ -87,6 +92,8 @@ async def test_disk(
         == 1730000000000
     )
 
+    assert hass.states.get("sensor.disk_3000_freebox_free_space").state == "88.27"
+
     # Simulate a changed storage size
     data_storage_get_disks_changed = deepcopy(DATA_STORAGE_GET_DISKS)
     data_storage_get_disks_changed[2]["partitions"][0]["free_bytes"] = 880000000000
@@ -104,6 +111,10 @@ async def test_battery(
 ) -> None:
     """Test battery sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
+
+    assert hass.states.get("sensor.telecommande_battery").state == "100"
+    assert hass.states.get("sensor.ouverture_porte_battery").state == "100"
+    assert hass.states.get("sensor.detecteur_battery").state == "100"
 
     # Simulate a changed battery
     data_home_get_nodes_changed = deepcopy(DATA_HOME_GET_NODES)
