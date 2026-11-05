@@ -4,7 +4,7 @@ import bisect
 from contextlib import suppress
 import datetime as dt
 from functools import lru_cache, partial
-from pathlib import Path
+from importlib import resources
 import re
 from typing import Any, Literal, overload
 import zoneinfo
@@ -18,7 +18,7 @@ import tzdata.zoneinfo
 # pinned tzdata definitions ahead of potentially stale OS /usr/share/zoneinfo
 # files (https://github.com/home-assistant/core/issues/180953,
 # https://github.com/home-assistant/core/issues/190078).
-TZDATA_ZONEINFO_DIR = str(Path(tzdata.zoneinfo.__file__).parent)
+TZDATA_ZONEINFO_DIR = str(resources.files(tzdata.zoneinfo))
 zoneinfo.reset_tzpath(
     (
         TZDATA_ZONEINFO_DIR,
