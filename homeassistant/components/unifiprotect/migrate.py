@@ -1,7 +1,7 @@
 """UniFi Protect data migrations."""
 
 import logging
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from uiprotect.data import Bootstrap, ModelType
 
@@ -49,6 +49,10 @@ async def async_migrate_data(hass: HomeAssistant, entry: UFPConfigEntry) -> None
     _LOGGER.debug("Start Migrate: async_migrate_sensor_signal_strength")
     async_migrate_sensor_signal_strength(hass, entry)
     _LOGGER.debug("Completed Migrate: async_migrate_sensor_signal_strength")
+
+    _LOGGER.debug("Start Migrate: async_link_removal_repairs")
+    async_link_removal_repairs(hass, entry)
+    _LOGGER.debug("Completed Migrate: async_link_removal_repairs")
 
 
 # Device type (``ProtectAdoptableDeviceModel.type``) reported by AI Ports. Matched
@@ -117,6 +121,59 @@ def async_migrate_insecure_cameras(hass: HomeAssistant, entry: UFPConfigEntry) -
     _async_remove_when_started(hass, entry, removals)
 
 
+# Persistent removal repairs, keyed by their issue id prefix up to
+# ``_removed_`` and pointing at the platforms the removed entity was on.
+_REMOVAL_REPAIR_PLATFORMS: dict[str, tuple[Platform, ...]] = {
+    "insecure_camera": (Platform.CAMERA,),
+    "package_binary_sensor": (Platform.BINARY_SENSOR,),
+    "hdr_switch": (Platform.SWITCH,),
+    "sense_setting_mirror": (Platform.BINARY_SENSOR, Platform.SENSOR),
+}
+
+
+@callback
+def async_link_removal_repairs(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
+    """Link the removal repairs raised before they named their config entry.
+
+    Their entity is gone, so they are never raised again. The deleted entity
+    registry entry of the removed entity still names the entry that owned it;
+    repairs of entities this entry did not own are left alone. Re-raising the
+    repair keeps its ignored state.
+
+    Added in 2026.12.0
+    """
+    owned = {
+        (deleted.domain, deleted.unique_id)
+        for deleted in er.async_get(hass).deleted_entities.values()
+        if deleted.platform == DOMAIN and deleted.config_entry_id == entry.entry_id
+    }
+    for (domain, issue_id), issue in list(ir.async_get(hass).issues.items()):
+        prefix, _, unique_id = issue_id.partition("_removed_")
+        if (
+            domain != DOMAIN
+            or not issue.is_persistent
+            or issue.config_entry_id is not None
+            or not any(
+                (platform, unique_id) in owned
+                for platform in _REMOVAL_REPAIR_PLATFORMS.get(prefix, ())
+            )
+        ):
+            continue
+        if TYPE_CHECKING:
+            assert issue.translation_key is not None
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            is_persistent=True,
+            config_entry_id=entry.entry_id,
+            severity=IssueSeverity.WARNING,
+            translation_key=issue.translation_key,
+            translation_placeholders=issue.translation_placeholders,
+        )
+
+
 @callback
 def _async_repair_if_used(
     hass: HomeAssistant,
@@ -152,6 +209,7 @@ def _async_repair_if_used(
         is_fixable=False,
         is_persistent=breaks_in is None,
         breaks_in_ha_version=breaks_in,
+        config_entry_id=entity.config_entry_id,
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
         translation_placeholders={
