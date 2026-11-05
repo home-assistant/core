@@ -2,7 +2,6 @@
 
 from collections.abc import Collection
 from datetime import timedelta
-from functools import partial
 
 from pyskyqhub.skyq_hub import SkyQHub
 
@@ -45,9 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SkyHubConfigEntry) -> No
 
     await _async_check_legacy_known_devices(hass, entry, seen_macs)
     entry.async_on_unload(coordinator.async_add_listener(async_check_new_devices))
-    entry.async_on_unload(
-        partial(ir.async_delete_issue, hass, DOMAIN, _legacy_issue_id(entry))
-    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -79,6 +75,7 @@ async def _async_check_legacy_known_devices(
         hass,
         DOMAIN,
         _legacy_issue_id(entry),
+        config_entry_id=entry.entry_id,
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key=ISSUE_LEGACY_KNOWN_DEVICES,
