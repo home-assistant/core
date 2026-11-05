@@ -716,11 +716,13 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 yield packet
         finally:
             await packets.aclose()
+            # kill() reads stderr itself, so our reader must stop first.
+            stderr_task.cancel()
+            await asyncio.wait({stderr_task})
             # Closing would wait for ffmpeg to flush, the hub already ended.
             if stream.is_running:
                 stream.kill()
                 await stream.process.wait()
-            stderr_task.cancel()
 
     async def _async_recording_failed(
         self,

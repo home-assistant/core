@@ -1742,6 +1742,22 @@ async def test_camera_secure_video_recording(
     expected_audio_map: str,
 ) -> None:
     """Test a recording streams the ffmpeg fragments and kills ffmpeg after."""
+    stdout = asyncio.StreamReader()
+    stdout.feed_data(INIT_SEGMENT + FRAGMENT)
+    stdout.feed_eof()
+    # A stderr that stays open until ffmpeg is killed, like a real one.
+    stderr = asyncio.StreamReader()
+    recording_ffmpeg.get_reader = AsyncMock(
+        side_effect=lambda source="stdout": stderr if source == "stderr" else stdout
+    )
+    kill_reads: list[asyncio.Task[bytes]] = []
+
+    def kill() -> None:
+        # HAFFmpeg.kill() reads the remaining output in a background task.
+        kill_reads.append(hass.async_create_task(stderr.read()))
+        stderr.feed_eof()
+
+    recording_ffmpeg.kill.side_effect = kill
     acc = await _secure_video_camera(hass, run_driver, **{CONF_SUPPORT_AUDIO: True})
     acc.set_selected_recording_configuration(
         to_base64_str(RECORDING_SELECTION.encode())
@@ -1758,6 +1774,8 @@ async def test_camera_secure_video_recording(
     assert open_kwargs["input_source"].startswith("-i rtsp://cam")
     assert expected_audio_map in open_kwargs["output"]
     recording_ffmpeg.kill.assert_called_once_with()
+    # A second reader on stderr would fail.
+    assert await kill_reads[0] == b""
 
 
 @pytest.mark.parametrize(
