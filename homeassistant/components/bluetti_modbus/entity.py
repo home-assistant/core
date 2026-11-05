@@ -10,11 +10,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODEL, MODEL_ID
-from .coordinator import (
-    BluettiModbusConfigEntry,
-    BluettiModbusDataUpdateCoordinator,
-    BluettiModbusSettingsCoordinator,
-)
+from .coordinator import BluettiModbusConfigEntry, BluettiModbusDataUpdateCoordinator
 
 
 def bluetti_modbus_device_info(
@@ -46,7 +42,7 @@ class BluettiModbusEntity(CoordinatorEntity[BluettiModbusDataUpdateCoordinator])
         self._attr_device_info = entry.runtime_data.device_info
 
 
-class BluettiModbusSettingEntity(CoordinatorEntity[BluettiModbusSettingsCoordinator]):
+class BluettiModbusSettingEntity(CoordinatorEntity[BluettiModbusDataUpdateCoordinator]):
     """Defines an entity for a setting the power station can be given."""
 
     _attr_has_entity_name = True
@@ -88,7 +84,6 @@ class BluettiModbusSettingEntity(CoordinatorEntity[BluettiModbusSettingsCoordina
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="write_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
         # async_set_updated_data would postpone the next settings poll.
         self.coordinator.data = self.coordinator.data | {self._field_name: value}

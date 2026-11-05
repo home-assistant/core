@@ -171,13 +171,13 @@
   },
   "exceptions": {
     "communication_error": {
-      "message": "An error occurred while communicating with the BLUETTI power station: {error}"
+      "message": "An error occurred while communicating with the BLUETTI power station."
     },
     "link_settings_in_use": {
       "message": "The device cannot be set up with these link settings: {error}"
     },
     "write_failed": {
-      "message": "The setting could not be written to the BLUETTI power station: {error}"
+      "message": "The setting could not be written to the BLUETTI power station."
     },
     "wrong_device": {
       "message": "The device at this address is a different device than the one this entry was set up for."

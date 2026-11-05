@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the BLUETTI Modbus integration."""
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +30,9 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         entry: BluettiModbusConfigEntry,
         device: Balco260,
+        *,
+        name: str,
+        update_interval: timedelta,
     ) -> None:
         """Initialize the coordinator."""
         self.device = device
@@ -36,8 +40,8 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             config_entry=entry,
-            name=f"{entry.title} readings",
-            update_interval=SCAN_INTERVAL,
+            name=f"{entry.title} {name}",
+            update_interval=update_interval,
         )
 
     @override
@@ -51,7 +55,6 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
             ) from err
 
         values = self.device.values
@@ -65,52 +68,11 @@ class BluettiModbusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return values
 
 
-class BluettiModbusSettingsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Polls a BLUETTI power station for the settings it can be given."""
-
-    config_entry: BluettiModbusConfigEntry
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: BluettiModbusConfigEntry,
-        device: Balco260,
-    ) -> None:
-        """Initialize the coordinator."""
-        self.device = device
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=entry,
-            name=f"{entry.title} settings",
-            update_interval=SETTINGS_SCAN_INTERVAL,
-        )
-
-    @override
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Poll the device's settings."""
-        try:
-            await self.device.async_update_with_retry()
-        except ModbusError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        values = self.device.values
-        if str(values["d_serial"]) != self.config_entry.unique_id:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="wrong_device",
-            )
-        return values
-
-
 @dataclass(kw_only=True)
 class BluettiModbusRuntimeData:
     """Runtime data for a BLUETTI Modbus config entry."""
 
     coordinator: BluettiModbusDataUpdateCoordinator
-    settings: BluettiModbusSettingsCoordinator
+    settings: BluettiModbusDataUpdateCoordinator
     device_info: DeviceInfo
     serial: str
