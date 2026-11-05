@@ -280,7 +280,7 @@ async def test_send_message(
             {
                 ATTR_CHAT_ID: 12345678,
                 ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat",
+                ATTR_ENTITY_ID: "notify.mock_chat_mock_chat",
             }
         ]
     }
@@ -377,7 +377,7 @@ async def test_send_message_with_inline_keyboard(
             {
                 ATTR_CHAT_ID: 12345678,
                 ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat",
+                ATTR_ENTITY_ID: "notify.mock_chat_mock_chat",
             }
         ]
     }
@@ -423,9 +423,9 @@ async def test_send_sticker_partial_error(
     assert err.value.translation_key == "multiple_errors"
     assert err.value.translation_placeholders == {
         "errors": (
-            "`entity_id` notify.mock_chat_1:"
+            "`entity_id` notify.mock_chat_1_mock_chat_1:"
             " mock network error\n"
-            "`entity_id` notify.mock_chat_2:"
+            "`entity_id` notify.mock_chat_2_mock_chat_2:"
             " mock network error"
         )
     }
@@ -653,7 +653,7 @@ async def test_send_file(hass: HomeAssistant, webhook_bot, service: str) -> None
             {
                 ATTR_CHAT_ID: 12345678,
                 ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat",
+                ATTR_ENTITY_ID: "notify.mock_chat_mock_chat",
             }
         ]
     }
@@ -1212,7 +1212,7 @@ async def test_send_message_with_config_entry(
             {
                 ATTR_CHAT_ID: 123456,
                 ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                ATTR_ENTITY_ID: "notify.mock_chat_1_mock_chat_1",
             }
         ]
     }
@@ -1356,7 +1356,7 @@ async def test_delete_message(
             {
                 ATTR_CHAT_ID: 123456,
                 ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                ATTR_ENTITY_ID: "notify.mock_chat_1_mock_chat_1",
             }
         ]
     }
@@ -1813,7 +1813,7 @@ async def test_send_video(
             {
                 ATTR_CHAT_ID: 123456,
                 ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                ATTR_ENTITY_ID: "notify.mock_chat_1_mock_chat_1",
             }
         ]
     }
@@ -1845,7 +1845,7 @@ async def test_send_video(
             {
                 ATTR_CHAT_ID: 123456,
                 ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                ATTR_ENTITY_ID: "notify.mock_chat_1_mock_chat_1",
             }
         ]
     }
@@ -2032,7 +2032,7 @@ async def test_send_message_multi_target(
             {
                 ATTR_CHAT_ID: 654321,
                 ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_2",
+                ATTR_ENTITY_ID: "notify.mock_chat_2_mock_chat_2",
             }
         ]
     }
@@ -2052,7 +2052,10 @@ async def test_notify_entity_send_message(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {ATTR_ENTITY_ID: "notify.mock_chat_2", ATTR_MESSAGE: "test_message"},
+        {
+            ATTR_ENTITY_ID: "notify.mock_chat_2_mock_chat_2",
+            ATTR_MESSAGE: "test_message",
+        },
         blocking=True,
         return_response=True,
     )
@@ -2062,7 +2065,7 @@ async def test_notify_entity_send_message(
             {
                 ATTR_CHAT_ID: 654321,
                 ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_2",
+                ATTR_ENTITY_ID: "notify.mock_chat_2_mock_chat_2",
             }
         ]
     }
@@ -2705,7 +2708,7 @@ async def test_send_media_group(
         "chats": [
             {
                 ATTR_CHAT_ID: 123456,
-                ATTR_ENTITY_ID: "notify.mock_chat_1",
+                ATTR_ENTITY_ID: "notify.mock_chat_1_mock_chat_1",
                 ATTR_MESSAGE_ID: [12345, 12346, 12347, 12348],
             }
         ]
