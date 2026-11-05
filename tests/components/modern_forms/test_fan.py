@@ -179,7 +179,6 @@ async def test_set_percentage(
             speed=6,
         )
 
-    await init_integration(hass, aioclient_mock)
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
