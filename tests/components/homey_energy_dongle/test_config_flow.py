@@ -139,6 +139,26 @@ async def test_user_flow_without_equipment_identifier_known_host(
     assert result["reason"] == "already_configured"
 
 
+async def test_user_flow_identified_meter_on_unidentified_entry_host(
+    hass: HomeAssistant, telegrams: TelegramQueue, telegram_data: str
+) -> None:
+    """Test a meter that reports an identifier can't duplicate an entry without one.
+
+    This happens after reconfiguring an entry from a profile without identifier.
+    """
+    MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.88"}).add_to_hass(hass)
+    telegrams.put_nowait(telegram_data)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("error", "reason"),

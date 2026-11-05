@@ -176,6 +176,14 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
             # The dongle-based discovery ID only makes the discovery ignorable;
             # entries of meters without an identifier are matched on host.
             await self.async_set_unique_id(None)
+        # Entries without a unique ID can only be recognized by their host, also
+        # when this meter does report an identifier.
+        host = self._discovered[CONF_HOST]
+        if any(
+            entry.unique_id is None and entry.data[CONF_HOST] == host
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            return self.async_abort(reason="already_configured")
         return self.async_create_entry(
             title=title,
             data={**self._discovered, CONF_DSMR_VERSION: version},
