@@ -15,7 +15,10 @@
     },
     "dev_class": "heater_central",
     "dhw_mode": "eco",
-    "dhw_modes": ["comfort", "eco"],
+    "dhw_modes": [
+      "comfort",
+      "eco"
+    ],
     "dhw_temperature": {
       "current": 37.0,
       "lower_bound": 40.0,
@@ -122,7 +125,11 @@
     },
     "dev_class": "gateway",
     "firmware": "3.9.0",
-    "gateway_modes": ["away", "full", "vacation"],
+    "gateway_modes": [
+      "away",
+      "full",
+      "vacation"
+    ],
     "hardware": "AME Smile 2.0 board",
     "location": "bc93488efab249e5bc54fd7e175a6f91",
     "mac_address": "D40FB201CBA0",
@@ -130,7 +137,12 @@
     "model_id": "smile_open_therm",
     "name": "Adam",
     "notifications": {},
-    "regulation_modes": ["bleeding_cold", "heating", "off", "bleeding_hot"],
+    "regulation_modes": [
+      "bleeding_cold",
+      "heating",
+      "off",
+      "bleeding_hot"
+    ],
     "select_gateway_mode": "full",
     "select_regulation_mode": "heating",
     "sensors": {
@@ -206,6 +218,12 @@
   },
   "f2bf9048bef64cc5b6d5110154e33c81": {
     "active_preset": "home",
+    "asleep_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 17.0,
+      "upper_bound": 30.0
+    },
     "available_schedules": [
       "off",
       "Badkamer",
@@ -213,12 +231,36 @@
       "Weekschema",
       "Test"
     ],
+    "away_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 17.0,
+      "upper_bound": 30.0
+    },
     "climate_mode": "heat",
     "control_state": "preheating",
     "dev_class": "climate",
+    "home_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 19.0,
+      "upper_bound": 30.0
+    },
     "model": "ThermoZone",
     "name": "Living room",
-    "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
+    "no_frost_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 10.0,
+      "upper_bound": 30.0
+    },
+    "preset_modes": [
+      "vacation",
+      "no_frost",
+      "asleep",
+      "home",
+      "away"
+    ],
     "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
@@ -240,11 +282,27 @@
       ],
       "secondary": []
     },
+    "vacation_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 15.0,
+      "upper_bound": 30.0
+    },
     "vendor": "Plugwise",
-    "zone_profiles": ["active", "off", "passive"]
+    "zone_profiles": [
+      "active",
+      "off",
+      "passive"
+    ]
   },
   "f871b8c4d63549319221e294e4f88074": {
     "active_preset": "vacation",
+    "asleep_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 12.0,
+      "upper_bound": 30.0
+    },
     "available_schedules": [
       "off",
       "Badkamer",
@@ -252,12 +310,36 @@
       "Weekschema",
       "Test"
     ],
+    "away_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 15.0,
+      "upper_bound": 30.0
+    },
     "climate_mode": "auto",
     "control_state": "idle",
     "dev_class": "climate",
+    "home_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 18.0,
+      "upper_bound": 30.0
+    },
     "model": "ThermoZone",
     "name": "Bathroom",
-    "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
+    "no_frost_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 10.0,
+      "upper_bound": 30.0
+    },
+    "preset_modes": [
+      "no_frost",
+      "asleep",
+      "vacation",
+      "home",
+      "away"
+    ],
     "select_schedule": "off",
     "select_zone_profile": "passive",
     "sensors": {
@@ -272,10 +354,24 @@
       "upper_bound": 99.9
     },
     "thermostats": {
-      "primary": ["e2f4322d57924fa090fbbc48b3a140dc"],
-      "secondary": ["1772a4ea304041adb83f357b751341ff"]
+      "primary": [
+        "e2f4322d57924fa090fbbc48b3a140dc"
+      ],
+      "secondary": [
+        "1772a4ea304041adb83f357b751341ff"
+      ]
+    },
+    "vacation_preset_temperature": {
+      "lower_bound": 4.0,
+      "resolution": 0.5,
+      "setpoint": 12.0,
+      "upper_bound": 30.0
     },
     "vendor": "Plugwise",
-    "zone_profiles": ["active", "off", "passive"]
+    "zone_profiles": [
+      "active",
+      "off",
+      "passive"
+    ]
   }
 }
