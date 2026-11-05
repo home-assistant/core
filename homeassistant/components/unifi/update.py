@@ -48,7 +48,7 @@ class UnifiUpdateEntityDescription[_HandlerT: Devices, _DataT: Device](
     control_fn: (
         Callable[[aiounifi.Controller, str], Coroutine[Any, Any, None]] | None
     ) = None
-    state_fn: Callable[[aiounifi.Controller, _DataT], bool] | None = None
+    state_fn: Callable[[aiounifi.Controller, _DataT], bool]
     installed_version_fn: Callable[[_DataT], str | None] = lambda obj: obj.version
     latest_version_fn: Callable[[_DataT], str | None] = lambda obj: (
         obj.upgrade_to_firmware or obj.version
@@ -81,6 +81,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
+        state_fn=lambda api, device: False,
         supported_fn=lambda hub, obj_id: (
             hub.api.devices[obj_id].suricata_version is not None
         ),
@@ -118,11 +119,8 @@ class UnifiDeviceUpdateEntity[_HandlerT: Devices, _DataT: Device](
     @override
     def async_initiate_state(self) -> None:
         """Initiate entity state."""
-        description = self.entity_description
-        self._attr_supported_features = UpdateEntityFeature(0)
-        if description.state_fn is not None:
-            self._attr_supported_features |= UpdateEntityFeature.PROGRESS
-        if description.control_fn is not None and self.hub.is_admin:
+        self._attr_supported_features = UpdateEntityFeature.PROGRESS
+        if self.entity_description.control_fn is not None and self.hub.is_admin:
             self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
         self.async_update_state(ItemEvent.ADDED, self._obj_id)
@@ -154,7 +152,6 @@ class UnifiDeviceUpdateEntity[_HandlerT: Devices, _DataT: Device](
         description = self.entity_description
 
         obj = description.object_fn(self.api, self._obj_id)
-        if description.state_fn is not None:
-            self._attr_in_progress = description.state_fn(self.api, obj)
+        self._attr_in_progress = description.state_fn(self.api, obj)
         self._attr_installed_version = description.installed_version_fn(obj)
         self._attr_latest_version = description.latest_version_fn(obj)
