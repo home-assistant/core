@@ -14230,7 +14230,7 @@
 # name: test_all_entities[da_wm_dw_000001][sensor.theater_dishwasher_detailed_job_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Detailed job state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Detailed job state',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.theater_dishwasher_detailed_job_state',
@@ -14712,6 +14712,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Remaining cycle time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.theater_dishwasher_remaining_cycle_time',
@@ -14763,6 +14764,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Time left to start',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.theater_dishwasher_time_left_to_start',
@@ -14863,7 +14865,7 @@
 # name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_detailed_job_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Detailed job state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Detailed job state',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dishwasher_1_detailed_job_state',
