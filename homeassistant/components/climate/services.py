@@ -8,10 +8,8 @@ import probatio
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util.unit_conversion import (
-    TemperatureConverter,
-    TemperatureDeltaConverter,
-)
+from homeassistant.helpers.temperature import display_temp
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     DATA_COMPONENT,
@@ -134,11 +132,10 @@ async def _async_service_temperature_set(
         )
 
     # min_temp and max_temp are shown converted to the configured unit and rounded
-    # to the precision, so a temperature picked at a limit can be up to half the
-    # precision outside the native range. Accept it and clamp it into the range.
-    tolerance = TemperatureDeltaConverter.convert(
-        entity.precision / 2, hass.config.units.temperature_unit, temp_unit
-    )
+    # to the precision, so a limit picked in the UI can be slightly outside the
+    # native range. Accept the shown limits and clamp to the native range.
+    shown_min_temp = display_temp(hass, min_temp, temp_unit, entity.precision)
+    shown_max_temp = display_temp(hass, max_temp, temp_unit, entity.precision)
 
     for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
@@ -157,7 +154,9 @@ async def _async_service_temperature_set(
                 max_temp,
                 temp_unit,
             )
-            if check_temp < min_temp - tolerance or check_temp > max_temp + tolerance:
+            if (check_temp < min_temp and temp < shown_min_temp) or (
+                check_temp > max_temp and temp > shown_max_temp
+            ):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="temp_out_of_range",
