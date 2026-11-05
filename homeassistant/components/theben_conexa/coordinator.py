@@ -1,5 +1,6 @@
 """Coordinator for the Theben Conexa Smartmeter gateway integration."""
 
+from asyncio import Lock, sleep as async_sleep
 from datetime import datetime
 import logging
 from typing import override
@@ -14,6 +15,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DATA_QUERY_LOCKS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +44,13 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
         )
         self._scheduled_updates: CALLBACK_TYPE | None = None
         self.smgw_user = entry.data[CONF_USERNAME]
+        # The Conexa SMGW is not able to handle multiple concurrent requests
+        # so we need a host specific lock to serialize the requests.
+        # This lock pool is shared across config entries, so it cannot use runtime_data.
+        domain_data = hass.data.setdefault(DOMAIN, {})  # pylint: disable=home-assistant-use-runtime-data
+        self._query_lock: Lock = domain_data.setdefault(
+            DATA_QUERY_LOCKS, {}
+        ).setdefault(entry.data[CONF_HOST], Lock())
 
     async def async_init(self) -> None:
         """Asynchronous Initialization and registering the update schedule."""
@@ -81,10 +91,16 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
     async def _async_update_data(self) -> dict[str, ConexaSMGW.MeterValue]:
         """Fetch data from API endpoint."""
 
-        try:
-            return await self._api.getLatestValues()
-        except ConexaSmgwErr as e:
-            raise UpdateFailed(f"Unexpected reply from gateway: {e}") from e
+        # The Conexa SMGW is not able to handle multiple concurrent requests, so we need to lock the query.
+        # An additional sleep is added to avoid flooding the SMGW
+        # because every instance queries the SMGW at the same time (every 15 minutes)
+        async with self._query_lock:
+            try:
+                return await self._api.getLatestValues()
+            except ConexaSmgwErr as e:
+                raise UpdateFailed(f"Unexpected reply from gateway: {e}") from e
+            finally:
+                await async_sleep(0.5)
 
     async def _scheduled_update(self, now: datetime) -> None:
         """Triggered exactly at the time pattern specified in async_init."""
