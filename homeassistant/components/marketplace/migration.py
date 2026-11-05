@@ -145,7 +145,7 @@ def _async_adopt_options(hass: HomeAssistant, entry: MarketplaceConfigEntry) -> 
         if entry.options[LEGACY_HACS_CHINA_OPTION]:
             data.pop(CONF_TOKEN, None)
         LOGGER.info(
-            "Switched to the %s download profile, the previous install used the Unofficial China relay",
+            "Switched to the %s download profile, the previous install used the Unofficial China relays",
             LEGACY_HACS_CHINA_PROFILE,
         )
 
