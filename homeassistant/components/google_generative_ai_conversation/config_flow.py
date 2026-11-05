@@ -13,7 +13,6 @@ from requests.exceptions import Timeout
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -35,6 +34,7 @@ from homeassistant.helpers.selector import (
     TemplateSelector,
 )
 
+from . import GoogleGenerativeAIConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_DANGEROUS_BLOCK_THRESHOLD,
@@ -202,7 +202,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: GoogleGenerativeAIConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {

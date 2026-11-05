@@ -17,13 +17,13 @@ from homeassistant.components.tts import (
     TtsAudioType,
     Voice,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_when_setup
 
+from . import CloudConfigEntry
 from .assist_pipeline import async_migrate_cloud_pipeline_engine
 from .client import CloudClient
 from .const import (
@@ -241,7 +241,7 @@ async def async_get_engine(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: CloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud text-to-speech platform."""
