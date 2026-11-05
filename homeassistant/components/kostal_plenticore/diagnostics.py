@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from homeassistant.components.diagnostics import REDACTED, async_redact_data
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
@@ -55,8 +55,7 @@ async def async_get_config_entry_diagnostics(
         **configuration_settings,
     }
 
-    device_info = {**plenticore.device_info}
-    device_info["identifiers"] = REDACTED  # contains serial number
-    data["device"] = device_info
+    # Identifiers contain the serial number
+    data["device"] = async_redact_data(plenticore.device_info, {"identifiers"})
 
     return data
