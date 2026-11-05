@@ -84,7 +84,7 @@ class HomeyEnergyDongleCoordinator(DataUpdateCoordinator[Telegram]):
             translation_placeholders={"name": self.config_entry.title},
         )
 
-    async def async_next_telegram(self) -> Telegram:
+    async def _async_next_telegram(self) -> Telegram:
         """Wait for the next telegram on the open stream."""
         try:
             async with asyncio.timeout(TELEGRAM_TIMEOUT):
@@ -122,7 +122,7 @@ class HomeyEnergyDongleCoordinator(DataUpdateCoordinator[Telegram]):
         """Push telegrams to the entities and reconnect after failures."""
         while True:
             try:
-                telegram = await self.async_next_telegram()
+                telegram = await self._async_next_telegram()
             except UpdateFailed as err:
                 # A failed stream is finished, so the next read opens a new connection.
                 self._telegrams = self._client.stream_parsed(skip_parse_errors=True)
@@ -143,7 +143,7 @@ class HomeyEnergyDongleCoordinator(DataUpdateCoordinator[Telegram]):
     async def _async_update_data(self) -> Telegram:
         """Wait for the first telegram, then keep the pushed one on requests."""
         if self.data is None:
-            return await self.async_next_telegram()
+            return await self._async_next_telegram()
         if not self.last_update_success:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="not_connected"

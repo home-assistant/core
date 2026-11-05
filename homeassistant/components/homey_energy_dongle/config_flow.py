@@ -41,6 +41,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_WS_PATH,
     DOMAIN,
+    IDENTIFIER_FIELDS,
 )
 from .coordinator import TELEGRAM_TIMEOUT, create_client
 
@@ -59,13 +60,6 @@ _DSMR_VERSION_LABELS = {
     "4": "DSMR 4",
     "2.2": "DSMR 2.2",
 }
-# dsmr-parser names the meter's identifier differently per profile.
-_IDENTIFIER_FIELDS = (
-    "EQUIPMENT_IDENTIFIER",
-    "BELGIUM_EQUIPMENT_IDENTIFIER",
-    "LUXEMBOURG_EQUIPMENT_IDENTIFIER",
-    "Q3D_EQUIPMENT_IDENTIFIER",
-)
 _VERSION_FIELD = {
     probatio.Required(CONF_DSMR_VERSION): SelectSelector(
         SelectSelectorConfig(
@@ -152,7 +146,7 @@ class HomeyEnergyDongleConfigFlow(ConfigFlow, domain=DOMAIN):
         identifier = next(
             (
                 obj
-                for field in _IDENTIFIER_FIELDS
+                for field in IDENTIFIER_FIELDS
                 if (obj := getattr(telegram, field, None)) is not None
             ),
             None,

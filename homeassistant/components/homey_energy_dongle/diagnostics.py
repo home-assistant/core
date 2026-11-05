@@ -6,14 +6,12 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
+from .const import IDENTIFIER_FIELDS
 from .coordinator import HomeyEnergyDongleConfigEntry
 
 TO_REDACT = {
     "unique_id",
-    "EQUIPMENT_IDENTIFIER",
-    "BELGIUM_EQUIPMENT_IDENTIFIER",
-    "LUXEMBOURG_EQUIPMENT_IDENTIFIER",
-    "Q3D_EQUIPMENT_IDENTIFIER",
+    *IDENTIFIER_FIELDS,
     "Q3D_EQUIPMENT_SERIALNUMBER",
     "EQUIPMENT_IDENTIFIER_GAS",
     "MBUS_EQUIPMENT_IDENTIFIER",
