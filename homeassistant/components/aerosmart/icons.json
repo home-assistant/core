@@ -1,5 +1,18 @@
 {
   "entity": {
+    "number": {
+      "domestic_hot_water_temperature_setpoint": {
+        "default": "mdi:water-thermometer"
+      },
+      "room_temperature_setpoint": {
+        "default": "mdi:thermometer"
+      }
+    },
+    "select": {
+      "ventilation_mode": {
+        "default": "mdi:fan-auto"
+      }
+    },
     "sensor": {
       "active_fan_level": {
         "default": "mdi:fan"

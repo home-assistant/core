@@ -49,6 +49,27 @@
     }
   },
   "entity": {
+    "number": {
+      "domestic_hot_water_temperature_setpoint": {
+        "name": "Domestic hot water temperature setpoint"
+      },
+      "room_temperature_setpoint": {
+        "name": "Room temperature setpoint"
+      }
+    },
+    "select": {
+      "ventilation_mode": {
+        "name": "Ventilation mode",
+        "state": {
+          "automatic": "Automatic",
+          "manual_0": "Manual level 0",
+          "manual_1": "Manual level 1",
+          "manual_2": "Manual level 2",
+          "manual_3": "Manual level 3",
+          "party": "Party"
+        }
+      }
+    },
     "sensor": {
       "air_condenser_solenoid_valve_operating_hours": {
         "name": "Air condenser solenoid valve operating hours"
@@ -214,6 +235,9 @@
     },
     "update_failed": {
       "message": "Error communicating with aerosmart: {error}"
+    },
+    "write_failed": {
+      "message": "Failed to write aerosmart control {field}: {error}"
     }
   }
 }
