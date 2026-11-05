@@ -20,6 +20,11 @@
           }
         }
       }
+    },
+    "number": {
+      "warm_mist_level": {
+        "default": "mdi:heat-wave"
+      }
     }
   },
   "services": {
