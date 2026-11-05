@@ -1,5 +1,6 @@
 """The caldav component."""
 
+from dataclasses import dataclass
 from functools import partial
 
 from caldav.davclient import DAVClient
@@ -21,9 +22,19 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
 )
 
+from .api import CalDavCalendar, get_calendars
 from .const import DOMAIN, TIMEOUT
 
-type CalDavConfigEntry = ConfigEntry[DAVClient]
+
+@dataclass
+class CalDavData:
+    """The client of a config entry and the calendars it found."""
+
+    client: DAVClient
+    calendars: list[CalDavCalendar]
+
+
+type CalDavConfigEntry = ConfigEntry[CalDavData]
 
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
@@ -42,7 +53,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> No
         )
     )
     try:
-        await hass.async_add_executor_job(client.get_principal)
+        calendars = await hass.async_add_executor_job(
+            get_calendars, client, {"VEVENT", "VTODO"}
+        )
     except AuthorizationError as err:
         if err.reason == "Unauthorized":
             raise ConfigEntryAuthFailed("Credentials error from CalDAV server") from err
@@ -59,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> No
     except DAVError as err:
         raise ConfigEntryNotReady("CalDAV client error") from err
 
-    entry.runtime_data = client
+    entry.runtime_data = CalDavData(client, calendars)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
