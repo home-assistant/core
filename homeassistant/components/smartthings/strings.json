@@ -522,7 +522,21 @@
         "name": "Fridge temperature"
       },
       "dishwasher_detailed_job_state": {
-        "name": "Detailed job state"
+        "name": "Detailed job state",
+        "state": {
+          "air_wash": "Air wash",
+          "cooling": "Cooling",
+          "drying": "Drying",
+          "finish": "Finish",
+          "pre_drain": "Pre-drain",
+          "pre_wash": "Pre-wash",
+          "rinse": "Rinse",
+          "spin": "Spin",
+          "wash": "Wash",
+          "wrinkle_prevent": "Wrinkle prevention",
+          "delay_wash": "Delayed start",
+          "delay_washing": "Delayed start"
+        }
       },
       "dishwasher_job_state": {
         "name": "Job state",
