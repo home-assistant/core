@@ -5,7 +5,6 @@ import shutil
 from aemet_opendata.exceptions import AemetError, AuthError, TownNotFound
 from aemet_opendata.interface import AEMET, ConnectionOptions, UpdateFeature
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -63,12 +62,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> Non
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> None:
     """Remove a config entry."""
     await hass.async_add_executor_job(
         shutil.rmtree,

@@ -630,7 +630,7 @@ async def mock_block_device(model: str = MODEL_1):
 
         device = Mock(
             spec=BlockDevice,
-            blocks=MOCK_BLOCKS,
+            blocks=deepcopy(MOCK_BLOCKS),
             settings=MOCK_SETTINGS,
             shelly=MOCK_SHELLY_COAP,
             version="1.11.0",

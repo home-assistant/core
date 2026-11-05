@@ -70,6 +70,8 @@ ATTR_SPEED = "speed"
 ATTR_ALTITUDE = "altitude"
 ATTR_COURSE = "course"
 ATTR_VERTICAL_ACCURACY = "vertical_accuracy"
+ATTR_RAW_GPS = "raw_gps"
+ATTR_RAW_GPS_ACCURACY = "raw_gps_accuracy"
 
 ATTR_WEBHOOK_DATA = "data"
 ATTR_WEBHOOK_ENCRYPTED = "encrypted"

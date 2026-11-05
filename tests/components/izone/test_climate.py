@@ -28,17 +28,20 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.izone.climate import ATTR_CONTROL_ZONE_SOURCE
-from homeassistant.components.izone.const import ATTR_AIRFLOW, DOMAIN
+from homeassistant.components.izone.const import DOMAIN
 from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
-from homeassistant.components.izone.services import (
-    IZONE_SERVICE_AIRFLOW_MAX,
-    IZONE_SERVICE_AIRFLOW_MIN,
+from homeassistant.components.izone.services import IZoneService, IZoneServiceArgument
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
 from .conftest import create_mock_controller, create_mock_zone
@@ -112,6 +115,75 @@ async def test_set_controller_temperature_when_controller_owns(
     )
 
     mock_controller.set_temp_setpoint.assert_awaited_once_with(23.5)
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(CONTROLLER_ENTITY, id="controller"),
+        pytest.param(ZONE_ENTITY, id="zone"),
+    ],
+)
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_set_temperature_rejects_off_step_setpoint(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+    entity_id: str,
+) -> None:
+    """In-range setpoints that are not multiples of 0.5 raise before reaching pizone."""
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 24.3},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "invalid_temperature_step"
+    mock_controller.set_temp_setpoint.assert_not_awaited()
+    mock_zones[0].set_temp_setpoint.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(CONTROLLER_ENTITY, id="controller"),
+        pytest.param(ZONE_ENTITY, id="zone"),
+    ],
+)
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_set_temperature_normalizes_fahrenheit_setpoint(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+    entity_id: str,
+) -> None:
+    """Fahrenheit conversion noise is snapped to the 0.5 °C step."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
+    await setup_integration(hass, mock_config_entry)
+    setters = {
+        CONTROLLER_ENTITY: mock_controller.set_temp_setpoint,
+        ZONE_ENTITY: mock_zones[0].set_temp_setpoint,
+    }
+
+    # 74.3 °F converts to 23.499999999999996 °C.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 74.3},
+        blocking=True,
+    )
+
+    setters[entity_id].assert_awaited_once_with(23.5)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -860,10 +932,10 @@ async def test_command_connection_error_recovers_on_coordinator_refresh(
 @pytest.mark.parametrize(
     ("service", "airflow"),
     [
-        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 41, id="min-int"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 41, id="max-int"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 40.9, id="min-float"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 40.9, id="max-float"),
+        pytest.param(IZoneService.AIRFLOW_MIN, 41, id="min-int"),
+        pytest.param(IZoneService.AIRFLOW_MAX, 41, id="max-int"),
+        pytest.param(IZoneService.AIRFLOW_MIN, 40.9, id="min-float"),
+        pytest.param(IZoneService.AIRFLOW_MAX, 40.9, id="max-float"),
     ],
 )
 async def test_airflow_rejects_non_multiples_of_five(
@@ -877,7 +949,10 @@ async def test_airflow_rejects_non_multiples_of_five(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ZONE_ENTITY, ATTR_AIRFLOW: airflow},
+            {
+                CommonServiceArgument.ENTITY_ID: ZONE_ENTITY,
+                IZoneServiceArgument.AIRFLOW: airflow,
+            },
             blocking=True,
         )
 

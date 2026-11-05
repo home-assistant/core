@@ -7,7 +7,7 @@ from aemet_opendata.exceptions import AemetError, AuthError
 from aemet_opendata.interface import AEMET, ConnectionOptions
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -23,6 +23,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import CONF_RADAR_UPDATES, CONF_STATION_UPDATES, DEFAULT_NAME, DOMAIN
+from .coordinator import AemetConfigEntry
 
 API_KEY_URL = "https://opendata.aemet.es/centrodedescargas/altaUsuario"
 
@@ -144,7 +145,7 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: AemetConfigEntry,
     ) -> SchemaOptionsFlowHandlerWithReload:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandlerWithReload(config_entry, OPTIONS_FLOW)

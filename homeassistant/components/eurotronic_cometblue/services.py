@@ -1,6 +1,7 @@
 """Comet Blue services."""
 
 from datetime import time, timedelta
+from enum import StrEnum
 import logging
 from typing import Final, TypedDict, cast
 
@@ -27,7 +28,6 @@ from .entity import CometBlueBluetoothEntity
 LOGGER = logging.getLogger(__name__)
 
 
-ATTR_SCHEDULE: Final = "schedule"
 ATTR_MONDAY: Final = "monday"
 ATTR_TUESDAY: Final = "tuesday"
 ATTR_WEDNESDAY: Final = "wednesday"
@@ -35,7 +35,6 @@ ATTR_THURSDAY: Final = "thursday"
 ATTR_FRIDAY: Final = "friday"
 ATTR_SATURDAY: Final = "saturday"
 ATTR_SUNDAY: Final = "sunday"
-ATTR_DATA: Final = "data"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
 ATTR_FROM: Final = "from"
@@ -50,6 +49,40 @@ ATTR_ALL_DAYS: Final = [
     ATTR_SATURDAY,
     ATTR_SUNDAY,
 ]
+
+
+class CometBlueService(StrEnum):
+    """Store keys for Eurotronic Comet Blue services."""
+
+    GET_SCHEDULE = "get_schedule"
+    SET_SCHEDULE = "set_schedule"
+    SET_HOLIDAY = "set_holiday"
+
+
+class CometBlueServiceArgument(StrEnum):
+    """Store keys for Eurotronic Comet Blue service arguments."""
+
+    MONDAY = "monday"
+    TUESDAY = "tuesday"
+    WEDNESDAY = "wednesday"
+    THURSDAY = "thursday"
+    FRIDAY = "friday"
+    SATURDAY = "saturday"
+    SUNDAY = "sunday"
+    FROM = "from"
+    TO = "to"
+    TEMPERATURE = "temperature"
+
+
+_SCHEDULE_DAYS: Final = (
+    CometBlueServiceArgument.MONDAY,
+    CometBlueServiceArgument.TUESDAY,
+    CometBlueServiceArgument.WEDNESDAY,
+    CometBlueServiceArgument.THURSDAY,
+    CometBlueServiceArgument.FRIDAY,
+    CometBlueServiceArgument.SATURDAY,
+    CometBlueServiceArgument.SUNDAY,
+)
 
 ScheduleEntry = TypedDict(
     "ScheduleEntry",
@@ -144,12 +177,12 @@ SCHEDULE_DAY_SCHEMA = probatio.All(
     _validate_cometblue_schedule,
 )
 SERVICE_SCHEDULE_SCHEMA = {
-    probatio.Optional(day): SCHEDULE_DAY_SCHEMA for day in ATTR_ALL_DAYS
+    probatio.Optional(day): SCHEDULE_DAY_SCHEMA for day in _SCHEDULE_DAYS
 }
 SERVICE_HOLIDAY_SCHEMA = {
-    probatio.Required(ATTR_FROM): cv.datetime,
-    probatio.Required(ATTR_TO): cv.datetime,
-    probatio.Required(ATTR_TEMPERATURE): probatio.All(
+    probatio.Required(CometBlueServiceArgument.FROM): cv.datetime,
+    probatio.Required(CometBlueServiceArgument.TO): cv.datetime,
+    probatio.Required(CometBlueServiceArgument.TEMPERATURE): probatio.All(
         probatio.Coerce(float),
         probatio.Range(min=MIN_TEMP, max=MAX_TEMP),
         _validate_half_precision,
@@ -196,10 +229,10 @@ async def set_schedule(
         entity.entity_id,
         entity.coordinator.address,
         ", ".join(
-            day for day in ATTR_ALL_DAYS if service_call.data.get(day) is not None
+            day for day in _SCHEDULE_DAYS if service_call.data.get(day) is not None
         ),
     )
-    for day in ATTR_ALL_DAYS:
+    for day in _SCHEDULE_DAYS:
         LOGGER.debug(
             "Settings schedule for %s: %s",
             day,
@@ -208,7 +241,7 @@ async def set_schedule(
     values = {
         day: {k: v.strftime("%H:%M") for k, v in sched.items()}
         for day, sched in service_call.data.items()
-        if sched is not None and day in ATTR_ALL_DAYS
+        if sched is not None and day in _SCHEDULE_DAYS
     }
     await entity.coordinator.send_command(
         entity.coordinator.device.set_weekdays_async,
@@ -221,7 +254,7 @@ async def set_holiday(
 ) -> None:
     """Service call to update the holiday time on the device."""
     # ceil the start time to the next full hour
-    away_start = service_call.data[ATTR_FROM].replace(
+    away_start = service_call.data[CometBlueServiceArgument.FROM].replace(
         minute=0, second=0, microsecond=0
     ) + timedelta(hours=1)
 
@@ -235,17 +268,19 @@ async def set_holiday(
         "Setting holiday for %s (%s) until %s with temperature %s",
         entity.entity_id,
         entity.coordinator.address,
-        service_call.data[ATTR_TO],
-        service_call.data[ATTR_TEMPERATURE],
+        service_call.data[CometBlueServiceArgument.TO],
+        service_call.data[CometBlueServiceArgument.TEMPERATURE],
     )
     await entity.coordinator.send_command(
         entity.coordinator.device.set_holiday_async,
         {
             "number": 1,
             "values": {
-                ATTR_START: service_call.data[ATTR_FROM],
-                ATTR_END: service_call.data[ATTR_TO],
-                ATTR_TEMPERATURE: service_call.data[ATTR_TEMPERATURE],
+                ATTR_START: service_call.data[CometBlueServiceArgument.FROM],
+                ATTR_END: service_call.data[CometBlueServiceArgument.TO],
+                ATTR_TEMPERATURE: service_call.data[
+                    CometBlueServiceArgument.TEMPERATURE
+                ],
             },
         },
     )
@@ -258,7 +293,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "get_schedule",
+        CometBlueService.GET_SCHEDULE,
         entity_domain=CLIMATE_DOMAIN,
         schema=None,
         supports_response=SupportsResponse.ONLY,
@@ -267,7 +302,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "set_schedule",
+        CometBlueService.SET_SCHEDULE,
         entity_domain=CLIMATE_DOMAIN,
         schema=cv.make_entity_service_schema(SERVICE_SCHEDULE_SCHEMA),
         supports_response=SupportsResponse.NONE,
@@ -276,7 +311,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "set_holiday",
+        CometBlueService.SET_HOLIDAY,
         entity_domain=CLIMATE_DOMAIN,
         schema=cv.make_entity_service_schema(SERVICE_HOLIDAY_SCHEMA),
         supports_response=SupportsResponse.NONE,
