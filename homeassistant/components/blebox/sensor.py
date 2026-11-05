@@ -9,6 +9,7 @@ from typing import override
 import blebox_uniapi.sensor
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -253,15 +254,24 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
         if description.key == feature.device_class
     ]
-    # Drop the issues of features the device no longer exposes
+    unique_ids = {entity.unique_id for entity in entities}
+    # Drop the issues of features the device no longer exposes, and of entities
+    # disabled while the config entry was not loaded
     with ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_id_pattern=PROBE_ISSUE_ID_PREFIX,
         config_entry_id=config_entry.entry_id,
     ):
-        for entity in entities:
-            ir.async_keep_issue(hass, DOMAIN, _probe_issue_id(entity.unique_id))
+        for entry in er.async_entries_for_config_entry(
+            er.async_get(hass), config_entry.entry_id
+        ):
+            if (
+                entry.domain == SENSOR_DOMAIN
+                and entry.unique_id in unique_ids
+                and not entry.disabled
+            ):
+                ir.async_keep_issue(hass, DOMAIN, _probe_issue_id(entry.unique_id))
     async_add_entities(entities)
 
 
