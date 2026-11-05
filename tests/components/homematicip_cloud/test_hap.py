@@ -216,6 +216,7 @@ async def test_hap_setup_waits_out_a_cloud_throttle() -> None:
     assert not get_hap.mock_calls
     assert err.value.translation_key == "cloud_throttled"
     assert err.value.translation_placeholders == {"minutes": "11"}
+    assert err.value.retry_after == 601.0
 
 
 async def test_hap_setup_reports_a_cloud_throttle() -> None:
@@ -246,6 +247,7 @@ async def test_hap_setup_reports_a_cloud_throttle() -> None:
 
     assert err.value.translation_key == "cloud_throttled"
     assert err.value.translation_placeholders == {"minutes": "15"}
+    assert err.value.retry_after == 900.0
 
 
 async def test_hap_setup_retries_a_cloud_throttle_without_cooldown() -> None:

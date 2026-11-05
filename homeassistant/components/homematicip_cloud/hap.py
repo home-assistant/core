@@ -189,6 +189,7 @@ class HomematicipHAP:
             translation_domain=DOMAIN,
             translation_key="cloud_throttled",
             translation_placeholders={"minutes": str(math.ceil(remaining / 60))},
+            retry_after=remaining,
         ) from cause
 
     @callback
