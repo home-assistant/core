@@ -22,6 +22,7 @@ from synology_dsm.exceptions import (
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -176,6 +177,10 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema = _reauth_schema()
         elif step_id == "user":
             data_schema = _user_schema_with_defaults(user_input)
+        elif step_id == "reconfigure":
+            data_schema = self.add_suggested_values_to_schema(
+                _user_schema_with_defaults({}), user_input
+            )
 
         return self.async_show_form(
             step_id=step_id,
@@ -246,18 +251,6 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             self.api = None
             return self._show_form(step_id, user_input, errors)
 
-        # Reauth keeps the backup location from the entry options
-        if self.source != SOURCE_REAUTH:
-            with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
-                self.shares = await self.api.file.get_shared_folders(only_writable=True)
-
-            if self.shares and not backup_path:
-                self.saved_user_input = user_input
-                return await self.async_step_backup_share()
-
-        # unique_id should be serial for services purpose
-        existing_entry = await self.async_set_unique_id(serial, raise_on_progress=False)
-
         config_data = {
             CONF_HOST: host,
             CONF_PORT: port,
@@ -278,12 +271,33 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input.get(CONF_VOLUMES):
             config_data[CONF_VOLUMES] = user_input[CONF_VOLUMES]
 
+        # Reauth keeps the backup location from the entry options
         if self.source == SOURCE_REAUTH:
+            await self.async_set_unique_id(serial, raise_on_progress=False)
             reauth_entry = self._get_reauth_entry()
             # Without a stored unique ID there is no serial to verify the NAS against
             if reauth_entry.unique_id is not None:
                 self._abort_if_unique_id_mismatch(reason="wrong_nas")
             return self.async_update_reload_and_abort(reauth_entry, data=config_data)
+
+        if self.source == SOURCE_RECONFIGURE:
+            await self.async_set_unique_id(serial)
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                data_updates=config_data,
+                reason="reconfigure_successful",
+            )
+
+        with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
+            self.shares = await self.api.file.get_shared_folders(only_writable=True)
+
+        if self.shares and not backup_path:
+            self.saved_user_input = user_input
+            return await self.async_step_backup_share()
+
+        # unique_id should be serial for services purpose
+        existing_entry = await self.async_set_unique_id(serial, raise_on_progress=False)
 
         if existing_entry:
             return self.async_update_reload_and_abort(
@@ -305,6 +319,28 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         step = "user"
         if not user_input:
             return self._show_form(step)
+        return await self.async_validate_input_create_entry(user_input, step_id=step)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection settings."""
+        step = "reconfigure"
+        entry = self._get_reconfigure_entry()
+        if not user_input:
+            return self._show_form(
+                step,
+                {
+                    CONF_HOST: entry.data[CONF_HOST],
+                    CONF_USERNAME: entry.data[CONF_USERNAME],
+                    CONF_PORT: str(entry.data[CONF_PORT]),
+                    CONF_SSL: entry.data[CONF_SSL],
+                    CONF_VERIFY_SSL: entry.data.get(
+                        CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
+                    ),
+                },
+            )
+        user_input = {**entry.data, **user_input}
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
     @override
@@ -429,6 +465,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = {**self.saved_user_input, **user_input}
         self.saved_user_input = {}
 
+        if self.source == SOURCE_RECONFIGURE:
+            return await self.async_step_reconfigure(user_input)
         return await self.async_step_user(user_input)
 
     async def async_step_backup_share(
