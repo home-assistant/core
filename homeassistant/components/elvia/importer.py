@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, cast
 
 from elvia import Elvia, error as ElviaError
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMeanType,
@@ -15,7 +16,6 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     statistics_during_period,
 )
-from homeassistant.components.recorder.util import get_instance
 from homeassistant.const import UnitOfEnergy
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter

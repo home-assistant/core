@@ -7,6 +7,7 @@ from unittest.mock import patch
 from asyncssh.misc import ChannelOpenError, ConnectionLost, PermissionDenied
 from asyncssh.sftp import SFTPConnectionLost, SFTPPermissionDenied
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sftp_storage import SFTPConfigEntryData
 from homeassistant.components.sftp_storage.const import DOMAIN
@@ -23,8 +24,6 @@ from .conftest import (
     ComponentSetup,
     create_private_key_file,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_ssh_connection")

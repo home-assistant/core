@@ -7,7 +7,8 @@ from http import HTTPStatus
 import json
 import logging
 import secrets
-from typing import Any, NoReturn, cast
+from typing import Any, Literal, NoReturn, cast
+from urllib.parse import quote_plus
 
 from aiohttp import ClientError, ClientResponseError, client, hdrs
 from multidict import CIMultiDict
@@ -24,6 +25,30 @@ from homeassistant.exceptions import (
 from .aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
+
+type ClientAuthMethod = Literal["client_secret_basic", "client_secret_post"]
+
+
+def client_auth(
+    data: Mapping[str, Any],
+    client_id: str,
+    client_secret: str | None,
+    method: ClientAuthMethod = "client_secret_post",
+) -> tuple[dict[str, Any], dict[str, str]]:
+    """Return the token request body and headers that authenticate the client."""
+
+    if method == "client_secret_basic" and client_secret is not None:
+        # RFC 6749 section 2.3.1 requires form encoding before base64.
+        credentials = (
+            f"{quote_plus(client_id, safe='')}:{quote_plus(client_secret, safe='')}"
+        )
+        encoded = base64.b64encode(credentials.encode()).decode()
+        return dict(data), {hdrs.AUTHORIZATION: f"Basic {encoded}"}
+
+    body = {**data, "client_id": client_id}
+    if client_secret:
+        body["client_secret"] = client_secret
+    return body, {}
 
 
 def generate_code_verifier(code_verifier_length: int = 128) -> str:

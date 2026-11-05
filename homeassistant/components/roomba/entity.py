@@ -1,8 +1,7 @@
 """Base class for iRobot devices."""
 
-from typing import override
+from typing import Any, override
 
-from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -23,7 +22,6 @@ class IRobotEntity(Entity):
         """Initialize the iRobot handler."""
         self.vacuum = roomba
         self._blid = blid
-        self.vacuum_state = roomba_reported_state(roomba)
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.robot_unique_id)},
@@ -42,9 +40,14 @@ class IRobotEntity(Entity):
         if mac_address := self.vacuum_state.get("hwPartsRev", {}).get(
             "wlan0HwAddr", self.vacuum_state.get("mac")
         ):
-            self._attr_device_info[ATTR_CONNECTIONS] = {
+            self._attr_device_info.connections = {
                 (dr.CONNECTION_NETWORK_MAC, mac_address)
             }
+
+    @property
+    def vacuum_state(self) -> dict[str, Any]:
+        """Return the current reported state."""
+        return roomba_reported_state(self.vacuum)
 
     @property
     def robot_unique_id(self):
@@ -60,7 +63,9 @@ class IRobotEntity(Entity):
     @property
     def run_stats(self):
         """Return the run stats."""
-        return self.vacuum_state.get("bbrun", {})
+        return self.vacuum_state.get("runtimeStats", {}) | self.vacuum_state.get(
+            "bbrun", {}
+        )
 
     @property
     def mission_stats(self):

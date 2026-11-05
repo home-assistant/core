@@ -5,14 +5,13 @@ from unittest.mock import MagicMock
 
 from hotspring import HotSpringConnectionError, HotSpringError, Spa
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hotspring.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(

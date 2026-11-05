@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from requests.exceptions import HTTPError
 from syrupy.assertion import SnapshotAssertion
 
@@ -25,8 +26,6 @@ from homeassistant.util import dt as dt_util
 
 from . import FritzDeviceSwitchMock, FritzTriggerMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 SWITCH_ENTITY_ID = f"{SWITCH_DOMAIN}.{CONF_FAKE_NAME}"
 TRIGGER_ENTITY_ID = f"{SWITCH_DOMAIN}.fake_trigger"

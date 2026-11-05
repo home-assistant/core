@@ -7,13 +7,13 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 
 import blebox_uniapi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
@@ -46,6 +46,7 @@ def mock_only_feature(spec, set_spec: bool = True, **kwargs):
     if issubclass(spec, blebox_uniapi.sensor.BaseSensor):
         # Autospec would leave is_error as a truthy Mock, making entities unavailable.
         kwargs.setdefault("is_error", False)
+        kwargs.setdefault("needs_configuration", False)
     return mock.create_autospec(spec, set_spec, True, **kwargs)
 
 
@@ -57,6 +58,7 @@ def setup_multi_feature_product(category, features, name, model):
     type(product).product = PropertyMock(return_value=model)
     type(product).brand = PropertyMock(return_value="BleBox")
     type(product).firmware_version = PropertyMock(return_value="1.23")
+    type(product).hardware_version = PropertyMock(return_value="0.1")
     type(product).unique_id = PropertyMock(return_value="aabbcc112233")
 
     for feature in features:
@@ -106,7 +108,7 @@ def config_entry_fixture() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.blebox.async_setup_entry", return_value=True
+        "homeassistant.components.blebox.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

@@ -33,7 +33,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -77,7 +76,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     )
 
     def __init__(
-        self, projector: Projector, unique_id: str, entry: ConfigEntry
+        self, projector: Projector, unique_id: str, entry: EpsonConfigEntry
     ) -> None:
         """Initialize entity to control Epson projector."""
         self._projector = projector

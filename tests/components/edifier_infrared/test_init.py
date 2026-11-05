@@ -1,6 +1,8 @@
 """Tests for the Edifier Infrared integration setup."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
 
 from homeassistant.components.edifier_infrared.const import (
     CONF_COMMAND_SET,
@@ -10,9 +12,6 @@ from homeassistant.components.edifier_infrared.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID
 
 
 async def test_setup_and_unload_entry(

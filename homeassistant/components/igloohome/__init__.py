@@ -31,7 +31,7 @@ class IgloohomeRuntimeData:
 type IgloohomeConfigEntry = ConfigEntry[IgloohomeRuntimeData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) -> None:
     """Set up igloohome from a config entry."""
     authentication = IgloohomeAuth(
         session=async_get_clientsession(hass),
@@ -50,9 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) ->
     entry.runtime_data = IgloohomeRuntimeData(api, devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

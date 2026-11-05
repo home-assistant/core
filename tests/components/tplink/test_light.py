@@ -16,13 +16,9 @@ from kasa import (
 from kasa.interfaces import LightEffect
 from kasa.iot import IotDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import tplink
-from homeassistant.components.homeassistant.scene import (
-    CONF_SCENE_ID,
-    CONF_SNAPSHOT,
-    SERVICE_CREATE,
-)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -41,7 +37,11 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
+from homeassistant.components.scene import (
+    DOMAIN as SCENE_DOMAIN,
+    SceneService,
+    SceneServiceArgument,
+)
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.components.tplink.services import (
     SERVICE_RANDOM_EFFECT,
@@ -69,8 +69,6 @@ from . import (
     _patch_single_discovery,
 )
 from .const import DEVICE_ID, MAC_ADDRESS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -1369,8 +1367,11 @@ async def test_scene_effect_light(
 
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_CREATE,
-        {CONF_SCENE_ID: "effect_off_scene", CONF_SNAPSHOT: [entity_id]},
+        SceneService.CREATE,
+        {
+            SceneServiceArgument.SCENE_ID: "effect_off_scene",
+            SceneServiceArgument.SNAPSHOT_ENTITIES: [entity_id],
+        },
         blocking=True,
     )
     await hass.async_block_till_done()

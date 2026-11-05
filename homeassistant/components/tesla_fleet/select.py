@@ -21,6 +21,9 @@ LOW = "low"
 MEDIUM = "medium"
 HIGH = "high"
 
+# The steering wheel heater has no medium level: Tesla expects 0, 1 or 3.
+WHEEL_HEAT_LEVEL = {OFF: 0, LOW: 1, HIGH: 3}
+
 PARALLEL_UPDATES = 0
 
 
@@ -137,10 +140,13 @@ class TeslaFleetSeatHeaterSelectEntity(TeslaFleetVehicleEntity, SelectEntity):
         """Handle updated data from the coordinator."""
         self._attr_available = self.entity_description.available_fn(self)
         value = self._value
-        if value is None:
-            self._attr_current_option = None
+        # Tesla reports levels above the highest option (for example 4) and
+        # "SNA" (signal not available) instead of a level.
+        if isinstance(value, int):
+            options = self._attr_options
+            self._attr_current_option = options[max(0, min(value, len(options) - 1))]
         else:
-            self._attr_current_option = self._attr_options[value]
+            self._attr_current_option = None
 
     @override
     async def async_select_option(self, option: str) -> None:
@@ -184,17 +190,20 @@ class TeslaFleetWheelHeaterSelectEntity(TeslaFleetVehicleEntity, SelectEntity):
         """Handle updated data from the coordinator."""
 
         value = self._value
-        if value is None:
-            self._attr_current_option = None
+        # Tesla reports levels above the highest option (for example 4) and
+        # "SNA" (signal not available) instead of a level.
+        if isinstance(value, int):
+            options = self._attr_options
+            self._attr_current_option = options[max(0, min(value, len(options) - 1))]
         else:
-            self._attr_current_option = self._attr_options[value]
+            self._attr_current_option = None
 
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_read_only(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
-        level = self._attr_options.index(option)
+        level = WHEEL_HEAT_LEVEL[option]
         # AC must be on to turn on steering wheel heater
         if level and not self.get("climate_state_is_climate_on"):
             await handle_vehicle_command(self.api.auto_conditioning_start())

@@ -29,7 +29,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: StookwijzerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: StookwijzerConfigEntry) -> None:
     """Set up Stookwijzer from a config entry."""
     await er.async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
 
@@ -38,19 +38,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: StookwijzerConfigEntry) 
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: StookwijzerConfigEntry
-) -> bool:
+) -> None:
     """Unload Stookwijzer config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: StookwijzerConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     LOGGER.debug("Migrating from version %s", entry.version)
 
@@ -64,7 +63,8 @@ async def async_migrate_entry(
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                "location_migration_failed",
+                f"location_migration_failed_{entry.entry_id}",
+                config_entry_id=entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="location_migration_failed",
@@ -87,8 +87,6 @@ async def async_migrate_entry(
         )
 
         LOGGER.debug("Migration to version %s successful", entry.version)
-
-    return True
 
 
 @callback

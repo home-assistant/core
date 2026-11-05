@@ -1,6 +1,7 @@
 """Tests for WiZ binary_sensor platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import wiz
 from homeassistant.components.wiz.binary_sensor import OCCUPANCY_UNIQUE_ID
@@ -19,8 +20,6 @@ from . import (
     async_push_update,
     async_setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("occupancy_source", ["pir", "wfsens"])

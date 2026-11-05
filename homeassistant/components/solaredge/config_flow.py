@@ -178,10 +178,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Schema(
                         {
                             probatio.Optional(
-                                probatio.Secret(CONF_API_KEY),
-                                default=user_input.get(CONF_SECTION_API_AUTH, {}).get(
-                                    CONF_API_KEY, ""
-                                ),
+                                probatio.Secret(CONF_API_KEY), default=""
                             ): str,
                         }
                     ),
@@ -191,18 +188,12 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Schema(
                         {
                             probatio.Inclusive(
-                                CONF_USERNAME,
-                                "web_account",
-                                default=user_input.get(CONF_SECTION_WEB_AUTH, {}).get(
-                                    CONF_USERNAME, ""
-                                ),
+                                CONF_USERNAME, "web_account", default=""
                             ): str,
                             probatio.Inclusive(
                                 probatio.Secret(CONF_PASSWORD),
                                 "web_account",
-                                default=user_input.get(CONF_SECTION_WEB_AUTH, {}).get(
-                                    CONF_PASSWORD, ""
-                                ),
+                                default="",
                             ): str,
                         }
                     ),
@@ -223,7 +214,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
         # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id=step_id,
-            data_schema=data_schema,
+            data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
             errors=self._errors,
             description_placeholders=description_placeholders,
         )

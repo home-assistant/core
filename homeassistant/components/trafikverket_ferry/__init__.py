@@ -9,7 +9,7 @@ from .coordinator import TVDataUpdateCoordinator
 TVFerryConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TVFerryConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TVFerryConfigEntry) -> None:
     """Set up Trafikverket Ferry from a config entry."""
 
     coordinator = TVDataUpdateCoordinator(hass, entry)
@@ -17,9 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TVFerryConfigEntry) -> b
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TVFerryConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TVFerryConfigEntry) -> None:
     """Unload Trafikverket Ferry config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

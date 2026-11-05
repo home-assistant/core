@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) -> None:
     """Set up AccuWeather as config entry."""
     api_key: str = entry.data[CONF_API_KEY]
 
@@ -74,11 +74,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AccuWeatherConfigEntry) 
             _LOGGER.debug("Removing ozone sensor entity %s", entity_id)
             ent_reg.async_remove(entity_id)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AccuWeatherConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

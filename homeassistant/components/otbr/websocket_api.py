@@ -30,7 +30,7 @@ from .util import (
 )
 
 if TYPE_CHECKING:
-    from . import OTBRConfigEntry
+    from .types import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

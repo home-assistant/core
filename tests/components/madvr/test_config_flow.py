@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.madvr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import MOCK_CONFIG, MOCK_MAC, MOCK_MAC_NEW
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

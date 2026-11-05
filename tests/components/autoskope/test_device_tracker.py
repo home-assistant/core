@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock
 from autoskope_client.models import CannotConnect, InvalidAuth, Vehicle, VehiclePosition
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.autoskope.const import DOMAIN, UPDATE_INTERVAL
@@ -13,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_entities(

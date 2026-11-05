@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from subarulink import SubaruException
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
@@ -29,8 +30,6 @@ from .conftest import (
     advance_time_to_next_fetch,
     setup_subaru_config_entry,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_API_REMOTE_START = f"{MOCK_API}remote_start"
 MOCK_API_REMOTE_STOP = f"{MOCK_API}remote_stop"

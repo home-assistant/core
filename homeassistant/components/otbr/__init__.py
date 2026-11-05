@@ -1,4 +1,4 @@
-"""The Open Thread Border Router integration."""
+"""The OpenThread Border Router integration."""
 
 import logging
 
@@ -36,7 +36,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Open Thread Border Router component."""
+    """Set up the OpenThread Border Router component."""
     websocket_api.async_setup(hass)
 
     async_register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
@@ -44,8 +44,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
-    """Set up an Open Thread Border Router config entry."""
+async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:
+    """Set up an OpenThread Border Router config entry."""
     api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
 
     otbrdata = OTBRData(entry.data["url"], api, entry.entry_id)
@@ -58,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
             hass,
             DOMAIN,
             f"get_get_border_agent_id_unsupported_{otbrdata.entry_id}",
+            config_entry_id=otbrdata.entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
@@ -72,7 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
         aiohttp.ClientError,
         TimeoutError,
     ) as err:
-        raise ConfigEntryNotReady("Unable to connect") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="cannot_connect"
+        ) from err
     try:
         otbrdata.ephemeral_key_supported = await otbrdata.get_ephemeral_key_supported()
     except HomeAssistantError:
@@ -95,10 +98,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
     if fw_info := await homeassistant_hardware.async_get_firmware_info(hass, entry):
         await async_notify_firmware_info(hass, DOMAIN, fw_info)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:
     """Unload a config entry."""
     otbrdata = entry.runtime_data
     otbrdata.unloading = True
@@ -108,7 +109,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> boo
         await otbrdata.deactivate_ephemeral_key(only_if_active=True)
     except HomeAssistantError:
         _LOGGER.warning("Could not deactivate the ephemeral key on %s", otbrdata.url)
-    return True
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:

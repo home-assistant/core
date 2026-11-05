@@ -69,7 +69,7 @@ def _async_migrate_device_identifiers(
         device_registry.async_update_device(device.id, new_identifiers=identifiers)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> None:
     """Migrate an AdGuard Home config entry to the current version."""
     if entry.minor_version < 2:
         # Entities were identified by host and port, which change when
@@ -107,10 +107,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) ->
         await er.async_migrate_entries(hass, entry.entry_id, _migrate_unique_id)
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> None:
     """Set up AdGuard Home from a config entry."""
     _async_migrate_device_identifiers(hass, entry)
 
@@ -144,9 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> None:
     """Unload AdGuard Home config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

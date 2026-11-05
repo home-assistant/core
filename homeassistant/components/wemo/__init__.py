@@ -83,16 +83,26 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up for WeMo devices."""
-    async_setup_services(hass)
+def _start_registry_and_responder() -> tuple[
+    pywemo.SubscriptionRegistry, pywemo.ssdp.DiscoveryResponder
+]:
+    """Start the subscription registry and the discovery responder."""
     # Keep track of WeMo device subscriptions for push updates
     registry = pywemo.SubscriptionRegistry()
-    await hass.async_add_executor_job(registry.start)
+    registry.start()
 
     # Respond to discovery requests from WeMo devices.
     discovery_responder = pywemo.ssdp.DiscoveryResponder(registry.port)
-    await hass.async_add_executor_job(discovery_responder.start)
+    discovery_responder.start()
+    return registry, discovery_responder
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up for WeMo devices."""
+    async_setup_services(hass)
+    registry, discovery_responder = await hass.async_add_executor_job(
+        _start_registry_and_responder
+    )
 
     def _on_hass_stop(_: Event) -> None:
         discovery_responder.stop()
@@ -117,7 +127,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a wemo config entry."""
     wemo_data = hass.data[DATA_WEMO]
     dispatcher = WemoDispatcher(entry)
@@ -135,10 +145,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if wemo_data.discovery_enabled:
         await discovery.async_discover_and_schedule()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a wemo config entry."""
     _LOGGER.debug("Unloading WeMo")
     wemo_data = hass.data[DATA_WEMO]
@@ -146,14 +154,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     wemo_data.config_entry_data.discovery.async_stop_discovery()
 
     dispatcher = wemo_data.config_entry_data.dispatcher
-    if unload_ok := await dispatcher.async_unload_platforms(hass):
-        for coordinator in list(
-            wemo_data.config_entry_data.device_coordinators.values()
-        ):
-            await coordinator.async_shutdown()
-        assert not wemo_data.config_entry_data.device_coordinators
-        wemo_data.config_entry_data = None  # type: ignore[assignment]
-    return unload_ok
+    await dispatcher.async_unload_platforms(hass)
+    for coordinator in list(wemo_data.config_entry_data.device_coordinators.values()):
+        await coordinator.async_shutdown()
+    assert not wemo_data.config_entry_data.device_coordinators
+    wemo_data.config_entry_data = None  # type: ignore[assignment]
 
 
 async def async_wemo_dispatcher_connect(
@@ -236,11 +241,11 @@ class WemoDispatcher:
             ),
         )
 
-    async def async_unload_platforms(self, hass: HomeAssistant) -> bool:
+    async def async_unload_platforms(self, hass: HomeAssistant) -> None:
         """Forward the unloading of an entry to platforms."""
         platforms: set[Platform] = set(self._dispatch_backlog.keys())
         platforms.update(self._dispatch_callbacks.keys())
-        return await hass.config_entries.async_unload_platforms(
+        await hass.config_entries.async_unload_platforms_or_raise(
             self._config_entry, platforms
         )
 

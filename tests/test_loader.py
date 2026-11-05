@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from awesomeversion import AwesomeVersion
 import pytest
+from pytest_homeassistant.common import MockModule, mock_integration
 
 from homeassistant import loader
 from homeassistant.components import hue
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.generated.zeroconf import ZEROCONF
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
-
-from .common import MockModule, mock_integration
 
 
 async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
@@ -591,6 +590,8 @@ def test_integration_properties(hass: HomeAssistant) -> None:
             "mqtt": ["hue/discovery"],
             "version": "1.0.0",
             "quality_scale": "gold",
+            "categories": ["lighting.bulbs_lamps", "hubs_protocols"],
+            "connectivity": ["zigbee", "network"],
         },
     )
     assert integration.name == "Philips Hue"
@@ -630,6 +631,8 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.overwrites_built_in is False
     assert integration.version == "1.0.0"
     assert integration.quality_scale == "gold"
+    assert integration.categories == ["lighting.bulbs_lamps", "hubs_protocols"]
+    assert integration.connectivity == ["zigbee", "network"]
 
     integration = loader.Integration(
         hass,
@@ -654,6 +657,8 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.mqtt is None
     assert integration.version is None
     assert integration.quality_scale == "custom"
+    assert integration.categories == []
+    assert integration.connectivity == []
 
     integration = loader.Integration(
         hass,
@@ -876,6 +881,63 @@ async def test_get_custom_components(hass: HomeAssistant) -> None:
         integrations = await loader.async_get_custom_components(hass)
         assert integrations == mock_get.return_value
         mock_get.assert_called_once_with(hass)
+
+
+async def test_integration_descriptions_custom_categories(
+    hass: HomeAssistant,
+) -> None:
+    """Test the descriptions give the categories of custom integrations."""
+    custom_components = {
+        domain: loader.Integration(
+            hass,
+            f"custom_components.{domain}",
+            None,
+            {"domain": domain, "name": domain, **manifest},
+        )
+        for domain, manifest in (
+            ("custom_solar", {"categories": ["energy.solar_batteries"]}),
+            ("custom_plain", {}),
+        )
+    }
+
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value=custom_components,
+    ):
+        descriptions = await loader.async_get_integration_descriptions(hass)
+
+    custom = descriptions["custom"]["integration"]
+    assert custom["custom_solar"]["categories"] == ["energy.solar_batteries"]
+    # Without categories it is an empty list, like the built-in integrations
+    assert custom["custom_plain"]["categories"] == []
+
+
+async def test_integration_descriptions_custom_connectivity(
+    hass: HomeAssistant,
+) -> None:
+    """Test the descriptions give the connectivity of custom integrations."""
+    custom_components = {
+        domain: loader.Integration(
+            hass,
+            f"custom_components.{domain}",
+            None,
+            {"domain": domain, "name": domain, **manifest},
+        )
+        for domain, manifest in (
+            ("custom_zigbee", {"connectivity": ["zigbee", "cloud"]}),
+            ("custom_plain", {}),
+        )
+    }
+
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value=custom_components,
+    ):
+        descriptions = await loader.async_get_integration_descriptions(hass)
+
+    custom = descriptions["custom"]["integration"]
+    assert custom["custom_zigbee"]["connectivity"] == ["zigbee", "cloud"]
+    assert custom["custom_plain"]["connectivity"] == []
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
@@ -2343,3 +2405,96 @@ async def test_async_get_integrations_multiple_non_existent(
     ):
         integrations = await loader.async_get_integrations(hass, ["does_not_exist"])
     assert integrations["does_not_exist"] is integration
+
+
+@pytest.mark.parametrize(
+    "vendors",
+    [
+        [("chirpstack", 744), ("tts", "sensecap")],
+        [("chirpstack", 0), ("chirpstack", 1)],
+        [],
+    ],
+)
+async def test_get_lorawan(
+    hass: HomeAssistant, vendors: list[tuple[str, int | str]]
+) -> None:
+    """Custom registrations replace built-ins without changing generated data."""
+    integration = _get_test_integration(hass, "sensecap", True)
+    integration.manifest["lorawan"] = [list(vendor) for vendor in vendors]
+    integration.manifest["config_flow"] = True
+    integration.dependencies.append("lorawan")
+    with (
+        patch(
+            "homeassistant.loader.LORAWAN",
+            {
+                "sensecap": [("chirpstack", 744), ("tts", "sensecap")],
+                "dragino": [("chirpstack", 676), ("tts", "dragino")],
+            },
+        ),
+        patch(
+            "homeassistant.loader.async_get_custom_components",
+            return_value={"sensecap": integration},
+        ),
+    ):
+        registrations = await loader.async_get_lorawan(hass)
+        assert loader.LORAWAN["sensecap"] == [("chirpstack", 744), ("tts", "sensecap")]
+    assert registrations.get("sensecap", []) == vendors
+    assert registrations["dragino"] == [("chirpstack", 676), ("tts", "dragino")]
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        744,
+        "744",
+        {"vendor": 744},
+        [True],
+        [-1],
+        [65536],
+        [744, 744],
+        [["chirpstack", True]],
+        [["chirpstack", False]],
+        [["chirpstack", -1]],
+        [["tts", ""]],
+        [["", "sensecap"]],
+        [["tts", "sensecap", "extra"]],
+        [["tts", "sensecap"], ["tts", "sensecap"]],
+    ],
+)
+async def test_invalid_lorawan_registration(hass: HomeAssistant, value: object) -> None:
+    """An invalid custom matcher cannot break other vendors' discovery."""
+    integration = _get_test_integration(hass, "sensecap", True)
+    integration.manifest["lorawan"] = value
+    integration.dependencies.append("lorawan")
+    with (
+        patch(
+            "homeassistant.loader.LORAWAN",
+            {
+                "sensecap": [("chirpstack", 744), ("tts", "sensecap")],
+                "dragino": [("chirpstack", 676), ("tts", "dragino")],
+            },
+        ),
+        patch(
+            "homeassistant.loader.async_get_custom_components",
+            return_value={"sensecap": integration},
+        ),
+    ):
+        registrations = await loader.async_get_lorawan(hass)
+        assert loader.LORAWAN["sensecap"] == [("chirpstack", 744), ("tts", "sensecap")]
+    assert "sensecap" not in registrations
+    assert registrations["dragino"] == [("chirpstack", 676), ("tts", "dragino")]
+
+
+@pytest.mark.parametrize("missing", ["config_flow", "dependencies"])
+async def test_missing_lorawan_requirement(hass: HomeAssistant, missing: str) -> None:
+    """Custom discovery requires a config flow and the shared integration."""
+    integration = _get_test_integration(hass, "sensecap", True)
+    integration.manifest["lorawan"] = [["chirpstack", 744]]
+    integration.manifest["dependencies"] = ["lorawan"]
+    integration.manifest.pop(missing)
+    with patch(
+        "homeassistant.loader.async_get_custom_components",
+        return_value={"sensecap": integration},
+    ):
+        registrations = await loader.async_get_lorawan(hass)
+    assert "sensecap" not in registrations

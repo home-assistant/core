@@ -8,6 +8,7 @@ from arcam.fmj.codecs import DecodeMode2CH, DecodeModeMCH, SourceCodes
 from arcam.fmj.errors import ConnectionFailed
 from arcam.fmj.state import State
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
@@ -43,8 +44,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_ENTITY_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

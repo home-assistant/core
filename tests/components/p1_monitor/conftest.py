@@ -4,12 +4,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from p1monitor import Phases, Settings, SmartMeter, WaterMeter
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.p1_monitor.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_array_fixture
 
 
 @pytest.fixture

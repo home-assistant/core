@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from waterfurnace.waterfurnace import WFCredentialError, WFException
 
 from homeassistant.components.recorder import Recorder
@@ -11,8 +12,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_auth_failure(

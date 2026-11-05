@@ -1,5 +1,6 @@
 """Shared schemas for MQTT discovery and YAML config items."""
 
+from collections import Counter
 from typing import Any
 
 import probatio
@@ -26,6 +27,8 @@ from .const import (
     CONF_AVAILABILITY_MODE,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_AVAILABILITY_TOPIC,
+    CONF_CHILD_DEVICE,
+    CONF_CHILD_DEVICES,
     CONF_COMMAND_TOPIC,
     CONF_COMPONENTS,
     CONF_CONFIGURATION_URL,
@@ -130,32 +133,53 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
     )
 
 
+MQTT_ENTITY_CHILD_DEVICE_INFO_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_IDENTIFIERS): probatio.All(
+            probatio.EnsureList(), [cv.string], probatio.Length(min=1)
+        ),
+        probatio.Optional(CONF_NAME): cv.string,
+    },
+)
+
+_MQTT_DEVICE_INFO_SCHEMA_BASE = probatio.Schema(
+    {
+        probatio.Optional(CONF_IDENTIFIERS, default=list): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(CONF_CONNECTIONS, default=list): probatio.All(
+            probatio.EnsureList(), [probatio.All(probatio.Length(2), [cv.string])]
+        ),
+        probatio.Optional(CONF_MANUFACTURER): cv.string,
+        probatio.Optional(CONF_MODEL): cv.string,
+        probatio.Optional(CONF_MODEL_ID): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_HW_VERSION): cv.string,
+        probatio.Optional(CONF_SERIAL_NUMBER): cv.string,
+        probatio.Optional(CONF_SW_VERSION): cv.string,
+        probatio.Optional(CONF_VIA_DEVICE): cv.string,
+        probatio.Optional(CONF_SUGGESTED_AREA): cv.string,
+        probatio.Optional(CONF_CONFIGURATION_URL): cv.configuration_url,
+    }
+)
+
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = probatio.All(
     # Remove in HA Core 2027.4, together with CONF_DEPRECATED_VIA_HUB
     cv.removed(CONF_DEPRECATED_VIA_HUB, raise_if_present=False),
-    probatio.Schema(
-        {
-            probatio.Optional(CONF_IDENTIFIERS, default=list): probatio.All(
-                probatio.EnsureList(), [cv.string]
-            ),
-            probatio.Optional(CONF_CONNECTIONS, default=list): probatio.All(
-                probatio.EnsureList(), [probatio.All(probatio.Length(2), [cv.string])]
-            ),
-            probatio.Optional(CONF_MANUFACTURER): cv.string,
-            probatio.Optional(CONF_MODEL): cv.string,
-            probatio.Optional(CONF_MODEL_ID): cv.string,
-            probatio.Optional(CONF_NAME): cv.string,
-            probatio.Optional(CONF_HW_VERSION): cv.string,
-            probatio.Optional(CONF_SERIAL_NUMBER): cv.string,
-            probatio.Optional(CONF_SW_VERSION): cv.string,
-            probatio.Optional(CONF_VIA_DEVICE): cv.string,
-            probatio.Optional(CONF_SUGGESTED_AREA): cv.string,
-            probatio.Optional(CONF_CONFIGURATION_URL): cv.configuration_url,
-        }
+    _MQTT_DEVICE_INFO_SCHEMA_BASE.extend(
+        {probatio.Optional(CONF_CHILD_DEVICE): MQTT_ENTITY_CHILD_DEVICE_INFO_SCHEMA}
     ),
     validate_device_has_at_least_one_identifier,
 )
 
+# Without child device, as device triggers and tags do not support child devices,
+# and in device based discovery child devices are set with child_devices
+MQTT_DEVICE_INFO_SCHEMA = probatio.All(
+    # Remove in HA Core 2027.4, together with CONF_DEPRECATED_VIA_HUB
+    cv.removed(CONF_DEPRECATED_VIA_HUB, raise_if_present=False),
+    _MQTT_DEVICE_INFO_SCHEMA_BASE,
+    validate_device_has_at_least_one_identifier,
+)
 
 MQTT_ORIGIN_INFO_SCHEMA = probatio.All(
     probatio.Schema(
@@ -192,6 +216,19 @@ MQTT_ENTITY_COMMON_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
     }
 )
 
+
+def validate_child_device_has_unique_id(config: ConfigType) -> ConfigType:
+    """Validate that a unique ID is set when a child device is configured."""
+    if (
+        CONF_CHILD_DEVICE in config.get(CONF_DEVICE, {})
+        and CONF_UNIQUE_ID not in config
+    ):
+        raise probatio.Invalid(
+            f"'{CONF_UNIQUE_ID}' is required when a '{CONF_CHILD_DEVICE}' is configured"
+        )
+    return config
+
+
 _UNIQUE_ID_SCHEMA = probatio.Schema(
     {probatio.Required(CONF_UNIQUE_ID): cv.string},
 ).extend({}, extra=True)
@@ -212,12 +249,29 @@ _COMPONENT_CONFIG_SCHEMA = probatio.All(
     check_unique_id,
 )
 
+# Device triggers and tags do not support child devices
+_CHILD_DEVICE_COMPONENT_CONFIG_SCHEMA = probatio.All(
+    probatio.Schema(
+        {probatio.Required(CONF_PLATFORM): probatio.In(ENTITY_PLATFORMS)},
+    ).extend({}, extra=True),
+    check_unique_id,
+)
+
+_CHILD_DEVICE_DISCOVERY_SCHEMA = MQTT_ENTITY_CHILD_DEVICE_INFO_SCHEMA.extend(
+    {
+        probatio.Required(CONF_COMPONENTS): probatio.Schema(
+            {str: _CHILD_DEVICE_COMPONENT_CONFIG_SCHEMA}
+        ),
+    }
+)
+
 DEVICE_DISCOVERY_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
     {
-        probatio.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        probatio.Required(CONF_COMPONENTS): probatio.Schema(
+        probatio.Required(CONF_DEVICE): MQTT_DEVICE_INFO_SCHEMA,
+        probatio.Optional(CONF_COMPONENTS): probatio.Schema(
             {str: _COMPONENT_CONFIG_SCHEMA}
         ),
+        probatio.Optional(CONF_CHILD_DEVICES): [_CHILD_DEVICE_DISCOVERY_SCHEMA],
         probatio.Required(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
         probatio.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         probatio.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
@@ -226,3 +280,42 @@ DEVICE_DISCOVERY_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
         probatio.Optional(CONF_ENCODING): cv.string,
     }
 )
+
+
+def _duplicates(values: list[str]) -> list[str]:
+    """Return the values that occur more than once."""
+    return sorted(value for value, count in Counter(values).items() if count > 1)
+
+
+def validate_device_discovery_components(config: ConfigType) -> ConfigType:
+    """Validate the components and child devices of a device discovery payload.
+
+    The component IDs set the discovery ID of each component, so they must be unique
+    over the components of the device and its child devices.
+    """
+    if CONF_COMPONENTS not in config and CONF_CHILD_DEVICES not in config:
+        raise probatio.Invalid(
+            f"At least one of '{CONF_COMPONENTS}' or '{CONF_CHILD_DEVICES}' is required"
+        )
+    component_ids: list[str] = list(config.get(CONF_COMPONENTS, {}))
+    child_identifiers: list[str] = []
+    child_device: ConfigType
+    for child_device in config.get(CONF_CHILD_DEVICES, []):
+        component_ids.extend(child_device[CONF_COMPONENTS])
+        child_identifiers.extend(child_device[CONF_IDENTIFIERS])
+    duplicates: list[str]
+    if duplicates := _duplicates(component_ids):
+        raise probatio.Invalid(f"Duplicate component IDs: {', '.join(duplicates)}")
+    if duplicates := _duplicates(child_identifiers):
+        raise probatio.Invalid(
+            f"Duplicate child device identifiers: {', '.join(duplicates)}"
+        )
+    shared: list[str]
+    if shared := sorted(
+        set(child_identifiers) & set(config[CONF_DEVICE][CONF_IDENTIFIERS])
+    ):
+        raise probatio.Invalid(
+            "Child device identifiers must differ from the device identifiers: "
+            f"{', '.join(shared)}"
+        )
+    return config

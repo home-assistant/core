@@ -17,7 +17,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 type IseoConfigEntry = ConfigEntry[IseoClient]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> None:
     """Set up ISEO Argo BLE Lock from a config entry."""
     address = entry.data[CONF_ADDRESS]
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
@@ -43,9 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool
     entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IseoConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

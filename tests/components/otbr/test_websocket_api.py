@@ -9,6 +9,12 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 import python_otbr_api
 from yarl import URL
 
@@ -24,10 +30,6 @@ from . import (
     TEST_BORDER_AGENT_EXTENDED_ADDRESS,
     TEST_BORDER_AGENT_ID,
 )
-
-from tests.common import MockUser
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture

@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock, patch
 
 from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.discovergy.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, discovergy: AsyncMock) -> None:
@@ -24,7 +23,7 @@ async def test_form(hass: HomeAssistant, discovergy: AsyncMock) -> None:
 
     with patch(
         "homeassistant.components.discovergy.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -56,7 +55,7 @@ async def test_reauth(
 
     with patch(
         "homeassistant.components.discovergy.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
@@ -130,7 +129,7 @@ async def test_reauth_unique_id_mismatch(
 
     with patch(
         "homeassistant.components.discovergy.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         configure_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

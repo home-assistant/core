@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 11
+MINOR_VERSION: Final = 12
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -459,6 +459,14 @@ ATTR_TEMPERATURE: Final = "temperature"
 
 # Persons attribute
 ATTR_PERSONS: Final = "persons"
+
+
+class CommonServiceArgument(StrEnum):
+    """Action fields shared by the actions of many integrations."""
+
+    CONFIG_ENTRY_ID = "config_entry_id"
+    DEVICE_ID = "device_id"
+    ENTITY_ID = "entity_id"
 
 
 class EntityCapabilityAttribute(StrEnum):

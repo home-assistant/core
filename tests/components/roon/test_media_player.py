@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+
 from homeassistant.components.media_player import ATTR_GROUP_MEMBERS
 from homeassistant.components.roon.const import DOMAIN
 from homeassistant.const import (
@@ -12,8 +14,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_capture_events
 
 KITCHEN_ENTITY_ID = "media_player.kitchen"
 LOUNGE_ENTITY_ID = "media_player.lounge"
