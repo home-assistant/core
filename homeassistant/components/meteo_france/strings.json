@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "empty": "No result in city search: please check the city field"
     },
     "step": {
@@ -11,13 +12,19 @@
         "data": {
           "city": "[%key:component::meteo_france::config::step::user::data::city%]"
         },
-        "description": "Choose your city from the list"
+        "data_description": {
+          "city": "The city you want weather forecasts for."
+        },
+        "description": "Several cities match your search."
       },
       "user": {
         "data": {
           "city": "City"
         },
-        "description": "Enter the postal code (only for France, recommended) or city name"
+        "data_description": {
+          "city": "Postal code or city name. Postal codes are only supported in France."
+        },
+        "description": "Search for the city you want weather forecasts for."
       }
     }
   },
@@ -56,6 +63,11 @@
       "wind_gust": {
         "name": "Wind gust"
       }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "An error occurred while fetching data from Météo-France."
     }
   }
 }
