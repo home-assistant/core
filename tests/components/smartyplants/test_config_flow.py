@@ -234,7 +234,7 @@ async def test_reauth_other_account_aborts(
     assert mock_config_entry.data[CONF_API_KEY] == API_KEY
 
 
-@pytest.mark.usefixtures("mock_smartyplants_client", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_smartyplants_client", "mock_setup_entry", "external_url")
 async def test_reconfigure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -244,6 +244,7 @@ async def test_reconfigure(
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    assert "webhook_url" in result["description_placeholders"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -259,7 +260,7 @@ async def test_reconfigure(
     }
 
 
-@pytest.mark.usefixtures("mock_smartyplants_client", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_smartyplants_client", "mock_setup_entry", "external_url")
 async def test_reconfigure_can_drop_the_secret(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -335,3 +336,29 @@ async def test_reconfigure_other_account_aborts(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_API_KEY] == API_KEY
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client", "mock_setup_entry")
+async def test_reconfigure_without_external_url_offers_the_key_only(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the secret is not asked for when its URL cannot be shown."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_key"
+    assert CONF_WEBHOOK_SECRET not in result["data_schema"].schema
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    # The secret was never offered, so it is kept rather than cleared.
+    assert mock_config_entry.data == {
+        CONF_API_KEY: NEW_API_KEY,
+        CONF_WEBHOOK_ID: WEBHOOK_ID,
+        CONF_WEBHOOK_SECRET: WEBHOOK_SECRET,
+    }

@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_WEBHOOK_SECRET, DOMAIN
+from .coordinator import SmartyPlantsConfigEntry
 
 SECRET_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
@@ -135,7 +136,52 @@ class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Change the API key or the signing secret of an existing entry."""
+        """Change the API key, and the secret when a webhook can be offered."""
+        webhook_url = self._webhook_url(self._get_reconfigure_entry())
+        if webhook_url is None:
+            # Nothing to paste into the app, so a secret is no use here.
+            return await self.async_step_reconfigure_key(user_input)
+
+        return await self._async_reconfigure(
+            user_input,
+            step_id="reconfigure",
+            data_schema=RECONFIGURE_SCHEMA,
+            collects_secret=True,
+            description_placeholders={"webhook_url": webhook_url},
+        )
+
+    async def async_step_reconfigure_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change only the API key, when there is no webhook URL to show."""
+        return await self._async_reconfigure(
+            user_input,
+            step_id="reconfigure_key",
+            data_schema=CREDENTIALS_SCHEMA,
+            collects_secret=False,
+        )
+
+    def _webhook_url(self, entry: SmartyPlantsConfigEntry) -> str | None:
+        """Return the push URL for this entry, when there is one to show."""
+        if (webhook_id := entry.data.get(CONF_WEBHOOK_ID)) is None:
+            return None
+        try:
+            return hass_webhook.async_generate_url(
+                self.hass, webhook_id, allow_internal=False
+            )
+        except NoURLAvailableError:
+            return None
+
+    async def _async_reconfigure(
+        self,
+        user_input: dict[str, Any] | None,
+        *,
+        step_id: str,
+        data_schema: probatio.Schema,
+        collects_secret: bool,
+        description_placeholders: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
+        """Verify the key offered and store it, keeping the rest of the entry."""
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
 
@@ -152,16 +198,16 @@ class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
                 # in the user's SmartyPlants app.
                 if secret := user_input.get(CONF_WEBHOOK_SECRET):
                     data[CONF_WEBHOOK_SECRET] = secret
-                else:
+                elif collects_secret:
+                    # Only an emptied field means the user is turning push off.
                     data.pop(CONF_WEBHOOK_SECRET, None)
                 return self.async_update_reload_and_abort(entry, data=data)
 
         return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                RECONFIGURE_SCHEMA, entry.data
-            ),
+            step_id=step_id,
+            data_schema=self.add_suggested_values_to_schema(data_schema, entry.data),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_reauth(
