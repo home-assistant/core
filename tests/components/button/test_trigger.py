@@ -864,7 +864,10 @@ async def test_button_event_trigger_not_triggered_reports(
 
 @pytest.mark.parametrize(
     ("trigger", "event_type"),
-    [("button.held", "long_press_start"), ("button.hold_ended", "long_press_end")],
+    [
+        pytest.param("button.held", "long_press_start", id="held"),
+        pytest.param("button.hold_ended", "long_press_end", id="hold_ended"),
+    ],
 )
 @pytest.mark.parametrize("entity_id", ["button.test_button", "input_button.test"])
 async def test_button_hold_triggers_ignore_buttons(
