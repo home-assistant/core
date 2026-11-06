@@ -24,7 +24,7 @@ from homeassistant.components.skoda.const import DOMAIN
 from homeassistant.components.skoda.coordinator import UPDATE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -122,6 +122,26 @@ async def test_set_charge_limit(
     mock_skoda_client.set_charge_limit.assert_awaited_once_with(VIN, 60)
     assert (state := hass.states.get(CHARGE_LIMIT_ENTITY_ID))
     assert state.state == "60"
+
+
+async def test_set_charge_limit_off_step(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_skoda_client: AsyncMock,
+) -> None:
+    """Test a charge limit between steps is rejected without calling the API."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: CHARGE_LIMIT_ENTITY_ID, ATTR_VALUE: 55},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "invalid_step"
+    mock_skoda_client.set_charge_limit.assert_not_awaited()
 
 
 async def test_set_charge_limit_error(

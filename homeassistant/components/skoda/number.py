@@ -14,8 +14,10 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import SkodaConfigEntry, SkodaUpdateCoordinator
 from .entity import SkodaEntity
 
@@ -114,6 +116,16 @@ class SkodaNumber(SkodaEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Send the new value to the vehicle."""
+        # number.set_value only validates the range, not the step.
+        if value % self.step:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_step",
+                translation_placeholders={
+                    "value": f"{value:g}",
+                    "step": f"{self.step:g}",
+                },
+            )
         native_value = round(value)
         await self.async_send_command(
             self.entity_description.set_value_fn(
