@@ -2,7 +2,7 @@
 
 import json
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import httpx2
 from mcp import MCPError
@@ -1260,6 +1260,41 @@ async def test_hassio_discovery_updates_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data == expected_data
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        config_entries.ConfigEntryState.LOADED,
+        config_entries.ConfigEntryState.SETUP_RETRY,
+        config_entries.ConfigEntryState.SETUP_ERROR,
+        config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+    ],
+)
+async def test_hassio_discovery_new_token_reloads_entry(
+    hass: HomeAssistant, state: config_entries.ConfigEntryState
+) -> None:
+    """Test a new token from the app reloads the entry so it gets used."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ADDON_DISCOVERY_INFO.uuid,
+        data={CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: "old-token"},
+        title=TEST_API_NAME,
+        state=state,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_HASSIO},
+            data=ADDON_DISCOVERY_INFO_WITH_TOKEN,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_API_TOKEN] == ADDON_TOKEN
+    mock_reload.assert_called_once_with(config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

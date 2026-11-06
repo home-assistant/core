@@ -224,11 +224,12 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             updates[CONF_API_TOKEN] = token
 
         entry = await self.async_set_unique_id(discovery_info.uuid)
-        # A rejected token leaves the entry in setup error, which the unique ID
-        # check below does not reload when the app announces a new token
+        # The unique ID check below only reloads loaded entries or ones waiting
+        # to retry, so a setup that fails on the old token would never retry
         if (
             entry is not None
-            and entry.state is ConfigEntryState.SETUP_ERROR
+            and entry.state
+            in (ConfigEntryState.SETUP_ERROR, ConfigEntryState.SETUP_IN_PROGRESS)
             and self.hass.config_entries.async_update_entry(
                 entry, data={**entry.data, **updates}
             )
