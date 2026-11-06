@@ -163,10 +163,9 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors, device_info = await self._handle_user_input(user_input=user_input)
 
             if not errors:
-                await self.async_set_unique_id(
-                    str(device_info["serial"]), raise_on_progress=False
+                await self.async_set_unique_id_or_abort(
+                    str(device_info["serial"]), updates=self._data
                 )
-                self._abort_if_unique_id_configured(updates=self._data)
 
                 return self.async_create_entry(
                     title=self._data[CONF_HOST], data=self._data
@@ -196,10 +195,9 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not errors:
-                await self.async_set_unique_id(
+                await self.async_set_unique_id_or_abort(
                     str(device_info["serial"]), raise_on_progress=False
                 )
-                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reconf_entry,
                     data_updates={
@@ -281,9 +279,9 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not (match := HOSTNAME_SERIAL.match(discovery_info.hostname)):
             return self.async_abort(reason="not_supported")
-        await self.async_set_unique_id(match.group(1))
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self._data[CONF_HOST], CONF_MAC: self._data[CONF_MAC]}
+        await self.async_set_unique_id_or_abort(
+            match.group(1),
+            updates={CONF_HOST: self._data[CONF_HOST], CONF_MAC: self._data[CONF_MAC]},
         )
 
         return await self.async_step_discovery_confirm()
