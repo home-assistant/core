@@ -63,11 +63,16 @@ async def async_retrieve_warning(
         return None, {}
     # IPMA publishes naive timestamps in UTC
     now = dt_util.utcnow().replace(tzinfo=None)
-    active = [w for w in warnings if w.startTime <= now < w.endTime]
-    if not active:
-        return "green", {}
-    warning = max(active, key=lambda w: WARNING_SEVERITY[w.awarenessLevelID])
-    return warning.awarenessLevelID, {k: str(v) for k, v in asdict(warning).items()}
+    active = sorted(
+        (w for w in warnings if w.startTime <= now < w.endTime),
+        key=lambda w: WARNING_SEVERITY[w.awarenessLevelID],
+        reverse=True,
+    )
+    if active:
+        return active[0].awarenessLevelID, {
+            k: str(v) for k, v in asdict(active[0]).items()
+        }
+    return "green", {}
 
 
 SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
