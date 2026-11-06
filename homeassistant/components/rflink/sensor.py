@@ -7,6 +7,7 @@ import probatio
 from rflink.parser import PACKET_FIELDS, UNITS
 
 from homeassistant.components.sensor import (
+    DOMAIN as PLATFORM_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -47,6 +48,7 @@ from .const import (
     TMP_ENTITY,
 )
 from .entity import RflinkDevice
+from .utils import create_issue_platform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -329,6 +331,7 @@ async def async_setup_platform(
             hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
 
     if discovery_info is None:
+        create_issue_platform(hass, PLATFORM_DOMAIN),
         return
     async_add_entities(devices_from_config(discovery_info))
     automatic_add_config(hass, discovery_info)
