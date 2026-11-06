@@ -23,8 +23,7 @@ from .const import (
     SERVICE_STOP_SUPER_CHLORINATION,
     SUPPORTED_COLOR_MODES,
 )
-from .coordinator import ScreenlogicDataUpdateCoordinator
-from .types import ScreenLogicConfigEntry
+from .coordinator import ScreenLogicConfigEntry, ScreenlogicDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
