@@ -29,12 +29,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
 FAN_ENTITY_ID = "fan.vallox"
+
+UNIT_ON = {"A_CYC_MODE": 0}
+UNIT_OFF = {"A_CYC_MODE": 5}
 
 HOME_PROFILE = {"A_CYC_STATE": 0}
 AWAY_PROFILE = {"A_CYC_STATE": 1}
@@ -63,8 +66,8 @@ async def test_all_entities(
 @pytest.mark.parametrize(
     ("metrics", "expected_state"),
     [
-        pytest.param({"A_CYC_MODE": 0}, STATE_ON, id="on"),
-        pytest.param({"A_CYC_MODE": 5}, STATE_OFF, id="off"),
+        pytest.param(UNIT_ON, STATE_ON, id="on"),
+        pytest.param(UNIT_OFF, STATE_OFF, id="off"),
     ],
 )
 async def test_fan_state(
@@ -119,12 +122,8 @@ async def test_fan_speed_missing(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("service", "metrics", "expected_called_with"),
     [
-        pytest.param(
-            SERVICE_TURN_ON, {"A_CYC_MODE": 5}, {"A_CYC_MODE": 0}, id="turn_on"
-        ),
-        pytest.param(
-            SERVICE_TURN_OFF, {"A_CYC_MODE": 0}, {"A_CYC_MODE": 5}, id="turn_off"
-        ),
+        pytest.param(SERVICE_TURN_ON, UNIT_OFF, UNIT_ON, id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, UNIT_ON, UNIT_OFF, id="turn_off"),
     ],
 )
 async def test_turn_on_off(
@@ -147,8 +146,8 @@ async def test_turn_on_off(
 @pytest.mark.parametrize(
     ("service", "metrics"),
     [
-        pytest.param(SERVICE_TURN_ON, {"A_CYC_MODE": 0}, id="turn_on_when_on"),
-        pytest.param(SERVICE_TURN_OFF, {"A_CYC_MODE": 5}, id="turn_off_when_off"),
+        pytest.param(SERVICE_TURN_ON, UNIT_ON, id="turn_on_when_on"),
+        pytest.param(SERVICE_TURN_OFF, UNIT_OFF, id="turn_off_when_off"),
     ],
 )
 async def test_turn_on_off_unchanged(
@@ -167,8 +166,8 @@ async def test_turn_on_off_unchanged(
 @pytest.mark.parametrize(
     ("service", "metrics"),
     [
-        pytest.param(SERVICE_TURN_ON, {"A_CYC_MODE": 5}, id="turn_on"),
-        pytest.param(SERVICE_TURN_OFF, {"A_CYC_MODE": 0}, id="turn_off"),
+        pytest.param(SERVICE_TURN_ON, UNIT_OFF, id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, UNIT_ON, id="turn_off"),
     ],
 )
 async def test_turn_on_off_exception(
@@ -185,45 +184,76 @@ async def test_turn_on_off_exception(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    (
-        "metrics",
-        "service_data",
-        "expected_set_values_calls",
-        "expected_set_profile_calls",
-        "expected_set_fan_speed_calls",
-    ),
+    ("metrics", "service_data", "expected_calls"),
     [
         pytest.param(
-            {"A_CYC_MODE": 5},
+            UNIT_OFF,
             {ATTR_PERCENTAGE: 15, ATTR_PRESET_MODE: "Away"},
-            [call({"A_CYC_MODE": 0})],
-            [call(Profile.AWAY)],
-            [call(Profile.AWAY, 15)],
+            [
+                call.set_fan_speed(Profile.AWAY, 15),
+                call.set_profile(Profile.AWAY),
+                call.set_values(UNIT_ON),
+                call.fetch_metric_data(),
+            ],
             id="fan_off",
         ),
         pytest.param(
-            {"A_CYC_MODE": 0},
+            UNIT_ON,
             {ATTR_PERCENTAGE: 15, ATTR_PRESET_MODE: "Away"},
-            [],
-            [call(Profile.AWAY)],
-            [call(Profile.AWAY, 15)],
+            [
+                call.set_fan_speed(Profile.AWAY, 15),
+                call.set_profile(Profile.AWAY),
+                call.fetch_metric_data(),
+            ],
             id="fan_on",
         ),
         pytest.param(
-            {"A_CYC_MODE": 0},
+            UNIT_ON,
             {ATTR_PRESET_MODE: "Away"},
-            [],
-            [call(Profile.AWAY)],
-            [],
+            [
+                call.set_profile(Profile.AWAY),
+                call.fetch_metric_data(),
+            ],
             id="preset_only",
         ),
         pytest.param(
-            {"A_CYC_MODE": 0},
+            UNIT_ON,
+            {ATTR_PRESET_MODE: "Home"},
+            [],
+            id="active_preset",
+        ),
+        pytest.param(
+            UNIT_ON,
             {ATTR_PERCENTAGE: 40},
-            [],
-            [],
-            [call(Profile.HOME, 40)],
+            [
+                call.set_fan_speed(Profile.HOME, 40),
+                call.fetch_metric_data(),
+            ],
             id="percentage_only",
+        ),
+        pytest.param(
+            UNIT_ON,
+            {ATTR_PERCENTAGE: 0},
+            [
+                call.set_values(UNIT_OFF),
+                call.fetch_metric_data(),
+            ],
+            id="zero_percentage",
+        ),
+        pytest.param(
+            UNIT_ON,
+            {ATTR_PERCENTAGE: 0, ATTR_PRESET_MODE: "Away"},
+            [
+                call.set_values(UNIT_OFF),
+                call.fetch_metric_data(),
+            ],
+            id="zero_percentage_with_preset",
+        ),
+        pytest.param(
+            UNIT_OFF,
+            {ATTR_PERCENTAGE: 0},
+            [],
+            id="zero_percentage_fan_off",
         ),
     ],
 )
@@ -231,11 +261,12 @@ async def test_turn_on_with_parameters(
     hass: HomeAssistant,
     mock_vallox_client: AsyncMock,
     service_data: dict[str, int | str],
-    expected_set_values_calls: list[_Call],
-    expected_set_profile_calls: list[_Call],
-    expected_set_fan_speed_calls: list[_Call],
+    expected_calls: list[_Call],
 ) -> None:
     """Test turn on with a preset mode, a percentage, or both."""
+    # Forget the fetch at setup, so only the calls of the service remain.
+    mock_vallox_client.reset_mock()
+
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
@@ -243,11 +274,98 @@ async def test_turn_on_with_parameters(
         blocking=True,
     )
 
-    assert mock_vallox_client.set_values.call_args_list == expected_set_values_calls
-    assert mock_vallox_client.set_profile.call_args_list == expected_set_profile_calls
-    assert (
-        mock_vallox_client.set_fan_speed.call_args_list == expected_set_fan_speed_calls
+    # One list over all methods also pins the order, and the refresh at the end.
+    assert mock_vallox_client.method_calls == expected_calls
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("metrics", [UNIT_OFF])
+@pytest.mark.parametrize(
+    ("failing_method", "expected_calls"),
+    [
+        pytest.param(
+            "set_fan_speed",
+            [call.set_fan_speed(Profile.AWAY, 15)],
+            id="speed",
+        ),
+        pytest.param(
+            "set_profile",
+            [
+                call.set_fan_speed(Profile.AWAY, 15),
+                call.set_profile(Profile.AWAY),
+                call.fetch_metric_data(),
+            ],
+            id="preset",
+        ),
+        pytest.param(
+            "set_values",
+            [
+                call.set_fan_speed(Profile.AWAY, 15),
+                call.set_profile(Profile.AWAY),
+                call.set_values(UNIT_ON),
+                call.fetch_metric_data(),
+            ],
+            id="power",
+        ),
+    ],
+)
+async def test_turn_on_exception(
+    hass: HomeAssistant,
+    mock_vallox_client: AsyncMock,
+    failing_method: str,
+    expected_calls: list[_Call],
+) -> None:
+    """Test turn on when one of its commands returns an error."""
+    mock_vallox_client.reset_mock()
+    getattr(mock_vallox_client, failing_method).side_effect = ValloxApiException(
+        "Fake failure"
     )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: FAN_ENTITY_ID,
+                ATTR_PERCENTAGE: 15,
+                ATTR_PRESET_MODE: "Away",
+            },
+            blocking=True,
+        )
+
+    # Refreshed only if a command before the failing one went through.
+    assert mock_vallox_client.method_calls == expected_calls
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("metrics", [UNIT_OFF])
+async def test_turn_on_unsupported_profile(
+    hass: HomeAssistant, mock_vallox_client: AsyncMock
+) -> None:
+    """Test turn on with a speed for a preset that has no fan speed setting."""
+    mock_vallox_client.reset_mock()
+    mock_vallox_client.set_fan_speed.side_effect = ValloxInvalidInputException(
+        "Fan speed is not settable for profile"
+    )
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: FAN_ENTITY_ID,
+                ATTR_PERCENTAGE: 40,
+                ATTR_PRESET_MODE: "Fireplace",
+            },
+            blocking=True,
+        )
+    assert exc.value.translation_key == "preset_without_fan_speed"
+    assert exc.value.translation_placeholders == {"preset_mode": "Fireplace"}
+
+    # The library rejects the speed before sending, so the unit is left as it was.
+    assert mock_vallox_client.method_calls == [
+        call.set_fan_speed(Profile.FIREPLACE, 40)
+    ]
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -326,7 +444,7 @@ async def test_set_preset_mode_exception(
         pytest.param(HOME_PROFILE, 40, [call(Profile.HOME, 40)], [], id="home"),
         pytest.param(AWAY_PROFILE, 30, [call(Profile.AWAY, 30)], [], id="away"),
         pytest.param(BOOST_PROFILE, 60, [call(Profile.BOOST, 60)], [], id="boost"),
-        pytest.param(HOME_PROFILE, 0, [], [call({"A_CYC_MODE": 5})], id="turn_off"),
+        pytest.param(HOME_PROFILE, 0, [], [call(UNIT_OFF)], id="turn_off"),
     ],
 )
 async def test_set_fan_speed(
@@ -376,12 +494,14 @@ async def test_set_fan_speed_unsupported_profile(
         "Fan speed is not settable for profile"
     )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PERCENTAGE,
             {ATTR_ENTITY_ID: FAN_ENTITY_ID, ATTR_PERCENTAGE: 40},
             blocking=True,
         )
+    assert exc.value.translation_key == "preset_without_fan_speed"
+    assert exc.value.translation_placeholders == {"preset_mode": "Fireplace"}
 
     mock_vallox_client.set_fan_speed.assert_called_once_with(Profile.FIREPLACE, 40)

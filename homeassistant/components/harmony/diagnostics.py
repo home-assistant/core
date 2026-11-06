@@ -18,8 +18,8 @@ async def async_get_config_entry_diagnostics(
     return {
         "options": dict(entry.options),
         "available": data.available,
-        "model": device_info.get("model"),
-        "sw_version": device_info.get("sw_version"),
+        "model": device_info.model,
+        "sw_version": device_info.sw_version,
         "current_activity": {"id": activity_id, "name": activity_name},
         "config": data.json_config,
     }

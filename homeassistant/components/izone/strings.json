@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "continue_setup": "Continue setting up the discovered iZone controller.",
       "discovery_failed": "Failed to start iZone discovery. Make sure your network is properly configured.",
       "discovery_started": "iZone discovery has started. Your controllers will appear as discovered devices under Settings \u003e Devices \u0026 services.",
@@ -27,11 +28,17 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
+        "data_description": {
+          "host": "The IP address or hostname of your iZone bridge."
+        },
         "description": "Enter the IP address or hostname of your iZone controller."
       },
       "select_controller": {
         "data": {
           "selected_controller_uid": "Controller"
+        },
+        "data_description": {
+          "selected_controller_uid": "Select the controller to set up now. Controllers you skip stay available under Settings > Devices & services."
         },
         "description": "Multiple unconfigured iZone controllers were found:\n{controllers}\n\nChoose the controller you want to set up now. Any controller you do not select will remain available as a discovered device you can set up later under **Settings** > **Devices & services**."
       },
@@ -65,6 +72,9 @@
     }
   },
   "exceptions": {
+    "airflow_zone_only": {
+      "message": "Airflow limits can only be set on a zone, not the controller"
+    },
     "bridge_unpaired": {
       "message": "iZone bridge is not paired with an air conditioner"
     },

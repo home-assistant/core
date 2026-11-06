@@ -52,10 +52,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
-    comment: >-
-      Deferred to a follow-up PR per the core review of #173433.
+  diagnostics: done
   discovery:
     status: exempt
     comment: Cloud service, no local discovery possible.

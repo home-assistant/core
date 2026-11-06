@@ -34,11 +34,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.service import async_register_platform_entity_service
@@ -240,6 +236,34 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         const.DOMAIN,
+        const.SERVICE_MULTICAST_SET_VALUE,
+        _async_multicast_set_value,
+        schema=probatio.Schema(
+            probatio.All(
+                {
+                    **TARGET_VALIDATORS,
+                    probatio.Optional(const.ATTR_BROADCAST, default=False): cv.boolean,
+                    probatio.Required(const.ATTR_COMMAND_CLASS): probatio.Coerce(int),
+                    probatio.Required(const.ATTR_PROPERTY): probatio.Any(
+                        probatio.Coerce(int), str
+                    ),
+                    probatio.Optional(const.ATTR_PROPERTY_KEY): probatio.Any(
+                        probatio.Coerce(int), str
+                    ),
+                    probatio.Optional(const.ATTR_ENDPOINT): probatio.Coerce(int),
+                    probatio.Required(const.ATTR_VALUE): VALUE_SCHEMA,
+                    probatio.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
+                },
+                probatio.Any(
+                    probatio.AtLeastOne(ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID),
+                    broadcast_command,
+                ),
+            ),
+        ),
+    )
+
+    hass.services.async_register(
+        const.DOMAIN,
         const.SERVICE_PING,
         _async_ping,
         schema=probatio.Schema(
@@ -293,8 +317,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ),
     )
 
-    services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
-    services.async_register()
+    hass.services.async_register(
+        const.DOMAIN,
+        const.SERVICE_REFRESH_VALUE,
+        _async_poll_value,
+        schema=probatio.Schema(
+            {
+                probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
+                probatio.Optional(
+                    const.ATTR_REFRESH_ALL_VALUES, default=False
+                ): cv.boolean,
+            }
+        ),
+    )
 
 
 @callback
@@ -519,10 +554,10 @@ async def _async_call_cc_api(
 
 
 @callback
-def _async_get_nodes(call: ServiceCall) -> set[ZwaveNode]:
+def _async_get_target_nodes(call: ServiceCall) -> set[ZwaveNode]:
     """Get the nodes targeted by the action call."""
     try:
-        nodes = async_get_nodes_from_targets(
+        return async_get_nodes_from_targets(
             call.hass, call.data, logger=_LOGGER, raise_on_driver_not_ready=True
         )
     except DriverNotReadyError as err:
@@ -531,7 +566,12 @@ def _async_get_nodes(call: ServiceCall) -> set[ZwaveNode]:
             translation_domain=const.DOMAIN,
             translation_key="driver_not_ready",
         ) from err
-    if not nodes:
+
+
+@callback
+def _async_get_nodes(call: ServiceCall) -> set[ZwaveNode]:
+    """Get the nodes targeted by the action call, requiring at least one."""
+    if not (nodes := _async_get_target_nodes(call)):
         raise ServiceValidationError(
             translation_domain=const.DOMAIN,
             translation_key="no_nodes_found",
@@ -727,6 +767,125 @@ async def _async_set_value_on_nodes(call: ServiceCall, nodes: set[ZwaveNode]) ->
     )
 
 
+@callback
+def _async_validate_multicast_nodes(
+    call: ServiceCall, nodes: set[ZwaveNode], broadcast: bool
+) -> None:
+    """Validate the target nodes for multicast."""
+    # User must specify a node if they are attempting a broadcast and have more
+    # than one zwave-js network.
+    if (
+        broadcast
+        and not nodes
+        and len(call.hass.config_entries.async_entries(const.DOMAIN)) > 1
+    ):
+        raise ServiceValidationError(
+            translation_domain=const.DOMAIN,
+            translation_key="multicast_broadcast_requires_target",
+        )
+
+    first_node = next((node for node in nodes), None)
+
+    if first_node and not all(node.client.driver is not None for node in nodes):
+        raise HomeAssistantError(
+            translation_domain=const.DOMAIN,
+            translation_key="driver_not_ready",
+        )
+
+    # If any nodes don't have matching home IDs, we can't run the command
+    # because we can't multicast across multiple networks
+    if (
+        first_node
+        and first_node.client.driver  # We checked the driver was ready above.
+        and any(
+            node.client.driver.controller.home_id
+            != first_node.client.driver.controller.home_id
+            for node in nodes
+            if node.client.driver is not None
+        )
+    ):
+        raise ServiceValidationError(
+            translation_domain=const.DOMAIN,
+            translation_key="multicast_different_networks",
+        )
+
+
+async def _async_multicast_set_value(call: ServiceCall) -> None:
+    """Set a value via multicast to multiple nodes."""
+    broadcast: bool = call.data[const.ATTR_BROADCAST]
+    options = call.data.get(const.ATTR_OPTIONS)
+    nodes = _async_get_target_nodes(call) if broadcast else _async_get_nodes(call)
+    _async_validate_multicast_nodes(call, nodes, broadcast)
+
+    if not broadcast and len(nodes) == 1:
+        _LOGGER.info(
+            "Passing the zwave_js.multicast_set_value service call to the "
+            "zwave_js.set_value service since only one node was targeted"
+        )
+        await _async_set_value_on_nodes(call, nodes)
+        return
+
+    command_class: CommandClass = call.data[const.ATTR_COMMAND_CLASS]
+    property_: int | str = call.data[const.ATTR_PROPERTY]
+    property_key: int | str | None = call.data.get(const.ATTR_PROPERTY_KEY)
+    endpoint: int | None = call.data.get(const.ATTR_ENDPOINT)
+
+    value = ValueDataType(commandClass=command_class, property=property_)
+    if property_key is not None:
+        value["propertyKey"] = property_key
+    if endpoint is not None:
+        value["endpoint"] = endpoint
+
+    new_value = call.data[const.ATTR_VALUE]
+
+    # If there are no nodes, we can assume there is only one config entry due to
+    # the check above and can use that to get the client, otherwise we can just
+    # get the client from the node.
+    client: ZwaveClient
+    first_node: ZwaveNode
+    try:
+        first_node = next(node for node in nodes)
+        client = first_node.client
+    except StopIteration:
+        data = call.hass.config_entries.async_entries(const.DOMAIN)[0].runtime_data
+        client = data.client
+        assert client.driver
+        first_node = next(
+            node
+            for node in client.driver.controller.nodes.values()
+            if get_value_id_str(node, command_class, property_, endpoint, property_key)
+            in node.values
+        )
+
+    # If value has a string type but the new value is not a string, we need to
+    # convert it to one
+    value_id = get_value_id_str(
+        first_node, command_class, property_, endpoint, property_key
+    )
+    if (
+        value_id in first_node.values
+        and first_node.values[value_id].metadata.type == "string"
+        and not isinstance(new_value, str)
+    ):
+        new_value = str(new_value)
+
+    try:
+        result = await async_multicast_set_value(
+            client=client,
+            new_value=new_value,
+            value_data=value,
+            nodes=None if broadcast else list(nodes),
+            options=options,
+        )
+    except FailedZWaveCommand as err:
+        raise HomeAssistantError("Unable to set value via multicast") from err
+
+    if result.status not in SET_VALUE_SUCCESS:
+        raise HomeAssistantError(
+            "Unable to set value via multicast"
+        ) from SetValueFailed(f"{result.status} {result.message}")
+
+
 async def _async_ping(call: ServiceCall) -> None:
     """Ping node(s)."""
     _LOGGER.warning(
@@ -811,263 +970,26 @@ async def _async_refresh_notifications(call: ServiceCall) -> None:
     await _async_call_cc_api(nodes, CommandClass.NOTIFICATION, "get", param)
 
 
-class ZWaveServices:
-    """Class that holds our services (Zwave Commands).
+async def _async_poll_value(call: ServiceCall) -> None:
+    """Poll value on a node."""
+    ent_reg = er.async_get(call.hass)
+    entries: list[er.RegistryEntry] = []
+    for entity_id in set(expand_entity_ids(call.hass, call.data[ATTR_ENTITY_ID])):
+        entry = ent_reg.async_get(entity_id)
+        if entry is None or entry.platform != const.DOMAIN:
+            _LOGGER.info("Entity %s is not a valid %s entity", entity_id, const.DOMAIN)
+            continue
+        entries.append(entry)
 
-    Services that should be published to hass.
-    """
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        ent_reg: er.EntityRegistry,
-        dev_reg: dr.DeviceRegistry,
-    ) -> None:
-        """Initialize with hass object."""
-        self._hass = hass
-        self._ent_reg = ent_reg
-        self._dev_reg = dev_reg
-
-    @callback
-    def async_register(self) -> None:
-        """Register all our services."""
-
-        @callback
-        def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
-            """Get nodes set from service data."""
-            try:
-                val[const.ATTR_NODES] = async_get_nodes_from_targets(
-                    self._hass,
-                    val,
-                    self._ent_reg,
-                    self._dev_reg,
-                    _LOGGER,
-                    raise_on_driver_not_ready=True,
-                )
-            except DriverNotReadyError as err:
-                # Not a validation error, so continue_on_error can tolerate it
-                raise HomeAssistantError(
-                    translation_domain=const.DOMAIN,
-                    translation_key="driver_not_ready",
-                ) from err
-            return val
-
-        @callback
-        def has_at_least_one_node(val: dict[str, Any]) -> dict[str, Any]:
-            """Validate that at least one node is specified."""
-            if not val.get(const.ATTR_NODES):
-                raise probatio.Invalid(
-                    f"No {const.DOMAIN} nodes found for given targets"
-                )
-            return val
-
-        @callback
-        def validate_multicast_nodes(val: dict[str, Any]) -> dict[str, Any]:
-            """Validate the input nodes for multicast."""
-            nodes: set[ZwaveNode] = val[const.ATTR_NODES]
-            broadcast: bool = val[const.ATTR_BROADCAST]
-
-            if not broadcast:
-                has_at_least_one_node(val)
-
-            # User must specify a node if they are attempting a broadcast and have more
-            # than one zwave-js network.
-            if (
-                broadcast
-                and not nodes
-                and len(self._hass.config_entries.async_entries(const.DOMAIN)) > 1
-            ):
-                raise probatio.Invalid(
-                    "You must include at least one entity or device in the service call"
-                )
-
-            first_node = next((node for node in nodes), None)
-
-            if first_node and not all(node.client.driver is not None for node in nodes):
-                raise probatio.Invalid(f"Driver not ready for all nodes: {nodes}")
-
-            # If any nodes don't have matching home IDs, we can't run the command
-            # because we can't multicast across multiple networks
-            if (
-                first_node
-                and first_node.client.driver  # We checked the driver was ready above.
-                and any(
-                    node.client.driver.controller.home_id
-                    != first_node.client.driver.controller.home_id
-                    for node in nodes
-                    if node.client.driver is not None
-                )
-            ):
-                raise probatio.Invalid(
-                    "Multicast commands only work on devices in the same network"
-                )
-
-            return val
-
-        @callback
-        def validate_entities(val: dict[str, Any]) -> dict[str, Any]:
-            """Validate entities exist and are from the zwave_js platform."""
-            val[ATTR_ENTITY_ID] = expand_entity_ids(self._hass, val[ATTR_ENTITY_ID])
-            invalid_entities = []
-            for entity_id in val[ATTR_ENTITY_ID]:
-                entry = self._ent_reg.async_get(entity_id)
-                if entry is None or entry.platform != const.DOMAIN:
-                    _LOGGER.info(
-                        "Entity %s is not a valid %s entity", entity_id, const.DOMAIN
-                    )
-                    invalid_entities.append(entity_id)
-
-            # Remove invalid entities
-            val[ATTR_ENTITY_ID] = list(set(val[ATTR_ENTITY_ID]) - set(invalid_entities))
-
-            if not val[ATTR_ENTITY_ID]:
-                raise probatio.Invalid(
-                    f"No {const.DOMAIN} entities found in service call"
-                )
-
-            return val
-
-        # Should be adjusted to register actions outside the ZWaveServices class
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_REFRESH_VALUE,
-            self.async_poll_value,
-            schema=probatio.Schema(
-                probatio.All(
-                    {
-                        probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
-                        probatio.Optional(
-                            const.ATTR_REFRESH_ALL_VALUES, default=False
-                        ): cv.boolean,
-                    },
-                    validate_entities,
-                )
-            ),
+    if not entries:
+        raise ServiceValidationError(
+            translation_domain=const.DOMAIN,
+            translation_key="no_entities_found",
         )
 
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        self._hass.services.async_register(
-            const.DOMAIN,
-            const.SERVICE_MULTICAST_SET_VALUE,
-            self.async_multicast_set_value,
-            schema=probatio.Schema(
-                probatio.All(
-                    {
-                        **TARGET_VALIDATORS,
-                        probatio.Optional(
-                            const.ATTR_BROADCAST, default=False
-                        ): cv.boolean,
-                        probatio.Required(const.ATTR_COMMAND_CLASS): probatio.Coerce(
-                            int
-                        ),
-                        probatio.Required(const.ATTR_PROPERTY): probatio.Any(
-                            probatio.Coerce(int), str
-                        ),
-                        probatio.Optional(const.ATTR_PROPERTY_KEY): probatio.Any(
-                            probatio.Coerce(int), str
-                        ),
-                        probatio.Optional(const.ATTR_ENDPOINT): probatio.Coerce(int),
-                        probatio.Required(const.ATTR_VALUE): VALUE_SCHEMA,
-                        probatio.Optional(const.ATTR_OPTIONS): {
-                            cv.string: VALUE_SCHEMA
-                        },
-                    },
-                    probatio.Any(
-                        probatio.AtLeastOne(
-                            ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
-                        ),
-                        broadcast_command,
-                    ),
-                    get_nodes_from_service_data,
-                    validate_multicast_nodes,
-                ),
-            ),
+    for entry in entries:
+        async_dispatcher_send(
+            call.hass,
+            f"{const.DOMAIN}_{entry.unique_id}_poll_value",
+            call.data[const.ATTR_REFRESH_ALL_VALUES],
         )
-
-    async def async_poll_value(self, service: ServiceCall) -> None:
-        """Poll value on a node."""
-        for entity_id in service.data[ATTR_ENTITY_ID]:
-            entry = self._ent_reg.async_get(entity_id)
-            assert entry  # Schema validation would have failed if we can't do this
-            async_dispatcher_send(
-                self._hass,
-                f"{const.DOMAIN}_{entry.unique_id}_poll_value",
-                service.data[const.ATTR_REFRESH_ALL_VALUES],
-            )
-
-    async def async_multicast_set_value(self, service: ServiceCall) -> None:
-        """Set a value via multicast to multiple nodes."""
-        nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
-        broadcast: bool = service.data[const.ATTR_BROADCAST]
-        options = service.data.get(const.ATTR_OPTIONS)
-
-        if not broadcast and len(nodes) == 1:
-            _LOGGER.info(
-                "Passing the zwave_js.multicast_set_value service call to the "
-                "zwave_js.set_value service since only one node was targeted"
-            )
-            await _async_set_value_on_nodes(service, nodes)
-            return
-
-        command_class: CommandClass = service.data[const.ATTR_COMMAND_CLASS]
-        property_: int | str = service.data[const.ATTR_PROPERTY]
-        property_key: int | str | None = service.data.get(const.ATTR_PROPERTY_KEY)
-        endpoint: int | None = service.data.get(const.ATTR_ENDPOINT)
-
-        value = ValueDataType(commandClass=command_class, property=property_)
-        if property_key is not None:
-            value["propertyKey"] = property_key
-        if endpoint is not None:
-            value["endpoint"] = endpoint
-
-        new_value = service.data[const.ATTR_VALUE]
-
-        # If there are no nodes, we can assume there is only one config entry due to
-        # schema validation and can use that to get the client, otherwise we can just
-        # get the client from the node.
-        client: ZwaveClient
-        first_node: ZwaveNode
-        try:
-            first_node = next(node for node in nodes)
-            client = first_node.client
-        except StopIteration:
-            data = self._hass.config_entries.async_entries(const.DOMAIN)[0].runtime_data
-            client = data.client
-            assert client.driver
-            first_node = next(
-                node
-                for node in client.driver.controller.nodes.values()
-                if get_value_id_str(
-                    node, command_class, property_, endpoint, property_key
-                )
-                in node.values
-            )
-
-        # If value has a string type but the new value is not a string, we need to
-        # convert it to one
-        value_id = get_value_id_str(
-            first_node, command_class, property_, endpoint, property_key
-        )
-        if (
-            value_id in first_node.values
-            and first_node.values[value_id].metadata.type == "string"
-            and not isinstance(new_value, str)
-        ):
-            new_value = str(new_value)
-
-        try:
-            result = await async_multicast_set_value(
-                client=client,
-                new_value=new_value,
-                value_data=value,
-                nodes=None if broadcast else list(nodes),
-                options=options,
-            )
-        except FailedZWaveCommand as err:
-            raise HomeAssistantError("Unable to set value via multicast") from err
-
-        if result.status not in SET_VALUE_SUCCESS:
-            raise HomeAssistantError(
-                "Unable to set value via multicast"
-            ) from SetValueFailed(f"{result.status} {result.message}")
