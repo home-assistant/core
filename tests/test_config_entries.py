@@ -11102,6 +11102,76 @@ async def test_set_unique_id_or_abort_raise_on_progress(
     assert result["reason"] == expected_reason
 
 
+@pytest.mark.parametrize(
+    ("unique_id", "raise_on_progress", "expected_reason"),
+    [
+        pytest.param("unique", None, "success", id="same_device"),
+        pytest.param("other", None, "unique_id_mismatch", id="other_device"),
+        pytest.param("unique", True, "already_in_progress", id="same_device_raise"),
+        pytest.param("other", True, "already_in_progress", id="other_device_raise"),
+    ],
+)
+@pytest.mark.parametrize(
+    "start_flow",
+    [
+        pytest.param(MockConfigEntry.start_reauth_flow, id="reauth"),
+        pytest.param(MockConfigEntry.start_reconfigure_flow, id="reconfigure"),
+    ],
+)
+async def test_set_unique_id_or_abort_entry_flow_with_flow_in_progress(
+    hass: HomeAssistant,
+    start_flow: Callable[
+        [MockConfigEntry, HomeAssistant], Awaitable[config_entries.ConfigFlowResult]
+    ],
+    unique_id: str,
+    raise_on_progress: bool | None,
+    expected_reason: str,
+) -> None:
+    """Test a discovery flow in progress doesn't block reauth or reconfigure."""
+    entry = MockConfigEntry(domain="test", unique_id="unique")
+    entry.add_to_hass(hass)
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_zeroconf(self, discovery_info):
+            """Test zeroconf step."""
+            await self.async_set_unique_id(discovery_info["unique_id"])
+            return await self.async_step_confirm()
+
+        async def async_step_confirm(self, user_input=None):
+            """Test confirm step."""
+            return self.async_show_form(step_id="confirm")
+
+        async def async_step_reauth(self, entry_data):
+            """Test reauth step."""
+            return await self._async_step_confirm()
+
+        async def async_step_reconfigure(self, user_input=None):
+            """Test reconfigure step."""
+            return await self._async_step_confirm()
+
+        async def _async_step_confirm(self):
+            """Confirm input."""
+            await self.async_set_unique_id_or_abort(
+                unique_id, raise_on_progress=raise_on_progress
+            )
+            return self.async_abort(reason="success")
+
+    with mock_config_flow("test", TestFlow):
+        await hass.config_entries.flow.async_init(
+            "test",
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data={"unique_id": unique_id},
+        )
+        result = await start_flow(entry, hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
+
+
 def test_state_not_stored_in_storage() -> None:
     """Test that state is not stored in storage.
 

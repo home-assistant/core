@@ -3432,14 +3432,26 @@ class ConfigFlow(ConfigEntryBaseFlow):
         default abort reason of either check.
 
         `raise_on_progress` defaults to False for user flows, so they take
-        precedence over a discovery flow for the same device, and to True
-        otherwise.
+        precedence over a discovery flow for the same device, and for reauth
+        and reconfigure flows, which can't create a duplicate entry. It
+        defaults to True otherwise.
 
-        Use `async_set_unique_id` with the separate checks when a reauth or
-        reconfigure flow may change the unique ID.
+        Requires strings.json entries for the abort reasons in user visible
+        flows: `already_configured` and `unique_id_mismatch`, or `reason`.
+
+        Use `async_set_unique_id` with the separate checks instead when:
+        - a reauth or reconfigure flow may change the unique ID of the entry,
+        - a reauth or reconfigure flow runs on entries without a unique ID,
+          for example to backfill it,
+        - a step shared by several sources needs a different reason or
+          placeholders for each check.
         """
         if raise_on_progress is None:
-            raise_on_progress = self.source != SOURCE_USER
+            raise_on_progress = self.source not in (
+                SOURCE_USER,
+                SOURCE_REAUTH,
+                SOURCE_RECONFIGURE,
+            )
         await self.async_set_unique_id(unique_id, raise_on_progress=raise_on_progress)
         if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
             self._abort_if_unique_id_mismatch(

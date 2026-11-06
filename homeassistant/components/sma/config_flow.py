@@ -195,9 +195,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not errors:
-                await self.async_set_unique_id_or_abort(
-                    str(device_info["serial"]), raise_on_progress=False
-                )
+                await self.async_set_unique_id_or_abort(str(device_info["serial"]))
                 return self.async_update_reload_and_abort(
                     reconf_entry,
                     data_updates={

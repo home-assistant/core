@@ -23,9 +23,33 @@ def _has_abort_entries_match(module: ast.Module) -> bool:
     return _has_method_call(module, "_async_abort_entries_match")
 
 
+def _has_method_call_outside_entry_steps(node: ast.AST, name: str) -> bool:
+    """Test if the node calls a method outside reauth and reconfigure steps.
+
+    In those steps `async_set_unique_id_or_abort` checks for a unique ID
+    mismatch, not for an entry that is already configured.
+    """
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and (
+        node.name.startswith(("async_step_reauth", "async_step_reconfigure"))
+    ):
+        return False
+    if (
+        isinstance(node, ast.Call)
+        and type(node.func) is ast.Attribute
+        and node.func.attr == name
+    ):
+        return True
+    return any(
+        _has_method_call_outside_entry_steps(child, name)
+        for child in ast.iter_child_nodes(node)
+    )
+
+
 def _has_abort_unique_id_configured(module: ast.Module) -> bool:
     """Test if the module calls defines (and checks for) a unique_id."""
-    return _has_method_call(module, "async_set_unique_id_or_abort") or (
+    return _has_method_call_outside_entry_steps(
+        module, "async_set_unique_id_or_abort"
+    ) or (
         _has_method_call(module, "async_set_unique_id")
         and _has_method_call(module, "_abort_if_unique_id_configured")
     )
