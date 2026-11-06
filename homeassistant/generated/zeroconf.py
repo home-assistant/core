@@ -737,10 +737,6 @@ ZEROCONF = {
             "name": "altherma4-*._https._tcp.local.",
         },
         {
-            "domain": "daikin_onecta",
-            "name": "homehub._https._tcp.local.",
-        },
-        {
             "domain": "grandstream_home",
             "name": "gds_*",
         },

@@ -18,10 +18,6 @@
       "type": "_https._tcp.local."
     },
     {
-      "name": "homehub._https._tcp.local.",
-      "type": "_https._tcp.local."
-    },
-    {
       "name": "altherma._daikin._tcp.local.",
       "type": "_daikin._tcp.local."
     },
