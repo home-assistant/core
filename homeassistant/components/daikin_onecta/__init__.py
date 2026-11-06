@@ -44,7 +44,6 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="oauth2_token_request_failed",
-            translation_placeholders={"error": str(err)},
         ) from err
 
     config_entry.runtime_data = coordinator

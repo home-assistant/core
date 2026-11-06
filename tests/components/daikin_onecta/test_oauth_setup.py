@@ -165,7 +165,7 @@ async def test_setup_entry_retries_token_timeout(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert config_entry.reason in {
         "oauth2_token_request_failed",
-        "Unable to obtain Daikin OAuth token: timeout",
+        "Unable to obtain Daikin OAuth token",
     }
 
 
