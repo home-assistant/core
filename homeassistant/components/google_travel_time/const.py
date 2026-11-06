@@ -1,5 +1,7 @@
 """Constants for Google Travel Time."""
 
+from enum import StrEnum
+
 from google_maps_routing_api import (
     TrafficModel,
     TransitRoutingPreference,
@@ -120,3 +122,26 @@ UNITS_TO_API_ENUM = {
     UNITS_METRIC: Units.METRIC,
     UNITS_IMPERIAL: Units.IMPERIAL,
 }
+
+
+class GoogleTravelTimeService(StrEnum):
+    """Store keys for Google Travel Time services."""
+
+    GET_TRAVEL_TIMES = "get_travel_times"
+    GET_TRANSIT_TIMES = "get_transit_times"
+
+
+class GoogleTravelTimeServiceArgument(StrEnum):
+    """Store keys for Google Travel Time service arguments."""
+
+    ORIGIN = "origin"
+    DESTINATION = "destination"
+    MODE = "mode"
+    UNITS = "units"
+    LANGUAGE = "language"
+    AVOID = "avoid"
+    TRAFFIC_MODEL = "traffic_model"
+    DEPARTURE_TIME = "departure_time"
+    TRANSIT_MODE = "transit_mode"
+    TRANSIT_ROUTING_PREFERENCE = "transit_routing_preference"
+    ARRIVAL_TIME = "arrival_time"

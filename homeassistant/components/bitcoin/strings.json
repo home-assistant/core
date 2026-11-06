@@ -5,6 +5,14 @@
       "unknown_currency": "blockchain.com does not quote Bitcoin in the currency from your YAML configuration."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "currency": "[%key:component::bitcoin::config::step::user::data::currency%]"
+        },
+        "data_description": {
+          "currency": "[%key:component::bitcoin::config::step::user::data_description::currency%]"
+        }
+      },
       "user": {
         "data": {
           "currency": "Currency"

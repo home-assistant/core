@@ -116,7 +116,8 @@ class WebDavBackupAgent(BackupAgent):
     @cached_property
     def _backup_path(self) -> str:
         """Return the path to the backup."""
-        return self._entry.data.get(CONF_BACKUP_PATH, "")
+        # Avoid "//file" paths when the backup path is the root
+        return self._entry.data.get(CONF_BACKUP_PATH, "").rstrip("/")
 
     @handle_backup_errors
     @override
@@ -132,7 +133,7 @@ class WebDavBackupAgent(BackupAgent):
         """
         backup = await self._find_backup_by_id(backup_id)
 
-        return await self._client.download_iter(
+        return await self._client.iter_read(
             f"{self._backup_path}/{suggested_filename(backup)}",
             timeout=BACKUP_TIMEOUT,
         )
@@ -154,11 +155,11 @@ class WebDavBackupAgent(BackupAgent):
         """
         (filename_tar, filename_meta) = suggested_filenames(backup)
 
-        await self._client.upload_iter(
-            await open_stream(),
+        await self._client.write(
             f"{self._backup_path}/{filename_tar}",
-            timeout=BACKUP_TIMEOUT,
+            await open_stream(),
             content_length=backup.size,
+            timeout=BACKUP_TIMEOUT,
             progress=lambda current, total: on_progress(bytes_uploaded=current),
         )
 
@@ -167,9 +168,9 @@ class WebDavBackupAgent(BackupAgent):
             f"{self._backup_path}/{filename_tar}",
         )
 
-        await self._client.upload_iter(
-            json_dumps(backup.as_dict()),
+        await self._client.write(
             f"{self._backup_path}/{filename_meta}",
+            json_dumps(backup.as_dict()),
         )
 
         _LOGGER.debug(
@@ -196,8 +197,8 @@ class WebDavBackupAgent(BackupAgent):
         (filename_tar, filename_meta) = suggested_filenames(backup)
         backup_path = f"{self._backup_path}/{filename_tar}"
 
-        await self._client.clean(backup_path)
-        await self._client.clean(f"{self._backup_path}/{filename_meta}")
+        await self._client.delete(backup_path)
+        await self._client.delete(f"{self._backup_path}/{filename_meta}")
 
         _LOGGER.debug(
             "Deleted backup at %s",
@@ -230,10 +231,7 @@ class WebDavBackupAgent(BackupAgent):
 
         async def _download_metadata(path: str) -> AgentBackup | None:
             """Download metadata file."""
-            iterator = await self._client.download_iter(path)
-            metadata_bytes = bytearray()
-            async for chunk in iterator:
-                metadata_bytes.extend(chunk)
+            metadata_bytes = await self._client.read(path)
             try:
                 return AgentBackup.from_dict(json_loads_object(metadata_bytes))
             except (*JSON_DECODE_EXCEPTIONS, KeyError, TypeError, ValueError) as err:
@@ -244,13 +242,13 @@ class WebDavBackupAgent(BackupAgent):
 
         async def _list_metadata_files() -> dict[str, AgentBackup]:
             """List metadata files."""
-            files = await self._client.list_files(self._backup_path)
+            resources = await self._client.list(self._backup_path)
             metadata_contents = await gather_with_limited_concurrency(
                 METADATA_DOWNLOAD_CONCURRENCY,
                 *(
-                    _download_metadata(file_name)
-                    for file_name in files
-                    if file_name.endswith(".metadata.json")
+                    _download_metadata(resource.path)
+                    for resource in resources
+                    if not resource.is_dir and resource.path.endswith(".metadata.json")
                 ),
             )
             return {

@@ -1,68 +1,82 @@
 """Tests for Vallox switch platform."""
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import patch_set_values
+from . import setup_integration
+
+BYPASS_LOCKED_ENTITY_ID = "switch.vallox_bypass_locked"
 
 
+@pytest.mark.usefixtures("mock_vallox_client")
+async def test_all_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the switch entities."""
+    with patch("homeassistant.components.vallox.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("entity_id", "metric_key", "value", "expected_state"),
+    ("metrics", "expected_state"),
     [
-        ("switch.vallox_bypass_locked", "A_CYC_BYPASS_LOCKED", 1, "on"),
-        ("switch.vallox_bypass_locked", "A_CYC_BYPASS_LOCKED", 0, "off"),
+        pytest.param({"A_CYC_BYPASS_LOCKED": 1}, STATE_ON, id="on"),
+        pytest.param({"A_CYC_BYPASS_LOCKED": 0}, STATE_OFF, id="off"),
+        pytest.param({"A_CYC_BYPASS_LOCKED": None}, STATE_UNKNOWN, id="missing"),
     ],
 )
-async def test_switch_entities(
-    entity_id: str,
-    metric_key: str,
-    value: int,
-    expected_state: str,
-    mock_entry: MockConfigEntry,
-    hass: HomeAssistant,
-    setup_fetch_metric_data_mock,
+async def test_bypass_locked_switch_state(
+    hass: HomeAssistant, expected_state: str
 ) -> None:
-    """Test switch entities."""
-    # Arrange
-    setup_fetch_metric_data_mock(metrics={metric_key: value})
-
-    # Act
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Assert
-    sensor = hass.states.get(entity_id)
-    assert sensor
-    assert sensor.state == expected_state
+    """Test the bypass locked switch state."""
+    state = hass.states.get(BYPASS_LOCKED_ENTITY_ID)
+    assert state
+    assert state.state == expected_state
 
 
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("service", "metric_key", "value"),
+    ("service", "value"),
     [
-        (SERVICE_TURN_ON, "A_CYC_BYPASS_LOCKED", 1),
-        (SERVICE_TURN_OFF, "A_CYC_BYPASS_LOCKED", 0),
+        pytest.param(SERVICE_TURN_ON, 1, id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, 0, id="turn_off"),
     ],
 )
-async def test_bypass_lock_switch_entitity_set(
-    service: str,
-    metric_key: str,
-    value: int,
-    mock_entry: MockConfigEntry,
-    hass: HomeAssistant,
+async def test_bypass_locked_switch_set(
+    hass: HomeAssistant, mock_vallox_client: AsyncMock, service: str, value: int
 ) -> None:
-    """Test bypass lock switch set."""
-    # Act
-    with patch_set_values() as set_values:
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            service,
-            service_data={ATTR_ENTITY_ID: "switch.vallox_bypass_locked"},
-        )
-        await hass.async_block_till_done()
-        set_values.assert_called_once_with({metric_key: value})
+    """Test setting the bypass locked switch."""
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: BYPASS_LOCKED_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_vallox_client.set_values.assert_called_once_with(
+        {"A_CYC_BYPASS_LOCKED": value}
+    )
+    # One fetch at setup, and one refresh after the change.
+    assert mock_vallox_client.fetch_metric_data.call_count == 2

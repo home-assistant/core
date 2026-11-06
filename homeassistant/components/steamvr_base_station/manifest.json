@@ -11,6 +11,7 @@
   "categories": ["media_entertainment.gaming"],
   "codeowners": ["@g4bri3lDev"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/steamvr_base_station",
   "integration_type": "device",
