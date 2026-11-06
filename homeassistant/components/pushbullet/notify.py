@@ -17,6 +17,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.os_error import os_read_error
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_FILE, ATTR_FILE_URL, ATTR_URL
@@ -137,7 +138,12 @@ class PushBulletNotificationService(BaseNotificationService):
             if filepath := data.get(ATTR_FILE):
                 if not self.hass.config.is_allowed_path(filepath):
                     raise ValueError("Filepath is not valid or allowed")
-                with open(filepath, "rb") as fileh:
+                try:
+                    # pylint: disable-next=consider-using-with
+                    fileh = open(filepath, "rb")
+                except OSError as err:
+                    raise os_read_error(err, filepath) from err
+                with fileh:
                     filedata = self.pushbullet.upload_file(fileh, filepath)
                 if filedata.get("file_type") == "application/x-empty":
                     raise ValueError("Cannot send an empty file")
