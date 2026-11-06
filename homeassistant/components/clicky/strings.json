@@ -22,5 +22,16 @@
         "title": "Connect to Clicky"
       }
     }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "[%key:component::clicky::config::error::api_error%]"
+    },
+    "cannot_connect": {
+      "message": "Could not connect to the Clicky API: {error}"
+    },
+    "invalid_auth": {
+      "message": "Authentication with the Clicky API failed"
+    }
   }
 }

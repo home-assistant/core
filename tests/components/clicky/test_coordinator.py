@@ -48,8 +48,11 @@ async def test_async_update_data_auth_failure(hass: HomeAssistant) -> None:
         client=client,
     )
 
-    with pytest.raises(ConfigEntryAuthFailed, match="API authentication failed"):
+    with pytest.raises(ConfigEntryAuthFailed) as exc_info:
         await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_auth"
 
 
 @pytest.mark.asyncio
@@ -60,7 +63,7 @@ async def test_async_update_data_connection_error(hass: HomeAssistant) -> None:
     client.__aenter__.return_value = client
     client.__aexit__.return_value = None
 
-    client.visitors_online.side_effect = ConnectionError
+    client.visitors_online.side_effect = ConnectionError("Connection refused")
 
     coordinator = ClickyCoordinator(
         hass=hass,
@@ -68,8 +71,12 @@ async def test_async_update_data_connection_error(hass: HomeAssistant) -> None:
         client=client,
     )
 
-    with pytest.raises(UpdateFailed, match="Couldn't connect to API"):
+    with pytest.raises(UpdateFailed) as exc_info:
         await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "cannot_connect"
+    assert exc_info.value.translation_placeholders == {"error": "Connection refused"}
 
 
 @pytest.mark.asyncio
@@ -116,5 +123,9 @@ async def test_async_update_data_failure(hass: HomeAssistant) -> None:
         client=client,
     )
 
-    with pytest.raises(UpdateFailed):
+    with pytest.raises(UpdateFailed) as exc_info:
         await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "api_error"
+    assert exc_info.value.translation_placeholders == {"error": "Unexpected Error"}
