@@ -66,15 +66,13 @@ from .entity import (
     async_device_available_fn,
     async_device_device_info_fn,
     async_device_supported_fn,
+    async_firewall_policy_supported_fn,
+    async_unifi_network_device_info_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
     is_locally_administered_mac,
 )
 from .hub import UnifiHub
-from .switch import (
-    async_firewall_policy_supported_fn,
-    async_unifi_network_device_info_fn,
-)
 
 PARALLEL_UPDATES = 0
 
