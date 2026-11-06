@@ -8,6 +8,7 @@ from pyforeca import (
     ForecaApiClient,
     ForecaAuthError,
     ForecaError,
+    ForecaProductUnavailableError,
     Location,
     format_location,
 )
@@ -44,7 +45,7 @@ async def _async_check_location(
     try:
         info = await client.location_info(location)
         await client.current(location)
-    except ForecaAuthError:
+    except ForecaAuthError, ForecaProductUnavailableError:
         return {"base": "invalid_auth"}, None
     except ForecaError:
         return {"base": "cannot_connect"}, None

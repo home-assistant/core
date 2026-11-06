@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from pyforeca import ForecaAuthError, ForecaConnectionError
+from pyforeca import (
+    ForecaAuthError,
+    ForecaConnectionError,
+    ForecaProductUnavailableError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -39,13 +43,15 @@ async def test_setup_retries_on_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize("exception", [ForecaAuthError, ForecaProductUnavailableError])
 async def test_setup_fails_on_rejected_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_foreca_client: MagicMock,
+    exception: type[Exception],
 ) -> None:
-    """Test a rejected API key fails setup instead of retrying."""
-    mock_foreca_client.current.side_effect = ForecaAuthError
+    """Test a key that is rejected or lacks the forecasts fails setup."""
+    mock_foreca_client.current.side_effect = exception
     await init_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
