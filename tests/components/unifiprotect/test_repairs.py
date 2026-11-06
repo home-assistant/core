@@ -52,11 +52,13 @@ async def test_cloud_user_fix(
     assert len(msg["result"]["issues"]) > 0
     issue = None
     for i in msg["result"]["issues"]:
-        if i["issue_id"] == "cloud_user":
+        if i["issue_id"] == f"cloud_user_{ufp.entry.entry_id}":
             issue = i
     assert issue is not None
 
-    data = await start_repair_fix_flow(client, DOMAIN, "cloud_user")
+    data = await start_repair_fix_flow(
+        client, DOMAIN, f"cloud_user_{ufp.entry.entry_id}"
+    )
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"

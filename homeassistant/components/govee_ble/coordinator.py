@@ -73,7 +73,7 @@ class GoveeBLEBluetoothProcessorCoordinator(
         address: str,
         update_method: Callable[[BluetoothServiceInfoBleak], SensorUpdate],
         device_data: GoveeBluetoothDeviceData,
-        entry: ConfigEntry,
+        entry: GoveeBLEConfigEntry,
     ) -> None:
         """Initialize the Govee BLE Bluetooth Passive Update Processor Coordinator."""
         self.model_info: ModelInfo | None = None

@@ -110,7 +110,7 @@ def _translate_error(
     return HomeAssistantError(
         translation_domain=DOMAIN,
         translation_key=translation_key,
-        translation_placeholders={ATTR_APB: apb},
+        translation_placeholders={"apb": apb},
     )
 
 
@@ -144,7 +144,7 @@ async def _async_resolve_product(
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_product",
-            translation_placeholders={ATTR_PRODUCT: product_input},
+            translation_placeholders={"product": product_input},
         )
     found = await data.client.async_search_products_in_apb(apb, product_input)
     match = next((product for product in found if product.cnk == product_input), None)
@@ -152,7 +152,7 @@ async def _async_resolve_product(
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="no_search_results",
-            translation_placeholders={ATTR_APB: apb, ATTR_QUERY: product_input},
+            translation_placeholders={"apb": apb, "query": product_input},
         )
     return match.cnk, _product_description(match)
 
@@ -179,7 +179,7 @@ async def _async_write_draft(
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="draft_not_empty",
-            translation_placeholders={ATTR_APB: apb},
+            translation_placeholders={"apb": apb},
         )
     draft_id: str | None
     try:
@@ -198,7 +198,7 @@ async def _async_write_draft(
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="order_failed",
-            translation_placeholders={ATTR_APB: apb},
+            translation_placeholders={"apb": apb},
         )
     return draft_id
 
@@ -220,7 +220,7 @@ async def _async_place_order(
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="order_unconfirmed",
-                translation_placeholders={ATTR_APB: apb},
+                translation_placeholders={"apb": apb},
             ) from err
         except FarmadError:
             await _async_clear_draft(data, apb)
@@ -229,7 +229,7 @@ async def _async_place_order(
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="order_unconfirmed",
-            translation_placeholders={ATTR_APB: apb},
+            translation_placeholders={"apb": apb},
         )
     return basket_id
 
