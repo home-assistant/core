@@ -10,7 +10,6 @@ from nextcord.abc import Messageable
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -20,6 +19,7 @@ from homeassistant.const import CONF_API_TOKEN, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import TextSelector
 
+from . import DiscordConfigEntry
 from .const import CONF_TARGET_ID, DOMAIN, SUBENTRY_TYPE_TARGET, URL_PLACEHOLDER
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: DiscordConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_TARGET: TargetSubentryFlowHandler}

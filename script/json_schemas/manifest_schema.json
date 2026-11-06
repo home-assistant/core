@@ -540,6 +540,40 @@
           ]
         }
       },
+      "connectivity": {
+        "description": "How the integration connects to its devices or services.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#connectivity",
+        "examples": [["zigbee"], ["cloud", "network"]],
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "enum": [
+            "bluetooth",
+            "cloud",
+            "dali",
+            "dect",
+            "enocean",
+            "esphome",
+            "homekit",
+            "host",
+            "infrared",
+            "insteon",
+            "knx",
+            "lorawan",
+            "matter",
+            "modbus",
+            "mqtt",
+            "network",
+            "onewire",
+            "rf",
+            "serial",
+            "x10",
+            "zigbee",
+            "zwave"
+          ]
+        }
+      },
       "single_config_entry": {
         "description": "Whether the integration only supports a single config entry.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#single_config_entry",
         "const": true

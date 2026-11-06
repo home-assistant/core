@@ -33,7 +33,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
 
-from .const import ATTR_AIRFLOW, DOMAIN
+from .const import DOMAIN
 from .coordinator import IZoneConfigEntry, IZoneCoordinator
 from .entity import IZoneCoordinatorEntity, zone_device_info
 
@@ -401,6 +401,18 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
         """Turn the entity on."""
         await self._async_run_and_update(self.controller.set_on(True))
 
+    async def async_set_airflow_min(self, airflow: int) -> None:
+        """Reject airflow minimum, which only applies to zones."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="airflow_zone_only"
+        )
+
+    async def async_set_airflow_max(self, airflow: int) -> None:
+        """Reject airflow maximum, which only applies to zones."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="airflow_zone_only"
+        )
+
 
 class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
     """Representation of iZone Zone."""
@@ -499,17 +511,13 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
         """Return the maximum air flow."""
         return self._zone.airflow_max
 
-    async def async_set_airflow_min(self, **kwargs):
+    async def async_set_airflow_min(self, airflow: int) -> None:
         """Set new airflow minimum."""
-        await self._async_run_and_update(
-            self._zone.set_airflow_min(int(kwargs[ATTR_AIRFLOW]))
-        )
+        await self._async_run_and_update(self._zone.set_airflow_min(airflow))
 
-    async def async_set_airflow_max(self, **kwargs):
+    async def async_set_airflow_max(self, airflow: int) -> None:
         """Set new airflow maximum."""
-        await self._async_run_and_update(
-            self._zone.set_airflow_max(int(kwargs[ATTR_AIRFLOW]))
-        )
+        await self._async_run_and_update(self._zone.set_airflow_max(airflow))
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:

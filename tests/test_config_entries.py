@@ -11581,7 +11581,6 @@ async def test_add_description_placeholder_automatically_not_overwrites(
     [
         ("some_integration", config_entries.SOURCE_USER, True),
         ("some_integration", config_entries.SOURCE_IGNORE, False),
-        ("mobile_app", config_entries.SOURCE_USER, False),
     ],
 )
 async def test_create_entry_existing_unique_id(

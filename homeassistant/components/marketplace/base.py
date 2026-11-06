@@ -1136,7 +1136,11 @@ class MarketplaceManager:
         LOGGER.info("The catalog of %s can not be reached: %s", category, exception)
         self.unreachable_categories.add(category)
         self.coordinators[category].async_update_listeners()
-        async_suggest_profile(self.hass, self.configuration.profile)
+        async_suggest_profile(
+            self.hass,
+            self.configuration.config_entry.entry_id,
+            self.configuration.profile,
+        )
 
     @callback
     def _async_catalog_reached(self, category: RepositoryCategory) -> None:
@@ -1390,6 +1394,7 @@ class MarketplaceManager:
             hass=self.hass,
             domain=DOMAIN,
             issue_id=f"removed_{repository.data.id}",
+            config_entry_id=self.configuration.config_entry.entry_id,
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
