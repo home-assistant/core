@@ -116,18 +116,19 @@ class MultiprotocolAddonManager(WaitingAddonManager):
         """Register a multipan platform."""
         self._platforms[integration_domain] = platform
 
-        channel = await platform.async_get_channel(hass)
         using_multipan = await platform.async_using_multipan(hass)
 
         _LOGGER.info(
-            "Registering new multipan platform '%s', using multipan: %s, channel: %s",
+            "Registering new multipan platform '%s', using multipan: %s",
             integration_domain,
             using_multipan,
-            channel,
         )
 
         if self._channel is not None or not using_multipan:
             return
+
+        # Reading the channel can be expensive, e.g. ZHA opens its database for it
+        channel = await platform.async_get_channel(hass)
 
         if channel is None:
             return
