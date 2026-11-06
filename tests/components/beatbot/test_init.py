@@ -30,6 +30,7 @@ from homeassistant.helpers import (
 from . import (
     BATTERY_ENTITY_ID,
     DEVICE_ID,
+    ERROR_ENTITY_ID,
     INTERFACE_BATTERY,
     INTERFACE_STATE,
     STATUS_ENTITY_ID,
@@ -175,20 +176,57 @@ async def test_poll_applies_batch_state(
     assert hass.states.get(BATTERY_ENTITY_ID).state == "42"
 
 
-async def test_poll_partial_batch_keeps_discovery_values(
+@pytest.mark.parametrize(
+    ("is_online", "status", "battery", "error"),
+    [
+        pytest.param(True, "charging", "80", "power_low", id="online"),
+        pytest.param(
+            False, STATE_UNAVAILABLE, STATE_UNAVAILABLE, STATE_UNAVAILABLE, id="offline"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_event_client")
+async def test_poll_partial_batch_keeps_cached_values(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    is_online: bool,
+    status: str,
+    battery: str,
+    error: str,
 ) -> None:
-    """Keep the discovery values a partial batch response does not report."""
-    mock_client.get_device_states.return_value = batch_state(
-        states={INTERFACE_STATE: 2}
-    )
+    """Keep cached runtime values while refreshing discovery metadata and status."""
+    mock_client.get_devices.side_effect = [
+        [create_device(work_status=0, battery_level=0)],
+        [
+            create_device(
+                name="Updated cleaner",
+                work_status=0,
+                battery_level=0,
+                is_online=is_online,
+            )
+        ],
+    ]
+    mock_client.get_device_states.side_effect = [
+        batch_state(states={INTERFACE_BATTERY: 80, "sensor.error": 1 << 2}),
+        batch_state(states={INTERFACE_STATE: 2}, is_online=None),
+    ]
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "80"
+    assert hass.states.get(ERROR_ENTITY_ID).state == "power_low"
+
     await poll(hass, freezer)
 
-    assert hass.states.get(STATUS_ENTITY_ID).state == "charging"
-    assert hass.states.get(BATTERY_ENTITY_ID).state == "80"
+    device = mock_config_entry.runtime_data.coordinator.data[DEVICE_ID]
+    assert device.name == "Updated cleaner"
+    assert device.is_online is is_online
+    assert device.work_status == 2
+    assert device.battery_level == 80
+    assert device.error_code == 1 << 2
+    assert hass.states.get(STATUS_ENTITY_ID).state == status
+    assert hass.states.get(BATTERY_ENTITY_ID).state == battery
+    assert hass.states.get(ERROR_ENTITY_ID).state == error
 
 
 @pytest.mark.parametrize("method", ["get_devices", "get_device_states"])

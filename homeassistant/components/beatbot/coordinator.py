@@ -109,7 +109,13 @@ class BeatbotCoordinator(DataUpdateCoordinator[dict[str, BeatbotDeviceData]]):
             len(states),
         )
 
+        previous_data = self.data if isinstance(self.data, dict) else {}
         for device_id, device in result.items():
+            if (previous := previous_data.get(device_id)) is not None:
+                # Discovery supplies metadata and availability, not runtime values.
+                is_online = device.is_online
+                device.copy_runtime_state_from(previous)
+                device.is_online = is_online
             if (state := states.get(device_id)) is not None:
                 self._apply_state_with_logging(
                     device_id,

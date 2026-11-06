@@ -28,6 +28,8 @@ from . import BeatbotConfigEntry
 from .coordinator import BeatbotCoordinator
 from .entity import BeatbotEntity
 
+PARALLEL_UPDATES = 0
+
 _CATEGORY = ProductCategory.POOL_CLEAN_BOT
 _STATUS_OPTIONS = list(
     dict.fromkeys(status.value for status in STATUS_BY_CATEGORY[_CATEGORY].values())
