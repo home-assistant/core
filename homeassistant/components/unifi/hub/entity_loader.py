@@ -326,6 +326,21 @@ class UnifiEntityLoader:
         )
 
     @callback
+    def async_forget_objects(self, mac: str) -> None:
+        """Forget the objects of a removed device registry entry.
+
+        Entities that are disabled never register their removal, so their
+        objects would stay known and not be recreated with the entry.
+        """
+        self.known_objects.difference_update(
+            {
+                (key, obj_id)
+                for key, obj_id in self.known_objects
+                if obj_id.partition("_")[0] == mac
+            }
+        )
+
+    @callback
     def get_data_update_coordinator[HandlerT: APIHandler[ApiItem]](
         self, handler: HandlerT
     ) -> UnifiDataUpdateCoordinator[HandlerT]:
@@ -354,6 +369,7 @@ class UnifiEntityLoader:
             )
 
         add_unifi_entities()
+        self.hub.adoption.async_on_adoption(add_unifi_entities)
 
         self.hub.config.entry.async_on_unload(
             async_dispatcher_connect(

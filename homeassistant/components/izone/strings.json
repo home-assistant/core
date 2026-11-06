@@ -66,6 +66,9 @@
     }
   },
   "exceptions": {
+    "airflow_zone_only": {
+      "message": "Airflow limits can only be set on a zone, not the controller"
+    },
     "bridge_unpaired": {
       "message": "iZone bridge is not paired with an air conditioner"
     },
