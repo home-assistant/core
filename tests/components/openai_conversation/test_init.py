@@ -1,5 +1,7 @@
 """Tests for the OpenAI integration."""
 
+import subprocess
+import sys
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -38,6 +40,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
+
+IMPORT_TIMEOUT = 60
 
 
 @pytest.mark.parametrize(
@@ -1546,3 +1550,31 @@ async def test_migration_from_v2_7_existing_evaluation(
     assert mock_config_entry.minor_version == 8
     assert mock_config_entry.subentries == existing_subentries
     assert hass.states.get("ai_task.my_decisions") is not None
+
+
+def test_client_resources_are_imported_with_the_integration() -> None:
+    """Importing the integration must leave no lazy client import for the loop.
+
+    The OpenAI client imports its responses and audio resources on first use,
+    which is a conversation turn, an AI task, or a TTS or STT request in the
+    event loop.
+
+    A clean interpreter is the only way to see this: anything the test suite
+    imported first would hide it.
+    """
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys, homeassistant.components.openai_conversation; "
+            "print(all(m in sys.modules for m in "
+            "('openai.resources.responses.responses', "
+            "'openai.resources.audio.audio')))",
+        ],
+        capture_output=True,
+        check=True,
+        text=True,
+        timeout=IMPORT_TIMEOUT,
+    )
+
+    assert result.stdout.strip() == "True"
