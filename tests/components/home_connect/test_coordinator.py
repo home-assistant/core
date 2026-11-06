@@ -582,8 +582,22 @@ async def test_event_listener_token_refresh_reauth_error(
 @pytest.mark.parametrize("platforms", [("sensor",)])
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
-    "exception",
-    [HomeConnectRequestError(), EventStreamInterruptedError()],
+    ("exception", "log_level", "log_message"),
+    [
+        pytest.param(
+            HomeConnectRequestError(),
+            "DEBUG",
+            "Non-breaking error",
+            id="request_error",
+        ),
+        pytest.param(
+            EventStreamInterruptedError(),
+            "DEBUG",
+            "Non-breaking error",
+            id="stream_interrupted",
+        ),
+        pytest.param(Exception(), "ERROR", "Unexpected error", id="unexpected_error"),
+    ],
 )
 @pytest.mark.parametrize(
     (
@@ -616,7 +630,10 @@ async def test_event_listener_resilience(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
-    exception: HomeConnectError,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    log_level: str,
+    log_message: str,
     entity_id: str,
     initial_state: str,
     status_key: StatusKey,
@@ -627,6 +644,7 @@ async def test_event_listener_resilience(
     after_event_expected_state: str,
 ) -> None:
     """Test that the event listener is resilient to interruptions."""
+    caplog.set_level("DEBUG")
     future = hass.loop.create_future()
 
     async def stream_exception():
@@ -648,6 +666,11 @@ async def test_event_listener_resilience(
 
     future.set_exception(exception)
     await hass.async_block_till_done()
+
+    assert any(
+        record.levelname == log_level and log_message in record.message
+        for record in caplog.records
+    )
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
