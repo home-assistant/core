@@ -6,9 +6,9 @@ RX11; port resolution prefers the setup stick but accepts any compatible
 replacement when it is the only one present.
 """
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 import contextlib
-from functools import partial
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -33,37 +33,112 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True, slots=True)
+class GatewayPort:
+    """RX11 port visible to setup and reconnect, including an ESPHome proxy."""
+
+    device: str
+    vid: int
+    pid: int
+    serial_number: str | None
+    manufacturer: str | None
+
+
+def _usb_id(value: int | str | None) -> int | None:
+    """Return a USB id as an int. Scan results use hex strings."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return int(value, 16)
+    return value
+
+
+def _gateway_port(port: Any) -> GatewayPort | None:
+    """Normalize a serialx or USB-scan port that carries a VID and PID."""
+    vid = _usb_id(getattr(port, "vid", None))
+    pid = _usb_id(getattr(port, "pid", None))
+    device = getattr(port, "device", None)
+    if vid is None or pid is None or not isinstance(device, str):
+        return None
+    return GatewayPort(
+        device=device,
+        vid=vid,
+        pid=pid,
+        serial_number=getattr(port, "serial_number", None),
+        manufacturer=getattr(port, "manufacturer", None),
+    )
+
+
+def _compatible_ports(
+    raw_ports: Iterable[Any],
+    usb_ids: frozenset[tuple[int, int]],
+) -> list[GatewayPort]:
+    """Keep the first port for each device path that matches ``usb_ids``."""
+    ports: list[GatewayPort] = []
+    seen: set[str] = set()
+    for raw in raw_ports:
+        port = raw if isinstance(raw, GatewayPort) else _gateway_port(raw)
+        if port is None or port.device in seen or (port.vid, port.pid) not in usb_ids:
+            continue
+        seen.add(port.device)
+        ports.append(port)
+    return ports
+
+
+async def async_list_gateway_ports(hass: HomeAssistant) -> list[GatewayPort]:
+    """Return compatible RX11 ports from the Home Assistant USB scan.
+
+    That scan includes local USB devices and ESPHome proxy ports whose firmware
+    reports a USB identity. Without the USB integration, fall back to the local
+    serialx enumeration.
+    """
+    from homeassistant.components import usb  # noqa: PLC0415
+
+    if usb.DOMAIN in hass.config.components:
+        try:
+            scanned = await usb.async_scan_serial_ports(hass)
+        except OSError:
+            return []
+        return _compatible_ports(scanned, SUPPORTED_USB_IDS)
+    try:
+        listed = await hass.async_add_executor_job(list_serial_ports)
+    except OSError:
+        return []
+    return _compatible_ports(listed, SUPPORTED_USB_IDS)
+
+
 def resolve_gateway_port(
     usb_ids: frozenset[tuple[int, int]],
     *,
     usb_serial: str | None = None,
     device_path: str | None = None,
     allow_replacement: bool = True,
+    ports: Sequence[Any] | None = None,
 ) -> str | None:
     """Return the serial port for an RX11 gateway.
 
-    Prefers the configured USB serial or device path. When that hardware is
-    absent and ``allow_replacement`` is true, any sole compatible stick is
-    accepted so a replacement RX11 can be used without reconfiguration.
+    Prefers the configured USB serial or device path. ``ports`` may include an
+    ``esphome-hass://`` URL from the USB scan. When the configured hardware is
+    absent and ``allow_replacement`` is true, the sole remaining compatible
+    stick is accepted so a replacement RX11 can be used without reconfiguration.
     """
-    try:
-        ports = [
-            port
-            for port in list_serial_ports()
-            if port.vid is not None
-            and port.pid is not None
-            and (port.vid, port.pid) in usb_ids
-        ]
-    except OSError:
-        return None
+    if ports is None:
+        try:
+            raw_ports: Sequence[Any] = list(list_serial_ports())
+        except OSError:
+            return None
+    else:
+        raw_ports = ports
+
+    matched = _compatible_ports(raw_ports, usb_ids)
 
     if usb_serial:
-        for port in ports:
+        for port in matched:
             if port.serial_number == usb_serial:
                 return port.device
 
     if device_path:
-        for port in ports:
+        for port in matched:
             if port.device != device_path:
                 continue
             # When a serial is configured, do not claim a path that already
@@ -72,13 +147,14 @@ def resolve_gateway_port(
                 continue
             return port.device
 
-    if allow_replacement and len(ports) == 1:
+    if allow_replacement and len(matched) == 1:
         if usb_serial or device_path:
-            _LOGGER.debug(
-                "Configured RX11 unavailable, using sole compatible stick on %s",
-                ports[0].device,
+            _LOGGER.warning(
+                "Configured RX11 %s is unavailable; using the only other compatible stick on %s",
+                usb_serial or device_path,
+                matched[0].device,
             )
-        return ports[0].device
+        return matched[0].device
 
     return None
 
@@ -173,14 +249,12 @@ class RX11Transceiver:
 
     async def _prepare_connection(self) -> bool:
         """Resolve the configured gateway port before connecting."""
-        port = await self.hass.async_add_executor_job(
-            partial(
-                resolve_gateway_port,
-                SUPPORTED_USB_IDS,
-                usb_serial=self._usb_serial,
-                device_path=self._configured_path,
-                allow_replacement=self._allow_replacement,
-            )
+        port = resolve_gateway_port(
+            SUPPORTED_USB_IDS,
+            usb_serial=self._usb_serial,
+            device_path=self._configured_path,
+            allow_replacement=self._allow_replacement,
+            ports=await async_list_gateway_ports(self.hass),
         )
         # Recreate the gateway with the resolved port via the public config API.
         old_gateway = self._gateway

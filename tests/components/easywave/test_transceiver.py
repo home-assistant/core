@@ -7,12 +7,16 @@ import pytest
 
 from homeassistant.components.easywave.const import SUPPORTED_USB_IDS
 from homeassistant.components.easywave.transceiver import (
+    GatewayPort,
     RX11Transceiver,
+    async_list_gateway_ports,
     resolve_gateway_port,
 )
+from homeassistant.components.usb import SerialDevice, USBDevice
 from homeassistant.core import HomeAssistant
 
 DEVICE_PATH = "/dev/ttyACM0"
+PROXY_PATH = "esphome-hass://esphome/entry?port_udev_id=usb-155a_1014-if00-port0"
 GATEWAY_PATH = "homeassistant.components.easywave.transceiver.EasywaveGateway"
 RESOLVE_PATH = "homeassistant.components.easywave.transceiver.resolve_gateway_port"
 
@@ -428,6 +432,172 @@ def test_resolve_gateway_port_path_fallback_when_serial_absent_on_port() -> None
             )
             == "/dev/ttyACM0"
         )
+
+
+async def test_async_list_gateway_ports_uses_usb_scan(hass: HomeAssistant) -> None:
+    """Local and proxied RX11 sticks both come from the USB scan."""
+    local = USBDevice(
+        device="/dev/ttyACM0",
+        vid="155A",
+        pid="1014",
+        serial_number="111",
+        manufacturer="ELDAT",
+        description="RX11 USB Transceiver",
+    )
+    proxy = USBDevice(
+        device=PROXY_PATH,
+        vid="155A",
+        pid="1014",
+        serial_number="222",
+        manufacturer="ELDAT",
+        description="RX11 USB Transceiver",
+    )
+    other = USBDevice(
+        device="/dev/ttyUSB0",
+        vid="1234",
+        pid="5678",
+        serial_number="999",
+        manufacturer="Other",
+        description="Other",
+    )
+    plain = SerialDevice(
+        device="/dev/ttyS0",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+    hass.config.components.add("usb")
+
+    with patch(
+        "homeassistant.components.usb.async_scan_serial_ports",
+        new=AsyncMock(return_value=[local, proxy, other, plain]),
+    ):
+        ports = await async_list_gateway_ports(hass)
+
+    assert [(port.device, port.vid, port.serial_number) for port in ports] == [
+        ("/dev/ttyACM0", 0x155A, "111"),
+        (PROXY_PATH, 0x155A, "222"),
+    ]
+
+
+def test_resolve_gateway_port_accepts_configured_proxy_url() -> None:
+    """A stored ESPHome proxy URL is used when the USB scan still lists it."""
+    proxy = GatewayPort(
+        device=PROXY_PATH,
+        vid=0x155A,
+        pid=0x1014,
+        serial_number="12345",
+        manufacturer="ELDAT",
+    )
+
+    assert (
+        resolve_gateway_port(
+            SUPPORTED_USB_IDS,
+            usb_serial="12345",
+            device_path=PROXY_PATH,
+            allow_replacement=False,
+            ports=[proxy],
+        )
+        == PROXY_PATH
+    )
+
+
+def test_resolve_gateway_port_prefers_proxy_serial_over_local_stick() -> None:
+    """The configured serial wins when that RX11 is behind a proxy."""
+    local = MagicMock(
+        device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="111"
+    )
+    proxy = GatewayPort(
+        device=PROXY_PATH,
+        vid=0x155A,
+        pid=0x1014,
+        serial_number="222",
+        manufacturer="ELDAT",
+    )
+
+    assert (
+        resolve_gateway_port(
+            SUPPORTED_USB_IDS,
+            usb_serial="222",
+            device_path=PROXY_PATH,
+            ports=[local, proxy],
+        )
+        == PROXY_PATH
+    )
+
+
+def test_resolve_gateway_port_warns_when_replacing_missing_proxy(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A missing proxy stick is replaced by the only other RX11, with a warning."""
+    replacement = MagicMock(
+        device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="222"
+    )
+
+    with (
+        patch(
+            "homeassistant.components.easywave.transceiver.list_serial_ports",
+            return_value=[replacement],
+        ),
+        caplog.at_level("WARNING"),
+    ):
+        assert (
+            resolve_gateway_port(
+                SUPPORTED_USB_IDS,
+                usb_serial="missing",
+                device_path=PROXY_PATH,
+            )
+            == "/dev/ttyACM0"
+        )
+
+    assert "using the only other compatible stick on /dev/ttyACM0" in caplog.text
+
+
+def test_resolve_gateway_port_does_not_replace_missing_proxy_during_setup() -> None:
+    """Setup validation keeps the selected proxy URL instead of another stick."""
+    replacement = MagicMock(
+        device="/dev/ttyACM0", vid=0x155A, pid=0x1014, serial_number="222"
+    )
+
+    with patch(
+        "homeassistant.components.easywave.transceiver.list_serial_ports",
+        return_value=[replacement],
+    ):
+        assert (
+            resolve_gateway_port(
+                SUPPORTED_USB_IDS,
+                usb_serial="missing",
+                device_path=PROXY_PATH,
+                allow_replacement=False,
+            )
+            is None
+        )
+
+
+async def test_prepare_connection_passes_proxy_ports(
+    hass: HomeAssistant, mock_gateway: MagicMock
+) -> None:
+    """Reconnect resolution includes RX11 sticks scanned behind a proxy."""
+    proxy = GatewayPort(
+        device=PROXY_PATH,
+        vid=0x155A,
+        pid=0x1014,
+        serial_number="12345",
+        manufacturer="ELDAT",
+    )
+    with patch(GATEWAY_PATH, return_value=mock_gateway):
+        transceiver = RX11Transceiver(hass, device_path=PROXY_PATH)
+        with (
+            patch(
+                "homeassistant.components.easywave.transceiver.async_list_gateway_ports",
+                new=AsyncMock(return_value=[proxy]),
+            ),
+            patch(RESOLVE_PATH, return_value=PROXY_PATH) as mock_resolve,
+        ):
+            assert await transceiver._prepare_connection() is True
+
+    assert mock_resolve.call_args.kwargs["ports"] == [proxy]
+    assert mock_resolve.call_args.kwargs["device_path"] == PROXY_PATH
 
 
 def test_resolve_gateway_port_returns_none_when_comports_raises() -> None:

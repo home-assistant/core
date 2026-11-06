@@ -5,7 +5,6 @@ import logging
 from typing import Any, override
 
 import probatio
-from serialx import SerialPortInfo, list_serial_ports
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -36,12 +35,12 @@ from .const import (
     get_frequency_for_pid,
     is_country_allowed_for_frequency,
 )
-from .transceiver import RX11Transceiver
+from .transceiver import GatewayPort, RX11Transceiver, async_list_gateway_ports
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _device_from_port(port: SerialPortInfo) -> dict[str, Any]:
+def _device_from_port(port: GatewayPort) -> dict[str, Any]:
     """Build gateway device metadata from a discovered serial port."""
     assert port.vid is not None
     assert port.pid is not None
@@ -129,16 +128,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show available RX11 serial ports and let the user pick one."""
         errors: dict[str, str] = {}
-        try:
-            ports = [
-                port
-                for port in await self.hass.async_add_executor_job(list_serial_ports)
-                if port.vid is not None
-                and port.pid is not None
-                and (port.vid, port.pid) in SUPPORTED_USB_IDS
-            ]
-        except OSError:
-            return self.async_abort(reason="no_devices_found")
+        ports = await async_list_gateway_ports(self.hass)
 
         port_list = {
             p.device: (

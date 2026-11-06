@@ -18,6 +18,7 @@ from homeassistant.components.easywave.const import (
     SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR,
     SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
 )
+from homeassistant.components.usb import USBDevice
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -27,8 +28,18 @@ from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-COMPORTS_PATH = "homeassistant.components.easywave.config_flow.list_serial_ports"
+USB_SCAN_PATH = "homeassistant.components.usb.async_scan_serial_ports"
 TRANSCEIVER_PATH = "homeassistant.components.easywave.config_flow.RX11Transceiver"
+PROXY_PATH = "esphome-hass://esphome/entry?port_udev_id=usb-155a_1014-if00-port0"
+
+
+def _patch_usb_scan(
+    ports: list | None = None, *, side_effect: type[Exception] | Exception | None = None
+):
+    """Patch the USB scan that supplies local and proxied RX11 ports."""
+    if side_effect is not None:
+        return patch(USB_SCAN_PATH, new=AsyncMock(side_effect=side_effect))
+    return patch(USB_SCAN_PATH, new=AsyncMock(return_value=ports or []))
 
 
 def _patch_connecting_transceiver(*, connected: bool = True):
@@ -60,7 +71,7 @@ def _make_port(
 
 async def test_user_flow_no_devices(hass: HomeAssistant) -> None:
     """Test user flow aborts when no serial ports are found."""
-    with patch(COMPORTS_PATH, return_value=[]):
+    with _patch_usb_scan([]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -79,7 +90,7 @@ async def test_user_flow_ignores_non_rx11_ports(hass: HomeAssistant) -> None:
         product="Other Device",
     )
 
-    with patch(COMPORTS_PATH, return_value=[other_port]):
+    with _patch_usb_scan([other_port]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -92,7 +103,7 @@ async def test_user_flow_single_port_skips_to_confirm(hass: HomeAssistant) -> No
     """Test user flow skips port selection when exactly one RX11 is found."""
     port = _make_port()
 
-    with patch(COMPORTS_PATH, return_value=[port]):
+    with _patch_usb_scan([port]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -108,7 +119,7 @@ async def test_user_flow_single_port_uses_known_manufacturer_fallback(
     port = _make_port()
     port.manufacturer = None
 
-    with patch(COMPORTS_PATH, return_value=[port]), _patch_connecting_transceiver():
+    with _patch_usb_scan([port]), _patch_connecting_transceiver():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -125,7 +136,7 @@ async def test_user_flow_select_port(hass: HomeAssistant) -> None:
     port1 = _make_port()
     port2 = _make_port(device="/dev/ttyACM1", serial_number="54321")
 
-    with patch(COMPORTS_PATH, return_value=[port1, port2]):
+    with _patch_usb_scan([port1, port2]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -133,7 +144,7 @@ async def test_user_flow_select_port(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ports"
 
-    with patch(COMPORTS_PATH, return_value=[port1, port2]):
+    with _patch_usb_scan([port1, port2]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_DEVICE_PATH: "/dev/ttyACM0"},
@@ -150,7 +161,7 @@ async def test_user_flow_aborts_when_frequency_not_permitted(
     hass.config.country = "US"
     port = _make_port()
 
-    with patch(COMPORTS_PATH, return_value=[port]):
+    with _patch_usb_scan([port]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -183,7 +194,7 @@ async def test_user_flow_aborts_when_country_not_configured(
     hass.config.country = None
     port = _make_port()
 
-    with patch(COMPORTS_PATH, return_value=[port]):
+    with _patch_usb_scan([port]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -213,7 +224,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
     """Test user flow creates entry after port selection and confirmation."""
     port = _make_port()
 
-    with patch(COMPORTS_PATH, return_value=[port]), _patch_connecting_transceiver():
+    with _patch_usb_scan([port]), _patch_connecting_transceiver():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -235,7 +246,7 @@ async def test_user_flow_cannot_connect_on_confirm(hass: HomeAssistant) -> None:
     port = _make_port()
 
     with (
-        patch(COMPORTS_PATH, return_value=[port]),
+        _patch_usb_scan([port]),
         _patch_connecting_transceiver(connected=False),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -258,7 +269,7 @@ async def test_user_flow_recovers_after_cannot_connect(hass: HomeAssistant) -> N
     mock_transceiver.dispose = AsyncMock()
 
     with (
-        patch(COMPORTS_PATH, return_value=[port]),
+        _patch_usb_scan([port]),
         patch(TRANSCEIVER_PATH, return_value=mock_transceiver),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -297,7 +308,7 @@ async def test_user_flow_cannot_connect_when_dispose_fails(
     mock_transceiver.dispose = AsyncMock(side_effect=dispose_side_effect)
 
     with (
-        patch(COMPORTS_PATH, return_value=[port]),
+        _patch_usb_scan([port]),
         patch(TRANSCEIVER_PATH, return_value=mock_transceiver),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -335,7 +346,7 @@ async def test_user_flow_cannot_connect_on_connection_error(
     mock_transceiver.dispose = AsyncMock()
 
     with (
-        patch(COMPORTS_PATH, return_value=[port]),
+        _patch_usb_scan([port]),
         patch(TRANSCEIVER_PATH, return_value=mock_transceiver),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -361,7 +372,7 @@ async def test_user_flow_unknown_error_on_unexpected_validation_failure(
     mock_transceiver.dispose = AsyncMock()
 
     with (
-        patch(COMPORTS_PATH, return_value=[port]),
+        _patch_usb_scan([port]),
         patch(TRANSCEIVER_PATH, return_value=mock_transceiver),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -382,7 +393,7 @@ async def test_user_flow_multiple_ports(hass: HomeAssistant) -> None:
     port1 = _make_port()
     port2 = _make_port(device="/dev/ttyACM1", serial_number="54321")
 
-    with patch(COMPORTS_PATH, return_value=[port1, port2]):
+    with _patch_usb_scan([port1, port2]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -391,9 +402,76 @@ async def test_user_flow_multiple_ports(hass: HomeAssistant) -> None:
     assert result["step_id"] == "ports"
 
 
+async def test_user_flow_offers_proxy_rx11_when_no_local_stick(
+    hass: HomeAssistant,
+) -> None:
+    """A proxied RX11 from the USB scan is offered next to ignored non-RX11 devices."""
+    proxy = USBDevice(
+        device=PROXY_PATH,
+        vid="155A",
+        pid="1014",
+        serial_number="12345",
+        manufacturer="ELDAT",
+        description="RX11 USB Transceiver",
+    )
+    other = USBDevice(
+        device="/dev/ttyUSB0",
+        vid="1234",
+        pid="5678",
+        serial_number="999",
+        manufacturer="Other",
+        description="Other",
+    )
+
+    with (
+        _patch_usb_scan([other, proxy]),
+        _patch_connecting_transceiver() as mock_transceiver_cls,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DEVICE_PATH] == PROXY_PATH
+    assert mock_transceiver_cls.call_args.kwargs["device_path"] == PROXY_PATH
+    assert mock_transceiver_cls.call_args.kwargs["allow_replacement"] is False
+
+
+async def test_usb_discovery_validates_proxy_url(
+    hass: HomeAssistant,
+) -> None:
+    """USB discovery of a proxied RX11 validates that proxy URL and stores it."""
+    discovery_info = UsbServiceInfo(
+        device=PROXY_PATH,
+        vid="155A",
+        pid="1014",
+        serial_number="12345",
+        manufacturer="ELDAT",
+        description="RX11 USB Transceiver",
+    )
+
+    with _patch_connecting_transceiver() as mock_transceiver_cls:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USB},
+            data=discovery_info,
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DEVICE_PATH] == PROXY_PATH
+    assert mock_transceiver_cls.call_args.kwargs["device_path"] == PROXY_PATH
+    assert mock_transceiver_cls.call_args.kwargs["allow_replacement"] is False
+
+
 async def test_user_flow_port_scan_oserror(hass: HomeAssistant) -> None:
     """Test user flow aborts when serial port enumeration fails."""
-    with patch(COMPORTS_PATH, side_effect=OSError):
+    with _patch_usb_scan(side_effect=OSError):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -431,7 +509,7 @@ async def test_user_flow_device_disappeared(hass: HomeAssistant) -> None:
     port1 = _make_port()
     port2 = _make_port(device="/dev/ttyACM1", serial_number="54321")
 
-    with patch(COMPORTS_PATH, return_value=[port1, port2]):
+    with _patch_usb_scan([port1, port2]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -441,7 +519,7 @@ async def test_user_flow_device_disappeared(hass: HomeAssistant) -> None:
 
     # On re-scan the selected port is gone
     port3 = _make_port(device="/dev/ttyACM2", serial_number="99999")
-    with patch(COMPORTS_PATH, return_value=[port2, port3]):
+    with _patch_usb_scan([port2, port3]):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_DEVICE_PATH: "/dev/ttyACM0"},
@@ -531,7 +609,7 @@ async def test_confirm_unique_id_from_vid_pid(hass: HomeAssistant) -> None:
     """Test unique_id falls back to VID/PID when serial is unknown."""
     port = _make_port(serial_number="unknown")
 
-    with patch(COMPORTS_PATH, return_value=[port]), _patch_connecting_transceiver():
+    with _patch_usb_scan([port]), _patch_connecting_transceiver():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
