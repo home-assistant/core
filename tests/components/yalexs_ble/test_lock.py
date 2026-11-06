@@ -60,6 +60,7 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.storage import Store
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -2301,6 +2302,47 @@ async def test_unload_cancels_credential_operation_and_removal_deletes_store(
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
+    assert STORAGE_KEY.format(entry.entry_id) not in hass_storage
+
+
+async def test_unload_waits_for_in_flight_name_save_before_removal(
+    hass: HomeAssistant,
+    mock_lock: MockLock,
+    entry: MockConfigEntry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a cancelled operation cannot recreate storage after removal."""
+    original_write = Store._async_write_data
+    write_started = asyncio.Event()
+    write_done = asyncio.Event()
+    release = asyncio.Event()
+
+    async def blocked_write(self: Store, data: dict) -> None:
+        async def write() -> None:
+            write_started.set()
+            await release.wait()
+            await original_write(self, data)
+            write_done.set()
+
+        # An executor write keeps running when its awaiting task is cancelled.
+        await asyncio.shield(hass.async_create_background_task(write(), "write"))
+
+    with patch.object(Store, "_async_write_data", blocked_write):
+        task = hass.async_create_task(
+            _call(
+                hass,
+                "set_lock_credential",
+                {"credential_data": "1234", "credential_index": 3, "name": "New"},
+            )
+        )
+        await write_started.wait()
+        hass.loop.call_later(0.05, release.set)
+        await hass.config_entries.async_unload(entry.entry_id)
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        await hass.config_entries.async_remove(entry.entry_id)
+        await write_done.wait()
+
     assert STORAGE_KEY.format(entry.entry_id) not in hass_storage
 
 

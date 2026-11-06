@@ -162,7 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
         else:
             raise
 
-    credential_names = CredentialNames(hass, entry.entry_id)
+    credential_names = CredentialNames(hass, entry)
     await credential_names.async_load()
     entry.runtime_data = YaleXSBLEData(
         entry.title,
