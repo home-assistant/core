@@ -1,11 +1,12 @@
 """Tests for the Opower coordinator."""
 
-from datetime import datetime, timedelta
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
 from itertools import pairwise
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from opower import AggregateType, CostRead
+from opower import Account, AggregateType, CostRead
 from opower.exceptions import ApiException
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -30,6 +31,104 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
+
+BILL_READ = CostRead(
+    start_time=datetime(2023, 1, 1, tzinfo=UTC),
+    end_time=datetime(2023, 2, 1, tzinfo=UTC),
+    consumption=100.0,
+    provided_cost=30.0,
+)
+OLDER_BILL_READ = CostRead(
+    start_time=datetime(2022, 12, 1, tzinfo=UTC),
+    end_time=datetime(2023, 1, 1, tzinfo=UTC),
+    consumption=100.0,
+    provided_cost=25.0,
+)
+
+
+def _mock_bill_reads(api: AsyncMock, bill_reads: list[CostRead]) -> None:
+    """Return the given bill reads and no interval reads."""
+
+    async def _get_cost_reads(
+        account: Account, aggregate_type: AggregateType, *args: Any, **kwargs: Any
+    ) -> list[CostRead]:
+        return bill_reads if aggregate_type is AggregateType.BILL else []
+
+    api.async_get_cost_reads.side_effect = _get_cost_reads
+
+
+@pytest.mark.parametrize(
+    "bill_read",
+    [
+        pytest.param(BILL_READ, id="no_export_register"),
+        pytest.param(replace(BILL_READ, imported=100.0, exported=0.0), id="no_export"),
+    ],
+)
+async def test_last_bill_effective_electricity_rate(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+    bill_read: CostRead,
+) -> None:
+    """Test the rate comes from the newest bill read of electricity accounts."""
+    _mock_bill_reads(mock_opower_api, [bill_read, OLDER_BILL_READ])
+
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    data = await coordinator._async_update_data()
+
+    assert data["111111"].last_bill_effective_electricity_rate == pytest.approx(0.3)
+    assert data["111111"].last_bill_received
+    assert data["222222"].last_bill_effective_electricity_rate is None
+    assert not data["222222"].last_bill_received
+
+
+@pytest.mark.parametrize(
+    "bill_read",
+    [
+        pytest.param(replace(BILL_READ, consumption=0.0), id="zero_consumption"),
+        pytest.param(replace(BILL_READ, consumption=-100.0), id="net_export"),
+        pytest.param(replace(BILL_READ, provided_cost=0.0), id="zero_cost"),
+        pytest.param(replace(BILL_READ, provided_cost=-30.0), id="credit"),
+        pytest.param(
+            replace(BILL_READ, imported=150.0, exported=50.0), id="partial_export"
+        ),
+    ],
+)
+async def test_last_bill_effective_electricity_rate_newest_bill_unusable(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+    bill_read: CostRead,
+) -> None:
+    """Test an unusable newest bill read does not fall back to an older one."""
+    _mock_bill_reads(mock_opower_api, [OLDER_BILL_READ, bill_read])
+
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    data = await coordinator._async_update_data()
+
+    assert data["111111"].last_bill_effective_electricity_rate is None
+    assert data["111111"].last_bill_received
+
+
+async def test_last_bill_effective_electricity_rate_kept_without_bill_reads(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test the previous rate is kept when no bill read is received."""
+    _mock_bill_reads(mock_opower_api, [BILL_READ])
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    coordinator.async_set_updated_data(await coordinator._async_update_data())
+    await async_wait_recording_done(hass)
+
+    _mock_bill_reads(mock_opower_api, [])
+    data = await coordinator._async_update_data()
+
+    assert data["111111"].last_bill_effective_electricity_rate == pytest.approx(0.3)
+    assert not data["111111"].last_bill_received
 
 
 async def test_coordinator_first_run(

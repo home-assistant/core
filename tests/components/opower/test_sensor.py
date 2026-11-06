@@ -1,19 +1,61 @@
 """Tests for the Opower sensor platform."""
 
-from datetime import datetime, timedelta
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from opower import CostRead
+from opower import Account, AggregateType, CostRead
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.opower.const import DOMAIN
 from homeassistant.components.recorder import Recorder
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfEnergy, UnitOfVolume
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    UnitOfEnergy,
+    UnitOfVolume,
+)
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
+
+RATE_ENTITY_ID = "sensor.elec_account_111111_last_bill_effective_electricity_rate"
+BILL_READ = CostRead(
+    start_time=datetime(2023, 1, 1, tzinfo=UTC),
+    end_time=datetime(2023, 2, 1, tzinfo=UTC),
+    consumption=100.0,
+    provided_cost=30.0,
+)
+
+
+def _mock_cost_reads(
+    api: AsyncMock,
+    bill_reads: list[CostRead],
+    interval_reads: list[CostRead] | None = None,
+) -> None:
+    """Return the given bill and interval reads."""
+
+    async def _get_cost_reads(
+        account: Account, aggregate_type: AggregateType, *args: Any, **kwargs: Any
+    ) -> list[CostRead]:
+        if aggregate_type is AggregateType.BILL:
+            return bill_reads
+        return interval_reads or []
+
+    api.async_get_cost_reads.side_effect = _get_cost_reads
+
+
+@pytest.fixture(autouse=True)
+def mock_bill_reads(mock_opower_api: AsyncMock) -> None:
+    """Return a usable bill read by default."""
+    _mock_cost_reads(mock_opower_api, [BILL_READ])
 
 
 async def test_sensors(
@@ -24,14 +66,18 @@ async def test_sensors(
     mock_opower_api: AsyncMock,
 ) -> None:
     """Test the creation and values of Opower sensors."""
-    mock_opower_api.async_get_cost_reads.return_value = [
-        CostRead(
-            start_time=dt_util.as_utc(datetime(2023, 1, 1, 8)),
-            end_time=dt_util.as_utc(datetime(2023, 1, 1, 9)),
-            consumption=1.5,
-            provided_cost=0.5,
-        ),
-    ]
+    _mock_cost_reads(
+        mock_opower_api,
+        [BILL_READ],
+        [
+            CostRead(
+                start_time=dt_util.as_utc(datetime(2023, 1, 1, 8)),
+                end_time=dt_util.as_utc(datetime(2023, 1, 1, 9)),
+                consumption=1.5,
+                provided_cost=0.5,
+            ),
+        ],
+    )
 
     with patch(
         "homeassistant.components.opower.coordinator.dt_util.utcnow"
@@ -64,6 +110,14 @@ async def test_sensors(
     assert state
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "USD"
     assert state.state == "20.0"
+
+    entry = entity_registry.async_get(RATE_ENTITY_ID)
+    assert entry
+    assert entry.unique_id == "pge_111111_last_bill_effective_electricity_rate"
+    state = hass.states.get(RATE_ENTITY_ID)
+    assert state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "USD/kWh"
+    assert state.state == "0.3"
 
     entry = entity_registry.async_get("sensor.elec_account_111111_last_changed")
     assert entry
@@ -114,6 +168,175 @@ async def test_sensors(
     state = hass.states.get("sensor.gas_account_222222_last_updated")
     assert state
     assert state.state == "2023-01-02T08:00:00+00:00"
+
+
+async def test_electricity_rate_sensor_without_forecast(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test the electricity rate sensor is created without forecast data."""
+    mock_opower_api.async_get_forecast.return_value = []
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(RATE_ENTITY_ID)
+    assert state
+    assert state.state == "0.3"
+    assert (
+        hass.states.get(
+            "sensor.elec_account_111111_current_bill_electric_usage_to_date"
+        )
+        is None
+    )
+
+
+async def _async_refresh(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Trigger a coordinator refresh."""
+    freezer.tick(timedelta(hours=12, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_electricity_rate_sensor_kept_without_bill_reads(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test the electricity rate sensor keeps its value without bill reads."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    _mock_cost_reads(mock_opower_api, [])
+    await _async_refresh(hass, freezer)
+
+    state = hass.states.get(RATE_ENTITY_ID)
+    assert state
+    assert state.state == "0.3"
+
+
+async def test_electricity_rate_sensor_unavailable(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test the electricity rate sensor is unavailable when the newest bill read is unusable."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    _mock_cost_reads(
+        mock_opower_api,
+        [
+            BILL_READ,
+            replace(
+                BILL_READ, end_time=datetime(2023, 3, 1, tzinfo=UTC), provided_cost=0.0
+            ),
+        ],
+    )
+    await _async_refresh(hass, freezer)
+
+    state = hass.states.get(RATE_ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+def _register_restored_rate_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Register the rate sensor with a restorable value from a previous run."""
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "pge_111111_last_bill_effective_electricity_rate",
+        suggested_object_id="elec_account_111111_last_bill_effective_electricity_rate",
+        config_entry=mock_config_entry,
+    )
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(RATE_ENTITY_ID, "0.25"),
+                {"native_value": 0.25, "native_unit_of_measurement": "USD/kWh"},
+            ),
+        ),
+    )
+
+
+async def test_electricity_rate_sensor_restored(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test the electricity rate sensor is restored until a bill is received."""
+    _register_restored_rate_sensor(hass, entity_registry, mock_config_entry)
+    _mock_cost_reads(mock_opower_api, [])
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(RATE_ENTITY_ID)
+    assert state
+    assert state.state == "0.25"
+
+    _mock_cost_reads(mock_opower_api, [replace(BILL_READ, provided_cost=0.0)])
+    await _async_refresh(hass, freezer)
+
+    state = hass.states.get(RATE_ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    # The restored rate must not come back once a newer bill replaced it.
+    _mock_cost_reads(mock_opower_api, [])
+    await _async_refresh(hass, freezer)
+
+    state = hass.states.get(RATE_ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_electricity_rate_sensor_not_restored_with_bill(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test a bill received at startup takes precedence over the restored rate."""
+    _register_restored_rate_sensor(hass, entity_registry, mock_config_entry)
+    _mock_cost_reads(mock_opower_api, [replace(BILL_READ, provided_cost=0.0)])
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(RATE_ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_electricity_rate_sensor_not_created_without_usable_bill(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test the electricity rate sensor is gated by a usable bill read."""
+    _mock_cost_reads(mock_opower_api, [replace(BILL_READ, provided_cost=0.0)])
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(RATE_ENTITY_ID) is None
 
 
 async def test_dynamic_and_stale_devices(
