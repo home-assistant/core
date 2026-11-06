@@ -9,6 +9,7 @@ from typing import override
 import blebox_uniapi.sensor
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -33,7 +34,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -42,6 +43,12 @@ from .coordinator import BleBoxConfigEntry, BleBoxCoordinator
 from .entity import BleBoxEntity
 
 PARALLEL_UPDATES = 0
+
+PROBE_ISSUE_ID_PREFIX = "probe_not_configured_"
+
+
+def _probe_issue_id(unique_id: str | None) -> str:
+    return f"{PROBE_ISSUE_ID_PREFIX}{unique_id}"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -247,6 +254,24 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
         if description.key == feature.device_class
     ]
+    unique_ids = {entity.unique_id for entity in entities}
+    # Drop the issues of features the device no longer exposes, and of entities
+    # disabled while the config entry was not loaded
+    with ir.async_refresh_issues(
+        hass,
+        DOMAIN,
+        issue_id_pattern=PROBE_ISSUE_ID_PREFIX,
+        config_entry_id=config_entry.entry_id,
+    ):
+        for entry in er.async_entries_for_config_entry(
+            er.async_get(hass), config_entry.entry_id
+        ):
+            if (
+                entry.domain == SENSOR_DOMAIN
+                and entry.unique_id in unique_ids
+                and not entry.disabled
+            ):
+                ir.async_keep_issue(hass, DOMAIN, _probe_issue_id(entry.unique_id))
     async_add_entities(entities)
 
 
@@ -278,10 +303,21 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
         self._async_update_probe_issue()
 
     @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Delete the probe configuration issue when removed."""
-        await super().async_will_remove_from_hass()
+    async def async_removed_from_registry(self) -> None:
+        """Delete the probe configuration issue when removed from the registry."""
+        await super().async_removed_from_registry()
         ir.async_delete_issue(self.hass, DOMAIN, self._probe_issue_id)
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Delete the probe configuration issue when the entity is disabled."""
+        await super().async_will_remove_from_hass()
+        # Issues of a disabled config entry are hidden by the issue registry
+        if self.registry_entry is not None and self.registry_entry.disabled_by not in (
+            None,
+            er.RegistryEntryDisabler.CONFIG_ENTRY,
+        ):
+            ir.async_delete_issue(self.hass, DOMAIN, self._probe_issue_id)
 
     @callback
     @override
@@ -292,7 +328,7 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
 
     @property
     def _probe_issue_id(self) -> str:
-        return f"probe_not_configured_{self.unique_id}"
+        return _probe_issue_id(self.unique_id)
 
     @callback
     def _async_update_probe_issue(self) -> None:
@@ -304,6 +340,7 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
             self.hass,
             DOMAIN,
             self._probe_issue_id,
+            config_entry_id=self.coordinator.config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key="probe_not_configured",

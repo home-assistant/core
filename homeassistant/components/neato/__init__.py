@@ -5,7 +5,6 @@ import logging
 from pybotvac import Account
 from pybotvac.exceptions import NeatoException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -18,12 +17,10 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import DOMAIN
-from .hub import NeatoHub
+from .hub import NeatoConfigEntry, NeatoHub
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
-
-type NeatoConfigEntry = ConfigEntry[NeatoHub]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
