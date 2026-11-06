@@ -271,8 +271,79 @@ async def test_gateway_version_issue(
 
     await async_init_integration(hass, mock_config_entry)
 
-    issue = issue_registry.async_get_issue(DOMAIN, "unsupported_gateway_firmware")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"unsupported_gateway_firmware_{mock_config_entry.entry_id}"
+    )
     assert (issue is not None) == issue_exists
+
+
+async def test_gateway_version_issue_per_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_client: MagicMock,
+) -> None:
+    """Test each entry gets its own gateway issue, removed with the entry."""
+    mock_cloud_client.get_thing_settings.return_value.firmwares[
+        FirmwareType.GATEWAY
+    ].build_version = "v3.5-rc6"
+    other_entry = MockConfigEntry(
+        title="My other LaMarzocco",
+        domain=DOMAIN,
+        version=4,
+        data=mock_config_entry.data,
+        unique_id="GS012345",
+    )
+    other_entry.add_to_hass(hass)
+    await async_init_integration(hass, mock_config_entry)
+
+    entries = (mock_config_entry, other_entry)
+    for entry in entries:
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"unsupported_gateway_firmware_{entry.entry_id}"
+        )
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
+        assert issue.translation_key == "unsupported_gateway_firmware"
+        assert issue.translation_placeholders == {
+            "gateway_version": "3.5rc6",
+            "name": entry.title,
+        }
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        DOMAIN,
+        f"unsupported_gateway_firmware_{mock_config_entry.entry_id}",
+    ) not in issue_registry.issues
+    assert (
+        DOMAIN,
+        f"unsupported_gateway_firmware_{other_entry.entry_id}",
+    ) in issue_registry.issues
+
+
+async def test_gateway_version_issue_deleted_after_update(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_client: MagicMock,
+) -> None:
+    """Test the gateway issue is deleted once the gateway firmware is updated."""
+    gateway_firmware = mock_cloud_client.get_thing_settings.return_value.firmwares[
+        FirmwareType.GATEWAY
+    ]
+    gateway_firmware.build_version = "v3.5-rc6"
+    await async_init_integration(hass, mock_config_entry)
+    issue_id = f"unsupported_gateway_firmware_{mock_config_entry.entry_id}"
+    assert (DOMAIN, issue_id) in issue_registry.issues
+
+    gateway_firmware.build_version = "v5.0.9"
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (DOMAIN, issue_id) not in issue_registry.issues
 
 
 async def test_device(

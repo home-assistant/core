@@ -713,6 +713,9 @@
       "climate_state_passenger_temp_setting": {
         "name": "Passenger temperature setting"
       },
+      "conductor_power": {
+        "name": "Conductor power"
+      },
       "consumer_energy_imported_from_battery": {
         "name": "Consumer imported from battery"
       },
@@ -1183,6 +1186,9 @@
       },
       "solar_power": {
         "name": "Solar power"
+      },
+      "solar_rgm_power": {
+        "name": "Solar RGM power"
       },
       "speed_limit_warning": {
         "name": "Speed limit warning",

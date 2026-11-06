@@ -13,7 +13,6 @@ from google_air_quality_api.mapping import AQICategoryMapping
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -48,6 +47,7 @@ from .const import (
     DOMAIN,
     SECTION_API_KEY_OPTIONS,
 )
+from .coordinator import GoogleAirQualityConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 AIR_QUALITY_COVERAGE_URL = (
@@ -235,7 +235,7 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: GoogleAirQualityConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"location": LocationSubentryFlowHandler}

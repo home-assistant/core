@@ -25,6 +25,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
 from .const import (
+    CONF_PROFILE,
     CONF_WARNING_ACCEPTED,
     DASHBOARD_RESOURCE_BASE,
     DOMAIN,
@@ -45,6 +46,12 @@ if TYPE_CHECKING:
     from .base import MarketplaceConfigEntry
 
 LEGACY_HACS_DOMAIN = "hacs"
+
+# The China fork of the custom integration writes this into the options of its
+# entry, the original never does. Its users chose the China mirrors, the
+# download profile that has them.
+LEGACY_HACS_CHINA_OPTION = "use_shared"
+LEGACY_HACS_CHINA_PROFILE = "hasscn"
 
 YAML_RESOURCES_ISSUE_ID = "legacy_dashboard_resources"
 
@@ -93,11 +100,15 @@ def async_adopt_legacy_install(
         if domain == LEGACY_HACS_DOMAIN
     ]
 
+    # The download profile is the one option of the Marketplace, anything else
+    # is left from before
+    legacy_options = entry.options.keys() - {CONF_PROFILE}
+
     if (
         not legacy_entities
         and not legacy_devices
         and not legacy_issues
-        and not entry.options
+        and not legacy_options
     ):
         return
 
@@ -107,9 +118,8 @@ def async_adopt_legacy_install(
     for issue_id in legacy_issues:
         ir.async_delete_issue(hass, LEGACY_HACS_DOMAIN, issue_id)
 
-    # The Marketplace has no options, anything stored there is left from before
-    if entry.options:
-        hass.config_entries.async_update_entry(entry, options={})
+    if legacy_options:
+        _async_adopt_options(hass, entry)
 
     LOGGER.info(
         "Took over the existing installation of %s entities and %s devices, "
@@ -118,6 +128,28 @@ def async_adopt_legacy_install(
         len(legacy_devices),
         len(legacy_issues),
     )
+
+
+@callback
+def _async_adopt_options(hass: HomeAssistant, entry: MarketplaceConfigEntry) -> None:
+    """Drop the options of the previous install, keeping the download profile."""
+    options = {
+        key: value for key, value in entry.options.items() if key == CONF_PROFILE
+    }
+    data = dict(entry.data)
+
+    if LEGACY_HACS_CHINA_OPTION in entry.options:
+        options.setdefault(CONF_PROFILE, LEGACY_HACS_CHINA_PROFILE)
+        # A shared token came from a pool on the mirrors, it belongs to
+        # someone else
+        if entry.options[LEGACY_HACS_CHINA_OPTION]:
+            data.pop(CONF_TOKEN, None)
+        LOGGER.info(
+            "Switched to the %s download profile, the previous install used the China mirrors",
+            LEGACY_HACS_CHINA_PROFILE,
+        )
+
+    hass.config_entries.async_update_entry(entry, data=data, options=options)
 
 
 @callback
@@ -323,6 +355,12 @@ async def async_remove_duplicate_entries(hass: HomeAssistant) -> None:
     if len(entries) < 2:
         return
 
+    # Before anything is taken from a duplicate, the choice of the China fork
+    # becomes a profile and its shared token is dropped
+    for entry in entries:
+        if entry.options.keys() - {CONF_PROFILE}:
+            _async_adopt_options(hass, entry)
+
     entity_registry = er.async_get(hass)
 
     def owns_legacy_entities(entry: MarketplaceConfigEntry) -> bool:
@@ -366,8 +404,21 @@ async def async_remove_duplicate_entries(hass: HomeAssistant) -> None:
     if acceptances:
         data[CONF_WARNING_ACCEPTED] = dict(acceptances)
 
-    if data != kept.data:
-        hass.config_entries.async_update_entry(kept, data=data)
+    options = dict(kept.options)
+    if CONF_PROFILE not in options and (
+        profile := next(
+            (
+                entry.options[CONF_PROFILE]
+                for entry in duplicates
+                if CONF_PROFILE in entry.options
+            ),
+            None,
+        )
+    ):
+        options[CONF_PROFILE] = profile
+
+    if data != kept.data or options != kept.options:
+        hass.config_entries.async_update_entry(kept, data=data, options=options)
 
     for entry in duplicates:
         LOGGER.warning(

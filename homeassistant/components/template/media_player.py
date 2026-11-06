@@ -144,9 +144,6 @@ RESTORED_MEDIA_TEMPLATES = (
     (CONF_MEDIA_TRACK, "_attr_media_track"),
 )
 
-# Deprecated states must not be produced by new entities.
-DEPRECATED_STATES = (MediaPlayerState("standby"),)
-
 MEDIA_PLAYER_COMMON_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -338,7 +335,6 @@ class AbstractTemplateMediaPlayer(
                 MediaPlayerState,
                 MediaPlayerState.ON,
                 MediaPlayerState.OFF,
-                deprecated_enums=DEPRECATED_STATES,
             ),
             self._update_player_state,
         )
@@ -640,10 +636,7 @@ class AbstractTemplateMediaPlayer(
     @override
     def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
-        if (
-            last_state.state in MediaPlayerState
-            and last_state.state not in DEPRECATED_STATES
-        ):
+        if last_state.state in MediaPlayerState:
             self._attr_state = MediaPlayerState(last_state.state)
             return True
 
