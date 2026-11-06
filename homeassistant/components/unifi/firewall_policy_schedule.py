@@ -17,7 +17,7 @@ from aiounifi.models.firewall_policy import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, MODES_WITH_DAYS
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -28,14 +28,6 @@ DEFAULT_TIME_RANGE_END = "12:00"
 
 WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 
-MODES_WITH_DAYS = (
-    FirewallPolicyScheduleMode.EVERY_WEEK,
-    FirewallPolicyScheduleMode.CUSTOM,
-)
-MODES_WITH_START_DATE = (
-    FirewallPolicyScheduleMode.ONE_TIME_ONLY,
-    FirewallPolicyScheduleMode.CUSTOM,
-)
 MODES_WITHOUT_SETTINGS = (
     FirewallPolicyScheduleMode.ALWAYS,
     FirewallPolicyScheduleMode.UNKNOWN,

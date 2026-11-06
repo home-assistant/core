@@ -21,7 +21,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, MODES_WITH_START_DATE
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -30,7 +30,6 @@ from .entity import (
     request_failed_error,
 )
 from .firewall_policy_schedule import (
-    MODES_WITH_START_DATE,
     async_save_schedule,
     parse_date,
     policy_schedule,

@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from aiounifi.models.device import DeviceState
+from aiounifi.models.firewall_policy import FirewallPolicyScheduleMode
 
 from homeassistant.const import Platform
 
@@ -77,3 +78,12 @@ DEVICE_STATES = {
     DeviceState.ADOPTION_FALIED: "adoption_failed",
     DeviceState.ISOLATED: "isolated",
 }
+
+MODES_WITH_DAYS = (
+    FirewallPolicyScheduleMode.EVERY_WEEK,
+    FirewallPolicyScheduleMode.CUSTOM,
+)
+MODES_WITH_START_DATE = (
+    FirewallPolicyScheduleMode.ONE_TIME_ONLY,
+    FirewallPolicyScheduleMode.CUSTOM,
+)
