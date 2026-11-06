@@ -50,7 +50,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowersensorConfigEntry) 
     # ConfigEntryNotReady above cannot leave a stale platform registered.
     # Anything discovered before sensor.py connects its listeners is seeded
     # from dispatcher.plugs / dispatcher.sensors when it loads.
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        await devices.stop()
+        raise
 
 
 async def async_unload_entry(
@@ -78,6 +82,10 @@ async def async_remove_config_entry_device(
     tracks the network, so any plug or sensor can be deleted.  A plug or sensor
     that is still active comes back when the integration loads again.
 
+    Deleting is refused while the integration is setting up.  Discovery is
+    already running by then, so a device deleted without being forgotten could
+    come straight back, or stay gone until the next reload.
+
     The household view is never deleted.  It belongs to the installation as a
     whole rather than to one device, and a household that has genuinely changed
     is set up again by removing the integration and adding it again.
@@ -92,6 +100,8 @@ async def async_remove_config_entry_device(
     """
     ids = {id_ for domain, id_ in device_entry.identifiers if domain == DOMAIN}
     if VHH_DEVICE_ID in ids:
+        return False
+    if config_entry.state is ConfigEntryState.SETUP_IN_PROGRESS:
         return False
     if config_entry.state is not ConfigEntryState.LOADED:
         return True
