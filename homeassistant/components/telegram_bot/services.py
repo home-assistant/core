@@ -7,7 +7,7 @@ from telegram.constants import InputMediaType
 from telegram.error import TelegramError
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
@@ -27,42 +27,13 @@ from homeassistant.util.json import JsonValueType
 
 from .bot import TelegramBotConfigEntry, TelegramNotificationService
 from .const import (
-    ATTR_ALLOWS_MULTIPLE_ANSWERS,
     ATTR_AUTHENTICATION,
-    ATTR_CALLBACK_QUERY_ID,
     ATTR_CAPTION,
-    ATTR_CHAT_ACTION,
     ATTR_CHAT_ID,
-    ATTR_DIRECTORY_PATH,
-    ATTR_DISABLE_NOTIF,
-    ATTR_DISABLE_WEB_PREV,
-    ATTR_DRAFT_ID,
     ATTR_FILE,
-    ATTR_FILE_ID,
-    ATTR_FILE_NAME,
-    ATTR_IS_ANONYMOUS,
-    ATTR_IS_BIG,
-    ATTR_KEYBOARD,
-    ATTR_KEYBOARD_INLINE,
-    ATTR_MEDIA,
     ATTR_MEDIA_TYPE,
-    ATTR_MESSAGE,
     ATTR_MESSAGE_ID,
-    ATTR_MESSAGE_TAG,
-    ATTR_MESSAGE_THREAD_ID,
-    ATTR_ONE_TIME_KEYBOARD,
-    ATTR_OPEN_PERIOD,
-    ATTR_OPTIONS,
-    ATTR_PARSER,
     ATTR_PASSWORD,
-    ATTR_PROTECT_CONTENT,
-    ATTR_QUESTION,
-    ATTR_REACTION,
-    ATTR_REPLY_TO_MSGID,
-    ATTR_RESIZE_KEYBOARD,
-    ATTR_SHOW_ALERT,
-    ATTR_STICKER_ID,
-    ATTR_TITLE,
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
@@ -77,33 +48,13 @@ from .const import (
     CHAT_ACTION_UPLOAD_VIDEO,
     CHAT_ACTION_UPLOAD_VIDEO_NOTE,
     CHAT_ACTION_UPLOAD_VOICE,
-    CONF_CONFIG_ENTRY_ID,
     DOMAIN,
     PARSER_HTML,
     PARSER_MD,
     PARSER_MD2,
     PARSER_PLAIN_TEXT,
-    SERVICE_ANSWER_CALLBACK_QUERY,
-    SERVICE_DELETE_MESSAGE,
-    SERVICE_DOWNLOAD_FILE,
-    SERVICE_EDIT_CAPTION,
-    SERVICE_EDIT_MESSAGE,
-    SERVICE_EDIT_MESSAGE_MEDIA,
-    SERVICE_EDIT_REPLYMARKUP,
-    SERVICE_LEAVE_CHAT,
-    SERVICE_SEND_ANIMATION,
-    SERVICE_SEND_CHAT_ACTION,
-    SERVICE_SEND_DOCUMENT,
-    SERVICE_SEND_LOCATION,
-    SERVICE_SEND_MEDIA_GROUP,
-    SERVICE_SEND_MESSAGE,
-    SERVICE_SEND_MESSAGE_DRAFT,
-    SERVICE_SEND_PHOTO,
-    SERVICE_SEND_POLL,
-    SERVICE_SEND_STICKER,
-    SERVICE_SEND_VIDEO,
-    SERVICE_SEND_VOICE,
-    SERVICE_SET_MESSAGE_REACTION,
+    TelegramBotService,
+    TelegramBotServiceArgument,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,63 +66,73 @@ ATTR_PARSER_SCHEMA = probatio.All(
 
 BASE_SERVICE_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Optional(ATTR_CHAT_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.All(
             probatio.EnsureList(), [probatio.Coerce(int)]
         ),
-        probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
-        probatio.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
-        probatio.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
-        probatio.Optional(ATTR_RESIZE_KEYBOARD): cv.boolean,
-        probatio.Optional(ATTR_ONE_TIME_KEYBOARD): cv.boolean,
-        probatio.Optional(ATTR_KEYBOARD): probatio.All(
+        probatio.Optional(TelegramBotServiceArgument.PARSE_MODE): ATTR_PARSER_SCHEMA,
+        probatio.Optional(TelegramBotServiceArgument.DISABLE_NOTIFICATION): cv.boolean,
+        probatio.Optional(
+            TelegramBotServiceArgument.DISABLE_WEB_PAGE_PREVIEW
+        ): cv.boolean,
+        probatio.Optional(TelegramBotServiceArgument.RESIZE_KEYBOARD): cv.boolean,
+        probatio.Optional(TelegramBotServiceArgument.ONE_TIME_KEYBOARD): cv.boolean,
+        probatio.Optional(TelegramBotServiceArgument.KEYBOARD): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
-        probatio.Optional(ATTR_MESSAGE_TAG): cv.string,
-        probatio.Optional(ATTR_MESSAGE_THREAD_ID): probatio.Coerce(int),
+        probatio.Optional(
+            TelegramBotServiceArgument.INLINE_KEYBOARD
+        ): probatio.EnsureList(),
+        probatio.Optional(TelegramBotServiceArgument.MESSAGE_TAG): cv.string,
+        probatio.Optional(
+            TelegramBotServiceArgument.MESSAGE_THREAD_ID
+        ): probatio.Coerce(int),
     }
 )
 
 SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend(
     {
-        probatio.Required(ATTR_MESSAGE): cv.string,
-        probatio.Optional(ATTR_TITLE): cv.string,
-        probatio.Optional(ATTR_REPLY_TO_MSGID): probatio.Coerce(int),
+        probatio.Required(TelegramBotServiceArgument.MESSAGE): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.TITLE): cv.string,
+        probatio.Optional(
+            TelegramBotServiceArgument.REPLY_TO_MESSAGE_ID
+        ): probatio.Coerce(int),
     }
 )
 
 SERVICE_SCHEMA_SEND_MESSAGE_DRAFT = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Optional(ATTR_CHAT_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.All(
             probatio.EnsureList(), [probatio.Coerce(int)]
         ),
-        probatio.Optional(ATTR_MESSAGE_THREAD_ID): probatio.Coerce(int),
-        probatio.Required(ATTR_DRAFT_ID): probatio.All(
+        probatio.Optional(
+            TelegramBotServiceArgument.MESSAGE_THREAD_ID
+        ): probatio.Coerce(int),
+        probatio.Required(TelegramBotServiceArgument.DRAFT_ID): probatio.All(
             probatio.Coerce(int), probatio.Range(min=1)
         ),
-        probatio.Required(ATTR_MESSAGE): cv.string,
-        probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
+        probatio.Required(TelegramBotServiceArgument.MESSAGE): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.PARSE_MODE): ATTR_PARSER_SCHEMA,
     }
 )
 
 SERVICE_SCHEMA_SEND_CHAT_ACTION = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Optional(ATTR_CHAT_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.All(
             probatio.EnsureList(), [probatio.Coerce(int)]
         ),
-        probatio.Required(ATTR_CHAT_ACTION): probatio.In(
+        probatio.Required(TelegramBotServiceArgument.CHAT_ACTION): probatio.In(
             (
                 CHAT_ACTION_TYPING,
                 CHAT_ACTION_UPLOAD_PHOTO,
@@ -186,33 +147,37 @@ SERVICE_SCHEMA_SEND_CHAT_ACTION = probatio.Schema(
                 CHAT_ACTION_UPLOAD_VIDEO_NOTE,
             )
         ),
-        probatio.Optional(ATTR_MESSAGE_THREAD_ID): probatio.Coerce(int),
+        probatio.Optional(
+            TelegramBotServiceArgument.MESSAGE_THREAD_ID
+        ): probatio.Coerce(int),
     }
 )
 
 SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
     {
-        probatio.Optional(ATTR_URL): cv.string,
-        probatio.Optional(ATTR_FILE): cv.string,
-        probatio.Optional(ATTR_CAPTION): cv.string,
-        probatio.Optional(ATTR_USERNAME): cv.string,
-        probatio.Optional(ATTR_PASSWORD): cv.string,
-        probatio.Optional(ATTR_AUTHENTICATION): cv.string,
-        probatio.Optional(ATTR_VERIFY_SSL): cv.boolean,
-        probatio.Optional(ATTR_REPLY_TO_MSGID): probatio.Coerce(int),
+        probatio.Optional(TelegramBotServiceArgument.URL): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.FILE): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.CAPTION): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.USERNAME): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.PASSWORD): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.AUTHENTICATION): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.VERIFY_SSL): cv.boolean,
+        probatio.Optional(
+            TelegramBotServiceArgument.REPLY_TO_MESSAGE_ID
+        ): probatio.Coerce(int),
     }
 )
 
 SERVICE_SCHEMA_SEND_MEDIA_GROUP = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Optional(ATTR_CHAT_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.All(
             probatio.EnsureList(), [probatio.Coerce(int)]
         ),
-        probatio.Required(ATTR_MEDIA): probatio.All(
+        probatio.Required(TelegramBotServiceArgument.MEDIA): probatio.All(
             probatio.EnsureList(),
             [
                 probatio.Schema(
@@ -237,79 +202,97 @@ SERVICE_SCHEMA_SEND_MEDIA_GROUP = probatio.Schema(
             ],
             probatio.Length(min=2, max=10),
         ),
-        probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
-        probatio.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
-        probatio.Optional(ATTR_PROTECT_CONTENT): cv.boolean,
-        probatio.Optional(ATTR_REPLY_TO_MSGID): probatio.Coerce(int),
-        probatio.Optional(ATTR_MESSAGE_THREAD_ID): probatio.Coerce(int),
+        probatio.Optional(TelegramBotServiceArgument.PARSE_MODE): ATTR_PARSER_SCHEMA,
+        probatio.Optional(TelegramBotServiceArgument.DISABLE_NOTIFICATION): cv.boolean,
+        probatio.Optional(TelegramBotServiceArgument.PROTECT_CONTENT): cv.boolean,
+        probatio.Optional(
+            TelegramBotServiceArgument.REPLY_TO_MESSAGE_ID
+        ): probatio.Coerce(int),
+        probatio.Optional(
+            TelegramBotServiceArgument.MESSAGE_THREAD_ID
+        ): probatio.Coerce(int),
     }
 )
 
 SERVICE_SCHEMA_SEND_STICKER = SERVICE_SCHEMA_SEND_FILE.extend(
-    {probatio.Optional(ATTR_STICKER_ID): cv.string}
+    {probatio.Optional(TelegramBotServiceArgument.STICKER_ID): cv.string}
 )
 
 SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend(
     {
-        probatio.Required(ATTR_LONGITUDE): cv.string,
-        probatio.Required(ATTR_LATITUDE): cv.string,
-        probatio.Optional(ATTR_REPLY_TO_MSGID): probatio.Coerce(int),
+        probatio.Required(TelegramBotServiceArgument.LONGITUDE): cv.string,
+        probatio.Required(TelegramBotServiceArgument.LATITUDE): cv.string,
+        probatio.Optional(
+            TelegramBotServiceArgument.REPLY_TO_MESSAGE_ID
+        ): probatio.Coerce(int),
     }
 )
 
 SERVICE_SCHEMA_SEND_POLL = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Optional(ATTR_CHAT_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.All(
             probatio.EnsureList(), [probatio.Coerce(int)]
         ),
-        probatio.Required(ATTR_QUESTION): cv.string,
-        probatio.Required(ATTR_OPTIONS): probatio.All(
+        probatio.Required(TelegramBotServiceArgument.QUESTION): cv.string,
+        probatio.Required(TelegramBotServiceArgument.OPTIONS): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(ATTR_OPEN_PERIOD): cv.positive_int,
-        probatio.Optional(ATTR_IS_ANONYMOUS, default=True): cv.boolean,
-        probatio.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
-        probatio.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
-        probatio.Optional(ATTR_MESSAGE_THREAD_ID): probatio.Coerce(int),
-        probatio.Optional(ATTR_REPLY_TO_MSGID): probatio.Coerce(int),
+        probatio.Optional(TelegramBotServiceArgument.OPEN_PERIOD): cv.positive_int,
+        probatio.Optional(
+            TelegramBotServiceArgument.IS_ANONYMOUS, default=True
+        ): cv.boolean,
+        probatio.Optional(
+            TelegramBotServiceArgument.ALLOWS_MULTIPLE_ANSWERS, default=False
+        ): cv.boolean,
+        probatio.Optional(TelegramBotServiceArgument.DISABLE_NOTIFICATION): cv.boolean,
+        probatio.Optional(
+            TelegramBotServiceArgument.MESSAGE_THREAD_ID
+        ): probatio.Coerce(int),
+        probatio.Optional(
+            TelegramBotServiceArgument.REPLY_TO_MESSAGE_ID
+        ): probatio.Coerce(int),
     }
 )
 
 SERVICE_SCHEMA_EDIT_MESSAGE = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Optional(ATTR_TITLE): cv.string,
-        probatio.Required(ATTR_MESSAGE): cv.string,
-        probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.TITLE): cv.string,
+        probatio.Required(TelegramBotServiceArgument.MESSAGE): cv.string,
+        probatio.Required(TelegramBotServiceArgument.MESSAGE_ID): probatio.Any(
             cv.positive_int, probatio.All(cv.string, "last")
         ),
-        probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
-        probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
-        probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
-        probatio.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
+        probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.Coerce(int),
+        probatio.Optional(TelegramBotServiceArgument.PARSE_MODE): ATTR_PARSER_SCHEMA,
+        probatio.Optional(
+            TelegramBotServiceArgument.INLINE_KEYBOARD
+        ): probatio.EnsureList(),
+        probatio.Optional(
+            TelegramBotServiceArgument.DISABLE_WEB_PAGE_PREVIEW
+        ): cv.boolean,
     }
 )
 
 SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(TelegramBotServiceArgument.MESSAGE_ID): probatio.Any(
             cv.positive_int, probatio.All(cv.string, "last")
         ),
-        probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
-        probatio.Optional(ATTR_CAPTION): cv.string,
-        probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
-        probatio.Required(ATTR_MEDIA_TYPE): probatio.In(
+        probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.Coerce(int),
+        probatio.Optional(TelegramBotServiceArgument.CAPTION): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.PARSE_MODE): ATTR_PARSER_SCHEMA,
+        probatio.Required(TelegramBotServiceArgument.MEDIA_TYPE): probatio.In(
             (
                 str(InputMediaType.ANIMATION),
                 str(InputMediaType.AUDIO),
@@ -318,63 +301,71 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = probatio.Schema(
                 str(InputMediaType.PHOTO),
             )
         ),
-        probatio.Optional(ATTR_URL): cv.string,
-        probatio.Optional(ATTR_FILE): cv.string,
-        probatio.Optional(ATTR_USERNAME): cv.string,
-        probatio.Optional(ATTR_PASSWORD): cv.string,
-        probatio.Optional(ATTR_AUTHENTICATION): cv.string,
-        probatio.Optional(ATTR_VERIFY_SSL): cv.boolean,
-        probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
+        probatio.Optional(TelegramBotServiceArgument.URL): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.FILE): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.USERNAME): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.PASSWORD): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.AUTHENTICATION): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.VERIFY_SSL): cv.boolean,
+        probatio.Optional(
+            TelegramBotServiceArgument.INLINE_KEYBOARD
+        ): probatio.EnsureList(),
     }
 )
 
 SERVICE_SCHEMA_EDIT_CAPTION = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(TelegramBotServiceArgument.MESSAGE_ID): probatio.Any(
             cv.positive_int, probatio.All(cv.string, "last")
         ),
-        probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
-        probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
-        probatio.Required(ATTR_CAPTION): cv.string,
-        probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
+        probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.Coerce(int),
+        probatio.Optional(TelegramBotServiceArgument.PARSE_MODE): ATTR_PARSER_SCHEMA,
+        probatio.Required(TelegramBotServiceArgument.CAPTION): cv.string,
+        probatio.Optional(
+            TelegramBotServiceArgument.INLINE_KEYBOARD
+        ): probatio.EnsureList(),
     }
 )
 
 SERVICE_SCHEMA_EDIT_REPLYMARKUP = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(TelegramBotServiceArgument.MESSAGE_ID): probatio.Any(
             cv.positive_int, probatio.All(cv.string, "last")
         ),
-        probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
-        probatio.Required(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
+        probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.Coerce(int),
+        probatio.Required(
+            TelegramBotServiceArgument.INLINE_KEYBOARD
+        ): probatio.EnsureList(),
     }
 )
 
 SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = probatio.Schema(
     {
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Required(ATTR_MESSAGE): cv.string,
-        probatio.Required(ATTR_CALLBACK_QUERY_ID): probatio.Coerce(int),
-        probatio.Optional(ATTR_SHOW_ALERT): cv.boolean,
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(TelegramBotServiceArgument.MESSAGE): cv.string,
+        probatio.Required(
+            TelegramBotServiceArgument.CALLBACK_QUERY_ID
+        ): probatio.Coerce(int),
+        probatio.Optional(TelegramBotServiceArgument.SHOW_ALERT): cv.boolean,
     }
 )
 
 SERVICE_SCHEMA_DELETE_MESSAGE = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
-        probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.Coerce(int),
+        probatio.Required(TelegramBotServiceArgument.MESSAGE_ID): probatio.Any(
             cv.positive_int, probatio.All(cv.string, "last")
         ),
     }
@@ -382,57 +373,57 @@ SERVICE_SCHEMA_DELETE_MESSAGE = probatio.Schema(
 
 SERVICE_SCHEMA_LEAVE_CHAT = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.Coerce(int),
     }
 )
 
 SERVICE_SCHEMA_SET_MESSAGE_REACTION = probatio.Schema(
     {
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(TelegramBotServiceArgument.MESSAGE_ID): probatio.Any(
             cv.positive_int, probatio.All(cv.string, "last")
         ),
-        probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
-        probatio.Required(ATTR_REACTION): cv.string,
-        probatio.Optional(ATTR_IS_BIG, default=False): cv.boolean,
+        probatio.Optional(TelegramBotServiceArgument.CHAT_ID): probatio.Coerce(int),
+        probatio.Required(TelegramBotServiceArgument.REACTION): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.IS_BIG, default=False): cv.boolean,
     }
 )
 
 SERVICE_SCHEMA_DOWNLOAD_FILE = probatio.Schema(
     {
-        probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        probatio.Required(ATTR_FILE_ID): cv.string,
-        probatio.Optional(ATTR_DIRECTORY_PATH): cv.string,
-        probatio.Optional(ATTR_FILE_NAME): cv.string,
+        probatio.Optional(CommonServiceArgument.CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(TelegramBotServiceArgument.FILE_ID): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.DIRECTORY_PATH): cv.string,
+        probatio.Optional(TelegramBotServiceArgument.FILE_NAME): cv.string,
     }
 )
 
 SERVICE_MAP: dict[str, VolSchemaType] = {
-    SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
-    SERVICE_SEND_MESSAGE_DRAFT: SERVICE_SCHEMA_SEND_MESSAGE_DRAFT,
-    SERVICE_SEND_CHAT_ACTION: SERVICE_SCHEMA_SEND_CHAT_ACTION,
-    SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
-    SERVICE_SEND_MEDIA_GROUP: SERVICE_SCHEMA_SEND_MEDIA_GROUP,
-    SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_STICKER,
-    SERVICE_SEND_ANIMATION: SERVICE_SCHEMA_SEND_FILE,
-    SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
-    SERVICE_SEND_VOICE: SERVICE_SCHEMA_SEND_FILE,
-    SERVICE_SEND_DOCUMENT: SERVICE_SCHEMA_SEND_FILE,
-    SERVICE_SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
-    SERVICE_SEND_POLL: SERVICE_SCHEMA_SEND_POLL,
-    SERVICE_EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
-    SERVICE_EDIT_MESSAGE_MEDIA: SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA,
-    SERVICE_EDIT_CAPTION: SERVICE_SCHEMA_EDIT_CAPTION,
-    SERVICE_EDIT_REPLYMARKUP: SERVICE_SCHEMA_EDIT_REPLYMARKUP,
-    SERVICE_ANSWER_CALLBACK_QUERY: SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY,
-    SERVICE_DELETE_MESSAGE: SERVICE_SCHEMA_DELETE_MESSAGE,
-    SERVICE_LEAVE_CHAT: SERVICE_SCHEMA_LEAVE_CHAT,
-    SERVICE_SET_MESSAGE_REACTION: SERVICE_SCHEMA_SET_MESSAGE_REACTION,
-    SERVICE_DOWNLOAD_FILE: SERVICE_SCHEMA_DOWNLOAD_FILE,
+    TelegramBotService.SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
+    TelegramBotService.SEND_MESSAGE_DRAFT: SERVICE_SCHEMA_SEND_MESSAGE_DRAFT,
+    TelegramBotService.SEND_CHAT_ACTION: SERVICE_SCHEMA_SEND_CHAT_ACTION,
+    TelegramBotService.SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
+    TelegramBotService.SEND_MEDIA_GROUP: SERVICE_SCHEMA_SEND_MEDIA_GROUP,
+    TelegramBotService.SEND_STICKER: SERVICE_SCHEMA_SEND_STICKER,
+    TelegramBotService.SEND_ANIMATION: SERVICE_SCHEMA_SEND_FILE,
+    TelegramBotService.SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
+    TelegramBotService.SEND_VOICE: SERVICE_SCHEMA_SEND_FILE,
+    TelegramBotService.SEND_DOCUMENT: SERVICE_SCHEMA_SEND_FILE,
+    TelegramBotService.SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
+    TelegramBotService.SEND_POLL: SERVICE_SCHEMA_SEND_POLL,
+    TelegramBotService.EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
+    TelegramBotService.EDIT_MESSAGE_MEDIA: SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA,
+    TelegramBotService.EDIT_CAPTION: SERVICE_SCHEMA_EDIT_CAPTION,
+    TelegramBotService.EDIT_REPLYMARKUP: SERVICE_SCHEMA_EDIT_REPLYMARKUP,
+    TelegramBotService.ANSWER_CALLBACK_QUERY: SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY,
+    TelegramBotService.DELETE_MESSAGE: SERVICE_SCHEMA_DELETE_MESSAGE,
+    TelegramBotService.LEAVE_CHAT: SERVICE_SCHEMA_LEAVE_CHAT,
+    TelegramBotService.SET_MESSAGE_REACTION: SERVICE_SCHEMA_SET_MESSAGE_REACTION,
+    TelegramBotService.DOWNLOAD_FILE: SERVICE_SCHEMA_DOWNLOAD_FILE,
 }
 
 
@@ -452,7 +443,7 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
                 service, target_config_entry.runtime_data, target_chat_id
             )
 
-            if service.service == SERVICE_DOWNLOAD_FILE:
+            if service.service == TelegramBotService.DOWNLOAD_FILE:
                 return service_response
 
             if service_response is not None:
@@ -509,48 +500,48 @@ async def _call_service(
     service_name = service.service
 
     kwargs = dict(service.data)
-    kwargs[ATTR_CHAT_ID] = chat_id
+    kwargs[TelegramBotServiceArgument.CHAT_ID] = chat_id
 
     messages: dict[str, JsonValueType] | None = None
-    if service_name == SERVICE_SEND_MESSAGE:
+    if service_name == TelegramBotService.SEND_MESSAGE:
         messages = await notify_service.send_message(context=service.context, **kwargs)
-    elif service_name == SERVICE_SEND_MEDIA_GROUP:
+    elif service_name == TelegramBotService.SEND_MEDIA_GROUP:
         messages = await notify_service.send_media_group(
             context=service.context, **kwargs
         )
-    elif service_name == SERVICE_SEND_CHAT_ACTION:
+    elif service_name == TelegramBotService.SEND_CHAT_ACTION:
         messages = await notify_service.send_chat_action(
             context=service.context, **kwargs
         )
     elif service_name in [
-        SERVICE_SEND_PHOTO,
-        SERVICE_SEND_ANIMATION,
-        SERVICE_SEND_VIDEO,
-        SERVICE_SEND_VOICE,
-        SERVICE_SEND_DOCUMENT,
+        TelegramBotService.SEND_PHOTO,
+        TelegramBotService.SEND_ANIMATION,
+        TelegramBotService.SEND_VIDEO,
+        TelegramBotService.SEND_VOICE,
+        TelegramBotService.SEND_DOCUMENT,
     ]:
         messages = await notify_service.send_file(
             service_name, context=service.context, **kwargs
         )
-    elif service_name == SERVICE_SEND_STICKER:
+    elif service_name == TelegramBotService.SEND_STICKER:
         messages = await notify_service.send_sticker(context=service.context, **kwargs)
-    elif service_name == SERVICE_SEND_LOCATION:
+    elif service_name == TelegramBotService.SEND_LOCATION:
         messages = await notify_service.send_location(context=service.context, **kwargs)
-    elif service_name == SERVICE_SEND_POLL:
+    elif service_name == TelegramBotService.SEND_POLL:
         messages = await notify_service.send_poll(context=service.context, **kwargs)
-    elif service_name == SERVICE_ANSWER_CALLBACK_QUERY:
+    elif service_name == TelegramBotService.ANSWER_CALLBACK_QUERY:
         await notify_service.answer_callback_query(context=service.context, **kwargs)
-    elif service_name == SERVICE_DELETE_MESSAGE:
+    elif service_name == TelegramBotService.DELETE_MESSAGE:
         await notify_service.delete_message(context=service.context, **kwargs)
-    elif service_name == SERVICE_LEAVE_CHAT:
+    elif service_name == TelegramBotService.LEAVE_CHAT:
         await notify_service.leave_chat(context=service.context, **kwargs)
-    elif service_name == SERVICE_SET_MESSAGE_REACTION:
+    elif service_name == TelegramBotService.SET_MESSAGE_REACTION:
         await notify_service.set_message_reaction(context=service.context, **kwargs)
-    elif service_name == SERVICE_EDIT_MESSAGE_MEDIA:
+    elif service_name == TelegramBotService.EDIT_MESSAGE_MEDIA:
         await notify_service.edit_message_media(context=service.context, **kwargs)
-    elif service_name == SERVICE_SEND_MESSAGE_DRAFT:
+    elif service_name == TelegramBotService.SEND_MESSAGE_DRAFT:
         await notify_service.send_message_draft(context=service.context, **kwargs)
-    elif service_name == SERVICE_DOWNLOAD_FILE:
+    elif service_name == TelegramBotService.DOWNLOAD_FILE:
         return await notify_service.download_file(context=service.context, **kwargs)
     else:
         await notify_service.edit_message(
@@ -610,9 +601,9 @@ def _build_targets(
     # build target list using service data: `config_entry_id` and `chat_id`
 
     config_entry: TelegramBotConfigEntry | None = None
-    if CONF_CONFIG_ENTRY_ID in service.data:
+    if CommonServiceArgument.CONFIG_ENTRY_ID in service.data:
         # parse config entry from service data
-        config_entry_id: str = service.data[CONF_CONFIG_ENTRY_ID]
+        config_entry_id: str = service.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         config_entry = service.hass.config_entries.async_get_known_entry(
             config_entry_id
         )
@@ -636,11 +627,11 @@ def _build_targets(
     # parse chat IDs from service data: `chat_id`
     if config_entry is not None:
         chat_ids: set[int] = set()
-        if ATTR_CHAT_ID in service.data:
+        if TelegramBotServiceArgument.CHAT_ID in service.data:
             chat_ids = set(
-                [service.data[ATTR_CHAT_ID]]
-                if isinstance(service.data[ATTR_CHAT_ID], int)
-                else service.data[ATTR_CHAT_ID]
+                [service.data[TelegramBotServiceArgument.CHAT_ID]]
+                if isinstance(service.data[TelegramBotServiceArgument.CHAT_ID], int)
+                else service.data[TelegramBotServiceArgument.CHAT_ID]
             )
 
         if not chat_ids and not targets:
@@ -714,18 +705,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         supports_response = SupportsResponse.NONE
 
         if service_notif in [
-            SERVICE_SEND_MESSAGE,
-            SERVICE_SEND_CHAT_ACTION,
-            SERVICE_SEND_PHOTO,
-            SERVICE_SEND_MEDIA_GROUP,
-            SERVICE_SEND_ANIMATION,
-            SERVICE_SEND_VIDEO,
-            SERVICE_SEND_VOICE,
-            SERVICE_SEND_DOCUMENT,
-            SERVICE_SEND_STICKER,
-            SERVICE_SEND_LOCATION,
-            SERVICE_SEND_POLL,
-            SERVICE_DOWNLOAD_FILE,
+            TelegramBotService.SEND_MESSAGE,
+            TelegramBotService.SEND_CHAT_ACTION,
+            TelegramBotService.SEND_PHOTO,
+            TelegramBotService.SEND_MEDIA_GROUP,
+            TelegramBotService.SEND_ANIMATION,
+            TelegramBotService.SEND_VIDEO,
+            TelegramBotService.SEND_VOICE,
+            TelegramBotService.SEND_DOCUMENT,
+            TelegramBotService.SEND_STICKER,
+            TelegramBotService.SEND_LOCATION,
+            TelegramBotService.SEND_POLL,
+            TelegramBotService.DOWNLOAD_FILE,
         ]:
             supports_response = SupportsResponse.OPTIONAL
 
