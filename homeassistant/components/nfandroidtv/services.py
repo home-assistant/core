@@ -3,27 +3,12 @@
 from notifications_android_tv.notifications import Notifications
 import probatio
 
-from homeassistant.components.notify import (
-    ATTR_MESSAGE,
-    ATTR_TITLE,
-    DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
-)
-from homeassistant.const import ATTR_ICON
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import MediaSelector
 
-from .const import (
-    ATTR_BGCOLOR,
-    ATTR_DURATION,
-    ATTR_FONTSIZE,
-    ATTR_IMAGE,
-    ATTR_INTERACTIVE,
-    ATTR_POSITION,
-    ATTR_TRANSPARENCY,
-    DOMAIN,
-)
+from .const import DOMAIN, NFAndroidTVService, NFAndroidTVServiceArgument
 
 
 @callback
@@ -33,19 +18,33 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NFAndroidTVService.SEND_MESSAGE,
         entity_domain=NOTIFY_DOMAIN,
         schema={
-            probatio.Optional(ATTR_TITLE): cv.string,
-            probatio.Required(ATTR_MESSAGE): cv.string,
-            probatio.Optional(ATTR_IMAGE): MediaSelector({"accept": ["*"]}),
-            probatio.Optional(ATTR_ICON): MediaSelector({"accept": ["*"]}),
-            probatio.Optional(ATTR_POSITION): probatio.In(Notifications.POSITIONS),
-            probatio.Optional(ATTR_DURATION): cv.positive_time_period,
-            probatio.Optional(ATTR_INTERACTIVE): probatio.Boolean(),
-            probatio.Optional(ATTR_BGCOLOR): probatio.In(Notifications.BKG_COLORS),
-            probatio.Optional(ATTR_FONTSIZE): probatio.In(Notifications.FONTSIZES),
-            probatio.Optional(ATTR_TRANSPARENCY): probatio.In(
+            probatio.Optional(NFAndroidTVServiceArgument.TITLE): cv.string,
+            probatio.Required(NFAndroidTVServiceArgument.MESSAGE): cv.string,
+            probatio.Optional(NFAndroidTVServiceArgument.IMAGE): MediaSelector(
+                {"accept": ["*"]}
+            ),
+            probatio.Optional(NFAndroidTVServiceArgument.ICON): MediaSelector(
+                {"accept": ["*"]}
+            ),
+            probatio.Optional(NFAndroidTVServiceArgument.POSITION): probatio.In(
+                Notifications.POSITIONS
+            ),
+            probatio.Optional(
+                NFAndroidTVServiceArgument.DURATION
+            ): cv.positive_time_period,
+            probatio.Optional(
+                NFAndroidTVServiceArgument.INTERACTIVE
+            ): probatio.Boolean(),
+            probatio.Optional(NFAndroidTVServiceArgument.BACKGROUND_COLOR): probatio.In(
+                Notifications.BKG_COLORS
+            ),
+            probatio.Optional(NFAndroidTVServiceArgument.FONTSIZE): probatio.In(
+                Notifications.FONTSIZES
+            ),
+            probatio.Optional(NFAndroidTVServiceArgument.TRANSPARENCY): probatio.In(
                 Notifications.TRANSPARENCIES
             ),
         },

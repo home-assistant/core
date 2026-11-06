@@ -1,6 +1,8 @@
 """The tests for local file camera component."""
 
+import errno
 from http import HTTPStatus
+import os
 from typing import Any
 from unittest.mock import Mock, mock_open, patch
 
@@ -38,19 +40,32 @@ async def test_loading_file(
     assert body == "hello"
 
 
+@pytest.mark.parametrize(
+    ("error_no", "translation_key"),
+    [
+        pytest.param(errno.ENOENT, "os_read_not_found", id="not_found"),
+        pytest.param(errno.EACCES, "os_read_permission_denied", id="permission"),
+        pytest.param(errno.EISDIR, "os_read_is_directory", id="is_directory"),
+        pytest.param(errno.EIO, "os_read_error", id="fallback"),
+    ],
+)
 @pytest.mark.usefixtures("loaded_entry")
-async def test_file_not_readable_after_setup(hass: HomeAssistant) -> None:
+async def test_file_not_readable_after_setup(
+    hass: HomeAssistant, error_no: int, translation_key: str
+) -> None:
     """Test an error is raised when the file is not readable after setup."""
     with (
         patch(
             "homeassistant.components.local_file.camera.open",
-            side_effect=FileNotFoundError,
+            side_effect=OSError(error_no, os.strerror(error_no)),
         ),
         pytest.raises(HomeAssistantError) as exc_info,
     ):
         await async_get_image(hass, "camera.local_file")
 
-    assert exc_info.value.translation_key == "file_not_found"
+    assert exc_info.value.translation_domain == "homeassistant"
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": "mock.file"}
 
 
 @pytest.mark.parametrize(
