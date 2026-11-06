@@ -21,5 +21,42 @@
         "description": "Enter the postal code (only for France, recommended) or city name"
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "cloud_cover": {
+        "name": "Cloud cover"
+      },
+      "current_weather": {
+        "name": "Current weather"
+      },
+      "frost_probability": {
+        "name": "Frost probability"
+      },
+      "next_rain": {
+        "name": "Next rain"
+      },
+      "rain_probability": {
+        "name": "Rain probability"
+      },
+      "snow_probability": {
+        "name": "Snow probability"
+      },
+      "today_precipitation": {
+        "name": "Today's precipitation"
+      },
+      "today_weather": {
+        "name": "Today's weather"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "weather_alert": {
+        "name": "Weather alert"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      }
+    }
   }
 }
