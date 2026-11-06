@@ -2454,7 +2454,7 @@ pylacrosse==0.4
 pylamarzocco==2.5.6
 
 # homeassistant.components.lastfm
-pylast==5.1.0
+pylast==7.2.0
 
 # homeassistant.components.launch_library
 pylaunches==2.0.0
