@@ -1,10 +1,17 @@
 """Config flow for the Clicky Web Analytics integration."""
 
-import logging
 from typing import Any, override
 
+from aiohttp import ClientError
 import probatio
-from pyclicky import AuthenticationError, ClickyClient, ConnectionError
+from pyclicky import (
+    AuthenticationError,
+    ClickyAPIError,
+    ClickyClient,
+    ConnectionError,
+    InvalidEndpoint,
+    ServiceUnavailable,
+)
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
@@ -16,8 +23,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -45,7 +50,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         await client.visitors_online()
     except AuthenticationError as error:
         raise InvalidAuth from error
-    except (ConnectionError, TimeoutError) as error:
+    except (
+        ConnectionError,
+        InvalidEndpoint,
+        ServiceUnavailable,
+        ClientError,
+        TimeoutError,
+    ) as error:
         raise CannotConnect from error
 
     return {"title": data[CONF_SITE_ID]}
@@ -62,6 +73,7 @@ class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step (website name and API credentials)."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_SITE_ID: user_input[CONF_SITE_ID]})
             try:
@@ -70,14 +82,17 @@ class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            except ClickyAPIError as error:
+                errors["base"] = "api_error"
+                description_placeholders["error"] = str(error)
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders=description_placeholders,
         )
 
 
