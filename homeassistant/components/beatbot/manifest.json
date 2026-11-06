@@ -1,0 +1,15 @@
+{
+  "domain": "beatbot",
+  "name": "Beatbot",
+  "categories": ["water.pools_spas"],
+  "codeowners": ["@dddddl"],
+  "config_flow": true,
+  "connectivity": ["cloud"],
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/beatbot",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["beatbot_cloud"],
+  "quality_scale": "bronze",
+  "requirements": ["beatbot-cloud==0.4.3"]
+}
