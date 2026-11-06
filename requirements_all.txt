@@ -1355,7 +1355,7 @@ hole==0.9.2
 holidays==0.108
 
 # homeassistant.components.frontend
-home-assistant-frontend==20261028.4
+home-assistant-frontend==20261028.5
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.10.27
@@ -3207,7 +3207,7 @@ smart-meter-texas==0.5.6
 snapcast==2.3.8
 
 # homeassistant.components.sonos
-soco==0.32.1
+soco==0.32.2
 
 # homeassistant.components.sofar
 sofar-modbus==0.25.3
