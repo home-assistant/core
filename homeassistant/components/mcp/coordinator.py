@@ -5,9 +5,13 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 import httpx2
+
+# mcp imports jsonschema lazily to validate tool results, and that import
+# reads schema files from disk, so load it here in the import executor.
+import jsonschema  # noqa: F401
 from mcp import MCPError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
@@ -34,15 +38,13 @@ from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_contex
 from .auth import AuthenticateHeader
 from .const import DOMAIN
 
-if TYPE_CHECKING:
-    from .types import ModelContextProtocolConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = dt.timedelta(minutes=30)
 TIMEOUT = 30
 
 type TokenManager = Callable[[], Awaitable[str]]
+type ModelContextProtocolConfigEntry = ConfigEntry[ModelContextProtocolCoordinator]
 
 
 async def _raise_on_post_error(response: httpx2.Response) -> None:
@@ -177,7 +179,7 @@ class ModelContextProtocolTool(llm.Tool):
         description: str | None,
         parameters: probatio.Schema,
         server_url: str,
-        config_entry: ConfigEntry,
+        config_entry: ModelContextProtocolConfigEntry,
         token_manager: TokenManager | None = None,
         annotations: llm.ToolAnnotations = llm.ToolAnnotations(),
     ) -> None:
@@ -265,6 +267,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.token_manager = token_manager
+        self.server_info: InitializeResult | None = None
 
     @override
     async def _async_update_data(self) -> list[llm.Tool]:
@@ -277,7 +280,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             async with asyncio.timeout(TIMEOUT):
                 async with mcp_client(
                     self.hass, self.config_entry.data[CONF_URL], self.token_manager
-                ) as (session, _):
+                ) as (session, server_info):
                     result = await session.list_tools()
         except (TimeoutError, httpx2.TimeoutException) as error:
             _LOGGER.debug("Timeout when listing tools: %s", error)
@@ -303,6 +306,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         _LOGGER.debug("Received tools: %s", result.tools)
+        self.server_info = server_info
         tools: list[llm.Tool] = []
         for tool in result.tools:
             try:

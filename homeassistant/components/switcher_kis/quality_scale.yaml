@@ -67,7 +67,7 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow:
     status: exempt
     comment: The integration does not have anything to reconfigure.

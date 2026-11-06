@@ -1,11 +1,21 @@
 """Tests for Victron GX MQTT select entities."""
 
+from unittest.mock import patch
+
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from victron_mqtt import Hub as VictronVenusHub
+from victron_mqtt import Hub as VictronVenusHub, WritableMetric
 from victron_mqtt.testing import finalize_injection, inject_message
 
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.components.victron_gx.const import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import MOCK_INSTALLATION_ID
@@ -67,7 +77,7 @@ async def test_victron_select_actions(
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test select_option service call."""
+    """Test select_option service calls and library validation errors."""
     victron_hub, mock_config_entry = init_integration
 
     await inject_message(
@@ -100,6 +110,26 @@ async def test_victron_select_actions(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "auto"
+
+    error = ValueError("The metric no longer accepts this option")
+    with (
+        patch.object(WritableMetric, "set", side_effect=error) as set_value,
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "manual"},
+            blocking=True,
+        )
+
+    set_value.assert_called_once_with("manual")
+    assert err.value.__cause__ is error
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "invalid_value"
+    assert str(err.value) == (
+        "The requested value is not valid for this setting on the GX device"
+    )
 
 
 async def test_select_main_topic_has_translation_key(

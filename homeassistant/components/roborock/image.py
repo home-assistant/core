@@ -8,7 +8,6 @@ from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.map_content import MapContent
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -117,7 +116,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: RoborockConfigEntry,
         coordinator: RoborockDataUpdateCoordinator,
         home_trait: HomeTrait,
         map_flag: int,

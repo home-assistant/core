@@ -14,12 +14,7 @@ from tesla_powerwall import (
     PowerwallUnreachableError,
 )
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigEntryState,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -29,6 +24,7 @@ from homeassistant.util.network import is_ip_address
 
 from . import async_last_update_was_successful
 from .const import CONFIG_ENTRY_COOKIE, DOMAIN
+from .coordinator import PowerwallConfigEntry
 from .helpers import is_api_404
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,7 +117,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         self.title: str | None = None
         self.password: str | None = None
 
-    async def _async_powerwall_is_offline(self, entry: ConfigEntry) -> bool:
+    async def _async_powerwall_is_offline(self, entry: PowerwallConfigEntry) -> bool:
         """Check if the power wall is offline.
 
         We define offline by the config entry
@@ -239,7 +235,6 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
         self.context["title_placeholders"] = {
             "name": self.title,
             "ip_address": self.ip_address,

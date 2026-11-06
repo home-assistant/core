@@ -1,0 +1,43 @@
+# serializer version: 1
+# name: test_diagnostics[coprocessor_version]
+  dict({
+    'active_dataset': dict({
+      'active_timestamp': dict({
+        'authoritative': False,
+        'seconds': 1,
+        'ticks': 0,
+      }),
+      'channel': 15,
+      'channel_mask': 134215680,
+      'security_policy': dict({
+        'rotationTime': 672,
+        'routers': True,
+      }),
+    }),
+    'api_version': '1.0.0',
+    'coprocessor_version': 'SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57',
+    'multiprotocol': False,
+    'pending_dataset': False,
+  })
+# ---
+# name: test_diagnostics[no_coprocessor_version]
+  dict({
+    'active_dataset': dict({
+      'active_timestamp': dict({
+        'authoritative': False,
+        'seconds': 1,
+        'ticks': 0,
+      }),
+      'channel': 15,
+      'channel_mask': 134215680,
+      'security_policy': dict({
+        'rotationTime': 672,
+        'routers': True,
+      }),
+    }),
+    'api_version': '1.0.0',
+    'coprocessor_version': None,
+    'multiprotocol': False,
+    'pending_dataset': False,
+  })
+# ---
