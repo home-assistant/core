@@ -1800,10 +1800,31 @@ async def test_send_video(
             },
             "failed_to_load_url",
             {
-                "url": "invalid url",
+                "url": "URL",
                 "error": "Request URL is missing an 'http://' or 'https://' protocol.",
             },
             id="invalid_url",
+        ),
+        pytest.param(
+            {TelegramBotServiceArgument.URL: "mock/webhook/secret-token?token=secret"},
+            {
+                "side_effect": httpx2.UnsupportedProtocol(
+                    "Request URL is missing an 'http://' or 'https://' protocol."
+                )
+            },
+            "failed_to_load_url",
+            {
+                "url": "URL",
+                "error": "Request URL is missing an 'http://' or 'https://' protocol.",
+            },
+            id="no_scheme_with_secret",
+        ),
+        pytest.param(
+            {TelegramBotServiceArgument.URL: "https://user:secret@mock:port/p?token=x"},
+            {"side_effect": httpx2.InvalidURL("Invalid port: 'port'")},
+            "failed_to_load_url",
+            {"url": "URL", "error": "Invalid port: 'port'"},
+            id="invalid_port_with_credentials",
         ),
     ],
 )

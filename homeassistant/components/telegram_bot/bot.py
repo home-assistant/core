@@ -1184,8 +1184,8 @@ def _url_origin(url: str) -> str:
     try:
         return str(URL(url).origin())
     except ValueError:
-        # Not an absolute URL
-        return url
+        # Not an absolute URL, which may still contain secrets
+        return "URL"
 
 
 async def load_data(
