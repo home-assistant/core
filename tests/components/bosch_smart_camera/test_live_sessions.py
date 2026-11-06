@@ -710,6 +710,38 @@ async def test_queued_stream_request_does_not_open_after_removal(
     assert mock_live.open.await_count == 1
 
 
+async def test_session_opened_during_removal_is_not_returned(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
+) -> None:
+    """Test a session that finishes opening as removal begins yields no URL."""
+    await setup_integration(hass, mock_config_entry)
+    entity = _entity(hass)
+    sessions = mock_config_entry.runtime_data.live_sessions
+    real = sessions.async_get_url
+
+    async def _open_then_remove(*args: Any, **kwargs: Any) -> str | None:
+        url = await real(*args, **kwargs)
+        entity._removing = True
+        return url
+
+    with patch.object(sessions, "async_get_url", _open_then_remove):
+        assert await entity.stream_source() is None
+
+
+async def test_idle_output_does_not_keep_the_reopen_running(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
+) -> None:
+    """Test an idle HLS output without preload counts as no viewer."""
+    await setup_integration(hass, mock_config_entry)
+    await async_get_stream_source(hass, ENTITY_ID)
+    entity = _entity(hass)
+    stream = await _watch(hass, viewer=True, preload=False)
+    assert entity._is_streaming()
+
+    stream.outputs()["hls"].idle_timer.idle = True
+    assert not entity._is_streaming()
+
+
 async def test_close_all_releases_open_sessions(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
 ) -> None:

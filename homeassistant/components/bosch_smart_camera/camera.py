@@ -95,9 +95,11 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         if self._removing:
             # A queued stream request must not open a session after removal began.
             return None
-        return await self.coordinator.live_sessions.async_get_url(
+        url = await self.coordinator.live_sessions.async_get_url(
             self._camera_id, self._is_streaming, self._session_changed
         )
+        # Removal may have begun while the session opened.
+        return None if self._removing else url
 
     @override
     async def async_refresh_providers(self, *, write_state: bool = True) -> None:
@@ -107,7 +109,8 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         """Return whether a viewer is using the stream."""
         stream = self.stream
         return stream is not None and (
-            bool(stream.outputs()) or stream.dynamic_stream_settings.preload_stream
+            any(not output.idle for output in stream.outputs().values())
+            or stream.dynamic_stream_settings.preload_stream
         )
 
     @callback
