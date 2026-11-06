@@ -90,10 +90,10 @@ def build_schedule(
 ) -> FirewallPolicySchedule:
     """Build the schedule for a mode from the current one plus changes.
 
-    Times are taken from the changes, then from the current schedule, then
-    from defaults; a malformed stored time or date is replaced the same way
-    a missing one is. Dates and days are only kept when the mode doesn't change:
-    choosing a mode starts it today, on every day of the week.
+    Times are taken from the changes, then from the current schedule if it
+    uses them, then from defaults; a malformed stored time or date is replaced
+    the same way a missing one is. Dates and days are only kept when the mode
+    doesn't change: choosing a mode starts it today, on every day of the week.
     """
     current_mode = schedule_mode(current)
     new_mode = mode or current_mode
@@ -102,21 +102,23 @@ def build_schedule(
         return schedule
 
     same_mode = new_mode is current_mode
+    # The controller keeps the times of a schedule that doesn't use them.
+    keep_times = schedule_uses_times(current)
     # Read through a Mapping: a TypedDict only accepts literal keys.
     current_values: Mapping[str, object] = current
 
     def _date(
         changed: date | None, key: str, *, keep: bool, default: date = today
-    ) -> str:
+    ) -> date:
         if changed is not None:
-            return changed.isoformat()
+            return changed
         if keep and (kept := parse_date(current_values.get(key))) is not None:
-            return kept.isoformat()
-        return default.isoformat()
+            return kept
+        return default
 
     def _time(changed: time | None, key: str, default: str) -> str:
         # A malformed stored time is replaced, so it isn't sent back.
-        if changed is None:
+        if changed is None and keep_times:
             changed = parse_time(current_values.get(key))
         return default if changed is None else changed.strftime("%H:%M")
 
@@ -134,13 +136,20 @@ def build_schedule(
         schedule["time_all_day"] = all_day
     if new_mode is FirewallPolicyScheduleMode.ONE_TIME_ONLY:
         # Choosing One time, even again, dates it today.
-        schedule["date"] = _date(start_date, "date", keep=mode is None)
+        schedule["date"] = _date(start_date, "date", keep=mode is None).isoformat()
     if new_mode is FirewallPolicyScheduleMode.CUSTOM:
-        schedule["date_start"] = _date(start_date, "date_start", keep=same_mode)
-        # The controller requires the range to end after the day it starts.
-        schedule["date_end"] = _date(
+        first_day = _date(start_date, "date_start", keep=same_mode)
+        last_day = _date(
             end_date, "date_end", keep=same_mode, default=today + timedelta(days=1)
         )
+        # The controller requires the range to end after the day it starts.
+        if first_day >= last_day:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="schedule_dates_out_of_order",
+            )
+        schedule["date_start"] = first_day.isoformat()
+        schedule["date_end"] = last_day.isoformat()
     if not all_day:
         schedule["time_range_start"] = _time(
             start, "time_range_start", DEFAULT_TIME_RANGE_START

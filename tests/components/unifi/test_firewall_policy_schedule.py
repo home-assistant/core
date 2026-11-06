@@ -26,7 +26,7 @@ from homeassistant.components.unifi.firewall_policy_schedule import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import ConfigEntryFactoryType
 from .test_sensor import FIREWALL_POLICY
@@ -94,6 +94,26 @@ CUSTOM = {
             {"mode": FirewallPolicyScheduleMode.EVERY_DAY},
             {
                 "mode": "EVERY_DAY",
+                "time_range_start": "09:00",
+                "time_range_end": "12:00",
+            },
+        ),
+        # So are they when the stored times are left over from an earlier mode.
+        (
+            {"mode": "ALWAYS", "time_range_start": "21:00", "time_range_end": "08:00"},
+            {"mode": FirewallPolicyScheduleMode.EVERY_DAY},
+            {
+                "mode": "EVERY_DAY",
+                "time_range_start": "09:00",
+                "time_range_end": "12:00",
+            },
+        ),
+        (
+            {**WEEKLY_ALL_DAY, "time_range_start": "21:00", "time_range_end": "08:00"},
+            {"mode": FirewallPolicyScheduleMode.ONE_TIME_ONLY},
+            {
+                "mode": "ONE_TIME_ONLY",
+                "date": "2026-01-16",
                 "time_range_start": "09:00",
                 "time_range_end": "12:00",
             },
@@ -272,6 +292,25 @@ def test_build_schedule(
 ) -> None:
     """A built schedule has exactly the keys its mode uses."""
     assert build_schedule(current, TODAY, **changes) == expected
+
+
+@pytest.mark.parametrize(
+    ("current", "changes"),
+    [
+        (CUSTOM, {"end_date": date(2026, 1, 5)}),
+        (CUSTOM, {"start_date": date(2026, 2, 1)}),
+        # Checked after a malformed stored date falls back to its default.
+        ({**CUSTOM, "date_end": "garbage"}, {"start_date": date(2026, 2, 1)}),
+        ({**CUSTOM, "date_start": None, "date_end": "2026-01-10"}, {"end": time(7)}),
+    ],
+)
+def test_build_schedule_dates_out_of_order(
+    current: dict[str, Any], changes: dict[str, Any]
+) -> None:
+    """A custom schedule must end after the day it starts."""
+    with pytest.raises(ServiceValidationError) as exc_info:
+        build_schedule(current, TODAY, **changes)
+    assert exc_info.value.translation_key == "schedule_dates_out_of_order"
 
 
 @pytest.mark.parametrize(

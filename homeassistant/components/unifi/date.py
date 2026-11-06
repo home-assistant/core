@@ -17,11 +17,10 @@ from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicySchedu
 from homeassistant.components.date import DateEntity, DateEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
-from .const import DOMAIN, MODES_WITH_START_DATE
+from .const import MODES_WITH_START_DATE
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -68,28 +67,13 @@ def async_firewall_policy_schedule_end_date_fn(
     return None
 
 
-def _raise_if_out_of_order(start: date | None, end: date | None) -> None:
-    """Raise unless a custom schedule ends after the day it starts.
-
-    The controller rejects a range that starts and ends on the same day.
-    """
-    if start is not None and end is not None and start >= end:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="schedule_dates_out_of_order",
-        )
-
-
 async def async_firewall_policy_schedule_start_date_control_fn(
     hub: UnifiHub, obj_id: str, value: date
 ) -> None:
     """Change the date a firewall policy schedule starts on."""
     schedule = policy_schedule(hub.api.firewall_policies[obj_id])
-    mode = schedule_mode(schedule)
-    if mode not in MODES_WITH_START_DATE:
+    if schedule_mode(schedule) not in MODES_WITH_START_DATE:
         raise_setting_unused()
-    if mode is FirewallPolicyScheduleMode.CUSTOM:
-        _raise_if_out_of_order(value, parse_date(schedule.get("date_end")))
     await async_save_schedule(hub, obj_id, start_date=value)
 
 
@@ -100,7 +84,6 @@ async def async_firewall_policy_schedule_end_date_control_fn(
     schedule = policy_schedule(hub.api.firewall_policies[obj_id])
     if schedule_mode(schedule) is not FirewallPolicyScheduleMode.CUSTOM:
         raise_setting_unused()
-    _raise_if_out_of_order(parse_date(schedule.get("date_start")), value)
     await async_save_schedule(hub, obj_id, end_date=value)
 
 
