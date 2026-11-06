@@ -93,7 +93,7 @@
       "message": "The device is not an E3/DC power station in E3/DC protocol mode."
     },
     "serial_mismatch": {
-      "message": "The device at this address has serial number {found}, not {expected}. Reconfigure the entry if the power station moved."
+      "message": "The device at this address has serial number {found}, not {expected}. If the power station's IP address changed, reconfigure the entry."
     }
   }
 }
