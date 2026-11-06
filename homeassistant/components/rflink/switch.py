@@ -2,7 +2,7 @@
 
 import probatio
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import DOMAIN as PLATFORM_DOMAIN, SwitchEntity
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -20,6 +20,7 @@ from .const import (
     DEVICE_DEFAULTS_SCHEMA,
 )
 from .entity import SwitchableRflinkDevice
+from .utils import create_issue_platform
 
 PARALLEL_UPDATES = 0
 
@@ -68,6 +69,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Rflink platform."""
     if discovery_info is None:
+        create_issue_platform(hass, PLATFORM_DOMAIN),
         return
     async_add_entities(devices_from_config(discovery_info))
 
