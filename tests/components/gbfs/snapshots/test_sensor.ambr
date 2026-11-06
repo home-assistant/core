@@ -1,0 +1,217 @@
+# serializer version: 1
+# name: test_sensors[sensor.main_st_1st_ave_classic_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Main St & 1st Ave'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_s1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.main_st_1st_ave_classic_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Classic bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Classic bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'classic_bikes',
+    'unique_id': 'example_bikes_s1_classic_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_sensors[sensor.main_st_1st_ave_classic_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main St & 1st Ave Classic bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.main_st_1st_ave_classic_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.main_st_1st_ave_docks_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Main St & 1st Ave'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_s1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.main_st_1st_ave_docks_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Docks available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Docks available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'docks_available',
+    'unique_id': 'example_bikes_s1_docks_available',
+    'unit_of_measurement': 'docks',
+  })
+# ---
+# name: test_sensors[sensor.main_st_1st_ave_docks_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main St & 1st Ave Docks available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'docks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.main_st_1st_ave_docks_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_sensors[sensor.main_st_1st_ave_e_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Main St & 1st Ave'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_s1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.main_st_1st_ave_e_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'E-bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'E-bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'e_bikes',
+    'unique_id': 'example_bikes_s1_e_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_sensors[sensor.main_st_1st_ave_e_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main St & 1st Ave E-bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.main_st_1st_ave_e_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors[sensor.main_st_1st_ave_vehicles_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Main St & 1st Ave'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_s1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.main_st_1st_ave_vehicles_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicles available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicles available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicles_available',
+    'unique_id': 'example_bikes_s1_vehicles_available',
+    'unit_of_measurement': 'vehicles',
+  })
+# ---
+# name: test_sensors[sensor.main_st_1st_ave_vehicles_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main St & 1st Ave Vehicles available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'vehicles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.main_st_1st_ave_vehicles_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
