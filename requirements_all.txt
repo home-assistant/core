@@ -187,7 +187,7 @@ aioacaia==0.2.2
 aioairq==0.4.8
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.7.2
+aioairzone-cloud==0.7.3
 
 # homeassistant.components.airzone
 aioairzone==1.0.5
@@ -304,7 +304,7 @@ aioharmanluxury==0.2.3
 aioharmony==1.0.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.9.0
+aiohasupervisor==0.10.0
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.41.0
@@ -930,7 +930,7 @@ dynalite-devices==0.1.47
 dynalite-panel==0.0.4
 
 # homeassistant.components.e3dc
-e3dc-ess-modbus==0.1.0
+e3dc-ess-modbus==0.2.0
 
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
@@ -1124,7 +1124,7 @@ fressnapftracker==0.3.1
 fritzconnection[qr]==1.15.1
 
 # homeassistant.components.fronius
-fronius-modbus==0.2.0
+fronius-modbus==0.4.0
 
 # homeassistant.components.fronius
 fronius-solarapi==0.1.1
@@ -3658,7 +3658,7 @@ ziggo-mediabox-xl==1.1.0
 zinvolt==1.1.1
 
 # homeassistant.components.zoneminder
-zm-py==0.5.9
+zm-py==0.5.12
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.74.0

@@ -32,7 +32,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_MAC, CONF_TYPE, CONF_URL
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -372,6 +372,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         # Device was de/re-connected, state might have changed
         self.async_write_ha_state()
 
+    @callback
     @override
     def _async_write_ha_state(self) -> None:
         """Write the state."""
