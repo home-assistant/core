@@ -161,9 +161,9 @@ async def _async_service_temperature_set(
                     translation_domain=DOMAIN,
                     translation_key="temp_out_of_range",
                     translation_placeholders={
-                        "check_temp": str(check_temp),
-                        "min_temp": str(min_temp),
-                        "max_temp": str(max_temp),
+                        "check_temp": str(temp),
+                        "min_temp": str(shown_min_temp),
+                        "max_temp": str(shown_max_temp),
                     },
                 )
             kwargs[value] = min(max(check_temp, min_temp), max_temp)

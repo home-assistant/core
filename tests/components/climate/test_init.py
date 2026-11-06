@@ -777,6 +777,12 @@ async def test_temperature_validation_display_rounding(
                 blocking=True,
             )
         assert exc.value.translation_key == "temp_out_of_range"
+        # The error shows the sent temperature and the shown limits
+        assert exc.value.translation_placeholders == {
+            "check_temp": str(temperature),
+            "min_temp": "16",
+            "max_temp": "32",
+        }
     assert test_climate.native_target_temperature == 89.5
 
     # 62 °F is 16.7 °C, shown as 17 °C. Temperatures between the native and the
@@ -804,6 +810,11 @@ async def test_temperature_validation_display_rounding(
             blocking=True,
         )
     assert exc.value.translation_key == "temp_out_of_range"
+    assert exc.value.translation_placeholders == {
+        "check_temp": "16.5",
+        "min_temp": "17",
+        "max_temp": "32",
+    }
 
 
 async def test_target_temp_high_higher_than_low(
