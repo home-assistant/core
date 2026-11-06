@@ -5,9 +5,8 @@ from pyclicky import ClickyClient
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 
-from .const import CONF_SITE_ID, CONF_SITEKEY, DOMAIN
+from .const import CONF_SITE_ID, CONF_SITEKEY
 from .coordinator import ClickyConfigEntry, ClickyCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -33,13 +32,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ClickyConfigEntry) -> No
 async def async_unload_entry(hass: HomeAssistant, entry: ClickyConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
-
-
-def device_info(name: str) -> DeviceInfo:
-    """Return device registry information."""
-    return DeviceInfo(
-        identifiers={(DOMAIN, name)},
-        entry_type=DeviceEntryType.SERVICE,
-        name=f"Clicky: {name}",
-        manufacturer="Clicky Web Analytics",
-    )

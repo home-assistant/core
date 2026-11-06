@@ -10,12 +10,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import device_info
-from .const import CONF_SITE_ID
+from .const import CONF_SITE_ID, DOMAIN
 from .coordinator import ClickyConfigEntry, ClickyCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -68,7 +68,12 @@ class ClickySensor(CoordinatorEntity[ClickyCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{site_id}_{description.key}"
-        self._attr_device_info = device_info(site_id)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, site_id)},
+            entry_type=DeviceEntryType.SERVICE,
+            name=f"Clicky: {site_id}",
+            manufacturer="Clicky Web Analytics",
+        )
 
     @property
     @override
