@@ -18,10 +18,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: GbfsConfigEntry) -> None
     try:
         feed = await client.get_gbfs_feed_from_url(entry.data[CONF_URL])
         system = await feed.get_system_info()
-        vehicle_types = await feed.get_vehicle_types()
     except MobilityFeedsError as err:
         raise ConfigEntryNotReady(f"Error reading GBFS system: {err}") from err
-    coordinator = GbfsCoordinator(hass, entry, feed, system, vehicle_types)
+    coordinator = GbfsCoordinator(hass, entry, feed, system)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))

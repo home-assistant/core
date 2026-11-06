@@ -1,5 +1,8 @@
 """Tests for the GBFS sensors."""
 
+from datetime import timedelta
+from typing import Any
+
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -22,7 +25,7 @@ from homeassistant.const import CONF_URL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MIXED_URL, V2_URL, V3_URL, mock_feed
+from . import MIXED_URL, V2_URL, V3_URL, mock_feed, serve_edited_v3_feed
 
 MAIN_ST = "sensor.main_st_1st_ave"
 
@@ -123,3 +126,69 @@ async def test_poll_failure_and_recovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == "5"
+
+
+async def test_station_missing_from_status(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a station without a status row is unavailable."""
+
+    def drop_s2(document: dict[str, Any]) -> None:
+        document["data"]["stations"] = [
+            station
+            for station in document["data"]["stations"]
+            if station["station_id"] != "s2"
+        ]
+
+    await serve_edited_v3_feed(hass, aioclient_mock, {"station_status": drop_s2})
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Variant Bikes",
+        unique_id="example_bikes",
+        data={CONF_URL: V3_URL},
+        subentries_data=[_station("s2", "Park Ave & 2nd St")],
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_new_vehicle_type_counts_in_its_group(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a vehicle type added to the feed counts without a reload."""
+    entity_id = f"{MAIN_ST}_e_bikes"
+    assert hass.states.get(entity_id).state == "2"
+
+    def add_type(document: dict[str, Any]) -> None:
+        document["data"]["vehicle_types"].append(
+            {
+                "vehicle_type_id": "ebike_xl",
+                "form_factor": "bicycle",
+                "propulsion_type": "electric",
+            }
+        )
+
+    def count_type(document: dict[str, Any]) -> None:
+        document["data"]["stations"][0]["vehicle_types_available"].append(
+            {"vehicle_type_id": "ebike_xl", "count": 4}
+        )
+
+    await serve_edited_v3_feed(
+        hass,
+        aioclient_mock,
+        {"vehicle_types": add_type, "station_status": count_type},
+    )
+    freezer.tick(timedelta(seconds=300))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "6"

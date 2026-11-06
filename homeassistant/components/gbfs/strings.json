@@ -34,6 +34,7 @@
     "station": {
       "abort": {
         "already_configured": "This station is already added.",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The system must finish loading before stations can be added."
       },
       "entry_type": "Station",

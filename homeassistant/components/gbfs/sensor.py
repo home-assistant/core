@@ -1,6 +1,6 @@
 """Sensors for GBFS stations."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import override
 
@@ -60,36 +60,35 @@ def vehicle_group(vehicle_type: VehicleType) -> str | None:
 class GbfsSensorEntityDescription(SensorEntityDescription):
     """Describes a GBFS station sensor."""
 
-    value_fn: Callable[[Station], int | None]
+    value_fn: Callable[[Station, Mapping[str, VehicleType]], int | None]
 
 
 VEHICLES_AVAILABLE = GbfsSensorEntityDescription(
     key="vehicles_available",
     translation_key="vehicles_available",
     state_class=SensorStateClass.MEASUREMENT,
-    value_fn=lambda station: station.bikes_available,
+    value_fn=lambda station, _: station.bikes_available,
 )
 
 DOCKS_AVAILABLE = GbfsSensorEntityDescription(
     key="docks_available",
     translation_key="docks_available",
     state_class=SensorStateClass.MEASUREMENT,
-    value_fn=lambda station: station.docks_available,
+    value_fn=lambda station, _: station.docks_available,
 )
 
 
-def _group_description(
-    group: str, type_ids: frozenset[str]
-) -> GbfsSensorEntityDescription:
+def _group_description(group: str) -> GbfsSensorEntityDescription:
     """Describe the sensor counting one group's vehicle types at a station."""
 
-    def value(station: Station) -> int | None:
+    def value(station: Station, vehicle_types: Mapping[str, VehicleType]) -> int | None:
         if station.vehicle_types_available is None:
             return None
         return sum(
             count
             for type_id, count in station.vehicle_types_available.items()
-            if type_id in type_ids
+            if (vehicle_type := vehicle_types.get(type_id)) is not None
+            and vehicle_group(vehicle_type) == group
         )
 
     return GbfsSensorEntityDescription(
@@ -107,17 +106,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for each station subentry."""
     coordinator = entry.runtime_data
-    type_ids: dict[str, set[str]] = {}
-    for vehicle_type in coordinator.vehicle_types:
-        if (group := vehicle_group(vehicle_type)) is not None:
-            type_ids.setdefault(group, set()).add(vehicle_type.id)
+    groups = {
+        group
+        for vehicle_type in coordinator.data.vehicle_types.values()
+        if (group := vehicle_group(vehicle_type)) is not None
+    }
     group_descriptions = [
-        _group_description(group, frozenset(type_ids[group]))
-        for group in GROUPS
-        if group in type_ids
+        _group_description(group) for group in GROUPS if group in groups
     ]
     for subentry_id, subentry in entry.subentries.items():
-        station = coordinator.data.get(subentry.data[CONF_STATION_ID])
+        station = coordinator.data.stations.get(subentry.data[CONF_STATION_ID])
         descriptions = [VEHICLES_AVAILABLE]
         if station is None or station.docks_available is not None:
             descriptions.append(DOCKS_AVAILABLE)
@@ -161,15 +159,16 @@ class GbfsStationSensor(CoordinatorEntity[GbfsCoordinator], SensorEntity):
     @override
     def available(self) -> bool:
         """Return if the station is in the feed and installed."""
-        station = self.coordinator.data.get(self._station_id)
+        station = self.coordinator.data.stations.get(self._station_id)
         return (
-            super().available
-            and station is not None
-            and station.is_installed is not False
+            super().available and station is not None and station.is_installed is True
         )
 
     @property
     @override
     def native_value(self) -> int | None:
         """Return the count."""
-        return self.entity_description.value_fn(self.coordinator.data[self._station_id])
+        data = self.coordinator.data
+        return self.entity_description.value_fn(
+            data.stations[self._station_id], data.vehicle_types
+        )

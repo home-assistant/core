@@ -1,5 +1,6 @@
 """Coordinator polling a GBFS system's stations."""
 
+from dataclasses import dataclass
 import logging
 from typing import override
 
@@ -22,8 +23,16 @@ _LOGGER = logging.getLogger(__name__)
 type GbfsConfigEntry = ConfigEntry[GbfsCoordinator]
 
 
-class GbfsCoordinator(DataUpdateCoordinator[dict[str, Station]]):
-    """Fetch every station of one GBFS system, keyed by station ID."""
+@dataclass(frozen=True, kw_only=True)
+class GbfsData:
+    """The current stations and vehicle types of a GBFS system, keyed by ID."""
+
+    stations: dict[str, Station]
+    vehicle_types: dict[str, VehicleType]
+
+
+class GbfsCoordinator(DataUpdateCoordinator[GbfsData]):
+    """Fetch every station and the vehicle types of one GBFS system."""
 
     config_entry: GbfsConfigEntry
 
@@ -33,7 +42,6 @@ class GbfsCoordinator(DataUpdateCoordinator[dict[str, Station]]):
         config_entry: GbfsConfigEntry,
         feed: GbfsFeedHandle,
         system: SystemInfo,
-        vehicle_types: list[VehicleType],
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -45,13 +53,18 @@ class GbfsCoordinator(DataUpdateCoordinator[dict[str, Station]]):
         )
         self.feed = feed
         self.system = system
-        self.vehicle_types = vehicle_types
 
     @override
-    async def _async_update_data(self) -> dict[str, Station]:
-        """Fetch station information and status."""
+    async def _async_update_data(self) -> GbfsData:
+        """Fetch stations and vehicle types."""
         try:
             stations = await self.feed.get_stations()
+            vehicle_types = await self.feed.get_vehicle_types()
         except MobilityFeedsError as err:
-            raise UpdateFailed(f"Error fetching GBFS stations: {err}") from err
-        return {station.id: station for station in stations}
+            raise UpdateFailed(f"Error fetching GBFS data: {err}") from err
+        return GbfsData(
+            stations={station.id: station for station in stations},
+            vehicle_types={
+                vehicle_type.id: vehicle_type for vehicle_type in vehicle_types
+            },
+        )

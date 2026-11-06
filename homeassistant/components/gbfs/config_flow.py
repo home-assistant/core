@@ -189,7 +189,12 @@ class StationSubentryFlowHandler(ConfigSubentryFlow):
         entry: GbfsConfigEntry = self._get_entry()
         if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
-        stations = entry.runtime_data.data
+        coordinator = entry.runtime_data
+        # Without station subentries nothing listens, so the coordinator isn't polling.
+        await coordinator.async_refresh()
+        if not coordinator.last_update_success:
+            return self.async_abort(reason="cannot_connect")
+        stations = coordinator.data.stations
         errors: dict[str, str] = {}
         if user_input is not None:
             if (station := stations.get(user_input[CONF_STATION_ID])) is None:
