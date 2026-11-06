@@ -1038,7 +1038,7 @@ eurotronic-cometblue-ha==2.0.0
 # evdev==1.9.3
 
 # homeassistant.components.evohome
-evohome-async==3.2.1
+evohome-async==3.2.2
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.19
