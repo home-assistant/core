@@ -170,7 +170,12 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 gen2=False,
                 last_front_intensity=intensity or 1.0,
             )
-        except (BoschCameraAuthError, BoschCameraConnectionError) as err:
+        except BoschCameraAuthError as err:
+            self.config_entry.async_start_reauth_if_available(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="auth_failed"
+            ) from err
+        except BoschCameraConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="light_failed"
             ) from err

@@ -144,7 +144,6 @@ async def test_intensity_defaults_to_full(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        BoschCameraAuthError("rejected"),
         BoschCameraConnectionError("offline"),
         CameraLightSetResult(ok=False, status=400),
     ],
@@ -222,6 +221,29 @@ async def test_write_auth_status_starts_reauth(
     """Test a rejected write token starts reauthentication."""
     await setup_integration(hass, mock_config_entry)
     mock_set_light.return_value = CameraLightSetResult(ok=False, status=status)
+
+    with (
+        patch.object(
+            mock_config_entry, "async_start_reauth_if_available"
+        ) as start_reauth,
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+    assert err.value.translation_key == "auth_failed"
+    start_reauth.assert_called_once_with(hass)
+
+
+@pytest.mark.usefixtures("mock_get_light")
+async def test_write_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_set_light: AsyncMock,
+) -> None:
+    """Test an auth exception on the write starts reauthentication."""
+    await setup_integration(hass, mock_config_entry)
+    mock_set_light.side_effect = BoschCameraAuthError("rejected")
 
     with (
         patch.object(
