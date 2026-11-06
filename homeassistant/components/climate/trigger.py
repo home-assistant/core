@@ -32,7 +32,7 @@ HVAC_MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.ext
         probatio.Required(CONF_OPTIONS): {
             probatio.Required(CONF_HVAC_MODE): probatio.All(
                 probatio.EnsureList(),
-                probatio.Length(min=1),
+                probatio.NonEmpty(),
                 [probatio.Coerce(HVACMode)],
             ),
         },

@@ -24,8 +24,8 @@ class WaterFurnaceEntity(CoordinatorEntity[WaterFurnaceCoordinator]):
 
         if coordinator.device_metadata:
             if coordinator.device_metadata.description:
-                device_info["model"] = coordinator.device_metadata.description
+                device_info.model = coordinator.device_metadata.description
             if coordinator.device_metadata.awlabctypedesc:
-                device_info["name"] = coordinator.device_metadata.awlabctypedesc
+                device_info.name = coordinator.device_metadata.awlabctypedesc
 
         self._attr_device_info = device_info

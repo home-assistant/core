@@ -59,8 +59,10 @@
     ]),
     'info': dict({
       'api_key': '**REDACTED**',
-      'latitude': '**REDACTED**',
-      'longitude': '**REDACTED**',
+      'location': dict({
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+      }),
       'station': '**REDACTED**',
     }),
     'observation': dict({

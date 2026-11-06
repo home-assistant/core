@@ -1,6 +1,5 @@
 """Support for the NOAA Tides and Currents API."""
 
-from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
@@ -18,6 +17,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
@@ -159,7 +159,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
 
     def update(self) -> None:
         """Get the latest data from NOAA Tides and Currents API."""
-        begin = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+        begin = dt_util.now()
         end = begin + DEFAULT_PREDICTION_LENGTH
         try:
             df_predictions = self._station.get_data(
@@ -182,6 +182,17 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
                 "Recent Tide data queried with start time set to %s",
                 begin.strftime("%m-%d-%Y %H:%M"),
             )
+        except (
+            coops.station.COOPSAPIError,
+            requests.exceptions.RequestException,
+        ) as err:
+            if self._attr_available:
+                _LOGGER.info("NOAA Tides and Currents API is unavailable: %s", err)
+                self._attr_available = False
+            return
         except ValueError as err:
             _LOGGER.error("Check NOAA Tides and Currents: %s", err.args)
             self.data = None
+        if not self._attr_available:
+            _LOGGER.info("NOAA Tides and Currents API is available again")
+            self._attr_available = True

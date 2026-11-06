@@ -6,10 +6,11 @@ from typing import Any, override
 import probatio
 from pushover_complete import BadAPIRequestError, PushoverAPI
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 
+from . import PushoverConfigEntry
 from .const import CONF_USER_KEY, DEFAULT_NAME, DOMAIN
 
 USER_SCHEMA = probatio.Schema(
@@ -18,7 +19,7 @@ USER_SCHEMA = probatio.Schema(
         # pylint: disable-next=home-assistant-config-flow-name-field
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         probatio.Required(probatio.Secret(CONF_API_KEY)): str,
-        probatio.Required(probatio.Secret(CONF_USER_KEY)): str,
+        probatio.Required(CONF_USER_KEY): str,
     }
 )
 
@@ -42,7 +43,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class PushBulletConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for pushover integration."""
 
-    _reauth_entry: ConfigEntry | None
+    _reauth_entry: PushoverConfigEntry | None
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

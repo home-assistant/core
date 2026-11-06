@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "activation_failed": "GitHub did not complete the connection. Try connecting again.",
-      "could_not_register": "Could not connect to GitHub. Try again later.",
-      "single_instance_allowed": "Only a single configuration of the Marketplace is allowed."
+      "could_not_register": "Could not connect to GitHub. Try again later."
     },
     "progress": {
       "wait_for_device": "1. Open {url}\n2. Enter this code to connect the Marketplace to your GitHub account:\n```\n{code}\n```\nThis continues on its own once GitHub confirms the connection."
@@ -340,6 +339,25 @@
       },
       "title": "{repository} was removed because it is marked as critical"
     },
+    "download_profile": {
+      "fix_flow": {
+        "abort": {
+          "entry_removed": "The Marketplace has been removed.",
+          "issue_ignored": "The Marketplace keeps using GitHub and stops suggesting the mirrors. You can switch at any time from the menu in the Marketplace."
+        },
+        "step": {
+          "init": {
+            "description": "The Marketplace can not reach its catalog. Unofficial mirrors run by {operator} are available for your country.\n\nEverything the Marketplace downloads, the catalog and the content you install, then goes through these mirrors instead of GitHub. When the mirrors can not be reached, downloads fall back to third-party proxies. Your GitHub account is not used with the mirrors or the proxies. You can switch back at any time from the menu in the Marketplace.",
+            "menu_options": {
+              "ignore": "Keep using GitHub, stop suggesting this",
+              "use_profile": "Use the mirrors"
+            },
+            "title": "Use unofficial mirrors for the Marketplace?"
+          }
+        }
+      },
+      "title": "The Marketplace can not reach its catalog"
+    },
     "legacy_dashboard_resources": {
       "description": "Your dashboard resources in YAML still load from `/hacsfiles`, the path HACS used. The Marketplace keeps serving it for compatibility, but installed resources use `/local/community`. Change these resources in your YAML configuration:\n\n{resources}",
       "title": "Dashboard resources use an old path"
@@ -360,23 +378,46 @@
       "fix_flow": {
         "step": {
           "confirm_restart": {
-            "description": "Restart Home Assistant to finish the installation or update of {name}. Select **Submit** to restart now.",
-            "title": "Restart required"
+            "description": "Restart Home Assistant to finish installing or updating {name}.",
+            "submit": "[%key:common::action::restart%]",
+            "title": "Restart required for {name}"
           }
         }
       },
-      "title": "Restart required"
+      "title": "Restart required for {name}"
     },
     "restart_required_uninstall": {
       "fix_flow": {
         "step": {
           "confirm_restart": {
-            "description": "Restart Home Assistant to finish uninstalling {name}, its code keeps running until then. Select **Submit** to restart now.",
-            "title": "Restart required"
+            "description": "Restart Home Assistant to finish uninstalling {name}. It is not fully removed until then.",
+            "submit": "[%key:common::action::restart%]",
+            "title": "Restart required for {name}"
           }
         }
       },
-      "title": "Restart required"
+      "title": "Restart required for {name}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "profile": "Download from"
+        },
+        "data_description": {
+          "profile": "Routes Marketplace traffic, the catalog and content you install, through the selected source. Third-party mirrors and proxies do not use your GitHub account, and you can switch back to GitHub at any time."
+        },
+        "title": "Download source"
+      }
+    }
+  },
+  "selector": {
+    "profile": {
+      "options": {
+        "default": "GitHub (run by GitHub and the Open Home Foundation)",
+        "hasscn": "Unofficial China mirrors (run by the Home Assistant China community, hasscn.top, with third-party proxies as a fallback)"
+      }
     }
   },
   "system_health": {
@@ -384,6 +425,7 @@
       "available_repositories": "Available repositories",
       "catalog_data": "Catalog reachable",
       "disabled": "Disabled",
+      "download_profile": "Download source",
       "github_api": "GitHub API reachable",
       "github_api_calls_remaining": "GitHub API calls remaining",
       "github_connected": "GitHub connected",

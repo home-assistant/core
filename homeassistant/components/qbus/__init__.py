@@ -39,12 +39,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> None:
     """Set up Qbus from a config entry."""
     _LOGGER.debug("%s - Loading entry", entry.unique_id)
 
     if not await async_wait_for_mqtt_client(hass):
-        _LOGGER.error("MQTT integration not available")
         raise ConfigEntryNotReady("MQTT integration not available")
 
     coordinator = QbusControllerCoordinator(hass, entry)
@@ -62,18 +61,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool
     if config:
         await coordinator.async_update_controller_config(config)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> None:
     """Unload a config entry."""
     _LOGGER.debug("%s - Unloading entry", entry.unique_id)
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        entry.runtime_data.shutdown()
-        _cleanup(hass, entry)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    entry.runtime_data.shutdown()
+    _cleanup(hass, entry)
 
 
 def _cleanup(hass: HomeAssistant, entry: QbusConfigEntry) -> None:

@@ -19,6 +19,10 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert test_username_glucose_value.state == str(GLUCOSE_READING.value)
     test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
     assert test_username_glucose_trend.state == GLUCOSE_READING.trend_description
+    test_username_glucose_reading_time = hass.states.get(
+        "sensor.test_username_glucose_reading_time"
+    )
+    assert test_username_glucose_reading_time.state == "2025-04-19T16:58:33+00:00"
 
 
 async def test_sensors_unknown(hass: HomeAssistant) -> None:
@@ -31,11 +35,16 @@ async def test_sensors_unknown(hass: HomeAssistant) -> None:
     ):
         await async_update_entity(hass, "sensor.test_username_glucose_value")
         await async_update_entity(hass, "sensor.test_username_glucose_trend")
+        await async_update_entity(hass, "sensor.test_username_glucose_reading_time")
 
     test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
     assert test_username_glucose_value.state == STATE_UNKNOWN
     test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
     assert test_username_glucose_trend.state == STATE_UNKNOWN
+    test_username_glucose_reading_time = hass.states.get(
+        "sensor.test_username_glucose_reading_time"
+    )
+    assert test_username_glucose_reading_time.state == STATE_UNKNOWN
 
 
 async def test_sensors_update_failed(hass: HomeAssistant) -> None:
@@ -48,8 +57,13 @@ async def test_sensors_update_failed(hass: HomeAssistant) -> None:
     ):
         await async_update_entity(hass, "sensor.test_username_glucose_value")
         await async_update_entity(hass, "sensor.test_username_glucose_trend")
+        await async_update_entity(hass, "sensor.test_username_glucose_reading_time")
 
     test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
     assert test_username_glucose_value.state == STATE_UNAVAILABLE
     test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
     assert test_username_glucose_trend.state == STATE_UNAVAILABLE
+    test_username_glucose_reading_time = hass.states.get(
+        "sensor.test_username_glucose_reading_time"
+    )
+    assert test_username_glucose_reading_time.state == STATE_UNAVAILABLE

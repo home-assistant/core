@@ -3,10 +3,12 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service, get_fixture_path
 
 from homeassistant import config as hass_config
-from homeassistant.components.intent_script import DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ACTION, SERVICE_RELOAD
+from homeassistant.components.intent_script.const import DOMAIN
+from homeassistant.components.intent_script.services import IntentScriptService
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ACTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -16,8 +18,6 @@ from homeassistant.helpers import (
     script,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service, get_fixture_path
 
 
 async def test_intent_script(hass: HomeAssistant) -> None:
@@ -443,7 +443,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            IntentScriptService.RELOAD,
             {},
             blocking=True,
         )
@@ -459,7 +459,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            IntentScriptService.RELOAD,
             {},
             blocking=True,
         )
@@ -499,7 +499,9 @@ async def test_reload_unloads_scripts(hass: HomeAssistant) -> None:
             action_script, "async_unload", wraps=action_script.async_unload
         ) as unload_mock,
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, IntentScriptService.RELOAD, blocking=True
+        )
         await hass.async_block_till_done()
 
     stop_mock.assert_called_once()

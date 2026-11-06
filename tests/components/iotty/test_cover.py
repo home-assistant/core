@@ -10,6 +10,7 @@ from iottycloud.verbs import (
     STATUS_OPENING,
     STATUS_STATIONATRY,
 )
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -27,8 +28,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import test_sh_one_added
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_open_ok(

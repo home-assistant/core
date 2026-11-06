@@ -10,6 +10,11 @@ from aiounifi.models.device import DeviceState
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import (
@@ -29,6 +34,7 @@ from homeassistant.components.unifi.const import (
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
+from homeassistant.components.unifi.sensor import TELEMETRY_UPDATE_INTERVAL
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -48,8 +54,6 @@ from .conftest import (
     WebsocketMessageMock,
     WebsocketStateManager,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 WIRED_CLIENT = {
     "hostname": "Wired client",
@@ -441,6 +445,27 @@ UPS_DEVICE_2.update(
 )
 UPS_DEVICE_2["vbms_table"]["battpool"].pop("device_input_voltage")
 UPS_DEVICE_2["vbms_table"]["battpool"]["device_bypass_voltage"] = 121.7
+
+UPS_BATTERY_POOL_SENSORS = {
+    "batteryLevel": "battery_level",
+    "timeToRemain": "battery_runtime",
+    "device_total_power_output": "output_power",
+    "device_output_current": "output_current",
+    "device_output_voltage": "output_voltage",
+    "device_input_voltage": "input_voltage",
+    "device_bypass_voltage": "bypass_voltage",
+    "device_total_power_factor": "output_power_factor",
+}
+
+UPS_BATTERY_POOL_FIELDS = [
+    pytest.param([device], device_name, field, sensor, id=f"{device['model']}-{field}")
+    for device, device_name in (
+        (UPS_DEVICE_1, "dummy_ups_2u_pro"),
+        (UPS_DEVICE_2, "dummy_ups_2u"),
+    )
+    for field, sensor in UPS_BATTERY_POOL_SENSORS.items()
+    if field in device["vbms_table"]["battpool"]
+]
 
 
 @pytest.mark.parametrize(
@@ -985,9 +1010,10 @@ async def test_wlan_client_sensors(
     await mock_websocket_state.disconnect()
     assert hass.states.get("sensor.ssid_1_clients").state == STATE_UNAVAILABLE
 
-    # Controller reconnects
+    # Controller reconnects, the recovery refetches the clients and the mocked
+    # payload still lists one on the SSID
     await mock_websocket_state.reconnect()
-    assert hass.states.get("sensor.ssid_1_clients").state == "0"
+    assert hass.states.get("sensor.ssid_1_clients").state == "1"
 
     # WLAN gets disabled
     wlan_1 = deepcopy(WLAN)
@@ -1000,7 +1026,7 @@ async def test_wlan_client_sensors(
     wlan_1["enabled"] = True
     mock_websocket_message(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.ssid_1_clients").state == "0"
+    assert hass.states.get("sensor.ssid_1_clients").state == "1"
 
 
 @pytest.mark.parametrize(
@@ -1109,9 +1135,18 @@ async def test_outlet_power_reading_extended_caps(
         ),
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.parametrize(
+    "missing_telemetry",
+    [
+        pytest.param({}, id="missing-table"),
+        pytest.param({"vbms_table": {}}, id="missing-pool"),
+        pytest.param({"vbms_table": {"battpool": {}}}, id="empty-pool"),
+        pytest.param({"vbms_table": {"battpool": None}}, id="null-pool"),
+    ],
+)
 async def test_ups_battery_pool_sensors(
     hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
@@ -1120,6 +1155,7 @@ async def test_ups_battery_pool_sensors(
     voltage_value: str,
     missing_voltage_sensor: str,
     metered_outlets: tuple[int, ...],
+    missing_telemetry: dict[str, Any],
 ) -> None:
     """Test UPS battery pool telemetry sensors."""
     assert {
@@ -1139,6 +1175,10 @@ async def test_ups_battery_pool_sensors(
         hass.states.get(f"sensor.{device_name}_{voltage_sensor}").state == voltage_value
     )
     assert hass.states.get(f"sensor.{device_name}_{missing_voltage_sensor}") is None
+    assert (
+        entity_registry.async_get(f"sensor.{device_name}_{missing_voltage_sensor}")
+        is None
+    )
     power_factor = hass.states.get(f"sensor.{device_name}_output_power_factor")
     assert power_factor is not None
     assert power_factor.state == "0.98"
@@ -1152,12 +1192,124 @@ async def test_ups_battery_pool_sensors(
 
     assert hass.states.get(f"sensor.{device_name}_battery_level").state == "95"
 
-    updated_device_data["vbms_table"].pop("battpool")
+    expected_states = {
+        f"sensor.{device_name}_{UPS_BATTERY_POOL_SENSORS[field]}": str(value)
+        for field, value in device_payload[0]["vbms_table"]["battpool"].items()
+    }
+    registry_entries = {
+        entity_id: entity_registry.async_update_entity(
+            entity_id, name=f"Custom {entity_id}", icon="mdi:battery"
+        )
+        for entity_id in expected_states
+    }
+    updated_device_data.pop("vbms_table")
+    updated_device_data.update(missing_telemetry)
     mock_websocket_message(message=MessageKey.DEVICE, data=updated_device_data)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"sensor.{device_name}_battery_level") is None
-    assert entity_registry.async_get(f"sensor.{device_name}_battery_level") is None
+    for entity_id, registry_entry in registry_entries.items():
+        assert hass.states.get(entity_id).state == STATE_UNKNOWN
+        assert entity_registry.async_get(entity_id) == registry_entry
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_payload[0])
+    await hass.async_block_till_done()
+
+    for entity_id, expected_state in expected_states.items():
+        assert hass.states.get(entity_id).state == expected_state
+        assert entity_registry.async_get(entity_id) == registry_entries[entity_id]
+
+    config_entry_setup.runtime_data.api.devices.remove_item(device_payload[0])
+    await hass.async_block_till_done()
+
+    for entity_id in expected_states:
+        assert hass.states.get(entity_id) is None
+        assert entity_registry.async_get(entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("device_payload", "device_name", "field", "sensor"),
+    UPS_BATTERY_POOL_FIELDS,
+    indirect=["device_payload"],
+)
+async def test_ups_battery_pool_readings(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+    device_name: str,
+    field: str,
+    sensor: str,
+) -> None:
+    """Test initial zero readings and recovery from missing or null fields."""
+    original_device = deepcopy(device_payload[0])
+    device_payload[0] = deepcopy(original_device)
+    device_payload[0]["vbms_table"]["battpool"][field] = 0
+    await config_entry_factory()
+
+    entity_id = f"sensor.{device_name}_{sensor}"
+    assert hass.states.get(entity_id).state == "0"
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+
+    original_pool = original_device["vbms_table"]["battpool"]
+    missing_field_pool = deepcopy(original_pool)
+    missing_field_pool.pop(field)
+    for pool, expected_state in (
+        (missing_field_pool, STATE_UNKNOWN),
+        (original_pool, str(original_pool[field])),
+        ({**original_pool, field: None}, STATE_UNKNOWN),
+        ({**original_pool, field: 0}, "0"),
+    ):
+        updated_device_data = deepcopy(original_device)
+        updated_device_data["vbms_table"]["battpool"] = pool
+        mock_websocket_message(message=MessageKey.DEVICE, data=updated_device_data)
+        await hass.async_block_till_done()
+
+        assert hass.states.get(entity_id).state == expected_state
+        assert entity_registry.async_get(entity_id) == registry_entry
+
+
+@pytest.mark.parametrize(
+    ("device_payload", "device_name", "field", "sensor"),
+    UPS_BATTERY_POOL_FIELDS,
+    indirect=["device_payload"],
+)
+@pytest.mark.parametrize(
+    "initial_readings",
+    [pytest.param((), id="missing"), pytest.param((None,), id="null")],
+)
+async def test_ups_battery_pool_late_field(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+    device_name: str,
+    field: str,
+    sensor: str,
+    initial_readings: tuple[None, ...],
+) -> None:
+    """Test initially unsupported fields are discovered on ordinary updates."""
+    original_device = deepcopy(device_payload[0])
+    device_payload[0] = deepcopy(original_device)
+    pool = device_payload[0]["vbms_table"]["battpool"]
+    pool.pop(field)
+    for value in initial_readings:
+        pool[field] = value
+    await config_entry_factory()
+
+    entity_id = f"sensor.{device_name}_{sensor}"
+    assert hass.states.get(entity_id) is None
+    assert entity_registry.async_get(entity_id) is None
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=original_device)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == str(
+        original_device["vbms_table"]["battpool"][field]
+    )
+    assert entity_registry.async_get(entity_id) is not None
 
 
 @pytest.mark.parametrize(
@@ -1269,6 +1421,7 @@ async def test_device_state(
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_device_system_stats(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
@@ -1280,12 +1433,119 @@ async def test_device_system_stats(
     assert hass.states.get("sensor.device_memory_utilization").state == "31.1"
 
     # Verify new event change system-stats
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     device = device_payload[0]
     device["system-stats"] = {"cpu": 7.7, "mem": 33.3, "uptime": 7316}
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
     assert hass.states.get("sensor.device_cpu_utilization").state == "7.7"
     assert hass.states.get("sensor.device_memory_utilization").state == "33.3"
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "device_id": "mock-id",
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "state": 1,
+                "version": "4.0.42.10433",
+                "system-stats": {"cpu": 5.8, "mem": 31.1, "uptime": 7316},
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_system_stats_update_interval(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_websocket_message: WebsocketMessageMock,
+    mock_websocket_state: WebsocketStateManager,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify device stats sensors limit how often their value changes."""
+
+    async def send(
+        cpu: float | str | None, mem: float | str | None, **changes: Any
+    ) -> None:
+        device = deepcopy(device_payload[0])
+        if cpu is None:
+            device.pop("system-stats")
+        else:
+            device["system-stats"] = {"cpu": cpu, "mem": mem, "uptime": 7316}
+        device.update(changes)
+        mock_websocket_message(message=MessageKey.DEVICE, data=device)
+        await hass.async_block_till_done()
+
+    def assert_states(cpu: str, mem: str) -> None:
+        assert hass.states.get("sensor.device_cpu_utilization").state == cpu
+        assert hass.states.get("sensor.device_memory_utilization").state == mem
+
+    assert_states("5.8", "31.1")
+
+    # Changed value within the interval is held
+    freezer.tick(timedelta(seconds=1))
+    await send(7.7, 33.3)
+    assert_states("5.8", "31.1")
+
+    # After the interval the current value is shown, not the held one
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL - timedelta(seconds=1))
+    await send(9.9, 35.5)
+    assert_states("9.9", "35.5")
+
+    freezer.tick(timedelta(seconds=1))
+    await send(9.9, 35.5)
+    assert_states("9.9", "35.5")
+    await send(11.1, 37.7)
+    assert_states("9.9", "35.5")
+
+    # A large change is shown at once, small changes are still held
+    freezer.tick(timedelta(seconds=1))
+    await send(21.0, 37.7)
+    assert_states("21.0", "35.5")
+    freezer.tick(timedelta(seconds=1))
+    await send(22.2, 37.7)
+    assert_states("21.0", "35.5")
+
+    # UniFi reports CPU and memory as numeric strings
+    freezer.tick(timedelta(seconds=1))
+    await send("33.3", "37.7")
+    assert_states("33.3", "35.5")
+
+    # A non-numeric reading within the interval is held
+    freezer.tick(timedelta(seconds=1))
+    await send("n/a", "37.7")
+    assert_states("33.3", "35.5")
+
+    # A clock set back does not hold values until it catches up
+    freezer.tick(-timedelta(hours=1))
+    await send("34.4", "38.8")
+    assert_states("34.4", "38.8")
+
+    # Unavailable is shown at once, and so is the first value afterwards
+    await send(12.2, 38.8, disabled=True)
+    assert_states(STATE_UNAVAILABLE, STATE_UNAVAILABLE)
+    freezer.tick(timedelta(seconds=1))
+    await send(13.3, 39.9)
+    assert_states("13.3", "39.9")
+
+    # Telemetry gaps are shown at once, and so is the value afterwards
+    freezer.tick(timedelta(seconds=1))
+    await send(None, None)
+    assert_states(STATE_UNKNOWN, STATE_UNKNOWN)
+    freezer.tick(timedelta(seconds=1))
+    await send(15.5, 41.1)
+    assert_states("15.5", "41.1")
+
+    # The refetched value is shown at once after a reconnect
+    freezer.tick(timedelta(seconds=1))
+    await mock_websocket_state.disconnect()
+    assert_states(STATE_UNAVAILABLE, STATE_UNAVAILABLE)
+    await mock_websocket_state.reconnect()
+    assert_states("5.8", "31.1")
 
 
 @pytest.mark.parametrize(
@@ -2189,6 +2449,7 @@ async def test_wan_monitor_latency_without_monitors_key(
 async def test_device_temperatures(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     mock_websocket_message,
     device_payload: list[dict[str, Any]],
     temperature_id: str,
@@ -2224,12 +2485,63 @@ async def test_device_temperatures(
     assert hass.states.get(entity_id).state == state
 
     # # Verify state update
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     device = device_payload[0]
     device["temperatures"][index_to_update]["value"] = updated_state
 
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
     assert hass.states.get(entity_id).state == updated_state
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "device_id": "mock-id",
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+                "temperatures": [{"name": "CPU", "type": "cpu", "value": 66.0}],
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_temperature_update_interval(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify device temperature sensors limit how often their value changes."""
+    entity_id = "sensor.device_cpu_temperature"
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "66.0"
+
+    device = device_payload[0]
+    freezer.tick(timedelta(seconds=1))
+    device["temperatures"][0]["value"] = 70.0
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "66.0"
+
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL - timedelta(seconds=1))
+    device["temperatures"][0]["value"] = 72.0
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "72.0"
 
 
 @pytest.mark.parametrize(
@@ -2264,7 +2576,7 @@ async def test_device_temperatures(
 async def test_device_temperature_with_missing_value(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device temperatures sensors are working as expected."""
@@ -2293,7 +2605,7 @@ async def test_device_temperature_with_missing_value(
 
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     # Send original payload again to verify sensor recovers
     mock_websocket_message(message=MessageKey.DEVICE, data=device_payload[0])

@@ -1,5 +1,6 @@
 """TemplateEntity utility class."""
 
+from collections.abc import Mapping
 import itertools
 import logging
 from typing import Any, override
@@ -14,9 +15,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.components.sensor.helpers import (  # pylint: disable=home-assistant-component-root-import
-    async_parse_date_datetime,
-)
+from homeassistant.components.sensor.helpers import async_parse_date_datetime  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
@@ -244,7 +243,9 @@ class TriggerBaseEntity(Entity):
         """Set unique id."""
         self._unique_id = unique_id
 
-    def _template_variables(self, run_variables: dict[str, Any] | None = None) -> dict:
+    def _template_variables(
+        self, run_variables: Mapping[str, Any] | None = None
+    ) -> dict:
         """Render template variables."""
         return {
             "this": TemplateStateFromEntityId(self.hass, self.entity_id),
@@ -401,7 +402,10 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         If self.device_class is `date`, `timestamp`, or `uptime`,
         it will try to parse the value to a date/datetime object.
         """
-        if self.device_class not in (
+        # Value templates render to strings, so a template rendering none gives "None"
+        if value == "None":
+            self._attr_native_value = None
+        elif self.device_class not in (
             SensorDeviceClass.DATE,
             SensorDeviceClass.TIMESTAMP,
             SensorDeviceClass.UPTIME,

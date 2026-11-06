@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 from aiortm import AioRTMError, AuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.remember_the_milk.const import (
@@ -30,8 +31,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .const import CREATE_ENTRY_DATA
-
-from tests.common import MockConfigEntry
 
 SUBENTRY_ID = "test-subentry-id"
 LIST_ID = 99

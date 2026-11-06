@@ -39,9 +39,8 @@ rules:
 
   # Silver
   action-exceptions:
-    status: exempt
-    comment: |
-      This integration does not provide additional actions.
+    status: todo
+    comment: Library errors are not handled in light, cover, climate and scene actions
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

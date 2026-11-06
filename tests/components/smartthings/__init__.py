@@ -13,14 +13,13 @@ from pysmartthings import (
     DeviceStatus,
 )
 from pysmartthings.models import HealthStatus
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smartthings.const import DOMAIN, MAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, load_fixture
 
 DEVICE_FIXTURES = [
     "aq_sensor_3_ikea",

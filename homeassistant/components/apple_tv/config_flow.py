@@ -20,7 +20,6 @@ from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_ZEROCONF,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -36,6 +35,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import AppleTvConfigEntry
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,7 +113,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: AppleTvConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
@@ -619,8 +619,9 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self.device_identifier, raise_on_progress=False
         )
 
-        # If an existing config entry is updated, then this was a re-auth
-        if existing_entry:
+        # If an existing config entry is updated, then this was a re-auth. An
+        # ignored entry is replaced by the new entry instead.
+        if existing_entry and existing_entry.source != SOURCE_IGNORE:
             return self.async_update_reload_and_abort(
                 existing_entry, data=data, unique_id=self.unique_id
             )

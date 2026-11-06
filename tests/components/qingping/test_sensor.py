@@ -3,6 +3,13 @@
 from datetime import timedelta
 import time
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
+
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
@@ -16,14 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from . import LIGHT_SERVICE_INFO, NO_DATA_SERVICE_INFO
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
-)
+from . import LIGHT_SERVICE_INFO, NO_DATA_SERVICE_INFO, VOC_NOISE_SERVICE_INFO
 
 
 async def test_sensors(hass: HomeAssistant) -> None:
@@ -48,6 +48,40 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert lux_sensor_attrs[ATTR_FRIENDLY_NAME] == "Motion & Light EEFF Illuminance"
     assert lux_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "lx"
     assert lux_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_voc_index_and_noise_sensors(hass: HomeAssistant) -> None:
+    """Test VOC index (unitless) and noise sensors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all("sensor")) == 0
+    inject_bluetooth_service_info(hass, VOC_NOISE_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("sensor")) == 2
+
+    voc_sensor = hass.states.get("sensor.motion_light_eeff_voc_index")
+    voc_sensor_attrs = voc_sensor.attributes
+    assert voc_sensor.state == "57"
+    assert voc_sensor_attrs[ATTR_FRIENDLY_NAME] == "Motion & Light EEFF VOC Index"
+    assert ATTR_UNIT_OF_MEASUREMENT not in voc_sensor_attrs
+    assert voc_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    noise_sensor = hass.states.get("sensor.motion_light_eeff_noise")
+    noise_sensor_attrs = noise_sensor.attributes
+    assert noise_sensor.state == "50"
+    assert noise_sensor_attrs[ATTR_FRIENDLY_NAME] == "Motion & Light EEFF Noise"
+    assert noise_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "dB"
+    assert noise_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

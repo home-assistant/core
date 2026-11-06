@@ -5,6 +5,12 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
@@ -24,12 +30,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import setup_integration
+from . import get_marketplace, setup_integration
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_INTEGRATION_ID
-
-from tests.common import MockConfigEntry, async_mock_service
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 ISSUE_ID = f"restart_required_{REPOSITORY_INTEGRATION_ID}_1.0.0"
 
@@ -83,13 +85,14 @@ async def test_restart_required_fix_flow_for_an_unknown_repository(
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key="restart_required",
+        translation_placeholders={"name": "Unknown integration"},
     )
 
     client = await hass_client()
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     assert data["step_id"] == "confirm_restart"
-    assert data["description_placeholders"] == {"name": ""}
+    assert data["description_placeholders"] == {"name": "Unknown integration"}
 
 
 async def test_restart_required_fix_flow_while_unloaded(
@@ -151,6 +154,38 @@ async def test_removal_the_catalog_takes_back(
         await marketplace.async_handle_removed_repositories()
 
     assert not marketplace.repositories.is_removed(REPOSITORY_INTEGRATION)
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"removed_{REPOSITORY_INTEGRATION_ID}"
+    )
+
+
+async def test_removed_repository_issue_removed_with_the_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the issue of a removed repository goes away with the entry."""
+    await setup_integration(hass, mock_config_entry)
+    marketplace = get_marketplace(hass)
+    marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).data.installed = True
+    removal = {"repository": REPOSITORY_INTEGRATION, "removal_type": "remove"}
+
+    with (
+        patch.object(
+            marketplace.data_client, "async_get_removed", return_value=[removal]
+        ),
+        patch.object(marketplace.data, "async_write"),
+    ):
+        await marketplace.async_handle_removed_repositories()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"removed_{REPOSITORY_INTEGRATION_ID}"
+    )
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+
     assert not issue_registry.async_get_issue(
         DOMAIN, f"removed_{REPOSITORY_INTEGRATION_ID}"
     )

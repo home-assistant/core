@@ -51,7 +51,7 @@ from .const import (
     GET_CAPABILITIES_EXCEPTIONS,
     LOGGER,
 )
-from .device import get_device
+from .device import get_device, get_mac_address
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -120,7 +120,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the ONVIF config flow."""
-        self.device_id = None
+        self.device_id: str | None = None
         self.devices: list[dict[str, Any]] = []
         self.onvif_config: dict[str, Any] = {}
 
@@ -177,6 +177,70 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders=description_placeholders,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device connection."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            self.onvif_config = reconfigure_entry.data | user_input
+            # An earlier attempt in this flow may have reached a different device
+            self.device_id = None
+            errors, description_placeholders = await self.async_setup_profiles(
+                configure_unique_id=False
+            )
+            if not errors:
+                if not self._is_same_device(reconfigure_entry):
+                    return self.async_abort(reason="unique_id_mismatch")
+                result = self.async_update_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+                # The update listener only handles options, so reload explicitly
+                self.hass.config_entries.async_schedule_reload(
+                    reconfigure_entry.entry_id
+                )
+                return result
+
+        suggested_values = {
+            key: value
+            for key, value in (user_input or reconfigure_entry.data).items()
+            if key != CONF_PASSWORD
+        }
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): int,
+                        probatio.Optional(CONF_USERNAME, default=""): str,
+                        probatio.Optional(
+                            probatio.Secret(CONF_PASSWORD), default=""
+                        ): str,
+                    }
+                ),
+                suggested_values,
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    @callback
+    def _is_same_device(self, entry: ConfigEntry) -> bool:
+        """Return whether the reached device belongs to the config entry."""
+        if self.device_id == entry.unique_id:
+            return True
+        # Entries created from WS-Discovery are keyed on the scope MAC, while
+        # their devices are registered with the MAC or serial the camera reports.
+        return any(
+            (DOMAIN, self.device_id) in device.identifiers
+            for device in dr.async_entries_for_config_entry(
+                dr.async_get(self.hass), entry.entry_id
+            )
         )
 
     @override
@@ -297,7 +361,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=conf(CONF_USERNAME, "")
                     ): str,
                     probatio.Optional(
-                        CONF_PASSWORD, default=conf(CONF_PASSWORD, "")
+                        probatio.Secret(CONF_PASSWORD), default=conf(CONF_PASSWORD, "")
                     ): str,
                 }
             ),
@@ -329,12 +393,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             if not self.device_id:
                 try:
                     network_interfaces = await device_mgmt.GetNetworkInterfaces()
-                    interface = next(
-                        filter(lambda interface: interface.Enabled, network_interfaces),
-                        None,
-                    )
-                    if interface:
-                        self.device_id = interface.Info.HwAddress
+                    self.device_id = get_mac_address(network_interfaces)
                 except Fault as fault:
                     if "not implemented" not in fault.message:
                         raise
@@ -352,7 +411,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                 raise AbortFlow(reason="no_mac")
 
             if configure_unique_id:
+                # pylint: disable-next=home-assistant-flow-call-in-try
                 await self.async_set_unique_id(self.device_id, raise_on_progress=False)
+                # pylint: disable-next=home-assistant-flow-call-in-try
                 self._abort_if_unique_id_configured(
                     updates={
                         CONF_HOST: self.onvif_config[CONF_HOST],

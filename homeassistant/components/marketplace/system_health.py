@@ -3,16 +3,13 @@
 from typing import Any
 
 from aiogithubapi import GitHubException
-from aiogithubapi.common.const import BASE_API_URL
 
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
 from .base import MarketplaceManager, async_get_marketplace
 from .const import CATALOG_REPOSITORY, DOMAIN
-
-GITHUB_STATUS = "https://www.githubstatus.com/"
-CLOUDFLARE_STATUS = "https://www.cloudflarestatus.com/"
+from .profiles import Endpoint
 
 
 @callback
@@ -30,20 +27,26 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         return {"disabled": "The Marketplace is not loaded"}
 
     marketplace = async_get_marketplace(hass)
+    # The endpoints the downloads start with
+    endpoints = marketplace.endpoints
+    profile = endpoints.profile
+    raw = endpoints.bases(Endpoint.RAW)[0]
+    github = endpoints.bases(Endpoint.GITHUB)[0]
+    catalog = endpoints.bases(Endpoint.CATALOG)[0]
 
     data: dict[str, Any] = {
+        "download_profile": profile.id,
         "github_api": system_health.async_check_can_reach_url(
-            hass, BASE_API_URL, GITHUB_STATUS
+            hass, profile.api, profile.status_pages.get("api")
         ),
         "github_content": system_health.async_check_can_reach_url(
-            hass,
-            f"https://raw.githubusercontent.com/{CATALOG_REPOSITORY}/main/integration",
+            hass, f"{raw}/{CATALOG_REPOSITORY}/main/integration"
         ),
         "github_web": system_health.async_check_can_reach_url(
-            hass, "https://github.com/", GITHUB_STATUS
+            hass, f"{github}/", profile.status_pages.get(Endpoint.GITHUB)
         ),
         "catalog_data": system_health.async_check_can_reach_url(
-            hass, "https://data-v2.hacs.xyz/data.json", CLOUDFLARE_STATUS
+            hass, f"{catalog}/data.json", profile.status_pages.get(Endpoint.CATALOG)
         ),
         "github_connected": marketplace.github_connected,
         "installed_version": marketplace.version,

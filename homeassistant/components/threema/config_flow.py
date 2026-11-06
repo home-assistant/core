@@ -8,7 +8,6 @@ from typing import Any, override
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -22,6 +21,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from . import ThreemaConfigEntry
 from .client import (
     ThreemaAPIClient,
     ThreemaAuthError,
@@ -82,7 +82,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: ThreemaConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentry types supported by this integration."""
         return {SUBENTRY_TYPE_RECIPIENT: RecipientSubentryFlowHandler}
@@ -211,10 +211,10 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 probatio.Required(CONF_GATEWAY_ID, default=self._gateway_id or ""): str,
                 probatio.Required(
-                    CONF_API_SECRET, default=self._api_secret or ""
+                    probatio.Secret(CONF_API_SECRET), default=self._api_secret or ""
                 ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
                 probatio.Optional(
-                    CONF_PRIVATE_KEY, default=self._private_key or ""
+                    probatio.Secret(CONF_PRIVATE_KEY), default=self._private_key or ""
                 ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
                 probatio.Optional(
                     _CONF_PUBLIC_KEY, default=self._public_key or ""
@@ -275,7 +275,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_API_SECRET): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_API_SECRET)): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }

@@ -1,14 +1,14 @@
 """Test the Tilt Hydrometer BLE sensors."""
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+
 from homeassistant.components.sensor import ATTR_STATE_CLASS, async_rounded_state
 from homeassistant.components.tilt_ble.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 
 from . import TILT_GREEN_SERVICE_INFO
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_sensors(hass: HomeAssistant) -> None:

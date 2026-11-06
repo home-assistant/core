@@ -29,6 +29,8 @@ type IrmKmiConfigEntry = ConfigEntry[IrmKmiCoordinator]
 class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]):
     """Coordinator to update data from IRM KMI."""
 
+    config_entry: IrmKmiConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,

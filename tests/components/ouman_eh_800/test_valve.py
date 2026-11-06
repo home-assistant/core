@@ -9,6 +9,7 @@ from ouman_eh_800_api import (
     OumanClientError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import (
@@ -22,8 +23,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 # Only L1 and L2 base endpoints produce valve entities. A single scenario
@@ -65,7 +64,9 @@ async def test_async_set_valve_position(
     expected_position: int,
 ) -> None:
     """Test that valve services write to the device and update state."""
-    entity_id = "valve.heating_circuit_1_patterilammitys_valve_position_setpoint"
+    entity_id = (
+        "valve.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position_setpoint"
+    )
 
     await hass.services.async_call(
         VALVE_DOMAIN,
@@ -118,7 +119,7 @@ async def test_async_set_valve_position_errors(
             VALVE_DOMAIN,
             SERVICE_SET_VALVE_POSITION,
             {
-                ATTR_ENTITY_ID: "valve.heating_circuit_1_patterilammitys_valve_position_setpoint",
+                ATTR_ENTITY_ID: "valve.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position_setpoint",
                 ATTR_POSITION: 50,
             },
             blocking=True,

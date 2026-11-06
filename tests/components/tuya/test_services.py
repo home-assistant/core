@@ -1,6 +1,7 @@
 """Tests for Tuya services."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from tuya_device_handlers.device_wrapper.service_feeder_schedule import FeederSchedule
 from tuya_sharing import CustomerDevice, Manager
@@ -12,8 +13,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import initialize_entry
-
-from tests.common import MockConfigEntry
 
 DECODED_MEAL_PLAN: list[FeederSchedule] = [
     {
