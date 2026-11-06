@@ -22,6 +22,7 @@ from homeassistant.components import conversation
 from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.components.google_assistant_sdk.const import SUPPORTED_LANGUAGE_CODES
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import chat_session, entity_registry as er
@@ -429,10 +430,9 @@ async def test_conversation_entity_chat_log(
 ) -> None:
     """Test the conversation entity stores the answer in the chat log."""
     await setup_integration()
-    assert await async_setup_component(hass, "conversation", {})
 
     entity_id = entity_registry.async_get_entity_id(
-        "conversation", DOMAIN, config_entry.entry_id
+        Platform.CONVERSATION, DOMAIN, config_entry.entry_id
     )
     assert entity_id is not None
 
