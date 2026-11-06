@@ -1,5 +1,6 @@
 """Config flow for the GBFS integration."""
 
+from collections.abc import Iterable
 import logging
 from typing import Any, override
 
@@ -7,6 +8,7 @@ from aiomobilitydatabase.feeds import (
     FeedParseError,
     MobilityFeedsClient,
     SourceConnectionError,
+    Station,
     SystemInfo,
 )
 import probatio
@@ -15,20 +17,28 @@ from yarl import URL
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
+    SubentryFlowResult,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util.location import distance
 
-from .const import DOMAIN, SUBENTRY_TYPE_STATION
+from .const import CONF_STATION_ID, DOMAIN, SUBENTRY_TYPE_STATION
+from .coordinator import GbfsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,5 +146,67 @@ class GbfsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
+def _station_options(
+    hass: HomeAssistant, stations: Iterable[Station]
+) -> list[SelectOptionDict]:
+    """List stations closest to home first, labelled with their distance."""
+    located: list[tuple[float | None, Station]] = []
+    for station in stations:
+        meters = (
+            None
+            if station.latitude is None or station.longitude is None
+            else distance(
+                hass.config.latitude,
+                hass.config.longitude,
+                station.latitude,
+                station.longitude,
+            )
+        )
+        located.append((meters, station))
+    located.sort(key=lambda item: (item[0] is None, item[0] or 0.0))
+    unit = hass.config.units.length_unit
+    return [
+        SelectOptionDict(
+            value=station.id,
+            label=(
+                f"{station.name or station.id} "
+                f"({hass.config.units.length(meters, UnitOfLength.METERS):.1f} {unit})"
+                if meters is not None
+                else station.name or station.id
+            ),
+        )
+        for meters, station in located
+    ]
+
+
 class StationSubentryFlowHandler(ConfigSubentryFlow):
     """Handle adding a station of a GBFS system."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Pick a station."""
+        entry: GbfsConfigEntry = self._get_entry()
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+        stations = entry.runtime_data.data
+        if user_input is not None:
+            station = stations[user_input[CONF_STATION_ID]]
+            return self.async_create_entry(
+                title=station.name or station.id,
+                data={CONF_STATION_ID: station.id},
+                unique_id=station.id,
+            )
+        return self.async_show_form(
+            step_id="user",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_STATION_ID): SelectSelector(
+                        SelectSelectorConfig(
+                            options=_station_options(self.hass, stations.values()),
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    )
+                }
+            ),
+        )

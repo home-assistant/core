@@ -12,8 +12,12 @@ from pytest_homeassistant.common import (
 )
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.gbfs.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.components.gbfs.const import (
+    CONF_STATION_ID,
+    DOMAIN,
+    SUBENTRY_TYPE_STATION,
+)
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -183,3 +187,61 @@ async def test_reconfigure_other_system(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data == {CONF_URL: V3_URL}
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_add_station(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test stations are offered closest first and added as subentries."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_STATION),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    options = result["data_schema"].schema[CONF_STATION_ID].config["options"]
+    assert [option["value"] for option in options] == ["s1", "s2", "s3"]
+    assert options[0]["label"] == "Main St & 1st Ave (0.0 km)"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STATION_ID: "s2"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Park Ave & 2nd St"
+    assert result["data"] == {CONF_STATION_ID: "s2"}
+    assert result["unique_id"] == "s2"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_add_station_already_added(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a station can only be added once."""
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_STATION),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STATION_ID: "s1"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_add_station_entry_not_loaded(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stations can't be added while the system isn't loaded."""
+    aioclient_mock.get(V3_URL, exc=ClientError())
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_STATION),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
