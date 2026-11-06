@@ -13,18 +13,18 @@
           "city": "[%key:component::meteo_france::config::step::user::data::city%]"
         },
         "data_description": {
-          "city": "The city to get the weather for, among the search results."
+          "city": "The city you want weather forecasts for."
         },
-        "description": "Choose your city from the list"
+        "description": "Several cities match your search."
       },
       "user": {
         "data": {
           "city": "City"
         },
         "data_description": {
-          "city": "Postal code or name of the city to get the weather for."
+          "city": "Postal code or city name. Postal codes are only supported in France."
         },
-        "description": "Enter the postal code (only for France, recommended) or city name"
+        "description": "Search for the city you want weather forecasts for."
       }
     }
   },
