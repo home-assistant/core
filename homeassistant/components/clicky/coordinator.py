@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 type ClickyConfigEntry = ConfigEntry[ClickyCoordinator]
 
 
-class ClickyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class ClickyCoordinator(DataUpdateCoordinator):
     """Handle fetching Clicky data and updating sensors."""
 
     config_entry: ClickyConfigEntry
