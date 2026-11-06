@@ -135,6 +135,12 @@
   "services": {
     "restart": {
       "description": "Restarts a DoorBird device. The device is unavailable for a short time while it reboots.",
+      "fields": {
+        "device_id": {
+          "description": "The DoorBird devices to restart.",
+          "name": "Devices"
+        }
+      },
       "name": "Restart"
     }
   }
