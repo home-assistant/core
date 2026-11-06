@@ -61,7 +61,7 @@
   },
   "exceptions": {
     "update_failed": {
-      "message": "An error occurred while fetching data from Météo-France: {error}"
+      "message": "An error occurred while fetching data from Météo-France."
     }
   }
 }

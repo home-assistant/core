@@ -30,14 +30,6 @@ class MeteoFranceData:
     alert_coordinator: MeteoFranceAlertUpdateCoordinator | None
 
 
-def _update_failed(err: RequestException) -> UpdateFailed:
-    return UpdateFailed(
-        translation_domain=DOMAIN,
-        translation_key="update_failed",
-        translation_placeholders={"error": str(err)},
-    )
-
-
 SCAN_INTERVAL_RAIN = timedelta(minutes=5)
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -73,7 +65,9 @@ class MeteoFranceForecastUpdateCoordinator(DataUpdateCoordinator[Forecast]):
                 self._client.get_forecast, self._latitude, self._longitude
             )
         except RequestException as err:
-            raise _update_failed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="update_failed"
+            ) from err
 
 
 class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
@@ -107,7 +101,9 @@ class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
                 self._client.get_rain, self._latitude, self._longitude
             )
         except RequestException as err:
-            raise _update_failed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="update_failed"
+            ) from err
 
 
 class MeteoFranceAlertUpdateCoordinator(DataUpdateCoordinator[CurrentPhenomenons]):
@@ -141,4 +137,6 @@ class MeteoFranceAlertUpdateCoordinator(DataUpdateCoordinator[CurrentPhenomenons
                 self._client.get_warning_current_phenomenons, self._department, 0, True
             )
         except RequestException as err:
-            raise _update_failed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="update_failed"
+            ) from err
