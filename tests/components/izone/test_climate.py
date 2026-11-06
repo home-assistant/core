@@ -28,17 +28,20 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.izone.climate import ATTR_CONTROL_ZONE_SOURCE
-from homeassistant.components.izone.const import ATTR_AIRFLOW, DOMAIN
+from homeassistant.components.izone.const import DOMAIN
 from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
-from homeassistant.components.izone.services import (
-    IZONE_SERVICE_AIRFLOW_MAX,
-    IZONE_SERVICE_AIRFLOW_MIN,
+from homeassistant.components.izone.services import IZoneService, IZoneServiceArgument
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
 from .conftest import create_mock_controller, create_mock_zone
@@ -112,6 +115,75 @@ async def test_set_controller_temperature_when_controller_owns(
     )
 
     mock_controller.set_temp_setpoint.assert_awaited_once_with(23.5)
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(CONTROLLER_ENTITY, id="controller"),
+        pytest.param(ZONE_ENTITY, id="zone"),
+    ],
+)
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_set_temperature_rejects_off_step_setpoint(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+    entity_id: str,
+) -> None:
+    """In-range setpoints that are not multiples of 0.5 raise before reaching pizone."""
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 24.3},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "invalid_temperature_step"
+    mock_controller.set_temp_setpoint.assert_not_awaited()
+    mock_zones[0].set_temp_setpoint.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(CONTROLLER_ENTITY, id="controller"),
+        pytest.param(ZONE_ENTITY, id="zone"),
+    ],
+)
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_set_temperature_normalizes_fahrenheit_setpoint(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+    entity_id: str,
+) -> None:
+    """Fahrenheit conversion noise is snapped to the 0.5 °C step."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
+    await setup_integration(hass, mock_config_entry)
+    setters = {
+        CONTROLLER_ENTITY: mock_controller.set_temp_setpoint,
+        ZONE_ENTITY: mock_zones[0].set_temp_setpoint,
+    }
+
+    # 74.3 °F converts to 23.499999999999996 °C.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 74.3},
+        blocking=True,
+    )
+
+    setters[entity_id].assert_awaited_once_with(23.5)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -336,22 +408,43 @@ async def test_control_zone_source_controller_owner(
     assert entity.attributes[ATTR_TEMPERATURE] == 24.0
 
 
+@pytest.mark.parametrize(
+    "zone_ctrl",
+    [
+        pytest.param(99, id="unmatched_index"),
+        pytest.param(None, id="missing_ctrlzone"),
+    ],
+)
 async def test_control_zone_source_unmatched_owner(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
+    zone_ctrl: int | None,
 ) -> None:
-    """Source is omitted when no owner matches."""
+    """Source is omitted when no owner matches; current uses return air."""
+    mock_controller.zone_ctrl = zone_ctrl
     mock_controller.control_setpoint_owner = None
     mock_controller.control_setpoint = None
+    mock_controller.temp_return = 21.0
     await setup_integration(hass, mock_config_entry)
 
     entity = hass.states.get(CONTROLLER_ENTITY)
     assert entity is not None
     assert ATTR_CONTROL_ZONE_SOURCE not in entity.attributes
+    assert entity.attributes["control_zone"] == zone_ctrl
+    assert entity.attributes["control_zone_name"] is None
+    assert entity.attributes["control_zone_setpoint"] is None
+    assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
 
 
+@pytest.mark.parametrize(
+    "disabled_by",
+    [
+        pytest.param(None, id="enabled_zone"),
+        pytest.param(er.RegistryEntryDisabler.USER, id="disabled_zone"),
+    ],
+)
 async def test_control_zone_source_follows_entity_id_rename(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -360,8 +453,16 @@ async def test_control_zone_source_follows_entity_id_rename(
     mock_zones: list[Mock],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    disabled_by: er.RegistryEntryDisabler | None,
 ) -> None:
     """Source tracks the zone climate entity_id after a rename."""
+    entity_registry.async_get_or_create(
+        CLIMATE_DOMAIN,
+        DOMAIN,
+        "000000001_z1",
+        suggested_object_id="living_room",
+        disabled_by=disabled_by,
+    )
     mock_controller.control_setpoint_owner = mock_zones[0]
     mock_controller.control_setpoint = mock_zones[0].temp_setpoint
     await setup_integration(hass, mock_config_entry)
@@ -831,10 +932,10 @@ async def test_command_connection_error_recovers_on_coordinator_refresh(
 @pytest.mark.parametrize(
     ("service", "airflow"),
     [
-        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 41, id="min-int"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 41, id="max-int"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 40.9, id="min-float"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 40.9, id="max-float"),
+        pytest.param(IZoneService.AIRFLOW_MIN, 41, id="min-int"),
+        pytest.param(IZoneService.AIRFLOW_MAX, 41, id="max-int"),
+        pytest.param(IZoneService.AIRFLOW_MIN, 40.9, id="min-float"),
+        pytest.param(IZoneService.AIRFLOW_MAX, 40.9, id="max-float"),
     ],
 )
 async def test_airflow_rejects_non_multiples_of_five(
@@ -848,9 +949,42 @@ async def test_airflow_rejects_non_multiples_of_five(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ZONE_ENTITY, ATTR_AIRFLOW: airflow},
+            {
+                CommonServiceArgument.ENTITY_ID: ZONE_ENTITY,
+                IZoneServiceArgument.AIRFLOW: airflow,
+            },
             blocking=True,
         )
 
+    mock_zones[0].set_airflow_min.assert_not_called()
+    mock_zones[0].set_airflow_max.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "service",
+    [
+        pytest.param(IZoneService.AIRFLOW_MIN, id="min"),
+        pytest.param(IZoneService.AIRFLOW_MAX, id="max"),
+    ],
+)
+async def test_airflow_rejects_controller(
+    hass: HomeAssistant,
+    mock_zones: list[Mock],
+    service: str,
+) -> None:
+    """Airflow services reject the controller entity."""
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                CommonServiceArgument.ENTITY_ID: CONTROLLER_ENTITY,
+                IZoneServiceArgument.AIRFLOW: 40,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "airflow_zone_only"
     mock_zones[0].set_airflow_min.assert_not_called()
     mock_zones[0].set_airflow_max.assert_not_called()

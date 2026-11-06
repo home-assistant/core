@@ -23,6 +23,7 @@ from homeassistant.auth.models import (
 )
 from homeassistant.components import auth
 from homeassistant.components.auth import DOMAIN
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -1217,3 +1218,32 @@ async def test_auth_code_unexpected_verifier_rejected(
     result = await resp.json()
     assert result["error"] == "invalid_request"
     assert "no code challenge was present" in result["error_description"]
+
+
+@pytest.mark.parametrize(
+    ("url", "content_type"),
+    [
+        pytest.param("/auth/login_flow", "application/json", id="login_flow"),
+        pytest.param(
+            "/auth/login_flow/mock-flow-id", "application/json", id="login_flow_step"
+        ),
+        pytest.param("/auth/token", "application/x-www-form-urlencoded", id="token"),
+        pytest.param("/auth/revoke", "application/x-www-form-urlencoded", id="revoke"),
+    ],
+)
+async def test_unauthenticated_body_too_large(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    url: str,
+    content_type: str,
+) -> None:
+    """Test unauthenticated auth endpoints reject large bodies before parsing."""
+    client = await async_setup_auth(hass, aiohttp_client)
+
+    resp = await client.post(
+        url,
+        data=b"a" * (MAX_UNAUTHENTICATED_BODY_SIZE + 1),
+        headers={"Content-Type": content_type},
+    )
+
+    assert resp.status == HTTPStatus.REQUEST_ENTITY_TOO_LARGE

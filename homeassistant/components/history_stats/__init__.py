@@ -19,6 +19,7 @@ from .const import (
     CONF_END,
     CONF_MIN_STATE_DURATION,
     CONF_START,
+    DOMAIN,
     PLATFORMS,
     SECTION_ADDITIONAL_SETTINGS,
 )
@@ -28,6 +29,10 @@ from .data import HistoryStats
 type HistoryStatsConfigEntry = ConfigEntry[HistoryStatsUpdateCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "DOMAIN",
+]
 
 
 async def async_setup_entry(
@@ -91,7 +96,9 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: HistoryStatsConfigEntry
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version

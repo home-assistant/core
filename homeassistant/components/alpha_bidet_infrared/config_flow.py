@@ -10,6 +10,7 @@ from homeassistant.components.infrared import (
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_MODEL
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
@@ -19,6 +20,20 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_INFRARED_EMITTER_ENTITY_ID, DOMAIN, AlphaBidetModel
+
+
+@callback
+def _emitter_schema(emitter_entity_ids: list[str]) -> probatio.Schema:
+    """Return the infrared emitter selection schema."""
+    return probatio.Schema(
+        {
+            probatio.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
+                EntitySelectorConfig(
+                    domain=INFRARED_DOMAIN, include_entities=emitter_entity_ids
+                )
+            ),
+        }
+    )
 
 
 class AlphaBidetIrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -46,14 +61,8 @@ class AlphaBidetIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
+            data_schema=_emitter_schema(emitter_entity_ids).extend(
                 {
-                    probatio.Required(CONF_INFRARED_EMITTER_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=emitter_entity_ids,
-                        )
-                    ),
                     probatio.Required(CONF_MODEL): SelectSelector(
                         SelectSelectorConfig(
                             options=[model.value for model in AlphaBidetModel],
@@ -61,5 +70,30 @@ class AlphaBidetIrConfigFlow(ConfigFlow, domain=DOMAIN):
                         )
                     ),
                 }
+            ),
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the infrared emitter."""
+        entry = self._get_reconfigure_entry()
+        emitter_entity_ids = async_get_emitters(self.hass)
+        if not emitter_entity_ids:
+            return self.async_abort(reason="no_emitters")
+
+        if user_input is not None:
+            emitter_entity_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
+            self._async_abort_entries_match(
+                {CONF_INFRARED_EMITTER_ENTITY_ID: emitter_entity_id}
+            )
+            return self.async_update_reload_and_abort(
+                entry, unique_id=emitter_entity_id, data_updates=user_input
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                _emitter_schema(emitter_entity_ids), entry.data
             ),
         )

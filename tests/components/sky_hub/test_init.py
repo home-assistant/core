@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES, Device
 from homeassistant.components.sky_hub.const import (
@@ -17,7 +18,12 @@ from homeassistant.components.sky_hub.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.setup import async_setup_component
 
 from .conftest import LAPTOP, PHONE
 
@@ -78,6 +84,7 @@ async def test_legacy_known_devices_issue(
         DOMAIN, _issue_id(mock_config_entry.entry_id)
     )
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.is_fixable is False
     assert issue.translation_key == ISSUE_LEGACY_KNOWN_DEVICES
@@ -148,6 +155,7 @@ async def test_legacy_known_devices_issue_on_new_device(
         DOMAIN, _issue_id(mock_config_entry.entry_id)
     )
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_placeholders == {
         "host": DEFAULT_HOST,
         "path": YAML_DEVICES,
@@ -188,12 +196,12 @@ async def test_legacy_known_devices_issue_cleared(
 
 
 @pytest.mark.usefixtures("mock_router")
-async def test_legacy_known_devices_issue_removed_on_unload(
+async def test_legacy_known_devices_issue_kept_on_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test unloading removes the router's legacy conflict issue."""
+    """Test unloading keeps the router's legacy conflict issue."""
     legacy_devices = [Device(hass, timedelta(0), True, "laptop", LAPTOP.mac)]
 
     with patch(
@@ -204,20 +212,73 @@ async def test_legacy_known_devices_issue_removed_on_unload(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert (
-            issue_registry.async_get_issue(
-                DOMAIN, _issue_id(mock_config_entry.entry_id)
-            )
-            is not None
-        )
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    issue = issue_registry.async_get_issue(
+        DOMAIN, _issue_id(mock_config_entry.entry_id)
+    )
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+
+@pytest.mark.usefixtures("mock_router")
+async def test_legacy_known_devices_issue_removed_with_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test removing the config entry removes its legacy conflict issue."""
+    legacy_devices = [Device(hass, timedelta(0), True, "laptop", LAPTOP.mac)]
+
+    with patch(
+        "homeassistant.components.sky_hub.async_load_config",
+        return_value=legacy_devices,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, _issue_id(mock_config_entry.entry_id))
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert (
         issue_registry.async_get_issue(DOMAIN, _issue_id(mock_config_entry.entry_id))
         is None
     )
+
+
+@pytest.mark.usefixtures("mock_router")
+async def test_legacy_known_devices_issue_ignore_survives_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored legacy conflict issue stays ignored across a reload."""
+    legacy_devices = [Device(hass, timedelta(0), True, "laptop", LAPTOP.mac)]
+
+    with patch(
+        "homeassistant.components.sky_hub.async_load_config",
+        return_value=legacy_devices,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        ir.async_ignore_issue(hass, DOMAIN, _issue_id(mock_config_entry.entry_id), True)
+
+        assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(
+        DOMAIN, _issue_id(mock_config_entry.entry_id)
+    )
+    assert issue is not None
+    assert issue.dismissed_version is not None
 
 
 async def test_legacy_known_devices_issue_per_entry(
@@ -247,6 +308,7 @@ async def test_legacy_known_devices_issue_per_entry(
         DOMAIN, _issue_id(mock_config_entry.entry_id)
     )
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_placeholders == {
         "host": DEFAULT_HOST,
         "path": YAML_DEVICES,
@@ -254,4 +316,129 @@ async def test_legacy_known_devices_issue_per_entry(
     }
     assert (
         issue_registry.async_get_issue(DOMAIN, _issue_id(other_entry.entry_id)) is None
+    )
+
+
+@pytest.mark.parametrize(
+    ("mac", "removable"),
+    [
+        pytest.param(LAPTOP.mac, False, id="connected"),
+        pytest.param(PHONE.mac, True, id="stale"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_router")
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    mac: str,
+    removable: bool,
+) -> None:
+    """Test only client devices which are not connected can be removed."""
+    mock_config_entry.add_to_hass(hass)
+    # A client device left over from before the router stopped reporting it
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, PHONE.mac)},
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "config", {})
+
+    connection = (dr.CONNECTION_NETWORK_MAC, mac)
+    device = device_registry.async_get_device_by_connection(
+        connection, mock_config_entry.entry_id
+    )
+    assert device is not None
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id)
+
+    assert response["success"] is removable
+    assert (
+        device_registry.async_get_device_by_connection(
+            connection, mock_config_entry.entry_id
+        )
+        is None
+    ) is removable
+
+
+async def test_remove_config_entry_device_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_router: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test client devices can be removed while the entry is not loaded."""
+    mock_router.success_init = False
+    mock_config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, LAPTOP.mac)},
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert await async_setup_component(hass, "config", {})
+
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id)
+
+    assert response["success"]
+    assert device_registry.async_get(device.id) is None
+
+
+async def test_remove_departed_client_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_router: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a departed client's device is removable and re-created on reconnect."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "config", {})
+    connection = (dr.CONNECTION_NETWORK_MAC, LAPTOP.mac)
+    unique_id = f"{mock_config_entry.entry_id}_{LAPTOP.mac}"
+
+    mock_router.async_get_skyhub_data.return_value = []
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get_device_by_connection(
+        connection, mock_config_entry.entry_id
+    )
+    assert device is not None
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id)
+    assert response["success"]
+    assert (
+        device_registry.async_get_device_by_connection(
+            connection, mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id("device_tracker", DOMAIN, unique_id) is None
+    )
+
+    mock_router.async_get_skyhub_data.return_value = [LAPTOP]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get_device_by_connection(
+        connection, mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.name == LAPTOP.name
+    assert (
+        entity_registry.async_get_entity_id("device_tracker", DOMAIN, unique_id)
+        is not None
     )

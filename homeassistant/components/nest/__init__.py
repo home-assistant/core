@@ -299,6 +299,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None
             hass,
             DOMAIN,
             subscription_issue_id,
+            config_entry_id=entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             learn_more_url=PUBSUB_LEARN_MORE_URL,
@@ -360,12 +361,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: NestConfigEntry) -> Non
 
 async def async_remove_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None:
     """Handle removal of pubsub subscriptions created during config flow."""
-    ir.async_delete_issue(
-        hass, DOMAIN, LEGACY_TOPIC_ISSUE_ID.format(entry_id=entry.entry_id)
-    )
-    ir.async_delete_issue(
-        hass, DOMAIN, SUBSCRIPTION_NOT_FOUND_ISSUE_ID.format(entry_id=entry.entry_id)
-    )
     if (
         DATA_SDM not in entry.data
         or not (
@@ -398,6 +393,7 @@ def _async_check_pubsub_topic(hass: HomeAssistant, entry: NestConfigEntry) -> No
         hass,
         DOMAIN,
         issue_id,
+        config_entry_id=entry.entry_id,
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         learn_more_url=PUBSUB_LEARN_MORE_URL,

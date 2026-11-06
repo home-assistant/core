@@ -296,7 +296,10 @@ async def test_invalid_json(
 
         async_fire_mqtt_message(hass, discovery_topic, "not json")
         await hass.async_block_till_done()
-        assert "Unable to parse JSON" in caplog.text
+        assert (
+            f"Unable to parse JSON discovery payload on topic '{discovery_topic}': "
+            "'not json'" in caplog.text
+        )
         assert not mock_dispatcher_send.called
 
 
@@ -325,22 +328,40 @@ async def test_discovery_schema_error(
         assert "AttributeError: Attribute abc not found" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("payload", "error"),
+    [
+        pytest.param(
+            '{"name": "abc", "state_topic": "home/alarm", '
+            '"command_topic": "home/alarm/set", '
+            '"qos": "some_invalid_value"}',
+            "Error 'expected int at 'qos''",
+            id="qos",
+        ),
+        pytest.param(
+            '{"name": "abc", "state_topic": "home/alarm", '
+            '"command_topic": "home/alarm/set", '
+            '"encoding": "unknown-encoding"}',
+            "Error 'Unknown payload encoding 'unknown-encoding' at 'encoding''",
+            id="encoding",
+        ),
+    ],
+)
 async def test_invalid_config(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
+    payload: str,
+    error: str,
 ) -> None:
     """Test sending in JSON that violates the platform schema."""
     await mqtt_mock_entry()
     async_fire_mqtt_message(
-        hass,
-        "homeassistant/alarm_control_panel/bla/config",
-        '{"name": "abc", "state_topic": "home/alarm", '
-        '"command_topic": "home/alarm/set", '
-        '"qos": "some_invalid_value"}',
+        hass, "homeassistant/alarm_control_panel/bla/config", payload
     )
     await hass.async_block_till_done()
-    assert "Error 'expected int at 'qos''" in caplog.text
+    assert error in caplog.text
+    assert hass.states.get("alarm_control_panel.abc") is None
 
 
 async def test_invalid_device_discovery_config(
@@ -4342,6 +4363,7 @@ async def test_shared_options_in_sync_with_device_schema() -> None:
         "device",
         "origin",
         "components",
+        "child_devices",
     }:
         assert option in SHARED_OPTIONS
 
