@@ -132,7 +132,7 @@ async def test_set_privacy_mode_auth_error(
     mock_set_privacy_mode: AsyncMock,
     status: int,
 ) -> None:
-    """Test a rejected token raises without starting an unsupported reauth flow."""
+    """Test a rejected token raises and starts the reauthentication flow."""
     mock_set_privacy_mode.return_value = CloudPutResult(ok=False, status=status)
     await setup_integration(hass, mock_config_entry)
 
@@ -143,7 +143,9 @@ async def test_set_privacy_mode_auth_error(
     await hass.async_block_till_done()
 
     assert err.value.translation_key == "auth_failed"
-    assert not hass.config_entries.flow.async_progress()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
 
 
 async def test_poll_during_write_keeps_written_state(
