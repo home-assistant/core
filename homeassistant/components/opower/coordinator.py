@@ -304,22 +304,23 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                         account, time_zone, last_consumption_start
                     )
 
-            if not cost_reads and not consumption_reads:
-                _LOGGER.debug("No recent usage/cost data. Skipping update")
-                if last_consumption_start is not None:
-                    last_changed_per_account[account.utility_account_id] = (
-                        dt_util.utc_from_timestamp(last_consumption_start)
-                    )
-                continue
-
-            if consumption_reads:
-                last_changed_per_account[account.utility_account_id] = (
-                    consumption_reads[-1].start_time
-                )
-            elif last_consumption_start is not None:
-                last_changed_per_account[account.utility_account_id] = (
+            # Never older than the usage already recorded, e.g. when falling back
+            # to cost reads that lag behind it.
+            last_changed_candidates = [
+                read.start_time for read in consumption_reads[-1:]
+            ]
+            if last_consumption_start is not None:
+                last_changed_candidates.append(
                     dt_util.utc_from_timestamp(last_consumption_start)
                 )
+            if last_changed_candidates:
+                last_changed_per_account[account.utility_account_id] = max(
+                    last_changed_candidates
+                )
+
+            if not cost_reads and not consumption_reads:
+                _LOGGER.debug("No recent usage/cost data. Skipping update")
+                continue
 
             await self._async_add_statistics(
                 _consumption_and_return(consumption_reads),

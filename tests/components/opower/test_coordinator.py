@@ -1040,3 +1040,31 @@ async def test_coordinator_keeps_trailing_zero_net_usage_with_registers(
         0.0,
         1.0,
     ]
+
+
+async def test_coordinator_last_changed_not_moved_back_by_cost_fallback(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test falling back to lagging cost reads doesn't move last_changed back."""
+    mock_opower_api.async_get_cost_reads.return_value = [
+        _cost_read(8, 1.5, 0.5),
+        _cost_read(9, 2.0, 0.7),
+    ]
+    mock_opower_api.async_get_usage_reads.return_value = [
+        _usage_read(8, 1.5),
+        _usage_read(9, 2.0),
+        _usage_read(10, 3.0),
+        _usage_read(11, 1.0),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    mock_opower_api.async_get_usage_reads.side_effect = ApiException("", "")
+    data = await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    assert data["111111"].last_changed == dt_util.as_utc(datetime(2023, 1, 1, 11))
