@@ -925,6 +925,11 @@ ZEROCONF = {
             "domain": "philips_js",
         },
     ],
+    "_placeholder._tcp.local.": [
+        {
+            "domain": "voice_support",
+        },
+    ],
     "_plexmediasvr._tcp.local.": [
         {
             "domain": "plex",
