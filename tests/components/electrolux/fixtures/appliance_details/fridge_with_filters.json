@@ -1,0 +1,423 @@
+{
+  "applianceInfo": {
+    "serialNumber": "12375757",
+    "pnc": "925060678",
+    "brand": "ELECTROLUX",
+    "deviceType": "FREESTANDING_MULTIDOOR",
+    "model": "DQ90X",
+    "variant": "UNDEFINED",
+    "colour": "SILVER"
+  },
+  "capabilities": {
+    "airFilterLifeTime": {
+      "access": "read",
+      "type": "number"
+    },
+    "airFilterLifeTimeBuyThreshold": {
+      "access": "constant",
+      "default": 12873600,
+      "type": "number"
+    },
+    "airFilterLifeTimeChangeThreshold": {
+      "access": "constant",
+      "default": 15724800,
+      "type": "number"
+    },
+    "airFilterState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "BUY": {},
+        "CHANGE": {},
+        "CLEAN": {},
+        "GOOD": {}
+      }
+    },
+    "airFilterStateReset": {
+      "access": "write",
+      "type": "string"
+    },
+    "alerts": {
+      "access": "read",
+      "type": "alert",
+      "values": {
+        "AIR_SENSOR_BROKEN": {},
+        "AIR_SENSOR_OPEN_CIRCUIT": {},
+        "AIR_SENSOR_SHORT_CIRCUIT": {},
+        "COMMUNICATION_ALARM": {},
+        "DRINK_CHILL_EXPIRED": {},
+        "HUMIDITY_SENSOR_BROKEN": {},
+        "HUMIDITY_SENSOR_OPEN_CIRCUIT": {},
+        "HUMIDITY_SENSOR_SHORT_CIRCUIT": {},
+        "POWER_FAILURE_ALARM": {}
+      }
+    },
+    "applianceMainBoardSwVersion": {
+      "access": "read",
+      "type": "string"
+    },
+    "applianceMode": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "DEMO": {},
+        "NORMAL": {},
+        "SERVICE": {}
+      }
+    },
+    "applianceUiSwVersion": {
+      "access": "read",
+      "type": "string"
+    },
+    "coolingValveState": {
+      "access": "read",
+      "type": "string"
+    },
+    "defrostRoutineState": {
+      "access": "read",
+      "type": "string"
+    },
+    "extraCavity": {
+      "alerts": {
+        "access": "read",
+        "type": "alert",
+        "values": {
+          "AIR_SENSOR_BROKEN": {},
+          "AIR_SENSOR_OPEN_CIRCUIT": {},
+          "AIR_SENSOR_SHORT_CIRCUIT": {},
+          "DOOR_ALARM": {},
+          "TEMPERATURE_ALARM": {}
+        }
+      },
+      "applianceState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "OFF": {},
+          "RUNNING": {}
+        }
+      },
+      "cloneTargetTemperatureMode": {
+        "access": "readwrite",
+        "type": "number",
+        "values": {
+          "FREEZER": {},
+          "OFF": {}
+        }
+      },
+      "doorState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "CLOSED": {},
+          "OPEN": {}
+        }
+      },
+      "fanState": {
+        "access": "read",
+        "type": "number",
+        "values": {
+          "OFF": {},
+          "ON": {}
+        }
+      },
+      "targetTemperatureC": {
+        "access": "readwrite",
+        "type": "temperature",
+        "values": {
+          "-2.0": {},
+          "0.0": {},
+          "3.0": {},
+          "7.0": {}
+        }
+      },
+      "temperatureAdjustingState": {
+        "access": "read",
+        "type": "number",
+        "values": {
+          "DOWN": {},
+          "NONE": {},
+          "UP": {}
+        }
+      }
+    },
+    "freezer": {
+      "alerts": {
+        "access": "read",
+        "type": "alert",
+        "values": {
+          "AIR_SENSOR_BROKEN": {},
+          "AIR_SENSOR_OPEN_CIRCUIT": {},
+          "AIR_SENSOR_SHORT_CIRCUIT": {},
+          "DEFROST_SENSOR_BROKEN": {},
+          "DEFROST_SENSOR_OPEN_CIRCUIT": {},
+          "DEFROST_SENSOR_SHORT_CIRCUIT": {},
+          "DOOR_ALARM": {},
+          "TEMPERATURE_ALARM": {}
+        }
+      },
+      "applianceState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "OFF": {},
+          "RUNNING": {}
+        }
+      },
+      "doorState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "CLOSED": {},
+          "OPEN": {}
+        }
+      },
+      "fastMode": {
+        "access": "readwrite",
+        "type": "string",
+        "values": {
+          "OFF": {},
+          "ON": {}
+        }
+      },
+      "fastModeTimeToEnd": {
+        "access": "read",
+        "type": "number"
+      },
+      "targetTemperatureC": {
+        "access": "readwrite",
+        "default": -18.0,
+        "max": -13.0,
+        "min": -23.0,
+        "step": 1.0,
+        "type": "temperature"
+      }
+    },
+    "fridge": {
+      "alerts": {
+        "access": "read",
+        "type": "alert",
+        "values": {
+          "AIR_SENSOR_BROKEN": {},
+          "AIR_SENSOR_OPEN_CIRCUIT": {},
+          "AIR_SENSOR_SHORT_CIRCUIT": {},
+          "DEFROST_SENSOR_BROKEN": {},
+          "DEFROST_SENSOR_OPEN_CIRCUIT": {},
+          "DEFROST_SENSOR_SHORT_CIRCUIT": {},
+          "DOOR_ALARM": {},
+          "TEMPERATURE_ALARM": {}
+        }
+      },
+      "applianceState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "OFF": {},
+          "RUNNING": {}
+        }
+      },
+      "doorState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "CLOSED": {},
+          "OPEN": {}
+        }
+      },
+      "fastMode": {
+        "access": "readwrite",
+        "type": "string",
+        "values": {
+          "OFF": {},
+          "ON": {}
+        }
+      },
+      "fastModeTimeToEnd": {
+        "access": "read",
+        "type": "number"
+      },
+      "targetTemperatureC": {
+        "access": "readwrite",
+        "default": 4.0,
+        "max": 7.0,
+        "min": 1.0,
+        "step": 1.0,
+        "type": "temperature"
+      }
+    },
+    "iceMaker": {
+      "alerts": {
+        "access": "read",
+        "type": "alert",
+        "values": {
+          "AIR_SENSOR_BROKEN": {},
+          "AIR_SENSOR_OPEN_CIRCUIT": {},
+          "AIR_SENSOR_SHORT_CIRCUIT": {},
+          "DEFROST_SENSOR_BROKEN": {},
+          "DEFROST_SENSOR_OPEN_CIRCUIT": {},
+          "DEFROST_SENSOR_SHORT_CIRCUIT": {}
+        }
+      },
+      "applianceState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "OFF": {},
+          "RUNNING": {}
+        }
+      },
+      "defrostTemperatureC": {
+        "access": "read",
+        "type": "temperature"
+      },
+      "evaporatorFanState": {
+        "access": "read",
+        "type": "number"
+      },
+      "executeCommand": {
+        "access": "write",
+        "type": "string",
+        "values": {
+          "OFF": {},
+          "ON": {}
+        }
+      },
+      "iceDispenserState": {
+        "access": "read",
+        "type": "number"
+      },
+      "iceTrayWaterFillSetting": {
+        "access": "read",
+        "type": "number",
+        "values": {
+          "LOW_PRESSURE": {},
+          "NORMAL_PRESSURE": {},
+          "VERY_HIGH_PRESSURE": {},
+          "VERY_LOW_PRESSURE": {}
+        }
+      }
+    },
+    "networkInterface": {
+      "linkQualityIndicator": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "EXCELLENT": {},
+          "GOOD": {},
+          "POOR": {},
+          "UNDEFINED": {},
+          "VERY_GOOD": {},
+          "VERY_POOR": {}
+        }
+      },
+      "otaState": {
+        "access": "read",
+        "type": "string",
+        "values": {
+          "DESCRIPTION_AVAILABLE": {},
+          "DESCRIPTION_DOWNLOADING": {},
+          "DESCRIPTION_READY": {},
+          "FW_DOWNLOADING": {},
+          "FW_DOWNLOAD_START": {},
+          "FW_SIGNATURE_CHECK": {},
+          "FW_UPDATE_IN_PROGRESS": {},
+          "IDLE": {},
+          "READY_TO_UPDATE": {},
+          "UPDATE_ABORT": {},
+          "UPDATE_CHECK": {},
+          "UPDATE_ERROR": {},
+          "UPDATE_OK": {},
+          "WAITINGFORAUTHORIZATION": {}
+        }
+      },
+      "swVersion": {
+        "access": "read",
+        "type": "string"
+      }
+    },
+    "reminderTime": {
+      "access": "readwrite",
+      "default": 1200,
+      "max": 2700,
+      "min": 1200,
+      "step": 60,
+      "type": "number",
+      "values": {
+        "-1": {},
+        "0": {}
+      }
+    },
+    "sensorHumidity": {
+      "access": "read",
+      "type": "number"
+    },
+    "temperatureRepresentation": {
+      "access": "read",
+      "default": "CELSIUS",
+      "max": 0,
+      "min": 0,
+      "type": "string",
+      "values": {
+        "CELSIUS": {}
+      }
+    },
+    "ui2LockMode": {
+      "access": "read",
+      "type": "boolean",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "uiLockMode": {
+      "access": "readwrite",
+      "type": "boolean",
+      "values": {
+        "OFF": {},
+        "ON": {}
+      }
+    },
+    "waterFilterFlow": {
+      "access": "read",
+      "type": "number"
+    },
+    "waterFilterFlowBuyThreshold": {
+      "access": "constant",
+      "default": 354,
+      "type": "number"
+    },
+    "waterFilterFlowChangeThreshold": {
+      "access": "constant",
+      "default": 473,
+      "type": "number"
+    },
+    "waterFilterLifeTime": {
+      "access": "read",
+      "type": "number"
+    },
+    "waterFilterLifeTimeBuyThreshold": {
+      "access": "constant",
+      "default": 12960000,
+      "type": "number"
+    },
+    "waterFilterLifeTimeChangeThreshold": {
+      "access": "constant",
+      "default": 15811200,
+      "type": "number"
+    },
+    "waterFilterState": {
+      "access": "read",
+      "type": "string",
+      "values": {
+        "BUY": {},
+        "CHANGE": {},
+        "CLEAN": {},
+        "GOOD": {}
+      }
+    },
+    "waterFilterStateReset": {
+      "access": "write",
+      "type": "string"
+    }
+  }
+}
