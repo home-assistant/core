@@ -1552,29 +1552,48 @@ async def test_migration_from_v2_7_existing_evaluation(
     assert hass.states.get("ai_task.my_decisions") is not None
 
 
-def test_client_resources_are_imported_with_the_integration() -> None:
-    """Importing the integration must leave no lazy client import for the loop.
+CHECK_CLIENT_RESOURCE_IMPORTS = """
+import importlib
 
-    The OpenAI client imports its responses and audio resources on first use,
-    which is a conversation turn, an AI task, or a TTS or STT request in the
-    event loop.
+import homeassistant.components.openai_conversation
+import openai
+
+imports = []
+import_module = importlib.import_module
+
+
+def record_import(name, package=None):
+    imports.append(name)
+    return import_module(name, package)
+
+
+importlib.import_module = record_import
+client = openai.AsyncOpenAI(api_key="test")
+client.responses
+client.audio.speech
+client.audio.transcriptions
+print(imports)
+"""
+
+
+def test_client_resources_are_imported_with_the_integration() -> None:
+    """Accessing the client resources must not import anything in the event loop.
+
+    The OpenAI client imports its responses and audio resources on first use
+    through importlib.import_module, which Home Assistant reports as a blocking
+    call when it happens in the event loop. Having the submodules in
+    sys.modules is not enough: the call uses a relative name that the check
+    does not resolve.
 
     A clean interpreter is the only way to see this: anything the test suite
     imported first would hide it.
     """
     result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            "import sys, homeassistant.components.openai_conversation; "
-            "print(all(m in sys.modules for m in "
-            "('openai.resources.responses.responses', "
-            "'openai.resources.audio.audio')))",
-        ],
+        [sys.executable, "-c", CHECK_CLIENT_RESOURCE_IMPORTS],
         capture_output=True,
         check=True,
         text=True,
         timeout=IMPORT_TIMEOUT,
     )
 
-    assert result.stdout.strip() == "True"
+    assert result.stdout.strip() == "[]"
