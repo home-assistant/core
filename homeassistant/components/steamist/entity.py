@@ -2,14 +2,13 @@
 
 from aiosteamist import SteamistStatus
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import SteamistDataUpdateCoordinator
+from .coordinator import SteamistConfigEntry, SteamistDataUpdateCoordinator
 
 
 class SteamistEntity(CoordinatorEntity[SteamistDataUpdateCoordinator], Entity):
@@ -20,7 +19,7 @@ class SteamistEntity(CoordinatorEntity[SteamistDataUpdateCoordinator], Entity):
     def __init__(
         self,
         coordinator: SteamistDataUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: SteamistConfigEntry,
         description: EntityDescription,
     ) -> None:
         """Initialize the entity."""

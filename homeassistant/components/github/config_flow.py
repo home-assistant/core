@@ -14,7 +14,6 @@ from aiogithubapi.const import OAUTH_USER_LOGIN
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -36,6 +35,7 @@ from .const import (
     LOGGER,
     SUBENTRY_TYPE_REPOSITORY,
 )
+from .coordinator import GithubConfigEntry
 
 
 async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
@@ -121,7 +121,7 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: GithubConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {SUBENTRY_TYPE_REPOSITORY: RepositoryFlowHandler}

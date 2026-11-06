@@ -136,8 +136,8 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={
-                CONF_HOST: self._config[CONF_HOST],
-                CONF_LOCATION: self._config[CONF_LOCATION],
+                "host": self._config[CONF_HOST],
+                "location": self._config[CONF_LOCATION],
             },
             data_schema=probatio.Schema(
                 {probatio.Required(probatio.Secret(CONF_API_KEY)): str}

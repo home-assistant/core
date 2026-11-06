@@ -14,18 +14,16 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntityFeature, LockState
 from homeassistant.components.matter.const import (
-    ATTR_CREDENTIAL_DATA,
-    ATTR_CREDENTIAL_INDEX,
-    ATTR_CREDENTIAL_RULE,
-    ATTR_CREDENTIAL_TYPE,
-    ATTR_USER_INDEX,
-    ATTR_USER_NAME,
-    ATTR_USER_STATUS,
-    ATTR_USER_TYPE,
     CLEAR_ALL_INDEX,
     DOMAIN,
+    MatterServiceArgument,
 )
-from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_CODE,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -379,8 +377,8 @@ async def test_set_lock_user_service(
         DOMAIN,
         "set_lock_user",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_USER_NAME: "TestUser",
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.USER_NAME: "TestUser",
         },
         blocking=True,
     )
@@ -436,9 +434,9 @@ async def test_set_lock_user_update_existing(
         DOMAIN,
         "set_lock_user",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_USER_INDEX: 1,
-            ATTR_USER_NAME: "New Name",
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.USER_INDEX: 1,
+            MatterServiceArgument.USER_NAME: "New Name",
         },
         blocking=True,
     )
@@ -485,8 +483,8 @@ async def test_set_lock_user_no_available_slots(
             DOMAIN,
             "set_lock_user",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_USER_NAME: "Test User",
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.USER_NAME: "Test User",
             },
             blocking=True,
         )
@@ -509,9 +507,9 @@ async def test_set_lock_user_empty_slot_error(
             DOMAIN,
             "set_lock_user",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_USER_INDEX: 5,
-                ATTR_USER_NAME: "Test User",
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.USER_INDEX: 5,
+                MatterServiceArgument.USER_NAME: "Test User",
             },
             blocking=True,
         )
@@ -531,8 +529,8 @@ async def test_clear_lock_user_service(
         DOMAIN,
         "clear_lock_user",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_USER_INDEX: 1,
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.USER_INDEX: 1,
         },
         blocking=True,
     )
@@ -558,7 +556,7 @@ async def test_get_lock_info_service(
     result = await hass.services.async_call(
         DOMAIN,
         "get_lock_info",
-        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        {CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
@@ -604,7 +602,7 @@ async def test_get_lock_users_service(
     result = await hass.services.async_call(
         DOMAIN,
         "get_lock_users",
-        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        {CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
@@ -645,8 +643,8 @@ async def test_service_on_lock_without_user_management(
             DOMAIN,
             "set_lock_user",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_USER_NAME: "Test",
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.USER_NAME: "Test",
             },
             blocking=True,
         )
@@ -656,8 +654,8 @@ async def test_service_on_lock_without_user_management(
             DOMAIN,
             "clear_lock_user",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_USER_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.USER_INDEX: 1,
             },
             blocking=True,
         )
@@ -755,7 +753,7 @@ async def test_get_lock_users_iterates_with_next_index(
     result = await hass.services.async_call(
         DOMAIN,
         "get_lock_users",
-        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        {CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
@@ -852,7 +850,7 @@ async def test_get_lock_users_scans_when_next_user_index_is_null(
     result = await hass.services.async_call(
         DOMAIN,
         "get_lock_users",
-        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        {CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
@@ -908,7 +906,7 @@ async def test_get_lock_users_follows_next_index_from_an_empty_slot(
     result = await hass.services.async_call(
         DOMAIN,
         "get_lock_users",
-        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        {CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
@@ -948,7 +946,7 @@ async def test_get_lock_users_next_user_index_loop_prevention(
     result = await hass.services.async_call(
         DOMAIN,
         "get_lock_users",
-        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        {CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
@@ -994,7 +992,7 @@ async def test_get_lock_users_with_credentials(
     result = await hass.services.async_call(
         DOMAIN,
         "get_lock_users",
-        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        {CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
@@ -1052,7 +1050,7 @@ async def test_get_lock_users_with_nullvalue_credentials(
     result = await hass.services.async_call(
         DOMAIN,
         "get_lock_users",
-        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        {CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
@@ -1111,7 +1109,7 @@ async def test_get_lock_users_with_fabric_indices(
     result = await hass.services.async_call(
         DOMAIN,
         "get_lock_users",
-        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        {CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
@@ -1129,26 +1127,32 @@ async def test_get_lock_users_with_fabric_indices(
 @pytest.mark.parametrize(
     ("service_name", "service_data", "return_response"),
     [
-        ("set_lock_user", {ATTR_USER_NAME: "Test"}, False),
-        ("clear_lock_user", {ATTR_USER_INDEX: 1}, False),
+        ("set_lock_user", {MatterServiceArgument.USER_NAME: "Test"}, False),
+        ("clear_lock_user", {MatterServiceArgument.USER_INDEX: 1}, False),
         ("get_lock_users", {}, True),
         (
             "set_lock_credential",
             {
-                ATTR_CREDENTIAL_TYPE: "pin",
-                ATTR_CREDENTIAL_DATA: "123456",
-                ATTR_CREDENTIAL_INDEX: 1,
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_DATA: "123456",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             True,
         ),
         (
             "clear_lock_credential",
-            {ATTR_CREDENTIAL_TYPE: "pin", ATTR_CREDENTIAL_INDEX: 1},
+            {
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
+            },
             False,
         ),
         (
             "get_lock_credential_status",
-            {ATTR_CREDENTIAL_TYPE: "pin", ATTR_CREDENTIAL_INDEX: 1},
+            {
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
+            },
             True,
         ),
     ],
@@ -1171,7 +1175,7 @@ async def test_matter_error_converted_to_home_assistant_error(
         await hass.services.async_call(
             DOMAIN,
             service_name,
-            {ATTR_ENTITY_ID: "lock.mock_door_lock", **service_data},
+            {CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock", **service_data},
             blocking=True,
             return_response=return_response,
         )
@@ -1222,10 +1226,10 @@ async def test_set_lock_credential_pin(
         DOMAIN,
         "set_lock_credential",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "pin",
-            ATTR_CREDENTIAL_DATA: credential_data,
-            ATTR_CREDENTIAL_INDEX: 1,
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+            MatterServiceArgument.CREDENTIAL_DATA: credential_data,
+            MatterServiceArgument.CREDENTIAL_INDEX: 1,
         },
         blocking=True,
         return_response=True,
@@ -1311,9 +1315,9 @@ async def test_set_lock_credential_auto_find_slot(
         DOMAIN,
         "set_lock_credential",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "pin",
-            ATTR_CREDENTIAL_DATA: "5678",
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+            MatterServiceArgument.CREDENTIAL_DATA: "5678",
         },
         blocking=True,
         return_response=True,
@@ -1370,11 +1374,11 @@ async def test_set_lock_credential_with_user_index(
         DOMAIN,
         "set_lock_credential",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "pin",
-            ATTR_CREDENTIAL_DATA: "1234",
-            ATTR_CREDENTIAL_INDEX: 1,
-            ATTR_USER_INDEX: 3,
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+            MatterServiceArgument.CREDENTIAL_DATA: "1234",
+            MatterServiceArgument.CREDENTIAL_INDEX: 1,
+            MatterServiceArgument.USER_INDEX: 3,
         },
         blocking=True,
         return_response=True,
@@ -1413,10 +1417,10 @@ async def test_set_lock_credential_invalid_pin_too_short(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "pin",
-                ATTR_CREDENTIAL_DATA: "12",  # Too short (min 4)
-                ATTR_CREDENTIAL_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_DATA: "12",  # Too short (min 4)
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             blocking=True,
             return_response=True,
@@ -1445,10 +1449,10 @@ async def test_set_lock_credential_invalid_pin_non_digit(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "pin",
-                ATTR_CREDENTIAL_DATA: "abcd",
-                ATTR_CREDENTIAL_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_DATA: "abcd",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             blocking=True,
             return_response=True,
@@ -1469,10 +1473,10 @@ async def test_set_lock_credential_unsupported_type(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "pin",
-                ATTR_CREDENTIAL_DATA: "1234",
-                ATTR_CREDENTIAL_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_DATA: "1234",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             blocking=True,
             return_response=True,
@@ -1514,10 +1518,10 @@ async def test_set_lock_credential_status_failure(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "pin",
-                ATTR_CREDENTIAL_DATA: "1234",
-                ATTR_CREDENTIAL_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_DATA: "1234",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             blocking=True,
             return_response=True,
@@ -1557,9 +1561,9 @@ async def test_set_lock_credential_no_available_slot(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "pin",
-                ATTR_CREDENTIAL_DATA: "1234",
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_DATA: "1234",
             },
             blocking=True,
             return_response=True,
@@ -1614,9 +1618,9 @@ async def test_set_lock_credential_auto_find_defaults_to_five(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "pin",
-                ATTR_CREDENTIAL_DATA: "1234",
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_DATA: "1234",
             },
             blocking=True,
             return_response=True,
@@ -1652,9 +1656,9 @@ async def test_clear_lock_credential(
         DOMAIN,
         "clear_lock_credential",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "pin",
-            ATTR_CREDENTIAL_INDEX: 1,
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+            MatterServiceArgument.CREDENTIAL_INDEX: 1,
         },
         blocking=True,
     )
@@ -1693,9 +1697,9 @@ async def test_get_lock_credential_status(
         DOMAIN,
         "get_lock_credential_status",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "pin",
-            ATTR_CREDENTIAL_INDEX: 1,
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+            MatterServiceArgument.CREDENTIAL_INDEX: 1,
         },
         blocking=True,
         return_response=True,
@@ -1741,9 +1745,9 @@ async def test_get_lock_credential_status_empty_slot(
         DOMAIN,
         "get_lock_credential_status",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "pin",
-            ATTR_CREDENTIAL_INDEX: 5,
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+            MatterServiceArgument.CREDENTIAL_INDEX: 5,
         },
         blocking=True,
         return_response=True,
@@ -1803,9 +1807,9 @@ async def test_get_lock_credential_status_with_fabric_indices(
         DOMAIN,
         "get_lock_credential_status",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "pin",
-            ATTR_CREDENTIAL_INDEX: 1,
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+            MatterServiceArgument.CREDENTIAL_INDEX: 1,
         },
         blocking=True,
         return_response=True,
@@ -1833,10 +1837,10 @@ async def test_credential_services_without_usr_feature(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "pin",
-                ATTR_CREDENTIAL_DATA: "1234",
-                ATTR_CREDENTIAL_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_DATA: "1234",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             blocking=True,
             return_response=True,
@@ -1847,9 +1851,9 @@ async def test_credential_services_without_usr_feature(
             DOMAIN,
             "clear_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "pin",
-                ATTR_CREDENTIAL_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             blocking=True,
         )
@@ -1859,9 +1863,9 @@ async def test_credential_services_without_usr_feature(
             DOMAIN,
             "get_lock_credential_status",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "pin",
-                ATTR_CREDENTIAL_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             blocking=True,
             return_response=True,
@@ -1905,10 +1909,10 @@ async def test_set_lock_credential_rfid(
         DOMAIN,
         "set_lock_credential",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "rfid",
-            ATTR_CREDENTIAL_DATA: "AABBCCDD",
-            ATTR_CREDENTIAL_INDEX: 1,
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "rfid",
+            MatterServiceArgument.CREDENTIAL_DATA: "AABBCCDD",
+            MatterServiceArgument.CREDENTIAL_INDEX: 1,
         },
         blocking=True,
         return_response=True,
@@ -1984,9 +1988,9 @@ async def test_set_lock_credential_rfid_auto_find_slot(
         DOMAIN,
         "set_lock_credential",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "rfid",
-            ATTR_CREDENTIAL_DATA: "AABBCCDD",
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "rfid",
+            MatterServiceArgument.CREDENTIAL_DATA: "AABBCCDD",
         },
         blocking=True,
         return_response=True,
@@ -2045,9 +2049,9 @@ async def test_set_lock_credential_rfid_no_available_slot(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "rfid",
-                ATTR_CREDENTIAL_DATA: "AABBCCDD",
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "rfid",
+                MatterServiceArgument.CREDENTIAL_DATA: "AABBCCDD",
             },
             blocking=True,
             return_response=True,
@@ -2112,9 +2116,9 @@ async def test_set_lock_credential_fingerprint_auto_find_slot(
         DOMAIN,
         "set_lock_credential",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "fingerprint",
-            ATTR_CREDENTIAL_DATA: "AABBCCDD",
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "fingerprint",
+            MatterServiceArgument.CREDENTIAL_DATA: "AABBCCDD",
         },
         blocking=True,
         return_response=True,
@@ -2165,10 +2169,10 @@ async def test_set_lock_credential_rfid_invalid_hex(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "rfid",
-                ATTR_CREDENTIAL_DATA: "ZZZZ",
-                ATTR_CREDENTIAL_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "rfid",
+                MatterServiceArgument.CREDENTIAL_DATA: "ZZZZ",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             blocking=True,
             return_response=True,
@@ -2200,10 +2204,10 @@ async def test_set_lock_credential_rfid_too_short(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "rfid",
-                ATTR_CREDENTIAL_DATA: "AABB",
-                ATTR_CREDENTIAL_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "rfid",
+                MatterServiceArgument.CREDENTIAL_DATA: "AABB",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             blocking=True,
             return_response=True,
@@ -2235,10 +2239,10 @@ async def test_set_lock_credential_rfid_too_long(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "rfid",
-                ATTR_CREDENTIAL_DATA: "AABBCCDDEEFF0011",
-                ATTR_CREDENTIAL_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "rfid",
+                MatterServiceArgument.CREDENTIAL_DATA: "AABBCCDDEEFF0011",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             blocking=True,
             return_response=True,
@@ -2259,9 +2263,9 @@ async def test_clear_lock_credential_rfid(
         DOMAIN,
         "clear_lock_credential",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "rfid",
-            ATTR_CREDENTIAL_INDEX: 3,
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "rfid",
+            MatterServiceArgument.CREDENTIAL_INDEX: 3,
         },
         blocking=True,
     )
@@ -2297,8 +2301,8 @@ async def test_clear_lock_user_clear_all(
         DOMAIN,
         "clear_lock_user",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_USER_INDEX: CLEAR_ALL_INDEX,
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.USER_INDEX: CLEAR_ALL_INDEX,
         },
         blocking=True,
     )
@@ -2361,10 +2365,10 @@ async def test_set_lock_credential_status_codes(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "pin",
-                ATTR_CREDENTIAL_DATA: "1234",
-                ATTR_CREDENTIAL_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_DATA: "1234",
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             blocking=True,
             return_response=True,
@@ -2503,7 +2507,7 @@ async def test_get_lock_info_without_usr_feature(
     result = await hass.services.async_call(
         DOMAIN,
         "get_lock_info",
-        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        {CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
@@ -2533,7 +2537,7 @@ async def test_get_lock_info_with_multiple_credential_types(
     result = await hass.services.async_call(
         DOMAIN,
         "get_lock_info",
-        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        {CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
         return_response=True,
     )
@@ -2569,10 +2573,10 @@ async def test_set_lock_credential_pin_too_long(
             DOMAIN,
             "set_lock_credential",
             {
-                ATTR_ENTITY_ID: "lock.mock_door_lock",
-                ATTR_CREDENTIAL_TYPE: "pin",
-                ATTR_CREDENTIAL_DATA: "123456789",  # 9 digits, max is 8
-                ATTR_CREDENTIAL_INDEX: 1,
+                CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+                MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+                MatterServiceArgument.CREDENTIAL_DATA: "123456789",  # 9 digits, max is 8
+                MatterServiceArgument.CREDENTIAL_INDEX: 1,
             },
             blocking=True,
             return_response=True,
@@ -2607,10 +2611,10 @@ async def test_set_lock_credential_pin_exact_min_length(
         DOMAIN,
         "set_lock_credential",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "pin",
-            ATTR_CREDENTIAL_DATA: "1234",  # Exactly 4 digits (min)
-            ATTR_CREDENTIAL_INDEX: 1,
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+            MatterServiceArgument.CREDENTIAL_DATA: "1234",  # Exactly 4 digits (min)
+            MatterServiceArgument.CREDENTIAL_INDEX: 1,
         },
         blocking=True,
         return_response=True,
@@ -2647,10 +2651,10 @@ async def test_set_lock_credential_pin_exact_max_length(
         DOMAIN,
         "set_lock_credential",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "pin",
-            ATTR_CREDENTIAL_DATA: "12345678",  # Exactly 8 digits (max)
-            ATTR_CREDENTIAL_INDEX: 1,
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+            MatterServiceArgument.CREDENTIAL_DATA: "12345678",  # Exactly 8 digits (max)
+            MatterServiceArgument.CREDENTIAL_INDEX: 1,
         },
         blocking=True,
         return_response=True,
@@ -2690,12 +2694,12 @@ async def test_set_lock_credential_with_user_status_and_type(
         DOMAIN,
         "set_lock_credential",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_CREDENTIAL_TYPE: "pin",
-            ATTR_CREDENTIAL_DATA: "1234",
-            ATTR_CREDENTIAL_INDEX: 1,
-            ATTR_USER_STATUS: "occupied_disabled",
-            ATTR_USER_TYPE: "non_access_user",
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.CREDENTIAL_TYPE: "pin",
+            MatterServiceArgument.CREDENTIAL_DATA: "1234",
+            MatterServiceArgument.CREDENTIAL_INDEX: 1,
+            MatterServiceArgument.USER_STATUS: "occupied_disabled",
+            MatterServiceArgument.USER_TYPE: "non_access_user",
         },
         blocking=True,
         return_response=True,
@@ -2735,10 +2739,10 @@ async def test_set_lock_user_new_with_explicit_params(
         DOMAIN,
         "set_lock_user",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_USER_NAME: "Restricted",
-            ATTR_USER_TYPE: "week_day_schedule_user",
-            ATTR_CREDENTIAL_RULE: "dual",
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.USER_NAME: "Restricted",
+            MatterServiceArgument.USER_TYPE: "week_day_schedule_user",
+            MatterServiceArgument.CREDENTIAL_RULE: "dual",
         },
         blocking=True,
     )
@@ -2787,10 +2791,10 @@ async def test_set_lock_user_update_with_explicit_type_and_rule(
         DOMAIN,
         "set_lock_user",
         {
-            ATTR_ENTITY_ID: "lock.mock_door_lock",
-            ATTR_USER_INDEX: 3,
-            ATTR_USER_TYPE: "programming_user",
-            ATTR_CREDENTIAL_RULE: "tri",
+            CommonServiceArgument.ENTITY_ID: "lock.mock_door_lock",
+            MatterServiceArgument.USER_INDEX: 3,
+            MatterServiceArgument.USER_TYPE: "programming_user",
+            MatterServiceArgument.CREDENTIAL_RULE: "tri",
         },
         blocking=True,
     )

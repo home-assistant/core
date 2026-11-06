@@ -45,7 +45,7 @@ class BluesoundData:
 type BluesoundConfigEntry = ConfigEntry[BluesoundRuntimeData]
 
 
-def cancel_task(task: asyncio.Task) -> Callable[[], Coroutine[None, None, None]]:
+def cancel_task(task: asyncio.Task[None]) -> Callable[[], Coroutine[None, None, None]]:
     """Cancel a task."""
 
     async def _cancel_task() -> None:

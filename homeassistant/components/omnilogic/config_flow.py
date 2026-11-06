@@ -6,17 +6,13 @@ from typing import Any, override
 from omnilogic import LoginException, OmniLogic, OmniLogicException
 import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import DEFAULT_PH_OFFSET, DOMAIN
+from .coordinator import OmniLogicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +26,7 @@ class OmniLogicConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: OmniLogicConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
