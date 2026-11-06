@@ -10,7 +10,6 @@ from pyforeca import (
     Location,
     MinutelyForecast,
     MinutelyForecastList,
-    Observation,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
@@ -18,6 +17,8 @@ from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixtur
 from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+
+from . import load_observation
 
 CURRENT = CurrentWeather(
     time="2026-09-01T17:00+03:00",
@@ -141,29 +142,6 @@ LOCATION = Location(
 )
 
 
-OBSERVATION = Observation.from_api(
-    {
-        "station": "Helsinki Kaisaniemi",
-        "distance": "1 km N",
-        "time": "2026-11-05T10:40:00+02:00",
-        "temperature": 8,
-        "feelsLikeTemp": 4,
-        "symbol": "d000",
-        "windDirString": "NW",
-        "windDir": 306,
-        "windSpeed": 6,
-        "windGust": 9,
-        "pressure": 1018.8,
-        "relHumidity": 69,
-        "visibility": 20000,
-        "snowDepth": None,
-        "longitude": 24.94,
-        "latitude": 60.18,
-        "elevation": 4,
-    }
-)
-
-
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -200,7 +178,11 @@ def mock_foreca_client() -> Generator[MagicMock]:
             ]
         )
         client.forecast_minutely = AsyncMock(return_value=MINUTELY)
-        client.observation_latest = AsyncMock(return_value=OBSERVATION)
+        client.observation_latest = AsyncMock(
+            return_value=load_observation(
+                "observation_hourly_precipitation_helsinki.json"
+            )
+        )
         yield client
 
 

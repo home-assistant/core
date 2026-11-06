@@ -99,7 +99,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2026-11-05T08:40:00+00:00',
+    'state': '2026-11-06T12:20:00+00:00',
   })
 # ---
 # name: test_sensors[sensor.helsinki_observed_apparent_temperature-entry]
@@ -158,7 +158,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4',
+    'state': '2.8',
   })
 # ---
 # name: test_sensors[sensor.helsinki_observed_condition-entry]
@@ -238,6 +238,66 @@
     'state': 'sunny',
   })
 # ---
+# name: test_sensors[sensor.helsinki_observed_hourly_precipitation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='location' title='Helsinki'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('foreca', '01JZ4Q1F0RECALOCATION000001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_observed_hourly_precipitation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Observed hourly precipitation',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Observed hourly precipitation',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'observed_precipitation',
+    'unique_id': '01JZ4Q1F0RECALOCATION000001_observed_precipitation',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_observed_hourly_precipitation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Observed hourly precipitation',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-11-06T13:00:00+02:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_observed_hourly_precipitation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.helsinki_observed_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -294,7 +354,74 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '69',
+    'state': '63',
+  })
+# ---
+# name: test_sensors[sensor.helsinki_observed_precipitation_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'hail',
+        'icing',
+        'rain',
+        'sleet',
+        'snow',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='location' title='Helsinki'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('foreca', '01JZ4Q1F0RECALOCATION000001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.helsinki_observed_precipitation_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Observed precipitation type',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Observed precipitation type',
+    'platform': 'foreca',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'observed_precipitation_type',
+    'unique_id': '01JZ4Q1F0RECALOCATION000001_observed_precipitation_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.helsinki_observed_precipitation_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Foreca',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Helsinki Observed precipitation type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'hail',
+        'icing',
+        'rain',
+        'sleet',
+        'snow',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.helsinki_observed_precipitation_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.helsinki_observed_pressure-entry]
@@ -353,7 +480,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1018.8',
+    'state': '1026.2',
   })
 # ---
 # name: test_sensors[sensor.helsinki_observed_snow_depth-entry]
@@ -471,7 +598,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '8',
+    'state': '5.6',
   })
 # ---
 # name: test_sensors[sensor.helsinki_observed_visibility-entry]
@@ -589,7 +716,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '306',
+    'state': '310',
   })
 # ---
 # name: test_sensors[sensor.helsinki_observed_wind_gust_speed-entry]
@@ -651,7 +778,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '32.4',
+    'state': '24.12',
   })
 # ---
 # name: test_sensors[sensor.helsinki_observed_wind_speed-entry]
@@ -713,7 +840,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '21.6',
+    'state': '13.32',
   })
 # ---
 # name: test_sensors[sensor.helsinki_precipitation_intensity-entry]

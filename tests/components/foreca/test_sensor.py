@@ -14,11 +14,17 @@ import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_load_json_object_fixture,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.foreca.const import UPDATE_INTERVAL, symbol_to_condition
+from homeassistant.components.foreca.const import (
+    DOMAIN,
+    UPDATE_INTERVAL,
+    symbol_to_condition,
+)
+from homeassistant.components.sensor import ATTR_LAST_RESET
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -31,9 +37,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import init_integration
+from . import init_integration, load_observation
 
+HOURLY_PRECIPITATION = "sensor.helsinki_observed_hourly_precipitation"
 OBSERVED_TEMPERATURE = "sensor.helsinki_observed_temperature"
+PRECIPITATION_TYPE = "sensor.helsinki_observed_precipitation_type"
 PRECIPITATION_PROBABILITY = "sensor.helsinki_precipitation_probability"
 
 
@@ -71,6 +79,7 @@ async def test_sensors_disabled_by_default(
         "sensor.helsinki_observation_time",
         "sensor.helsinki_observed_apparent_temperature",
         "sensor.helsinki_observed_condition",
+        "sensor.helsinki_observed_precipitation_type",
         "sensor.helsinki_observed_pressure",
         "sensor.helsinki_observed_snow_depth",
         "sensor.helsinki_observed_visibility",
@@ -101,7 +110,7 @@ async def test_sensors_without_values(
         await init_integration(hass, mock_config_entry)
 
     states = hass.states.async_all(Platform.SENSOR)
-    assert len(states) == 15
+    assert len(states) == 17
     assert {state.state for state in states} == {STATE_UNKNOWN}
 
 
@@ -170,7 +179,7 @@ async def test_failed_observation_leaves_other_entities_available(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(OBSERVED_TEMPERATURE).state == "8"
+    assert hass.states.get(OBSERVED_TEMPERATURE).state == "5.6"
     assert mock_foreca_client.observation_latest.await_count == 3
 
 
@@ -201,7 +210,7 @@ async def test_rejected_key_on_the_station_request_keeps_the_entry_loaded(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(OBSERVED_TEMPERATURE).state == "8"
+    assert hass.states.get(OBSERVED_TEMPERATURE).state == "5.6"
 
 
 async def test_observations_missing_from_plan_keep_the_entry_loaded(
@@ -217,3 +226,117 @@ async def test_observations_missing_from_plan_keep_the_entry_loaded(
     assert hass.config_entries.flow.async_progress() == []
     assert hass.states.get(OBSERVED_TEMPERATURE).state == STATE_UNAVAILABLE
     assert hass.states.get("weather.helsinki").state == "partlycloudy"
+
+
+async def test_observation_request(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+) -> None:
+    """Test the observation asks for station precipitation and unrounded values."""
+    with patch("homeassistant.components.foreca.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    assert mock_foreca_client.observation_latest.await_args.kwargs == {
+        "precipitation": "hourly",
+        "rounding": 0,
+    }
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("fixture", "amount", "precipitation_type", "last_reset"),
+    [
+        pytest.param(
+            "observation_hourly_precipitation_tromso.json",
+            "0.3",
+            "rain",
+            "2026-11-06T12:00:00+01:00",
+            id="rain",
+        ),
+        pytest.param(
+            "observation_hourly_precipitation_zurich.json",
+            "0",
+            STATE_UNKNOWN,
+            "2026-11-06T12:00:00+01:00",
+            id="type_without_precipitation",
+        ),
+        pytest.param(
+            "observation_hourly_precipitation_reykjavik.json",
+            "0",
+            STATE_UNKNOWN,
+            "2026-11-06T10:00:00+00:00",
+            id="last_hour_not_reported",
+        ),
+    ],
+)
+async def test_observed_hourly_precipitation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+    fixture: str,
+    amount: str,
+    precipitation_type: str,
+    last_reset: str,
+) -> None:
+    """Test the station's last full hour of precipitation and its type.
+
+    Zurich reports rain for an hour without precipitation. Reykjavik's newest
+    hour ends an hour before its observation.
+    """
+    mock_foreca_client.observation_latest.return_value = load_observation(fixture)
+    with patch("homeassistant.components.foreca.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    state = hass.states.get(HOURLY_PRECIPITATION)
+    assert state is not None
+    assert state.state == amount
+    assert state.attributes[ATTR_LAST_RESET] == last_reset
+    assert hass.states.get(PRECIPITATION_TYPE).state == precipitation_type
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("skipped_hours", "time", "amount", "precipitation_type"),
+    [
+        pytest.param(2, "2026-11-06T13:00:00+01:00", "0.7", "rain", id="two_hours"),
+        pytest.param(
+            3,
+            "2026-11-06T13:00:00+01:00",
+            STATE_UNKNOWN,
+            STATE_UNKNOWN,
+            id="three_hours",
+        ),
+        pytest.param(0, None, STATE_UNKNOWN, STATE_UNKNOWN, id="no_observation_time"),
+    ],
+)
+async def test_stale_hourly_precipitation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+    skipped_hours: int,
+    time: str | None,
+    amount: str,
+    precipitation_type: str,
+) -> None:
+    """Test the last hour is unknown once it is more than two hours old.
+
+    The Tromso response stands in for a station that skipped its latest hours,
+    with those hours left out of its series.
+    """
+    station = (
+        await async_load_json_object_fixture(
+            hass, "observation_hourly_precipitation_tromso.json", DOMAIN
+        )
+    )["observations"][0]
+    hours = station["precip1h"]
+    station["precip1h"] = hours[: len(hours) - skipped_hours]
+    station["time"] = time
+    mock_foreca_client.observation_latest.return_value = Observation.from_api(station)
+    with patch("homeassistant.components.foreca.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    state = hass.states.get(HOURLY_PRECIPITATION)
+    assert state is not None
+    assert state.state == amount
+    assert hass.states.get(PRECIPITATION_TYPE).state == precipitation_type
