@@ -3,8 +3,9 @@
 import asyncio
 from unittest.mock import Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import assert_setup_component
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components.template import DOMAIN, trigger_entity
 from homeassistant.components.template.const import TemplateService
@@ -19,11 +20,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import condition, config_validation as cv, template
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import async_trigger
 
@@ -881,3 +883,54 @@ async def test_entity_remove_unloads_condition(
     await entity.async_will_remove_from_hass()
 
     mock_cond.async_unload.assert_called_once()
+
+
+async def test_trigger_without_context_does_not_inherit_context(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a trigger without a context does not reuse the previous trigger's one."""
+    freezer.move_to("2026-01-01 00:00:00+00:00")
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "triggers": [
+                        {
+                            "trigger": "event",
+                            "event_type": "test_event",
+                            "id": "with_context",
+                        },
+                        {
+                            "trigger": "time_pattern",
+                            "seconds": "/1",
+                            "id": "without_context",
+                        },
+                    ],
+                    "sensor": [{"name": "test", "state": "{{ trigger.id }}"}],
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    context = Context(user_id="test_user")
+    hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state
+    assert state.state == "with_context"
+    assert state.context.id == context.id
+
+    # Stay within the time an entity considers its context recent
+    freezer.tick(1)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state
+    assert state.state == "without_context"
+    assert state.context.id != context.id
+    assert state.context.user_id is None

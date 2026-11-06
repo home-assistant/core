@@ -157,12 +157,12 @@ class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
         connection = (dr.CONNECTION_NETWORK_MAC, mac)
         self._attr_device_info = DeviceInfo(connections={connection})
         if device.hostname:
-            self._attr_device_info["name"] = device.hostname
+            self._attr_device_info.name = device.hostname
         elif not dr.async_get(coordinator.hass).async_get_device_by_connection(
             connection, coordinator.config_entry.entry_id
         ):
             # Only name a new device by MAC, an existing device keeps its name
-            self._attr_device_info["name"] = mac
+            self._attr_device_info.name = mac
 
     @property
     @override

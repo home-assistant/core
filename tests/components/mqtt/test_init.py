@@ -747,6 +747,34 @@ def test_validate_publish_topic() -> None:
     mqtt.valid_publish_topic("$SYS/")
 
 
+@pytest.mark.parametrize(
+    "encoding",
+    [
+        pytest.param("utf-8", id="utf-8"),
+        pytest.param("UTF8", id="alias"),
+        pytest.param("latin-1", id="latin-1"),
+        pytest.param("", id="raw"),
+    ],
+)
+def test_validate_encoding(encoding: str) -> None:
+    """Test valid payload encodings are passed through."""
+    assert mqtt.util.valid_encoding(encoding) == encoding
+
+
+@pytest.mark.parametrize(
+    "encoding",
+    [
+        pytest.param("unknown-encoding", id="unknown"),
+        pytest.param("rot13", id="not_a_text_encoding"),
+        pytest.param(None, id="none"),
+    ],
+)
+def test_validate_invalid_encoding(encoding: str | None) -> None:
+    """Test invalid payload encodings are rejected."""
+    with pytest.raises(probatio.Invalid):
+        mqtt.util.valid_encoding(encoding)
+
+
 def test_entity_device_info_schema() -> None:
     """Test MQTT entity device info validation."""
     # just identifier
@@ -897,6 +925,30 @@ async def test_receiving_non_utf8_message_gets_logged(
     assert (
         "Can't decode payload b'\\x9a' on test-topic with encoding utf-8" in caplog.text
     )
+
+
+async def test_receiving_message_with_unknown_encoding_gets_logged(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    record_calls: MessageCallbackType,
+    recorded_calls: list[ReceiveMessage],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a subscription with an unknown encoding does not block other subscribers."""
+    await mqtt_mock_entry()
+    await mqtt.async_subscribe(hass, "#", record_calls, encoding="unknown-encoding")
+    # A wildcard keeps registration order, so this subscriber is served after "#"
+    await mqtt.async_subscribe(hass, "+", record_calls)
+
+    async_fire_mqtt_message(hass, "test-topic", b"payload")
+
+    await hass.async_block_till_done()
+    assert (
+        "Can't decode payload b'payload' on test-topic with encoding unknown-encoding"
+        in caplog.text
+    )
+    assert len(recorded_calls) == 1
+    assert recorded_calls[0].payload == "payload"
 
 
 async def test_receiving_message_with_non_utf8_topic_gets_logged(
@@ -2888,7 +2940,12 @@ async def test_mqtt_protocol_failed_migration_to_v5(
         not in caplog.text
     )
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert issue.config_entry_id == entry.entry_id
     assert entry.data.get(mqtt.CONF_PROTOCOL, mqtt.PROTOCOL_311) == current_protocol
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "protocol_5_migration") is None
 
 
 INVALID_SENSOR_1 = {

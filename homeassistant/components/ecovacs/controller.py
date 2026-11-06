@@ -49,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 class EcovacsController:
     """Ecovacs controller."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: EcovacsConfigEntry) -> None:
         """Initialize controller."""
         self._hass = hass
         self._entry = entry
@@ -240,3 +240,6 @@ class EcovacsController:
     def legacy_devices(self) -> list[VacBot]:
         """Return legacy devices."""
         return self._legacy_devices
+
+
+type EcovacsConfigEntry = ConfigEntry[EcovacsController]
