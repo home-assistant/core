@@ -130,7 +130,8 @@ class MultiprotocolAddonManager(WaitingAddonManager):
         # Reading the channel can be expensive, e.g. ZHA opens its database for it
         channel = await platform.async_get_channel(hass)
 
-        if channel is None:
+        # Another platform may have imported the channel while we were waiting
+        if self._channel is not None or channel is None:
             return
 
         _LOGGER.info(

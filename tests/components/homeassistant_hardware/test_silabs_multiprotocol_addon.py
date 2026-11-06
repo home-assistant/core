@@ -1475,6 +1475,34 @@ async def test_import_channel_only_read_when_needed(
     assert mock_get_channel.called is channel_read
 
 
+async def test_import_channel_not_overwritten_while_reading(
+    hass: HomeAssistant,
+) -> None:
+    """Test a channel imported while reading the platform channel is kept."""
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
+    multipan_manager._channel = None
+
+    mock_multiprotocol_platform = MockMultiprotocolPlatform()
+
+    async def get_channel(hass: HomeAssistant) -> int:
+        # Another platform imports its channel while this one is being read
+        multipan_manager.async_set_channel(11)
+        return 15
+
+    hass.config.components.add(TEST_DOMAIN)
+    mock_platform(
+        hass, f"{TEST_DOMAIN}.silabs_multiprotocol", mock_multiprotocol_platform
+    )
+
+    with patch.object(mock_multiprotocol_platform, "async_get_channel", get_channel):
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: TEST_DOMAIN})
+        await hass.async_block_till_done()
+
+    assert multipan_manager.async_get_channel() == 11
+
+
 @pytest.mark.parametrize(
     (
         "platform_using_multipan",
