@@ -102,6 +102,8 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
         subtracting it from now is an absolute start time. While off it is the
         finished length of the last on period and would walk forward every poll.
         A decrease while still on is a new period whose off poll was missed.
+        An unchanged value is a stale sample: subscribed devices that are on
+        skip the coordinator refresh, which still notifies entities.
         """
         wemo = self.wemo
         if not isinstance(wemo, Insight):
@@ -112,6 +114,9 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
             return None
 
         on_for = wemo.on_for
+        if self._on_since is not None and on_for == self._on_for:
+            return self._on_since
+
         candidate = (dt_util.utcnow() - timedelta(seconds=on_for)).replace(
             microsecond=0
         )

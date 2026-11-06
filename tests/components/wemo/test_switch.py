@@ -235,6 +235,44 @@ async def test_insight_on_since_resets_when_on_for_decreases(
         assert attributes[ATTR_ON_LATEST_TIME] == start + timedelta(seconds=45)
 
 
+async def test_insight_on_since_holds_when_on_for_is_unchanged(
+    hass: HomeAssistant,
+    pywemo_registry: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A skipped refresh must not move the cached on period start.
+
+    Subscribed Insight devices that are on return from the coordinator update
+    without reading the device, then still notify entities. ``on_for`` stays
+    stale while the clock advances past the drift window.
+    """
+    freezer.move_to("2026-11-06T12:00:00+00:00")
+    await async_setup_component(hass, HA_DOMAIN, {})
+    with create_pywemo_device(pywemo_registry, "Insight") as insight:
+        wemo_entity = await async_create_wemo_entity(hass, insight, "")
+        assert wemo_entity is not None
+
+        async def async_update() -> None:
+            await hass.services.async_call(
+                HA_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
+                blocking=True,
+            )
+
+        insight.standby_state = pywemo.StandbyState.ON
+        await async_update()
+        state = hass.states.get(wemo_entity.entity_id)
+        assert state is not None
+        on_since = state.attributes[ATTR_ON_LATEST_TIME]
+
+        freezer.tick(timedelta(seconds=90))
+        await async_update()
+        state = hass.states.get(wemo_entity.entity_id)
+        assert state is not None
+        assert state.attributes[ATTR_ON_LATEST_TIME] == on_since
+
+
 async def test_maker_state_attributes(hass: HomeAssistant, pywemo_registry) -> None:
     """Verify the switch attributes are set for the Insight device."""
     await async_setup_component(hass, HA_DOMAIN, {})
