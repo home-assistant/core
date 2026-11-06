@@ -1,0 +1,13 @@
+{
+  "domain": "gbfs",
+  "name": "General Bikeshare Feed Specification (GBFS)",
+  "categories": ["vehicles_transport.bikes_scooters"],
+  "codeowners": ["@raman325"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/gbfs",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["aiomobilitydatabase"],
+  "quality_scale": "bronze",
+  "requirements": ["aiomobilitydatabase==0.6.0"]
+}

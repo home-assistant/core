@@ -1,0 +1,14 @@
+{
+  "last_updated": "2026-11-05T12:00:00Z",
+  "ttl": 300,
+  "version": "3.0",
+  "data": {
+    "system_id": "example_bikes",
+    "languages": ["en"],
+    "name": [{ "text": "Example Bikes", "language": "en" }],
+    "operator": [{ "text": "Example Mobility", "language": "en" }],
+    "opening_hours": "24/7",
+    "feed_contact_email": "gbfs@example.com",
+    "timezone": "America/New_York"
+  }
+}
