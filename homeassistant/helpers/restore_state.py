@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 import asyncio
-from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Self, cast, override
@@ -528,7 +527,7 @@ class _RestoreStoreManager:
             RESTORE_SCOPE_CONFIG_ENTRIES: {},
             RESTORE_SCOPE_DOMAINS: {},
         }
-        self._active_keys: set[tuple[RestoreScope, str]] = set()
+        self._owners: dict[tuple[RestoreScope, str], object] = {}
         self._save_deadline = 0.0
 
     async def async_load(self, *, load_empty: bool = False) -> None:
@@ -549,46 +548,59 @@ class _RestoreStoreManager:
             self._data = stored
 
     @callback
-    def async_register(self, scope: RestoreScope, storage_key: str) -> None:
-        """Register a coordinator's storage key.
+    def async_register(
+        self, owner: object, scope: RestoreScope, storage_key: str
+    ) -> None:
+        """Register a coordinator as the owner of a storage key.
 
         Raises ValueError if another live coordinator already uses the same
         scope and storage_key.
         """
         key = (scope, storage_key)
-        if key in self._active_keys:
+        if key in self._owners:
             raise ValueError(
                 f"Storage key {storage_key!r} is already in use for {scope[1]!r}"
             )
-        self._active_keys.add(key)
+        self._owners[key] = owner
 
     @callback
-    def async_unregister(self, scope: RestoreScope, storage_key: str) -> None:
+    def async_unregister(
+        self, owner: object, scope: RestoreScope, storage_key: str
+    ) -> None:
         """Unregister a coordinator's storage key, freeing it for reuse."""
-        self._active_keys.discard((scope, storage_key))
+        key = (scope, storage_key)
+        if self._owners.get(key) is owner:
+            del self._owners[key]
 
     @callback
     def async_get(self, scope: RestoreScope, storage_key: str) -> Any:
-        """Return a copy of a coordinator's stored data, or None if nothing is stored."""
+        """Return the data stored for a coordinator, or None if nothing is stored."""
         bucket, scope_id = scope
-        return deepcopy(self._data[bucket].get(scope_id, {}).get(storage_key))
+        return self._data[bucket].get(scope_id, {}).get(storage_key)
 
     @callback
     def async_schedule_save(
-        self, scope: RestoreScope, storage_key: str, data: Any, delay: float
+        self,
+        owner: object,
+        scope: RestoreScope,
+        storage_key: str,
+        data: Any,
+        delay: float,
     ) -> None:
-        """Schedule saving a copy of the data of a coordinator."""
-        # A coordinator can outlive its config entry when unloading fails.
-        if (scope, storage_key) not in self._active_keys:
+        """Schedule saving the data of a coordinator."""
+        if not self._is_owner(owner, scope, storage_key):
             return
         bucket, scope_id = scope
-        # Another coordinator's save must not persist in-place changes to this data.
-        self._data[bucket].setdefault(scope_id, {})[storage_key] = deepcopy(data)
+        self._data[bucket].setdefault(scope_id, {})[storage_key] = data
         self._async_delay_save(delay)
 
     @callback
-    def async_remove_data(self, scope: RestoreScope, storage_key: str) -> None:
+    def async_remove_data(
+        self, owner: object, scope: RestoreScope, storage_key: str
+    ) -> None:
         """Remove the data stored for a coordinator."""
+        if not self._is_owner(owner, scope, storage_key):
+            return
         bucket, scope_id = scope
         scope_data = self._data[bucket].get(scope_id, {})
         if storage_key not in scope_data:
@@ -602,10 +614,20 @@ class _RestoreStoreManager:
     def async_clear_config_entry(self, entry_id: str) -> None:
         """Remove all data stored for a config entry and reject its later saves."""
         scope = (RESTORE_SCOPE_CONFIG_ENTRIES, entry_id)
-        self._active_keys = {key for key in self._active_keys if key[0] != scope}
+        self._owners = {
+            key: owner for key, owner in self._owners.items() if key[0] != scope
+        }
         if self._data[RESTORE_SCOPE_CONFIG_ENTRIES].pop(entry_id, None) is None:
             return
         self._async_delay_save()
+
+    def _is_owner(self, owner: object, scope: RestoreScope, storage_key: str) -> bool:
+        """Return if the coordinator currently owns the storage key.
+
+        A shut down coordinator, or one whose config entry was removed after a
+        failed unload, no longer owns its key and must not touch the data.
+        """
+        return self._owners.get((scope, storage_key)) is owner
 
     @callback
     def _async_delay_save(self, delay: float = 0) -> None:

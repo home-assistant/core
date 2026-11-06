@@ -1560,12 +1560,13 @@ async def set_stored_data(
     data: Any,
 ) -> None:
     """Seed the restore coordinator store and load it, as bootstrap would."""
+    if entry is not None:
+        store_data = make_store_data(entries={entry.entry_id: {RESTORE_KEY: data}})
+    else:
+        store_data = make_store_data(domains={RESTORE_DOMAIN: {RESTORE_KEY: data}})
     hass_storage[restore_state.RESTORE_STORAGE_KEY] = {
         "version": 1,
-        "data": make_store_data(
-            entries={entry.entry_id: {RESTORE_KEY: data}} if entry else {},
-            domains={} if entry else {RESTORE_DOMAIN: {RESTORE_KEY: data}},
-        ),
+        "data": store_data,
     }
     await restore_state.async_load(hass)
 
@@ -1605,7 +1606,7 @@ def get_restore_crd(
     save_delay: float = 0,
 ) -> update_coordinator.RestoreDataUpdateCoordinator[Any]:
     """Make a restore coordinator with its config entry ready for first refresh."""
-    if config_entry:
+    if config_entry is not None:
         config_entry._async_set_state(
             hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, "For testing"
         )
@@ -2359,40 +2360,6 @@ async def test_persist_successful_none_refresh(
     assert get_stored_data(hass_storage, restore_entry) is None
 
 
-async def test_saved_data_detached_from_coordinator(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    restore_entry: MockConfigEntry,
-) -> None:
-    """Test mutating data in place does not change what another save persists."""
-    crd = get_restore_crd(hass, config_entry=restore_entry)
-    other_crd = get_restore_crd(hass, config_entry=restore_entry, storage_key="other")
-    crd.async_set_updated_data({"value": "saved"})
-
-    crd.data["value"] = "mutated"
-    other_crd.async_set_updated_data({"value": "other"})
-    await flush_restore_store(hass)
-
-    assert get_stored_data(hass_storage, restore_entry) == {"value": "saved"}
-
-
-async def test_restored_data_detached_from_store(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    restore_entry: MockConfigEntry,
-) -> None:
-    """Test mutating restored data in place does not change the stored data."""
-    await set_stored_data(hass, hass_storage, restore_entry, {"value": "stored"})
-    crd = get_restore_crd(hass, config_entry=restore_entry)
-    other_crd = get_restore_crd(hass, config_entry=restore_entry, storage_key="other")
-
-    crd.data["value"] = "mutated"
-    other_crd.async_set_updated_data({"value": "other"})
-    await flush_restore_store(hass)
-
-    assert get_stored_data(hass_storage, restore_entry) == {"value": "stored"}
-
-
 async def test_no_save_after_entry_removed_without_unload(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -2451,6 +2418,23 @@ async def test_push_after_shutdown_not_saved(
     replacement.async_set_updated_data({"value": "replacement"})
 
     crd.async_set_updated_data({"value": "late"})
+    await flush_restore_store(hass)
+
+    assert get_stored_data(hass_storage, restore_entry) == {"value": "replacement"}
+
+
+async def test_remove_after_shutdown_keeps_replacement_data(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    restore_entry: MockConfigEntry,
+) -> None:
+    """Test a shut down coordinator cannot remove the data of a new coordinator."""
+    crd = get_restore_crd(hass, config_entry=restore_entry)
+    await crd.async_shutdown()
+    replacement = get_restore_crd(hass, config_entry=restore_entry)
+    replacement.async_set_updated_data({"value": "replacement"})
+
+    crd.async_remove_stored_data()
     await flush_restore_store(hass)
 
     assert get_stored_data(hass_storage, restore_entry) == {"value": "replacement"}

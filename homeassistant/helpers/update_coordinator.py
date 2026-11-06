@@ -674,7 +674,8 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator that persists data and restores it on creation.
 
-    The data must be JSON-serializable. storage_key must be stable and unique
+    The data must be JSON-serializable and is persisted by reference, so replace
+    it rather than mutate it in place. storage_key must be stable and unique
     within the config entry, or the domain when there is no config entry; a
     second live coordinator with the same key raises ValueError. Coordinators
     with a config entry release their key on unload or failed setup, but domain
@@ -709,7 +710,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         else:
             raise ValueError("config_entry or domain is required")
         store_manager = _async_get_restore_store_manager(hass)
-        store_manager.async_register(storage_scope, storage_key)
+        store_manager.async_register(self, storage_scope, storage_key)
         super().__init__(
             hass,
             logger,
@@ -731,19 +732,16 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     @override
     async def async_shutdown(self) -> None:
         """Free the storage key so it can be reused by a new coordinator."""
-        # A new coordinator may own the key after the first shutdown.
-        if not self._shutdown_requested:
-            self._store_manager.async_unregister(self._storage_scope, self._storage_key)
+        self._store_manager.async_unregister(
+            self, self._storage_scope, self._storage_key
+        )
         await super().async_shutdown()
 
     @callback
     def _schedule_save(self) -> None:
         """Schedule saving the current data to storage."""
-        # An in-flight refresh can finish after a new coordinator took over the key.
-        if self._shutdown_requested:
-            return
         self._store_manager.async_schedule_save(
-            self._storage_scope, self._storage_key, self.data, self._save_delay
+            self, self._storage_scope, self._storage_key, self.data, self._save_delay
         )
 
     @override
@@ -769,7 +767,9 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 
         Safe to call when nothing is stored.
         """
-        self._store_manager.async_remove_data(self._storage_scope, self._storage_key)
+        self._store_manager.async_remove_data(
+            self, self._storage_scope, self._storage_key
+        )
 
 
 class BaseCoordinatorEntity[
