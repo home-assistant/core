@@ -4,9 +4,7 @@ import logging
 
 from grandstream_home_api import GDSPhoneAPI, attempt_login, create_device_api_instance
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_SW_VERSION,
     CONF_HOST,
     CONF_MODEL,
     CONF_PASSWORD,
@@ -21,7 +19,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN
+from .const import CONF_SW_VERSION, DOMAIN
 from .coordinator import (
     GrandstreamConfigEntry,
     GrandstreamCoordinator,
@@ -41,7 +39,7 @@ def _get_display_model(device_model: str, product_model: str | None) -> str:
 
 
 def _create_device_info(
-    entry: ConfigEntry,
+    entry: GrandstreamConfigEntry,
     unique_id: str,
     device_model: str,
     product_model: str | None,
@@ -64,7 +62,7 @@ def _create_device_info(
     )
 
 
-async def _setup_api(hass: HomeAssistant, entry: ConfigEntry) -> GDSPhoneAPI:
+async def _setup_api(hass: HomeAssistant, entry: GrandstreamConfigEntry) -> GDSPhoneAPI:
     """Set up and initialize API with error handling."""
     host = entry.data[CONF_HOST]
     username = entry.data[CONF_USERNAME]
@@ -116,7 +114,7 @@ async def _setup_api(hass: HomeAssistant, entry: ConfigEntry) -> GDSPhoneAPI:
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) -> None:
     """Set up Grandstream Home integration."""
     _LOGGER.debug("Starting integration initialization: %s", entry.entry_id)
 
@@ -133,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) 
 
     # 3. Create device info
     mac_address = api.device_mac
-    discovery_version = entry.data.get(ATTR_SW_VERSION)
+    discovery_version = entry.data.get(CONF_SW_VERSION)
 
     device_info = _create_device_info(
         entry=entry,
@@ -164,11 +162,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _LOGGER.debug("Integration setup completed for %s", entry.title)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GrandstreamConfigEntry
-) -> bool:
+) -> None:
     """Unload config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

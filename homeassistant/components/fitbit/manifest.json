@@ -1,8 +1,10 @@
 {
   "domain": "fitbit",
   "name": "Fitbit",
+  "categories": ["health_wellbeing"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials", "http"],
   "documentation": "https://www.home-assistant.io/integrations/fitbit",
   "integration_type": "service",

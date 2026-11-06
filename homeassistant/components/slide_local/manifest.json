@@ -1,8 +1,10 @@
 {
   "domain": "slide_local",
   "name": "Slide Local",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@dontinelli"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/slide_local",
   "homekit": {
     "models": ["Slide"]

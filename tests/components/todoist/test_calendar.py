@@ -10,6 +10,7 @@ import zoneinfo
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 from todoist_api_python.models import Due
 
 from homeassistant import setup
@@ -30,8 +31,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
 from .conftest import PROJECT_ID, SECTION_ID, SUMMARY, make_api_due
-
-from tests.typing import ClientSessionGenerator
 
 # Set our timezone to CST/Regina so we can check calculations
 # This keeps UTC-6 all year round
@@ -384,6 +383,24 @@ async def test_create_task_service_call_with_section(
         labels=["Label1"],
         assignee_id="1",
     )
+
+
+async def test_create_task_service_call_with_none_section(
+    hass: HomeAssistant, api: AsyncMock
+) -> None:
+    """Test a `None` section is ignored rather than raising an error."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            CONTENT: "task",
+            PROJECT_NAME: "Name",
+            SECTION_NAME: None,
+        },
+        blocking=True,
+    )
+
+    api.add_task.assert_called_with("task", project_id=PROJECT_ID)
 
 
 @pytest.mark.parametrize(

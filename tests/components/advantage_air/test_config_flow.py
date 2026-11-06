@@ -9,7 +9,7 @@ from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import TEST_SYSTEM_DATA, USER_INPUT
+from . import TEST_SYSTEM_DATA, TEST_SYSTEM_DATA_NO_RID, USER_INPUT
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -29,7 +29,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ) as mock_get,
         patch(
             "homeassistant.components.advantage_air.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -87,7 +87,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.advantage_air.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -97,3 +97,54 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_form_without_rid_uses_mid(hass: HomeAssistant) -> None:
+    """Test a tablet that reports no rid uses its mid as unique id."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.advantage_air.config_flow.advantage_air.async_get",
+            new=AsyncMock(return_value=TEST_SYSTEM_DATA_NO_RID),
+        ),
+        patch(
+            "homeassistant.components.advantage_air.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "d88039efd4a3"
+
+
+async def test_form_without_rid_or_mid(hass: HomeAssistant) -> None:
+    """Test the flow aborts when the tablet reports neither rid nor mid."""
+
+    system = {
+        key: value
+        for key, value in TEST_SYSTEM_DATA_NO_RID["system"].items()
+        if key != "mid"
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.advantage_air.config_flow.advantage_air.async_get",
+        new=AsyncMock(return_value={**TEST_SYSTEM_DATA_NO_RID, "system": system}),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_system_id"

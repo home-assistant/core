@@ -1,14 +1,13 @@
 """Tests for Tradfri diagnostics."""
 
 import pytest
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from pytradfri.device import Device
 
 from homeassistant.core import HomeAssistant
 
 from .common import setup_integration
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize("device", ["air_purifier"], indirect=True)

@@ -15,6 +15,7 @@ from pysmartyplants import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -54,9 +55,7 @@ class SmartyPlantsCoordinator(DataUpdateCoordinator[dict[str, Sensor]]):
             try:
                 sensors = await self.client.async_get_sensors()
             except SmartyPlantsAuthError as err:
-                # Reported as an update failure rather than starting a re-auth
-                # flow, which this integration does not offer yet.
-                raise UpdateFailed(
+                raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN, translation_key="invalid_auth"
                 ) from err
             except SmartyPlantsForbiddenError as err:

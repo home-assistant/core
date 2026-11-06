@@ -4,6 +4,7 @@ import contextlib
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+from homematicip.async_home import AsyncHome
 from homematicip.base.functionalChannels import FunctionalChannel
 from homematicip.device import BaseDevice
 from homematicip.group import Group
@@ -15,7 +16,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .hap import AsyncHome, HomematicipHAP
+from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 

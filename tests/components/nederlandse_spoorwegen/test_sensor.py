@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 import zoneinfo
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from syrupy.assertion import SnapshotAssertion
 
@@ -25,8 +26,6 @@ import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
 from .const import API_KEY
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

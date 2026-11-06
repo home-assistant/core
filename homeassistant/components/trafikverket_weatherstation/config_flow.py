@@ -49,6 +49,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
             name = user_input[CONF_STATION]
             api_key = user_input[CONF_API_KEY]
             station = user_input[CONF_STATION]
+            self._async_abort_entries_match({CONF_STATION: station})
 
             try:
                 await self.validate_input(api_key, station)
@@ -126,8 +127,13 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle re-configuration with Trafikverket."""
         errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input:
+            if user_input[CONF_STATION] != reconfigure_entry.data[CONF_STATION]:
+                self._async_abort_entries_match(
+                    {CONF_STATION: user_input[CONF_STATION]}
+                )
             try:
                 await self.validate_input(
                     user_input[CONF_API_KEY], user_input[CONF_STATION]
@@ -143,7 +149,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
+                    reconfigure_entry,
                     title=user_input[CONF_STATION],
                     data=user_input,
                 )
@@ -157,7 +163,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(CONF_STATION): TextSelector(),
                 }
             ),
-            {**self._get_reconfigure_entry().data, **(user_input or {})},
+            {**reconfigure_entry.data, **(user_input or {})},
         )
 
         return self.async_show_form(

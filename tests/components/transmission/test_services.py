@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.transmission.const import (
     ATTR_DELETE_DATA,
@@ -23,8 +24,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 
 async def test_service_config_entry_not_loaded_state(

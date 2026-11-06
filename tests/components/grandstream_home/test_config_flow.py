@@ -4,11 +4,11 @@ from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.grandstream_home.const import DOMAIN
+from homeassistant.components.grandstream_home.const import CONF_SW_VERSION, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF, ConfigFlowResult
 from homeassistant.const import (
-    ATTR_SW_VERSION,
     CONF_HOST,
     CONF_MODEL,
     CONF_PASSWORD,
@@ -21,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_gds_api")
 
@@ -39,7 +37,7 @@ def _assert_created_entry(hass: HomeAssistant, result: ConfigFlowResult) -> None
         CONF_VERIFY_SSL: False,
         CONF_TYPE: "GDS",
         CONF_MODEL: None,
-        ATTR_SW_VERSION: None,
+        CONF_SW_VERSION: None,
     }
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == format_mac("00:0B:82:12:34:56")
@@ -196,7 +194,7 @@ async def test_full_zeroconf_flow(hass: HomeAssistant) -> None:
         CONF_VERIFY_SSL: False,
         CONF_TYPE: "GDS",
         CONF_MODEL: None,
-        ATTR_SW_VERSION: "1.0.1.13",
+        CONF_SW_VERSION: "1.0.1.13",
     }
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == format_mac("EC74D79753C5")
@@ -348,7 +346,7 @@ async def test_zeroconf_gsc_device(hass: HomeAssistant) -> None:
         CONF_VERIFY_SSL: False,
         CONF_TYPE: "GSC",
         CONF_MODEL: None,
-        ATTR_SW_VERSION: "1.0.1.13",
+        CONF_SW_VERSION: "1.0.1.13",
     }
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == format_mac("EC74D79753C5")
@@ -431,7 +429,7 @@ async def test_zeroconf_edge_cases(
         CONF_VERIFY_SSL: False,
         CONF_TYPE: "GDS",
         CONF_MODEL: model,
-        ATTR_SW_VERSION: None,
+        CONF_SW_VERSION: None,
     }
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == unique_id
@@ -459,9 +457,12 @@ async def test_user_already_configured(
     mock_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.100"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.100"},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -500,9 +501,12 @@ async def test_user_no_mac_already_configured(
     mock_gds_api.device_mac = None
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.100"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.100"},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -526,9 +530,12 @@ async def test_user_no_mac_new_device(
     mock_gds_api.device_mac = None
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.200"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.200"},
     )
 
     result = await hass.config_entries.flow.async_configure(

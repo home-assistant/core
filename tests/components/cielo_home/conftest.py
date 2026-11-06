@@ -4,19 +4,18 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cielo_home.const import DOMAIN
 from homeassistant.components.climate import HVACMode
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry for the Cielo Home integration."""
     with patch(
-        "homeassistant.components.cielo_home.async_setup_entry", return_value=True
+        "homeassistant.components.cielo_home.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -71,6 +70,7 @@ def mock_cielo_device_api() -> Generator[MagicMock]:
     device_api.min_temp.return_value = 10
     device_api.max_temp.return_value = 35
     device_api.target_temperature_step.return_value = 1
+    device_api.precision.return_value = 1
     device_api.hvac_mode.return_value = HVACMode.COOL
     device_api.hvac_modes.return_value = [HVACMode.OFF, HVACMode.COOL]
     device_api.mode_supports_temperature.return_value = True

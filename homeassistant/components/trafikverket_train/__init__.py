@@ -19,7 +19,7 @@ TVTrainConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) -> None:
     """Set up Trafikverket Train from a config entry."""
 
     coordinator = TVDataUpdateCoordinator(hass, entry)
@@ -36,16 +36,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) -> None:
     """Unload Trafikverket Weatherstation config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) -> None:
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", entry.version)
 
@@ -106,5 +104,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) ->
         entry.version,
         entry.minor_version,
     )
-
-    return True

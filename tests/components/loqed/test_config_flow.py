@@ -9,6 +9,8 @@ from unittest.mock import Mock, patch
 import aiohttp
 from loqedAPI import loqed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.loqed.const import DOMAIN
@@ -16,9 +18,6 @@ from homeassistant.const import CONF_API_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_API_TOKEN = "eyadiuyfasiuasf"
 TEST_WEBHOOK_ID = "Webhook_ID"

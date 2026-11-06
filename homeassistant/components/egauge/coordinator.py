@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -74,14 +74,9 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             self.serial_number = await self.client.get_device_serial_number()
             self.hostname = await self.client.get_hostname()
             self._register_info = await self.client.get_register_info()
-        except (
-            EgaugeAuthenticationError,
-            EgaugePermissionError,
-            EgaugeException,
-        ) as err:
-            # EgaugeAuthenticationError and
-            # EgaugePermissionError will raise
-            # ConfigEntryAuthFailed once reauth is implemented
+        except (EgaugeAuthenticationError, EgaugePermissionError) as err:
+            raise ConfigEntryAuthFailed from err
+        except EgaugeException as err:
             raise ConfigEntryError from err
         except ConnectError as err:
             raise UpdateFailed(f"Error fetching device info: {err}") from err
@@ -92,12 +87,9 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
         try:
             measurements = await self.client.get_current_measurements()
             counters = await self.client.get_current_counters()
-        except (
-            EgaugeAuthenticationError,
-            EgaugePermissionError,
-            EgaugeException,
-        ) as err:
-            # will raise ConfigEntryAuthFailed once reauth is implemented
+        except (EgaugeAuthenticationError, EgaugePermissionError) as err:
+            raise ConfigEntryAuthFailed from err
+        except EgaugeException as err:
             raise ConfigEntryError(f"Error fetching device info: {err}") from err
         except ConnectError as err:
             raise UpdateFailed(f"Error fetching device info: {err}") from err

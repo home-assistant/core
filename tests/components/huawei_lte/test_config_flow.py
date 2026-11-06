@@ -7,6 +7,7 @@ from urllib.parse import urlparse, urlunparse
 from huawei_lte_api.enums.client import ResponseCodeEnum
 from huawei_lte_api.enums.user import LoginErrorEnum, LoginStateEnum, PasswordTypeEnum
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests.exceptions
 from requests.exceptions import ConnectionError
 import requests_mock
@@ -40,8 +41,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 FIXTURE_UNIQUE_ID = "SERIALNUMBER"
 

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import (
@@ -19,8 +20,6 @@ from homeassistant.helpers import (
 )
 
 from . import UPNP_SERIAL
-
-from tests.common import MockConfigEntry
 
 
 async def test_roku_sensors(

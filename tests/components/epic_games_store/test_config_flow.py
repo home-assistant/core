@@ -95,7 +95,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.epic_games_store.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -138,7 +138,7 @@ async def test_form_cannot_connect_wrong_param(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.epic_games_store.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

@@ -70,7 +70,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: EmulatedRokuConfigEntry
-) -> bool:
+) -> None:
     """Set up an emulated roku server from a config entry."""
     config = entry.data
     name: str = config[CONF_NAME]
@@ -97,11 +97,10 @@ async def async_setup_entry(
             translation_key="setup_failed",
             translation_placeholders={"name": name},
         )
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: EmulatedRokuConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await entry.runtime_data.unload()
+    await entry.runtime_data.unload()

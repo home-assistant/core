@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from jwt import DecodeError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sensoterra.customerapi import InvalidAuth as StInvalidAuth, Timeout as StTimeout
 
 from homeassistant.components.sensoterra.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import API_EMAIL, API_PASSWORD, API_TOKEN, HASS_UUID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

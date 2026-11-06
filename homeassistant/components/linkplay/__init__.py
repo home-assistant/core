@@ -38,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> None:
     """Async setup hass config entry. Called when an entry has been setup."""
 
     session: ClientSession = await async_get_client_session(hass)
@@ -66,10 +66,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> 
     # forward to platforms
     entry.runtime_data = LinkPlayData(bridge=bridge)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> None:
     """Unload a config entry."""
 
     # remove the bridge from the controller and discover multirooms
@@ -78,4 +77,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) ->
     await controller.remove_bridge(bridge)
     await controller.discover_multirooms()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

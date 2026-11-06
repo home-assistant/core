@@ -13,6 +13,12 @@ from unittest.mock import Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import py
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_fire_time_changed_exact,
+    async_test_home_assistant,
+    mock_storage,
+)
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
@@ -32,13 +38,6 @@ from homeassistant.helpers.json import json_bytes, prepare_save_json
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
 from homeassistant.util.json import JsonValueType
-
-from tests.common import (
-    async_fire_time_changed,
-    async_fire_time_changed_exact,
-    async_test_home_assistant,
-    mock_storage,
-)
 
 MOCK_VERSION = 1
 MOCK_VERSION_2 = 2
@@ -91,6 +90,44 @@ async def test_loading(hass: HomeAssistant, store: storage.Store) -> None:
     await store.async_save(MOCK_DATA)
     data = await store.async_load()
     assert data == MOCK_DATA
+
+
+async def test_remove_pending_save(store: storage.Store) -> None:
+    """Removal discards delayed data instead of returning it on the next load."""
+    await store.async_save(MOCK_DATA)
+    store.async_delay_save(lambda: MOCK_DATA2, 60)
+
+    await store.async_remove()
+
+    assert await store.async_load() is None
+
+
+async def test_remove_during_write(
+    hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
+) -> None:
+    """An active write cannot recreate removed storage."""
+    write_started = asyncio.Event()
+    finish_write = asyncio.Event()
+    async_write = store._io.async_write
+
+    async def blocked_write(mode: str, data: str | bytes) -> None:
+        write_started.set()
+        await finish_write.wait()
+        await async_write(mode, data)
+
+    with patch.object(store._io, "async_write", side_effect=blocked_write):
+        write_task = hass.async_create_task(store.async_save(MOCK_DATA))
+        await write_started.wait()
+        remove_task = hass.async_create_task(store.async_remove())
+        await asyncio.sleep(0)
+        finish_write.set()
+        await asyncio.gather(write_task, remove_task)
+
+    assert MOCK_KEY not in hass_storage
+    assert await store.async_load() is None
+
+    await store.async_save(MOCK_DATA2)
+    assert await store.async_load() == MOCK_DATA2
 
 
 async def test_custom_encoder(hass: HomeAssistant) -> None:
@@ -927,7 +964,7 @@ async def test_loading_corrupt_core_file(
         assert issue_entry.translation_placeholders["storage_key"] == storage_key
         assert issue_entry.issue_domain == HOMEASSISTANT_DOMAIN
         assert (
-            "unexpected character: line 1 column 1 (char 0)"
+            "unexpected character, expected a JSON value: line 1 column 1 (char 0)"
             in issue_entry.translation_placeholders["error"]
         )
 

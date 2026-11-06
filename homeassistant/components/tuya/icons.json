@@ -10,6 +10,9 @@
       "drop": {
         "default": "mdi:package-down"
       },
+      "fall": {
+        "default": "mdi:human-handsdown"
+      },
       "feeding": {
         "default": "mdi:information"
       },
@@ -215,6 +218,9 @@
       },
       "pm25": {
         "default": "mdi:molecule"
+      },
+      "pump_speed": {
+        "default": "mdi:speedometer"
       },
       "remaining_time": {
         "default": "mdi:timer"

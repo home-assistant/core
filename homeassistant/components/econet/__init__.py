@@ -39,7 +39,7 @@ type EconetConfigEntry = ConfigEntry[dict[EquipmentType, list[Equipment]]]
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: EconetConfigEntry
-) -> bool:
+) -> None:
     """Set up EcoNet as config entry."""
 
     email = config_entry.data[CONF_EMAIL]
@@ -66,7 +66,7 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    api.subscribe()
+    await hass.async_add_executor_job(api.subscribe)
 
     def update_published():
         """Handle a push update."""
@@ -78,10 +78,14 @@ async def async_setup_entry(
     for _eqip in equipment[EquipmentType.THERMOSTAT]:
         _eqip.set_update_callback(update_published)
 
+    def resubscribe_mqtt() -> None:
+        """Resubscribe to MQTT updates."""
+        api.unsubscribe()
+        api.subscribe()
+
     async def resubscribe(now):
         """Resubscribe to the MQTT updates."""
-        await hass.async_add_executor_job(api.unsubscribe)
-        api.subscribe()
+        await hass.async_add_executor_job(resubscribe_mqtt)
 
         # Refresh values
         await asyncio.sleep(60)
@@ -89,9 +93,7 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(async_track_time_interval(hass, resubscribe, INTERVAL))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: EconetConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EconetConfigEntry) -> None:
     """Unload a EcoNet config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

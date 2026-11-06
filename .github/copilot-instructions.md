@@ -66,7 +66,7 @@ The PR description must follow this template (from `.github/PULL_REQUEST_TEMPLAT
 - This PR fixes or closes issue: fixes #
 - This PR is related to issue: 
 - Link to documentation pull request: 
-- Link to developer documentation pull request: 
+- Link to contributors documentation pull request: 
 - Link to frontend pull request: 
 
 ## Checklist
@@ -78,7 +78,7 @@ The PR description must follow this template (from `.github/PULL_REQUEST_TEMPLAT
 
   AI tools are welcome, but contributors are responsible for *fully*
   understanding the code before submitting a PR. Please follow our AI policy:
-  https://developers.home-assistant.io/docs/ai_policy
+  https://contributors.home-assistant.io/start/ai-policy/
 -->
 
 - [ ] I understand the code I am submitting and can explain how it works.
@@ -131,11 +131,11 @@ To help with the load of incoming pull requests:
 
   Below, some useful links you could explore:
 -->
-[dev-checklist]: https://developers.home-assistant.io/docs/development_checklist/
-[manifest-docs]: https://developers.home-assistant.io/docs/creating_integration_manifest/
-[quality-scale]: https://developers.home-assistant.io/docs/integration_quality_scale_index/
+[dev-checklist]: https://contributors.home-assistant.io/core/development/checklist/
+[manifest-docs]: https://contributors.home-assistant.io/core/integrations/manifest/
+[quality-scale]: https://contributors.home-assistant.io/core/quality-scale/
 [docs-repository]: https://github.com/home-assistant/home-assistant.io
-[perfect-pr]: https://developers.home-assistant.io/docs/review-process/#creating-the-perfect-pr
+[perfect-pr]: https://contributors.home-assistant.io/start/pull-requests/#before-you-open-it
 ```
 
 # GitHub Copilot & Claude Code Instructions
@@ -156,7 +156,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - Run "python3" in current virtual environment to ensure the correct Python version is used for testing.
 - When entering a new environment or worktree, run `script/setup` to set up the virtual environment with all development dependencies (pylint, pre-commit hooks, etc.). This is required before committing. If uv reports that no download was found for the required Python version, the environment is running an outdated version of uv; upgrade it with `curl -LsSf https://astral.sh/uv/install.sh | sh` and run `script/setup` again.
 - .vscode/tasks.json contains useful commands used for development.
-- After finishing a code session, run `uv run --no-sync prek run --all-files` to check for linting and formatting issues.
+- After finishing a code session, run `base=$(git merge-base HEAD dev) && uv run --no-sync prek run --files $(git diff --name-only --diff-filter=d "$base"; git ls-files --others --exclude-standard)` to check the files changed on the branch (committed, uncommitted and untracked) for linting and formatting issues.
 
 ## Python Syntax Notes
 
@@ -185,7 +185,9 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - Do not add comments that just restate the code on the following line(s) (e.g. `# Check if initialized` above `if self.initialized:`). Comments should only explain why (non-obvious constraints, surprising behavior, or workarounds), never what. Never add comments that justify a change by referencing what the code looked like before. Comments in tests that explain why a function call or assertion is made are ok.
 - Do not add section or divider comments (e.g. `# --- XYZ Triggers ---`) inside or outside of functions, since those can easily become stale and be misleading.
 - When catching exceptions, try-clauses should be as small as possible, i.e. avoid wrapping large blocks of code in a try-clause, and avoid catching exceptions from functions that are not expected to raise them.
+- Asserts that exist only to narrow types for the type checker must be placed behind an `if TYPE_CHECKING:` guard, so they are not executed at runtime.
 - Sensitive service actions, i.e. those that can change configuration or have security implications, should require an admin user. Register them with the `async_register_admin_service` service helper, which checks this for you.
+- Constants that more than one module of an integration uses go in `const.py`; a constant only one module uses stays in that module. Tests do not count as a user. This includes entity descriptions and service schemas. Never import a constant from one platform module into another; move it to `const.py` instead. Pre-existing constants that a change does not touch can stay where they are.
 
 ## AI policy
 

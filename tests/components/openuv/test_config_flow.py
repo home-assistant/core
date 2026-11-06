@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import probatio
 from pyopenuv.errors import InvalidApiKeyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openuv.const import (
     CONF_FROM_WINDOW,
@@ -16,14 +17,13 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_ELEVATION,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_API_KEY, TEST_ELEVATION, TEST_LATITUDE, TEST_LONGITUDE
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -54,8 +54,10 @@ async def test_create_entry(hass: HomeAssistant, client, config, mock_pyopenuv) 
     assert result["data"] == {
         CONF_API_KEY: TEST_API_KEY,
         CONF_ELEVATION: TEST_ELEVATION,
-        CONF_LATITUDE: TEST_LATITUDE,
-        CONF_LONGITUDE: TEST_LONGITUDE,
+        CONF_LOCATION: {
+            CONF_LATITUDE: TEST_LATITUDE,
+            CONF_LONGITUDE: TEST_LONGITUDE,
+        },
     }
 
 

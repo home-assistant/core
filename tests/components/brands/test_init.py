@@ -10,6 +10,9 @@ from unittest.mock import patch
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.brands.const import (
     BRANDS_CDN_URL,
@@ -20,10 +23,6 @@ from homeassistant.components.brands.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import Integration
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 FAKE_PNG = b"\x89PNG\r\n\x1a\nfakeimagedata"
 BRAND_PNG = b"\x89PNG\r\n\x1a\nfakebranddata"

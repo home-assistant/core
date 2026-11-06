@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import WizConfigEntry, WizData
-from .entity import WizToggleEntity
+from .entity import WizToggleEntity, wiz_exception_handler
 
 
 async def async_setup_entry(
@@ -34,6 +34,7 @@ class WizSocketEntity(WizToggleEntity, SwitchEntity):
         self._async_update_attrs()
 
     @override
+    @wiz_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the socket to turn on."""
         await self._device.turn_on(PilotBuilder())

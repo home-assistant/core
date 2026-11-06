@@ -2,6 +2,8 @@
 
 from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
 
 from homeassistant.components.edifier_infrared.const import (
     CONF_COMMAND_SET,
@@ -13,9 +15,6 @@ from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID
 
 
 @pytest.mark.parametrize(

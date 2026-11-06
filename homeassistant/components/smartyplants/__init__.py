@@ -14,7 +14,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SmartyPlantsConfigEntry
-) -> bool:
+) -> None:
     """Set up SmartyPlants from a config entry."""
     client = SmartyPlantsClient(
         entry.data[CONF_API_KEY],
@@ -31,11 +31,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SmartyPlantsConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

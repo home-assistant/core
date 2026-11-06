@@ -25,6 +25,7 @@ from aiohomeconnect.model.program import (
     ProgramDefinitionOption,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -46,8 +47,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 _FAN_SPEED_PERCENTAGE_KEY = (
     OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
@@ -545,7 +544,7 @@ async def test_supported_features(
 
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
-            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+            ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_COOL,
             options=[],
         )
     )
@@ -562,7 +561,7 @@ async def test_supported_features(
                             timestamp=0,
                             level="",
                             handling="",
-                            value=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+                            value=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_COOL.value,
                         )
                     ]
                 ),

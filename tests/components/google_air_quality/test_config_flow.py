@@ -7,6 +7,7 @@ from google_air_quality_api.exceptions import (
     InvalidCustomLAQIConfigurationError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.google_air_quality.const import (
     CONF_ENABLE_CUSTOM_LAQI,
@@ -27,8 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 def _assert_create_entry_result(

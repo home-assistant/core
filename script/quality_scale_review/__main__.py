@@ -83,8 +83,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("GITHUB_TOKEN is unset")
 
     pr = github_api.fetch_pull_request(args.repo, args.pr_number, token)
+    # The diff excludes test snapshots, so they do not make a domain touched.
     domains = integrations.with_quality_scale(
-        integrations.touched_domains(pr.filenames), pr.file_statuses
+        integrations.touched_domains(pr.reviewed_filenames), pr.file_statuses
     )
     decision = decide_skip(
         pr,

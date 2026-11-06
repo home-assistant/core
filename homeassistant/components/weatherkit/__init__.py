@@ -17,7 +17,7 @@ from .coordinator import WeatherKitConfigEntry, WeatherKitDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WEATHER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WeatherKitConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WeatherKitConfigEntry) -> None:
     """Set up this integration using UI."""
     coordinator = WeatherKitDataUpdateCoordinator(
         hass=hass,
@@ -45,9 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeatherKitConfigEntry) -
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WeatherKitConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WeatherKitConfigEntry) -> None:
     """Handle removal of an entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

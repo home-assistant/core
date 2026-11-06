@@ -4,16 +4,8 @@ from typing import Any
 
 from freezegun import freeze_time
 import pytest
-
-from homeassistant.components.event import DOMAIN, EventEntity
-from homeassistant.components.event.const import ATTR_EVENT_TYPE
-from homeassistant.components.event.trigger import TRIGGERS
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntity, setup_test_component_platform
-from tests.components.common import (
+from pytest_homeassistant.common import MockEntity, setup_test_component_platform
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     arm_trigger,
@@ -23,6 +15,13 @@ from tests.components.common import (
     set_or_remove_state,
     target_entities,
 )
+
+from homeassistant.components.event import DOMAIN, EventEntity
+from homeassistant.components.event.const import ATTR_EVENT_TYPE
+from homeassistant.components.event.trigger import TRIGGERS
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 
 class _MockEventEntity(MockEntity, EventEntity):

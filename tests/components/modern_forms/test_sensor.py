@@ -2,13 +2,13 @@
 
 from datetime import datetime
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 
 from . import init_integration, init_integration_gen4, modern_forms_timers_set_mock
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_sensors(

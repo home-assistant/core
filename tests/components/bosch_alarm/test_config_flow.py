@@ -6,17 +6,16 @@ from unittest.mock import AsyncMock
 
 from bosch_alarm_mode2.const import PANEL_FAMILY, PanelModel
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_alarm.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_user(
@@ -504,13 +503,7 @@ async def test_reconfig_flow(
     await setup_integration(hass, mock_config_entry)
 
     config_flow_data = {k: f"{v}2" for k, v in config_flow_data.items()}
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -550,13 +543,7 @@ async def test_reconfig_flow_incorrect_model(
     await setup_integration(hass, mock_config_entry)
 
     config_flow_data = {k: f"{v}2" for k, v in config_flow_data.items()}
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     mock_panel.model = PanelModel("Solution 3000", family=PANEL_FAMILY.SOLUTION)
 

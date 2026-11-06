@@ -4,6 +4,7 @@ from typing import Final
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dwd_weather_warnings.const import (
     CONF_REGION_DEVICE_TRACKER,
@@ -15,8 +16,6 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 DEMO_CONFIG_ENTRY_REGION: Final = {
     CONF_REGION_IDENTIFIER: "807111000",

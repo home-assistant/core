@@ -62,7 +62,7 @@ async def _get_all_data(
     return data
 
 
-class RAVEnDataCoordinator(DataUpdateCoordinator):
+class RAVEnDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Communication coordinator for a Rainforest RAVEn device."""
 
     _raven_device: RAVEnSerialDevice | None = None

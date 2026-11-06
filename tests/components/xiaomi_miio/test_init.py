@@ -1,11 +1,11 @@
 """Tests for the Xiaomi Miio integration setup."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.xiaomi_miio.const import CONF_FLOW_TYPE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_unsupported_model(hass: HomeAssistant) -> None:

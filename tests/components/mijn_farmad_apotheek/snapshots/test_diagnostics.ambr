@@ -1,0 +1,62 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'entry': dict({
+      'created_at': '2025-01-01T00:00:00+00:00',
+      'data': dict({
+        'access_token': '**REDACTED**',
+        'email': '**REDACTED**',
+        'refresh_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'mijn_farmad_apotheek',
+      'entry_id': '01JGFJJZ008DNE3BKJ7ZE14YFE',
+      'minor_version': 1,
+      'modified_at': '2025-01-01T00:00:00+00:00',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'products': list([
+      1,
+    ]),
+  })
+# ---
+# name: test_diagnostics_failed_entry
+  dict({
+    'entry': dict({
+      'created_at': '2025-01-01T00:00:00+00:00',
+      'data': dict({
+        'access_token': '**REDACTED**',
+        'email': '**REDACTED**',
+        'refresh_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'mijn_farmad_apotheek',
+      'entry_id': '01JGFJJZ008DNE3BKJ7ZE14YFE',
+      'minor_version': 1,
+      'modified_at': '2025-01-01T00:00:00+00:00',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---

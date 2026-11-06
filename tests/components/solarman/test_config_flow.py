@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.solarman.const import CONF_SN, DOMAIN, MODEL_NAME_MAP
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 # Configure test constants
 TEST_HOST = "192.168.1.100"

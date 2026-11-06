@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.models.keyboard_key import KeyboardKey
 from systembridgeconnector.models.keyboard_text import KeyboardText
@@ -21,8 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import FIXTURE_UUID
-
-from tests.common import AsyncMock, MockConfigEntry
 
 
 @pytest.mark.parametrize(

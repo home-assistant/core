@@ -1,8 +1,10 @@
 {
   "domain": "youtube",
   "name": "YouTube",
+  "categories": ["news_social_media"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/youtube",
   "integration_type": "service",

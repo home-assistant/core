@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
@@ -23,8 +24,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MOCK_GATEWAY_ID, MOCK_RECIPIENT_ID, RECIPIENT_SUBENTRY
-
-from tests.common import MockConfigEntry
 
 _SECOND_RECIPIENT_ID = "WXYZ9999"
 _SECOND_RECIPIENT_SUBENTRY: ConfigSubentryDataWithId = {

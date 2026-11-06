@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiorecollect.client import PickupEvent, PickupType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recollect_waste.const import (
     CONF_PLACE_ID,
@@ -14,8 +15,6 @@ from homeassistant.components.recollect_waste.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_PLACE_ID = "12345"
 TEST_SERVICE_ID = "67890"

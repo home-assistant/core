@@ -26,7 +26,7 @@ WORKDIR /usr/src
 COPY rootfs /
 
 # Add go2rtc binary
-COPY --from=ghcr.io/alexxit/go2rtc:1.9.14@sha256:675c318b23c06fd862a61d262240c9a63436b4050d177ffc68a32710d9e05bae /usr/local/bin/go2rtc /bin/go2rtc
+COPY --from=ghcr.io/alexxit/go2rtc:1.9.15@sha256:e098de5c2f8040dc3d4784ed2d5cfdac3b0979f9349afe587ef6a670a14b9f4d /usr/local/bin/go2rtc /bin/go2rtc
 
 ## Setup Home Assistant Core dependencies
 COPY --parents requirements.txt homeassistant/package_constraints.txt homeassistant/

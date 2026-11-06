@@ -10,8 +10,11 @@ from homeassistant.helpers import config_entry_oauth2_flow, llm
 
 from .application_credentials import authorization_server_context
 from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
-from .coordinator import ModelContextProtocolCoordinator, TokenManager
-from .types import ModelContextProtocolConfigEntry
+from .coordinator import (
+    ModelContextProtocolConfigEntry,
+    ModelContextProtocolCoordinator,
+    TokenManager,
+)
 
 __all__ = [
     "DOMAIN",
@@ -37,6 +40,17 @@ async def async_get_config_entry_implementation(
         )
 
 
+def _load_jsonschema() -> None:
+    """Load jsonschema and its bundled metaschemas.
+
+    The MCP client imports them lazily to validate tool output, which would
+    otherwise do blocking file I/O in the event loop on the first tool call.
+    """
+    from jsonschema.validators import Draft202012Validator  # noqa: PLC0415
+
+    Draft202012Validator.check_schema({})
+
+
 async def _create_token_manager(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
 ) -> TokenManager | None:
@@ -59,8 +73,9 @@ async def _create_token_manager(
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
-) -> bool:
+) -> None:
     """Set up Model Context Protocol from a config entry."""
+    await hass.async_add_executor_job(_load_jsonschema)
     token_manager = await _create_token_manager(hass, entry)
     coordinator = ModelContextProtocolCoordinator(hass, entry, token_manager)
     await coordinator.async_config_entry_first_refresh()
@@ -79,14 +94,11 @@ async def async_setup_entry(
 
     entry.runtime_data = coordinator
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return True
 
 
 @dataclass(kw_only=True)

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from pylamarzocco.const import MachineState, SmartStandByType, WidgetType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -19,8 +20,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import WAKE_UP_SLEEP_ENTRY_IDS, async_init_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_switches(
