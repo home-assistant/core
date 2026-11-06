@@ -23,7 +23,13 @@ def _repr_or_none(value: object) -> str | None:
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: E3dcConfigEntry
 ) -> dict[str, Any]:
-    """Return diagnostics for a config entry."""
+    """Return diagnostics for a config entry.
+
+    The raw registers can be loaded into ``modbus_connection.mock`` to replay a
+    problem without the power station. Their keys are Modbus addresses, which
+    are one lower than the register numbers in E3/DC's documentation. The serial
+    number registers are left out.
+    """
     coordinator = entry.runtime_data
     last_exception = coordinator.last_exception
     device = coordinator.device
