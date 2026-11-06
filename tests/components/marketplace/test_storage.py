@@ -235,6 +235,45 @@ async def test_hacs_file_of_another_format_not_adopted(
     assert "marketplace.common" not in hass_storage
 
 
+@pytest.mark.parametrize(
+    ("key", "legacy_key", "legacy_data"),
+    [
+        pytest.param("common", "hacs.hacs", HACS_COMMON, id="common"),
+        pytest.param(
+            "repositories",
+            "hacs.repositories",
+            {"1296269": {"full_name": REPOSITORY_INTEGRATION}},
+            id="repositories",
+        ),
+        pytest.param(
+            "repositories",
+            "hacs.data",
+            {"repositories": {"integration": [{"id": 1296269}]}},
+            id="repositories_from_the_older_file",
+        ),
+    ],
+)
+async def test_hacs_data_not_adopted_over_a_corrupt_file(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    config_dir: Path,
+    key: str,
+    legacy_key: str,
+    legacy_data: dict[str, Any],
+) -> None:
+    """Test the HACS data is not adopted when our own file was moved aside as corrupt.
+
+    The HACS file is older than ours, adopting it would hide the corrupt file.
+    """
+    _write_hacs_file(config_dir, legacy_key, legacy_data)
+    (
+        config_dir / ".storage" / f"marketplace.{key}.corrupt.2026-11-02T10:00:00+00:00"
+    ).write_text("{")
+
+    assert await async_load_from_storage(hass, key) == {}
+    assert f"marketplace.{key}" not in hass_storage
+
+
 async def test_own_data_wins(
     hass: HomeAssistant,
     hacs_storage: dict[str, Any],

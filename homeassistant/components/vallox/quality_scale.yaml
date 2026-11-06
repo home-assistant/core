@@ -72,9 +72,7 @@ rules:
       (1) The number, switch and date entities let ValloxApiException through,
       for example when the unit is unreachable, instead of raising
       HomeAssistantError.
-      (2) The fan raises a plain ValueError when the profile does not support
-      setting the fan speed, which should be a ServiceValidationError.
-      (3) The custom actions raise a plain ValueError unless exactly one entry
+      (2) The custom actions raise a plain ValueError unless exactly one entry
       is loaded, which is covered by action-setup.
   config-entry-unloading: done
   docs-configuration-parameters:
