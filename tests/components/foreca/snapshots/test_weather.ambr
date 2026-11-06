@@ -55,6 +55,116 @@
     }),
   })
 # ---
+# name: test_forecasts_extra[metric-daily]
+  dict({
+    'weather.helsinki': dict({
+      'forecast': list([
+        dict({
+          'apparent_templow': 7.4,
+          'confidence': 'good',
+          'datetime': '2026-09-02T00:00:00-07:00',
+          'max_humidity': 93,
+          'min_dew_point': 4.6,
+          'min_humidity': 51,
+          'min_visibility': 8.0,
+          'snow_accumulation': 15.0,
+          'snow_depth': 40.0,
+          'solar_radiation_sum': 2875,
+          'sunrise': '2026-09-02T03:00:00+00:00',
+          'sunset': '2026-09-02T17:00:00+00:00',
+          'sunshine_duration': 6.4,
+        }),
+        dict({
+          'apparent_templow': None,
+          'confidence': None,
+          'datetime': '2026-09-03T00:00:00-07:00',
+          'max_humidity': None,
+          'min_dew_point': None,
+          'min_humidity': None,
+          'min_visibility': None,
+          'snow_accumulation': None,
+          'snow_depth': None,
+          'solar_radiation_sum': None,
+          'sunrise': None,
+          'sunset': None,
+          'sunshine_duration': None,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts_extra[metric-hourly]
+  dict({
+    'weather.helsinki': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2026-09-01T18:00:00+03:00',
+          'precipitation_type': 'rain',
+          'snow_accumulation': 3.0,
+          'snow_depth': 20.0,
+          'solar_radiation': 141.0,
+          'thunderstorm_probability': 12,
+          'visibility': 24.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts_extra[us_customary-daily]
+  dict({
+    'weather.helsinki': dict({
+      'forecast': list([
+        dict({
+          'apparent_templow': 45.32,
+          'confidence': 'good',
+          'datetime': '2026-09-02T00:00:00-07:00',
+          'max_humidity': 93,
+          'min_dew_point': 40.28,
+          'min_humidity': 51,
+          'min_visibility': 4.97,
+          'snow_accumulation': 0.59,
+          'snow_depth': 1.57,
+          'solar_radiation_sum': 2875,
+          'sunrise': '2026-09-02T03:00:00+00:00',
+          'sunset': '2026-09-02T17:00:00+00:00',
+          'sunshine_duration': 6.4,
+        }),
+        dict({
+          'apparent_templow': None,
+          'confidence': None,
+          'datetime': '2026-09-03T00:00:00-07:00',
+          'max_humidity': None,
+          'min_dew_point': None,
+          'min_humidity': None,
+          'min_visibility': None,
+          'snow_accumulation': None,
+          'snow_depth': None,
+          'solar_radiation_sum': None,
+          'sunrise': None,
+          'sunset': None,
+          'sunshine_duration': None,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecasts_extra[us_customary-hourly]
+  dict({
+    'weather.helsinki': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2026-09-01T18:00:00+03:00',
+          'precipitation_type': 'rain',
+          'snow_accumulation': 0.12,
+          'snow_depth': 0.79,
+          'solar_radiation': 141.0,
+          'thunderstorm_probability': 12,
+          'visibility': 14.91,
+        }),
+      ]),
+    }),
+  })
+# ---
 # name: test_weather[weather.helsinki-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

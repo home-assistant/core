@@ -8,6 +8,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.foreca.const import DOMAIN
+from homeassistant.components.foreca.services import SERVICE_GET_FORECASTS_EXTRA
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     SERVICE_GET_FORECASTS,
@@ -16,6 +18,11 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from . import init_integration
 
@@ -113,3 +120,64 @@ async def test_daily_forecast_lands_on_the_right_local_day(
     # The date has to survive being rendered where Home Assistant is, which is
     # what midnight UTC would break.
     assert dt_util.as_local(timestamp).date() == date(2026, 9, 2)
+
+
+@pytest.mark.usefixtures("mock_foreca_client")
+@pytest.mark.parametrize("forecast_type", ["daily", "hourly"])
+@pytest.mark.parametrize(
+    "unit_system",
+    [
+        pytest.param(METRIC_SYSTEM, id="metric"),
+        pytest.param(US_CUSTOMARY_SYSTEM, id="us_customary"),
+    ],
+)
+async def test_forecasts_extra(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    forecast_type: str,
+    unit_system: UnitSystem,
+) -> None:
+    """Test the extra forecast values in the entity's units."""
+    hass.config.units = unit_system
+    with patch("homeassistant.components.foreca.PLATFORMS", [Platform.WEATHER]):
+        await init_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECASTS_EXTRA,
+        {ATTR_ENTITY_ID: ENTITY_ID, "type": forecast_type},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    ("forecast_type", "mocked_method", "undated"),
+    [
+        ("daily", "forecast_daily", [DailyForecast(date=None)]),
+        ("hourly", "forecast_hourly", [HourlyForecast(time=None)]),
+    ],
+)
+async def test_forecasts_extra_without_a_time_is_dropped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_foreca_client: MagicMock,
+    forecast_type: str,
+    mocked_method: str,
+    undated: list[DailyForecast] | list[HourlyForecast],
+) -> None:
+    """Test that a forecast entry without a date or time is left out."""
+    getattr(mock_foreca_client, mocked_method).return_value = undated
+    with patch("homeassistant.components.foreca.PLATFORMS", [Platform.WEATHER]):
+        await init_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECASTS_EXTRA,
+        {ATTR_ENTITY_ID: ENTITY_ID, "type": forecast_type},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {ENTITY_ID: {"forecast": []}}

@@ -1,17 +1,13 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: The integration does not register actions.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: The integration does not register actions.
+  docs-actions: done
   docs-conditions:
     status: exempt
     comment: The integration does not register conditions.
@@ -34,7 +30,7 @@ rules:
   # Silver
   action-exceptions:
     status: exempt
-    comment: The integration does not register actions.
+    comment: The only action reads data already fetched and makes no requests.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
