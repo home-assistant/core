@@ -62,7 +62,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
-from .const import ATTR_MANUFACTURER, DOMAIN
+from .const import ATTR_MANUFACTURER, DOMAIN, MODES_WITH_DAYS, WEEKDAYS
 from .entity import (
     SubscriptionType,
     UnifiEntity,
@@ -78,8 +78,6 @@ from .entity import (
     request_failed_error,
 )
 from .firewall_policy_schedule import (
-    MODES_WITH_DAYS,
-    WEEKDAYS,
     async_save_schedule,
     policy_schedule,
     raise_setting_unused,

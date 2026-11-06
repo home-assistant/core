@@ -79,6 +79,8 @@ DEVICE_STATES = {
     DeviceState.ISOLATED: "isolated",
 }
 
+WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
+
 MODES_WITH_DAYS = (
     FirewallPolicyScheduleMode.EVERY_WEEK,
     FirewallPolicyScheduleMode.CUSTOM,

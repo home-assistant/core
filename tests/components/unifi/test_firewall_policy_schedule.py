@@ -246,9 +246,9 @@ CUSTOM = {
                 "time_range_end": "06:00",
             },
         ),
-        # All day off doesn't send back a malformed time left in the schedule.
+        # All day off doesn't bring back times left in the schedule.
         (
-            {**WEEKLY_ALL_DAY, "time_range_start": "bad"},
+            {**WEEKLY_ALL_DAY, "time_range_start": "21:00", "time_range_end": "08:00"},
             {"all_day": False},
             {
                 "mode": "EVERY_WEEK",
