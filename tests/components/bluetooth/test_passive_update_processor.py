@@ -2007,6 +2007,53 @@ def test_restore_data_device_info_round_trip() -> None:
     assert restored.devices == devices
 
 
+async def test_plain_device_info_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a plain device info is converted, and reported once."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    @callback
+    def _mock_update_method(service_info: BluetoothServiceInfo) -> dict[str, str]:
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(data: dict[str, str]) -> PassiveBluetoothDataUpdate:
+        return PassiveBluetoothDataUpdate(
+            devices={None: {"name": "Plain", "not_a_field": "ignored"}}
+        )
+
+    token = current_entry.set(MockConfigEntry(domain=DOMAIN))
+    coordinator = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
+    )
+    current_entry.reset(token)
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
+    unregister_processor = coordinator.async_register_processor(processor)
+    cancel_coordinator = coordinator.async_start()
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
+
+    assert processor.devices[None] == DeviceInfo(name="Plain")
+    assert isinstance(processor.devices[None], DeviceInfo)
+    assert (
+        caplog.text.count(
+            "Detected that integration 'bluetooth' passes a plain dict as a device"
+            " info in a PassiveBluetoothDataUpdate instead of a DeviceInfo. This will"
+            " stop working in Home Assistant 2027.12"
+        )
+        == 1
+    )
+
+    unregister_processor()
+    cancel_coordinator()
+
+
 def test_update_stores_equal_device_info() -> None:
     """Test an equal incoming device info replaces the stored one, without a change.
 
