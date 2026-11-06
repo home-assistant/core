@@ -2,7 +2,14 @@
 
 from unittest.mock import AsyncMock, patch
 
-from pyclicky import AuthenticationError, ClickyAPIError, ConnectionError
+from aiohttp import ClientError
+from pyclicky import (
+    AuthenticationError,
+    ClickyAPIError,
+    ConnectionError,
+    InvalidEndpoint,
+    ServiceUnavailable,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -45,19 +52,23 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_error"),
+    ("side_effect", "expected_error", "expected_placeholders"),
     [
-        (AuthenticationError, "invalid_auth"),
-        (ConnectionError, "cannot_connect"),
-        (ClickyAPIError, "unknown"),
-        (Exception, "unknown"),
+        (AuthenticationError(), "invalid_auth", {}),
+        (ConnectionError(), "cannot_connect", {}),
+        (InvalidEndpoint(), "cannot_connect", {}),
+        (ServiceUnavailable(), "cannot_connect", {}),
+        (ClientError(), "cannot_connect", {}),
+        (TimeoutError(), "cannot_connect", {}),
+        (ClickyAPIError("Some API error"), "api_error", {"error": "Some API error"}),
     ],
 )
 async def test_form_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    side_effect: type[Exception],
+    side_effect: Exception,
     expected_error: str,
+    expected_placeholders: dict[str, str],
 ) -> None:
     """Test that errors are shown and the flow can recover."""
     result = await hass.config_entries.flow.async_init(
@@ -80,6 +91,7 @@ async def test_form_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+    assert result["description_placeholders"] == expected_placeholders
     assert len(mock_setup_entry.mock_calls) == 0
 
     with patch(

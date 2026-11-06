@@ -14,7 +14,6 @@ from pyclicky import (
 )
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -34,34 +33,6 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    session = async_get_clientsession(hass)
-    client = ClickyClient(
-        site_id=data[CONF_SITE_ID],
-        sitekey=data[CONF_SITEKEY],
-        session=session,
-    )
-
-    try:
-        await client.visitors_online()
-    except AuthenticationError as error:
-        raise InvalidAuth from error
-    except (
-        ConnectionError,
-        InvalidEndpoint,
-        ServiceUnavailable,
-        ClientError,
-        TimeoutError,
-    ) as error:
-        raise CannotConnect from error
-
-    return {"title": data[CONF_SITE_ID]}
-
-
 class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Clicky Web Analytics."""
 
@@ -76,17 +47,31 @@ class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_SITE_ID: user_input[CONF_SITE_ID]})
+
+            client = ClickyClient(
+                site_id=user_input[CONF_SITE_ID],
+                sitekey=user_input[CONF_SITEKEY],
+                session=async_get_clientsession(self.hass),
+            )
             try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+                await client.visitors_online()
+            except AuthenticationError:
                 errors["base"] = "invalid_auth"
+            except (
+                ConnectionError,
+                InvalidEndpoint,
+                ServiceUnavailable,
+                ClientError,
+                TimeoutError,
+            ):
+                errors["base"] = "cannot_connect"
             except ClickyAPIError as error:
                 errors["base"] = "api_error"
                 description_placeholders["error"] = str(error)
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_SITE_ID], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -94,11 +79,3 @@ class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=description_placeholders,
         )
-
-
-class CannotConnect(Exception):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(Exception):
-    """Error to indicate there is invalid auth."""
