@@ -15,6 +15,7 @@ from aiounifi.interfaces.api_handlers import (
 from aiounifi.models.api import ApiItem
 from aiounifi.models.event import Event, EventKey
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
@@ -71,6 +72,13 @@ def async_port_poe_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
 
 
 @callback
+def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if firewall policy can be controlled."""
+    policy = hub.api.firewall_policies[obj_id]
+    return not policy.predefined and policy.name != ""
+
+
+@callback
 def async_wlan_available_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if WLAN is available."""
     wlan = hub.api.wlans[obj_id]
@@ -115,6 +123,20 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
         connections={(CONNECTION_NETWORK_MAC, obj_id)},
         manufacturer=client.oui,
         name=client.name or client.hostname,
+    )
+
+
+@callback
+def async_unifi_network_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for the UniFi Network application."""
+    unique_id = hub.config.entry.unique_id
+    assert unique_id is not None
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(SWITCH_DOMAIN, unique_id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model="UniFi Network",
+        name="UniFi Network",
     )
 
 
