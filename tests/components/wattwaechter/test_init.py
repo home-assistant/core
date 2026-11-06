@@ -257,7 +257,6 @@ async def test_device_sw_version_follows_firmware(
     )
     assert device is not None
     assert device.sw_version == "1.2.3"
-    assert entry.data[CONF_FW_VERSION] == "1.2.3"
 
     # The device installs a firmware update
     mock_client.system_info.return_value = _system_info_with_version("1.3.0")
@@ -265,9 +264,8 @@ async def test_device_sw_version_follows_firmware(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert device_registry.async_get(device.id).sw_version == "1.3.0"
-    assert entry.data[CONF_FW_VERSION] == "1.3.0"
 
-    # The stored version is kept when the system info is unavailable on reload
+    # The last known version is kept when the system info is unavailable on reload
     mock_client.system_info.side_effect = WattwaechterConnectionError("offline")
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()

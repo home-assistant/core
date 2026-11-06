@@ -64,7 +64,13 @@ class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
             LEGACY_MODEL_IDS.get(model, model) if model else None
         )
         self.mac: str = config_entry.data[CONF_MAC]
-        self.fw_version: str | None = config_entry.data.get(CONF_FW_VERSION)
+        # The entry only stores the version from the initial setup.
+        device = dr.async_get(hass).async_get_device_by_identifier(
+            (DOMAIN, self.device_id), config_entry.entry_id
+        )
+        self.fw_version: str | None = (
+            device.sw_version if device else None
+        ) or config_entry.data.get(CONF_FW_VERSION)
 
         super().__init__(
             hass,
@@ -139,16 +145,8 @@ class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
 
     def _async_update_device_info(self, system: SystemInfo) -> None:
         """Update the registered device after a firmware update, a medium change or late system info."""
-        if (
-            fw_version := system.get_value("esp", "os_version")
-        ) and fw_version != self.fw_version:
-            # Store the new version so the device keeps it on the next setup,
-            # even when the system info cannot be read then.
+        if fw_version := system.get_value("esp", "os_version"):
             self.fw_version = fw_version
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data={**self.config_entry.data, CONF_FW_VERSION: fw_version},
-            )
         model, model_id = self.device_model(system)
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device_by_identifier(
