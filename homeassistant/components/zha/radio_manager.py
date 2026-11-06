@@ -39,6 +39,7 @@ from .const import (
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
     DEFAULT_DATABASE_NAME,
+    DOMAIN,
     EZSP_OVERWRITE_EUI64,
 )
 from .helpers import get_zha_data
@@ -293,9 +294,15 @@ class ZhaRadioManager:
             repairs.async_delete_blocking_issues(self.hass)
             return ProbeResult.RADIO_TYPE_DETECTED
 
+        # Disabled entries are skipped since their linked issues are hidden
+        entries = self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False, include_disabled=False
+        )
+        config_entry_id = entries[0].entry_id if len(entries) == 1 else None
+
         with suppress(repairs.wrong_silabs_firmware.AlreadyRunningEZSP):
             if await repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware(
-                self.hass, self.device_path
+                self.hass, self.device_path, config_entry_id
             ):
                 return ProbeResult.WRONG_FIRMWARE_INSTALLED
 

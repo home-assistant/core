@@ -45,6 +45,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     CONNECTION_NETWORK_MAC,
+    ChildDeviceInfo,
     DeviceInfo,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -142,9 +143,9 @@ def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
         return custom_name
 
     if device.settings["device"]["type"] == MODEL_EM3:
-        return f"{device.name} Phase {get_block_channel(block, 'A')}"
+        return f"Phase {get_block_channel(block, 'A')}"
 
-    return f"{device.name} Channel {get_block_channel(block)}"
+    return f"Channel {get_block_channel(block)}"
 
 
 def is_block_momentary_input(
@@ -447,15 +448,15 @@ def get_rpc_sub_device_name(
     _, component, component_id = get_rpc_key(get_rpc_key_normalized(key))
 
     if component in ("cct", "rgb", "rgbw"):
-        return f"{device.name} {component.upper()} light {component_id}"
+        return f"{component.upper()} light {component_id}"
     if component == "em1":
-        return f"{device.name} Energy Meter {component_id}"
+        return f"Energy Meter {component_id}"
     if component == "em" and emeter_phase is not None:
-        return f"{device.name} Phase {emeter_phase}"
+        return f"Phase {emeter_phase}"
     if component == "switch":
-        return f"{device.name} Output {component_id}"
+        return f"Output {component_id}"
 
-    return f"{device.name} {component.title()} {component_id}"
+    return f"{component.title()} {component_id}"
 
 
 def get_device_entry_gen(entry: ConfigEntry) -> int:
@@ -821,13 +822,9 @@ def get_rpc_device_info(
     config_entry_id: str,
     device: RpcDevice,
     mac: str,
-    configuration_url: str,
-    model: str,
-    model_name: str | None = None,
     key: str | None = None,
     emeter_phase: str | None = None,
-    suggested_area: str | None = None,
-) -> DeviceInfo:
+) -> DeviceInfo | ChildDeviceInfo:
     """Return device info for RPC device."""
     if key is None:
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
@@ -836,17 +833,12 @@ def get_rpc_device_info(
     has_id, component, _ = get_rpc_key(key)
 
     if emeter_phase is not None:
-        return DeviceInfo(
+        return ChildDeviceInfo(
             identifiers={(DOMAIN, f"{mac}-{key}-{emeter_phase.lower()}")},
             name=get_rpc_sub_device_name(device, key, emeter_phase),
-            manufacturer="Shelly",
-            model=model_name,
-            model_id=model,
-            suggested_area=suggested_area,
-            via_device_id=dr.async_get_device_id_by_identifier(
+            parent_device_id=dr.async_get_device_id_by_identifier(
                 hass, (DOMAIN, mac), config_entry_id=config_entry_id
             ),
-            configuration_url=configuration_url,
         )
 
     if (
@@ -859,17 +851,12 @@ def get_rpc_device_info(
     ):
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
 
-    return DeviceInfo(
+    return ChildDeviceInfo(
         identifiers={(DOMAIN, f"{mac}-{key}")},
         name=get_rpc_sub_device_name(device, key),
-        manufacturer="Shelly",
-        model=model_name,
-        model_id=model,
-        suggested_area=suggested_area,
-        via_device_id=dr.async_get_device_id_by_identifier(
+        parent_device_id=dr.async_get_device_id_by_identifier(
             hass, (DOMAIN, mac), config_entry_id=config_entry_id
         ),
-        configuration_url=configuration_url,
     )
 
 
@@ -903,16 +890,16 @@ def get_ir_device_info(
     device: RpcDevice,
     mac: str,
     key: str,
-) -> DeviceInfo:
+) -> ChildDeviceInfo:
     """Return device info for IR code sub-device."""
     device_id = device.config[key]["device_id"]
     ir_device_key = f"irdevice:{device_id}"
     name = device.config[ir_device_key].get("name") or f"IR Device {device_id}"
 
-    return DeviceInfo(
+    return ChildDeviceInfo(
         identifiers={(DOMAIN, f"{mac}-{ir_device_key}")},
         name=name,
-        via_device_id=dr.async_get_device_id_by_identifier(
+        parent_device_id=dr.async_get_device_id_by_identifier(
             hass, (DOMAIN, mac), config_entry_id=config_entry_id
         ),
     )
@@ -932,12 +919,8 @@ def get_block_device_info(
     config_entry_id: str,
     device: BlockDevice,
     mac: str,
-    configuration_url: str,
-    model: str,
-    model_name: str | None = None,
     block: Block | None = None,
-    suggested_area: str | None = None,
-) -> DeviceInfo:
+) -> DeviceInfo | ChildDeviceInfo:
     """Return device info for Block device."""
     if is_block_single_device(device, block) or (
         block is not None and get_block_number_of_channels(device, block) < 2
@@ -947,17 +930,12 @@ def get_block_device_info(
     if TYPE_CHECKING:
         assert block
 
-    return DeviceInfo(
+    return ChildDeviceInfo(
         identifiers={(DOMAIN, f"{mac}-{block.description}")},
         name=get_block_sub_device_name(device, block),
-        manufacturer="Shelly",
-        model=model_name,
-        model_id=model,
-        suggested_area=suggested_area,
-        via_device_id=dr.async_get_device_id_by_identifier(
+        parent_device_id=dr.async_get_device_id_by_identifier(
             hass, (DOMAIN, mac), config_entry_id=config_entry_id
         ),
-        configuration_url=configuration_url,
     )
 
 
@@ -999,13 +977,14 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     dev_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
 
-    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+    devices: list[dr.AnyDeviceEntry] = [
+        device
+        for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+        if device.via_device_id
+    ]
+    devices.extend(dr.async_child_entries_for_config_entry(dev_reg, entry.entry_id))
 
     for device in devices:
-        if not device.via_device_id:
-            # Device is not a sub-device, skip
-            continue
-
         if er.async_entries_for_device(entity_reg, device.id, True):
             # Device has entities, skip
             continue

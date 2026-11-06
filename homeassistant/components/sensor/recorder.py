@@ -37,7 +37,7 @@ from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity import entity_sources
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -402,7 +402,7 @@ def _normalize_states(
 
     valid_fstates: list[tuple[float, State]] = []
     convert: Callable[[float | None], float | None] | None = None
-    last_unit: str | UndefinedType | None = UNDEFINED
+    last_unit: str | Undefined | None = Undefined
     valid_units = converter.VALID_UNITS
 
     for fstate, state in fstates:
