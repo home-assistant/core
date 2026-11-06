@@ -6,6 +6,7 @@ import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -208,15 +209,16 @@ async def async_attach_trigger(
         CONF_SUBTYPE: config[CONF_SUBTYPE],
     }
 
+    event_config = event_trigger.TRIGGER_SCHEMA(
+        {
+            EventTriggerArgument.PLATFORM: CONF_EVENT,
+            EventTriggerArgument.EVENT_TYPE: EVENT_EASYWAVE,
+            EventTriggerArgument.EVENT_DATA: event_data,
+        }
+    )
     return await event_trigger.async_attach_trigger(
         hass,
-        event_trigger.TRIGGER_SCHEMA(
-            {
-                event_trigger.CONF_PLATFORM: CONF_EVENT,
-                event_trigger.CONF_EVENT_TYPE: EVENT_EASYWAVE,
-                event_trigger.CONF_EVENT_DATA: event_data,
-            }
-        ),
+        event_config,
         action,
         trigger_info,
         platform_type="device",
