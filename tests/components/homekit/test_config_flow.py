@@ -18,7 +18,7 @@ from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component
 
@@ -492,6 +492,59 @@ async def test_options_flow_devices(
 
         await hass.async_block_till_done()
         await hass.config_entries.async_unload(config_entry.entry_id)
+
+
+async def test_options_flow_devices_prefer_name_by_user(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the device picker shows the user assigned device name."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={"filter": {"include_domains": ["fan"]}},
+    )
+    config_entry.add_to_hass(hass)
+
+    device_config_entry = MockConfigEntry(domain="test")
+    device_config_entry.add_to_hass(hass)
+    renamed = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "renamed")},
+        name="Remote",
+    )
+    renamed = device_registry.async_update_device(
+        renamed.id, name_by_user="Bedroom Remote"
+    )
+    default = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "default")},
+        name="Kitchen Remote",
+    )
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"domains": ["fan"], "include_exclude_mode": "exclude"},
+    )
+    assert result["step_id"] == "exclude"
+
+    with patch(
+        "homeassistant.components.homekit.config_flow.device_automation.async_get_device_automations",
+        return_value={renamed.id: [], default.id: []},
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={"entities": []},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bridged_device_triggers"
+    devices_selector = result["data_schema"].schema["devices"]
+    assert devices_selector.options == {
+        renamed.id: "Bedroom Remote",
+        default.id: "Kitchen Remote",
+    }
 
 
 async def test_options_flow_include_mode_with_non_existant_entity(
