@@ -80,5 +80,4 @@ rules:
   async-dependency: todo
   inject-websession: done
   strict-typing:
-    status: todo
-    comment: The integration itself is strictly typed, but the SDM API library does not include a py.typed file or other strict typing signifier.
+    status: done
