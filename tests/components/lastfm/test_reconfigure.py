@@ -863,6 +863,204 @@ async def test_reconfigure_overlapping_submissions_restart_polling(
             await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("polling_ticks", "expected_exchanges"),
+    [
+        pytest.param((60,), 1, id="one-poll"),
+        pytest.param((), 0, id="abort-before-poll"),
+    ],
+)
+async def test_reconfigure_submit_during_polling_cancellation(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    polling_ticks: tuple[int, ...],
+    expected_exchanges: int,
+) -> None:
+    """Submit during replacement must not create duplicate polling loops."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    first_user = BlockingAccountUser()
+    second_user = BlockingAccountUser()
+    second_started = asyncio.Event()
+    polling_started = asyncio.Event()
+    submissions: list[asyncio.Task[ConfigFlowResult]] = []
+    generator = MockSessionKeyGenerator()
+
+    async def submit_second() -> ConfigFlowResult:
+        """Queue replacement credentials before the first submission advances."""
+        second_started.set()
+        return await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=RECONFIGURE_DATA
+        )
+
+    async def interrupted_sleep(delay: float) -> None:
+        """Submit while the cancelled polling loop is unwinding."""
+        polling_started.set()
+        try:
+            await asyncio.sleep(delay)
+        finally:
+            mock_asyncio.sleep.side_effect = asyncio.sleep
+            submissions.append(
+                hass.async_create_task(
+                    hass.config_entries.flow.async_configure(result["flow_id"])
+                )
+            )
+
+    with (
+        patch("pylast.User", side_effect=[first_user, second_user]),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=generator),
+        patch.object(
+            generator,
+            "get_web_auth_session_key_username",
+            side_effect=WSError("network", "14", "Token not authorized"),
+        ) as exchange_session,
+        patch(POLLING_INTERVAL_PATH, 60),
+        patch(f"{FLOW_MODULE}.MAX_POLLING_ATTEMPTS", 1),
+        patch(
+            f"{FLOW_MODULE}.asyncio",
+            wraps=asyncio,
+            CancelledError=asyncio.CancelledError,
+        ) as mock_asyncio,
+    ):
+        mock_asyncio.sleep.side_effect = interrupted_sleep
+        submissions.append(
+            hass.async_create_task(
+                hass.config_entries.flow.async_configure(
+                    result["flow_id"], user_input=RECONFIGURE_DATA
+                )
+            )
+        )
+        try:
+            assert await hass.async_add_executor_job(
+                first_user.validation_started.wait, 5
+            )
+            submissions.append(hass.async_create_task(submit_second()))
+            await second_started.wait()
+            first_user.validation_release.set()
+            first_result = await submissions[0]
+            assert first_result["type"] is FlowResultType.EXTERNAL_STEP
+            await polling_started.wait()
+            assert await hass.async_add_executor_job(
+                second_user.validation_started.wait, 5
+            )
+            second_user.validation_release.set()
+            second_result = await submissions[1]
+            assert second_result["type"] is FlowResultType.EXTERNAL_STEP
+            submit_result = await submissions[2]
+            assert submit_result["type"] is FlowResultType.EXTERNAL_STEP
+            await hass.async_block_till_done()
+
+            calls_before_polling = exchange_session.call_count
+            for seconds in polling_ticks:
+                async_fire_time_changed(
+                    hass, dt_util.utcnow() + timedelta(seconds=seconds)
+                )
+                await hass.async_block_till_done(wait_background_tasks=True)
+            assert (
+                exchange_session.call_count == calls_before_polling + expected_exchanges
+            )
+            assert hass.config_entries.flow.async_get(result["flow_id"])["step_id"] == (
+                "auth_url"
+            )
+            assert config_entry.options == CONF_DATA
+            hass.config_entries.flow.async_abort(result["flow_id"])
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+            await hass.async_block_till_done(wait_background_tasks=True)
+            assert (
+                exchange_session.call_count == calls_before_polling + expected_exchanges
+            )
+        finally:
+            mock_asyncio.sleep.side_effect = asyncio.sleep
+            first_user.validation_release.set()
+            second_user.validation_release.set()
+            await asyncio.gather(*submissions, return_exceptions=True)
+            for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN):
+                hass.config_entries.flow.async_abort(flow["flow_id"])
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_reconfigure_credentials_changed_with_queued_submit(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    default_user: MockUser,
+) -> None:
+    """A queued Submit must not exchange a token discarded after credentials change."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    first_user = BlockingAccountUser()
+    replacement_generator = BlockingWebAuthGenerator()
+    second_started = asyncio.Event()
+    submit_started = asyncio.Event()
+    submissions: list[asyncio.Task[ConfigFlowResult]] = []
+    new_options = {**CONF_DATA, CONF_API_KEY: NEW_API_KEY}
+
+    async def submit_second() -> ConfigFlowResult:
+        """Queue reconfiguration before the first authorization starts."""
+        second_started.set()
+        return await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=RECONFIGURE_DATA
+        )
+
+    async def submit_authorization() -> ConfigFlowResult:
+        """Submit while replacement token creation holds the session lock."""
+        submit_started.set()
+        return await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    with (
+        patch("pylast.User", side_effect=[first_user, default_user]),
+        patch(
+            SESSION_KEY_GENERATOR_PATH,
+            side_effect=[MockSessionKeyGenerator(), replacement_generator],
+        ),
+        patch.object(
+            replacement_generator,
+            "get_web_auth_session_key_username",
+            return_value=(NEW_SESSION_KEY, USERNAME_1),
+        ) as exchange_session,
+        patch(POLLING_INTERVAL_PATH, 60),
+    ):
+        submissions.append(
+            hass.async_create_task(
+                hass.config_entries.flow.async_configure(
+                    result["flow_id"], user_input=RECONFIGURE_DATA
+                )
+            )
+        )
+        try:
+            assert await hass.async_add_executor_job(
+                first_user.validation_started.wait, 5
+            )
+            submissions.append(hass.async_create_task(submit_second()))
+            await second_started.wait()
+            first_user.validation_release.set()
+            first_result = await submissions[0]
+            assert first_result["type"] is FlowResultType.EXTERNAL_STEP
+            assert await hass.async_add_executor_job(
+                replacement_generator.authorization_started.wait, 5
+            )
+            submissions.append(hass.async_create_task(submit_authorization()))
+            await submit_started.wait()
+            assert not submissions[2].done()
+            hass.config_entries.async_update_entry(config_entry, options=new_options)
+            replacement_generator.authorization_release.set()
+            second_result = await submissions[1]
+            assert second_result["reason"] == "configuration_changed"
+            with pytest.raises(UnknownFlow):
+                await submissions[2]
+            await hass.async_block_till_done(wait_background_tasks=True)
+            exchange_session.assert_not_called()
+            assert config_entry.options == new_options
+            assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+        finally:
+            first_user.validation_release.set()
+            replacement_generator.authorization_release.set()
+            await asyncio.gather(*submissions, return_exceptions=True)
+            for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN):
+                hass.config_entries.flow.async_abort(flow["flow_id"])
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+
 async def test_reconfigure_overlapping_submission_during_token_creation(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

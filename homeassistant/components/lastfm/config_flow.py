@@ -240,6 +240,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _async_get_session_key(self) -> None:
         """Exchange the token once and record the result."""
         async with self._session_key_lock:
+            self._raise_if_removed()
             if self._authorized_username is not None or self._session_key_error:
                 return
             try:
@@ -252,6 +253,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 self._session_key_error = True
             else:
+                self._raise_if_removed()
                 if session is not None:
                     self._set_session(session)
 
@@ -506,6 +508,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Wait for the user to authorize the application on Last.fm."""
+        self._raise_if_removed()
         if (
             not self._session_key_error
             and self._authorized_username is None
@@ -579,11 +582,15 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 await asyncio.sleep(POLLING_INTERVAL)
                 await self._async_get_session_key()
                 if self._session_key_error or self._authorized_username is not None:
-                    self._polling_task = None
+                    if self._polling_task is asyncio.current_task():
+                        self._polling_task = None
                     self.hass.async_create_task(self._async_advance_flow())
                     return
+        except UnknownFlow:
+            return
         finally:
-            self._polling_task = None
+            if self._polling_task is asyncio.current_task():
+                self._polling_task = None
 
     async def _async_advance_flow(self) -> None:
         """Advance the flow after a terminal polling outcome.

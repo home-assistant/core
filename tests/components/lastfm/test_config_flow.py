@@ -21,7 +21,7 @@ from homeassistant.components.lastfm.const import (
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 from homeassistant.util import dt as dt_util
 
 from . import (
@@ -764,6 +764,67 @@ async def test_flow_abort_cancels_session_key_polling(
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
         await hass.async_block_till_done(wait_background_tasks=True)
         session_exchange.assert_not_called()
+
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def test_flow_abort_prevents_queued_submit_session_exchange(
+    hass: HomeAssistant, default_user: MockUser
+) -> None:
+    """Test a queued Submit does not exchange a session after the flow is aborted."""
+    session_key_generator = MockSessionKeyGenerator()
+    exchange_started = asyncio.Event()
+    exchange_release = Event()
+    submit_started = asyncio.Event()
+    submissions: list[asyncio.Task[ConfigFlowResult]] = []
+
+    def blocked_exchange(url: str, token: str = "") -> tuple[str, str]:
+        """Wait for the flow to be aborted before returning a retryable error."""
+        hass.loop.call_soon_threadsafe(exchange_started.set)
+        assert exchange_release.wait(5)
+        raise WSError("network", "16", "Service unavailable")
+
+    async def queued_submit() -> ConfigFlowResult:
+        """Signal when the second Submit starts."""
+        submit_started.set()
+        return await hass.config_entries.flow.async_configure(flow_id)
+
+    with (
+        patch("pylast.User", return_value=default_user),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=session_key_generator),
+        patch.object(
+            session_key_generator,
+            "get_web_auth_session_key_username",
+            side_effect=blocked_exchange,
+        ) as session_exchange,
+        patch(POLLING_INTERVAL_PATH, 60),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        flow_id = result["flow_id"]
+        submissions.append(
+            hass.async_create_task(hass.config_entries.flow.async_configure(flow_id))
+        )
+        try:
+            await exchange_started.wait()
+            submissions.append(hass.async_create_task(queued_submit()))
+            await submit_started.wait()
+            assert not submissions[1].done()
+            session_exchange.assert_called_once_with(AUTH_URL)
+            hass.config_entries.flow.async_abort(flow_id)
+        finally:
+            exchange_release.set()
+            results = await asyncio.gather(*submissions, return_exceptions=True)
+            await hass.async_block_till_done()
+
+        assert isinstance(results[0], UnknownFlow)
+        assert isinstance(results[1], UnknownFlow)
+        session_exchange.assert_called_once_with(AUTH_URL)
 
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
