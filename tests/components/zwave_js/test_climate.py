@@ -506,6 +506,50 @@ async def test_setpoint_thermostat_fahrenheit_range_rounding(
     assert args["value"] == 78.5
 
 
+@pytest.mark.parametrize(
+    ("setpoint_limit", "requested_temperature"),
+    [
+        pytest.param({"min": 60.2}, 60.2, id="min"),
+        pytest.param({"max": 85.3}, 85.3, id="max"),
+    ],
+)
+async def test_setpoint_thermostat_fahrenheit_rounding_clamped(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_radio_thermostat_ct100_plus: Node,
+    integration: MockConfigEntry,
+    setpoint_limit: dict[str, float],
+    requested_temperature: float,
+) -> None:
+    """Test a rounded setpoint is clamped to the device's setpoint range."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    # A limit off the half-degree grid makes rounding push a valid request out of range.
+    climate_radio_thermostat_ct100_plus.values[
+        "13-67-1-setpoint-1"
+    ].metadata.data.update(setpoint_limit)
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ATTR_TEMPERATURE: requested_temperature,
+        },
+        blocking=True,
+    )
+
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["valueId"] == {
+        "commandClass": 67,
+        "endpoint": 1,
+        "property": "setpoint",
+        "propertyKey": 1,
+    }
+    assert args["value"] == requested_temperature
+
+
 async def test_setpoint_thermostat_celsius_not_rounded(
     hass: HomeAssistant,
     client: MagicMock,
