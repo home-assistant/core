@@ -32,21 +32,10 @@ def format_track(track: Track | None) -> str | None:
     return f"{track.artist} - {track.title}"
 
 
-def get_lastfm_error(error: PyLastError) -> WSError | None:
-    """Return the API error pylast hid when re-raising it as a PyLastError."""
-    # See upstream issue: https://github.com/pylast/pylast/issues/543
-    if isinstance(error, WSError):
-        return error
-    cause = error.__cause__
-    if isinstance(cause, WSError):
-        return cause
-    return None
-
-
 def format_lastfm_error(error: PyLastError) -> str:
     """Format a pylast error without including client credentials."""
-    if (ws_error := get_lastfm_error(error)) is not None:
-        return f"{ws_error.status}: {ws_error.details}"
+    if isinstance(error, WSError):
+        return f"{error.status}: {error.details}"
     return str(error)
 
 
@@ -85,11 +74,10 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
 
     def _raise_if_auth_failed(self, error: PyLastError) -> None:
         """Raise when Last.fm rejects the stored session key."""
-        ws_error = get_lastfm_error(error)
         if (
             self.config_entry.options.get(CONF_SESSION_KEY)
-            and ws_error is not None
-            and ws_error.status == ERROR_CODE_INVALID_SESSION_KEY
+            and isinstance(error, WSError)
+            and error.status == ERROR_CODE_INVALID_SESSION_KEY
         ):
             raise ConfigEntryAuthFailed from error
 
@@ -110,7 +98,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
     def _get_user_data(self, username: str) -> LastFMUserData | None:
         user = self._client.get_user(username)
         try:
-            play_count = user.get_playcount()
+            play_count = int(user.get_playcount())
             image = user.get_image()
             top_tracks = user.get_top_tracks(limit=1)
         except PyLastError as exc:
@@ -129,8 +117,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             last_tracks = user.get_recent_tracks(limit=1)
         except PyLastError as exc:
             self._raise_if_auth_failed(exc)
-            error = get_lastfm_error(exc)
-            if error is None or error.status != ERROR_CODE_LOGIN_REQUIRED:
+            if not isinstance(exc, WSError) or exc.status != ERROR_CODE_LOGIN_REQUIRED:
                 if self.last_update_success:
                     LOGGER.error(
                         "LastFM update for %s failed: %s",

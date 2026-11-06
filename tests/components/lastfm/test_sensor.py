@@ -199,6 +199,10 @@ async def test_reconfigure_unlocks_hidden_listening_information(
             MockUser(thrown_error=PyLastError("Something strange")),
             id="plain_library_error",
         ),
+        pytest.param(
+            MockUser(recent_tracks_error=PyLastError("Something strange")),
+            id="recent_tracks_library_error",
+        ),
     ],
 )
 async def test_error_log_does_not_include_credentials(

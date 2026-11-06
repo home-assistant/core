@@ -50,7 +50,7 @@ from .const import (
     MAX_POLLING_ATTEMPTS,
     POLLING_INTERVAL,
 )
-from .coordinator import LastFMConfigEntry, get_lastfm_error
+from .coordinator import LastFMConfigEntry
 
 PLACEHOLDERS = {
     "api_account_url": "https://www.last.fm/api/account/create",
@@ -96,20 +96,20 @@ def get_lastfm_user(
         user.get_playcount()
         if check_recent_tracks:
             user.get_recent_tracks(limit=1)
-    except PyLastError as error:
-        ws_error = get_lastfm_error(error)
-        if ws_error is not None and ws_error.status == ERROR_CODE_LOGIN_REQUIRED:
+    except WSError as error:
+        if error.status == ERROR_CODE_LOGIN_REQUIRED:
             errors["base"] = "hidden_recent_tracks"
-        elif ws_error is not None and ws_error.details == "User not found":
+        elif error.details == "User not found":
             errors["base"] = "invalid_account"
         elif (
-            ws_error is not None
-            and ws_error.details
+            error.details
             == "Invalid API key - You must be granted a valid key by last.fm"
         ):
             errors["base"] = "invalid_auth"
         else:
             errors["base"] = "unknown"
+    except PyLastError:
+        errors["base"] = "unknown"
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
@@ -159,13 +159,10 @@ def get_session_key(
     """Exchange the web auth token for a session key and username."""
     try:
         return session_key_generator.get_web_auth_session_key_username(auth_url)
-    except PyLastError as error:
-        ws_error = get_lastfm_error(error)
-        if (
-            ws_error is not None
-            and str(ws_error.status)
-            in {ERROR_CODE_TOKEN_UNAUTHORIZED, *ERROR_CODES_RETRYABLE}
-        ) or isinstance(error, (MalformedResponseError, NetworkError)):
+    except MalformedResponseError, NetworkError:
+        return None
+    except WSError as error:
+        if str(error.status) in {ERROR_CODE_TOKEN_UNAUTHORIZED, *ERROR_CODES_RETRYABLE}:
             return None
         raise
 

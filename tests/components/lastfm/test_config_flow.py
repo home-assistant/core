@@ -5,7 +5,7 @@ from datetime import timedelta
 from threading import Event
 from unittest.mock import MagicMock, call, patch
 
-from pylast import MalformedResponseError, NetworkError, WSError
+from pylast import MalformedResponseError, NetworkError, PyLastError, WSError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -404,6 +404,7 @@ async def test_flow_restarts_polling_after_timeout(
     "error",
     [
         pytest.param(WSError("network", "15", "Token expired"), id="expired_token"),
+        pytest.param(PyLastError("Library failure"), id="library_error"),
         pytest.param(Exception(), id="unexpected_error"),
     ],
 )
@@ -965,6 +966,10 @@ async def test_flow_web_auth_fails(
             id="temporarily_unavailable",
         ),
         pytest.param(
+            WSError("network", 503, "Service unavailable"),
+            id="http_service_unavailable",
+        ),
+        pytest.param(
             NetworkError("network", Exception()),
             id="network_error",
         ),
@@ -1032,6 +1037,7 @@ async def test_flow_waits_for_authorization(
             "invalid_auth",
         ),
         (WSError("network", "status", "User not found"), "invalid_account"),
+        pytest.param(PyLastError("Library failure"), "unknown", id="library_error"),
         (Exception(), "unknown"),
         (WSError("network", "status", "Something strange"), "unknown"),
     ],
