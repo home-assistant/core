@@ -13,7 +13,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('zonneplan', '00000000-0000-4000-8000-000000000201')]>,
     'disabled_by': None,

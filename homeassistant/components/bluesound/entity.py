@@ -1,7 +1,13 @@
 """Shared entity base for Bluesound integration."""
 
-from pyblu import Player, SyncStatus
+from collections.abc import Callable, Coroutine
+from functools import wraps
+from typing import Any, Concatenate
 
+from pyblu import Player, SyncStatus
+from pyblu.errors import PlayerError, PlayerUnreachableError
+
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -13,6 +19,33 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DEFAULT_PORT, DOMAIN
 from .coordinator import BluesoundCoordinator
 from .utils import format_unique_id
+
+
+def bluesound_exception_handler[_BluesoundEntityT: BluesoundEntity, **_P](
+    func: Callable[Concatenate[_BluesoundEntityT, _P], Coroutine[Any, Any, None]],
+) -> Callable[Concatenate[_BluesoundEntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate Bluesound actions to raise player errors as HomeAssistantError."""
+
+    @wraps(func)
+    async def handler(
+        self: _BluesoundEntityT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except PlayerUnreachableError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="player_unreachable",
+                translation_placeholders={"error": str(error)},
+            ) from error
+        except PlayerError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected_response",
+                translation_placeholders={"error": str(error)},
+            ) from error
+
+    return handler
 
 
 class BluesoundEntity(CoordinatorEntity[BluesoundCoordinator]):

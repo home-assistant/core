@@ -4,6 +4,7 @@
   "categories": ["health_wellbeing"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials", "http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/google_health",
   "integration_type": "service",

@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -142,9 +142,8 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             discovery_info.vid,
             discovery_info.pid,
         )
-        self._set_confirm_only()
         self.context["title_placeholders"] = {
-            CONF_NAME: f"Insteon PLM {self._device_name}"
+            "name": f"Insteon PLM {self._device_name}"
         }
         await self.async_set_unique_id(DEFAULT_DISCOVERY_UNIQUE_ID)
         return await self.async_step_confirm_usb()
@@ -158,7 +157,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm_usb",
-            description_placeholders={CONF_NAME: self._device_name},
+            description_placeholders={"name": self._device_name},
         )
 
     @override
@@ -168,7 +167,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a DHCP discovery."""
         self.discovered_conf = {CONF_HOST: discovery_info.ip}
         self.context["title_placeholders"] = {
-            CONF_NAME: f"Insteon Hub {discovery_info.ip}"
+            "name": f"Insteon Hub {discovery_info.ip}"
         }
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         return await self.async_step_user()

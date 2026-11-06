@@ -22,6 +22,7 @@ def _mock_routes_response() -> dict[str, Any]:
             {
                 "distanceMeters": 21300,
                 "duration": "1620s",
+                "staticDuration": "1560s",
                 "localizedValues": {
                     "distance": {"text": "21.3 km"},
                     "duration": {"text": "27 mins"},
@@ -82,6 +83,7 @@ async def test_service_referrer_sent_to_api(
             {
                 "duration": 1620,
                 "duration_text": "27 mins",
+                "static_duration": 1560,
                 "static_duration_text": "26 mins",
                 "distance_meters": 21300,
                 "distance_text": "21.3 km",
@@ -101,7 +103,7 @@ async def test_service_referrer_sent_to_api(
     assert headers["X-Goog-Api-Key"] == "api_key"
     assert (
         headers["X-Goog-FieldMask"]
-        == "routes.duration,routes.distanceMeters,routes.localizedValues"
+        == "routes.duration,routes.staticDuration,routes.distanceMeters,routes.localizedValues"
     )
 
 

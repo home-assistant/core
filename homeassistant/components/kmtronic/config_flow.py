@@ -8,18 +8,14 @@ import probatio
 from pykmtronic.auth import Auth
 from pykmtronic.hub import KMTronicHubAPI
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_REVERSE, DOMAIN
+from .coordinator import KMTronicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +58,7 @@ class KmtronicConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: KMTronicConfigEntry,
     ) -> KMTronicOptionsFlow:
         """Get the options flow for this handler."""
         return KMTronicOptionsFlow()
@@ -76,8 +72,6 @@ class KmtronicConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-
-                return self.async_create_entry(title=info["host"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -85,6 +79,8 @@ class KmtronicConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=info["host"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
