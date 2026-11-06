@@ -184,6 +184,12 @@ async def test_poll_during_write_keeps_written_state(
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
+    mock_account_states.return_value = {CAMERA_ID: CameraAccountStates(False, None)}
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
 
 async def test_camera_removed_during_write(
     hass: HomeAssistant,
