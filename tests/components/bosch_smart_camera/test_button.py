@@ -101,14 +101,16 @@ async def test_restart_failure(
 async def test_restart_auth_error(
     hass: HomeAssistant, enabled_entry: MockConfigEntry, mock_soft_reset: AsyncMock
 ) -> None:
-    """Test a rejected token raises without starting an unsupported reauth flow."""
+    """Test a rejected token raises and starts the reauthentication flow."""
     mock_soft_reset.side_effect = BoschCameraAuthError("rejected", status=401)
 
     with pytest.raises(HomeAssistantError, match="sign in again"):
         await _press(hass)
     await hass.async_block_till_done()
 
-    assert not hass.config_entries.flow.async_progress()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
 
 
 @pytest.mark.usefixtures("enabled_entry")
