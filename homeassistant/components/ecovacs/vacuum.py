@@ -29,8 +29,8 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from . import EcovacsConfigEntry
 from .const import DOMAIN
+from .controller import EcovacsConfigEntry
 from .entity import EcovacsEntity, EcovacsLegacyEntity
 from .util import get_name_key
 
