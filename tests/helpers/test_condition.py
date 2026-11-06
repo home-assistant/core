@@ -40,7 +40,9 @@ from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.const import (
     ATTR_AREA_ID,
+    ATTR_DEVICE_CLASS,
     ATTR_LABEL_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -55,7 +57,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
-    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
@@ -1278,17 +1279,17 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "sensor.am",
         "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
-        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     hass.states.async_set(
         "sensor.pm",
         "2020-06-01 01:00:00.000000+00:00",  # 6 pm local time
-        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
     hass.states.async_set(
         "sensor.uptime_am",
         "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
-        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.UPTIME},
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.UPTIME},
     )
     hass.states.async_set(
         "sensor.no_device_class",
@@ -1297,7 +1298,7 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "sensor.invalid_timestamp",
         "This is not a timestamp",
-        {EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
+        {ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
     )
 
     with patch(
@@ -3614,7 +3615,7 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
 ) -> None:
     """Test numerical condition with attribute value_source skips entity unit check.
 
-    When value_source is set, the entity itself may not have EntityStateAttribute.UNIT_OF_MEASUREMENT
+    When value_source is set, the entity itself may not have ATTR_UNIT_OF_MEASUREMENT
     (e.g., climate target humidity). The valid_unit check should only apply to
     state-based entities, not attribute-based ones.
     """
@@ -3626,7 +3627,7 @@ async def test_numerical_condition_attribute_value_source_skips_unit_check(
         valid_unit="%",
     )
 
-    # Entity has no unit_of_measurement but has the attribute value
+    # Entity has no ATTR_UNIT_OF_MEASUREMENT but has the attribute value
     # The unit check should be skipped for attribute-based value sources
     hass.states.async_set("test.entity_1", "auto", {"humidity": 75})
     assert test.async_check() is True
@@ -3665,9 +3666,7 @@ async def test_numerical_condition_valid_unit(
         valid_unit=valid_unit,
     )
 
-    attrs = (
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: entity_unit} if entity_unit else {}
-    )
+    attrs = {ATTR_UNIT_OF_MEASUREMENT: entity_unit} if entity_unit else {}
     hass.states.async_set("test.entity_1", "75", attrs)
     assert test.async_check() is expected
 
@@ -3935,7 +3934,7 @@ async def test_numerical_condition_with_unit_thresholds(
     hass.states.async_set(
         "test.entity_1",
         state_value,
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is expected
 
@@ -3957,12 +3956,12 @@ async def test_numerical_condition_with_unit_entity_reference(
     hass.states.async_set(
         "test.entity_1",
         "25",
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     hass.states.async_set(
         "sensor.temp_limit",
         "75",
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     assert test.async_check() is True
 
@@ -3970,7 +3969,7 @@ async def test_numerical_condition_with_unit_entity_reference(
     hass.states.async_set(
         "test.entity_1",
         "20",
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is False
 
@@ -3990,13 +3989,13 @@ async def test_numerical_condition_with_unit_entity_reference_incompatible_unit(
     hass.states.async_set(
         "test.entity_1",
         "25",
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     # "%" is not a temperature unit → conversion fails → condition false
     hass.states.async_set(
         "sensor.bad_limit",
         "75",
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: "%"},
+        {ATTR_UNIT_OF_MEASUREMENT: "%"},
     )
     assert test.async_check() is False
 
@@ -4020,7 +4019,7 @@ async def test_numerical_condition_with_unit_tracked_value_conversion(
     hass.states.async_set(
         "test.entity_1",
         "80",
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     assert test.async_check() is True
 
@@ -4028,7 +4027,7 @@ async def test_numerical_condition_with_unit_tracked_value_conversion(
     hass.states.async_set(
         "test.entity_1",
         "50",
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     assert test.async_check() is False
 
@@ -4057,7 +4056,7 @@ async def test_numerical_condition_with_unit_attribute_value_source(
         "on",
         {
             "temperature": 25,
-            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     assert test.async_check() is True
@@ -4068,7 +4067,7 @@ async def test_numerical_condition_with_unit_attribute_value_source(
         "on",
         {
             "temperature": 20,
-            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     assert test.async_check() is False
@@ -4215,7 +4214,7 @@ async def test_numerical_condition_with_unit_invalid_state(
     hass.states.async_set(
         "test.entity_1",
         state_value,
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is False
 
@@ -4235,7 +4234,7 @@ async def test_numerical_condition_with_unit_missing_entity_reference(
     hass.states.async_set(
         "test.entity_1",
         "25",
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is False
 
@@ -4269,12 +4268,12 @@ async def test_numerical_condition_with_unit_behavior(
     hass.states.async_set(
         "test.entity_1",
         "75",
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     hass.states.async_set(
         "test.entity_2",
         "80",
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is True
 
@@ -4282,7 +4281,7 @@ async def test_numerical_condition_with_unit_behavior(
     hass.states.async_set(
         "test.entity_2",
         "25",
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is one_match_expected
 
@@ -4290,7 +4289,7 @@ async def test_numerical_condition_with_unit_behavior(
     hass.states.async_set(
         "test.entity_1",
         "25",
-        {EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     assert test.async_check() is False
 
@@ -7030,11 +7029,9 @@ async def test_condition_entity_filter_by_device_class(hass: HomeAssistant) -> N
     """Test entity_filter filters by device_class when specified."""
     cond = _make_condition(hass, {"sensor": DomainSpec(device_class="humidity")})
 
+    hass.states.async_set("sensor.humidity_1", "50", {ATTR_DEVICE_CLASS: "humidity"})
     hass.states.async_set(
-        "sensor.humidity_1", "50", {EntityStateAttribute.DEVICE_CLASS: "humidity"}
-    )
-    hass.states.async_set(
-        "sensor.temperature_1", "22", {EntityStateAttribute.DEVICE_CLASS: "temperature"}
+        "sensor.temperature_1", "22", {ATTR_DEVICE_CLASS: "temperature"}
     )
     hass.states.async_set("sensor.no_class", "10", {})
 
@@ -7067,11 +7064,9 @@ async def test_condition_entity_filter_multiple_domains_with_device_class(
         },
     )
 
+    hass.states.async_set("sensor.humidity", "60", {ATTR_DEVICE_CLASS: "humidity"})
     hass.states.async_set(
-        "sensor.humidity", "60", {EntityStateAttribute.DEVICE_CLASS: "humidity"}
-    )
-    hass.states.async_set(
-        "sensor.temperature", "20", {EntityStateAttribute.DEVICE_CLASS: "temperature"}
+        "sensor.temperature", "20", {ATTR_DEVICE_CLASS: "temperature"}
     )
     hass.states.async_set("climate.hvac", "heat", {})
     hass.states.async_set("weather.home", "sunny", {})
@@ -7096,12 +7091,8 @@ async def test_condition_entity_filter_no_device_class_means_match_all_in_domain
     """Test that DomainSpec without device_class matches all entities in the domain."""
     cond = _make_condition(hass, {"cover": DomainSpec()})
 
-    hass.states.async_set(
-        "cover.door", "open", {EntityStateAttribute.DEVICE_CLASS: "door"}
-    )
-    hass.states.async_set(
-        "cover.garage", "closed", {EntityStateAttribute.DEVICE_CLASS: "garage"}
-    )
+    hass.states.async_set("cover.door", "open", {ATTR_DEVICE_CLASS: "door"})
+    hass.states.async_set("cover.garage", "closed", {ATTR_DEVICE_CLASS: "garage"})
     hass.states.async_set("cover.plain", "open", {})
 
     entities = {"cover.door", "cover.garage", "cover.plain"}

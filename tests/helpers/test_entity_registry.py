@@ -24,10 +24,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     EntityCategory,
-    EntityStateAttribute,
 )
 from homeassistant.core import (
     CoreState,
@@ -8291,8 +8291,7 @@ async def test_migration_1_23(
         entry = registry.async_get(entity_id)
         assert er.async_get_legacy_friendly_name(hass, entry) == friendly_name
         assert (
-            hass.states.get(entity_id).attributes[EntityStateAttribute.FRIENDLY_NAME]
-            == friendly_name
+            hass.states.get(entity_id).attributes[ATTR_FRIENDLY_NAME] == friendly_name
         )
 
     # Check migrated data

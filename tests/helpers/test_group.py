@@ -2,12 +2,7 @@
 
 from pytest_homeassistant.common import MockEntity, MockEntityPlatform
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    EntityCapabilityAttribute,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_GROUP_ENTITIES, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, group
 from homeassistant.helpers.group import (
@@ -313,7 +308,7 @@ async def test_expand_entity_ids_with_generic_group_self_reference(
 
 
 async def test_generic_group_attribute_in_state(hass: HomeAssistant) -> None:
-    """Test group_entities is included in GenericGroup state."""
+    """Test ATTR_GROUP_ENTITIES is included in GenericGroup state."""
     platform = MockEntityPlatform(hass, domain="light", platform_name="test")
 
     ent = MockEntity(entity_id="light.group_with_attrs", unique_id="attrs_test")
@@ -324,11 +319,8 @@ async def test_generic_group_attribute_in_state(hass: HomeAssistant) -> None:
 
     state = hass.states.get("light.group_with_attrs")
     assert state is not None
-    assert EntityCapabilityAttribute.GROUP_ENTITIES in state.attributes
-    assert state.attributes[EntityCapabilityAttribute.GROUP_ENTITIES] == [
-        "light.lamp1",
-        "light.lamp2",
-    ]
+    assert ATTR_GROUP_ENTITIES in state.attributes
+    assert state.attributes[ATTR_GROUP_ENTITIES] == ["light.lamp1", "light.lamp2"]
 
 
 async def test_integration_specific_group_member_entity_ids(
@@ -487,7 +479,7 @@ async def test_integration_specific_group_attribute_in_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test group_entities is included in IntegrationSpecificGroup state."""
+    """Test ATTR_GROUP_ENTITIES is included in IntegrationSpecificGroup state."""
     entity_registry.async_get_or_create(
         "light", "test", "unique_1", suggested_object_id="member1"
     )
@@ -505,8 +497,8 @@ async def test_integration_specific_group_attribute_in_state(
 
     state = hass.states.get("light.int_group_attrs")
     assert state is not None
-    assert EntityCapabilityAttribute.GROUP_ENTITIES in state.attributes
-    assert sorted(state.attributes[EntityCapabilityAttribute.GROUP_ENTITIES]) == [
+    assert ATTR_GROUP_ENTITIES in state.attributes
+    assert sorted(state.attributes[ATTR_GROUP_ENTITIES]) == [
         "light.member1",
         "light.member2",
     ]
