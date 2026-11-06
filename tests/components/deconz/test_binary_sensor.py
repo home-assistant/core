@@ -14,7 +14,7 @@ from homeassistant.components.deconz.const import (
     CONF_MASTER_GATEWAY,
     DOMAIN,
 )
-from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
+from homeassistant.components.deconz.services import DeconzService
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -491,7 +491,7 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     deconz_payload["sensors"]["0"] = sensor
     mock_requests()
 
-    await hass.services.async_call(DOMAIN, SERVICE_DEVICE_REFRESH)
+    await hass.services.async_call(DOMAIN, DeconzService.DEVICE_REFRESH)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1

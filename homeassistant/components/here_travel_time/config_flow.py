@@ -16,7 +16,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -52,6 +51,7 @@ from .const import (
     TRAVEL_MODE_PUBLIC,
     TRAVEL_MODES,
 )
+from .coordinator import HereConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HereConfigEntry,
     ) -> HERETravelTimeOptionsFlow:
         """Get the options flow."""
         return HERETravelTimeOptionsFlow()

@@ -803,7 +803,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             if not self._tunnel_endpoints:
                 errors["base"] = "keyfile_no_tunnel_for_host"
-                description_placeholders = {CONF_HOST: str(host_ia)}
+                description_placeholders = {"host": str(host_ia)}
         else:
             self._tunnel_endpoints = self._keyring.interfaces
 

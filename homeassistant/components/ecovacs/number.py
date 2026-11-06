@@ -21,7 +21,7 @@ from homeassistant.const import DEGREE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import EcovacsConfigEntry
+from .controller import EcovacsConfigEntry
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,

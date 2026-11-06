@@ -4,7 +4,6 @@ import logging
 
 from grandstream_home_api import GDSPhoneAPI, attempt_login, create_device_api_instance
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -40,7 +39,7 @@ def _get_display_model(device_model: str, product_model: str | None) -> str:
 
 
 def _create_device_info(
-    entry: ConfigEntry,
+    entry: GrandstreamConfigEntry,
     unique_id: str,
     device_model: str,
     product_model: str | None,
@@ -63,7 +62,7 @@ def _create_device_info(
     )
 
 
-async def _setup_api(hass: HomeAssistant, entry: ConfigEntry) -> GDSPhoneAPI:
+async def _setup_api(hass: HomeAssistant, entry: GrandstreamConfigEntry) -> GDSPhoneAPI:
     """Set up and initialize API with error handling."""
     host = entry.data[CONF_HOST]
     username = entry.data[CONF_USERNAME]
