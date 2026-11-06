@@ -56,10 +56,6 @@ class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize a new ClickyConfigFlow."""
-        self._data: dict[str, Any] = {}
-
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -67,9 +63,7 @@ class ClickyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step (website name and API credentials)."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._data.update(user_input)
-
-            self._async_abort_entries_match({CONF_SITE_ID: self._data[CONF_SITE_ID]})
+            self._async_abort_entries_match({CONF_SITE_ID: user_input[CONF_SITE_ID]})
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
