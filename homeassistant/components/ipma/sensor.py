@@ -14,13 +14,15 @@ from pyipma.uv import UV
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt as dt_util
 
 from . import IpmaConfigEntry
 from .const import MIN_TIME_BETWEEN_UPDATES
 from .entity import IPMADevice
 
 _LOGGER = logging.getLogger(__name__)
+
+WARNING_SEVERITY = {"green": 0, "yellow": 1, "orange": 2, "red": 3}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -55,13 +57,17 @@ async def async_retrieve_uvi(
 async def async_retrieve_warning(
     location: Location, api: IPMA_API
 ) -> tuple[Any, dict[str, str]]:
-    """Retrieve Warning."""
+    """Retrieve the most severe warning currently in effect."""
     warnings = await location.warnings(api)
-    if len(warnings):
-        return warnings[0].awarenessLevelID, {
-            k: str(v) for k, v in asdict(warnings[0]).items()
-        }
-    return "green", {}
+    if warnings is None:
+        return None, {}
+    # IPMA publishes naive timestamps in UTC
+    now = dt_util.utcnow().replace(tzinfo=None)
+    active = [w for w in warnings if w.startTime <= now < w.endTime]
+    if not active:
+        return "green", {}
+    warning = max(active, key=lambda w: WARNING_SEVERITY[w.awarenessLevelID])
+    return warning.awarenessLevelID, {k: str(v) for k, v in asdict(warning).items()}
 
 
 SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
