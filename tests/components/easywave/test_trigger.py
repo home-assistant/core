@@ -2,6 +2,8 @@
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import group
 from homeassistant.components.easywave.const import (
@@ -10,11 +12,12 @@ from homeassistant.components.easywave.const import (
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_BUTTON_RELEASE,
     EVENT_TYPE_GATEWAY_CONNECTED,
+    SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
 )
 from homeassistant.components.easywave.trigger import TRIGGERS
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.const import CONF_DEVICE_ID, CONF_OPTIONS, CONF_TARGET
+from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES, CONF_OPTIONS, CONF_TARGET
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -27,13 +30,11 @@ from homeassistant.setup import async_setup_component
 from .conftest import (
     MOCK_ENTRY_ID,
     MOCK_TRANSMITTER_DEVICE_ID,
+    _bucket_subentry_data,
     _entry_with_subentries,
     _transmitter_device_record,
     async_setup_easywave_entry,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def _async_setup_entry(
@@ -229,6 +230,84 @@ async def test_easywave_button_press_a_trigger_fires_for_area_target(
 
     assert len(service_calls) == 1
     assert service_calls[0].data["subtype"] == "a"
+
+
+async def test_easywave_button_press_a_trigger_ignores_area_device_whose_entity_left(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """An area trigger skips a transmitter whose state entity was moved out."""
+    excluded_serial = "cc" * 16
+    included = _transmitter_device_record(title="Included")
+    excluded = _transmitter_device_record(title="Excluded", serial=excluded_serial)
+    record = _bucket_subentry_data(
+        subentry_type=SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
+        devices={
+            **included["data"][CONF_DEVICES],
+            **excluded["data"][CONF_DEVICES],
+        },
+    )
+    await async_setup_easywave_entry(hass, _entry_with_subentries(record))
+
+    included_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_TRANSMITTER_DEVICE_ID), MOCK_ENTRY_ID
+    )
+    excluded_id = f"transmitter_{excluded_serial}"
+    excluded_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, excluded_id), MOCK_ENTRY_ID
+    )
+    assert included_device is not None
+    assert excluded_device is not None
+    excluded_entity = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{excluded_id}_last_button"
+    )
+    assert excluded_entity is not None
+
+    area = area_registry.async_get_or_create("living_room")
+    other_area = area_registry.async_get_or_create("kitchen")
+    device_registry.async_update_device(included_device.id, area_id=area.id)
+    device_registry.async_update_device(excluded_device.id, area_id=area.id)
+    entity_registry.async_update_entity(excluded_entity, area_id=other_area.id)
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "trigger": "easywave.button_press_a",
+                    "target": {"area_id": area.id},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        EVENT_EASYWAVE,
+        {
+            "device_id": excluded_device.id,
+            "type": EVENT_TYPE_BUTTON_PRESS,
+            "subtype": "a",
+        },
+    )
+    await hass.async_block_till_done()
+    assert service_calls == []
+
+    hass.bus.async_fire(
+        EVENT_EASYWAVE,
+        {
+            "device_id": included_device.id,
+            "type": EVENT_TYPE_BUTTON_PRESS,
+            "subtype": "a",
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
 
 
 async def test_easywave_button_press_a_trigger_fires_for_group_target(

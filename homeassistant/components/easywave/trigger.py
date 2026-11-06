@@ -74,7 +74,8 @@ class EasywaveEventTrigger(Trigger, ABC):
             TargetSelection(self._target),
             primary_entities_only=self._primary_entities_only,
         )
-        device_ids = set(referenced.referenced_devices)
+        # Area expansion keeps a device whose state entity was moved out.
+        device_ids: set[str] = set()
         for entity_id in referenced.referenced | referenced.indirectly_referenced:
             if device_id := async_entity_id_to_device_id(self._hass, entity_id):
                 device_ids.add(device_id)
