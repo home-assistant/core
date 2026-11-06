@@ -36,7 +36,7 @@ PARALLEL_UPDATES = 0
 
 
 class SgReadyStatus(IntEnum):
-    """The SG Ready operating states, which the E3/DC manual leaves undocumented."""
+    """The SG Ready operating states."""
 
     BLOCKED = 1
     NORMAL = 2
