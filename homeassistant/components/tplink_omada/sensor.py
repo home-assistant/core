@@ -201,12 +201,19 @@ class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data, keeping the last value if the device is gone."""
+        """Handle updated data."""
         # The device may no longer be reported (e.g. it was removed from the
-        # controller) — keep the last known value instead of raising KeyError.
+        # controller) — the entity becomes unavailable instead of raising
+        # KeyError. The stale value is kept only for when it reappears.
         if (current := self.coordinator.data.get(self.device.mac)) is not None:
             self._attr_native_value = self.entity_description.update_func(current)
         super()._handle_coordinator_update()
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return availability based on the device still being reported."""
+        return super().available and self.device.mac in self.coordinator.data
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -268,10 +275,16 @@ class OmadaSwitchPortSensor(
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data, keeping the last value if the port is gone."""
+        """Handle updated data."""
         # The port may no longer be reported (e.g. after a firmware update or
-        # a port reconfiguration) — keep the last known value instead of
-        # raising KeyError.
+        # a port reconfiguration) — the entity becomes unavailable instead of
+        # raising KeyError. The stale value is kept for when it reappears.
         if (current := self.coordinator.data.get(self._port_id)) is not None:
             self._attr_native_value = self.entity_description.update_func(current)
         super()._handle_coordinator_update()
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return availability based on the port still being reported."""
+        return super().available and self._port_id in self.coordinator.data

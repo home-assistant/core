@@ -145,14 +145,14 @@ async def test_sfp_port_has_no_poe_power_sensor(
     assert hass.states.get("sensor.test_poe_switch_port_8_poe_power") is not None
 
 
-async def test_port_disappearing_from_coordinator_keeps_last_state(
+async def test_port_disappearing_from_coordinator_becomes_unavailable(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_omada_site_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a port no longer reported by the switch keeps its last known value."""
+    """Test a port no longer reported by the switch makes its sensor unavailable."""
     entity_id = "sensor.test_poe_switch_port_1_poe_power"
     assert hass.states.get(entity_id).state == "2.7"
 
@@ -169,22 +169,23 @@ async def test_port_disappearing_from_coordinator_keeps_last_state(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    # The sensor still exists and keeps its last known value, without errors
+    # The sensor exists and becomes unavailable, without errors from the
+    # switch port coordinator
     entity = hass.states.get(entity_id)
     assert entity is not None
-    assert entity.state == "2.7"
-    assert "KeyError" not in caplog.text
-    assert "Omada API Data - Test PoE Switch Ports" not in caplog.text
+    assert entity.state == "unavailable"
+    errors = [r.getMessage() for r in caplog.records if r.levelno >= logging.ERROR]
+    assert not any("Omada API Data - Test PoE Switch Ports" in msg for msg in errors)
 
 
-async def test_device_disappearing_from_coordinator_keeps_last_state(
+async def test_device_disappearing_from_coordinator_becomes_unavailable(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_omada_site_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a device removed from the controller keeps its last known value."""
+    """Test a device removed from the controller makes its sensors unavailable."""
     entity_id = "sensor.test_poe_switch_device_status"
     assert hass.states.get(entity_id).state == "connected"
 
@@ -199,13 +200,14 @@ async def test_device_disappearing_from_coordinator_keeps_last_state(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    # The sensor still exists and keeps its last known value, without errors
-    # from the device list coordinator (the update coordinator has its own
-    # separate error handling for vanished devices and is out of scope here)
+    # The sensor exists and becomes unavailable, without errors from the
+    # device list coordinator (the update coordinator has its own separate
+    # error handling for vanished devices and is out of scope here)
     entity = hass.states.get(entity_id)
     assert entity is not None
-    assert entity.state == "connected"
-    assert "Omada API Data - DeviceList" not in caplog.text
+    assert entity.state == "unavailable"
+    errors = [r.getMessage() for r in caplog.records if r.levelno >= logging.ERROR]
+    assert not any("Omada API Data - DeviceList" in msg for msg in errors)
 
 
 async def _set_test_device_status(
