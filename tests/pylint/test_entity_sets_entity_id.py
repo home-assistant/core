@@ -1,9 +1,13 @@
 """Tests for the entity_id pylint checker."""
 
+import json
+from pathlib import Path
+
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
 from pylint_home_assistant.checkers.entity_id import HassEntitySetsEntityIdChecker
+from pylint_home_assistant.helpers.integration import clear_caches
 import pytest
 
 from . import assert_adds_messages, assert_no_messages, walk_checker
@@ -15,6 +19,7 @@ _MODULE = "homeassistant.components.test_integration.sensor"
 @pytest.fixture(name="checker")
 def checker_fixture(linter: UnittestLinter) -> HassEntitySetsEntityIdChecker:
     """Fixture to provide the W7461 checker."""
+    clear_caches()
     return HassEntitySetsEntityIdChecker(linter)
 
 
@@ -154,3 +159,40 @@ def test_entity_sets_entity_id_not_flagged(
     root_node = astroid.parse(code, module_name)
     with assert_no_messages(linter):
         walk_checker(linter, checker, root_node)
+
+
+@pytest.mark.parametrize(
+    ("manifest", "expected_messages"),
+    [
+        pytest.param({"quality_scale": "internal"}, [], id="internal"),
+        pytest.param({"quality_scale": "silver"}, [_MSG_ID], id="silver"),
+        pytest.param({}, [_MSG_ID], id="no_quality_scale"),
+    ],
+)
+def test_entity_sets_entity_id_quality_scale(
+    linter: UnittestLinter,
+    checker: HassEntitySetsEntityIdChecker,
+    tmp_path: Path,
+    manifest: dict[str, str],
+    expected_messages: list[str],
+) -> None:
+    """Test internal integrations are not flagged."""
+    integration_dir = tmp_path / "homeassistant" / "components" / "test_integration"
+    integration_dir.mkdir(parents=True)
+    (integration_dir / "manifest.json").write_text(
+        json.dumps({"domain": "test_integration", **manifest})
+    )
+    root_node = astroid.parse(
+        """
+from homeassistant.helpers.entity import Entity
+
+class MyEntity(Entity):
+    entity_id = "sensor.my_entity"
+""",
+        _MODULE,
+    )
+    root_node.file = str(integration_dir / "sensor.py")
+    walk_checker(linter, checker, root_node)
+    assert [
+        message.msg_id for message in linter.release_messages()
+    ] == expected_messages

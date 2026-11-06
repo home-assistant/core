@@ -420,8 +420,7 @@ it for the `config_entry` class annotation and `__init__` argument, so
 class MyCoordinator(DataUpdateCoordinator[MyData]):
     config_entry: MyConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None:
-        ...
+    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None: ...
 ```
 
 When the alias lives in `__init__.py`, import it in the coordinator under
@@ -784,9 +783,7 @@ cause and finish the flow, so the test proves the flow recovers:
 assert result["errors"] == {"base": "cannot_connect"}
 
 mock_client.connect.side_effect = None
-result = await hass.config_entries.flow.async_configure(
-    result["flow_id"], USER_INPUT
-)
+result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
 assert result["type"] is FlowResultType.CREATE_ENTRY
 ```
 
@@ -1007,6 +1004,9 @@ class MySensor(SensorEntity):
 Give the entity a name (or a `translation_key`) and let Home Assistant
 generate the entity ID instead.
 
+Internal integrations (`quality_scale: internal` in `manifest.json`) are not
+checked.
+
 
 ## `home_assistant_entity_description_defaults` checker
 
@@ -1166,10 +1166,10 @@ such as `CONF_USERNAME`. Integrations that need a constant can use a dedicated
 
 ```python
 # Bad
-description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]}
+description_placeholders = {CONF_USERNAME: entry.data[CONF_USERNAME]}
 
 # Good
-description_placeholders={"username": entry.data[CONF_USERNAME]}
+description_placeholders = {"username": entry.data[CONF_USERNAME]}
 
 # Bad
 self.context["title_placeholders"] = {CONF_HOST: discovery_info.host}

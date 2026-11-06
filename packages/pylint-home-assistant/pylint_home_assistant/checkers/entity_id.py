@@ -9,6 +9,9 @@ Flagged in integration modules, on ``Entity`` subclasses:
 - a class-body ``entity_id = ...`` assignment, and
 - a ``self.entity_id = ...`` assignment in a method of the class.
 
+Internal integrations (``quality_scale: internal`` in the manifest) are not
+checked.
+
 ``W7461`` (``home-assistant-entity-sets-entity-id``)
 """
 
@@ -17,6 +20,7 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.helpers.entity_class import inherits_from_entity
+from pylint_home_assistant.helpers.integration import is_internal_integration
 from pylint_home_assistant.helpers.module_info import is_integration_module
 
 _ENTITY_ID = "entity_id"
@@ -56,7 +60,9 @@ class HassEntitySetsEntityIdChecker(BaseChecker):
 
     def visit_module(self, node: nodes.Module) -> None:
         """Cache per-module state."""
-        self._check_module = is_integration_module(node.name)
+        self._check_module = is_integration_module(
+            node.name
+        ) and not is_internal_integration(node)
 
     def visit_assignname(self, node: nodes.AssignName) -> None:
         """Flag class-body ``entity_id = ...`` assignments."""
