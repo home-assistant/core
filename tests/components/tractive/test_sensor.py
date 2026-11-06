@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,7 +13,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import init_integration
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -123,7 +121,6 @@ async def test_sensor_weight_update(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_without_health_data(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,

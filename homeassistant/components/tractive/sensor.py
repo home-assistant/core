@@ -174,7 +174,6 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         health_sensor=True,
         device_class=SensorDeviceClass.ENUM,
         options=HEALTH_STATUS_OPTIONS,
-        entity_registry_enabled_default=False,
     ),
     TractiveSensorEntityDescription(
         key="scratch_status",
@@ -182,7 +181,6 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         health_sensor=True,
         device_class=SensorDeviceClass.ENUM,
         options=HEALTH_STATUS_OPTIONS,
-        entity_registry_enabled_default=False,
     ),
 )
 
