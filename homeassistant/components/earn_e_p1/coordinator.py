@@ -59,14 +59,13 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Serve cached data while packets arrive, fail once the meter is silent."""
+        timeout = NO_DATA_TIMEOUT.total_seconds()
         if (
             self._last_packet is None
-            or self.hass.loop.time() - self._last_packet
-            >= NO_DATA_TIMEOUT.total_seconds()
+            or self.hass.loop.time() - self._last_packet >= timeout
         ):
             raise UpdateFailed(
-                f"No data received from {self.host} for "
-                f"{NO_DATA_TIMEOUT.total_seconds():.0f} seconds"
+                f"No data received from {self.host} for {timeout:.0f} seconds"
             )
         return self.data
 
