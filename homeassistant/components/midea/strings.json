@@ -118,6 +118,9 @@
       "arofene_link": {
         "name": "Methanal"
       },
+      "child_lock": {
+        "name": "[%key:component::midea::entity::switch::child_lock::name%]"
+      },
       "door_warn": {
         "name": "Door warning"
       },
@@ -406,6 +409,83 @@
       "condenser_temperature": {
         "name": "Condenser temperature"
       },
+      "cooking_mode": {
+        "name": "Cooking mode",
+        "state": {
+          "above_tube": "Top grill",
+          "auto": "Auto menu",
+          "baby_egg": "Baby egg",
+          "baby_fruit": "Baby fruit",
+          "baby_milk": "Baby milk",
+          "bake_cake": "Bake cake",
+          "bake_cookies": "Bake cookies",
+          "bake_ribs": "Bake ribs",
+          "bake_shrimp": "Bake shrimp",
+          "bake_swing": "Bake swing",
+          "baking": "Baking",
+          "brittle": "Brittle",
+          "bun": "Bun",
+          "carrots": "Carrots",
+          "chicken_block": "Chicken block",
+          "chicken_soup": "Chicken soup",
+          "coconut_sogo": "Coconut sago",
+          "code_to_hot": "Cold to hot",
+          "coix_bean": "Coix seed",
+          "dumplings": "Dumplings",
+          "egg": "Egg",
+          "fans_scallops": "Vermicelli scallops",
+          "fast_hot": "Fast heat",
+          "fast_soup": "Fast soup",
+          "fast_steam": "Fast steam",
+          "ferment": "Ferment",
+          "frozen_food": "Frozen food",
+          "hot_steam": "Hot steam",
+          "humidity_auto": "Humidity auto menu",
+          "instant_noodle": "Instant noodle",
+          "jujube_longan": "Jujube longan",
+          "kebab": "Kebab",
+          "lotus_seed": "Lotus seed",
+          "meat": "Meat",
+          "meat_eggplant": "Meat eggplant",
+          "meat_tofu": "Meat tofu",
+          "metal_sterilize": "Metal sterilize",
+          "microwave": "Microwave",
+          "milk_coffee": "Milk coffee",
+          "none": "None",
+          "papaya_milk": "Papaya milk",
+          "pearl_meat": "Pearl meat",
+          "popcorn": "Popcorn",
+          "porridge": "Porridge",
+          "pre_hot": "Preheat",
+          "pumpkin": "Pumpkin",
+          "pure_steam": "Pure steam",
+          "pure_steam_fish": "Pure steam fish",
+          "remove_odor": "Remove odor",
+          "rice": "Rice",
+          "roast": "Roast",
+          "sauerkraut_fish": "Sauerkraut fish",
+          "sausage": "Sausage",
+          "sauted_meat": "Sautéed meat",
+          "scale_clean": "Scale clean",
+          "sirloin": "Sirloin",
+          "smart_clean": "Smart clean",
+          "smart_steam_fish": "Smart steam fish",
+          "snow_pear": "Snow pear",
+          "spicy_sausage": "Spicy sausage",
+          "spicy_tofu": "Spicy tofu",
+          "steam_bun": "Steam bun",
+          "steam_corn": "Steam corn",
+          "steam_ribs": "Steam ribs",
+          "steam_seafood": "Steam seafood",
+          "sweet_potato": "Sweet potato",
+          "time_unfreeze": "Timed defrost",
+          "tofu": "Tofu",
+          "unfreeze": "Defrost",
+          "vegetable": "Vegetable",
+          "warm": "Warm",
+          "wing": "Wing"
+        }
+      },
       "current_energy_consumption": {
         "name": "Current energy consumption"
       },
@@ -514,6 +594,16 @@
       },
       "filter_life_level": {
         "name": "Filter {filter_number} life level"
+      },
+      "fire_power": {
+        "name": "Power level",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "medium_high": "Medium high",
+          "medium_low": "Medium low"
+        }
       },
       "flex_zone_actual_temp": {
         "name": "Flex zone actual temperature"
@@ -729,18 +819,26 @@
       "status": {
         "name": "Status",
         "state": {
+          "cancel": "Canceled",
+          "cloud": "Cloud recipe",
           "delay": "Delayed",
           "delay_choosing": "Delay choosing",
           "delay_pause": "Delay paused",
           "end": "End",
           "fault": "[%key:common::state::fault%]",
           "finished": "Finished",
+          "heat": "Heating",
           "idle": "[%key:common::state::idle%]",
+          "order": "Scheduled",
           "pause": "[%key:common::state::paused%]",
+          "pause_cancel": "Pause canceled",
           "paused": "[%key:common::state::paused%]",
           "prevent_wrinkle_end": "Prevent wrinkle end",
+          "reaction": "Reaction",
+          "save_power": "Power saving",
           "standby": "[%key:common::state::standby%]",
           "start": "Start",
+          "three": "Three",
           "working": "Working"
         }
       },

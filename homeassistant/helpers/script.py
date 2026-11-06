@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_EXCLUDE,
     CONF_FOR_EACH,
     CONF_IF,
     CONF_MODE,
@@ -111,7 +112,7 @@ from .trace import (
     trace_stack_top,
     trace_update_result,
 )
-from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
+from .typing import ConfigType, TemplateVarsType, Undefined
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -440,7 +441,7 @@ class _StopScript(_HaltScript):
         self,
         message: str,
         response: Any,
-        conversation_response: str | UndefinedType | None = UNDEFINED,
+        conversation_response: str | Undefined | None = Undefined,
     ) -> None:
         """Initialize a halt exception."""
         super().__init__(message)
@@ -470,7 +471,7 @@ class _ScriptRun:
         self._started = False
         self._stop = hass.loop.create_future()
         self._stopped = asyncio.Event()
-        self._conversation_response: str | UndefinedType | None = UNDEFINED
+        self._conversation_response: str | Undefined | None = Undefined
 
     def _changed(self) -> None:
         if not self._stop.done():
@@ -533,7 +534,7 @@ class _ScriptRun:
             response = err.response
 
             # Bubble up child conversation response
-            if err.conversation_response is not UNDEFINED:
+            if err.conversation_response is not Undefined:
                 self._conversation_response = err.conversation_response
 
         except Exception:
@@ -703,7 +704,7 @@ class _ScriptRun:
                 eager_start=True,
             )
         )
-        if result and result.conversation_response is not UNDEFINED:
+        if result and result.conversation_response is not Undefined:
             self._conversation_response = result.conversation_response
 
     ## Flow control actions ##
@@ -1476,10 +1477,12 @@ type _VarsType = dict[str, Any] | Mapping[str, Any] | ScriptRunVariables
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
-    """Extract referenced IDs."""
+    """Extract referenced IDs, including those in an exclude block."""
     # Data may not exist, or be a template
     if not isinstance(data, dict):
         return
+
+    _referenced_extract_ids(data.get(CONF_EXCLUDE), key, found)
 
     item_ids = data.get(key)
 
@@ -1508,7 +1511,7 @@ class _IfData(TypedDict):
 class ScriptRunResult:
     """Container with the result of a script run."""
 
-    conversation_response: str | UndefinedType | None
+    conversation_response: str | Undefined | None
     service_response: ServiceResponse
     variables: Mapping[str, Any]
 

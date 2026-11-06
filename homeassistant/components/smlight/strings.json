@@ -203,7 +203,7 @@
   },
   "issues": {
     "unsupported_firmware": {
-      "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration.",
+      "description": "Your SMLIGHT SLZB-06x device \"{name}\" is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration.",
       "title": "SLZB core firmware update required"
     }
   },

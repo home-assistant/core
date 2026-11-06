@@ -1,11 +1,13 @@
 """Test Matter switches."""
 
 import asyncio
+from typing import Any
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import NullValue
 from matter_server.client.models.node import MatterNode
+from matter_server.common import custom_clusters
 from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
@@ -21,6 +23,16 @@ from .common import (
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
+
+REVERSE_MOTOR_DIRECTION_ENTITY_ID = (
+    "switch.mock_full_window_covering_reverse_motor_direction"
+)
+
+
+@pytest.fixture
+def platform() -> Platform:
+    """Return the platform under test."""
+    return Platform.SWITCH
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -495,3 +507,174 @@ async def test_door_lock_one_touch_locking(
         node_id=matter_node.node_id, attribute_path=attribute_path, value=False
     )
     assert matter_client.write_attribute.call_count == 2
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
+async def test_window_covering_reverse_motor_direction(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test switch entity for the WindowCovering MotorDirectionReversed mode bit."""
+    state = hass.states.get(REVERSE_MOTOR_DIRECTION_ENTITY_ID)
+    assert state
+    assert state.state == "off"
+
+    set_node_attribute(matter_node, 1, 258, 23, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(REVERSE_MOTOR_DIRECTION_ENTITY_ID)
+    assert state.state == "on"
+
+    # only the MotorDirectionReversed bit drives the state
+    set_node_attribute(matter_node, 1, 258, 23, 8)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(REVERSE_MOTOR_DIRECTION_ENTITY_ID)
+    assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
+@pytest.mark.parametrize(
+    ("mode", "service", "written_value"),
+    [
+        pytest.param(8, "turn_on", 9, id="set_keeps_led_feedback"),
+        pytest.param(9, "turn_off", 8, id="clear_keeps_led_feedback"),
+        # bits outside the Mode bitmap must survive the read-modify-write too
+        pytest.param(0x10, "turn_on", 0x11, id="set_keeps_undeclared_bit"),
+        pytest.param(0x11, "turn_off", 0x10, id="clear_keeps_undeclared_bit"),
+    ],
+)
+async def test_window_covering_reverse_motor_direction_write(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    mode: int,
+    service: str,
+    written_value: int,
+) -> None:
+    """Test writing the mode bit preserves the other bits of the Mode bitmap."""
+    set_node_attribute(matter_node, 1, 258, 23, mode)
+    await trigger_subscription_callback(hass, matter_client)
+
+    await hass.services.async_call(
+        "switch",
+        service,
+        {"entity_id": REVERSE_MOTOR_DIRECTION_ENTITY_ID},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.WindowCovering.Attributes.Mode,
+        ),
+        value=written_value,
+    )
+
+
+def _write_response(status: int) -> list[dict[str, Any]]:
+    """Build a write response as the Matter Server reports it."""
+    return [
+        {
+            "Path": {"EndpointId": 1, "ClusterId": 258, "AttributeId": 23},
+            "Status": status,
+        }
+    ]
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
+@pytest.mark.parametrize(
+    ("status", "expected_error"),
+    [
+        pytest.param(
+            clusters.Globals.Enums.status.kConstraintError,
+            "does not support changing",
+            id="constraint_error",
+        ),
+        pytest.param(
+            clusters.Globals.Enums.status.kUnsupportedWrite,
+            "returned status",
+            id="unsupported_write",
+        ),
+        pytest.param(
+            clusters.Globals.Enums.status.kBusy,
+            "returned status",
+            id="busy",
+        ),
+    ],
+)
+async def test_window_covering_reverse_motor_direction_rejected(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    status: int,
+    expected_error: str,
+) -> None:
+    """Test a device rejecting the write raises a meaningful error."""
+    matter_client.write_attribute.return_value = _write_response(status)
+
+    with pytest.raises(HomeAssistantError, match=expected_error):
+        await hass.services.async_call(
+            "switch",
+            "turn_on",
+            {"entity_id": REVERSE_MOTOR_DIRECTION_ENTITY_ID},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
+async def test_window_covering_reverse_motor_direction_accepted(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a successful write response does not raise."""
+    matter_client.write_attribute.return_value = _write_response(
+        clusters.Globals.Enums.status.kSuccess
+    )
+
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": REVERSE_MOTOR_DIRECTION_ENTITY_ID},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_led_strip_t2"])
+async def test_aqara_led_strip_t2(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test switch entities on Aqara LED Strip T2."""
+    state = hass.states.get("switch.aqara_led_strip_t2_music_sync")
+    assert state
+    assert state.state == "on"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {
+            "entity_id": "switch.aqara_led_strip_t2_music_sync",
+        },
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncEnabled,
+        ),
+        value=False,
+    )
+
+    set_node_attribute(matter_node, 1, 291503119, 19, False)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("switch.aqara_led_strip_t2_music_sync")
+    assert state
+    assert state.state == "off"

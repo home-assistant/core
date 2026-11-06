@@ -205,7 +205,6 @@ get_library:
             - radio
     favorite:
       example: "true"
-      default: false
       selector:
         boolean:
     search:

@@ -4,6 +4,7 @@
   "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@frenck"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["zone"],
   "documentation": "https://www.home-assistant.io/integrations/open_meteo",
   "integration_type": "service",

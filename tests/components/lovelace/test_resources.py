@@ -10,7 +10,11 @@ import pytest
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.lovelace import dashboard, resources
-from homeassistant.components.lovelace.const import DOMAIN, LOVELACE_DATA
+from homeassistant.components.lovelace.const import (
+    DOMAIN,
+    LOVELACE_DATA,
+    LovelaceService,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -425,7 +429,9 @@ async def test_reload_resources(hass: HomeAssistant) -> None:
             "lovelace": {"resource_mode": "yaml", "resources": new_resources}
         },
     ):
-        await hass.services.async_call(DOMAIN, "reload_resources", blocking=True)
+        await hass.services.async_call(
+            DOMAIN, LovelaceService.RELOAD_RESOURCES, blocking=True
+        )
 
     assert hass.data[LOVELACE_DATA].resources.async_items() == new_resources
 
@@ -435,4 +441,6 @@ async def test_reload_resources_storage_mode(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
 
     with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(DOMAIN, "reload_resources", blocking=True)
+        await hass.services.async_call(
+            DOMAIN, LovelaceService.RELOAD_RESOURCES, blocking=True
+        )

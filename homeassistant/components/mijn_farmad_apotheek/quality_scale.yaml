@@ -38,7 +38,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: The integration has no options.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable:
     status: exempt
     comment: The integration has no entities.
@@ -49,30 +49,28 @@ rules:
   parallel-updates:
     status: exempt
     comment: The integration has no entity platforms.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   devices:
     status: exempt
     comment: The integration has no devices.
-  diagnostics: todo
+  diagnostics: done
   discovery:
     status: exempt
     comment: The service cannot be discovered.
   discovery-update-info:
     status: exempt
     comment: The service cannot be discovered.
-  docs-data-update:
-    status: exempt
-    comment: The integration fetches nothing on a schedule.
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: The integration has no devices.
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: The integration has no devices.

@@ -8,6 +8,7 @@
         'is4k': False,
         'media': dict({
           'adult': False,
+          'backdrop_path': '/6qld2YxAO9gdEblo0rsEb8BcYKO.jpg',
           'budget': 0,
           'genres': list([
             dict({
@@ -45,6 +46,7 @@
           'original_title': 'Culpa tuya',
           'overview': "The love between Noah and Nick seems unwavering despite their parents' attempts to separate them. But his job and her entry into college open up their lives to new relationships that will shake the foundations of both their relationship and the Leister family itself.",
           'popularity': 3958.479,
+          'poster_path': '/1sQA7lfcF9yUyoLYC0e6Zo3jmxE.jpg',
           'release_date': datetime.date(2024, 12, 26),
           'revenue': 0,
           'runtime': 120,
@@ -98,6 +100,7 @@
         'id': 14,
         'is4k': False,
         'media': dict({
+          'backdrop_path': '/bXJII8e2iIQ7EzDx4KRhSghn2me.jpg',
           'first_air_date': datetime.date(2024, 12, 19),
           'genres': list([
             dict({
@@ -158,6 +161,7 @@
           'original_name': 'Beast Games',
           'overview': "I gathered 1,000 people to fight for $5,000,000, the LARGEST cash prize in TV history! We're also giving away a private island, Lamborghinis, and millions more in cash throughout the competition! Go watch to see the greatest show ever made!",
           'popularity': 769.189,
+          'poster_path': '/3itZlypnOcVcqI5xxyO6nvJ52yM.jpg',
           'seasons': list([
             dict({
               'air_date': datetime.date(2024, 12, 19),

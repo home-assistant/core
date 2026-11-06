@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> None
     # Register the alarm panel device so child devices can link to it via
     # via_device_id, since the panel is otherwise only registered by a sibling
     # entity on a concurrently loaded platform.
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
         device_info=coordinator.device_info,
     )

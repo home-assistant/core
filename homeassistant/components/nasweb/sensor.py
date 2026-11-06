@@ -92,7 +92,6 @@ class BaseSensorEntity(SensorEntity, BaseCoordinatorEntity):
         super().__init__(coordinator)
         self._attr_available = False
         self._attr_has_entity_name = True
-        self._attr_should_poll = False
 
     @override
     async def async_added_to_hass(self) -> None:

@@ -48,12 +48,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import (
-    UNDEFINED,
-    ConfigType,
-    UndefinedType,
-    VolSchemaType,
-)
+from homeassistant.helpers.typing import ConfigType, Undefined, VolSchemaType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import subscription
@@ -418,22 +413,22 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     @callback
     def _parse_float_payload(
         self, msg: ReceiveMessage, template_name: str, name: str
-    ) -> float | UndefinedType | None:
-        """Render and parse a numeric payload, UNDEFINED means ignore the update."""
+    ) -> float | Undefined | None:
+        """Render and parse a numeric payload, Undefined means ignore the update."""
         payload = self.render_template(msg, template_name)
         if not payload:
             _LOGGER.debug(
                 "Invalid empty payload for %s, ignoring update",
                 name,
             )
-            return UNDEFINED
+            return Undefined
         if payload == PAYLOAD_NONE:
             return None
         try:
             return float(payload)
         except ValueError:
             _LOGGER.error("Could not parse %s from %s", template_name, payload)
-            return UNDEFINED
+            return Undefined
 
     @callback
     def _handle_current_temperature_received(self, msg: ReceiveMessage) -> None:
@@ -442,7 +437,7 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
             value := self._parse_float_payload(
                 msg, CONF_CURRENT_TEMP_TEMPLATE, "current temperature"
             )
-        ) is not UNDEFINED:
+        ) is not Undefined:
             self._attr_native_current_temperature = value
 
     @override
@@ -677,7 +672,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_TEMP_STATE_TEMPLATE, "target temperature"
             )
-        ) is UNDEFINED:
+        ) is Undefined:
             return
         self._attr_native_target_temperature = value
         if value is not None:
@@ -690,7 +685,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_TEMP_LOW_STATE_TEMPLATE, "target temperature low"
             )
-        ) is UNDEFINED:
+        ) is Undefined:
             return
         self._attr_native_target_temperature_low = value
         if value is not None:
@@ -703,7 +698,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_TEMP_HIGH_STATE_TEMPLATE, "target temperature high"
             )
-        ) is UNDEFINED:
+        ) is Undefined:
             return
         self._attr_native_target_temperature_high = value
         if value is not None:
@@ -716,7 +711,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_CURRENT_HUMIDITY_TEMPLATE, "current humidity"
             )
-        ) is not UNDEFINED:
+        ) is not Undefined:
             self._attr_current_humidity = value
 
     @callback
@@ -726,7 +721,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             value := self._parse_float_payload(
                 msg, CONF_HUMIDITY_STATE_TEMPLATE, "target humidity"
             )
-        ) is not UNDEFINED:
+        ) is not Undefined:
             self._attr_target_humidity = value
 
     @callback

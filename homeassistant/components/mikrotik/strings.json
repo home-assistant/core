@@ -89,6 +89,9 @@
       "disk_usage": {
         "name": "Disk usage"
       },
+      "fan_speed_with_index": {
+        "name": "Fan {index} speed"
+      },
       "memory_usage": {
         "name": "Memory usage"
       },

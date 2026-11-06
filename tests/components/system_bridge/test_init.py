@@ -1,7 +1,10 @@
 """Test the System Bridge integration."""
 
+from dataclasses import replace
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+import logging
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -12,10 +15,11 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
     DataMissingException,
 )
-from systembridgeconnector.models.modules import ModulesData
+from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
+from systembridgeconnector.models.modules import GetData, Module, ModulesData
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
-from homeassistant.components.system_bridge.const import DOMAIN
+from homeassistant.components.system_bridge.const import DOMAIN, GET_DATA_WAIT_TIMEOUT
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
@@ -53,6 +57,62 @@ async def test_entry_setup_unload(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_websocket_client.close.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("version", "requests_audio"),
+    [
+        pytest.param("5.15.0", False, id="before_audio"),
+        pytest.param("5.16.0", True, id="audio"),
+        pytest.param("5.22.1.dev0+abc1234", True, id="dev_build"),
+    ],
+)
+@pytest.mark.usefixtures("mock_version")
+async def test_setup_requests_audio_when_supported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    version: str,
+    requests_audio: bool,
+) -> None:
+    """Test audio is only requested from backends that answer for it."""
+    mock_websocket_client.get_data.return_value = replace(
+        mock_websocket_client.get_data.return_value,
+        system=replace(FIXTURE_SYSTEM, version=version),
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        call(GetData(modules=[Module.AUDIO]), timeout=GET_DATA_WAIT_TIMEOUT)
+        in mock_websocket_client.get_data.await_args_list
+    ) is requests_audio
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_setup_without_audio_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test setup carries on when the backend has no audio data yet."""
+    modules_data = replace(
+        mock_websocket_client.get_data.return_value,
+        system=replace(FIXTURE_SYSTEM, version="5.16.0"),
+    )
+    mock_websocket_client.get_data.return_value = None
+    mock_websocket_client.get_data.side_effect = [
+        modules_data,
+        DataMissingException("No data received for modules: ['audio']"),
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
@@ -322,6 +382,7 @@ async def test_register_data_listener_failure(
     side_effect: type[Exception],
     expected_state: ConfigEntryState,
     reauth: bool,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup fails when registering the data listener fails."""
     mock_websocket_client.register_data_listener.side_effect = side_effect
@@ -334,6 +395,7 @@ async def test_register_data_listener_failure(
     assert (
         any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})) is reauth
     )
+    assert "TestSystem is unavailable" not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -370,6 +432,86 @@ async def test_listener_disconnect_marks_unavailable(
     state = hass.states.get("update.hostname")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_reconnect_backoff_and_logging(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test reconnects back off while the host is away and log once each way."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    register = mock_websocket_client.register_data_listener
+    register.side_effect = ConnectionErrorException
+    mock_websocket_client.connect.side_effect = ConnectionErrorException
+    calls = register.await_count
+
+    # Each failed reconnect doubles the wait, up to 2 minutes
+    for wait, expected_calls in (
+        (30, calls + 1),
+        (30, calls + 1),
+        (30, calls + 2),
+        (60, calls + 2),
+        (60, calls + 3),
+        (120, calls + 4),
+    ):
+        freezer.tick(timedelta(seconds=wait))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert register.await_count == expected_calls
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert caplog.text.count("TestSystem is unavailable") == 1
+    assert not [
+        record
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.system_bridge")
+        and record.levelno >= logging.WARNING
+    ]
+
+    coordinator = mock_config_entry.runtime_data
+
+    async def register_with_buffered_data(*args: Any) -> None:
+        coordinator.async_set_updated_data(coordinator.data)
+
+    async def register_fails_after_buffered_data(*args: Any) -> None:
+        await register_with_buffered_data()
+        raise ConnectionErrorException
+
+    # Data pushed before the register call fails must not log the outage again
+    register.side_effect = register_fails_after_buffered_data
+    mock_websocket_client.connect.side_effect = None
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert register.await_count == calls + 5
+    assert caplog.text.count("TestSystem is unavailable") == 1
+
+    # Data pushed before the register call returns must not hide the recovery
+    register.side_effect = register_with_buffered_data
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert caplog.text.count("TestSystem is available again") == 1
+    assert "Fetching system_bridge data recovered" not in caplog.text
+    assert caplog.text.count("TestSystem is unavailable") == 1
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert register.await_count == calls + 7
 
 
 @pytest.mark.usefixtures("init_integration")

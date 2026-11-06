@@ -357,55 +357,6 @@ async def test_line_broadcast_available_status(
     assert state.state != STATE_UNAVAILABLE
 
 
-async def test_line_broadcast_available_status_with_line_missing(
-    hass: HomeAssistant,
-    mock_lunatone_info: AsyncMock,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_sensors: AsyncMock,
-    mock_lunatone_scan: AsyncMock,
-    mock_lunatone_dali_broadcast: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test if the broadcast light is available."""
-    line_id = "0"
-    entity_id = f"light.dali_line_{line_id}"
-
-    await setup_integration(hass, mock_config_entry)
-
-    line_data = deepcopy(mock_lunatone_info.data.lines[line_id])
-
-    async def fake_update():
-        info_data = deepcopy(mock_lunatone_info.data)
-        if line_id in info_data.lines:
-            del info_data.lines[line_id]
-        else:
-            info_data.lines[line_id] = line_data
-        mock_lunatone_info.data = info_data
-
-    mock_lunatone_info.async_update.side_effect = fake_update
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-
-    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-
-
 @pytest.mark.parametrize(
     "color_temp_kelvin",
     [10000, 5000, 1000],

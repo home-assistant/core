@@ -1,6 +1,7 @@
 """Test AI Task platform of Ollama integration."""
 
 from pathlib import Path
+import threading
 from unittest.mock import patch
 
 import ollama
@@ -267,7 +268,13 @@ async def test_generate_data_with_attachment(
             "done_reason": "stop",
         }
 
+    def read_bytes(path: Path) -> bytes:
+        """Return image bytes, failing if called in the event loop."""
+        assert threading.get_ident() != hass.loop_thread_id
+        return b"image bytes"
+
     with (
+        patch.object(Path, "read_bytes", read_bytes),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
             side_effect=[
@@ -301,9 +308,7 @@ async def test_generate_data_with_attachment(
     chat_message = messages[1]
     assert chat_message.role == "user"
     assert chat_message.content == "Generate test data"
-    assert chat_message.images == [
-        ollama.Image(value=Path("doorbell_snapshot.jpg")),
-    ]
+    assert chat_message.images == [ollama.Image(value=b"image bytes")]
 
 
 @pytest.mark.usefixtures("mock_init_component")

@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@rytilahti", "@bdraco", "@sdb9696"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["network", "ffmpeg", "stream"],
   "dhcp": [
     {
@@ -307,5 +308,5 @@
   "iot_class": "local_polling",
   "loggers": ["kasa"],
   "quality_scale": "platinum",
-  "requirements": ["python-kasa[speedups]==0.11.0.1"]
+  "requirements": ["python-kasa[speedups]==0.12.0"]
 }

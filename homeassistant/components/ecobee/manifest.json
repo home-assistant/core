@@ -4,6 +4,7 @@
   "categories": ["climate.thermostats_heating"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/ecobee",
   "homekit": {
     "models": ["EB", "ecobee*"]

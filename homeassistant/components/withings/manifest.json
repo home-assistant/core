@@ -5,6 +5,7 @@
   "categories": ["health_wellbeing"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials", "http", "webhook"],
   "dhcp": [
     {

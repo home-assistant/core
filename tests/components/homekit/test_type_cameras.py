@@ -1,17 +1,20 @@
 """Test different accessory types: Camera."""
 
 import asyncio
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import camera, ffmpeg
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.camera import TurboJPEGSingleton
 from homeassistant.components.event import EventDeviceClass
-from homeassistant.components.homekit.accessories import HomeBridge
+from homeassistant.components.homekit.accessories import HomeBridge, HomeDriver
 from homeassistant.components.homekit.const import (
     AUDIO_CODEC_COPY,
     CHAR_MOTION_DETECTED,
@@ -30,7 +33,10 @@ from homeassistant.components.homekit.const import (
     VIDEO_CODEC_H264_OMX,
     VIDEO_CODEC_H264_V4L2M2M,
 )
-from homeassistant.components.homekit.type_cameras import Camera
+from homeassistant.components.homekit.type_cameras import (
+    MOTION_EVENT_RESET_SECONDS,
+    Camera,
+)
 from homeassistant.components.homekit.type_switches import Switch
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -953,13 +959,21 @@ async def test_camera_with_linked_motion_event(hass: HomeAssistant, run_driver) 
     broker.reset_mock()
     assert char.value is False
 
-    char.set_value(True)
     fire_time = dt_util.utcnow().isoformat()
     hass.states.async_set(
         motion_entity_id, fire_time, {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION}
     )
     await hass.async_block_till_done()
-    assert len(broker.mock_calls) == 4
+    assert len(broker.mock_calls) == 2
+    broker.reset_mock()
+    # Motion stays detected so HomeKit receives the event before it resets.
+    assert char.value is True
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=MOTION_EVENT_RESET_SECONDS)
+    )
+    await hass.async_block_till_done()
+    assert len(broker.mock_calls) == 2
     broker.reset_mock()
     assert char.value is False
 
@@ -1007,6 +1021,10 @@ async def test_camera_with_linked_motion_event(hass: HomeAssistant, run_driver) 
     )
     await hass.async_block_till_done()
     assert broker.mock_calls
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=MOTION_EVENT_RESET_SECONDS)
+    )
+    await hass.async_block_till_done()
 
     # Now go unavailable
     broker.reset_mock()
@@ -1036,6 +1054,64 @@ async def test_camera_with_linked_motion_event(hass: HomeAssistant, run_driver) 
     )
     await hass.async_block_till_done()
     assert broker.mock_calls
+
+
+async def test_camera_linked_motion_event_resets_after_last_event(
+    hass: HomeAssistant, run_driver: HomeDriver, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a new motion event extends the hold and stopping cancels it."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    motion_entity_id = "event.motion"
+    hass.states.async_set(
+        motion_entity_id,
+        "2025-01-01T00:00:00+00:00",
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION},
+    )
+    entity_id = "camera.demo_camera"
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {CONF_STREAM_SOURCE: "/dev/null", CONF_LINKED_MOTION_SENSOR: motion_entity_id},
+    )
+    acc.run()
+    char = acc.get_service(SERV_MOTION_SENSOR).get_characteristic(CHAR_MOTION_DETECTED)
+    hold = timedelta(seconds=MOTION_EVENT_RESET_SECONDS)
+
+    for _ in range(2):
+        hass.states.async_set(
+            motion_entity_id,
+            dt_util.utcnow().isoformat(),
+            {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION},
+        )
+        await hass.async_block_till_done()
+        freezer.tick(hold / 2)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # The second event restarted the hold.
+    assert char.value is True
+    freezer.tick(hold / 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert char.value is False
+
+    hass.states.async_set(
+        motion_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION},
+    )
+    await hass.async_block_till_done()
+    acc.async_stop()
+    freezer.tick(hold)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    # Stopping cancelled the reset.
+    assert char.value is True
 
 
 async def test_camera_with_a_missing_linked_motion_sensor(

@@ -13,6 +13,7 @@ from homeassistant.components.media_source import (
     async_resolve_media,
 )
 from homeassistant.components.system_bridge.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -138,26 +139,35 @@ async def test_file(
     )
 
 
-async def test_bad_entry(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
+@pytest.mark.parametrize(
+    "entry_id",
+    [
+        pytest.param("badentryid", id="not_found"),
+        pytest.param("other_entry", id="other_integration"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_bad_entry(hass: HomeAssistant, entry_id: str) -> None:
     """Test invalid entry raises BrowseError."""
+    MockConfigEntry(
+        domain="other", entry_id="other_entry", state=ConfigEntryState.LOADED
+    ).add_to_hass(hass)
+
     with pytest.raises(BrowseError):
         await async_browse_media(
             hass,
-            f"{URI_SCHEME}{DOMAIN}/badentryid",
+            f"{URI_SCHEME}{DOMAIN}/{entry_id}",
         )
 
     with pytest.raises(BrowseError):
         await async_browse_media(
             hass,
-            f"{URI_SCHEME}{DOMAIN}/badentryid~~baddirectory",
+            f"{URI_SCHEME}{DOMAIN}/{entry_id}~~baddirectory",
         )
 
     with pytest.raises(ValueError):
         await async_resolve_media(
             hass,
-            f"{URI_SCHEME}{DOMAIN}/badentryid~~baddirectory/badfile.txt~~text/plain",
+            f"{URI_SCHEME}{DOMAIN}/{entry_id}~~baddirectory/badfile.txt~~text/plain",
             None,
         )

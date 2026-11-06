@@ -5,8 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import attr
-
-from script.hassfest.manifest_util import sort_manifest
+from hassfest.manifest_util import sort_manifest
 
 from .const import COMPONENT_DIR, TESTS_DIR
 

@@ -34,7 +34,8 @@ from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, discovery, event
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, EVENT_HDMI_CEC_UNAVAILABLE
+from .const import DATA_HDMI_CEC, DOMAIN, EVENT_HDMI_CEC_UNAVAILABLE
+from .services import HdmiCecData, setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +53,6 @@ CMD_RELEASE = "release"
 EVENT_CEC_COMMAND_RECEIVED = "cec_command_received"
 EVENT_CEC_KEYPRESS_RECEIVED = "cec_keypress_received"
 
-ATTR_DEVICE = "device"
 ATTR_KEY = "key"
 ATTR_DUR = "dur"
 ATTR_SRC = "src"
@@ -94,16 +94,6 @@ SERVICE_VOLUME_SCHEMA = probatio.Schema(
     },
     extra=probatio.PREVENT_EXTRA,
 )
-
-SERVICE_UPDATE_DEVICES = "update"
-SERVICE_UPDATE_DEVICES_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.Schema({})}, extra=probatio.PREVENT_EXTRA
-)
-
-SERVICE_SELECT_DEVICE = "select_device"
-
-SERVICE_POWER_ON = "power_on"
-SERVICE_STANDBY = "standby"
 
 DEVICE_SCHEMA: probatio.Schema = probatio.Schema(
     {
@@ -162,7 +152,7 @@ def parse_mapping(mapping, parents=None):
                 yield (val, pad_physical_address(cur))
 
 
-def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the CEC capability."""
 
     hass.data[DOMAIN] = {}
@@ -188,6 +178,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     else:
         adapter = CecAdapter(name=display_name[:12], activate_source=False)
     hdmi_network = HDMINetwork(adapter, loop=loop)
+    hass.data[DATA_HDMI_CEC] = HdmiCecData(hdmi_network, device_aliases)
 
     def _adapter_watchdog(now=None):
         _LOGGER.debug("Reached _adapter_watchdog")
@@ -263,42 +254,6 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
             command = CecCommand(cmd, dst, src, att)
         hdmi_network.send_command(command)
 
-    def _standby(call: ServiceCall) -> None:
-        hdmi_network.standby()
-
-    def _power_on(call: ServiceCall) -> None:
-        hdmi_network.power_on()
-
-    def _select_device(call: ServiceCall) -> None:
-        """Select the active device."""
-        if not (addr := call.data[ATTR_DEVICE]):
-            _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
-            return
-        if addr in device_aliases:
-            addr = device_aliases[addr]
-        else:
-            entity = hass.states.get(addr)
-            _LOGGER.debug("Selecting entity %s", entity)
-            if entity is not None:
-                addr = entity.attributes["physical_address"]
-                _LOGGER.debug("Address acquired: %s", addr)
-                if addr is None:
-                    _LOGGER.error(
-                        "Device %s has not physical address", call.data[ATTR_DEVICE]
-                    )
-                    return
-        if not isinstance(addr, (PhysicalAddress,)):
-            addr = PhysicalAddress(addr)
-        hdmi_network.active_source(addr)
-        _LOGGER.debug("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
-
-    def _update(call: ServiceCall) -> None:
-        """Update if device update is needed.
-
-        Called by service, requests CEC network to update data.
-        """
-        hdmi_network.scan()
-
     def _new_device(device):
         """Handle new devices which are detected by HDMI network."""
         key = f"{DOMAIN}.{device.name}"
@@ -326,22 +281,11 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         hass.services.register(
             DOMAIN, SERVICE_VOLUME, _volume, schema=SERVICE_VOLUME_SCHEMA
         )
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        hass.services.register(
-            DOMAIN,
-            SERVICE_UPDATE_DEVICES,
-            _update,
-            schema=SERVICE_UPDATE_DEVICES_SCHEMA,
-        )
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        hass.services.register(DOMAIN, SERVICE_POWER_ON, _power_on)
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        hass.services.register(DOMAIN, SERVICE_STANDBY, _standby)
-        # pylint: disable-next=home-assistant-action-registered-outside-services-module
-        hass.services.register(DOMAIN, SERVICE_SELECT_DEVICE, _select_device)
 
         hdmi_network.set_new_device_callback(_new_device)
         hdmi_network.start()
+
+    setup_services(hass)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_cec)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)

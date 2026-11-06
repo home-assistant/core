@@ -140,6 +140,7 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
 
         self._event_type = None
         self._attr_event_types = []
+        self._event_types_known = False
 
         self.setup_template(
             CONF_EVENT_TYPES,
@@ -157,6 +158,8 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     @callback
     def _update_event_types(self, event_types: Any) -> None:
         """Update the event types from the template."""
+        self._event_types_known = True
+
         if event_types in (None, "None", ""):
             self._attr_event_types = []
             return

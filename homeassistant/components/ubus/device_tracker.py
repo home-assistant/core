@@ -1,27 +1,34 @@
-"""Support for OpenWRT (ubus) routers."""
+"""Support for OpenWrt (ubus) routers as a device tracker."""
 
-import logging
-import re
-from typing import override
+from typing import TYPE_CHECKING, override
 
-from openwrt.ubus import Ubus
 import probatio
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    AsyncSeeCallback,
+    ScannerEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HomeAssistant,
+    callback,
+)
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_DHCP_SOFTWARE = "dhcp_software"
-DEFAULT_DHCP_SOFTWARE = "dnsmasq"
-DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "none"]
+from .const import CONF_DHCP_SOFTWARE, DEFAULT_DHCP_SOFTWARE, DHCP_SOFTWARES, DOMAIN
+from .coordinator import UbusConfigEntry, UbusDataUpdateCoordinator
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -35,158 +42,152 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
-    """Validate the configuration and return an ubus scanner."""
-    config = config[DEVICE_TRACKER_DOMAIN]
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: AsyncSeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Import the legacy YAML device tracker into a config entry."""
+    import_data = {
+        CONF_HOST: config[CONF_HOST],
+        CONF_USERNAME: config[CONF_USERNAME],
+        CONF_PASSWORD: config[CONF_PASSWORD],
+        CONF_DHCP_SOFTWARE: config[CONF_DHCP_SOFTWARE],
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_data
+    )
 
-    dhcp_sw = config[CONF_DHCP_SOFTWARE]
-    scanner: DeviceScanner
-    if dhcp_sw == "dnsmasq":
-        scanner = DnsmasqUbusDeviceScanner(config)
-    elif dhcp_sw == "odhcpd":
-        scanner = OdhcpdUbusDeviceScanner(config)
-    else:
-        scanner = UbusDeviceScanner(config)
+    if result["type"] is FlowResultType.ABORT and result["reason"] in (
+        "cannot_connect",
+        "invalid_auth",
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"yaml_import_{result['reason']}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=f"yaml_import_{result['reason']}",
+            translation_placeholders={"host": config[CONF_HOST]},
+        )
+        return False
 
-    return scanner if scanner.success_init else None
-
-
-def _refresh_on_access_denied(func):
-    """If remove rebooted, it lost our session so rebuild one and try again."""
-
-    def decorator(self, *args, **kwargs):
-        """Wrap the function to refresh session_id on PermissionError."""
-        try:
-            return func(self, *args, **kwargs)
-        except PermissionError:
-            _LOGGER.warning(
-                "Invalid session detected. Trying to refresh session_id and re-run RPC"
-            )
-            self.ubus.connect()
-
-            return func(self, *args, **kwargs)
-
-    return decorator
-
-
-class UbusDeviceScanner(DeviceScanner):
-    """Class which queries a wireless router running OpenWrt firmware.
-
-    Adapted from Tomato scanner.
-    """
-
-    def __init__(self, config):
-        """Initialize the scanner."""
-        self.host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
-
-        self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
-        self.last_results = {}
-        self.url = f"http://{self.host}/ubus"
-
-        self.ubus = Ubus(self.url, self.username, self.password)
-        self.hostapd = []
-        self.mac2name = None
-        self.success_init = self.ubus.connect() is not None
-
-    @override
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-        return self.last_results
-
-    def _generate_mac2name(self):
-        """Return empty MAC to name dict. Overridden if DHCP server is set."""
-        self.mac2name = {}
-
-    @_refresh_on_access_denied
-    @override
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        if self.mac2name is None:
-            self._generate_mac2name()
-        if self.mac2name is None:
-            # Generation of mac2name dictionary failed
-            return None
-        return self.mac2name.get(device.upper(), None)
-
-    @override
-    async def async_get_extra_attributes(self, device: str) -> dict[str, str]:
-        """Return the host to distinguish between multiple routers."""
-        return {"host": self.host}
-
-    @_refresh_on_access_denied
-    def _update_info(self):
-        """Ensure the information from the router is up to date.
-
-        Returns boolean if scanning successful.
-        """
-        if not self.success_init:
-            return False
-
-        _LOGGER.debug("Checking hostapd")
-
-        if not self.hostapd:
-            hostapd = self.ubus.get_hostapd()
-            self.hostapd.extend(hostapd.keys())
-
-        self.last_results = []
-        results = 0
-        # for each access point
-        for hostapd in self.hostapd:
-            if result := self.ubus.get_hostapd_clients(hostapd):
-                results = results + 1
-                # Check for each device is authorized (valid wpa key)
-                for key in result["clients"]:
-                    device = result["clients"][key]
-                    if device["authorized"]:
-                        self.last_results.append(key)
-
-        return bool(results)
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.5.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "OpenWrt (ubus)",
+        },
+    )
+    return True
 
 
-class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
-    """Implement the Ubus device scanning for the dnsmasq DHCP server."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: UbusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the device tracker for a ubus config entry."""
+    coordinator = config_entry.runtime_data
+    tracked: set[str] = set()
 
-    def __init__(self, config):
-        """Initialize the scanner."""
-        super().__init__(config)
-        self.leasefile = None
+    device_registry = dr.async_get(hass)
 
-    @override
-    def _generate_mac2name(self):
-        if self.leasefile is None:
-            if result := self.ubus.get_uci_config("dhcp", "dnsmasq"):
-                values = result["values"].values()
-                self.leasefile = next(iter(values))["leasefile"]
-            else:
-                return
+    @callback
+    def _async_update_devices() -> None:
+        new_macs = [mac for mac in coordinator.data if mac not in tracked]
+        tracked.update(new_macs)
+        if new_macs:
+            async_add_entities(UbusScannerEntity(coordinator, mac) for mac in new_macs)
+        # Rename here, as trackers are disabled by default and get no updates.
+        for mac, name in coordinator.data.items():
+            if (
+                name
+                and (
+                    device_entry := device_registry.async_get_device_by_connection(
+                        (dr.CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
+                    )
+                )
+                and device_entry.name != name
+            ):
+                device_registry.async_update_device(device_entry.id, name=name)
 
-        result = self.ubus.file_read(self.leasefile)
-        if result:
-            self.mac2name = {}
-            for line in result["data"].splitlines():
-                hosts = line.split(" ")
-                self.mac2name[hosts[1].upper()] = hosts[3]
+    @callback
+    def _async_device_removed(
+        event: Event[dr.EventDeviceRegistryUpdatedData],
+    ) -> None:
+        """Track a client again if it reconnects after its device was removed."""
+        if TYPE_CHECKING:
+            assert event.data["action"] == "remove"
+        connections = set(event.data["device"]["connections"])
+        tracked.difference_update(
+            [
+                mac
+                for mac in tracked
+                if (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac)) in connections
+            ]
+        )
+
+    @callback
+    def _is_own_device_removed(event_data: dr.EventDeviceRegistryUpdatedData) -> bool:
+        return (
+            event_data["action"] == "remove"
+            and event_data["device"]["config_entry_id"] == config_entry.entry_id
+        )
+
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_update_devices))
+    config_entry.async_on_unload(
+        hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            _async_device_removed,
+            event_filter=_is_own_device_removed,
+        )
+    )
+    _async_update_devices()
+
+
+class UbusScannerEntity(CoordinatorEntity[UbusDataUpdateCoordinator], ScannerEntity):
+    """Representation of a device connected to an OpenWrt router."""
+
+    def __init__(self, coordinator: UbusDataUpdateCoordinator, mac: str) -> None:
+        """Initialize the tracked device."""
+        super().__init__(coordinator)
+        self._mac = mac
+        connection = (dr.CONNECTION_NETWORK_MAC, mac)
+        if name := coordinator.data.get(mac):
+            self._attr_device_info = dr.DeviceInfo(connections={connection}, name=name)
+        elif dr.async_get(coordinator.hass).async_get_device_by_connection(
+            connection, coordinator.config_entry.entry_id
+        ):
+            # Without a hostname, keep the name of an existing device.
+            self._attr_device_info = dr.DeviceInfo(connections={connection})
         else:
-            # Error, handled in the ubus.file_read()
-            return
+            self._attr_device_info = dr.DeviceInfo(connections={connection}, name=mac)
 
-
-class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
-    """Implement the Ubus device scanning for the odhcp DHCP server."""
-
+    @property
     @override
-    def _generate_mac2name(self):
-        if result := self.ubus.get_dhcp_method("ipv4leases"):
-            self.mac2name = {}
-            for device in result["device"].values():
-                for lease in device["leases"]:
-                    mac = lease["mac"]  # mac = aabbccddeeff
-                    # Convert it to expected format with colon
-                    mac = ":".join(mac[i : i + 2] for i in range(0, len(mac), 2))
-                    self.mac2name[mac.upper()] = lease["hostname"]
-        else:
-            # Error, handled in the ubus.get_dhcp_method()
-            return
+    def mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        return self._mac
+
+    @property
+    @override
+    def is_connected(self) -> bool:
+        """Return whether the device is connected to the router."""
+        return self._mac in self.coordinator.data
+
+    @property
+    @override
+    def hostname(self) -> str | None:
+        """Return the hostname of the device."""
+        return self.coordinator.data.get(self._mac)

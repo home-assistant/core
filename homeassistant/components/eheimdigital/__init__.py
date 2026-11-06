@@ -41,7 +41,7 @@ async def async_setup_entry(
         assert isinstance(main, EheimDigitalDevice)
     # Register the main device up front so child devices can resolve their
     # via_device_id link during concurrent platform setup.
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id, device_info=async_device_info(coordinator, main)
     )
 

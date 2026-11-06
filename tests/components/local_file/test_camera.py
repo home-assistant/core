@@ -9,9 +9,13 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.camera import async_get_image
-from homeassistant.components.local_file.const import DOMAIN, SERVICE_UPDATE_FILE_PATH
+from homeassistant.components.local_file.const import DOMAIN
+from homeassistant.components.local_file.services import (
+    LocalFileService,
+    LocalFileServiceArgument,
+)
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -162,7 +166,7 @@ async def test_update_file_path(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_FILE_PATH,
+            LocalFileService.UPDATE_FILE_PATH,
             service_data,
             blocking=True,
         )
@@ -178,15 +182,15 @@ async def test_update_file_path(
 
     # Assert it fails if file is not readable
     service_data = {
-        ATTR_ENTITY_ID: "camera.local_file",
-        CONF_FILE_PATH: "new/path2.jpg",
+        CommonServiceArgument.ENTITY_ID: "camera.local_file",
+        LocalFileServiceArgument.FILE_PATH: "new/path2.jpg",
     }
     with pytest.raises(
         ServiceValidationError, match="Path new/path2.jpg is not accessible"
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_FILE_PATH,
+            LocalFileService.UPDATE_FILE_PATH,
             service_data,
             blocking=True,
         )

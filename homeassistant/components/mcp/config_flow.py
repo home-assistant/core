@@ -7,6 +7,7 @@ import logging
 from typing import Any, cast, override
 
 import httpx2
+from mcp import MCPError
 import probatio
 from yarl import URL
 
@@ -136,7 +137,7 @@ async def validate_input(
             auth_header = AuthenticateHeader.from_header(url, error.response)
             raise InvalidAuth(auth_header) from error
         raise CannotConnect from error
-    except httpx2.HTTPError as error:
+    except (httpx2.HTTPError, MCPError) as error:
         _LOGGER.info("Cannot connect to MCP server: %s", error)
         raise CannotConnect from error
 
@@ -222,7 +223,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm the MCP server provided by an app."""
         if user_input is None:
-            self._set_confirm_only()
             return self.async_show_form(
                 step_id="hassio_confirm",
                 description_placeholders={"addon": self.addon_name},

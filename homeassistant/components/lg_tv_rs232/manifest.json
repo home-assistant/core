@@ -4,6 +4,7 @@
   "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@balloob"],
   "config_flow": true,
+  "connectivity": ["serial"],
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/lg_tv_rs232",
   "integration_type": "device",

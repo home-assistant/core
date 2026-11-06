@@ -62,7 +62,7 @@ async def test_entities(
         ),
         pytest.param(
             "room_sensors",
-            "select.heating_circuit_1_patterilammitys_operation_mode",
+            "select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode",
             L1BaseEndpoints.OPERATION_MODE,
             OperationMode.AUTOMATIC,
             OperationMode.SHUTDOWN,

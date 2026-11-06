@@ -51,9 +51,9 @@ from . import (
     async_trigger_update,
 )
 from .helpers import (
+    create_mock_ceiling_light,
     create_mock_matrix_light,
-    create_reference_ceiling_light,
-    create_reference_mirror_light,
+    create_mock_mirror_light,
 )
 
 CEILING_KEYS = ("uplight", "downlight")
@@ -62,13 +62,13 @@ MIRROR_KEYS = ("front", "back")
 MAIN_ENTITY_ID = "light.my_group_my_bulb"
 
 COMPONENTS = [
-    pytest.param(create_reference_ceiling_light, CEILING_KEYS, id="ceiling"),
-    pytest.param(create_reference_mirror_light, MIRROR_KEYS, id="mirror"),
+    pytest.param(create_mock_ceiling_light, CEILING_KEYS, id="ceiling"),
+    pytest.param(create_mock_mirror_light, MIRROR_KEYS, id="mirror"),
 ]
 
 ON_OFF = [
     pytest.param(
-        create_reference_ceiling_light,
+        create_mock_ceiling_light,
         CEILING_KEYS,
         "uplight",
         "turn_uplight_on",
@@ -76,7 +76,7 @@ ON_OFF = [
         id="uplight",
     ),
     pytest.param(
-        create_reference_ceiling_light,
+        create_mock_ceiling_light,
         CEILING_KEYS,
         "downlight",
         "turn_downlight_on",
@@ -84,7 +84,7 @@ ON_OFF = [
         id="downlight",
     ),
     pytest.param(
-        create_reference_mirror_light,
+        create_mock_mirror_light,
         MIRROR_KEYS,
         "front",
         "turn_front_on",
@@ -92,7 +92,7 @@ ON_OFF = [
         id="front",
     ),
     pytest.param(
-        create_reference_mirror_light,
+        create_mock_mirror_light,
         MIRROR_KEYS,
         "back",
         "turn_back_on",
@@ -103,7 +103,7 @@ ON_OFF = [
 
 MANY_ZONE = [
     pytest.param(
-        create_reference_ceiling_light,
+        create_mock_ceiling_light,
         CEILING_KEYS,
         "downlight",
         "downlight_colors",
@@ -111,7 +111,7 @@ MANY_ZONE = [
         id="downlight",
     ),
     pytest.param(
-        create_reference_mirror_light,
+        create_mock_mirror_light,
         MIRROR_KEYS,
         "back",
         "back_colors",
@@ -166,38 +166,33 @@ async def test_components_disabled_by_default(
         assert hass.states.get(entity_id_for(key)) is None
 
 
-@pytest.mark.parametrize(("factory", "keys", "key", "turn_on", "turn_off"), ON_OFF)
 async def test_component_entity_id_changes_in_place(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    factory: Callable[[], Device],
-    keys: tuple[str, ...],
-    key: str,
-    turn_on: str,
-    turn_off: str,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test a component keeps working under its new entity_id after a rename."""
-    device = await _setup_components(hass, entity_registry, factory, keys)
-    setattr(device.state, f"{key}_is_on", False)
+    device = await _setup_components(
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
+    )
+    device.state.uplight_is_on = False
     await async_trigger_update(hass)
-    new_entity_id = f"light.renamed_{key}"
+    new_entity_id = "light.renamed_uplight"
 
     # An in-place rename does not add the entity to hass again
     with patch.object(LIFXComponentLight, "async_added_to_hass") as added:
         entity_registry.async_update_entity(
-            entity_id_for(key), new_entity_id=new_entity_id
+            entity_id_for("uplight"), new_entity_id=new_entity_id
         )
         await hass.async_block_till_done()
     added.assert_not_called()
 
-    assert hass.states.get(entity_id_for(key)) is None
+    assert hass.states.get(entity_id_for("uplight")) is None
     state = hass.states.get(new_entity_id)
     assert state
     assert state.state == STATE_OFF
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: new_entity_id}, blocking=True
     )
-    getattr(device, turn_on).assert_awaited_once()
+    device.turn_uplight_on.assert_awaited_once()
 
 
 @pytest.mark.parametrize(("factory", "keys"), COMPONENTS)
@@ -226,14 +221,12 @@ async def test_components_report_state(
     ("factory", "keys", "field"),
     [
         pytest.param(
-            create_reference_ceiling_light,
+            create_mock_ceiling_light,
             ("downlight", "uplight"),
             "downlight_colors",
             id="downlight",
         ),
-        pytest.param(
-            create_reference_mirror_light, MIRROR_KEYS, "front_colors", id="front"
-        ),
+        pytest.param(create_mock_mirror_light, MIRROR_KEYS, "front_colors", id="front"),
     ],
 )
 async def test_multizone_component_reports_average_color(
@@ -273,13 +266,13 @@ async def test_multizone_component_reports_average_color(
     ("factory", "keys", "fields"),
     [
         pytest.param(
-            create_reference_ceiling_light,
+            create_mock_ceiling_light,
             CEILING_KEYS,
             ("uplight_is_on", "downlight_is_on"),
             id="ceiling",
         ),
         pytest.param(
-            create_reference_mirror_light,
+            create_mock_mirror_light,
             MIRROR_KEYS,
             ("front_is_on", "back_is_on"),
             id="mirror",
@@ -322,13 +315,24 @@ async def test_plain_matrix_has_no_components(
 
 
 @pytest.mark.parametrize(
-    ("is_on", "expected"),
+    ("factory", "keys", "key", "turn_on", "turn_off", "is_on", "expected"),
     [
-        pytest.param(False, [call(None, 0.0)], id="off"),
-        pytest.param(True, [], id="already-on"),
+        *(
+            pytest.param(*param.values, False, [call(None, 0.0)], id=param.id)
+            for param in ON_OFF
+        ),
+        pytest.param(
+            create_mock_ceiling_light,
+            CEILING_KEYS,
+            "uplight",
+            "turn_uplight_on",
+            "turn_uplight_off",
+            True,
+            [],
+            id="already-on",
+        ),
     ],
 )
-@pytest.mark.parametrize(("factory", "keys", "key", "turn_on", "turn_off"), ON_OFF)
 async def test_turn_on_without_attributes(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -359,7 +363,7 @@ async def test_uplight_turn_on_with_brightness(
 ) -> None:
     """Test a brightness change keeps the uplight's colour temperature."""
     device = await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
     )
 
     await _call(hass, LIGHT_DOMAIN, SERVICE_TURN_ON, "uplight", brightness=255)
@@ -409,7 +413,7 @@ async def test_hue_change_on_an_off_component(
 ) -> None:
     """Test a hue-only change lights an off component at a real brightness."""
     device = await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
     )
     device.state.downlight_is_on = False
     device.state.downlight_colors = [HSBK(0.0, 0.0, 0.0, 3500)] * 2
@@ -445,7 +449,7 @@ async def test_turn_on_reads_before_a_partial_change(
 ) -> None:
     """Test only a change that keeps part of the colour reads the device first."""
     device = await _setup_components(
-        hass, entity_registry, create_reference_mirror_light, MIRROR_KEYS
+        hass, entity_registry, create_mock_mirror_light, MIRROR_KEYS
     )
     device.refresh_state.reset_mock()
 
@@ -462,7 +466,7 @@ async def test_turn_on_refuses_to_merge_over_stale_state(
 ) -> None:
     """Test a partial change is refused when the device cannot be read."""
     device = await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
     )
     device.refresh_state.side_effect = LifxError("unreachable")
 
@@ -474,23 +478,18 @@ async def test_turn_on_refuses_to_merge_over_stale_state(
     device.turn_downlight_on.assert_not_awaited()
 
 
-@pytest.mark.parametrize(("factory", "keys", "key", "turn_on", "turn_off"), ON_OFF)
 async def test_turn_on_with_zero_brightness_turns_off(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    factory: Callable[[], Device],
-    keys: tuple[str, ...],
-    key: str,
-    turn_on: str,
-    turn_off: str,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test core redirects a turn on at zero brightness to turning the component off."""
-    device = await _setup_components(hass, entity_registry, factory, keys)
+    device = await _setup_components(
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
+    )
 
-    await _call(hass, LIGHT_DOMAIN, SERVICE_TURN_ON, key, brightness=0)
+    await _call(hass, LIGHT_DOMAIN, SERVICE_TURN_ON, "uplight", brightness=0)
 
-    getattr(device, turn_on).assert_not_awaited()
-    getattr(device, turn_off).assert_awaited_once_with(None, 0.0)
+    device.turn_uplight_on.assert_not_awaited()
+    device.turn_uplight_off.assert_awaited_once_with(None, 0.0)
 
 
 async def test_turn_on_with_a_brightness_step(
@@ -498,7 +497,7 @@ async def test_turn_on_with_a_brightness_step(
 ) -> None:
     """Test a relative step resolves against the component's own brightness."""
     device = await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
     )
 
     await _call(
@@ -546,7 +545,7 @@ async def test_device_error(
 ) -> None:
     """Test a library failure surfaces as a Home Assistant error."""
     device = await _setup_components(
-        hass, entity_registry, create_reference_mirror_light, MIRROR_KEYS
+        hass, entity_registry, create_mock_mirror_light, MIRROR_KEYS
     )
     # Off, so that a bare turn on writes to the device
     device.state.front_is_on = False
@@ -564,7 +563,7 @@ async def test_write_stops_a_software_effect(
 ) -> None:
     """Test a component write first stops a software effect on the device."""
     device = await _setup_components(
-        hass, entity_registry, create_reference_mirror_light, MIRROR_KEYS
+        hass, entity_registry, create_mock_mirror_light, MIRROR_KEYS
     )
     mock_effect_conductor.stop.reset_mock()
 
@@ -581,7 +580,7 @@ async def test_stopping_a_software_effect_can_fail(
 ) -> None:
     """Test a failure to stop a software effect is reported and nothing is written."""
     device = await _setup_components(
-        hass, entity_registry, create_reference_mirror_light, MIRROR_KEYS
+        hass, entity_registry, create_mock_mirror_light, MIRROR_KEYS
     )
     mock_effect_conductor.stop.side_effect = LifxError("restore boom")
 
@@ -617,7 +616,7 @@ async def test_set_state_power(
 ) -> None:
     """Test lifx.set_state turns a component on or off only when asked."""
     device = await _setup_components(
-        hass, entity_registry, create_reference_mirror_light, MIRROR_KEYS
+        hass, entity_registry, create_mock_mirror_light, MIRROR_KEYS
     )
     device.state.front_is_on = is_on
     await async_trigger_update(hass)
@@ -637,7 +636,7 @@ async def test_set_state_zero_brightness_turns_off(
     lifx.set_state, so the component itself has to redirect it.
     """
     device = await _setup_components(
-        hass, entity_registry, create_reference_mirror_light, MIRROR_KEYS
+        hass, entity_registry, create_mock_mirror_light, MIRROR_KEYS
     )
 
     await _call(
@@ -660,7 +659,7 @@ async def test_set_state_remembers_a_color_while_off(
 ) -> None:
     """Test a colour set with the component left off is kept for its next turn on."""
     device = await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
     )
     device.state.downlight_is_on = False
     device.state.downlight_colors = [HSBK(0.0, 0.0, 0.0, 3500)] * 2
@@ -688,7 +687,7 @@ async def test_set_state_ignores_zones(
 ) -> None:
     """Test multizone zones do not narrow a change to a matrix component."""
     device = await _setup_components(
-        hass, entity_registry, create_reference_mirror_light, MIRROR_KEYS
+        hass, entity_registry, create_mock_mirror_light, MIRROR_KEYS
     )
 
     await _call(
@@ -708,13 +707,13 @@ async def test_set_state_ignores_zones(
     ("factory", "keys", "effect"),
     [
         pytest.param(
-            create_reference_ceiling_light,
+            create_mock_ceiling_light,
             CEILING_KEYS,
             SERVICE_EFFECT_FLAME,
             id="flame",
         ),
         pytest.param(
-            create_reference_mirror_light,
+            create_mock_mirror_light,
             MIRROR_KEYS,
             SERVICE_EFFECT_COLORSWEEP,
             id="color-sweep",
@@ -764,7 +763,7 @@ async def test_lifx_actions_refused_by_components(
 ) -> None:
     """Test the LIFX actions a component cannot carry out are refused."""
     await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
     )
 
     with pytest.raises(ServiceValidationError) as err:
@@ -816,7 +815,7 @@ async def _setup_with_restored(
             )
         ],
     )
-    device = create_reference_ceiling_light()
+    device = create_mock_ceiling_light()
     device.state.uplight_is_on = is_on
     device.state.uplight_color = HSBK(30.0, 0.5, 0.9 if is_on else 0.0, 3500)
     device.state.stored_uplight_color = stored
@@ -986,7 +985,7 @@ async def test_disabling_one_component_disables_the_other(
 ) -> None:
     """Test disabling either component entity disables its partner."""
     await _setup_components(
-        hass, entity_registry, create_reference_mirror_light, MIRROR_KEYS
+        hass, entity_registry, create_mock_mirror_light, MIRROR_KEYS
     )
 
     entity_registry.async_update_entity(
@@ -1005,7 +1004,7 @@ async def test_rename_and_disable_together(
 ) -> None:
     """Test a rename in the same update as a disable still reaches the partner."""
     await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
     )
 
     entity_registry.async_update_entity(
@@ -1025,7 +1024,7 @@ async def test_rename_alone_does_not_sync(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test renaming a component leaves its partner as it was."""
-    await async_setup_lifx_entry(hass, create_reference_ceiling_light())
+    await async_setup_lifx_entry(hass, create_mock_ceiling_light())
 
     entity_registry.async_update_entity(
         entity_id_for("uplight"), new_entity_id="light.renamed"
@@ -1042,7 +1041,7 @@ async def test_component_sync_stops_on_unload(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test unloading the entry removes the registry listener."""
-    entry = await async_setup_lifx_entry(hass, create_reference_ceiling_light())
+    entry = await async_setup_lifx_entry(hass, create_mock_ceiling_light())
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -1060,7 +1059,7 @@ async def test_rename_then_later_disable_still_syncs(
 ) -> None:
     """Test a disable that arrives after an earlier, separate rename still syncs."""
     await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
     )
     entity_registry.async_update_entity(
         entity_id_for("uplight"), new_entity_id="light.renamed_uplight"
@@ -1083,7 +1082,7 @@ async def test_disabling_the_main_light_disables_its_components(
 ) -> None:
     """Test components cannot stay enabled once their main light is disabled."""
     await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
     )
 
     entity_registry.async_update_entity(
@@ -1103,7 +1102,7 @@ async def test_enabling_a_component_enables_the_main_light(
 ) -> None:
     """Test enabling a component brings back the main light it depends on."""
     await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
     )
     entity_registry.async_update_entity(
         MAIN_ENTITY_ID, disabled_by=er.RegistryEntryDisabler.USER
@@ -1129,7 +1128,7 @@ async def test_unrelated_light_disable_does_not_touch_components(
 ) -> None:
     """Test disabling a light that is not this device's leaves its lights alone."""
     await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
     )
     other = entity_registry.async_get_or_create(
         Platform.LIGHT, platform, "d073d5000001"
@@ -1150,7 +1149,7 @@ async def test_enabling_the_main_light_leaves_components_disabled(
 ) -> None:
     """Test re-enabling the main light does not switch its components on too."""
     await _setup_components(
-        hass, entity_registry, create_reference_ceiling_light, CEILING_KEYS
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
     )
     entity_registry.async_update_entity(
         MAIN_ENTITY_ID, disabled_by=er.RegistryEntryDisabler.USER

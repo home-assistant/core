@@ -15,6 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import (
+    PRO_200B_SERVICE_INFO,
     PRO_GOOD_SIGNAL_SERVICE_INFO,
     PRO_SERVICE_INFO,
     PRO_UNUSABLE_SIGNAL_SERVICE_INFO,
@@ -118,6 +119,29 @@ async def test_sensors_good_signal(hass: HomeAssistant) -> None:
     assert tank_sensor_attrs[ATTR_FRIENDLY_NAME] == "Pro Plus EEFF Tank Level"
     assert tank_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == UnitOfLength.MILLIMETERS
     assert tank_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_sensors_pro_200b(hass: HomeAssistant) -> None:
+    """Test the Pro-200B."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all("sensor")) == 0
+    inject_bluetooth_service_info(hass, PRO_200B_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("sensor")) == 4
+
+    assert hass.states.get("sensor.pro_200b_eeff_temperature").state == "20"
+    assert hass.states.get("sensor.pro_200b_eeff_tank_level").state == "63"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

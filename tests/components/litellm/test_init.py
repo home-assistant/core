@@ -1,5 +1,7 @@
 """Tests for the LiteLLM integration setup."""
 
+import subprocess
+import sys
 from unittest.mock import AsyncMock
 
 import httpx2
@@ -11,6 +13,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
+
+IMPORT_TIMEOUT = 60
 
 
 async def test_load_unload_entry(
@@ -58,3 +62,29 @@ async def test_setup_error(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
+
+
+def test_client_resources_are_imported_with_the_integration() -> None:
+    """Importing the integration must leave no lazy client import for the loop.
+
+    The OpenAI client imports its chat and audio resources on first use, which
+    is a conversation turn or a speech-to-text request in the event loop.
+
+    A clean interpreter is the only way to see this: anything the test suite
+    imported first would hide it.
+    """
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys, homeassistant.components.litellm; "
+            "print(all(m in sys.modules for m in "
+            "('openai.resources.chat.chat', 'openai.resources.audio.audio')))",
+        ],
+        capture_output=True,
+        check=True,
+        text=True,
+        timeout=IMPORT_TIMEOUT,
+    )
+
+    assert result.stdout.strip() == "True"

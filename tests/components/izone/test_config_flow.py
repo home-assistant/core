@@ -932,6 +932,34 @@ async def test_homekit_resolves_uid_via_discover_endpoint(
     assert result["result"].unique_id == "000000001"
 
 
+async def test_homekit_aborts_when_controller_does_not_verify(
+    hass: HomeAssistant,
+) -> None:
+    """HomeKit aborts with cannot_connect when the UID's address fails the HTTP check."""
+    with (
+        patch(
+            "homeassistant.components.izone.discovery.async_discover_all_endpoints",
+            new=AsyncMock(return_value={}),
+        ),
+        patch(
+            "homeassistant.components.izone.discovery.async_discover_endpoint",
+            new=AsyncMock(
+                side_effect=pizone.EndpointVerifyError(
+                    "192.0.2.1", pizone.VerifyFailure.NO_REPLY, uid="000000001"
+                )
+            ),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data=_make_homekit_info("iZone 000000001", "203.0.113.1"),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_homekit_aborts_when_discovery_bind_fails(hass: HomeAssistant) -> None:
     """HomeKit aborts when discovery cannot bind the UDP socket."""
     with patch(
@@ -1651,11 +1679,27 @@ async def test_user_manual_host_empty_rejected_by_schema(hass: HomeAssistant) ->
 
 
 @pytest.mark.usefixtures("mock_entry_setup")
-async def test_user_manual_host_unreachable(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "lookup",
+    [
+        pytest.param(AsyncMock(return_value=None), id="no-endpoint"),
+        pytest.param(
+            AsyncMock(
+                side_effect=pizone.EndpointVerifyError(
+                    "192.0.2.99", pizone.VerifyFailure.NO_REPLY
+                )
+            ),
+            id="verify-error",
+        ),
+    ],
+)
+async def test_user_manual_host_unreachable(
+    hass: HomeAssistant, lookup: AsyncMock
+) -> None:
     """Unreachable host redisplays the form with cannot_connect."""
     with patch(
         "homeassistant.components.izone.discovery.async_discover_by_host",
-        new=AsyncMock(return_value=None),
+        new=lookup,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

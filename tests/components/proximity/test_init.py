@@ -4,6 +4,11 @@ from typing import Any
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.proximity.const import (
     CONF_IGNORED_ZONES,
@@ -11,14 +16,18 @@ from homeassistant.components.proximity.const import (
     CONF_TRACKED_ENTITIES,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    __version__ as HA_VERSION,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
 
@@ -923,6 +932,7 @@ async def test_create_removed_tracked_entity_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     entity_registry: er.EntityRegistry,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test we create an issue for removed tracked entities."""
     t1 = entity_registry.async_get_or_create(
@@ -935,7 +945,8 @@ async def test_create_removed_tracked_entity_issue(
     hass.states.async_set(t1.entity_id, "not_home")
     hass.states.async_set(t2.entity_id, "not_home")
 
-    await async_setup_single_entry(
+    assert await async_setup_component(hass, "repairs", {})
+    mock_config = await async_setup_single_entry(
         hass, "zone.home", [t1.entity_id, t2.entity_id], [], 1
     )
 
@@ -956,9 +967,215 @@ async def test_create_removed_tracked_entity_issue(
     state = hass.states.get(sensor_t2)
     assert state.state == STATE_UNAVAILABLE
 
-    assert issue_registry.async_get_issue(
-        DOMAIN, f"tracked_entity_removed_{t2.entity_id}"
+    issue_id = f"tracked_entity_removed_{mock_config.entry_id}_{t2.entity_id}"
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == mock_config.entry_id
+    assert issue.is_persistent
+    assert issue.translation_placeholders == {
+        "entity_id": t2.entity_id,
+        "name": "Home",
+    }
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {
+        "entity_id": t2.entity_id,
+        "name": "Home",
+    }
+    result = await process_repair_fix_flow(client, result["flow_id"])
+    assert result["type"] == "create_entry"
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+def _mock_proximity_entry(
+    hass: HomeAssistant, title: str, zone: str, tracked_entities: list[str]
+) -> MockConfigEntry:
+    """Add a proximity config entry to hass without setting it up."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=title,
+        data={
+            CONF_ZONE: zone,
+            CONF_TRACKED_ENTITIES: tracked_entities,
+            CONF_IGNORED_ZONES: [],
+            CONF_TOLERANCE: 1,
+        },
     )
+    entry.add_to_hass(hass)
+    return entry
+
+
+async def test_removed_tracked_entity_issue_per_config_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test proximities tracking the same removed entity get separate issues."""
+    t1 = entity_registry.async_get_or_create(
+        "device_tracker", "device_tracker", "test1"
+    )
+    hass.states.async_set(t1.entity_id, "not_home")
+    home_entry = _mock_proximity_entry(hass, "Home", "zone.home", [t1.entity_id])
+    work_entry = _mock_proximity_entry(hass, "Work", "zone.work", [t1.entity_id])
+    # Sets up both entries
+    assert await hass.config_entries.async_setup(home_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_remove(t1.entity_id)
+    entity_registry.async_remove(t1.entity_id)
+    await hass.async_block_till_done()
+
+    home_issue_id = f"tracked_entity_removed_{home_entry.entry_id}_{t1.entity_id}"
+    work_issue_id = f"tracked_entity_removed_{work_entry.entry_id}_{t1.entity_id}"
+    assert (home_issue := issue_registry.async_get_issue(DOMAIN, home_issue_id))
+    assert home_issue.config_entry_id == home_entry.entry_id
+    assert home_issue.translation_placeholders == {
+        "entity_id": t1.entity_id,
+        "name": "Home",
+    }
+    assert (work_issue := issue_registry.async_get_issue(DOMAIN, work_issue_id))
+    assert work_issue.config_entry_id == work_entry.entry_id
+    assert work_issue.translation_placeholders == {
+        "entity_id": t1.entity_id,
+        "name": "Work",
+    }
+
+    assert await hass.config_entries.async_remove(home_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, home_issue_id)
+    assert issue_registry.async_get_issue(DOMAIN, work_issue_id)
+
+
+async def test_removed_tracked_entity_issue_deleted_when_untracked(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the issue is deleted once the removed entity is no longer tracked."""
+    t1 = entity_registry.async_get_or_create(
+        "device_tracker", "device_tracker", "test1"
+    )
+    t2 = entity_registry.async_get_or_create(
+        "device_tracker", "device_tracker", "test2"
+    )
+    hass.states.async_set(t1.entity_id, "not_home")
+    hass.states.async_set(t2.entity_id, "not_home")
+    home_entry = _mock_proximity_entry(
+        hass, "Home", "zone.home", [t1.entity_id, t2.entity_id]
+    )
+    work_entry = _mock_proximity_entry(hass, "Work", "zone.work", [t2.entity_id])
+    assert await hass.config_entries.async_setup(home_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_remove(t2.entity_id)
+    entity_registry.async_remove(t2.entity_id)
+    await hass.async_block_till_done()
+
+    home_issue_id = f"tracked_entity_removed_{home_entry.entry_id}_{t2.entity_id}"
+    work_issue_id = f"tracked_entity_removed_{work_entry.entry_id}_{t2.entity_id}"
+    assert issue_registry.async_get_issue(DOMAIN, home_issue_id)
+    assert issue_registry.async_get_issue(DOMAIN, work_issue_id)
+
+    result = await hass.config_entries.options.async_init(home_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TRACKED_ENTITIES: [t1.entity_id],
+            CONF_IGNORED_ZONES: [],
+            CONF_TOLERANCE: 1,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # The options flow changes data only, so it does not trigger a reload
+    assert await hass.config_entries.async_reload(home_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, home_issue_id)
+    assert issue_registry.async_get_issue(DOMAIN, work_issue_id)
+
+
+@pytest.mark.parametrize(
+    ("legacy_dismissed_version", "expected_dismissed_version"),
+    [
+        pytest.param(None, None, id="not_ignored"),
+        pytest.param("2025.1.0", HA_VERSION, id="ignored"),
+    ],
+)
+async def test_migrate_legacy_removed_tracked_entity_issue(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    legacy_dismissed_version: str | None,
+    expected_dismissed_version: str | None,
+) -> None:
+    """Test a legacy removed tracked entity issue is migrated per config entry."""
+    tracked_entity_id = "device_tracker.test1"
+    untracked_entity_id = "device_tracker.test2"
+    home_entry = _mock_proximity_entry(hass, "Home", "zone.home", [tracked_entity_id])
+    work_entry = _mock_proximity_entry(hass, "Work", "zone.work", [tracked_entity_id])
+    other_entry = _mock_proximity_entry(hass, "Other", "zone.home", [])
+    hass_storage[ir.STORAGE_KEY] = {
+        "version": ir.STORAGE_VERSION_MAJOR,
+        "minor_version": ir.STORAGE_VERSION_MINOR,
+        "data": {
+            "issues": [
+                {
+                    "breaks_in_ha_version": None,
+                    "config_entry_id": None,
+                    "config_subentry_id": None,
+                    "created": "2026-01-01T00:00:00+00:00",
+                    "data": None,
+                    "dismissed_version": legacy_dismissed_version,
+                    "domain": DOMAIN,
+                    "is_fixable": True,
+                    "is_persistent": True,
+                    "issue_domain": None,
+                    "issue_id": f"tracked_entity_removed_{entity_id}",
+                    "learn_more_url": None,
+                    "severity": "warning",
+                    "translation_key": "tracked_entity_removed",
+                    "translation_placeholders": {
+                        "entity_id": entity_id,
+                        "name": "Work",
+                    },
+                }
+                for entity_id in (tracked_entity_id, untracked_entity_id)
+            ]
+        },
+    }
+    await issue_registry.async_load()
+
+    assert await hass.config_entries.async_setup(home_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"tracked_entity_removed_{tracked_entity_id}"
+    )
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"tracked_entity_removed_{untracked_entity_id}"
+    )
+    assert {
+        issue_id: (
+            issue.config_entry_id,
+            issue.is_persistent,
+            issue.translation_placeholders,
+            issue.dismissed_version,
+        )
+        for (domain, issue_id), issue in issue_registry.issues.items()
+        if domain == DOMAIN
+    } == {
+        f"tracked_entity_removed_{entry.entry_id}_{tracked_entity_id}": (
+            entry.entry_id,
+            True,
+            {"entity_id": tracked_entity_id, "name": entry.title},
+            expected_dismissed_version,
+        )
+        for entry in (home_entry, work_entry)
+    }
+    assert other_entry.state is ConfigEntryState.LOADED
 
 
 async def test_track_renamed_tracked_entity(

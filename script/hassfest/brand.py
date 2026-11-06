@@ -1,9 +1,8 @@
 """Brand validation."""
 
+from hassfest.model import Brand, Config, Integration
 import probatio
 from probatio.humanize import humanize_error
-
-from .model import Brand, Config, Integration
 
 BRAND_SCHEMA = probatio.Schema(
     {

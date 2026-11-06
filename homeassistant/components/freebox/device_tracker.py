@@ -5,6 +5,7 @@ from typing import Any, override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -61,9 +62,12 @@ class FreeboxDevice(ScannerEntity):
     def __init__(self, router: FreeboxRouter, device: dict[str, Any]) -> None:
         """Initialize a Freebox device."""
         self._router = router
-        self._name = device["primary_name"].strip() or DEFAULT_DEVICE_NAME
         self._mac = device["l2ident"]["id"]
         self._manufacturer = device["vendor_name"]
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            name=device["primary_name"].strip() or DEFAULT_DEVICE_NAME,
+        )
         self._attr_icon = icon_for_freebox_device(device)
         self._active = False
         self._attr_extra_state_attributes: dict[str, Any] = {}
@@ -90,12 +94,6 @@ class FreeboxDevice(ScannerEntity):
     def mac_address(self) -> str:
         """Return a unique ID."""
         return self._mac
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
 
     @property
     @override

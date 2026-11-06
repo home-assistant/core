@@ -7,13 +7,17 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import LunatoneConfigEntry, LunatoneScanDataUpdateCoordinator
+from .coordinator import (
+    LunatoneConfigEntry,
+    LunatoneInfoDataUpdateCoordinator,
+    LunatoneScanDataUpdateCoordinator,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -30,12 +34,14 @@ async def async_setup_entry(
     assert config_entry.unique_id is not None
 
     entities: list[BinarySensorEntity] = [
-        LunatoneDALIScanStatus(coordinator_scan, config_entry.unique_id)
+        LunatoneDALIScanStatus(
+            coordinator_scan, coordinator_info, config_entry.unique_id
+        )
     ]
     entities.extend(
         [
             LunatoneDALIScanStatus(
-                coordinator_scan, config_entry.unique_id, int(line_id)
+                coordinator_scan, coordinator_info, config_entry.unique_id, int(line_id)
             )
             for line_id in coordinator_info.data.lines
         ]
@@ -56,12 +62,14 @@ class LunatoneDALIScanStatus(
 
     def __init__(
         self,
-        coordinator: LunatoneScanDataUpdateCoordinator,
+        coordinator_scan: LunatoneScanDataUpdateCoordinator,
+        coordinator_info: LunatoneInfoDataUpdateCoordinator,
         config_entry_unique_id: str,
         line: int | None = None,
     ) -> None:
         """Initialize a Lunatone DALI scan status."""
-        super().__init__(coordinator)
+        super().__init__(coordinator_scan)
+        self._coordinator_info = coordinator_info
 
         self._line = line
 
@@ -74,11 +82,23 @@ class LunatoneDALIScanStatus(
             identifiers={(DOMAIN, device_unique_id)},
         )
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._coordinator_info.async_add_listener(self._handle_info_update)
+        )
+
+    @callback
+    def _handle_info_update(self) -> None:
+        self.async_write_ha_state()
+
     @property
     @override
     def available(self) -> bool:
         return super().available and (
-            self._line is None or self._line in self.coordinator.line_scan_status
+            self._line is None or str(self._line) in self._coordinator_info.data.lines
         )
 
     @property

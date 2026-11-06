@@ -3,6 +3,7 @@
   "name": "MeteoAlarm",
   "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@rolfberkenbosch"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/meteoalarm",
   "iot_class": "cloud_polling",
   "loggers": ["meteoalertapi"],

@@ -445,10 +445,9 @@ async def test_component_setup_dependencies_with_config_entry(
     """Test we wait for a dependency with config entry."""
     calls: list[str] = []
 
-    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         await asyncio.sleep(0)
         calls.append("entry")
-        return True
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_async_setup_entry))
     mock_platform(hass, "comp.config_flow", None)
@@ -894,12 +893,11 @@ async def test_parallel_entry_setup(hass: HomeAssistant, mock_handlers) -> None:
 
     calls = []
 
-    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Mock setting up an entry."""
         calls.append(entry.data["value"])
         await asyncio.sleep(0)
         calls.append(entry.data["value"])
-        return True
 
     mock_integration(
         hass,
@@ -986,7 +984,7 @@ async def test_integration_only_setup_entry(hass: HomeAssistant) -> None:
         MockModule(
             "test_integration_only_entry",
             setup=False,
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
     assert await setup.async_setup_component(hass, "test_integration_only_entry", {})
@@ -1303,7 +1301,7 @@ async def test_async_start_setup_simple_integration_end_to_end(
         MockModule(
             "test_integration_no_platforms",
             setup=False,
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
     assert await setup.async_setup_component(hass, "test_integration_no_platforms", {})
@@ -1380,7 +1378,7 @@ async def test_setup_config_entry_from_yaml(
         MockModule(
             "test_integration_only_entry",
             setup=False,
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
 

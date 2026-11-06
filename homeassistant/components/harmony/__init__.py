@@ -1,6 +1,8 @@
 """The Logitech Harmony Hub integration."""
 
+from functools import partial
 import logging
+from pathlib import Path
 
 from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP
@@ -12,6 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS
 from .data import HarmonyConfigEntry, HarmonyData
 from .services import async_setup_services
+from .util import config_file_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +99,10 @@ def _async_import_options_from_data_if_missing(
 
 
 async def _update_listener(hass: HomeAssistant, entry: HarmonyConfigEntry) -> None:
-    """Handle options update."""
+    """Reload when the host changes and pass options updates to the entities."""
+    if entry.data[CONF_HOST] != entry.runtime_data.address:
+        await hass.config_entries.async_reload(entry.entry_id)
+        return
     async_dispatcher_send(
         hass, f"{HARMONY_OPTIONS_UPDATE}-{entry.unique_id}", entry.options
     )
@@ -109,3 +115,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> 
     finally:
         # Shutdown a harmony remote for removal
         await entry.runtime_data.shutdown()
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> None:
+    """Remove the hub configuration file."""
+    await hass.async_add_executor_job(
+        partial(Path(config_file_path(hass, entry.unique_id)).unlink, missing_ok=True)
+    )

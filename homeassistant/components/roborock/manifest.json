@@ -4,6 +4,7 @@
   "categories": ["appliances_cleaning.cleaning", "appliances_cleaning.laundry"],
   "codeowners": ["@Lash-L", "@allenporter"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dhcp": [
     {
       "macaddress": "249E7D*"

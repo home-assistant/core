@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 import logging
+from typing import TYPE_CHECKING
 
 from awesomeversion import AwesomeVersion
 from synology_dsm import SynologyDSM
@@ -25,7 +26,6 @@ from synology_dsm.exceptions import (
     SynologyDSMRequestException,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -50,6 +50,9 @@ from .const import (
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
 
+if TYPE_CHECKING:
+    from .coordinator import SynologyDSMConfigEntry
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -58,7 +61,7 @@ class SynoApi:
 
     dsm: SynologyDSM
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: SynologyDSMConfigEntry) -> None:
         """Initialize the API wrapper class."""
         self._hass = hass
         self._entry = entry

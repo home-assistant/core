@@ -7,6 +7,7 @@ import logging
 from typing import Any, override
 
 from neopool_modbus import NeoPoolModbusClient
+from neopool_modbus.decoders import aggregate_filtration_remaining
 from neopool_modbus.exceptions import NeoPoolError
 from neopool_modbus.registers import (
     MAX_RELAY_GPIO,
@@ -50,7 +51,7 @@ _TIMER_OPTIONS: dict[str, str] = {
 }
 
 
-type NeoPoolConfigEntry = ConfigEntry["NeoPoolCoordinator"]
+type NeoPoolConfigEntry = ConfigEntry[NeoPoolCoordinator]
 
 
 class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -75,6 +76,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self._corrupted_gpio_state: frozenset[tuple[str, int]] | None = None
+        self._corrupted_gpio_issue_id = f"corrupted_gpio_{entry.entry_id}"
         self._follow_up_unsub: CALLBACK_TYPE | None = None
         # Serializes masked read-modify-write across siblings sharing a register.
         self.masked_write_lock = asyncio.Lock()
@@ -140,7 +142,8 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                "corrupted_gpio",
+                self._corrupted_gpio_issue_id,
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="corrupted_gpio",
@@ -148,17 +151,23 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         else:
             # Clear a previously raised repair issue once the device is healthy.
-            ir.async_delete_issue(self.hass, DOMAIN, "corrupted_gpio")
+            ir.async_delete_issue(self.hass, DOMAIN, self._corrupted_gpio_issue_id)
 
     def _get_enabled_timers(self, data: dict[str, Any]) -> list[str]:
         """Return the timer block names to poll.
 
         Base aux and light blocks poll on their config option. The second aux
-        subtimer and filtration blocks additionally require an active context
-        (the block name registered by an enabled time entity).
+        subtimer and filtration blocks additionally require an active context: a
+        block name or a collection of them (FILTRATION_REMAINING spans all three
+        filtration blocks).
         """
         options = self.config_entry.options
-        active = {ctx for ctx in self.async_contexts() if isinstance(ctx, str)}
+        active: set[str] = set()
+        for ctx in self.async_contexts():
+            if isinstance(ctx, str):
+                active.add(ctx)
+            elif isinstance(ctx, (set, frozenset, tuple, list)):
+                active.update(ctx)
         enabled: list[str] = []
         for key in TIMER_BLOCKS:
             option_key = _TIMER_OPTIONS.get(key)
@@ -180,23 +189,58 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         enabled += [ft for ft in _FILT_TIMERS if ft in active]
         return enabled
 
+    def _filtration_remaining_blocks(self) -> set[str]:
+        """Return filtration blocks needed by the remaining-time sensor.
+
+        Only the FILTRATION_REMAINING sensor registers its context as a
+        collection of block names; the time entities register a single block
+        name as a plain string. Returning just the collection-sourced blocks
+        keeps force-reads tied to that sensor, so a running pump does not
+        bypass the cache for time-only contexts.
+        """
+        blocks: set[str] = set()
+        for ctx in self.async_contexts():
+            if isinstance(ctx, (set, frozenset, tuple, list)):
+                blocks.update(ft for ft in ctx if ft in _FILT_TIMERS)
+        return blocks
+
     async def _read_timers_into_data(self, data: dict[str, Any]) -> None:
         """Read every enabled timer block and merge derived fields into data.
 
         Exposes the enable flag (the light platform's manual-mode guard), the
-        start/stop endpoints consumed by the time platform, and the repeat
-        period consumed by the select platform. Further derived keys will be
-        added by follow-up platform PRs that consume them.
+        start/stop endpoints consumed by the time platform, the repeat period
+        consumed by the select platform, and the countdown aggregated into
+        FILTRATION_REMAINING by the sensor platform.
         """
         enabled = self._get_enabled_timers(data)
-        if not enabled:
-            return
-        timers = await self.client.read_all_timers(enabled_timers=enabled)
-        for t_name, t in timers.items():
-            data[f"{t_name}_enable"] = t["enable"]
-            data[f"{t_name}_start"] = t["on"]  # seconds since midnight
-            data[f"{t_name}_period"] = t["period"]
-            data[f"{t_name}_stop"] = t.get("stop")
+        if enabled:
+            # FILTRATION_REMAINING must stay fresh while the pump runs, so
+            # force-read the sensor's filtration blocks even if their countdown
+            # looks static between polls. Scope this to the sensor's context so
+            # a time-only context keeps using the cache.
+            remaining_blocks = self._filtration_remaining_blocks()
+            prev_remaining = (
+                self.data.get("FILTRATION_REMAINING") if self.data else None
+            )
+            filtration_active = bool(data.get("Filtration Pump")) or bool(
+                prev_remaining and prev_remaining > 0
+            )
+            force_read = (
+                tuple(ft for ft in enabled if ft in remaining_blocks)
+                if filtration_active and remaining_blocks
+                else None
+            )
+            timers = await self.client.read_all_timers(
+                enabled_timers=enabled, force_read=force_read
+            )
+            for t_name, t in timers.items():
+                data[f"{t_name}_enable"] = t["enable"]
+                data[f"{t_name}_start"] = t["on"]  # seconds since midnight
+                data[f"{t_name}_period"] = t["period"]
+                data[f"{t_name}_countdown"] = t["countdown"]
+                data[f"{t_name}_stop"] = t.get("stop")
+
+        data["FILTRATION_REMAINING"] = aggregate_filtration_remaining(data)
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:

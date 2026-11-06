@@ -62,7 +62,7 @@ from homeassistant.helpers.event import (
     async_track_state_removed_domain,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 
@@ -1136,7 +1136,7 @@ async def test_friendly_name_empty_override_uses_device_name(
         (False, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
         (True, None, "Device Bla", "Device Bla"),
-        (True, "Entity Blu", UNDEFINED, "Mock Title Entity Blu"),
+        (True, "Entity Blu", Undefined, "Mock Title Entity Blu"),
         (True, "Entity Blu", None, "Mock Title Entity Blu"),
     ],
 )
@@ -1144,7 +1144,7 @@ async def test_friendly_name_attr(
     hass: HomeAssistant,
     has_entity_name: bool,
     entity_name: str | None,
-    device_name: str | UndefinedType | None,
+    device_name: str | Undefined | None,
     expected_friendly_name: str | None,
 ) -> None:
     """Test friendly name when the entity uses _attr_*."""
@@ -1172,10 +1172,10 @@ async def test_friendly_name_attr(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla"),
+        (True, Undefined, "Device Bla"),
     ],
 )
 async def test_friendly_name_description(
@@ -1210,10 +1210,10 @@ async def test_friendly_name_description(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla English cls"),
+        (True, Undefined, "Device Bla English cls"),
     ],
 )
 async def test_friendly_name_description_device_class_name(
@@ -1483,10 +1483,10 @@ async def test_entity_name_translation_placeholder_errors(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla"),
+        (True, Undefined, "Device Bla"),
     ],
 )
 async def test_friendly_name_property(
@@ -1520,11 +1520,11 @@ async def test_friendly_name_property(
         (False, "Entity Blu", "Device Bla Entity Blu"),
         (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
         (False, None, "Device Bla"),
-        (False, UNDEFINED, "Device Bla"),
+        (False, Undefined, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         # Won't use the device class name because the entity overrides the name property
-        (True, UNDEFINED, "Device Bla"),
+        (True, Undefined, "Device Bla"),
     ],
 )
 async def test_friendly_name_property_device_class_name(

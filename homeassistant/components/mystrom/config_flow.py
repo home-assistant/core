@@ -84,10 +84,9 @@ class MyStromConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self._host},
             )
 
-        self._set_confirm_only()
         if TYPE_CHECKING:
             assert self._host is not None
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders={CONF_HOST: self._host},
+            description_placeholders={"host": self._host},
         )

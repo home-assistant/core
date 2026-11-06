@@ -1065,11 +1065,16 @@ async def test_no_repair_issue(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (DOMAIN, "https_webhook") not in issue_registry.issues
-    assert (DOMAIN, "webhook_url") not in issue_registry.issues
-    assert (DOMAIN, "enable_port") not in issue_registry.issues
-    assert (DOMAIN, "firmware_update") not in issue_registry.issues
-    assert (DOMAIN, "ssl") not in issue_registry.issues
+    for issue_id in (
+        "https_webhook",
+        "webhook_url",
+        "enable_port",
+        "firmware_update_host",
+        "ssl",
+    ):
+        assert (DOMAIN, f"{issue_id}_{config_entry.entry_id}") not in (
+            issue_registry.issues
+        )
 
 
 async def test_https_repair_issue(
@@ -1096,7 +1101,12 @@ async def test_https_repair_issue(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (DOMAIN, "https_webhook") in issue_registry.issues
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"https_webhook_{config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
+    assert issue.translation_placeholders["name"] == TEST_NVR_NAME
 
 
 async def test_ssl_repair_issue(
@@ -1126,7 +1136,10 @@ async def test_ssl_repair_issue(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (DOMAIN, "ssl") in issue_registry.issues
+    issue = issue_registry.async_get_issue(DOMAIN, f"ssl_{config_entry.entry_id}")
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
+    assert issue.translation_placeholders["name"] == TEST_NVR_NAME
 
 
 @pytest.mark.parametrize("protocol", ["rtsp", "rtmp"])
@@ -1146,7 +1159,11 @@ async def test_port_repair_issue(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (DOMAIN, "enable_port") in issue_registry.issues
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"enable_port_{config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
 
 
 async def test_webhook_repair_issue(
@@ -1169,7 +1186,11 @@ async def test_webhook_repair_issue(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (DOMAIN, "webhook_url") in issue_registry.issues
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"webhook_url_{config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
 
 
 async def test_firmware_repair_issue(
@@ -1183,7 +1204,47 @@ async def test_firmware_repair_issue(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (DOMAIN, "firmware_update_host") in issue_registry.issues
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"firmware_update_host_{config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
+
+
+async def test_firmware_repair_issue_per_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test each host gets its own firmware issue, removed with its entry."""
+    reolink_host.camera_sw_version_update_required.return_value = True
+    config_entry_2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+        data=config_entry.data,
+        options=config_entry.options,
+        title="Second NVR",
+    )
+    config_entry_2.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry_2.state is ConfigEntryState.LOADED
+
+    issue_id_1 = f"firmware_update_host_{config_entry.entry_id}"
+    issue_id_2 = f"firmware_update_host_{config_entry_2.entry_id}"
+    issue_1 = issue_registry.async_get_issue(DOMAIN, issue_id_1)
+    issue_2 = issue_registry.async_get_issue(DOMAIN, issue_id_2)
+    assert issue_1 is not None
+    assert issue_1.config_entry_id == config_entry.entry_id
+    assert issue_2 is not None
+    assert issue_2.config_entry_id == config_entry_2.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id_1) is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id_2) is not None
 
 
 async def test_password_too_long_repair_issue(

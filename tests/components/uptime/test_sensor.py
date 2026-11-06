@@ -3,7 +3,6 @@
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
-from syrupy.filters import props
 
 from homeassistant.components.uptime.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -26,10 +25,10 @@ async def test_uptime_sensor(
     assert state == snapshot
 
     assert (entity_entry := entity_registry.async_get(state.entity_id))
-    assert entity_entry == snapshot(exclude=props("unique_id"))
+    assert entity_entry == snapshot
     assert entity_entry.unique_id == init_integration.entry_id
 
     assert entity_entry.device_id
     assert (device_entry := device_registry.async_get(entity_entry.device_id))
-    assert device_entry == snapshot(exclude=props("identifiers"))
+    assert device_entry == snapshot
     assert device_entry.identifiers == {(DOMAIN, init_integration.entry_id)}

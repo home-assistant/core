@@ -112,7 +112,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
 
         self._finished_event = asyncio.Event()
         self._firmware: Firmware | None = None
-        self._unload: list[Callable] = []
+        self._unload: list[Callable[[], None]] = []
         self.idx = idx
 
         if (
@@ -136,8 +136,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self._firmware = self.entity_description.latest_version(
             self.coordinator.data, self.idx
         )
-        if self._firmware:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     @property
     @override
@@ -202,10 +201,10 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         return None
 
     @callback
-    def _update_progress(self, progress: MessageEvent) -> None:
+    def _update_progress(self, event: MessageEvent) -> None:
         """Update install progress on event."""
 
-        progress = int(progress.data)
+        progress = int(event.data)
         self._attr_update_percentage = progress
         self.async_write_ha_state()
 
@@ -252,7 +251,9 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
             self.register_callbacks()
 
             try:
-                await self.coordinator.client.fw_update(self._firmware, self.idx)
+                await self.coordinator.async_execute_command(
+                    self.coordinator.client.fw_update, self._firmware, self.idx
+                )
 
                 # block until update finished event received
                 await self._finished_event.wait()

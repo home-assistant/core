@@ -1,6 +1,7 @@
 """Constants for the BSB-LAN integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Final
 
@@ -24,3 +25,13 @@ CONF_HEATING_CIRCUITS: Final = "heating_circuits"
 
 DEFAULT_HEATING_CIRCUITS: Final = (1,)
 DEFAULT_PORT: Final = 80
+
+DEFAULT_HOT_WATER_MIN_TEMP: Final = 10.0
+DEFAULT_HOT_WATER_MAX_TEMP: Final = 65.0
+
+
+class Setpoint(StrEnum):
+    """Setpoint a temperature change goes to: comfort or nominal, or reduced."""
+
+    NORMAL = "normal"
+    REDUCED = "reduced"

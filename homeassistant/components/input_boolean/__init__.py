@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import CONF_INITIAL, DATA_INPUT_BOOLEAN, DOMAIN
+from .const import CONF_INITIAL, DATA_INPUT_BOOLEAN, DOMAIN, InputBooleanService
 from .entity import InputBoolean
 from .services import async_setup_services
 
@@ -60,6 +60,7 @@ __all__ = [
     "SERVICE_TURN_OFF",
     "SERVICE_TURN_ON",
     "STORAGE_FIELDS",
+    "InputBooleanService",
 ]
 
 

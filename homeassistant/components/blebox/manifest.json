@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@bbx-a", "@swistakm", "@bkobus-bbx"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     { "hostname": "rollergate*" },
     { "hostname": "gatebox*" },

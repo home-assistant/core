@@ -13,7 +13,7 @@ from homeassistant.components.tessie.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 # Tessie library
 TEST_STATE_OF_ALL_VEHICLES = load_json_object_fixture("vehicles.json", DOMAIN)
@@ -65,7 +65,7 @@ NO_SCOPES = ["user_data", "offline_access", "openid"]
 
 
 async def setup_platform(
-    hass: HomeAssistant, platforms: list[Platform] | UndefinedType = UNDEFINED
+    hass: HomeAssistant, platforms: list[Platform] | Undefined = Undefined
 ) -> MockConfigEntry:
     """Set up the Tessie platform."""
 
@@ -77,7 +77,7 @@ async def setup_platform(
 
     with patch(
         "homeassistant.components.tessie.PLATFORMS",
-        PLATFORMS if platforms is UNDEFINED else platforms,
+        PLATFORMS if platforms is Undefined else platforms,
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()

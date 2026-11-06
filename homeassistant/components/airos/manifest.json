@@ -4,6 +4,7 @@
   "categories": ["computers_network.routers_network"],
   "codeowners": ["@CoMPaTech"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [{ "registered_devices": true }],
   "documentation": "https://www.home-assistant.io/integrations/airos",
   "integration_type": "device",

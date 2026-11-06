@@ -226,35 +226,43 @@ async def test_merten_507801(
     assert state
 
 
-async def test_shelly_001p10_disabled_entities(
+async def test_shelly_001p10_suppressed_endpoint(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     client,
-    shelly_qnsh_001P10_shutter,
-    integration,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: MockConfigEntry,
 ) -> None:
-    """Test that Shelly 001P10 entity created by endpoint 2 is disabled."""
-    entity_ids = [
-        "cover.wave_shutter_2",
-    ]
-    for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
-        assert state is None
-        entry = entity_registry.async_get(entity_id)
-        assert entry
-        assert entry.disabled
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    """Test that Shelly 001P10 endpoint 2 is suppressed (no entity created at all).
 
-        # Test enabling entity
-        updated_entry = entity_registry.async_update_entity(
-            entry.entity_id, disabled_by=None
+    Endpoint 2 covers the same shutter as endpoint 1 and has no practical function.
+    The discovery schema suppresses it completely so it doesn't produce even a
+    disabled entity, and endpoint 1 therefore has no collision partner, so the
+    shutter cover stays on the main node device rather than on a child device.
+    """
+    node = shelly_qnsh_001P10_shutter
+
+    # Endpoint 2 is suppressed, so the node exposes exactly one cover entity (endpoint 1)
+    # and no second, disabled or hidden, endpoint-2 cover.
+    cover_entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, integration.entry_id
         )
-        assert updated_entry != entry
-        assert updated_entry.disabled is False
+        if entry.domain == Platform.COVER
+    ]
+    assert [entry.entity_id for entry in cover_entries] == ["cover.wave_shutter"]
+    assert hass.states.get("cover.wave_shutter")
 
-    # Test if the main entity from endpoint 1 was created.
-    state = hass.states.get("cover.wave_shutter")
-    assert state
+    # With no collision partner, the shutter cover stays on the main node device rather
+    # than on an endpoint child device.
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
+    )
+    assert node_device is not None
+    assert not dr.async_entries_for_parent_device(device_registry, node_device.id)
+    assert cover_entries[0].device_id == node_device.id
 
 
 async def test_merten_507801_disabled_enitites(

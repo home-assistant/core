@@ -18,7 +18,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -159,7 +158,7 @@ class AirzoneSystemBinarySensor(AirzoneSystemEntity, AirzoneBinarySensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: AirzoneBinarySensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_id: str,
         system_data: dict[str, Any],
     ) -> None:
@@ -177,7 +176,7 @@ class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
         self,
         coordinator: AirzoneUpdateCoordinator,
         description: AirzoneBinarySensorEntityDescription,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_zone_id: str,
         zone_data: dict[str, Any],
     ) -> None:

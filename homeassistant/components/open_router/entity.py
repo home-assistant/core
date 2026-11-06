@@ -187,8 +187,11 @@ async def _transform_stream(
                         current_tool_call["arguments"] + tool_call.function.arguments
                     )
 
-        if choice.finish_reason == "tool_calls":
+        # OpenRouter repeats the finish reason in the chunk carrying the usage,
+        # so the tool calls are emitted only once.
+        if choice.finish_reason == "tool_calls" and tool_calls:
             completed_tool_calls = [tool_calls[index] for index in sorted(tool_calls)]
+            tool_calls.clear()
 
             data["tool_calls"] = [
                 llm.ToolInput(

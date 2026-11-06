@@ -132,7 +132,7 @@ class AzureEventHub:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: AzureEventHubConfigEntry,
         entities_filter: EntityFilter,
     ) -> None:
         """Initialize the listener."""

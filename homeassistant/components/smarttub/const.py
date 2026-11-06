@@ -6,7 +6,9 @@ EVENT_SMARTTUB = "smarttub"
 
 SCAN_INTERVAL = 60
 
-POLLING_TIMEOUT = 10
+POLLING_TIMEOUT = 30
+# consecutive failed polls for which the last known data is kept
+MAX_STALE_POLLS = 3
 API_TIMEOUT = 5
 
 DEFAULT_MIN_TEMP = 18.5

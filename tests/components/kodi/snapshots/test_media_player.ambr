@@ -4,7 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -40,9 +40,9 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('kodi', '01JZ8Y6K9QW3X5V7T2R4P6N8M0')]>,
     'disabled_by': None,
     'domain': 'media_player',
     'entity_category': None,
@@ -88,7 +88,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': None,
       'connections': set({
       }),
@@ -124,9 +124,9 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('kodi', '11111111-1111-1111-1111-111111111111')]>,
     'disabled_by': None,
     'domain': 'media_player',
     'entity_category': None,

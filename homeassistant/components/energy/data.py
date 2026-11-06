@@ -14,7 +14,7 @@ from homeassistant.helpers import entity_registry as er, singleton, storage
 from .const import DOMAIN
 
 STORAGE_VERSION = 1
-STORAGE_MINOR_VERSION = 3
+STORAGE_MINOR_VERSION = 4
 STORAGE_KEY = DOMAIN
 
 
@@ -156,6 +156,19 @@ class SolarSourceType(TypedDict):
     name: NotRequired[str]
 
 
+class HomeSourceType(TypedDict):
+    """Dictionary holding the whole-home consumption meter.
+
+    It does not touch any other calculation,
+    and is intended to be used with a main panel sensor.
+    """
+
+    type: Literal["home"]
+    stat_energy_to: str
+    stat_rate: NotRequired[str]
+    name: NotRequired[str]
+
+
 class BatterySourceType(TypedDict):
     """Dictionary holding the source of battery storage."""
 
@@ -229,6 +242,7 @@ class WaterSourceType(TypedDict):
 type SourceType = (
     GridSourceType
     | SolarSourceType
+    | HomeSourceType
     | BatterySourceType
     | GasSourceType
     | WaterSourceType
@@ -258,6 +272,7 @@ class EnergyPreferences(TypedDict):
     energy_sources: list[SourceType]
     device_consumption: list[DeviceConsumption]
     device_consumption_water: NotRequired[list[DeviceConsumption]]
+    device_consumption_gas: NotRequired[list[DeviceConsumption]]
 
 
 class EnergyPreferencesUpdate(EnergyPreferences, total=False):
@@ -516,6 +531,14 @@ SOLAR_SOURCE_SCHEMA = probatio.Schema(
         probatio.Optional("name"): str,
     }
 )
+HOME_SOURCE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required("type"): "home",
+        probatio.Required("stat_energy_to"): str,
+        probatio.Optional("stat_rate"): str,
+        probatio.Optional("name"): str,
+    }
+)
 BATTERY_SOURCE_SCHEMA = probatio.Schema(
     {
         probatio.Required("type"): "battery",
@@ -572,7 +595,8 @@ WATER_SOURCE_SCHEMA = probatio.All(
 
 def check_type_limits(value: list[SourceType]) -> list[SourceType]:
     """Validate that we don't have too many of certain types."""
-    # Currently no type limits - multiple grid sources are allowed (like batteries)
+    if sum(1 for source in value if source["type"] == "home") > 1:
+        raise probatio.Invalid("Only one home source is allowed")
     return value
 
 
@@ -624,6 +648,7 @@ ENERGY_SOURCE_SCHEMA = probatio.All(
                 {
                     "grid": GRID_SOURCE_SCHEMA,
                     "solar": SOLAR_SOURCE_SCHEMA,
+                    "home": HOME_SOURCE_SCHEMA,
                     "battery": BATTERY_SOURCE_SCHEMA,
                     "gas": GAS_SOURCE_SCHEMA,
                     "water": WATER_SOURCE_SCHEMA,
@@ -749,6 +774,10 @@ class _EnergyPreferencesStore(storage.Store[EnergyPreferences]):
                     new_sources.append(source)
             data["energy_sources"] = new_sources
 
+        if old_major_version == 1 and old_minor_version < 4:
+            # Add device_consumption_gas field if it doesn't exist
+            data.setdefault("device_consumption_gas", [])
+
         return data
 
 
@@ -815,6 +844,7 @@ class EnergyManager:
             "energy_sources": [],
             "device_consumption": [],
             "device_consumption_water": [],
+            "device_consumption_gas": [],
         }
 
     async def async_update(self, update: EnergyPreferencesUpdate) -> None:
@@ -828,6 +858,7 @@ class EnergyManager:
             "energy_sources",
             "device_consumption",
             "device_consumption_water",
+            "device_consumption_gas",
         ):
             if key in update:
                 data[key] = update[key]

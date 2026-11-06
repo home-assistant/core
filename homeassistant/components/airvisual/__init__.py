@@ -8,7 +8,7 @@ from typing import Any
 from pyairvisual.cloud_api import CloudAPI
 
 from homeassistant.components import automation
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_COUNTRY,
@@ -126,7 +126,7 @@ def async_sync_geo_coordinator_update_intervals(
 
 @callback
 def _standardize_geography_config_entry(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: AirVisualConfigEntry
 ) -> None:
     """Ensure that geography config entries have appropriate properties."""
     entry_updates = {}

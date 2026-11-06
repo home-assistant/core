@@ -27,10 +27,11 @@ from tesla_fleet_api.router import (
     merge_site_info,
 )
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
-from teslemetry_stream.const import EnergyTotalsEvent
+from teslemetry_stream.const import EnergyTotalsEvent, WallConnectorTotalsEvent
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -39,7 +40,7 @@ if TYPE_CHECKING:
     from . import TeslemetryConfigEntry
 
 from .const import DOMAIN, LOGGER
-from .helpers import async_update_device_sw_version, flatten
+from .helpers import async_update_device_sw_version, flatten, gateway_issue_id
 
 RETRY_EXCEPTIONS = (
     InvalidResponse,
@@ -66,10 +67,14 @@ ENERGY_LIVE_INTERVAL = timedelta(seconds=5)
 ENERGY_LIVE_LOCAL_MAX_BACKOFF = timedelta(minutes=1)
 ENERGY_CONFIG_INTERVAL = timedelta(seconds=30)
 LOCAL_STATUS_INTERVAL = timedelta(seconds=10)
+LOCAL_COMPONENTS_INTERVAL = timedelta(seconds=30)
 
 # Start of the day the energy history totals cover. Kept out of
 # ENERGY_HISTORY_FIELDS, which is the list of keys that become sensors.
 PERIOD_START = "_period_start"
+
+# Wh delivered per Wall Connector DIN on the reported day.
+WALL_CONNECTOR_TOTALS = "totals"
 
 # Keys within tariff_content_v2 kept as nested dicts rather than flattened,
 # since entities and calendars read them as whole structures.
@@ -243,6 +248,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self._local_poll_in_progress = False
         self._local_backoff_ticks = 1
         self._local_ticks_to_skip = 0
+        self._local_reached = False
         self.data = _index_wall_connectors(data)
 
     def enable_local_polling(self, local: PowerwallEnergySite) -> None:
@@ -295,6 +301,15 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
                         "Local live poll for %s recovered", self.api.energy_site_id
                     )
                 self._local_backoff_ticks = 1
+                if not self._local_reached:
+                    self._local_reached = True
+                    ir.async_delete_issue(
+                        self.hass,
+                        DOMAIN,
+                        gateway_issue_id(
+                            self.config_entry.entry_id, self.api.energy_site_id
+                        ),
+                    )
             self.data = self._merged()
             # Not async_set_updated_data: availability stays with the stream.
             self.async_update_listeners()
@@ -510,11 +525,11 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         return self._ingest_site_info(data)
 
 
-class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage energy site history totals from the Teslemetry stream.
+class TeslemetryStreamTotalsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Base class for daily energy totals pushed by the Teslemetry stream.
 
-    The server sums each day's periods itself and publishes cumulative
-    ``energy_totals``; there is no REST poll and no local accumulation.
+    The server sums each day itself and publishes the totals; there is no
+    REST poll and no local accumulation.
     """
 
     config_entry: TeslemetryConfigEntry
@@ -524,13 +539,14 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
         site_id: int,
+        name: str,
     ) -> None:
-        """Initialize Teslemetry Energy History coordinator."""
+        """Initialize the stream totals coordinator."""
         super().__init__(
             hass,
             LOGGER,
             config_entry=config_entry,
-            name=f"Teslemetry Energy History {site_id}",
+            name=f"{name} {site_id}",
         )
         self.site_id = site_id
         self.time_zone: tzinfo | None = None
@@ -549,16 +565,33 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
         self.time_zone = zone
 
-    def handle_stream_update(self, event: EnergyTotalsEvent) -> None:
-        """Handle an energy_totals document from the stream."""
-        data: dict[str, Any] = asdict(event.totals)
+    def _period_start(self, day: str) -> datetime:
+        """Return the start of a site-local day reported by the stream."""
         # The server finalises a day after the site's local midnight, so a late
         # event must stay on the day it reports rather than the current one.
-        data[PERIOD_START] = datetime.combine(
-            date.fromisoformat(event.date),
+        return datetime.combine(
+            date.fromisoformat(day),
             time(),
             tzinfo=self.time_zone or dt_util.get_default_time_zone(),
         )
+
+
+class TeslemetryEnergyHistoryCoordinator(TeslemetryStreamTotalsCoordinator):
+    """Class to manage energy site history totals from the Teslemetry stream."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        site_id: int,
+    ) -> None:
+        """Initialize Teslemetry Energy History coordinator."""
+        super().__init__(hass, config_entry, site_id, "Teslemetry Energy History")
+
+    def handle_stream_update(self, event: EnergyTotalsEvent) -> None:
+        """Handle an energy_totals document from the stream."""
+        data: dict[str, Any] = asdict(event.totals)
+        data[PERIOD_START] = self._period_start(event.date)
         self.async_set_updated_data(data)
 
 
@@ -625,3 +658,57 @@ class TeslemetryLocalStatusCoordinator(TeslemetryLocalCoordinator[dict[str, Any]
     async def _async_fetch(self) -> dict[str, Any]:
         """Fetch the gateway status."""
         return await self.client.get_status()
+
+
+class TeslemetryWallConnectorTotalsCoordinator(TeslemetryStreamTotalsCoordinator):
+    """Class to manage daily Wall Connector energy totals from the Teslemetry stream."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        site_id: int,
+    ) -> None:
+        """Initialize Teslemetry Wall Connector Totals coordinator."""
+        super().__init__(
+            hass, config_entry, site_id, "Teslemetry Wall Connector Totals"
+        )
+        self._created_at: datetime | None = None
+
+    def handle_stream_update(self, event: WallConnectorTotalsEvent) -> None:
+        """Handle a wall_connector_totals document from the stream."""
+        # A connect-time replay can be older than a live event already applied.
+        if self._created_at is not None and event.created_at < self._created_at:
+            return
+        self._created_at = event.created_at
+        self.async_set_updated_data(
+            {
+                WALL_CONNECTOR_TOTALS: event.totals,
+                PERIOD_START: self._period_start(event.date),
+            }
+        )
+
+
+class TeslemetryLocalComponentsCoordinator(TeslemetryLocalCoordinator[dict[str, Any]]):
+    """Class to poll the components of a locally paired Powerwall gateway."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        client: PowerwallClient,
+        site_id: int,
+    ) -> None:
+        """Initialize the local Powerwall components coordinator."""
+        super().__init__(
+            hass,
+            config_entry,
+            client,
+            f"Teslemetry Powerwall Components {site_id}",
+            LOCAL_COMPONENTS_INTERVAL,
+        )
+
+    @override
+    async def _async_fetch(self) -> dict[str, Any]:
+        """Fetch the gateway components."""
+        return await self.client.get_components()

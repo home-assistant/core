@@ -5,6 +5,7 @@
   "categories": ["media_entertainment.music_radio_services"],
   "codeowners": ["@music-assistant", "@arturpragacz"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["auth"],
   "documentation": "https://www.home-assistant.io/integrations/music_assistant",
   "integration_type": "service",

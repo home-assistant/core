@@ -1380,7 +1380,8 @@ async def test_play_media_announce(
     sonos_websocket.play_clip.reset_mock()
     sonos_websocket.play_clip.side_effect = SonosWebsocketError("Error Message")
     with pytest.raises(
-        HomeAssistantError, match="Error when calling Sonos websocket: Error Message"
+        HomeAssistantError,
+        match="An error occurred while communicating with the Sonos speaker",
     ):
         await hass.services.async_call(
             MP_DOMAIN,

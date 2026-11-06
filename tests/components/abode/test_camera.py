@@ -10,6 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.abode.const import DOMAIN
+from homeassistant.components.abode.services import AbodeService
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -49,7 +50,7 @@ async def test_capture_image(hass: HomeAssistant) -> None:
     with patch("jaraco.abode.devices.camera.Camera.capture") as mock_capture:
         await hass.services.async_call(
             DOMAIN,
-            "capture_image",
+            AbodeService.CAPTURE_IMAGE,
             {ATTR_ENTITY_ID: "camera.test_cam"},
             blocking=True,
         )
@@ -174,7 +175,7 @@ async def test_capture_image_after_entity_id_change(
     with patch("jaraco.abode.devices.camera.Camera.capture") as mock_capture:
         await hass.services.async_call(
             DOMAIN,
-            "capture_image",
+            AbodeService.CAPTURE_IMAGE,
             {ATTR_ENTITY_ID: CAMERA_ENTITY_ID},
             blocking=True,
         )
@@ -183,7 +184,7 @@ async def test_capture_image_after_entity_id_change(
 
         await hass.services.async_call(
             DOMAIN,
-            "capture_image",
+            AbodeService.CAPTURE_IMAGE,
             {ATTR_ENTITY_ID: RENAMED_CAMERA_ENTITY_ID},
             blocking=True,
         )

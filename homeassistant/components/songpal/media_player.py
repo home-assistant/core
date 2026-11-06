@@ -28,11 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_ENDPOINT, DOMAIN, ERROR_REQUEST_RETRY
 
@@ -42,19 +38,6 @@ PARAM_NAME = "name"
 PARAM_VALUE = "value"
 
 INITIAL_RETRY_DELAY = 10
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up from legacy configuration file. Obsolete."""
-    _LOGGER.error(
-        "Configuring Songpal through media_player platform is no longer supported."
-        " Convert to songpal platform or UI configuration"
-    )
 
 
 async def async_setup_entry(

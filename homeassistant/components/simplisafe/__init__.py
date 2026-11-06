@@ -109,20 +109,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @callback
 def _async_register_base_station(
-    hass: HomeAssistant, entry: ConfigEntry, system: SystemType
+    hass: HomeAssistant, entry: SimpliSafeConfigEntry, system: SystemType
 ) -> None:
     """Register a new bridge."""
     device_registry = dr.async_get(hass)
 
-    base_station = device_registry.async_get_or_create_device(
+    base_station = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, str(system.system_id))},
-            manufacturer="SimpliSafe",
-            model=str(system.version),
-            name=system.address,
-            serial_number=system.serial,
-        ),
+        identifiers={(DOMAIN, str(system.system_id))},
+        manufacturer="SimpliSafe",
+        model=str(system.version),
+        name=system.address,
+        serial_number=system.serial,
     )
 
     # Check for an old system ID format and remove it:
@@ -143,7 +141,10 @@ def _async_register_base_station(
 
 @callback
 def _async_register_camera(
-    hass: HomeAssistant, entry: ConfigEntry, system: SystemType, camera: Camera
+    hass: HomeAssistant,
+    entry: SimpliSafeConfigEntry,
+    system: SystemType,
+    camera: Camera,
 ) -> None:
     """Register a camera device."""
     if not isinstance(system, SystemV3):
@@ -155,24 +156,24 @@ def _async_register_camera(
     model_id = system.camera_data[camera.serial]["model"]
     device_name = f"{camera.name.capitalize()} {model_name}"
 
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, camera.serial)},
-            manufacturer="SimpliSafe",
-            model=model_name,
-            model_id=model_id,
-            name=device_name,
-            serial_number=camera.serial,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                hass, (DOMAIN, str(system.system_id)), config_entry_id=entry.entry_id
-            ),
+        identifiers={(DOMAIN, camera.serial)},
+        manufacturer="SimpliSafe",
+        model=model_name,
+        model_id=model_id,
+        name=device_name,
+        serial_number=camera.serial,
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, str(system.system_id)), config_entry_id=entry.entry_id
         ),
     )
 
 
 @callback
-def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def _async_standardize_config_entry(
+    hass: HomeAssistant, entry: SimpliSafeConfigEntry
+) -> None:
     """Bring a config entry up to current standards."""
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed(
@@ -224,7 +225,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
 
     current_options = {**entry.options}
 
-    async def async_reload_entry(_: HomeAssistant, updated_entry: ConfigEntry) -> None:
+    async def async_reload_entry(
+        _: HomeAssistant, updated_entry: SimpliSafeConfigEntry
+    ) -> None:
         """Handle an options update.
 
         This method will get called in two scenarios:
@@ -252,7 +255,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) 
 class SimpliSafe:
     """Define a SimpliSafe data object."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: API) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: SimpliSafeConfigEntry, api: API
+    ) -> None:
         """Initialize."""
         self._api = api
         self._hass = hass

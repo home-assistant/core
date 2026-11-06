@@ -286,13 +286,14 @@ async def test_update_off_ws_with_power_state(
     ):
         await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
 
-        mock_device_info.assert_called_once()
+        # Once for the MAC lookup, once by the power check before the websocket
+        assert mock_device_info.call_count == 2
         mock_start_listening.assert_called_once()
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_UNAVAILABLE
 
-    # First update uses start_listening once, and initialises device_info
+    # First update initialises device_info, then refreshes PowerState
     device_info = deepcopy(SAMPLE_DEVICE_INFO_WIFI)
     device_info["device"]["PowerState"] = "on"
     rest_api.rest_device_info.return_value = device_info
@@ -302,7 +303,7 @@ async def test_update_off_ws_with_power_state(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     remote_websocket.start_listening.assert_called_once()
-    rest_api.rest_device_info.assert_called_once()
+    assert rest_api.rest_device_info.call_count == 2
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
@@ -336,6 +337,35 @@ async def test_update_off_ws_with_power_state(
     assert state.state == STATE_UNAVAILABLE
 
     remote_websocket.start_listening.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("power_state", "expected_state", "start_listening_calls"),
+    [
+        pytest.param("standby", STATE_OFF, 0, id="standby"),
+        pytest.param("on", STATE_ON, 1, id="on"),
+    ],
+)
+async def test_setup_ws_with_power_state(
+    hass: HomeAssistant,
+    remote_websocket: Mock,
+    rest_api: Mock,
+    power_state: str,
+    expected_state: str,
+    start_listening_calls: int,
+) -> None:
+    """Test the first power check on an existing entry uses PowerState."""
+    device_info = deepcopy(SAMPLE_DEVICE_INFO_WIFI)
+    device_info["device"]["PowerState"] = power_state
+    rest_api.rest_device_info.return_value = device_info
+    # Some TVs accept the websocket connection while in standby
+    remote_websocket.is_alive.return_value = True
+
+    await setup_samsungtv_entry(hass, ENTRYDATA_WEBSOCKET)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == expected_state
+    assert remote_websocket.start_listening.call_count == start_listening_calls
 
 
 async def test_update_off_encryptedws(

@@ -154,7 +154,6 @@ CREDENTIAL_RULE_SINGLE = "single"
 CREDENTIAL_RULE_DUAL = "dual"
 CREDENTIAL_RULE_TRIPLE = "triple"
 
-ATTR_NODES = "nodes"
 # config parameter
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"

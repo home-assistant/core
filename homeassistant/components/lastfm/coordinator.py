@@ -74,7 +74,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             top_tracks = user.get_top_tracks(limit=1)
         except PyLastError as exc:
             if self.last_update_success:
-                LOGGER.error("LastFM update for %s failed: %r", username, exc)
+                LOGGER.error("LastFM update for %s failed: %s", username, exc)
             return None
         now_playing = None
         last_tracks = []
@@ -86,7 +86,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
                 isinstance(exc, WSError) and exc.status == ERROR_CODE_LOGIN_REQUIRED
             ):
                 if self.last_update_success:
-                    LOGGER.error("LastFM update for %s failed: %r", username, exc)
+                    LOGGER.error("LastFM update for %s failed: %s", username, exc)
                 return None
             if username not in self._warned_hidden_users:
                 self._warned_hidden_users.add(username)

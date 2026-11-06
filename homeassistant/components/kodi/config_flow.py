@@ -123,7 +123,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        self.context.update({"title_placeholders": {CONF_NAME: self._name}})
+        self.context.update({"title_placeholders": {"name": self._name}})
 
         try:
             await validate_http(self.hass, self._get_data())
@@ -276,7 +276,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=schema,
-            description_placeholders={CONF_HOST: reauth_entry.data[CONF_HOST]},
+            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             errors=errors,
         )
 

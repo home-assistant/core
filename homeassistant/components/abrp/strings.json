@@ -1,0 +1,75 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "api_unauthorized": "Could not verify your A Better Routeplanner account.",
+      "cannot_connect": "Failed to connect to A Better Routeplanner.",
+      "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_vehicles": "No vehicles were found on this A Better Routeplanner account."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_capacity": {
+        "name": "Battery capacity"
+      },
+      "battery_temperature": {
+        "name": "Battery temperature"
+      },
+      "calibrated_ref_cons": {
+        "name": "Calibrated ref cons"
+      },
+      "charging_state": {
+        "name": "Charging state",
+        "state": {
+          "charging_ac": "Charging (AC)",
+          "charging_dc": "Charging (DC)",
+          "charging_unknown": "Charging",
+          "not_charging": "Not charging",
+          "plugged_in": "Plugged in"
+        }
+      },
+      "odometer": {
+        "name": "Odometer"
+      },
+      "range": {
+        "name": "Range"
+      },
+      "soc": {
+        "name": "SoC"
+      },
+      "soe": {
+        "name": "SoE"
+      },
+      "soh": {
+        "name": "State of health"
+      }
+    }
+  },
+  "exceptions": {
+    "abrp_session_invalid": {
+      "message": "A Better Routeplanner rejected the authentication session."
+    },
+    "abrp_update_failed": {
+      "message": "Failed to fetch vehicle data from A Better Routeplanner."
+    },
+    "oauth2_token_refresh_failed": {
+      "message": "Failed to refresh the OAuth2 access token."
+    }
+  }
+}

@@ -4,6 +4,7 @@
   "categories": ["water.pools_spas"],
   "codeowners": ["@fdebrus"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [
     {
       "hostname": "sugarwifi"

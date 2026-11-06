@@ -22,8 +22,10 @@ from homeassistant.components.openai_conversation.const import (
     CONF_STORE_RESPONSES,
     CONF_VERBOSITY,
     CONF_WEB_SEARCH,
+    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_DECISION_MODEL,
 )
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -538,7 +540,9 @@ async def test_generate_image(
     assert image_data.filename == "2025-06-14_155900_test_task.png"
 
     assert (
-        issue_registry.async_get_issue(DOMAIN, "organization_verification_required")
+        issue_registry.async_get_issue(
+            DOMAIN, f"organization_verification_required_{mock_config_entry.entry_id}"
+        )
         is None
     )
 
@@ -550,28 +554,63 @@ async def test_repair_issue(
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test that repair issue is raised when verification is required."""
-    with (
-        patch(
-            "openai.resources.responses.AsyncResponses.create",
-            side_effect=PermissionDeniedError(
-                response=httpx2.Response(
-                    status_code=403, request=httpx2.Request(method="GET", url="")
-                ),
-                body=None,
-                message="Please click on Verify Organization.",
+    """Test the verification repair issue is raised and linked per entry."""
+    other_entry = MockConfigEntry(
+        title="OpenAI 2",
+        domain=DOMAIN,
+        data={"api_key": "other"},
+        version=mock_config_entry.version,
+        minor_version=mock_config_entry.minor_version,
+        subentries_data=[
+            ConfigSubentryData(
+                data=RECOMMENDED_AI_TASK_OPTIONS,
+                subentry_type="ai_task_data",
+                title="Other AI Task",
+                unique_id=None,
             ),
-        ),
-        pytest.raises(HomeAssistantError, match="Error talking to OpenAI"),
-    ):
-        await ai_task.async_generate_image(
-            hass,
-            task_name="Test Task",
-            entity_id="ai_task.openai_ai_task",
-            instructions="Generate test image",
-        )
+        ],
+    )
+    other_entry.add_to_hass(hass)
+    with patch("openai.resources.models.AsyncModels.list", new_callable=AsyncMock):
+        assert await hass.config_entries.async_setup(other_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(DOMAIN, "organization_verification_required")
+    with patch(
+        "openai.resources.responses.AsyncResponses.create",
+        side_effect=PermissionDeniedError(
+            response=httpx2.Response(
+                status_code=403, request=httpx2.Request(method="GET", url="")
+            ),
+            body=None,
+            message="Please click on Verify Organization.",
+        ),
+    ):
+        for entity_id in ("ai_task.openai_ai_task", "ai_task.other_ai_task"):
+            with pytest.raises(HomeAssistantError, match="Error talking to OpenAI"):
+                await ai_task.async_generate_image(
+                    hass,
+                    task_name="Test Task",
+                    entity_id=entity_id,
+                    instructions="Generate test image",
+                )
+
+    for entry in (mock_config_entry, other_entry):
+        issue = issue_registry.async_get_issue(
+            DOMAIN, f"organization_verification_required_{entry.entry_id}"
+        )
+        assert issue is not None
+        assert issue.config_entry_id == entry.entry_id
+        assert issue.translation_key == "organization_verification_required"
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"organization_verification_required_{mock_config_entry.entry_id}"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"organization_verification_required_{other_entry.entry_id}"
+    )
 
 
 @pytest.mark.parametrize(

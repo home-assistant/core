@@ -6,11 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.file import DOMAIN
-from homeassistant.components.file.services import (
-    ATTR_FILE_ENCODING,
-    ATTR_FILE_NAME,
-    SERVICE_READ_FILE,
-)
+from homeassistant.components.file.services import FileService, FileServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -34,10 +30,10 @@ async def test_read_file(
     """Test reading files in supported formats."""
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_READ_FILE,
+        FileService.READ_FILE,
         {
-            ATTR_FILE_NAME: file_name,
-            ATTR_FILE_ENCODING: file_encoding,
+            FileServiceArgument.FILE_NAME: file_name,
+            FileServiceArgument.FILE_ENCODING: file_encoding,
         },
         blocking=True,
         return_response=True,
@@ -55,10 +51,10 @@ async def test_read_file_disallowed_path(
     with pytest.raises(ServiceValidationError) as sve:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_READ_FILE,
+            FileService.READ_FILE,
             {
-                ATTR_FILE_NAME: file_name,
-                ATTR_FILE_ENCODING: "json",
+                FileServiceArgument.FILE_NAME: file_name,
+                FileServiceArgument.FILE_ENCODING: "json",
             },
             blocking=True,
             return_response=True,
@@ -79,10 +75,10 @@ async def test_read_file_bad_encoding_option(
     with pytest.raises(ServiceValidationError) as sve:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_READ_FILE,
+            FileService.READ_FILE,
             {
-                ATTR_FILE_NAME: file_name,
-                ATTR_FILE_ENCODING: "invalid",
+                FileServiceArgument.FILE_NAME: file_name,
+                FileServiceArgument.FILE_ENCODING: "invalid",
             },
             blocking=True,
             return_response=True,
@@ -111,10 +107,10 @@ async def test_read_file_decoding_error(
     with pytest.raises(HomeAssistantError) as hae:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_READ_FILE,
+            FileService.READ_FILE,
             {
-                ATTR_FILE_NAME: file_name,
-                ATTR_FILE_ENCODING: file_encoding,
+                FileServiceArgument.FILE_NAME: file_name,
+                FileServiceArgument.FILE_ENCODING: file_encoding,
             },
             blocking=True,
             return_response=True,
@@ -136,10 +132,10 @@ async def test_read_file_dne(
     with pytest.raises(HomeAssistantError) as hae:
         _ = await hass.services.async_call(
             DOMAIN,
-            SERVICE_READ_FILE,
+            FileService.READ_FILE,
             {
-                ATTR_FILE_NAME: file_name,
-                ATTR_FILE_ENCODING: "yaml",
+                FileServiceArgument.FILE_NAME: file_name,
+                FileServiceArgument.FILE_ENCODING: "yaml",
             },
             blocking=True,
             return_response=True,

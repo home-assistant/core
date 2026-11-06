@@ -138,7 +138,9 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the supported features."""
-        if self.coordinator.current_user.product != ProductType.PREMIUM:
+        # Spotify omits the product for some apps; only restrict known non-premium
+        product = self.coordinator.current_user.product
+        if product is not None and product != ProductType.PREMIUM:
             return MediaPlayerEntityFeature(0)
         if not self.currently_playing or self.currently_playing.device.is_restricted:
             return MediaPlayerEntityFeature.SELECT_SOURCE
@@ -158,9 +160,12 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     @override
     def volume_level(self) -> float | None:
         """Return the device volume."""
-        if not self.currently_playing:
+        if (
+            not self.currently_playing
+            or (volume := self.currently_playing.device.volume_percent) is None
+        ):
             return None
-        return self.currently_playing.device.volume_percent / 100
+        return volume / 100
 
     @property
     @ensure_item

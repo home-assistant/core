@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, override
 
 from neopool_modbus.capabilities import (
@@ -47,11 +47,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.dt import utcnow
+from homeassistant.util.variance import ignore_variance
 
+from .const import DEFAULT_SCAN_INTERVAL
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
 from .entity import NeoPoolEntity
 
 PARALLEL_UPDATES = 0
+
+# Pin the countdown end time against per-second drift and poll jitter. One poll
+# cycle plus a margin absorbs a late poll without swallowing a short backwash.
+_REMAINING_VARIANCE = timedelta(seconds=DEFAULT_SCAN_INTERVAL + 10)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -63,6 +70,13 @@ class NeoPoolSensorEntityDescription(SensorEntityDescription):
     options_fn: Callable[[dict[str, Any]], list[str]] | None = None
     unit_fn: Callable[[dict[str, Any]], str | None] | None = None
     precision_fn: Callable[[dict[str, Any]], int | None] | None = None
+    # Timer block names this sensor needs polled; registered as the entity's
+    # coordinator context so the coordinator reads those blocks only while the
+    # sensor is enabled.
+    context: tuple[str, ...] | None = None
+    # Seconds remaining, rendered as an end timestamp so it stays correct
+    # between polls. Returns None (unavailable) when nothing is counting down.
+    remaining_fn: Callable[[dict[str, Any]], int | None] | None = None
 
 
 SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
@@ -212,6 +226,14 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         suggested_display_precision=0,
         supported_fn=has_filtvalve,
     ),
+    "FILTRATION_REMAINING": NeoPoolSensorEntityDescription(
+        key="FILTRATION_REMAINING",
+        translation_key="filtration_remaining",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        context=("filtration1", "filtration2", "filtration3"),
+        remaining_fn=lambda data: data.get("FILTRATION_REMAINING"),
+    ),
     "CELL_RUNTIME_TOTAL": NeoPoolSensorEntityDescription(
         key="CELL_RUNTIME_TOTAL",
         translation_key="cell_runtime_total",
@@ -318,11 +340,21 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         description: NeoPoolSensorEntityDescription,
     ) -> None:
         """Initialize the NeoPool sensor entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, context=description.context)
         self.entity_description = description
         self._key = key
         self._attr_unique_id = (
             f"{self.coordinator.config_entry.unique_id}_{key.lower()}"
+        )
+        # Holds the countdown end time across polls to absorb per-second drift.
+        # Recreated on a stop so a new countdown is not masked (see native_value).
+        self._remaining_end = self._new_remaining_filter()
+
+    def _new_remaining_filter(self) -> Callable[[int], datetime]:
+        """Return a fresh end-time filter that ignores sub-tolerance drift."""
+        return ignore_variance(
+            lambda seconds: utcnow() + timedelta(seconds=seconds),
+            _REMAINING_VARIANCE,
         )
 
     @property
@@ -365,6 +397,20 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
             return None
         if self._is_production_suppressed():
             return 0
+        if (remaining_fn := self.entity_description.remaining_fn) is not None:
+            remaining = remaining_fn(self.coordinator.data)
+            if remaining is None or remaining <= 0:
+                # Countdown stopped; recreate the filter so a new countdown is
+                # not held over as an expired end time within tolerance.
+                self._remaining_end = self._new_remaining_filter()
+                return None
+            end_time = self._remaining_end(remaining)
+            if end_time <= utcnow():
+                # A restart without a zero reading can leave the held end time
+                # in the past; drop it so the new countdown is reported fresh.
+                self._remaining_end = self._new_remaining_filter()
+                end_time = self._remaining_end(remaining)
+            return end_time
         if (value_fn := self.entity_description.value_fn) is not None:
             value: float | int | str | datetime | None = value_fn(self.coordinator.data)
             return value

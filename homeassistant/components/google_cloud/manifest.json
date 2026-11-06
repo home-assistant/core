@@ -4,6 +4,7 @@
   "categories": ["ai_voice.speech"],
   "codeowners": ["@lufton", "@tronikos"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["file_upload"],
   "documentation": "https://www.home-assistant.io/integrations/google_cloud",
   "integration_type": "service",

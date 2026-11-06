@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 import datetime as dt
+from typing import TYPE_CHECKING
 
 import aiohttp
 from aiohttp.web import Request
@@ -19,7 +20,6 @@ import onvif_parsers.util
 from zeep.exceptions import Fault, TransportError, ValidationError, XMLParseError
 
 from homeassistant.components import webhook
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
@@ -29,6 +29,9 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 from .models import Event, PullPointManagerState, WebHookManagerState
+
+if TYPE_CHECKING:
+    from .device import ONVIFConfigEntry
 
 # Topics in this list are ignored because we do not want to create
 # entities for them.
@@ -106,7 +109,7 @@ class EventManager:
         self,
         hass: HomeAssistant,
         device: ONVIFCamera,
-        config_entry: ConfigEntry,
+        config_entry: ONVIFConfigEntry,
         name: str,
     ) -> None:
         """Initialize event manager."""

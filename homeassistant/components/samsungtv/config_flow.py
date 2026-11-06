@@ -12,7 +12,6 @@ from samsungtvws.encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthent
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -66,6 +65,7 @@ from .const import (
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
 )
+from .coordinator import SamsungTVConfigEntry
 
 DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): TextSelector()})
 
@@ -75,7 +75,7 @@ def _strip_uuid(udn: str) -> str:
 
 
 def _entry_is_complete(
-    entry: ConfigEntry,
+    entry: SamsungTVConfigEntry,
     ssdp_rendering_control_location: str | None,
     ssdp_main_tv_agent_location: str | None,
 ) -> bool:
@@ -404,9 +404,9 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_get_existing_matching_entry(
         self,
-    ) -> tuple[ConfigEntry | None, bool]:
+    ) -> tuple[SamsungTVConfigEntry | None, bool]:
         """Get first existing matching entry (prefer unique id)."""
-        matching_host_entry: ConfigEntry | None = None
+        matching_host_entry: SamsungTVConfigEntry | None = None
         for entry in self._async_current_entries(include_ignore=False):
             if (self._mac and self._mac == entry.data.get(CONF_MAC)) or (
                 self._upnp_udn and self._upnp_udn == entry.unique_id
@@ -423,7 +423,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_update_existing_matching_entry(
         self,
-    ) -> ConfigEntry | None:
+    ) -> SamsungTVConfigEntry | None:
         """Check existing entries and update them.
 
         Returns the existing entry if it was updated.

@@ -495,7 +495,7 @@ async def test_report_colored_temp_light_state(hass: HomeAssistant) -> None:
         "on",
         {
             "friendly_name": "Test light On",
-            "color_temp": 240,
+            "color_temp_kelvin": 4166,
             "supported_color_modes": ["color_temp"],
         },
     )

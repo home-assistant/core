@@ -492,6 +492,9 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                     user_input,
                     other_subentries=other_subentries,
                 )
+            except SchemaFlowError as err:
+                errors["base"] = str(err)
+            else:
                 if reconfiguring:
                     return self.async_update_and_abort(
                         self._get_entry(),
@@ -503,8 +506,6 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                     title=user_input.get(CONF_NAME),
                     data=user_input,
                 )
-            except SchemaFlowError as err:
-                errors["base"] = str(err)
 
         return self.async_show_form(
             step_id="reconfigure" if reconfiguring else str(obs_type),

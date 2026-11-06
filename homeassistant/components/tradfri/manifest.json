@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.smart_home_hubs", "lighting.bulbs_lamps"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["zigbee"],
   "documentation": "https://www.home-assistant.io/integrations/tradfri",
   "homekit": {
     "models": ["TRADFRI"]

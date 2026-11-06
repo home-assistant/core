@@ -188,3 +188,24 @@ async def test_climate_set_temperature_turn_off_turn_on(
     assert mock_setup.api.set_power.call_count == 2
     assert mock_setup.api.set_mode.call_count == 1
     assert state.state == HVACMode.HEAT
+
+
+async def test_climate_setpoint_limits(hass: HomeAssistant) -> None:
+    """Test the climate entity uses the device setpoint limits."""
+    device = get_device("Guest room")
+    mock_api = device.get_mock_api()
+    mock_api.get_full_status.return_value = {
+        "sensor": SensorMode.INNER_SENSOR_CONTROL.value,
+        "power": 1,
+        "auto_mode": 0,
+        "active": 0,
+        "room_temp": 22,
+        "thermostat_temp": 23,
+        "svl": 10,
+        "svh": 28,
+    }
+    await device.setup_entry(hass, mock_api=mock_api)
+
+    state = hass.states.get("climate.guest_room")
+    assert state.attributes["min_temp"] == 10
+    assert state.attributes["max_temp"] == 28

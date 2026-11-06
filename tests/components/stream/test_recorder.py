@@ -1,11 +1,14 @@
 """The tests for recording streams."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
+from functools import partial
 from io import BytesIO
+import itertools
 import os
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import av
 import pytest
@@ -13,6 +16,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
+    ATTR_SETTINGS,
     DOMAIN,
     HLS_PROVIDER,
     OUTPUT_IDLE_TIMEOUT,
@@ -79,6 +83,61 @@ async def test_record_stream(hass: HomeAssistant, filename, h264_video) -> None:
 
     # Assert
     assert os.path.exists(filename)
+
+
+@pytest.mark.parametrize(
+    "generate_source",
+    [
+        pytest.param(partial(generate_h264_video, "mpegts", 5), id="h264-b-frames"),
+        pytest.param(partial(generate_h265_video, "mpegts", 5), id="h265-b-frames"),
+    ],
+)
+async def test_record_stream_worker_restart(
+    hass: HomeAssistant,
+    filename: str,
+    tmp_path: Path,
+    should_retry: Mock,
+    generate_source: Callable[[], BytesIO],
+) -> None:
+    """Test a recording continues across a worker restart.
+
+    The source has video only, with B-frames.
+    """
+    worker_finished = asyncio.Event()
+
+    class MockStream(Stream):
+        """Mock Stream so we can patch remove_provider."""
+
+        async def remove_provider(self, provider):
+            """Add a finished event to Stream.remove_provider."""
+            await Stream.remove_provider(self, provider)
+            worker_finished.set()
+
+    source = tmp_path / "source.ts"
+    source.write_bytes((await hass.async_add_executor_job(generate_source)).getvalue())
+    # The worker runs twice over the source, each run in several segments
+    should_retry.side_effect = [True, False]
+    with (
+        patch("homeassistant.components.stream.Stream", wraps=MockStream),
+        patch("homeassistant.components.stream.STREAM_RESTART_INCREMENT", 0),
+        patch.object(hass.data[DOMAIN][ATTR_SETTINGS], "min_segment_duration", 1.9),
+    ):
+        stream = create_stream(hass, str(source), {}, dynamic_stream_settings())
+
+        with patch.object(hass.config, "is_allowed_path", return_value=True):
+            make_recording = hass.async_create_task(stream.async_record(filename))
+            await worker_finished.wait()
+
+            # Fire the IdleTimer
+            future = dt_util.utcnow() + timedelta(seconds=30)
+            async_fire_time_changed(hass, future)
+
+            await make_recording
+
+    with av.open(filename) as recording:
+        assert recording.duration / av.time_base > 5
+        dts = [packet.dts for packet in recording.demux(video=0) if packet.size]
+    assert all(later > earlier for earlier, later in itertools.pairwise(dts))
 
 
 async def test_record_stream_h265_is_hvc1(hass: HomeAssistant, filename: str) -> None:

@@ -46,7 +46,7 @@ class ReolinkData:
     firmware_coordinator: ReolinkFirmwareCoordinator
 
 
-def is_connected(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) -> bool:
+def is_connected(hass: HomeAssistant, config_entry: ReolinkConfigEntry) -> bool:
     """Check if an existing entry has a proper connection."""
     return (
         hasattr(config_entry, "runtime_data")

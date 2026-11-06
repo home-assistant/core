@@ -114,7 +114,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 await self.async_set_unique_id(device_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(
-                    description_placeholders={CONF_DEVICE_ID: device_id},
+                    description_placeholders={"device_id": device_id},
                 )
 
                 return self.async_create_entry(

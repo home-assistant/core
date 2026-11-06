@@ -3,8 +3,12 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from google.api_core.exceptions import GoogleAPIError, PermissionDenied
-from google.maps.routing_v2 import Units
+from google_maps_routing_api import (
+    ComputeRoutesResponse,
+    GoogleMapsRoutingApiAuthError,
+    GoogleMapsRoutingApiError,
+    Units,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -34,7 +38,7 @@ from .const import DEFAULT_OPTIONS, MOCK_CONFIG
 @pytest.fixture(name="mock_update_empty")
 def mock_update_empty_fixture(routes_mock: AsyncMock) -> AsyncMock:
     """Mock an update to the sensor with an empty response."""
-    routes_mock.compute_routes.return_value = None
+    routes_mock.async_compute_routes.return_value = None
     return routes_mock
 
 
@@ -104,6 +108,30 @@ async def test_sensor_empty_response(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+async def test_sensor_route_without_localized_values(
+    hass: HomeAssistant,
+    routes_mock: AsyncMock,
+    mock_config: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a route missing the requested optional fields does not raise."""
+    routes_mock.async_compute_routes.return_value = ComputeRoutesResponse.from_dict(
+        {"routes": [{}]}
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.google_travel_time")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["duration"] == ""
+    assert state.attributes["distance"] == ""
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
     [
         (
             MOCK_CONFIG,
@@ -152,7 +180,7 @@ async def test_sensor_unit_system(
     hass: HomeAssistant,
     routes_mock: AsyncMock,
     unit_system: UnitSystem,
-    expected_unit_option: str,
+    expected_unit_option: Units,
 ) -> None:
     """Test that sensor works."""
     hass.config.units = unit_system
@@ -167,8 +195,11 @@ async def test_sensor_unit_system(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    routes_mock.compute_routes.assert_called_once()
-    assert routes_mock.compute_routes.call_args.args[0].units == expected_unit_option
+    routes_mock.async_compute_routes.assert_called_once()
+    assert (
+        routes_mock.async_compute_routes.call_args.kwargs["units"]
+        == expected_unit_option
+    )
 
 
 @pytest.mark.parametrize(
@@ -183,7 +214,9 @@ async def test_sensor_exception(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that exception gets caught."""
-    routes_mock.compute_routes.side_effect = GoogleAPIError("Errormessage")
+    routes_mock.async_compute_routes.side_effect = GoogleMapsRoutingApiError(
+        "Errormessage"
+    )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -204,7 +237,11 @@ async def test_sensor_routes_api_disabled(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that exception gets caught and issue created."""
-    routes_mock.compute_routes.side_effect = PermissionDenied("Errormessage")
+    routes_mock.async_compute_routes.side_effect = GoogleMapsRoutingApiAuthError(
+        "Routes API is disabled.",
+        status="PERMISSION_DENIED",
+        reason="SERVICE_DISABLED",
+    )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -220,3 +257,29 @@ async def test_sensor_routes_api_disabled(
     await hass.config_entries.async_remove(mock_config.entry_id)
     await hass.async_block_till_done()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+async def test_sensor_auth_error_no_issue(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    routes_mock: AsyncMock,
+    mock_config: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a non Routes API disabled auth error does not create an issue."""
+    routes_mock.async_compute_routes.side_effect = GoogleMapsRoutingApiAuthError(
+        "API key not valid. Please pass a valid API key.",
+        reason="API_KEY_INVALID",
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.google_travel_time").state == STATE_UNKNOWN
+    assert "Error getting travel time" in caplog.text
+
+    assert not issue_registry.issues

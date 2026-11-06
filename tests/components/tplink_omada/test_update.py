@@ -589,7 +589,12 @@ async def test_controller_update_without_hardware_does_not_support_install(
 @pytest.mark.parametrize(
     ("entity_name", "expected_notes"),
     [
-        ("oc200_test_omada_controller", "Release notes for Omada SDN Controller."),
+        (
+            "oc200_test_omada_controller",
+            "Download controller software:  \n"
+            "https://example.com/controller-update.tar.gz\n\n"
+            "Release notes for Omada SDN Controller.",
+        ),
         ("test_router", None),
         ("test_poe_switch", "Bug fixes and performance improvements"),
     ],
@@ -618,3 +623,108 @@ async def test_release_notes(
     result = await client.receive_json()
 
     assert expected_notes == result["result"]
+
+
+@pytest.mark.parametrize(
+    ("update_sections", "notes_type"),
+    [
+        pytest.param(("software",), "software", id="software"),
+        pytest.param(("hardware",), "hardware", id="hardware"),
+        pytest.param(("hardware", "software"), "hardware", id="hardware_precedence"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("content", "software_notes", "hardware_notes"),
+    [
+        pytest.param(
+            {
+                "downloadLink": "https://example.com/controller-update.tar.gz",
+                "releaseLog": "Release notes.",
+                "fwReleaseLog": "Release notes.",
+            },
+            "Download controller software:  \n"
+            "https://example.com/controller-update.tar.gz\n\nRelease notes.",
+            "Release notes.",
+            id="link_and_notes",
+        ),
+        pytest.param(
+            {"downloadLink": "https://example.com/controller-update.tar.gz"},
+            "Download controller software:  \n"
+            "https://example.com/controller-update.tar.gz",
+            None,
+            id="link_only",
+        ),
+        pytest.param(
+            {"releaseLog": "Release notes.", "fwReleaseLog": "Release notes."},
+            "Release notes.",
+            "Release notes.",
+            id="notes_only",
+        ),
+        pytest.param({}, None, None, id="missing_content"),
+        pytest.param(
+            {"downloadLink": None, "releaseLog": None, "fwReleaseLog": None},
+            None,
+            None,
+            id="null_content",
+        ),
+        pytest.param(
+            {"downloadLink": "", "releaseLog": "", "fwReleaseLog": ""},
+            "",
+            "",
+            id="empty_content",
+        ),
+    ],
+)
+async def test_controller_release_notes_content(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    update_sections: tuple[str, ...],
+    notes_type: str,
+    content: dict[str, str | None],
+    software_notes: str | None,
+    hardware_notes: str | None,
+) -> None:
+    """Test software download links without changing hardware release notes."""
+    update = OmadaControllerUpdateInfo(
+        {
+            section: {
+                "upgrade": True,
+                "latestVersion": "6.3.0.111",
+                "releaseUrl": "https://example.com/release-notes",
+                **content,
+            }
+            for section in update_sections
+        }
+    )
+    original_data = {section: data.copy() for section, data in update.raw_data.items()}
+    original_notes = update.release_notes
+    original_url = update.release_url
+    mock_omada_client.check_firmware_updates.return_value = update
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", [Platform.UPDATE]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.oc200_test_omada_controller_firmware",
+        }
+    )
+    result = await client.receive_json()
+    assert result["success"]
+    assert (
+        result["result"]
+        == {
+            "software": software_notes,
+            "hardware": hardware_notes,
+        }[notes_type]
+    )
+    assert update.release_notes == original_notes
+    assert update.release_url == original_url
+    assert update.raw_data == original_data

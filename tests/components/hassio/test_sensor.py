@@ -134,7 +134,7 @@ async def test_sensor(
 
     # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
     async_fire_time_changed(
-        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
     await hass.async_block_till_done()
 
