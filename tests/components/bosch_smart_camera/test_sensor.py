@@ -148,6 +148,37 @@ async def test_auth_error_starts_reauth(
     assert mock_start_reauth.called
 
 
+async def test_only_cameras_with_enabled_sensor_are_polled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    mock_get_wifi_info: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test recurring polls skip cameras whose sensor stays disabled."""
+    mock_list_cameras.return_value = [
+        *CAMERAS,
+        replace(CAMERAS[0], id=OTHER_ID, title="Hall"),
+    ]
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "sensor",
+        "bosch_smart_camera",
+        f"{CAMERA_ID}_wifi_signal_strength",
+        config_entry=mock_config_entry,
+        suggested_object_id="garden_wi_fi_signal_strength",
+    )
+    await setup_integration(hass, mock_config_entry)
+    mock_get_wifi_info.reset_mock()
+
+    freezer.tick(WIFI_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [call.args[2] for call in mock_get_wifi_info.await_args_list] == [CAMERA_ID]
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_camera_added_and_removed(
     hass: HomeAssistant,

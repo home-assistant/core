@@ -64,7 +64,7 @@ class BoschWifiSensor(CoordinatorEntity[BoschWifiCoordinator], SensorEntity):
         self, coordinator: BoschWifiCoordinator, camera_id: str, title: str
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, camera_id)
         self._camera_id = camera_id
         self._attr_unique_id = f"{camera_id}_{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(

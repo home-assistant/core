@@ -180,7 +180,15 @@ class BoschWifiCoordinator(DataUpdateCoordinator[dict[str, int | None]]):
         token = await self._cameras.async_get_access_token()
         session = async_get_clientsession(self.hass)
         data: dict[str, int | None] = {}
-        for camera_id in self._cameras.data:
+        # The first poll runs before any entity exists; later ones only fetch
+        # cameras that have an enabled sensor.
+        subscribed = set(self.async_contexts())
+        camera_ids = [
+            camera_id
+            for camera_id in self._cameras.data
+            if self.data is None or camera_id in subscribed
+        ]
+        for camera_id in camera_ids:
             try:
                 info = await get_wifi_info(session, token, camera_id)
             except BoschCameraAuthError as err:
