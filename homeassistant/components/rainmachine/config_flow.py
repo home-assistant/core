@@ -1,18 +1,13 @@
 """Config flow to configure the RainMachine component."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 import probatio
 from regenmaschine import Client
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -26,6 +21,9 @@ from .const import (
     DEFAULT_ZONE_RUN,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from . import RainMachineConfigEntry
 
 
 @callback
@@ -59,7 +57,7 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RainMachineConfigEntry,
     ) -> RainMachineOptionsFlowHandler:
         """Define the config flow to handle options."""
         return RainMachineOptionsFlowHandler()
