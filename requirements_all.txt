@@ -1121,7 +1121,7 @@ fressnapftracker==0.3.1
 fritzconnection[qr]==1.15.1
 
 # homeassistant.components.fronius
-fronius-modbus==0.2.0
+fronius-modbus==0.4.0
 
 # homeassistant.components.fronius
 fronius-solarapi==0.1.1
@@ -3577,7 +3577,7 @@ xiaomi-ble==1.21.2
 xiaomi-weather==0.1.0
 
 # homeassistant.components.knx
-xknx==4.1.0
+xknx==4.1.1
 
 # homeassistant.components.knx
 xknxproject==3.10.0
@@ -3655,7 +3655,7 @@ ziggo-mediabox-xl==1.1.0
 zinvolt==1.1.1
 
 # homeassistant.components.zoneminder
-zm-py==0.5.9
+zm-py==0.5.12
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.74.0
