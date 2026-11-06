@@ -233,7 +233,9 @@ def remote_websocket_fixture() -> Generator[Mock]:
     ):
         remote_websocket.ws_event_callback = ws_event_callback
 
-    async def _send_commands(commands: list[SamsungTVCommand]):
+    async def _send_commands(
+        commands: list[SamsungTVCommand], key_press_delay: float | None = None
+    ):
         if (
             len(commands) == 1
             and isinstance(commands[0], ChannelEmitCommand)
