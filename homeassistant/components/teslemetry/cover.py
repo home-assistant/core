@@ -20,14 +20,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
-from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryRootEntity,
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_vehicle_command
-from .models import TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryVehicleData
 
 OPEN = 1
 CLOSED = 0

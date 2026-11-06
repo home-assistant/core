@@ -41,7 +41,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import PressureConverter
 from homeassistant.util.variance import ignore_variance
 
-from . import TeslemetryConfigEntry
 from .const import ENERGY_HISTORY_FIELDS
 from .coordinator import PERIOD_START, WALL_CONNECTOR_TOTALS
 from .entity import (
@@ -56,7 +55,7 @@ from .entity import (
     TeslemetryWallConnectorTotalsEntity,
 )
 from .helpers import async_remove_stale_vehicle_entities
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 
