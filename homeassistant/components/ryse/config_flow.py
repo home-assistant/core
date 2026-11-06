@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 
 from . import _async_unpair
 from .const import DOMAIN, MANUFACTURER_ID, SERVICE_UUID
-from .helpers import async_local_scanner_devices
+from .helpers import async_local_scanner_devices, best_local_scanner_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,10 +40,13 @@ def _local_pairing_device(
     selected route can be a proxy, and a proxy PAIR flag cannot be bonded with
     the host BlueZ agent.
     """
-    for scanner_device in async_local_scanner_devices(hass, address):
-        if is_pairing_mode(scanner_device.advertisement.manufacturer_data):
-            return scanner_device
-    return None
+    return best_local_scanner_device(
+        [
+            scanner_device
+            for scanner_device in async_local_scanner_devices(hass, address)
+            if is_pairing_mode(scanner_device.advertisement.manufacturer_data)
+        ]
+    )
 
 
 def _scanner_device_name(scanner_device: BluetoothScannerDevice) -> str:

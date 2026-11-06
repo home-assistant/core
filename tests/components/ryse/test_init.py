@@ -13,6 +13,8 @@ from homeassistant.core import HomeAssistant
 
 from . import (
     DEVICE_ADDRESS,
+    LOCAL_SOURCE_HCI1,
+    inject_ryse,
     make_advertisement,
     make_ble_device,
     register_local_scanner,
@@ -211,6 +213,66 @@ async def test_setup_uses_local_adapter_not_proxy(
         cancel_remote()
 
 
+async def test_setup_uses_strongest_local_adapter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ryse_ble_device: MagicMock,
+) -> None:
+    """Test setup prefers the strongest local adapter, not registration order."""
+    weak_device = make_ble_device()
+    strong_device = make_ble_device()
+    cancel_weak = register_local_scanner(
+        hass, weak_device, make_advertisement(rssi=-80)
+    )
+    cancel_strong = register_local_scanner(
+        hass,
+        strong_device,
+        make_advertisement(rssi=-40),
+        source=LOCAL_SOURCE_HCI1,
+        adapter="hci1",
+    )
+    try:
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        mock_ryse_ble_device.assert_called_once_with(strong_device)
+    finally:
+        cancel_weak()
+        cancel_strong()
+
+
+async def test_setup_prefers_bonded_local_adapter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ryse_ble_device: MagicMock,
+) -> None:
+    """Test setup prefers the adapter that already holds the BlueZ bond."""
+    strong_unpaired = make_ble_device()
+    bonded = make_ble_device(paired=True)
+    cancel_unpaired = register_local_scanner(
+        hass, strong_unpaired, make_advertisement(rssi=-20)
+    )
+    cancel_bonded = register_local_scanner(
+        hass,
+        bonded,
+        make_advertisement(rssi=-80),
+        source=LOCAL_SOURCE_HCI1,
+        adapter="hci1",
+    )
+    try:
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        mock_ryse_ble_device.assert_called_once_with(bonded)
+    finally:
+        cancel_unpaired()
+        cancel_bonded()
+
+
 async def test_ble_device_callback_keeps_local_route(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -232,6 +294,40 @@ async def test_ble_device_callback_keeps_local_route(
         mock_device.set_ble_device.assert_called_with(local_ble_device)
     finally:
         cancel_remote()
+
+
+async def test_ble_device_callback_stays_on_bonded_adapter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test reconnects stay on the bonded adapter when a stronger local adapter appears."""
+    bonded = make_ble_device(paired=True)
+    cancel_bonded = register_local_scanner(hass, bonded, make_advertisement(rssi=-80))
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    stronger = make_ble_device()
+    cancel_stronger = register_local_scanner(
+        hass,
+        stronger,
+        make_advertisement(rssi=-20),
+        source=LOCAL_SOURCE_HCI1,
+        adapter="hci1",
+    )
+    try:
+        inject_ryse(
+            hass,
+            stronger,
+            make_advertisement(rssi=-20, service_data={SERVICE_UUID: b"\x01"}),
+            LOCAL_SOURCE_HCI1,
+        )
+        await hass.async_block_till_done()
+        mock_device.set_ble_device.assert_called_with(bonded)
+    finally:
+        cancel_bonded()
+        cancel_stronger()
 
 
 async def test_ble_device_callback_logs_lost_and_restored_local_route(

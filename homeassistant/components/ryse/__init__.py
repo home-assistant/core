@@ -19,7 +19,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .helpers import async_local_scanner_devices
+from .helpers import async_best_local_scanner_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,10 +40,12 @@ async def _async_unpair(device: RyseBLEDevice) -> None:
         _LOGGER.debug("Error while releasing RYSE connection", exc_info=True)
 
 
-def _async_local_ble_device(hass: HomeAssistant, address: str) -> BLEDevice | None:
-    """Return the BLEDevice seen by a local adapter, ignoring Bluetooth proxies."""
-    devices = async_local_scanner_devices(hass, address)
-    return devices[0].ble_device if devices else None
+def _async_local_ble_device(
+    hass: HomeAssistant, address: str, *, prefer: BLEDevice | None = None
+) -> BLEDevice | None:
+    """Return the BLEDevice from the best local adapter, ignoring Bluetooth proxies."""
+    scanner_device = async_best_local_scanner_device(hass, address, prefer=prefer)
+    return scanner_device.ble_device if scanner_device else None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool:
@@ -77,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
     entry.async_on_unload(partial(_async_unpair, device))
 
     missing_local_route = False
+    current_ble_device = ble_device
 
     @callback
     def _async_update_ble_device(
@@ -87,9 +90,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
 
         Local adapters set ``service_info.source`` to the adapter MAC, not
         ``SOURCE_LOCAL``. Resolve via scanners that currently see the address.
+        Stay on the adapter that holds the BlueZ bond when several locals see it.
         """
-        nonlocal missing_local_route
-        ble_device = _async_local_ble_device(hass, service_info.address)
+        nonlocal missing_local_route, current_ble_device
+        ble_device = _async_local_ble_device(
+            hass, service_info.address, prefer=current_ble_device
+        )
         if ble_device is None:
             if not missing_local_route:
                 _LOGGER.info(
@@ -105,6 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
                 service_info.address,
             )
             missing_local_route = False
+        current_ble_device = ble_device
         device.set_ble_device(ble_device)
 
     entry.async_on_unload(

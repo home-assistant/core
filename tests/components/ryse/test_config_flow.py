@@ -19,6 +19,7 @@ from . import (
     DEVICE_ADDRESS,
     DEVICE_NAME,
     LOCAL_SOURCE,
+    LOCAL_SOURCE_HCI1,
     PROXY_SOURCE,
     USER_INPUT,
     inject_ryse,
@@ -107,6 +108,39 @@ async def test_async_step_user_success(
     mock_device.pair.assert_awaited_once()
     mock_device.unpair.assert_awaited_once()
     cancel()
+
+
+async def test_async_step_user_pairs_on_strongest_local_adapter(
+    hass: HomeAssistant, mock_device: MagicMock
+) -> None:
+    """Test user pairing uses the strongest local adapter, not registration order."""
+    weak_device = make_ble_device()
+    strong_device = make_ble_device()
+    weak_adv = make_advertisement(rssi=-80)
+    strong_adv = make_advertisement(rssi=-40)
+    cancel_weak = register_local_scanner(hass, weak_device, weak_adv)
+    cancel_strong = register_local_scanner(
+        hass, strong_device, strong_adv, source=LOCAL_SOURCE_HCI1, adapter="hci1"
+    )
+    inject_ryse(hass, weak_device, weak_adv)
+    await _abort_bluetooth_flows(hass)
+    try:
+        with patch(
+            "homeassistant.components.ryse.config_flow.RyseBLEDevice",
+            return_value=mock_device,
+        ) as mock_cls:
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_USER}
+            )
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], USER_INPUT
+            )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        mock_cls.assert_called_once_with(strong_device)
+        mock_device.pair.assert_awaited_once()
+    finally:
+        cancel_weak()
+        cancel_strong()
 
 
 @pytest.mark.parametrize(

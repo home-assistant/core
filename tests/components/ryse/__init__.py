@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.bluetooth import (
     HCI0_SOURCE_ADDRESS,
+    HCI1_SOURCE_ADDRESS,
     FakeRemoteScanner,
     FakeScanner,
     MockBleakClient,
@@ -26,15 +27,27 @@ DEVICE_NAME = "RYSE Shade"
 DEVICE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 RSSI_VALUE = -40
 LOCAL_SOURCE = HCI0_SOURCE_ADDRESS
+LOCAL_SOURCE_HCI1 = HCI1_SOURCE_ADDRESS
 PROXY_SOURCE = "11:22:33:44:55:66"
 PAIRING_MANUFACTURER_DATA = {MANUFACTURER_ID: b"\xcc\x64\x62\x64"}
 IDLE_MANUFACTURER_DATA = {MANUFACTURER_ID: b"\x8c\x64\x62\x64"}
 USER_INPUT = {CONF_ADDRESS: DEVICE_ADDRESS}
 
 
-def make_ble_device(name: str | None = DEVICE_NAME) -> BLEDevice:
+def make_ble_device(
+    name: str | None = DEVICE_NAME,
+    *,
+    paired: bool = False,
+    adapter: str = "hci0",
+) -> BLEDevice:
     """Return a BLEDevice for the test shade."""
-    return generate_ble_device(DEVICE_ADDRESS, name)
+    details = None
+    if paired:
+        details = {
+            "path": f"/org/bluez/{adapter}/dev_AA_BB_CC_DD_EE_FF",
+            "props": {"Paired": True},
+        }
+    return generate_ble_device(DEVICE_ADDRESS, name, details=details)
 
 
 def make_advertisement(
@@ -44,6 +57,7 @@ def make_advertisement(
     manufacturer_data: dict[int, bytes] | None = None,
     service_uuids: list[str] | None = None,
     service_data: dict[str, bytes] | None = None,
+    rssi: int = RSSI_VALUE,
 ) -> AdvertisementData:
     """Return RYSE advertisement data."""
     if manufacturer_data is None:
@@ -57,7 +71,7 @@ def make_advertisement(
         manufacturer_data=manufacturer_data,
         service_data=service_data or {},
         service_uuids=service_uuids,
-        rssi=RSSI_VALUE,
+        rssi=rssi,
     )
 
 
@@ -66,6 +80,7 @@ def register_local_scanner(
     device: BLEDevice,
     advertisement: AdvertisementData,
     source: str = LOCAL_SOURCE,
+    adapter: str = "hci0",
 ) -> Callable[[], None]:
     """Register a local adapter scanner that currently sees *device*."""
 
@@ -80,7 +95,7 @@ def register_local_scanner(
         ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
             return {device.address: (device, advertisement)}
 
-    scanner = LocalScanner(source, "hci0", connectable=True)
+    scanner = LocalScanner(source, adapter, connectable=True)
     return bluetooth.async_register_scanner(hass, scanner, connection_slots=5)
 
 
