@@ -21,16 +21,18 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
 from .const import DOMAIN
-from .entity import UnifiEntity, UnifiEntityDescription, request_failed_error
+from .entity import (
+    UnifiEntity,
+    UnifiEntityDescription,
+    async_firewall_policy_supported_fn,
+    async_unifi_network_device_info_fn,
+    request_failed_error,
+)
 from .firewall_policy_schedule import (
     MODES_WITH_DAYS,
     async_save_schedule,
     policy_schedule,
     schedule_mode,
-)
-from .switch import (
-    async_firewall_policy_supported_fn,
-    async_unifi_network_device_info_fn,
 )
 
 if TYPE_CHECKING:

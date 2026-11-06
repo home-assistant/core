@@ -20,17 +20,19 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
-from .entity import UnifiEntity, UnifiEntityDescription, request_failed_error
+from .entity import (
+    UnifiEntity,
+    UnifiEntityDescription,
+    async_firewall_policy_supported_fn,
+    async_unifi_network_device_info_fn,
+    request_failed_error,
+)
 from .firewall_policy_schedule import (
     async_save_schedule,
     parse_time,
     policy_schedule,
     raise_setting_unused,
     schedule_uses_times,
-)
-from .switch import (
-    async_firewall_policy_supported_fn,
-    async_unifi_network_device_info_fn,
 )
 
 if TYPE_CHECKING:
