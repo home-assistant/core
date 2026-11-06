@@ -600,6 +600,36 @@ async def test_play_media_source_passes_mime_type(
     assert soco_mock.play_from_queue.call_args_list == expected_play_from_queue_calls
 
 
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_play_radio_media_source_does_not_pass_mime_type(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+) -> None:
+    """Test radio media source MIME type is not passed to SoCo."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+
+    with patch(
+        "homeassistant.components.sonos.media_player.media_source.async_resolve_media",
+        return_value=PlayMedia(
+            url="http://example.com/audio/stream", mime_type="audio/mpeg"
+        ),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "music",
+                ATTR_MEDIA_CONTENT_ID: "media-source://radio_browser/station",
+            },
+            blocking=True,
+        )
+
+    soco_mock.play_uri.assert_called_once_with(
+        "http://example.com/audio/stream", force_radio=True
+    )
+
+
 _share_link: str = "spotify:playlist:abcdefghij0123456789XY"
 _share_link_title: str = "playlist title"
 
