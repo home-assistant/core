@@ -1,5 +1,6 @@
 """Config flow for the Theben Conexa Smartmeter gateway integration."""
 
+from asyncio import Lock
 from collections.abc import Mapping
 import logging
 from typing import Any, override
@@ -12,7 +13,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DATA_QUERY_LOCKS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,24 +37,32 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
         self, host: str, username: str, password: str, errors: dict[str, str]
     ) -> str | None:
         """Validate the credentials and return the unique id, or fill errors."""
-        try:
-            await checkNetworkConnection(host)
-        except OSError, aiohttp.ClientError:
-            errors["base"] = "cannot_connect"
-            return None
-        try:
-            local_api = await ConexaSMGW.create(
-                async_get_clientsession(self.hass), host, username, password
-            )
-        except OSError, aiohttp.ClientError:
-            # The smgw unfortunately does not reply with invalid auth it just times out
-            # So after we checked that connection is possible we assume Invalid auth if something happens
-            errors["base"] = "invalid_auth"
-            return None
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-            return None
+        # The Conexa SMGW is not able to handle multiple concurrent requests
+        # so we need a host specific lock to serialize the requests.
+        # This lock pool is shared across config entries, so it cannot use runtime_data.
+        domain_data = self.hass.data.setdefault(DOMAIN, {})  # pylint: disable=home-assistant-use-runtime-data
+        query_lock: Lock = domain_data.setdefault(DATA_QUERY_LOCKS, {}).setdefault(
+            host, Lock()
+        )
+        async with query_lock:
+            try:
+                await checkNetworkConnection(host)
+            except OSError, aiohttp.ClientError:
+                errors["base"] = "cannot_connect"
+                return None
+            try:
+                local_api = await ConexaSMGW.create(
+                    async_get_clientsession(self.hass), host, username, password
+                )
+            except OSError, aiohttp.ClientError:
+                # The smgw unfortunately does not reply with invalid auth it just times out
+                # So after we checked that connection is possible we assume Invalid auth if something happens
+                errors["base"] = "invalid_auth"
+                return None
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+                return None
         # According to the docs the grid operator can assign multiple users for the
         # same gateway. So we use the combination of smgwID and username as unique id
         return f"{local_api.gatewayInfo.smgwID}-{username}"

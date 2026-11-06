@@ -55,25 +55,26 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
     async def async_init(self) -> None:
         """Asynchronous Initialization and registering the update schedule."""
 
-        try:
-            await checkNetworkConnection(self.config_entry.data[CONF_HOST])
-        except (TimeoutError, ConnectionRefusedError, OSError) as e:
-            raise ConfigEntryNotReady("Device is not reachable") from e
+        async with self._query_lock:
+            try:
+                await checkNetworkConnection(self.config_entry.data[CONF_HOST])
+            except (TimeoutError, ConnectionRefusedError, OSError) as e:
+                raise ConfigEntryNotReady("Device is not reachable") from e
 
-        # Unfortunately the Conexa 3.0 doesn't provide separate authentication feedback it just ignores
-        # all requests with invalid username/password, That's why here we need to assume it failed
-        # because of wrong credentials, as we checked for connectivity just before and the device was reachable.
-        try:
-            self._api = await ConexaSMGW.create(
-                async_get_clientsession(self.hass),
-                self.config_entry.data[CONF_HOST],
-                self.config_entry.data[CONF_USERNAME],
-                self.config_entry.data[CONF_PASSWORD],
-            )
-        except (TimeoutError, aiohttp.ClientError) as e:
-            raise ConfigEntryAuthFailed("Authentication failed") from e
-        except ConexaSmgwErr as e:
-            raise ConfigEntryNotReady(f"Unexpected reply from gateway: {e}") from e
+            # Unfortunately the Conexa 3.0 doesn't provide separate authentication feedback it just ignores
+            # all requests with invalid username/password, That's why here we need to assume it failed
+            # because of wrong credentials, as we checked for connectivity just before and the device was reachable.
+            try:
+                self._api = await ConexaSMGW.create(
+                    async_get_clientsession(self.hass),
+                    self.config_entry.data[CONF_HOST],
+                    self.config_entry.data[CONF_USERNAME],
+                    self.config_entry.data[CONF_PASSWORD],
+                )
+            except (TimeoutError, aiohttp.ClientError) as e:
+                raise ConfigEntryAuthFailed("Authentication failed") from e
+            except ConexaSmgwErr as e:
+                raise ConfigEntryNotReady(f"Unexpected reply from gateway: {e}") from e
 
         self.gateway_info = self._api.gatewayInfo
 

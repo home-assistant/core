@@ -10,12 +10,53 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from theben_conexa_smgw import UnexpectedReturnCode
 
+from homeassistant.components.theben_conexa.coordinator import SmgwSensorCoordinator
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.test_setup import FrozenDateTimeFactory
+
+
+async def test_coordinator_client_creation_is_serialized(
+    hass: HomeAssistant,
+    mock_conexa_smgw: SimpleNamespace,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test client creation for entries with the same host is serialized."""
+    second_entry = MockConfigEntry(
+        domain=mock_config_entry.domain,
+        unique_id="second-entry",
+        data=mock_config_entry.data,
+    )
+    active_requests = 0
+    max_active_requests = 0
+
+    async def contact_gateway(*args: object) -> object:
+        nonlocal active_requests, max_active_requests
+        active_requests += 1
+        max_active_requests = max(max_active_requests, active_requests)
+        try:
+            await asyncio.sleep(0.01)
+            return mock_conexa_smgw.client
+        finally:
+            active_requests -= 1
+
+    mock_conexa_smgw.network.side_effect = contact_gateway
+    mock_conexa_smgw.create.side_effect = contact_gateway
+    first_coordinator = SmgwSensorCoordinator(hass, mock_config_entry)
+    second_coordinator = SmgwSensorCoordinator(hass, second_entry)
+    try:
+        await asyncio.gather(
+            first_coordinator.async_init(),
+            second_coordinator.async_init(),
+        )
+    finally:
+        await first_coordinator.async_shutdown()
+        await second_coordinator.async_shutdown()
+
+    assert max_active_requests == 1
 
 
 async def test_coordinator_initial_refreshes_are_serialized(
