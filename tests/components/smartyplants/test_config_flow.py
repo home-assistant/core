@@ -362,3 +362,29 @@ async def test_reconfigure_without_external_url_offers_the_key_only(
         CONF_WEBHOOK_ID: WEBHOOK_ID,
         CONF_WEBHOOK_SECRET: WEBHOOK_SECRET,
     }
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client", "mock_setup_entry", "external_url")
+async def test_reconfigure_without_a_webhook_offers_the_key_only(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test an entry that has no webhook is not offered a secret for one."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: API_KEY},
+        unique_id=ACCOUNT_ID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    # An address is reachable, but there is no webhook id to build a URL from.
+    assert result["step_id"] == "reconfigure_key"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_API_KEY: NEW_API_KEY}
