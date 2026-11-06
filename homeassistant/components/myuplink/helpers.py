@@ -243,7 +243,7 @@ def skip_entity(model: str, device_point: DevicePoint) -> bool:
             return True
         if device_point.parameter_id in PARAMETER_ID_TO_EXCLUDE_F730:
             return True
-    if device_point.category.lower() in ["scheduling", "energy log"]:
+    if device_point.category.lower() == "scheduling":
         return True
     return False
 
