@@ -30,11 +30,11 @@
       }
     },
     "number": {
-      "warm_mist_level": {
-        "default": "mdi:heat-wave"
-      },
       "mist_level": {
         "default": "mdi:water-percent"
+      },
+      "warm_mist_level": {
+        "default": "mdi:heat-wave"
       }
     },
     "switch": {
