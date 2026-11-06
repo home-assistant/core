@@ -40,6 +40,11 @@
       }
     }
   },
+  "device": {
+    "built_in_battery": {
+      "name": "Built-in battery"
+    }
+  },
   "entity": {
     "sensor": {
       "ac_output_current": {
@@ -51,23 +56,11 @@
       "ac_output_voltage": {
         "name": "AC output voltage"
       },
-      "battery_current": {
-        "name": "Battery current"
-      },
-      "battery_cycle_count": {
-        "name": "Battery cycle count"
-      },
-      "battery_soc": {
-        "name": "Battery SoC"
-      },
-      "battery_soh": {
-        "name": "Battery SoH"
-      },
-      "battery_voltage": {
-        "name": "Battery voltage"
-      },
       "cell_count": {
         "name": "Cell count"
+      },
+      "cycle_count": {
+        "name": "Cycle count"
       },
       "dc_pv_input_count": {
         "name": "DC PV input count"
@@ -132,17 +125,23 @@
       "pv_input_voltage": {
         "name": "PV {input} input voltage"
       },
+      "soc": {
+        "name": "SoC"
+      },
+      "soh": {
+        "name": "SoH"
+      },
       "temperature_sensor_count": {
         "name": "Temperature sensor count"
       },
       "total_ac_output_energy": {
         "name": "Total AC output energy"
       },
-      "total_battery_charged_energy": {
-        "name": "Total battery charged energy"
+      "total_charged_energy": {
+        "name": "Total charged energy"
       },
-      "total_battery_discharged_energy": {
-        "name": "Total battery discharged energy"
+      "total_discharged_energy": {
+        "name": "Total discharged energy"
       },
       "total_grid_export_energy": {
         "name": "Total grid export energy"
