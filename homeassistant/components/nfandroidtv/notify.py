@@ -22,7 +22,7 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
 )
-from homeassistant.const import ATTR_ICON, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -60,6 +60,8 @@ from .const import (
 from .issue import deprecated_notify_action_call
 
 _LOGGER = logging.getLogger(__name__)
+
+_ATTR_ICON = "icon"
 
 
 async def async_setup_entry(
@@ -114,7 +116,7 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
                 self.hass, kwargs.pop(NFAndroidTVServiceArgument.IMAGE)
             )
         if NFAndroidTVServiceArgument.ICON in kwargs:
-            kwargs[ATTR_ICON] = await _resolve_media(
+            kwargs[_ATTR_ICON] = await _resolve_media(
                 self.hass, kwargs.pop(NFAndroidTVServiceArgument.ICON)
             )
         if NFAndroidTVServiceArgument.DURATION in kwargs:
@@ -290,7 +292,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         translation_key="invalid_notification_image",
                         translation_placeholders={"type": type(imagedata).__name__},
                     )
-            if icondata := data.get(ATTR_ICON):
+            if icondata := data.get(_ATTR_ICON):
                 if isinstance(icondata, str):
                     icondata = (
                         self.load_file(url=icondata)
