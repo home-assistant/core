@@ -140,7 +140,7 @@ async def cloud(
 
 def connected_cloud_alarm() -> MagicMock:
     """Create a cloud session with coherent connected status responses."""
-    alarm = MagicMock(spec=AlarmSystem)
+    alarm = MagicMock(spec=AlarmSystem(MagicMock(spec=API)))
     alarm.get_panel_state.side_effect = partial(AlarmSystem.get_panel_state, alarm)
     alarm._summarize_alarms.side_effect = AlarmSystem._summarize_alarms
     alarm.get_user_code.return_value = "1234"
