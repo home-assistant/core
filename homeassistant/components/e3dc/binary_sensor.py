@@ -47,7 +47,7 @@ BINARY_SENSORS: tuple[E3dcBinarySensorDescription, ...] = (
     _ems_flag("charging_locked", EmsStatus.CHARGING_LOCKED),
     _ems_flag("discharging_locked", EmsStatus.DISCHARGING_LOCKED),
     _ems_flag("emergency_power_ready", EmsStatus.EMERGENCY_POWER_READY),
-    _ems_flag("weather_based_charging", EmsStatus.WEATHER_BASED_CHARGING),
+    _ems_flag("charging_limited_by_forecast", EmsStatus.WEATHER_BASED_CHARGING),
     _ems_flag("feed_in_limited", EmsStatus.FEED_IN_LIMITED),
     _ems_flag("charge_lock_time", EmsStatus.CHARGE_LOCK_TIME, enabled=False),
     _ems_flag("discharge_lock_time", EmsStatus.DISCHARGE_LOCK_TIME, enabled=False),

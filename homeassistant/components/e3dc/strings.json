@@ -37,6 +37,9 @@
       "charge_lock_time": {
         "name": "Charging lockout period"
       },
+      "charging_limited_by_forecast": {
+        "name": "Charging limited by forecast"
+      },
       "charging_locked": {
         "name": "Charging locked"
       },
@@ -51,9 +54,6 @@
       },
       "feed_in_limited": {
         "name": "Feed-in limited"
-      },
-      "weather_based_charging": {
-        "name": "Weather-based charging"
       }
     },
     "sensor": {

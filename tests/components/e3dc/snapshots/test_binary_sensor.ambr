@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_all_entities[binary_sensor.e3_dc_s10_x_charging_limited_by_forecast-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('e3dc', 'S10-12345678912')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.e3_dc_s10_x_charging_limited_by_forecast',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging limited by forecast',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charging limited by forecast',
+    'platform': 'e3dc',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_limited_by_forecast',
+    'unique_id': 'S10-12345678912_charging_limited_by_forecast',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.e3_dc_s10_x_charging_limited_by_forecast-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X Charging limited by forecast',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.e3_dc_s10_x_charging_limited_by_forecast',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[binary_sensor.e3_dc_s10_x_charging_locked-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -293,56 +343,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.e3_dc_s10_x_feed_in_limited',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_all_entities[binary_sensor.e3_dc_s10_x_weather_based_charging-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('e3dc', 'S10-12345678912')]>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.e3_dc_s10_x_weather_based_charging',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Weather-based charging',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Weather-based charging',
-    'platform': 'e3dc',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'weather_based_charging',
-    'unique_id': 'S10-12345678912_weather_based_charging',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[binary_sensor.e3_dc_s10_x_weather_based_charging-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E3/DC S10 X Weather-based charging',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.e3_dc_s10_x_weather_based_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

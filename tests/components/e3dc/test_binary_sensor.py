@@ -24,7 +24,7 @@ EMS_STATUS_ENTITY_IDS = [
     "binary_sensor.e3_dc_s10_x_charging_locked",
     "binary_sensor.e3_dc_s10_x_discharging_locked",
     "binary_sensor.e3_dc_s10_x_emergency_power_ready",
-    "binary_sensor.e3_dc_s10_x_weather_based_charging",
+    "binary_sensor.e3_dc_s10_x_charging_limited_by_forecast",
     "binary_sensor.e3_dc_s10_x_feed_in_limited",
     "binary_sensor.e3_dc_s10_x_charging_lockout_period",
     "binary_sensor.e3_dc_s10_x_discharging_lockout_period",
