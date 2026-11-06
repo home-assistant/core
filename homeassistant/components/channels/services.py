@@ -1,13 +1,28 @@
 """Services for the Channels integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.const import ATTR_SECONDS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import service
 
-from .const import DOMAIN, SERVICE_SEEK_BACKWARD, SERVICE_SEEK_BY, SERVICE_SEEK_FORWARD
+from .const import DOMAIN
+
+
+class ChannelsService(StrEnum):
+    """Store keys for Channels services."""
+
+    SEEK_FORWARD = "seek_forward"
+    SEEK_BACKWARD = "seek_backward"
+    SEEK_BY = "seek_by"
+
+
+class ChannelsServiceArgument(StrEnum):
+    """Store keys for Channels service arguments."""
+
+    SECONDS = "seconds"
 
 
 @callback
@@ -17,7 +32,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SEEK_FORWARD,
+        ChannelsService.SEEK_FORWARD,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
         func="seek_forward",
@@ -26,7 +41,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SEEK_BACKWARD,
+        ChannelsService.SEEK_BACKWARD,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=None,
         func="seek_backward",
@@ -35,8 +50,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SEEK_BY,
+        ChannelsService.SEEK_BY,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={probatio.Required(ATTR_SECONDS): probatio.Coerce(int)},
+        schema={
+            probatio.Required(ChannelsServiceArgument.SECONDS): probatio.Coerce(int)
+        },
         func="seek_by",
     )

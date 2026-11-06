@@ -29,6 +29,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import (
+    CONF_PROFILE,
     CONF_WARNING_ACCEPTED,
     DOMAIN,
     STORAGE_VERSION,
@@ -69,13 +70,35 @@ def _load_proxy_fixtures() -> dict[str, bytes]:
     }
 
 
+# The China mirrors serve the same paths as the hosts they mirror
+MIRRORED_HOSTS = {
+    "ghapi.hacs.vip": "api.github.com",
+    "data-v2.hacs.vip": "data-v2.hacs.xyz",
+    "data-v2.hasscn.top": "data-v2.hacs.xyz",
+}
+# These serve raw content below /raw, the rest is what github.com serves
+GITHUB_MIRRORS = ("ghrp.hacs.vip", "ghrp2.hacs.vip")
+
+
 def _fixture_key(url: URL) -> str:
     """Return the recorded response a request URL maps to.
 
     Query strings are ignored, the recordings are keyed by path alone.
     """
-    key = f"{url.host}{url.path}"
-    if url.host in JSON_HOSTS and not url.path.endswith(".json"):
+    host = MIRRORED_HOSTS.get(url.host, url.host)
+    path = url.path
+
+    # A public proxy takes the full URL as its path
+    if host == "gh-proxy.org":
+        proxied = URL(path.removeprefix("/"))
+        host, path = proxied.host, proxied.path
+    if host in GITHUB_MIRRORS:
+        host = "github.com"
+        if path.startswith("/raw/"):
+            host, path = "raw.githubusercontent.com", path.removeprefix("/raw")
+
+    key = f"{host}{path}"
+    if host in JSON_HOSTS and not path.endswith(".json"):
         return f"{key}.json"
     return key
 
@@ -230,10 +253,17 @@ def config_entry_source() -> str:
 
 
 @pytest.fixture
+def download_profile() -> str | None:
+    """Return the download profile in the options, None for none set."""
+    return None
+
+
+@pytest.fixture
 def mock_config_entry(
     github_token: str | None,
     warning_accepted: dict[str, Any] | None,
     config_entry_source: str,
+    download_profile: str | None,
 ) -> MockConfigEntry:
     """Return the default mocked config entry."""
     data: dict[str, Any] = {}
@@ -242,11 +272,16 @@ def mock_config_entry(
     if warning_accepted:
         data[CONF_WARNING_ACCEPTED] = warning_accepted
 
+    options: dict[str, Any] = {}
+    if download_profile:
+        options[CONF_PROFILE] = download_profile
+
     return MockConfigEntry(
         title="",
         domain=DOMAIN,
         source=config_entry_source,
         data=data,
+        options=options,
         unique_id="12345",
     )
 

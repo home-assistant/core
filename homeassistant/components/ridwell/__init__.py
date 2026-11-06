@@ -2,7 +2,6 @@
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -35,7 +34,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: RidwellConfigEntry) -> 
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(hass: HomeAssistant, entry: RidwellConfigEntry) -> None:
     """Migrate an old config entry."""
     version = entry.version
 

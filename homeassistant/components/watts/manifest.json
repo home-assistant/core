@@ -4,6 +4,7 @@
   "categories": ["climate.thermostats_heating"],
   "codeowners": ["@theobld-ww", "@devender-verma-ww", "@ssi-spyro"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials", "cloud"],
   "documentation": "https://www.home-assistant.io/integrations/watts",
   "integration_type": "hub",
