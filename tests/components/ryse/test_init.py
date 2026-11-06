@@ -8,7 +8,7 @@ from bleak.backends.device import BLEDevice
 import pytest
 
 from homeassistant.components.ryse.const import SERVICE_UUID
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -107,20 +107,21 @@ async def test_setup_without_ble_device(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_retries_when_pairing_fails(
+async def test_setup_starts_reauth_when_pairing_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     local_ryse_scanner: BLEDevice,
     mock_device: MagicMock,
 ) -> None:
-    """Test setup is retried when pairing with the device fails."""
+    """Test a lost or rejected bond starts reauth instead of retrying forever."""
     mock_device.pair.return_value = False
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     mock_device.unpair.assert_awaited_once()
+    assert list(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_setup_retries_on_ble_error(
@@ -156,10 +157,12 @@ async def test_setup_releases_connection_on_unexpected_pair_error(
 
 
 @pytest.mark.parametrize(
-    "pair_result",
+    ("pair_result", "expected_state"),
     [
-        pytest.param(False, id="pair_returns_false"),
-        pytest.param(BleakError("ble err"), id="pair_raises"),
+        pytest.param(False, ConfigEntryState.SETUP_ERROR, id="pair_returns_false"),
+        pytest.param(
+            BleakError("ble err"), ConfigEntryState.SETUP_RETRY, id="pair_raises"
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -170,21 +173,22 @@ async def test_setup_releases_connection_on_unexpected_pair_error(
     ],
 )
 @pytest.mark.usefixtures("local_ryse_scanner")
-async def test_setup_retries_when_unpair_fails(
+async def test_setup_reports_pairing_outcome_when_unpair_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_device: MagicMock,
     pair_result: bool | BleakError,
+    expected_state: ConfigEntryState,
     unpair_side_effect: Exception,
 ) -> None:
-    """Test setup is retried even if releasing the connection after a failed pair raises."""
+    """Test a failed unpair does not hide the pairing outcome."""
     mock_device.pair.side_effect = [pair_result]
     mock_device.unpair.side_effect = unpair_side_effect
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
     mock_device.unpair.assert_awaited_once()
 
 

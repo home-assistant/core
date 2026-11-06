@@ -17,7 +17,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .helpers import async_best_local_scanner_device
 
@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RyseConfigEntry) -> bool
     try:
         paired = await device.pair()
         if not paired:
-            raise ConfigEntryNotReady(connect_error)
+            raise ConfigEntryAuthFailed(connect_error)
     except (TimeoutError, OSError, EOFError, BleakError) as err:
         raise ConfigEntryNotReady(connect_error) from err
     finally:

@@ -48,6 +48,7 @@ class RyseCoverEntity(CoverEntity):
     def __init__(self, device: RyseBLEDevice, config_entry: RyseConfigEntry) -> None:
         """Initialize the Smart Shade cover entity."""
         self._device = device
+        self._config_entry = config_entry
 
         self._attr_unique_id = device.address
         self._current_position: int | None = None
@@ -152,6 +153,7 @@ class RyseCoverEntity(CoverEntity):
                 if not paired:
                     await _async_unpair(self._device)
                     self._set_available(False, "failed to pair")
+                    self._config_entry.async_start_reauth(self.hass)
                     return
 
             if (

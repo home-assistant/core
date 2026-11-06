@@ -18,6 +18,7 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.ryse.const import MANUFACTURER_NAME
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -347,6 +348,7 @@ async def test_pairing_failure_marks_unavailable(
     unavailable = f"{ENTITY_ID} became unavailable: failed to pair"
     assert caplog.text.count(unavailable) == 1
     mock_device.unpair.assert_awaited_once()
+    assert list(polled_cover.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
     caplog.clear()
     await async_poll_device(hass, freezer)

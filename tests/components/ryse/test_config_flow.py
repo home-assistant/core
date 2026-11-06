@@ -902,3 +902,62 @@ async def test_async_step_bluetooth_fallback_name(
     assert result["title"] == "RYSE device"
     mock_device.pair.assert_awaited_once()
     cancel()
+
+
+async def test_reauth_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test reauth re-pairs the shade and reloads the entry."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {"name": mock_config_entry.title}
+
+    cancel, _ = _see_on_local(hass)
+    await _abort_bluetooth_flows(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_device.pair.assert_awaited_once()
+    cancel()
+
+
+async def test_reauth_not_in_pairing_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test reauth stays on the form until the shade is in pairing mode."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    cancel, _ = _see_on_local(hass, pairing=False)
+    await _abort_bluetooth_flows(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "not_in_pairing_mode"}
+    mock_device.pair.assert_not_called()
+    cancel()
+
+
+async def test_reauth_not_local_source(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
+) -> None:
+    """Test reauth reports when the shade is not on a local adapter."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "not_local_source"}
+    mock_device.pair.assert_not_called()

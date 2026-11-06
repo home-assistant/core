@@ -1,5 +1,6 @@
 """Config flow for RYSE BLE integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -126,6 +127,33 @@ class RyseBLEDeviceConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders={"name": name},
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Re-pair after the BlueZ bond is lost."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask the user to hold PAIR, then bond again."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        address = reauth_entry.unique_id
+        assert address is not None
+
+        if user_input is not None:
+            if error := await self._async_pair(address):
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(reauth_entry)
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            description_placeholders={"name": reauth_entry.title},
             errors=errors,
         )
 
