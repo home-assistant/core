@@ -10,6 +10,7 @@ from e3dc_ess_modbus import (
     EmergencyPowerStatus,
     InverterMode,
     PowerMeterType,
+    SgReadyStatus,
 )
 
 from homeassistant.components.sensor import (
@@ -33,27 +34,6 @@ from .coordinator import E3dcConfigEntry
 from .entity import E3dcEntity
 
 PARALLEL_UPDATES = 0
-
-
-class SgReadyStatus(IntEnum):
-    """The SG Ready operating states."""
-
-    BLOCKED = 1
-    NORMAL = 2
-    SWITCH_ON_RECOMMENDED = 3
-    FORCED_ON = 4
-
-
-def _sg_ready_status(device: E3dcPowerStation) -> SgReadyStatus | None:
-    """The SG Ready state, or None when the station reports another value."""
-    if (meters := device.wide_power_meters) is None or (
-        value := meters.sg_ready_status
-    ) is None:
-        return None
-    try:
-        return SgReadyStatus(value)
-    except ValueError:
-        return None
 
 
 def _enum_options(enum_type: type[IntEnum]) -> list[str]:
@@ -226,7 +206,11 @@ SENSORS: tuple[E3dcSensorDescription, ...] = (
         options=_enum_options(SgReadyStatus),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=_sg_ready_status,
+        value_fn=lambda device: (
+            meters.sg_ready_status
+            if (meters := device.wide_power_meters) is not None
+            else None
+        ),
     ),
     E3dcSensorDescription(
         key="active_power_failsafe_timeout",
