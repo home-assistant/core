@@ -7,11 +7,14 @@ from typing import override
 
 from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.model import CurrentPhenomenons, Forecast, Rain
+from requests import RequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +28,14 @@ class MeteoFranceData:
     forecast_coordinator: MeteoFranceForecastUpdateCoordinator
     rain_coordinator: MeteoFranceRainUpdateCoordinator | None
     alert_coordinator: MeteoFranceAlertUpdateCoordinator | None
+
+
+def _update_failed(err: RequestException) -> UpdateFailed:
+    return UpdateFailed(
+        translation_domain=DOMAIN,
+        translation_key="update_failed",
+        translation_placeholders={"error": str(err)},
+    )
 
 
 SCAN_INTERVAL_RAIN = timedelta(minutes=5)
@@ -57,9 +68,12 @@ class MeteoFranceForecastUpdateCoordinator(DataUpdateCoordinator[Forecast]):
     @override
     async def _async_update_data(self) -> Forecast:
         """Get data from Meteo-France forecast."""
-        return await self.hass.async_add_executor_job(
-            self._client.get_forecast, self._latitude, self._longitude
-        )
+        try:
+            return await self.hass.async_add_executor_job(
+                self._client.get_forecast, self._latitude, self._longitude
+            )
+        except RequestException as err:
+            raise _update_failed(err) from err
 
 
 class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
@@ -88,9 +102,12 @@ class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
     @override
     async def _async_update_data(self) -> Rain:
         """Get data from Meteo-France rain."""
-        return await self.hass.async_add_executor_job(
-            self._client.get_rain, self._latitude, self._longitude
-        )
+        try:
+            return await self.hass.async_add_executor_job(
+                self._client.get_rain, self._latitude, self._longitude
+            )
+        except RequestException as err:
+            raise _update_failed(err) from err
 
 
 class MeteoFranceAlertUpdateCoordinator(DataUpdateCoordinator[CurrentPhenomenons]):
@@ -119,6 +136,9 @@ class MeteoFranceAlertUpdateCoordinator(DataUpdateCoordinator[CurrentPhenomenons
     @override
     async def _async_update_data(self) -> CurrentPhenomenons:
         """Get data from Meteo-France alert."""
-        return await self.hass.async_add_executor_job(
-            self._client.get_warning_current_phenomenons, self._department, 0, True
-        )
+        try:
+            return await self.hass.async_add_executor_job(
+                self._client.get_warning_current_phenomenons, self._department, 0, True
+            )
+        except RequestException as err:
+            raise _update_failed(err) from err
