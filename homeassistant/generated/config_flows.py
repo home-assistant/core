@@ -197,6 +197,7 @@ FLOWS = {
         "dwd_weather_warnings",
         "dynalite",
         "dyson_infrared",
+        "e3dc",
         "eafm",
         "earn_e_p1",
         "easyenergy",
