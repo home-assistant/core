@@ -57,6 +57,9 @@
     }
   },
   "exceptions": {
+    "minute_forecast_error": {
+      "message": "Error fetching the minute forecast: {error}"
+    },
     "three_hour_forecast_error": {
       "message": "Error fetching the 3-hour forecast."
     }
@@ -83,6 +86,10 @@
         }
       },
       "name": "Get extra forecast values"
+    },
+    "get_minute_forecast": {
+      "description": "Retrieves the precipitation rate for each minute of the next hour, in the weather entity's precipitation unit per hour. Every call makes a request to the Foreca Weather API and counts toward the daily limit of your plan.",
+      "name": "Get minute forecast"
     }
   }
 }
