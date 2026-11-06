@@ -35,6 +35,8 @@ from .const import (
 )
 from .coordinator import SeventeenTrackConfigEntry
 
+_ATTR_FRIENDLY_NAME = "friendly_name"
+
 SERVICE_GET_PACKAGES_SCHEMA: Final = probatio.Schema(
     {
         probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
@@ -130,7 +132,7 @@ def _package_to_dict(package: Package) -> dict[str, Any]:
         ATTR_LOCATION: package.location,
         ATTR_STATUS: package.status,
         ATTR_INFO_TEXT: package.info_text,
-        "friendly_name": package.friendly_name,
+        _ATTR_FRIENDLY_NAME: package.friendly_name,
     }
     if timestamp := package.timestamp:
         result[ATTR_TIMESTAMP] = timestamp.isoformat()
