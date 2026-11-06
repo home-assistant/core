@@ -2007,6 +2007,7 @@ def test_restore_data_device_info_round_trip() -> None:
     assert restored.devices == devices
 
 
+@pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
 async def test_plain_device_info_deprecated(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
