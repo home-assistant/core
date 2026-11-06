@@ -849,6 +849,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_start_later-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('smartthings', 'f36dc7ce-cac0-0667-dc14-a3704eb5e676')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.theater_dishwasher_start_later',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start later',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start later',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start_later',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherOperation_startLater',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_dw_000001][button.theater_dishwasher_start_later-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Start later',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.theater_dishwasher_start_later',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[da_wm_dw_01011][button.dishwasher_1_cancel-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1093,6 +1143,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.dishwasher_1_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[da_wm_dw_01011][button.dishwasher_1_start_later-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('smartthings', '7ff318f3-3772-524d-3c9f-72fcd26413ed')]>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.dishwasher_1_start_later',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start later',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start later',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start_later',
+    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_samsungce.dishwasherOperation_startLater',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_dw_01011][button.dishwasher_1_start_later-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Start later',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dishwasher_1_start_later',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
