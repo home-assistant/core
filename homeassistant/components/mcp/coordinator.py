@@ -22,7 +22,7 @@ import probatio
 # Imported by name because the tests patch it on this module.
 from probatio import from_openapi
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -214,7 +214,12 @@ class ModelContextProtocolTool(llm.Tool):
     ) -> llm.ToolResult:
         """Call the tool."""
         meta: RequestParamsMeta | None = None
-        if llm_context.context and (user_id := llm_context.context.user_id):
+        # Remote servers added by the user must not get a stable user identifier
+        if (
+            self.config_entry.source == SOURCE_HASSIO
+            and llm_context.context
+            and (user_id := llm_context.context.user_id)
+        ):
             # mypy does not support the extra_items of this TypedDict (PEP 728)
             meta = cast(RequestParamsMeta, {META_USER_ID: user_id})
         try:

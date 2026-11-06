@@ -31,7 +31,7 @@ from homeassistant.components.mcp.coordinator import (
     META_USER_ID,
     create_mcp_httpx_client,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_TOKEN, CONF_URL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
@@ -46,7 +46,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.httpx_client import SERVER_SOFTWARE
 
-from .conftest import MCP_SERVER_URL, TEST_API_NAME
+from .conftest import API_TOKEN, MCP_SERVER_URL, TEST_API_NAME
 
 SEARCH_MEMORY_TOOL = Tool(
     name="search_memory",
@@ -410,17 +410,12 @@ async def test_mcp_server_authentication_failure(
 
 
 @pytest.mark.usefixtures("fake_mcp_server")
-async def test_api_token(hass: HomeAssistant) -> None:
+async def test_api_token(
+    hass: HomeAssistant, config_entry_with_api_token: MockConfigEntry
+) -> None:
     """Test the token provided by the app discovery is sent on every request."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: "test-api-token"},
-        title=TEST_API_NAME,
-    )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state is ConfigEntryState.LOADED
+    await hass.config_entries.async_setup(config_entry_with_api_token.entry_id)
+    assert config_entry_with_api_token.state is ConfigEntryState.LOADED
 
     api = next(
         iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
@@ -433,25 +428,39 @@ async def test_api_token(hass: HomeAssistant) -> None:
     )
 
     assert {call.request.headers.get("Authorization") for call in respx.calls} == {
-        "Bearer test-api-token"
+        f"Bearer {API_TOKEN}"
+    }
+
+
+@pytest.mark.usefixtures("credential", "fake_mcp_server")
+async def test_oauth_preferred_over_api_token(
+    hass: HomeAssistant, config_entry_with_auth: MockConfigEntry
+) -> None:
+    """Test OAuth is used when the entry also has a token from the app discovery."""
+    hass.config_entries.async_update_entry(
+        config_entry_with_auth,
+        data={**config_entry_with_auth.data, CONF_API_TOKEN: API_TOKEN},
+    )
+
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+    assert config_entry_with_auth.state is ConfigEntryState.LOADED
+
+    assert {call.request.headers.get("Authorization") for call in respx.calls} == {
+        "Bearer test-access-token"
     }
 
 
 @respx.mock
-async def test_api_token_authentication_failure(hass: HomeAssistant) -> None:
+async def test_api_token_authentication_failure(
+    hass: HomeAssistant, config_entry_with_api_token: MockConfigEntry
+) -> None:
     """Test a server rejecting the token from the app discovery starts reauth."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: "test-api-token"},
-        title=TEST_API_NAME,
-    )
-    config_entry.add_to_hass(hass)
     post_route = respx.post(MCP_SERVER_URL).mock(return_value=httpx2.Response(401))
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    await hass.config_entries.async_setup(config_entry_with_api_token.entry_id)
+    assert config_entry_with_api_token.state is ConfigEntryState.SETUP_ERROR
     assert post_route.calls.last.request.headers["Authorization"] == (
-        "Bearer test-api-token"
+        f"Bearer {API_TOKEN}"
     )
 
     flows = hass.config_entries.flow.async_progress()
@@ -630,25 +639,36 @@ async def test_call_tool(
 
 
 @pytest.mark.parametrize(
-    ("context", "expected_meta"),
+    ("source", "context", "expected_meta"),
     [
         pytest.param(
+            SOURCE_HASSIO,
             Context(user_id="test-user-id"),
             {META_USER_ID: "test-user-id"},
-            id="user",
+            id="app_user",
         ),
-        pytest.param(Context(), None, id="no_user"),
-        pytest.param(None, None, id="no_context"),
+        pytest.param(SOURCE_HASSIO, Context(), None, id="app_no_user"),
+        pytest.param(SOURCE_HASSIO, None, None, id="app_no_context"),
+        pytest.param(
+            SOURCE_USER, Context(user_id="test-user-id"), None, id="remote_server"
+        ),
     ],
 )
 async def test_call_tool_user_meta(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
     fake_mcp_server: FakeMcpServer,
+    source: str,
     context: Context | None,
     expected_meta: dict[str, str] | None,
 ) -> None:
-    """Test the Home Assistant user is passed to the MCP server on a tool call."""
+    """Test the Home Assistant user is only passed to MCP servers from apps."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=source,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    )
+    config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
 

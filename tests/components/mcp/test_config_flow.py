@@ -1338,16 +1338,24 @@ async def test_hassio_discovery_missing_capabilities(
 
 
 @pytest.mark.parametrize(
-    "discovery_info",
+    ("discovery_info", "expected_authorization"),
     [
-        pytest.param(ADDON_DISCOVERY_INFO, id="no_token"),
-        pytest.param(ADDON_DISCOVERY_INFO_WITH_TOKEN, id="token_rejected"),
+        pytest.param(ADDON_DISCOVERY_INFO, None, id="no_token"),
+        pytest.param(
+            ADDON_DISCOVERY_INFO_WITH_TOKEN,
+            f"Bearer {ADDON_TOKEN}",
+            id="token_rejected",
+        ),
     ],
 )
 @respx.mock
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_hassio_discovery_requires_authentication(
-    hass: HomeAssistant, mock_mcp_client: Mock, discovery_info: HassioServiceInfo
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    mock_http_streamable_client: Mock,
+    discovery_info: HassioServiceInfo,
+    expected_authorization: str | None,
 ) -> None:
     """Test the discovered MCP server continues into the OAuth flow."""
     result = await hass.config_entries.flow.async_init(
@@ -1364,6 +1372,8 @@ async def test_hassio_discovery_requires_authentication(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
+    http_client = mock_http_streamable_client.call_args.kwargs["http_client"]
+    assert http_client.headers.get("Authorization") == expected_authorization
     # The user is taken to the application credentials UI to enter credentials.
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"

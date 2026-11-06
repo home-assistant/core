@@ -21,7 +21,7 @@ from homeassistant.components.mcp.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from .conftest import TEST_API_NAME
+from .conftest import API_TOKEN, TEST_API_NAME
 
 
 @pytest.mark.parametrize(
@@ -29,7 +29,7 @@ from .conftest import TEST_API_NAME
     [
         pytest.param({CONF_URL: "http://1.1.1.1/sse"}, id="no_auth"),
         pytest.param(
-            {CONF_URL: "http://1.1.1.1/sse", CONF_API_TOKEN: "test-api-token"},
+            {CONF_URL: "http://1.1.1.1/sse", CONF_API_TOKEN: API_TOKEN},
             id="api_token",
         ),
     ],
