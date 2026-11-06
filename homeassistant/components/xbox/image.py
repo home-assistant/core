@@ -9,7 +9,7 @@ from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -174,6 +174,7 @@ class XboxImageEntity(XboxBaseEntity, ImageEntity):
         )
         self._attr_image_last_updated = dt_util.utcnow()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

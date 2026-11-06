@@ -372,7 +372,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         negative_sum = 0.0
         last_stats_time: float | None = None
         if last_stat_start is not None:
-            start = rows[0][0]
+            start = min(rows[0][0], dt_util.utc_from_timestamp(last_stat_start))
             _LOGGER.debug("Getting statistics at: %s", start)
             # In the common case there should be a previous statistic at start time
             # so we only need to fetch one statistic. If there isn't any, fetch all.
@@ -401,33 +401,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                     return float(records[0]["sum"])
                 return 0.0
 
-            if stats.get(positive_statistic_id):
-                positive_sum = _safe_get_sum(stats[positive_statistic_id])
-                negative_sum = _safe_get_sum(stats.get(negative_statistic_id, []))
-                last_stats_time = stats[positive_statistic_id][0]["start"]
-            else:
-                # All reads are newer than the last statistic.
-                last = await get_instance(self.hass).async_add_executor_job(
-                    get_last_statistics,
-                    self.hass,
-                    1,
-                    positive_statistic_id,
-                    True,
-                    {"sum"},
-                )
-                positive_sum = _safe_get_sum(last.get(positive_statistic_id, []))
-                last_negative = await get_instance(self.hass).async_add_executor_job(
-                    get_last_statistics,
-                    self.hass,
-                    1,
-                    negative_statistic_id,
-                    True,
-                    {"sum"},
-                )
-                negative_sum = _safe_get_sum(
-                    last_negative.get(negative_statistic_id, [])
-                )
-                last_stats_time = last_stat_start
+            # We are in this code path only if there is a last statistic at or
+            # after start, so statistics_during_period should have found it.
+            assert stats.get(positive_statistic_id)
+            positive_sum = _safe_get_sum(stats[positive_statistic_id])
+            negative_sum = _safe_get_sum(stats.get(negative_statistic_id, []))
+            last_stats_time = stats[positive_statistic_id][0]["start"]
 
         positive_statistics: list[StatisticData] = []
         negative_statistics: list[StatisticData] = []
@@ -658,63 +637,47 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         else:
             start = datetime.fromtimestamp(start_time, tz=tz) - timedelta(days=30)
         end = dt_util.now(tz)
-        _LOGGER.debug("Getting monthly %s reads: %s - %s", kind, start, end)
-        try:
-            cost_reads = await fetch(account, AggregateType.BILL, start, end)
-        except ApiException as err:
-            _LOGGER.error("Error getting monthly %s reads: %s", kind, err)
-            raise
-        _LOGGER.debug("Got %s monthly %s reads", len(cost_reads), kind)
-        if account.read_resolution is ReadResolution.BILLING:
-            return cost_reads
+        cost_reads: list[_ReadT] = []
+        if start_time is None or account.read_resolution is ReadResolution.BILLING:
+            _LOGGER.debug("Getting monthly %s reads: %s - %s", kind, start, end)
+            try:
+                cost_reads = await fetch(account, AggregateType.BILL, start, end)
+            except ApiException as err:
+                _LOGGER.error("Error getting monthly %s reads: %s", kind, err)
+                raise
+            _LOGGER.debug("Got %s monthly %s reads", len(cost_reads), kind)
+            if account.read_resolution is ReadResolution.BILLING:
+                return cost_reads
 
-        if start_time is None:
-            start = end - timedelta(days=3 * 365)
-        else:
-            if cost_reads:
-                start = cost_reads[0].start_time
-            assert start
-            start = max(start, end - timedelta(days=3 * 365))
-        _LOGGER.debug("Getting daily %s reads: %s - %s", kind, start, end)
-        try:
-            daily_cost_reads = await fetch(account, AggregateType.DAY, start, end)
-        except ApiException as err:
-            _LOGGER.error("Error getting daily %s reads: %s", kind, err)
-            raise
-        _LOGGER.debug("Got %s daily %s reads", len(daily_cost_reads), kind)
-        if not daily_cost_reads and start_time is not None:
+        if start_time is None or account.read_resolution is ReadResolution.DAY:
+            daily_start = end - timedelta(days=3 * 365)
+            if start is not None:
+                daily_start = max(start, daily_start)
+            _LOGGER.debug("Getting daily %s reads: %s - %s", kind, daily_start, end)
+            try:
+                daily_cost_reads = await fetch(
+                    account, AggregateType.DAY, daily_start, end
+                )
+            except ApiException as err:
+                _LOGGER.error("Error getting daily %s reads: %s", kind, err)
+                raise
+            _LOGGER.debug("Got %s daily %s reads", len(daily_cost_reads), kind)
+            _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
             if account.read_resolution is ReadResolution.DAY:
-                # Nothing finer to fall back to, and see the hourly reads below.
-                _LOGGER.debug("No daily %s reads. Skipping update", kind)
-                return []
-            # The hourly reads below are still finer than the statistics they
-            # land on, so only drop the bill reads and carry on with those.
-            _LOGGER.debug("No daily %s reads. Trying the hourly ones", kind)
-            cost_reads = []
-        _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
-        if account.read_resolution is ReadResolution.DAY:
-            return cost_reads
+                return cost_reads
 
-        if start_time is None:
-            start = end - timedelta(days=2 * 30)
-        else:
-            assert start
-            start = max(start, end - timedelta(days=2 * 30))
-        _LOGGER.debug("Getting hourly %s reads: %s - %s", kind, start, end)
+        hourly_start = end - timedelta(days=2 * 30)
+        if start is not None:
+            hourly_start = max(start, hourly_start)
+        _LOGGER.debug("Getting hourly %s reads: %s - %s", kind, hourly_start, end)
         try:
-            hourly_cost_reads = await fetch(account, AggregateType.HOUR, start, end)
+            hourly_cost_reads = await fetch(
+                account, AggregateType.HOUR, hourly_start, end
+            )
         except ApiException as err:
             _LOGGER.error("Error getting hourly %s reads: %s", kind, err)
             raise
         _LOGGER.debug("Got %s hourly %s reads", len(hourly_cost_reads), kind)
-        if not hourly_cost_reads and start_time is not None:
-            # A day read starts at local midnight, where that day's first hourly
-            # statistic already is, so keeping the daily reads would replace it
-            # with a coarser one carrying a different running sum. Only a concern
-            # once statistics exist: on the initial import there is nothing to
-            # overwrite and the daily reads are the best available data.
-            _LOGGER.debug("No hourly %s reads. Skipping update", kind)
-            return []
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
         _LOGGER.debug("Got %s %s reads", len(cost_reads), kind)
         return cost_reads
