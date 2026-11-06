@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import setup_integration
+from . import setup_added_entry, setup_integration
 
 ONLINE = "binary_sensor.monstera_connectivity"
 STALE = "binary_sensor.monstera_readings_outdated"
@@ -135,7 +135,7 @@ async def test_entry_from_custom_integration_is_adopted(
     )
     assert existing.entity_id == "binary_sensor.monstera_online"
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_added_entry(hass, mock_config_entry)
 
     assert hass.states.get("binary_sensor.monstera_online") is not None
     assert hass.states.get(ONLINE) is None
