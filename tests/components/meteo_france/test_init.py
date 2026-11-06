@@ -95,6 +95,8 @@ async def test_setup_retry_when_forecast_fails(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_domain == DOMAIN
+    assert config_entry.error_reason_translation_key == "update_failed"
 
 
 async def test_setup_without_rain_forecast(
