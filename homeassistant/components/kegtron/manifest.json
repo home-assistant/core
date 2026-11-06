@@ -10,6 +10,7 @@
   "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@Ernst79"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/kegtron",
   "integration_type": "device",

@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import encode_basic_auth, web
 from aiohttp.web_exceptions import HTTPUnauthorized
+from freezegun.api import FrozenDateTimeFactory
 import jwt
 import pytest
 from pytest_homeassistant.common import MockUser
@@ -16,7 +17,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerat
 import yarl
 
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
-from homeassistant.auth.models import User
+from homeassistant.auth.models import TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN, User
 from homeassistant.auth.providers import trusted_networks
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import websocket_api
@@ -40,6 +41,7 @@ from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.http import KEY_AUTHENTICATED, KEY_HASS
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import HTTP_HEADER_HA_AUTH
 
@@ -248,6 +250,30 @@ async def test_auth_active_access_with_access_token_in_header(
     refresh_token.user.is_active = False
     req = await client.get("/", headers={"Authorization": f"Bearer {token}"})
     assert req.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_auth_logs_long_lived_access_token_usage(
+    hass: HomeAssistant,
+    app: web.Application,
+    aiohttp_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a request with a long-lived access token logs its usage."""
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user,
+        client_name="Script",
+        token_type=TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    access_token = hass.auth.async_create_access_token(refresh_token)
+    await async_setup_auth(hass, app)
+    client = await aiohttp_client(app)
+
+    freezer.tick(timedelta(minutes=1))
+    req = await client.get("/", headers={"Authorization": f"Bearer {access_token}"})
+    assert req.status == HTTPStatus.OK
+    assert refresh_token.last_used_at == dt_util.utcnow()
+    assert refresh_token.last_used_ip == "127.0.0.1"
 
 
 async def test_auth_active_access_with_trusted_ip(

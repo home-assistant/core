@@ -91,7 +91,9 @@ async def async_unload_entry(
     hass.async_create_task(entry.runtime_data.ws_disconnect(), eager_start=True)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: AmbientStationConfigEntry
+) -> None:
     """Migrate old entry."""
     version = entry.version
 
@@ -115,7 +117,10 @@ class AmbientStation:
     """Define a class to handle the Ambient websocket."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, websocket: Websocket
+        self,
+        hass: HomeAssistant,
+        entry: AmbientStationConfigEntry,
+        websocket: Websocket,
     ) -> None:
         """Initialize."""
         self._entry = entry

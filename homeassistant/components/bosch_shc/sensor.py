@@ -54,7 +54,7 @@ class SHCSensorEntityDescription[_DeviceT: SHCDevice](SensorEntityDescription):
     attributes_fn: Callable[[_DeviceT], dict[str, Any]] | None = None
 
 
-_PowerMeterDevice = SHCSmartPlug | SHCLightSwitchBSM | SHCMicromoduleShutterControl
+type _PowerMeterDevice = SHCSmartPlug | SHCLightSwitchBSM | SHCMicromoduleShutterControl
 
 TEMPERATURE_SENSOR = "temperature"
 HUMIDITY_SENSOR = "humidity"
@@ -154,6 +154,7 @@ _WALLTHERMOSTAT_HUMIDITY_DESCRIPTION: SHCSensorEntityDescription[SHCWallThermost
     SHCSensorEntityDescription(
         key=HUMIDITY_SENSOR,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda device: device.humidity,
     )
@@ -181,6 +182,7 @@ _TWINGUARD_HUMIDITY_DESCRIPTION: SHCSensorEntityDescription[SHCTwinguard] = (
     SHCSensorEntityDescription(
         key=HUMIDITY_SENSOR,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda device: device.humidity,
     )

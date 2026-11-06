@@ -12,14 +12,6 @@ def format_unique_id(mac: str, port: int) -> str:
     return f"{format_mac(mac)}-{port}"
 
 
-def dispatcher_unjoin_signal(leader_id: str) -> str:
-    """Unjoin an entity ID with a signal.
-
-    Id is ip_address:port. This can be obtained from sync_status.id.
-    """
-    return f"bluesound_unjoin_{leader_id}"
-
-
 def id_to_paired_player(id: str) -> PairedPlayer | None:
     """Try to convert id in format 'ip:port' to PairedPlayer.
 
