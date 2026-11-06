@@ -51,6 +51,15 @@ class VeSyncSensorEntityDescription(SensorEntityDescription):
     use_device_temperature_unit: bool = False
 
 
+def _get_cook_status(device: VeSyncBaseDevice) -> str | None:
+    """Return the normalized cook status if available."""
+    if (cook_status := device.state.cook_status) is None:
+        return None
+
+    cook_status = cook_status.lower()
+    return AIR_FRYER_MODE_MAP.get(cook_status, cook_status)
+
+
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="filter-life",
@@ -175,15 +184,16 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="cook_status",
         translation_key="cook_status",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda device: AIR_FRYER_MODE_MAP.get(
-            device.state.cook_status.lower(), device.state.cook_status.lower()
-        ),
+        value_fn=_get_cook_status,
         exists_fn=is_air_fryer,
         options=[
             "cooking_end",
             "cooking",
             "cooking_stop",
             "heating",
+            "ready",
+            "appointing",
+            "hold",
             "preheat_end",
             "preheat_stop",
             "pull_out",

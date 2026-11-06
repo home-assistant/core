@@ -167,6 +167,9 @@ class EnergyPreferencesValidation:
     device_consumption_water: list[ValidationIssues] = dataclasses.field(
         default_factory=list
     )
+    device_consumption_gas: list[ValidationIssues] = dataclasses.field(
+        default_factory=list
+    )
 
     def as_dict(self) -> dict:
         """Return dictionary version."""
@@ -182,6 +185,10 @@ class EnergyPreferencesValidation:
             "device_consumption_water": [
                 [dataclasses.asdict(issue) for issue in issues.issues.values()]
                 for issues in self.device_consumption_water
+            ],
+            "device_consumption_gas": [
+                [dataclasses.asdict(issue) for issue in issues.issues.values()]
+                for issues in self.device_consumption_gas
             ],
         }
 
@@ -886,6 +893,23 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 WATER_USAGE_DEVICE_CLASSES,
                 WATER_USAGE_UNITS,
                 WATER_UNIT_ERROR,
+                device_result,
+            )
+        )
+
+    for device in manager.data.get("device_consumption_gas", []):
+        device_result = ValidationIssues()
+        result.device_consumption_gas.append(device_result)
+        wanted_statistics_metadata.add(device["stat_consumption"])
+        validate_calls.append(
+            functools.partial(
+                _async_validate_usage_stat,
+                hass,
+                statistics_metadata,
+                device["stat_consumption"],
+                GAS_USAGE_DEVICE_CLASSES,
+                GAS_USAGE_UNITS,
+                GAS_UNIT_ERROR,
                 device_result,
             )
         )

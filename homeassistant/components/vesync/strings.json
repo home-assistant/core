@@ -106,13 +106,16 @@
       "cook_status": {
         "name": "Cooking status",
         "state": {
+          "appointing": "Appointing",
           "cooking": "Cooking",
           "cooking_end": "Cooking finished",
           "cooking_stop": "Cooking stopped",
           "heating": "Preheating",
+          "hold": "Hold",
           "preheat_end": "Preheating finished",
           "preheat_stop": "Preheating stopped",
           "pull_out": "Drawer pulled out",
+          "ready": "Ready",
           "standby": "[%key:common::state::standby%]"
         }
       },

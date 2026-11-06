@@ -55,7 +55,6 @@ class MeteoFranceSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
     MeteoFranceSensorEntityDescription(
         key="pressure",
-        name="Pressure",
         native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -64,17 +63,15 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
     ),
     MeteoFranceSensorEntityDescription(
         key="wind_gust",
-        name="Wind gust",
+        translation_key="wind_gust",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:weather-windy-variant",
         entity_registry_enabled_default=False,
         data_path="current_forecast:wind:gust",
     ),
     MeteoFranceSensorEntityDescription(
         key="wind_speed",
-        name="Wind speed",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
@@ -83,7 +80,6 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
     ),
     MeteoFranceSensorEntityDescription(
         key="temperature",
-        name="Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -92,40 +88,37 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
     ),
     MeteoFranceSensorEntityDescription(
         key="uv",
-        name="UV",
+        translation_key="uv_index",
         native_unit_of_measurement=UV_INDEX,
-        icon="mdi:sunglasses",
         data_path="today_forecast:uv",
     ),
     MeteoFranceSensorEntityDescription(
         key="precipitation",
-        name="Daily precipitation",
+        translation_key="today_precipitation",
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
         data_path="today_forecast:precipitation:24h",
     ),
     MeteoFranceSensorEntityDescription(
         key="cloud",
-        name="Cloud cover",
+        translation_key="cloud_cover",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-partly-cloudy",
         data_path="current_forecast:clouds",
     ),
     MeteoFranceSensorEntityDescription(
         key="original_condition",
-        name="Original condition",
+        translation_key="current_weather",
         entity_registry_enabled_default=False,
         data_path="current_forecast:weather:desc",
     ),
     MeteoFranceSensorEntityDescription(
         key="daily_original_condition",
-        name="Daily original condition",
+        translation_key="today_weather",
         entity_registry_enabled_default=False,
         data_path="today_forecast:weather12H:desc",
     ),
     MeteoFranceSensorEntityDescription(
         key="humidity",
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -136,7 +129,7 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
 SENSOR_TYPES_RAIN: tuple[MeteoFranceSensorEntityDescription, ...] = (
     MeteoFranceSensorEntityDescription(
         key="next_rain",
-        name="Next rain",
+        translation_key="next_rain",
         device_class=SensorDeviceClass.TIMESTAMP,
         data_path="",
     ),
@@ -145,8 +138,7 @@ SENSOR_TYPES_RAIN: tuple[MeteoFranceSensorEntityDescription, ...] = (
 SENSOR_TYPES_ALERT: tuple[MeteoFranceSensorEntityDescription, ...] = (
     MeteoFranceSensorEntityDescription(
         key="weather_alert",
-        name="Weather alert",
-        icon="mdi:weather-cloudy-alert",
+        translation_key="weather_alert",
         data_path="",
     ),
 )
@@ -154,23 +146,20 @@ SENSOR_TYPES_ALERT: tuple[MeteoFranceSensorEntityDescription, ...] = (
 SENSOR_TYPES_PROBABILITY: tuple[MeteoFranceSensorEntityDescription, ...] = (
     MeteoFranceSensorEntityDescription(
         key="rain_chance",
-        name="Rain chance",
+        translation_key="rain_probability",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-rainy",
         data_path="probability_forecast:rain:3h",
     ),
     MeteoFranceSensorEntityDescription(
         key="snow_chance",
-        name="Snow chance",
+        translation_key="snow_probability",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-snowy",
         data_path="probability_forecast:snow:3h",
     ),
     MeteoFranceSensorEntityDescription(
         key="freeze_chance",
-        name="Freeze chance",
+        translation_key="frost_probability",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:snowflake",
         data_path="probability_forecast:freezing",
     ),
 )
@@ -225,6 +214,7 @@ class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
 
     entity_description: MeteoFranceSensorEntityDescription
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -235,8 +225,6 @@ class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
         super().__init__(coordinator)
         self.entity_description = description
         if hasattr(coordinator.data, "position"):
-            city_name = coordinator.data.position["name"]
-            self._attr_name = f"{city_name} {description.name}"
             pos = coordinator.data.position
             self._attr_unique_id = f"{pos['lat']},{pos['lon']}_{description.key}"
 
@@ -244,13 +232,15 @@ class MeteoFranceSensor[_DataT: Rain | Forecast | CurrentPhenomenons](
     @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        assert self.platform.config_entry and self.platform.config_entry.unique_id
+        entry = self.platform.config_entry
+        assert entry and entry.unique_id
+        forecast = entry.runtime_data.forecast_coordinator.data
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            identifiers={(DOMAIN, entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
-            name=self.coordinator.name,
+            name=forecast.position["name"],
         )
 
     @property
@@ -320,9 +310,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor[CurrentPhenomenons]):
     ) -> None:
         """Initialize the Meteo-France sensor."""
         super().__init__(coordinator, description)
-        dept_code = self.coordinator.data.domain_id
-        self._attr_name = f"{dept_code} {description.name}"
-        self._attr_unique_id = self._attr_name
+        self._attr_unique_id = f"{self.coordinator.data.domain_id} Weather alert"
 
     @property
     @override
