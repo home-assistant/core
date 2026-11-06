@@ -88,7 +88,13 @@
         "name": "Self-consumption"
       },
       "sg_ready_status": {
-        "name": "SG Ready status"
+        "name": "SG Ready status",
+        "state": {
+          "blocked": "Blocked",
+          "forced_on": "Forced on",
+          "normal": "Normal operation",
+          "switch_on_recommended": "Switch-on recommended"
+        }
       },
       "wallbox_power": {
         "name": "Wallbox power"

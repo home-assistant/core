@@ -52,8 +52,14 @@ async def test_all_entities(
         pytest.param(
             {40137: 2},
             "sensor.e3_dc_s10_x_sg_ready_status",
-            "2",
+            "normal",
             id="wide_power_meters",
+        ),
+        pytest.param(
+            {40137: 0},
+            "sensor.e3_dc_s10_x_sg_ready_status",
+            "unknown",
+            id="sg_ready_undocumented_value",
         ),
         pytest.param(
             {40194: 60},
