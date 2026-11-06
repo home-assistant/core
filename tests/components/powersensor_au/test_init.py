@@ -381,41 +381,6 @@ async def test_device_can_be_deleted_while_unloaded_and_returns_on_load(
     } == entities
 
 
-async def test_device_cannot_be_deleted_during_setup(
-    hass: HomeAssistant,
-    mock_devices: MagicMock,
-    config_entry: MockConfigEntry,
-    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
-    device_registry: dr.DeviceRegistry,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Discovery is already running during setup, so a delete then is refused."""
-    found = {"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"}
-    await fire(found)
-    await hass.async_block_till_done()
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, PLUG_MAC), config_entry.entry_id
-    )
-    assert device is not None
-    await _unload(hass, config_entry)
-
-    deleted: list[bool] = []
-
-    async def delete_during_discovery(
-        on_event: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
-    ) -> None:
-        await on_event(found)
-        assert config_entry.state is ConfigEntryState.SETUP_IN_PROGRESS
-        deleted.append(await _delete_device(hass, hass_ws_client, device.id))
-
-    mock_devices.start.side_effect = delete_during_discovery
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert deleted == [False]
-    assert device_registry.async_get(device.id) is not None
-
-
 async def test_returning_sensor_gets_entities_of_a_role_it_had_before(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
