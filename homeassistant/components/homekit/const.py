@@ -30,6 +30,10 @@ AUDIO_CODEC_COPY = "copy"
 ATTR_DISPLAY_NAME = "display_name"
 ATTR_VALUE = "value"
 ATTR_INTEGRATION = "platform"
+ATTR_HW_VERSION = "hw_version"
+ATTR_MANUFACTURER = "manufacturer"
+ATTR_MODEL = "model"
+ATTR_SW_VERSION = "sw_version"
 ATTR_KEY_NAME = "key_name"
 # Current attribute used by homekit_controller
 ATTR_OBSTRUCTION_DETECTED = "obstruction-detected"
@@ -105,10 +109,6 @@ HOMEKIT_MODE_ACCESSORY = "accessory"
 HOMEKIT_MODE_BRIDGE = "bridge"
 DEFAULT_HOMEKIT_MODE = HOMEKIT_MODE_BRIDGE
 HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
-
-# #### HomeKit Component Services ####
-SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
-SERVICE_HOMEKIT_UNPAIR = "unpair"
 
 # #### String Constants ####
 BRIDGE_MODEL = "Bridge"

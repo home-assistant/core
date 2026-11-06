@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_SERIAL_NUMBER,
     CONF_TYPE,
     PERCENTAGE,
     UnitOfElectricCurrent,
@@ -28,6 +27,7 @@ from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import CONF_SERIAL_NUMBER
 from .coordinator import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
 from .entity import LektricoEntity
 
@@ -306,7 +306,7 @@ async def async_setup_entry(
         LektricoSensor(
             description,
             coordinator,
-            f"{entry.data[CONF_TYPE]}_{entry.data[ATTR_SERIAL_NUMBER]}",
+            f"{entry.data[CONF_TYPE]}_{entry.data[CONF_SERIAL_NUMBER]}",
         )
         for description in sensors_to_be_used
     )

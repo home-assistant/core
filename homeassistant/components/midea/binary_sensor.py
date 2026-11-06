@@ -32,6 +32,11 @@ BINARY_SENSORS: list[MideaBinarySensorEntityDescription] = [
         device_class=BinarySensorDeviceClass.MOTION,
     ),
     MideaBinarySensorEntityDescription(
+        key="child_lock",
+        translation_key="child_lock",
+        models=[DeviceType.B0],
+    ),
+    MideaBinarySensorEntityDescription(
         key="door",
         device_class=BinarySensorDeviceClass.OPENING,
     ),

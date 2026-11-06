@@ -1,4 +1,23 @@
 {
+  "entity": {
+    "sensor": {
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "compensation": {
+        "name": "{energy_name} compensation"
+      },
+      "cost": {
+        "name": "{energy_name} cost"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "power_inverted": {
+        "name": "{source_name} inverted"
+      }
+    }
+  },
   "issues": {
     "entity_gas_price_unit_mismatch": {
       "description": "Use a price per energy unit (such as kWh) for a gas sensor that measures energy, or a price per volume unit (such as m³) for a gas sensor that measures volume. Until then, the gas cost is not calculated. The following price entities do not match the unit of their gas sensor:",

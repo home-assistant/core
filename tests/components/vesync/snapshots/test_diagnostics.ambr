@@ -96,6 +96,7 @@
         'set_mist_level': 'Method',
         'set_mode': 'Method',
         'set_nightlight_brightness': 'Method',
+        'set_rgb_nightlight': 'Method',
         'set_sleep_mode': 'Method',
         'set_state': 'Method',
         'set_timer': 'Method',
@@ -106,6 +107,7 @@
         'supports_drying_mode': 'Method',
         'supports_nightlight': 'Method',
         'supports_nightlight_brightness': 'Method',
+        'supports_rgb_nightlight': 'Method',
         'supports_warm_mist': 'Method',
         'target_minmax': list([
           30,

@@ -201,3 +201,39 @@ async def test_temperatures_follow_attachment_change(
     assert state.state == "31.5"
     assert (state := hass.states.get("sensor.nrgkick_test_connector_l3_temperature"))
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "connect_time",
+    [None, "invalid", 10**18],
+    ids=["missing", "not_a_number", "too_large"],
+)
+async def test_vehicle_connected_since_invalid_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
+    connect_time: int | str | None,
+) -> None:
+    """Test vehicle connected since is unknown for a missing or invalid value."""
+    mock_nrgkick_api.get_values.return_value["general"]["vehicle_connect_time"] = (
+        connect_time
+    )
+
+    await setup_integration(hass, mock_config_entry, platforms=[Platform.SENSOR])
+
+    assert (state := hass.states.get("sensor.nrgkick_test_vehicle_connected_since"))
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_missing_status_code_becomes_state_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
+) -> None:
+    """Test that a missing code value maps to HA's unknown state."""
+    mock_nrgkick_api.get_values.return_value["general"]["status"] = None
+
+    await setup_integration(hass, mock_config_entry, platforms=[Platform.SENSOR])
+
+    assert (state := hass.states.get("sensor.nrgkick_test_status"))
+    assert state.state == STATE_UNKNOWN

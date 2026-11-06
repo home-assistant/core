@@ -7,7 +7,6 @@ from http import HTTPStatus
 from aiohttp import ClientConnectionError, ClientResponseError
 from pymelcloud import get_devices
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -95,6 +94,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: MelCloudConfigEntry
+) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

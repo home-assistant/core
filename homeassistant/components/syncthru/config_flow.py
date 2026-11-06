@@ -70,7 +70,7 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
             # Remove trailing " (ip)" if present for consistency with user driven config
             self.name = re.sub(r"\s+\([\d.]+\)\s*$", "", self.name)
 
-        self.context["title_placeholders"] = {CONF_NAME: self.name}
+        self.context["title_placeholders"] = {"name": self.name}
         return await self.async_step_confirm()
 
     async def async_step_confirm(

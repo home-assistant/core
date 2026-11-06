@@ -82,7 +82,11 @@ rules:
     comment: This integration does not define custom icons for entities.
   reconfiguration-flow: todo
   repair-issues: done
-  stale-devices: todo
+  stale-devices:
+    status: done
+    comment: |
+      The router does not report departed clients, so a client device can be
+      removed manually while the client is not connected.
 
   # Platinum
   async-dependency: done

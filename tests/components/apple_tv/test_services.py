@@ -7,7 +7,11 @@ from pyatv.exceptions import NotSupportedError, ProtocolError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.apple_tv.const import ATTR_TEXT, DOMAIN
+from homeassistant.components.apple_tv.const import DOMAIN
+from homeassistant.components.apple_tv.services import (
+    AppleTVService,
+    AppleTVServiceArgument,
+)
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -23,8 +27,11 @@ async def test_set_keyboard_text(
     """Test setting keyboard text."""
     await hass.services.async_call(
         DOMAIN,
-        "set_keyboard_text",
-        {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, ATTR_TEXT: "Star Wars"},
+        AppleTVService.SET_KEYBOARD_TEXT,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            AppleTVServiceArgument.TEXT: "Star Wars",
+        },
         blocking=True,
     )
     mock_atv.keyboard.text_set.assert_called_once_with("Star Wars")
@@ -38,10 +45,10 @@ async def test_append_keyboard_text(
     """Test appending keyboard text."""
     await hass.services.async_call(
         DOMAIN,
-        "append_keyboard_text",
+        AppleTVService.APPEND_KEYBOARD_TEXT,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_TEXT: " Episode IV",
+            AppleTVServiceArgument.TEXT: " Episode IV",
         },
         blocking=True,
     )
@@ -56,7 +63,7 @@ async def test_clear_keyboard_text(
     """Test clearing keyboard text."""
     await hass.services.async_call(
         DOMAIN,
-        "clear_keyboard_text",
+        AppleTVService.CLEAR_KEYBOARD_TEXT,
         {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id},
         blocking=True,
     )
@@ -73,8 +80,11 @@ async def test_set_keyboard_text_not_connected(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            "set_keyboard_text",
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, ATTR_TEXT: "test"},
+            AppleTVService.SET_KEYBOARD_TEXT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                AppleTVServiceArgument.TEXT: "test",
+            },
             blocking=True,
         )
 
@@ -89,8 +99,11 @@ async def test_set_keyboard_text_not_focused(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            "set_keyboard_text",
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, ATTR_TEXT: "test"},
+            AppleTVService.SET_KEYBOARD_TEXT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                AppleTVServiceArgument.TEXT: "test",
+            },
             blocking=True,
         )
 
@@ -113,8 +126,11 @@ async def test_set_keyboard_text_not_supported(
     ):
         await hass.services.async_call(
             DOMAIN,
-            "set_keyboard_text",
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, ATTR_TEXT: "test"},
+            AppleTVService.SET_KEYBOARD_TEXT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                AppleTVServiceArgument.TEXT: "test",
+            },
             blocking=True,
         )
 
@@ -129,7 +145,10 @@ async def test_set_keyboard_text_protocol_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            "set_keyboard_text",
-            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, ATTR_TEXT: "test"},
+            AppleTVService.SET_KEYBOARD_TEXT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                AppleTVServiceArgument.TEXT: "test",
+            },
             blocking=True,
         )
