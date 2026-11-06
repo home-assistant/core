@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import setup_integration
+from . import setup_added_entry, setup_integration
 
 LEGACY_ENTITY_ID = "sensor.monstera_fertilise_in"
 
@@ -62,7 +62,7 @@ async def test_no_issue_when_the_entry_was_adopted(
     mock_config_entry.add_to_hass(hass)
     _add_legacy_entry(entity_registry, mock_config_entry)
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_added_entry(hass, mock_config_entry)
 
     assert not issue_registry.issues
 
@@ -85,7 +85,7 @@ async def test_issue_lists_the_stranded_entity(
         suggested_object_id="monstera_fertilize_in",
     )
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_added_entry(hass, mock_config_entry)
 
     issue = issue_registry.async_get_issue(
         DOMAIN, f"{LEGACY_ENTITIES_ISSUE}_{mock_config_entry.entry_id}"
@@ -113,7 +113,7 @@ async def test_fix_flow_removes_the_stranded_entity(
         config_entry=mock_config_entry,
         suggested_object_id="monstera_fertilize_in",
     )
-    await setup_integration(hass, mock_config_entry)
+    await setup_added_entry(hass, mock_config_entry)
 
     issue_id = f"{LEGACY_ENTITIES_ISSUE}_{mock_config_entry.entry_id}"
     client = await hass_client()
@@ -128,3 +128,36 @@ async def test_fix_flow_removes_the_stranded_entity(
     assert entity_registry.async_get(LEGACY_ENTITY_ID) is None
     assert entity_registry.async_get("sensor.monstera_fertilize_in") is not None
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client", "repairs")
+async def test_fix_flow_keeps_an_entity_whose_collision_was_resolved(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity that can be adopted again is not deleted by the fix."""
+    mock_config_entry.add_to_hass(hass)
+    legacy = _add_legacy_entry(entity_registry, mock_config_entry)
+    blocking = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "sensor-1_fertilize",
+        config_entry=mock_config_entry,
+        suggested_object_id="monstera_fertilize_in",
+    )
+    await setup_added_entry(hass, mock_config_entry)
+
+    issue_id = f"{LEGACY_ENTITIES_ISSUE}_{mock_config_entry.entry_id}"
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    # The entity holding the new id goes between raising the issue and fixing it.
+    entity_registry.async_remove(blocking.entity_id)
+
+    data = await process_repair_fix_flow(client, data["flow_id"])
+    await hass.async_block_till_done()
+
+    assert data["type"] == "create_entry"
+    assert entity_registry.async_get(legacy.entity_id) is not None

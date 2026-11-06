@@ -19,7 +19,7 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import setup_added_entry, setup_integration
 
 
 @pytest.mark.usefixtures("mock_smartyplants_client")
@@ -135,7 +135,7 @@ async def test_legacy_unique_id_is_migrated(
         suggested_object_id="monstera_fertilise_in",
     )
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_added_entry(hass, mock_config_entry)
 
     entry = entity_registry.async_get(legacy.entity_id)
     assert entry.unique_id == "sensor-1_fertilize"
@@ -165,7 +165,7 @@ async def test_legacy_unique_id_kept_when_new_one_exists(
         suggested_object_id="monstera_fertilize_in",
     )
 
-    await setup_integration(hass, mock_config_entry)
+    await setup_added_entry(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert (

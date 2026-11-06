@@ -6,7 +6,7 @@ from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from .const import DOMAIN, LEGACY_FERTILISE_SUFFIX
+from .const import DOMAIN, FERTILIZE_SUFFIX, LEGACY_FERTILISE_SUFFIX
 from .coordinator import SmartyPlantsConfigEntry
 
 LEGACY_ENTITIES_ISSUE = "legacy_entities"
@@ -16,8 +16,9 @@ LEGACY_ENTITIES_ISSUE = "legacy_entities"
 def async_stranded_entity_ids(hass: HomeAssistant, entry_id: str) -> list[str]:
     """Return the entities the custom integration left that cannot be adopted.
 
-    Adoption renames every entry it can, so whatever still carries the old
-    suffix afterwards is an entry whose new unique id was already taken.
+    An old entry is only stranded while the id it would be renamed to is
+    taken. Deleting the entry holding that id frees it, and the next setup
+    adopts the old one, so it is no longer something to offer to delete.
     """
     registry = er.async_get(hass)
     return sorted(
@@ -26,6 +27,12 @@ def async_stranded_entity_ids(hass: HomeAssistant, entry_id: str) -> list[str]:
             entry_id
         )
         if registry_entry.unique_id.endswith(LEGACY_FERTILISE_SUFFIX)
+        and registry.async_get_entity_id(
+            registry_entry.domain,
+            DOMAIN,
+            registry_entry.unique_id.removesuffix(LEGACY_FERTILISE_SUFFIX)
+            + FERTILIZE_SUFFIX,
+        )
     )
 
 
