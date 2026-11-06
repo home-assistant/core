@@ -975,3 +975,68 @@ async def test_coordinator_drops_unreported_usage(
     assert [s["state"] for s in stats["opower:pge_elec_111111_energy_consumption"]] == [
         1.5
     ]
+
+
+async def test_coordinator_usage_only_utility(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test a utility that never publishes cost keeps updating usage."""
+    mock_opower_api.async_get_usage_reads.return_value = [
+        _usage_read(8, 1.5),
+        _usage_read(9, 2.0),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    mock_opower_api.async_get_usage_reads.return_value = [
+        _usage_read(8, 1.5),
+        _usage_read(9, 2.0),
+        _usage_read(10, 3.0),
+    ]
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await _get_elec_stats(hass)
+    assert [s["sum"] for s in stats["opower:pge_elec_111111_energy_consumption"]] == [
+        1.5,
+        3.5,
+        6.5,
+    ]
+    assert "opower:pge_elec_111111_energy_cost" not in stats
+    assert not ir.async_get(hass).issues
+
+
+async def test_coordinator_keeps_trailing_zero_net_usage_with_registers(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test a trailing zero-net interval with real import and export is kept."""
+    mock_opower_api.async_get_usage_reads.return_value = [
+        _usage_read(8, 1.5),
+        UsageRead(
+            start_time=dt_util.as_utc(datetime(2023, 1, 1, 9)),
+            end_time=dt_util.as_utc(datetime(2023, 1, 1, 10)),
+            consumption=0.0,
+            imported=1.0,
+            exported=1.0,
+        ),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await _get_elec_stats(hass)
+    assert [s["state"] for s in stats["opower:pge_elec_111111_energy_consumption"]] == [
+        1.5,
+        1.0,
+    ]
+    assert [s["state"] for s in stats["opower:pge_elec_111111_energy_return"]] == [
+        0.0,
+        1.0,
+    ]

@@ -485,6 +485,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             None,
             {"start", "state", "sum"},
         )
+        # A source series that was never written (e.g. cost for a utility that
+        # only publishes usage) has nothing to migrate.
+        need_migration_source_ids &= existing_stats.keys()
         for source_id, source_stats in existing_stats.items():
             _LOGGER.debug("Found %d statistics for %s", len(source_stats), source_id)
             if not source_stats:
@@ -590,7 +593,9 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         # Intervals the meter hasn't reported yet can come back as zeros (or
         # without a value). Drop them so they aren't recorded as real zeros that
         # the next update would then skip over.
-        while reads and not reads[-1].consumption:
+        while reads and not (
+            reads[-1].consumption or reads[-1].imported or reads[-1].exported
+        ):
             reads.pop()
         return reads
 
