@@ -674,6 +674,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/gate/ @home-assistant/core
 /homeassistant/components/gatus/ @TN-1
 /tests/components/gatus/ @TN-1
+/homeassistant/components/gbfs/ @raman325
+/tests/components/gbfs/ @raman325
 /homeassistant/components/gdacs/ @exxamalte
 /tests/components/gdacs/ @exxamalte
 /homeassistant/components/generic/ @davet2001
