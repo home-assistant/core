@@ -9,7 +9,12 @@ import probatio
 
 from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
-from homeassistant.helpers import entity_registry as er, singleton, storage
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    singleton,
+    storage,
+)
 
 from .const import DOMAIN
 
@@ -188,6 +193,9 @@ class BatterySourceType(TypedDict):
 
     # usable capacity in kWh, used to weight the combined state of charge
     capacity: NotRequired[float]
+
+    # entity_id of a sensor reporting usable capacity in an energy unit
+    entity_capacity: NotRequired[str]
 
     # An optional custom name for display in energy graphs
     name: NotRequired[str]
@@ -549,8 +557,11 @@ BATTERY_SOURCE_SCHEMA = probatio.Schema(
         probatio.Optional("stat_rate"): str,
         probatio.Optional("power_config"): POWER_CONFIG_SCHEMA,
         probatio.Optional("stat_soc"): str,
-        probatio.Optional("capacity"): probatio.All(
+        probatio.Exclusive("capacity", "battery_capacity"): probatio.All(
             probatio.Coerce(float), probatio.Range(min=0, min_included=False)
+        ),
+        probatio.Exclusive("entity_capacity", "battery_capacity"): cv.entity_domain(
+            "sensor"
         ),
         probatio.Optional("name"): str,
     }
