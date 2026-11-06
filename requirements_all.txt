@@ -1358,7 +1358,7 @@ hole==0.9.2
 holidays==0.108
 
 # homeassistant.components.frontend
-home-assistant-frontend==20261028.4
+home-assistant-frontend==20261028.5
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.10.27
@@ -1490,7 +1490,7 @@ israel-rail-api==0.1.5
 jaraco.abode==6.4.0
 
 # homeassistant.components.jellyfin
-jellyfin-apiclient-python==1.19.0
+jellyfin-apiclient-python==1.21.0
 
 # homeassistant.components.command_line
 # homeassistant.components.rest
@@ -2457,7 +2457,7 @@ pylacrosse==0.4
 pylamarzocco==2.5.6
 
 # homeassistant.components.lastfm
-pylast==5.1.0
+pylast==7.2.0
 
 # homeassistant.components.launch_library
 pylaunches==2.0.0
@@ -3210,7 +3210,7 @@ smart-meter-texas==0.5.6
 snapcast==2.3.8
 
 # homeassistant.components.sonos
-soco==0.32.1
+soco==0.32.2
 
 # homeassistant.components.sofar
 sofar-modbus==0.25.3
@@ -3431,7 +3431,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==25.0.0
+uiprotect==25.0.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3454,7 +3454,7 @@ upcloud-api==2.9.0
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
 # homeassistant.components.zwave_me
-url-normalize==3.0.1
+url-normalize==3.1.0
 
 # homeassistant.components.uvc
 uvcclient==0.12.1
