@@ -191,6 +191,11 @@
       "wlan_control": {
         "name": "Enabled"
       }
+    },
+    "update": {
+      "ips_engine": {
+        "name": "IPS engine"
+      }
     }
   },
   "exceptions": {
