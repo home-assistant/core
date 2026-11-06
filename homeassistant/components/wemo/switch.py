@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import async_wemo_dispatcher_connect
 from .coordinator import DeviceCoordinator
@@ -29,6 +30,10 @@ ATTR_SWITCH_MODE = "switch_mode"
 
 MAKER_SWITCH_MOMENTARY = "momentary"
 MAKER_SWITCH_TOGGLE = "toggle"
+
+# on_for is whole seconds and Insight is polled every SCAN_INTERVAL, so the
+# computed start time jitters. Match the sensor uptime drift window.
+_ON_SINCE_DRIFT = timedelta(seconds=60)
 
 
 async def async_setup_entry(
@@ -50,6 +55,7 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
 
     # All wemo devices used with WemoSwitch are subclasses of Switch.
     wemo: Switch
+    _on_since: datetime | None = None
 
     @property
     @override
@@ -75,7 +81,10 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
             attr[ATTR_CURRENT_STATE_DETAIL] = self.detail_state
 
         if isinstance(self.wemo, Insight):
-            attr[ATTR_ON_LATEST_TIME] = self.as_uptime(self.wemo.on_for)
+            if (on_since := self._absolute_on_since()) is not None:
+                attr[ATTR_ON_LATEST_TIME] = on_since
+            # today_on_time and total_on_time are cumulative durations, not
+            # points in time, so they stay relative strings.
             attr[ATTR_ON_TODAY_TIME] = self.as_uptime(self.wemo.today_on_time)
             attr[ATTR_ON_TOTAL_TIME] = self.as_uptime(self.wemo.total_on_time)
             attr[ATTR_POWER_THRESHOLD] = self.wemo.threshold_power_watts
@@ -84,6 +93,29 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
             attr[ATTR_COFFEMAKER_MODE] = self.wemo.mode
 
         return attr
+
+    def _absolute_on_since(self) -> datetime | None:
+        """Return when the current on period started.
+
+        ``on_for`` increases only while the outlet is on or in standby, so
+        subtracting it from now is an absolute start time. While off it is the
+        finished length of the last on period and would walk forward every poll.
+        """
+        wemo = self.wemo
+        if not isinstance(wemo, Insight):
+            return None
+        if wemo.standby_state not in (StandbyState.ON, StandbyState.STANDBY):
+            self._on_since = None
+            return None
+
+        candidate = (dt_util.utcnow() - timedelta(seconds=wemo.on_for)).replace(
+            microsecond=0
+        )
+        previous = self._on_since
+        if previous is not None and abs(candidate - previous) <= _ON_SINCE_DRIFT:
+            return previous
+        self._on_since = candidate
+        return candidate
 
     @staticmethod
     def as_uptime(_seconds: int) -> str:
