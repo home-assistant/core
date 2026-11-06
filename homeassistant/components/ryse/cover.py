@@ -1,5 +1,7 @@
 """Support for RYSE Smart Shades via BLE."""
 
+from collections.abc import Callable, Coroutine
+from functools import partial
 import logging
 from typing import Any, override
 
@@ -118,43 +120,62 @@ class RyseCoverEntity(CoverEntity):
             self._clear_cached_position()
         self.async_write_ha_state()
 
+    async def _async_ensure_connected(self) -> bool:
+        """Reconnect when the BLE client is missing or dropped.
+
+        ryseble's writes are no-ops when ``client`` is None, so a command that
+        runs after a failed poll would otherwise appear to succeed.
+        """
+        if self._device.client and self._device.client.is_connected:
+            return True
+        if await self._device.pair():
+            return True
+        await _async_unpair(self._device)
+        self._set_available(False, "failed to pair")
+        self._config_entry.async_start_reauth(self.hass)
+        return False
+
+    async def _async_send_command(
+        self, description: str, send: Callable[[], Coroutine[Any, Any, None]]
+    ) -> None:
+        """Send a cover command, reconnecting first if needed."""
+        try:
+            if not await self._async_ensure_connected():
+                self.async_write_ha_state()
+                raise HomeAssistantError(f"Failed to {description}: failed to pair")
+            await send()
+            self._set_available(True)
+        except (TimeoutError, OSError, EOFError, BleakError) as err:
+            raise HomeAssistantError(f"Failed to {description}: {err}") from err
+
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the shade."""
-        try:
-            await self._device.send_open()
-        except (TimeoutError, OSError, EOFError, BleakError) as err:
-            raise HomeAssistantError(f"Failed to open cover: {err}") from err
+        await self._async_send_command("open cover", self._device.send_open)
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the shade."""
-        try:
-            await self._device.send_close()
-        except (TimeoutError, OSError, EOFError, BleakError) as err:
-            raise HomeAssistantError(f"Failed to close cover: {err}") from err
+        await self._async_send_command("close cover", self._device.send_close)
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the shade to a specific position."""
         ha_position = kwargs[ATTR_POSITION]
         device_position = self._device.get_real_position(ha_position)
-        try:
-            await self._device.send_set_position(device_position)
-        except (TimeoutError, OSError, EOFError, BleakError) as err:
-            raise HomeAssistantError(f"Failed to set cover position: {err}") from err
+        await self._async_send_command(
+            "set cover position",
+            partial(self._device.send_set_position, device_position),
+        )
 
     async def async_update(self) -> None:
         """Fetch the current state and position from the device."""
         paired = False
         try:
             if not self._device.client or not self._device.client.is_connected:
-                paired = await self._device.pair()
-                if not paired:
-                    await _async_unpair(self._device)
-                    self._set_available(False, "failed to pair")
-                    self._config_entry.async_start_reauth(self.hass)
+                if not await self._async_ensure_connected():
                     return
+                paired = True
 
             if (
                 self._current_position is not None

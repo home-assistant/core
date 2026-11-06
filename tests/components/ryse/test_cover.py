@@ -328,6 +328,94 @@ async def test_cover_services_ble_error(
     assert state.attributes.get(ATTR_CURRENT_POSITION) is None
 
 
+@pytest.mark.parametrize(
+    (
+        "service",
+        "service_data",
+        "method",
+        "device_args",
+    ),
+    [
+        (SERVICE_OPEN_COVER, {}, "send_open", ()),
+        (SERVICE_CLOSE_COVER, {}, "send_close", ()),
+        (
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 75},
+            "send_set_position",
+            (25,),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("polled_cover")
+async def test_cover_command_reconnects_when_disconnected(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    service: str,
+    service_data: dict[str, Any],
+    method: str,
+    device_args: tuple[int, ...],
+) -> None:
+    """Test a cover command pairs again when the previous poll dropped the client."""
+    mock_device.client = None
+    mock_device.pair.reset_mock()
+
+    async def _pair() -> bool:
+        mock_device.client = MagicMock(is_connected=True)
+        return True
+
+    mock_device.pair.side_effect = _pair
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: ENTITY_ID} | service_data,
+        blocking=True,
+    )
+
+    mock_device.pair.assert_awaited_once()
+    getattr(mock_device, method).assert_awaited_once_with(*device_args)
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "error"),
+    [
+        (SERVICE_OPEN_COVER, {}, "Failed to open cover: failed to pair"),
+        (SERVICE_CLOSE_COVER, {}, "Failed to close cover: failed to pair"),
+        (
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 50},
+            "Failed to set cover position: failed to pair",
+        ),
+    ],
+)
+async def test_cover_command_raises_when_reconnect_fails(
+    hass: HomeAssistant,
+    mock_device: MagicMock,
+    polled_cover: MockConfigEntry,
+    service: str,
+    service_data: dict[str, Any],
+    error: str,
+) -> None:
+    """Test a cover command surfaces an error instead of no-oping without a client."""
+    mock_device.client = None
+    mock_device.pair.return_value = False
+    mock_device.unpair.reset_mock()
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID} | service_data,
+            blocking=True,
+        )
+
+    mock_device.send_open.assert_not_awaited()
+    mock_device.send_close.assert_not_awaited()
+    mock_device.send_set_position.assert_not_awaited()
+    mock_device.unpair.assert_awaited_once()
+    assert list(polled_cover.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
 async def test_pairing_failure_marks_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
