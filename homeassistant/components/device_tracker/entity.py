@@ -10,8 +10,6 @@ from homeassistant.components.zone import ZoneEntityStateAttribute
 from homeassistant.const import (  # noqa: F401
     ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     STATE_HOME,
     STATE_NOT_HOME,
     EntityCategory,
