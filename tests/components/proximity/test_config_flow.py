@@ -1,5 +1,6 @@
 """Test proximity config flow."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -76,8 +77,33 @@ async def test_user_flow(
     assert mock_setup_entry.called
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test options flow."""
+@pytest.mark.parametrize(
+    ("user_input", "expected_setup_calls"),
+    [
+        pytest.param(
+            {
+                CONF_TRACKED_ENTITIES: ["device_tracker.test2"],
+                CONF_IGNORED_ZONES: [],
+                CONF_TOLERANCE: 1,
+            },
+            2,
+            id="changed",
+        ),
+        pytest.param(
+            {
+                CONF_TRACKED_ENTITIES: ["device_tracker.test1"],
+                CONF_IGNORED_ZONES: ["zone.work"],
+                CONF_TOLERANCE: 10,
+            },
+            1,
+            id="unchanged",
+        ),
+    ],
+)
+async def test_options_flow(
+    hass: HomeAssistant, user_input: dict[str, Any], expected_setup_calls: int
+) -> None:
+    """Test options flow updates the entry and reloads it if changed."""
 
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -97,26 +123,20 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         await hass.config_entries.async_setup(mock_config.entry_id)
         await hass.async_block_till_done()
-        assert mock_setup_entry.called
+        assert mock_setup_entry.call_count == 1
 
         result = await hass.config_entries.options.async_init(mock_config.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_TRACKED_ENTITIES: ["device_tracker.test2"],
-            CONF_IGNORED_ZONES: [],
-            CONF_TOLERANCE: 1,
-        },
-    )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+        await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config.data == {
-        CONF_ZONE: "zone.home",
-        CONF_TRACKED_ENTITIES: ["device_tracker.test2"],
-        CONF_IGNORED_ZONES: [],
-        CONF_TOLERANCE: 1,
-    }
+    assert mock_config.data == {CONF_ZONE: "zone.home", **user_input}
+    assert mock_config.options == {}
+    assert mock_setup_entry.call_count == expected_setup_calls
 
 
 async def test_abort_duplicated_entry(hass: HomeAssistant) -> None:
