@@ -521,6 +521,27 @@
       "cooler_temperature": {
         "name": "Fridge temperature"
       },
+      "delayed_start_time": {
+        "name": "Delayed start time"
+      },
+      "dishwasher_detailed_job_state": {
+        "name": "Detailed job state",
+        "state": {
+          "auto_release_drying": "Drying with auto door release",
+          "cooling": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::cooling%]",
+          "delay_washing": "[%key:component::smartthings::entity::sensor::washer_job_state::state::delay_wash%]",
+          "draining": "[%key:component::smartthings::entity::sensor::oven_job_state::state::draining%]",
+          "drying": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::drying%]",
+          "drying_auto_release_delay": "Drying before auto door release",
+          "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]",
+          "none": "[%key:component::smartthings::entity::sensor::washer_job_state::state::none%]",
+          "pre_drain": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::pre_drain%]",
+          "pre_washing": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::pre_wash%]",
+          "rinsing": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::rinse%]",
+          "sanitizing": "[%key:component::smartthings::entity::sensor::dryer_job_state::state::sanitizing%]",
+          "washing": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wash%]"
+        }
+      },
       "dishwasher_job_state": {
         "name": "Job state",
         "state": {

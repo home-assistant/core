@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, cast, override
 
 from pysmartthings import Attribute, Capability, ComponentStatus, SmartThings, Status
@@ -66,12 +66,16 @@ JOB_STATE_MAP = {
     "continuousDehumidifying": "continuous_dehumidifying",
     "thawingFrozenInside": "thawing_frozen_inside",
     "delayWash": "delay_wash",
+    "delayWashing": "delay_washing",
     "weightSensing": "weight_sensing",
     "freezeProtection": "freeze_protection",
     "preDrain": "pre_drain",
     "preWash": "pre_wash",
+    "preWashing": "pre_washing",
     "prewash": "pre_wash",
     "wrinklePrevent": "wrinkle_prevent",
+    "dryingAutoReleaseDelay": "drying_auto_release_delay",
+    "autoReleaseDrying": "auto_release_drying",
     "unknown": None,
 }
 
@@ -1234,6 +1238,47 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.SAMSUNG_CE_DISHWASHER_JOB_STATE: {
+        Attribute.DISHWASHER_JOB_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.DISHWASHER_JOB_STATE,
+                translation_key="dishwasher_detailed_job_state",
+                options=[
+                    "auto_release_drying",
+                    "cooling",
+                    "delay_washing",
+                    "draining",
+                    "drying",
+                    "drying_auto_release_delay",
+                    "finished",
+                    "none",
+                    "pre_drain",
+                    "pre_washing",
+                    "rinsing",
+                    "sanitizing",
+                    "washing",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: JOB_STATE_MAP.get(value, value),
+            )
+        ]
+    },
+    Capability.SAMSUNG_CE_DISHWASHER_OPERATION: {
+        Attribute.TIME_LEFT_TO_START: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.TIME_LEFT_TO_START,
+                translation_key="delayed_start_time",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                # Truncated as the device counts down in whole minutes
+                value_fn=lambda value: (
+                    dt_util.utcnow().replace(second=0, microsecond=0)
+                    + timedelta(minutes=value)
+                    if value
+                    else None
+                ),
+            )
+        ]
+    },
     Capability.SAMSUNG_CE_WATER_CONSUMPTION_REPORT: {
         Attribute.WATER_CONSUMPTION: [
             SmartThingsSensorEntityDescription(
@@ -1508,6 +1553,9 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
+        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
+            # Timestamps can be derived from attributes reported with a unit
+            return None
         if self.entity_description.use_temperature_unit:
             unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
                 Attribute.TEMPERATURE
