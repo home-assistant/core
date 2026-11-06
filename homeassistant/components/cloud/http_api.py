@@ -1231,7 +1231,7 @@ async def google_assistant_get(
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,
-            f"{entity_id} not supported by Google assistant",
+            f"{entity_id} not supported by Google Home",
         )
         return
 
