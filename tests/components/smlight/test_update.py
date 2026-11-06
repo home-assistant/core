@@ -815,12 +815,14 @@ async def test_update_zigbee_firmware_specific_version(
     assert state.attributes[ATTR_LATEST_VERSION] == "20250201"
 
 
+@pytest.mark.parametrize("version", ["v9.9.9", ""])
 async def test_update_firmware_specific_version_not_found(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
+    version: str,
 ) -> None:
-    """Test a version missing from the catalog is refused before flashing."""
+    """Test a version missing from the catalog, or empty, is refused before flashing."""
     await setup_integration(hass, mock_config_entry)
     entity_id = "update.mock_title_core_firmware"
 
@@ -828,12 +830,12 @@ async def test_update_firmware_specific_version_not_found(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VERSION: "v9.9.9"},
+            {ATTR_ENTITY_ID: entity_id, ATTR_VERSION: version},
             blocking=True,
         )
 
     assert exc_info.value.translation_key == "firmware_version_not_found"
-    assert exc_info.value.translation_placeholders["version"] == "v9.9.9"
+    assert exc_info.value.translation_placeholders["version"] == version
     mock_smlight_client.fw_update.assert_not_called()
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False

@@ -261,7 +261,9 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     ) -> None:
         """Install firmware update."""
 
-        firmware = self._get_firmware(version) if version else self._firmware
+        firmware = (
+            self._get_firmware(version) if version is not None else self._firmware
+        )
 
         if not self.coordinator.in_progress and firmware:
             self.coordinator.in_progress = True
