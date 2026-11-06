@@ -1121,7 +1121,7 @@ fressnapftracker==0.3.1
 fritzconnection[qr]==1.15.1
 
 # homeassistant.components.fronius
-fronius-modbus==0.2.0
+fronius-modbus==0.4.0
 
 # homeassistant.components.fronius
 fronius-solarapi==0.1.1
