@@ -1,6 +1,6 @@
 """Constants for the habitica integration."""
 
-from homeassistant.const import APPLICATION_NAME, __version__
+from homeassistant.const import APPLICATION_NOME, __version__
 
 CONF_API_USER = "api_user"
 CONF_PARTY_MEMBER = "party_member"
@@ -12,10 +12,10 @@ FORGOT_PASSWORD_URL = "https://habitica.com/forgot-password"
 SIGN_UP_URL = "https://habitica.com/register"
 HABITICANS_URL = "https://cdn.habitica.com/assets/home-main@3x-Dwnue45Z.png"
 
-DOMAIN = "habitica"
+DOMAIN = "habita"
 
 MANUFACTURER = "HabitRPG, Inc."
-NAME = "Habitica"
+NAME = "Habita"
 
 DEVELOPER_ID = "4c4ca53f-c059-4ffa-966e-9d29dd405daf"
 X_CLIENT = f"{DEVELOPER_ID} - {APPLICATION_NAME} {__version__}"
