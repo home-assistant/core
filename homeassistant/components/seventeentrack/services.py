@@ -1,8 +1,10 @@
 """Services for the seventeentrack integration."""
 
+from json import JSONDecodeError
 from typing import Any, Final
 
 import probatio
+from pyseventeentrack.errors import SeventeenTrackError
 from pyseventeentrack.package import PACKAGE_STATUS_MAP, Package
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_FRIENDLY_NAME, ATTR_LOCATION
@@ -13,6 +15,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, selector, service
 from homeassistant.util import slugify
 
@@ -29,11 +32,25 @@ from .const import (
     ATTR_TRACKING_INFO_LANGUAGE,
     ATTR_TRACKING_NUMBER,
     DOMAIN,
+    LOGGER,
     SERVICE_ADD_PACKAGE,
     SERVICE_ARCHIVE_PACKAGE,
     SERVICE_GET_PACKAGES,
 )
 from .coordinator import SeventeenTrackConfigEntry
+
+ATTR_FIRST_CARRIER = "first_carrier"
+ATTR_SECOND_CARRIER = "second_carrier"
+
+CARRIER_CODE = probatio.All(
+    probatio.Any(
+        probatio.Check(lambda value: type(value) is int, "Expected an integer"),
+        probatio.Match(r"[0-9]+\Z"),
+        msg="Expected a carrier code",
+    ),
+    probatio.Coerce(int),
+    probatio.Range(min=1),
+)
 
 SERVICE_GET_PACKAGES_SCHEMA: Final = probatio.Schema(
     {
@@ -52,12 +69,17 @@ SERVICE_GET_PACKAGES_SCHEMA: Final = probatio.Schema(
     }
 )
 
-SERVICE_ADD_PACKAGE_SCHEMA: Final = probatio.Schema(
-    {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        probatio.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
-        probatio.Required(ATTR_PACKAGE_FRIENDLY_NAME): cv.string,
-    }
+SERVICE_ADD_PACKAGE_SCHEMA: Final = probatio.All(
+    probatio.Schema(
+        {
+            probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+            probatio.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
+            probatio.Required(ATTR_PACKAGE_FRIENDLY_NAME): cv.string,
+            probatio.Optional(ATTR_FIRST_CARRIER): CARRIER_CODE,
+            probatio.Optional(ATTR_SECOND_CARRIER): CARRIER_CODE,
+        }
+    ),
+    cv.key_dependency(ATTR_SECOND_CARRIER, ATTR_FIRST_CARRIER),
 )
 
 SERVICE_ARCHIVE_PACKAGE_SCHEMA: Final = probatio.Schema(
@@ -103,9 +125,19 @@ async def _add_package(call: ServiceCall) -> None:
 
     seventeen_coordinator = entry.runtime_data
 
-    await seventeen_coordinator.client.profile.add_package(
-        tracking_number, friendly_name
-    )
+    try:
+        await seventeen_coordinator.client.profile.add_package(
+            tracking_number,
+            friendly_name,
+            first_carrier=call.data.get(ATTR_FIRST_CARRIER),
+            second_carrier=call.data.get(ATTR_SECOND_CARRIER),
+        )
+    except (JSONDecodeError, SeventeenTrackError, TimeoutError) as err:
+        LOGGER.debug("Failed to add package to 17TRACK", exc_info=True)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="add_package_failed",
+        ) from err
 
 
 async def _archive_package(call: ServiceCall) -> None:
