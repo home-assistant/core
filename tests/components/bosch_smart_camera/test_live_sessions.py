@@ -468,6 +468,34 @@ async def test_proxy_death_during_pre_warm_discards_the_open(
     assert not mock_config_entry.runtime_data.live_sessions.camera_ids
 
 
+async def test_proxy_death_before_the_waiter_resumes(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
+) -> None:
+    """Test a proxy dying after the session was published is not handed out."""
+    await setup_integration(hass, mock_config_entry)
+    sessions = mock_config_entry.runtime_data.live_sessions
+    opened = sessions._opened
+
+    async def wake(*args: object, **kwargs: object) -> bool:
+        await asyncio.sleep(0)
+        return True
+
+    mock_live.pre_warm.side_effect = wake
+
+    def die_after_open(camera_id: str, task: asyncio.Task[Any]) -> None:
+        opened(camera_id, task)
+        mock_live.proxy_died[CAMERA_ID]()
+
+    with (
+        patch.object(sessions, "_opened", die_after_open),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await async_get_stream_source(hass, ENTITY_ID)
+
+    assert exc_info.value.translation_key == "stream_failed"
+    assert await async_get_stream_source(hass, ENTITY_ID)
+
+
 async def test_cameras_are_isolated(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

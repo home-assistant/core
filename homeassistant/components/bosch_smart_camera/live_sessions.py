@@ -90,7 +90,13 @@ class LiveSessions:
                 )
             )
             task.add_done_callback(partial(self._opened, camera_id))
-        return (await asyncio.shield(task)).url
+        await asyncio.shield(task)
+        # The proxy may have died after the session was published.
+        if (session := self._sessions.get(camera_id)) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="stream_failed"
+            )
+        return session.url
 
     def _opened(self, camera_id: str, task: asyncio.Task[_Session]) -> None:
         if self._opening.get(camera_id) is task:
