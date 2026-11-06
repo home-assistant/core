@@ -8,7 +8,7 @@ import probatio
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 
-from .types import ModelContextProtocolConfigEntry
+from .coordinator import ModelContextProtocolConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

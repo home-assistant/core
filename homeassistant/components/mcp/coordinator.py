@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import Any, cast, override
 
 import httpx2
 
@@ -38,9 +38,6 @@ from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_contex
 from .auth import AuthenticateHeader
 from .const import DOMAIN
 
-if TYPE_CHECKING:
-    from .types import ModelContextProtocolConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = dt.timedelta(minutes=30)
@@ -48,6 +45,7 @@ TIMEOUT = 30
 META_USER_ID = "io.home-assistant/user_id"
 
 type TokenManager = Callable[[], Awaitable[str]]
+type ModelContextProtocolConfigEntry = ConfigEntry[ModelContextProtocolCoordinator]
 
 
 def static_token_manager(token: str) -> TokenManager:
@@ -191,7 +189,7 @@ class ModelContextProtocolTool(llm.Tool):
         description: str | None,
         parameters: probatio.Schema,
         server_url: str,
-        config_entry: ConfigEntry,
+        config_entry: ModelContextProtocolConfigEntry,
         token_manager: TokenManager | None = None,
         annotations: llm.ToolAnnotations = llm.ToolAnnotations(),
     ) -> None:
