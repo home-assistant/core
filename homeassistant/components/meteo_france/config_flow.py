@@ -7,7 +7,7 @@ from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.model import Place
 import probatio
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 
@@ -88,7 +88,7 @@ class MeteoFranceFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Step where the user choose the city from the API search results."""
         if not user_input:
-            if len(self.places) > 1 and self.source != SOURCE_IMPORT:
+            if len(self.places) > 1:
                 places_for_form: dict[str, str] = {}
                 for place in self.places:
                     places_for_form[_build_place_key(place)] = f"{place}"
