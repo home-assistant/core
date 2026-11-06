@@ -1,8 +1,9 @@
 """Test RYSE Cover entity behavior."""
 
+from collections.abc import Callable
 import logging
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
@@ -17,7 +18,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.components.ryse.const import MANUFACTURER_NAME
+from homeassistant.components.ryse.const import MANUFACTURER_NAME, SERVICE_UUID
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -32,11 +33,31 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import inject_ryse, make_advertisement
+
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 DEVICE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 ENTITY_ID = "cover.test_device"
 LOGGER_NAME = "homeassistant.components.ryse.cover"
+
+
+def _disconnect_callback(client: MagicMock) -> Callable[[MagicMock], None]:
+    """Return the GATT disconnect callback registered on *client*."""
+    client.set_disconnected_callback.assert_called()
+    return client.set_disconnected_callback.call_args[0][0]
+
+
+async def async_see_shade(
+    hass: HomeAssistant, ble_device: BLEDevice, token: bytes = b"\x01"
+) -> None:
+    """Inject a local advertisement so a dropped cover can reconnect."""
+    inject_ryse(
+        hass,
+        ble_device,
+        make_advertisement(pairing=False, service_data={SERVICE_UUID: token}),
+    )
+    await hass.async_block_till_done()
 
 
 async def async_poll_device(
@@ -89,39 +110,14 @@ async def test_cover_entity(
 
 async def test_cover_available_after_setup(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_device: MagicMock,
     setup_integration: MockConfigEntry,
 ) -> None:
-    """Test the cover is available after pairing, before the first poll."""
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
-    mock_device.send_get_position.assert_not_awaited()
-
-    await async_poll_device(hass, freezer)
-
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    """Test the cover is available and requests position after pairing."""
+    assert mock_device.client is not None
+    assert mock_device.client.is_connected
     mock_device.send_get_position.assert_awaited_once()
 
-
-async def test_cover_requests_position_when_already_connected(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    local_ryse_scanner: BLEDevice,
-    mock_device: MagicMock,
-) -> None:
-    """Test a connected device is asked for position as soon as the cover is added."""
-    mock_device.client = MagicMock(is_connected=True)
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    mock_device.send_get_position.assert_awaited_once()
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNKNOWN
@@ -135,8 +131,8 @@ async def test_cover_polls_connected_device_without_pairing(
     setup_integration: MockConfigEntry,
 ) -> None:
     """Test an already connected device is not paired again."""
-    mock_device.client = MagicMock(is_connected=True)
     mock_device.pair.reset_mock()
+    mock_device.send_get_position.reset_mock()
 
     await async_poll_device(hass, freezer)
 
@@ -199,7 +195,6 @@ async def test_poll_skips_get_position_when_cached(
     """Test polling does not request position again when a valid cache exists."""
     await mock_device.update_callback(100)
     await hass.async_block_till_done()
-    mock_device.client = MagicMock(is_connected=True)
     mock_device.send_get_position.reset_mock()
 
     await async_poll_device(hass, freezer)
@@ -226,7 +221,6 @@ async def test_poll_refreshes_invalid_cached_position(
     assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
-    mock_device.client = MagicMock(is_connected=True)
     mock_device.send_get_position.reset_mock()
     mock_device.is_valid_position.return_value = False
 
@@ -359,12 +353,6 @@ async def test_cover_command_reconnects_when_disconnected(
     mock_device.client = None
     mock_device.pair.reset_mock()
 
-    async def _pair() -> bool:
-        mock_device.client = MagicMock(is_connected=True)
-        return True
-
-    mock_device.pair.side_effect = _pair
-
     await hass.services.async_call(
         COVER_DOMAIN,
         service,
@@ -398,7 +386,7 @@ async def test_cover_command_raises_when_reconnect_fails(
 ) -> None:
     """Test a cover command surfaces an error instead of no-oping without a client."""
     mock_device.client = None
-    mock_device.pair.return_value = False
+    mock_device.pair.side_effect = AsyncMock(return_value=False)
     mock_device.unpair.reset_mock()
 
     with pytest.raises(HomeAssistantError, match=error):
@@ -425,10 +413,19 @@ async def test_pairing_failure_marks_unavailable(
 ) -> None:
     """Test a failed pairing marks the cover unavailable and is logged once."""
     caplog.set_level(logging.INFO, logger=LOGGER_NAME)
-    mock_device.pair.return_value = False
+    mock_device.client = None
+    mock_device.pair.side_effect = AsyncMock(return_value=False)
     mock_device.unpair.reset_mock()
 
-    await async_poll_device(hass, freezer)
+    with pytest.raises(
+        HomeAssistantError, match="Failed to open cover: failed to pair"
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
 
     state = hass.states.get(ENTITY_ID)
     assert state
@@ -439,20 +436,14 @@ async def test_pairing_failure_marks_unavailable(
     assert list(polled_cover.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
     caplog.clear()
+    mock_device.pair.reset_mock()
     await async_poll_device(hass, freezer)
 
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
     assert unavailable not in caplog.text
-
-    mock_device.pair.return_value = True
-    await async_poll_device(hass, freezer)
-
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert f"{ENTITY_ID} is available again" in caplog.text
+    mock_device.pair.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
@@ -483,25 +474,28 @@ async def test_ble_error_while_polling_marks_unavailable(
     mock_device.unpair.assert_awaited_once()
 
     caplog.clear()
+    mock_device.pair.reset_mock()
     await async_poll_device(hass, freezer)
 
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_UNAVAILABLE
     assert unavailable not in caplog.text
+    mock_device.pair.assert_not_awaited()
 
 
 async def test_ble_error_while_polling_clears_cached_position(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_device: MagicMock,
+    local_ryse_scanner: BLEDevice,
     polled_cover: MockConfigEntry,
 ) -> None:
-    """Test a poll error drops cached position so the next poll fetches again."""
+    """Test a poll error drops cached position so reconnect fetches again."""
     await mock_device.update_callback(50)
     await hass.async_block_till_done()
 
-    mock_device.client = None
+    mock_device.is_valid_position.return_value = False
     mock_device.send_get_position.side_effect = BleakError("ble err")
     mock_device.unpair.reset_mock()
     await async_poll_device(hass, freezer)
@@ -514,7 +508,7 @@ async def test_ble_error_while_polling_clears_cached_position(
 
     mock_device.send_get_position.side_effect = None
     mock_device.send_get_position.reset_mock()
-    await async_poll_device(hass, freezer)
+    await async_see_shade(hass, local_ryse_scanner)
 
     mock_device.send_get_position.assert_awaited_once()
     state = hass.states.get(ENTITY_ID)
@@ -526,16 +520,11 @@ async def test_ble_error_while_polling_resets_connection(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_device: MagicMock,
+    local_ryse_scanner: BLEDevice,
     polled_cover: MockConfigEntry,
 ) -> None:
-    """Test a poll error unpairs so the next poll reconnects instead of reusing the client."""
-    mock_device.client = MagicMock(is_connected=True)
+    """Test a poll error unpairs and waits for an advertisement instead of pairing again."""
     mock_device.send_get_position.side_effect = BleakError("ble err")
-
-    def _drop_client() -> None:
-        mock_device.client = None
-
-    mock_device.unpair.side_effect = _drop_client
     mock_device.unpair.reset_mock()
     mock_device.pair.reset_mock()
 
@@ -549,6 +538,11 @@ async def test_ble_error_while_polling_resets_connection(
     mock_device.pair.reset_mock()
     await async_poll_device(hass, freezer)
 
+    mock_device.pair.assert_not_awaited()
+    mock_device.send_get_position.assert_not_awaited()
+
+    await async_see_shade(hass, local_ryse_scanner)
+
     mock_device.pair.assert_awaited_once()
     mock_device.send_get_position.assert_awaited_once()
     state = hass.states.get(ENTITY_ID)
@@ -556,31 +550,61 @@ async def test_ble_error_while_polling_resets_connection(
     assert state.state != STATE_UNAVAILABLE
 
 
-async def test_valid_notification_restores_availability(
+async def test_disconnect_callback_marks_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_device: MagicMock,
     caplog: pytest.LogCaptureFixture,
-    polled_cover: MockConfigEntry,
+    setup_integration: MockConfigEntry,
 ) -> None:
-    """Test a valid notification marks the cover available after a failed poll."""
+    """Test a GATT disconnect marks the cover unavailable without waiting to poll."""
     caplog.set_level(logging.INFO, logger=LOGGER_NAME)
-    mock_device.send_get_position.side_effect = BleakError("ble err")
-    await async_poll_device(hass, freezer)
+    client = mock_device.client
+    mock_device.pair.reset_mock()
+    mock_device.unpair.reset_mock()
 
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    caplog.clear()
-    await mock_device.update_callback(100)
+    _disconnect_callback(client)(client)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.state == CoverState.CLOSED
-    assert state.attributes[ATTR_CURRENT_POSITION] == 0
-    assert f"{ENTITY_ID} is available again" in caplog.text
+    assert state.state == STATE_UNAVAILABLE
+    assert f"{ENTITY_ID} became unavailable: disconnected" in caplog.text
+    mock_device.unpair.assert_awaited_once()
+    mock_device.pair.assert_not_awaited()
+
+    mock_device.pair.reset_mock()
+    await async_poll_device(hass, freezer)
+
+    mock_device.pair.assert_not_awaited()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_advertisement_reconnects_after_disconnect(
+    hass: HomeAssistant,
+    local_ryse_scanner: BLEDevice,
+    mock_device: MagicMock,
+    setup_integration: MockConfigEntry,
+) -> None:
+    """Test a later advertisement reconnects after the GATT link drops."""
+    client = mock_device.client
+    mock_device.pair.reset_mock()
+    mock_device.send_get_position.reset_mock()
+    mock_device.unpair.reset_mock()
+
+    _disconnect_callback(client)(client)
+    await hass.async_block_till_done()
+    mock_device.pair.assert_not_awaited()
+
+    await async_see_shade(hass, local_ryse_scanner)
+
+    mock_device.pair.assert_awaited_once()
+    mock_device.send_get_position.assert_awaited_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_notification_callback_lifecycle(

@@ -37,7 +37,11 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_device() -> MagicMock:
-    """Return a mocked RyseBLEDevice."""
+    """Return a mocked RyseBLEDevice.
+
+    ``pair()`` attaches a connected Bleak client and ``unpair()`` drops it,
+    matching ryseble.device.RyseBLEDevice.
+    """
     device = MagicMock()
     device.address = DEVICE_ADDRESS
     device.update_callback = None
@@ -45,13 +49,24 @@ def mock_device() -> MagicMock:
     device.is_valid_position.return_value = True
     device.get_real_position.side_effect = lambda x: 100 - x
     device.is_closed.side_effect = lambda x: x == 100
-    device.pair = AsyncMock(return_value=True)
-    device.unpair = AsyncMock()
     device.set_ble_device = MagicMock()
     device.send_open = AsyncMock()
     device.send_close = AsyncMock()
     device.send_set_position = AsyncMock()
     device.send_get_position = AsyncMock()
+
+    async def _pair() -> bool:
+        device.client = MagicMock(is_connected=True)
+        return True
+
+    async def _unpair() -> None:
+        client = device.client
+        device.client = None
+        if client is not None:
+            client.is_connected = False
+
+    device.pair = AsyncMock(side_effect=_pair)
+    device.unpair = AsyncMock(side_effect=_unpair)
     return device
 
 

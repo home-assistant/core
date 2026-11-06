@@ -17,6 +17,7 @@
   "documentation": "https://www.home-assistant.io/integrations/ryse",
   "integration_type": "device",
   "iot_class": "local_push",
+  "loggers": ["ryseble"],
   "quality_scale": "bronze",
   "requirements": ["ryseble==1.15.1"]
 }

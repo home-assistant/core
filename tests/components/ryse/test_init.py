@@ -1,7 +1,7 @@
 """Tests for RYSE init setup."""
 
 import logging
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
@@ -114,7 +114,7 @@ async def test_setup_starts_reauth_when_pairing_fails(
     mock_device: MagicMock,
 ) -> None:
     """Test a lost or rejected bond starts reauth instead of retrying forever."""
-    mock_device.pair.return_value = False
+    mock_device.pair.side_effect = AsyncMock(return_value=False)
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
