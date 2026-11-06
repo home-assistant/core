@@ -7,11 +7,16 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.gbfs.const import CONF_STATION_ID, SUBENTRY_TYPE_STATION
+from homeassistant.components.gbfs.const import (
+    CONF_STATION_ID,
+    DOMAIN,
+    SUBENTRY_TYPE_STATION,
+)
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from . import BASE_URL, V3_URL, mock_feed
+from . import BASE_URL, STATION_SUBENTRY_ID, V3_URL, mock_feed
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -62,3 +67,41 @@ async def test_adding_station_reloads(
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.park_ave_2nd_st_vehicles_available").state == "1"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_removing_station_drops_its_entities_and_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing a station subentry reloads and drops only that station."""
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            data=MappingProxyType({CONF_STATION_ID: "s2"}),
+            subentry_type=SUBENTRY_TYPE_STATION,
+            title="Park Ave & 2nd St",
+            unique_id="s2",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "example_bikes_s1"), mock_config_entry.entry_id
+    )
+
+    hass.config_entries.async_remove_subentry(mock_config_entry, STATION_SUBENTRY_ID)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.main_st_1st_ave_vehicles_available") is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "example_bikes_s1"), mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert hass.states.get("sensor.park_ave_2nd_st_vehicles_available") is not None
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "example_bikes_s2"), mock_config_entry.entry_id
+    )

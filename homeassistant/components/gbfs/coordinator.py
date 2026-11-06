@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class GbfsCoordinator(DataUpdateCoordinator[dict[str, Station]]):
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=DOMAIN,
+            name=config_entry.title,
             update_interval=UPDATE_INTERVAL,
         )
         self.feed = feed

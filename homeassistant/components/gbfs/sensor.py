@@ -119,7 +119,7 @@ async def async_setup_entry(
     for subentry_id, subentry in entry.subentries.items():
         station = coordinator.data.get(subentry.data[CONF_STATION_ID])
         descriptions = [VEHICLES_AVAILABLE]
-        if station is not None and station.docks_available is not None:
+        if station is None or station.docks_available is not None:
             descriptions.append(DOCKS_AVAILABLE)
         descriptions.extend(group_descriptions)
         async_add_entities(
@@ -148,11 +148,10 @@ class GbfsStationSensor(CoordinatorEntity[GbfsCoordinator], SensorEntity):
         self.entity_description = description
         self._station_id: str = subentry.data[CONF_STATION_ID]
         system = coordinator.system
-        self._attr_unique_id = (
-            f"{system.system_id}_{self._station_id}_{description.key}"
-        )
+        system_id = coordinator.config_entry.unique_id
+        self._attr_unique_id = f"{system_id}_{self._station_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{system.system_id}_{self._station_id}")},
+            identifiers={(DOMAIN, f"{system_id}_{self._station_id}")},
             name=subentry.title,
             manufacturer=system.operator or system.name,
             entry_type=DeviceEntryType.SERVICE,

@@ -1,0 +1,17 @@
+{
+  "last_updated": "2026-11-05T12:00:00Z",
+  "ttl": 0,
+  "version": "3.0",
+  "data": {
+    "feeds": [
+      {
+        "name": "system_information",
+        "url": "https://gbfs.example.com/v3/system_information.json"
+      },
+      {
+        "name": "vehicle_status",
+        "url": "https://gbfs.example.com/v3_dockless/vehicle_status.json"
+      }
+    ]
+  }
+}

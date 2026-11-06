@@ -37,6 +37,9 @@
         "entry_not_loaded": "The system must finish loading before stations can be added."
       },
       "entry_type": "Station",
+      "error": {
+        "station_not_found": "The station is no longer in the feed. Pick another one."
+      },
       "initiate_flow": {
         "user": "Add station"
       },

@@ -3,10 +3,13 @@
 from collections.abc import Callable
 
 from aiohttp import ClientError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
+    async_fire_time_changed,
     async_load_fixture,
+    async_load_json_object_fixture,
     get_schema_suggested_value,
     load_fixture,
 )
@@ -16,13 +19,14 @@ from homeassistant.components.gbfs.const import (
     CONF_STATION_ID,
     DOMAIN,
     SUBENTRY_TYPE_STATION,
+    UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MIRROR_URL, V2_URL, V3_URL, mock_feed
+from . import BASE_URL, DOCKLESS_URL, MIRROR_URL, V2_URL, V3_URL, mock_feed
 
 
 @pytest.mark.usefixtures("mock_v3_feed", "mock_setup_entry")
@@ -44,28 +48,9 @@ async def test_user_flow(hass: HomeAssistant) -> None:
 
 
 def _serve_dockless(aioclient_mock: AiohttpClientMocker) -> None:
+    mock_feed(aioclient_mock, "v3_dockless")
     aioclient_mock.get(
-        V3_URL,
-        json={
-            "version": "3.0",
-            "ttl": 0,
-            "last_updated": "2026-11-05T12:00:00Z",
-            "data": {
-                "feeds": [
-                    {
-                        "name": "system_information",
-                        "url": "https://gbfs.example.com/v3/system_information.json",
-                    },
-                    {
-                        "name": "vehicle_status",
-                        "url": "https://gbfs.example.com/v3/vehicle_status.json",
-                    },
-                ]
-            },
-        },
-    )
-    aioclient_mock.get(
-        "https://gbfs.example.com/v3/system_information.json",
+        f"{BASE_URL}/v3/system_information.json",
         text=load_fixture("v3/system_information.json", DOMAIN),
     )
 
@@ -97,7 +82,7 @@ def _serve_dockless(aioclient_mock: AiohttpClientMocker) -> None:
             "invalid_feed",
             id="invalid_feed",
         ),
-        pytest.param(V3_URL, _serve_dockless, "no_stations", id="no_stations"),
+        pytest.param(DOCKLESS_URL, _serve_dockless, "no_stations", id="no_stations"),
         pytest.param(
             V3_URL, lambda m: m.get(V3_URL, exc=RuntimeError()), "unknown", id="unknown"
         ),
@@ -146,14 +131,13 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_v3_feed", "mock_setup_entry")
+@pytest.mark.usefixtures("init_integration")
 async def test_reconfigure(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test moving a system to a new discovery URL."""
-    mock_config_entry.add_to_hass(hass)
+    """Test moving a loaded system to a new discovery URL reloads it."""
     aioclient_mock.get(
         MIRROR_URL,
         text=await async_load_fixture(hass, "v3/gbfs.json", DOMAIN),
@@ -169,6 +153,8 @@ async def test_reconfigure(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == {CONF_URL: MIRROR_URL}
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.usefixtures("mock_v3_feed", "mock_setup_entry")
@@ -200,8 +186,8 @@ async def test_add_station(
     )
     assert result["type"] is FlowResultType.FORM
     options = result["data_schema"].schema[CONF_STATION_ID].config["options"]
-    assert [option["value"] for option in options] == ["s1", "s2", "s3"]
-    assert options[0]["label"] == "Main St & 1st Ave (0.0 km)"
+    assert [option["value"] for option in options] == ["s2", "s3"]
+    assert options[0]["label"] == "Park Ave & 2nd St (1.4 km)"
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {CONF_STATION_ID: "s2"}
@@ -213,19 +199,45 @@ async def test_add_station(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_add_station_already_added(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+async def test_add_station_removed_from_feed(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a station can only be added once."""
+    """Test a station that left the feed after the form was shown is refused."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_STATION),
         context={"source": SOURCE_USER},
     )
+    assert result["type"] is FlowResultType.FORM
+
+    aioclient_mock.clear_requests()
+    for name in ("station_information", "station_status"):
+        document = await async_load_json_object_fixture(hass, f"v3/{name}.json", DOMAIN)
+        document["data"]["stations"] = [
+            station
+            for station in document["data"]["stations"]
+            if station["station_id"] != "s2"
+        ]
+        aioclient_mock.get(f"{BASE_URL}/v3/{name}.json", json=document)
+    mock_feed(aioclient_mock, "v3")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {CONF_STATION_ID: "s1"}
+        result["flow_id"], {CONF_STATION_ID: "s2"}
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "station_not_found"}
+    options = result["data_schema"].schema[CONF_STATION_ID].config["options"]
+    assert [option["value"] for option in options] == ["s3"]
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STATION_ID: "s3"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_add_station_entry_not_loaded(

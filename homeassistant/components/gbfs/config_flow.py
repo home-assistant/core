@@ -129,7 +129,7 @@ class GbfsConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(system.system_id)
                 if self.source == SOURCE_RECONFIGURE:
                     self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         self._get_reconfigure_entry(), data_updates={CONF_URL: url}
                     )
                 self._abort_if_unique_id_configured()
@@ -190,23 +190,35 @@ class StationSubentryFlowHandler(ConfigSubentryFlow):
         if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
         stations = entry.runtime_data.data
+        errors: dict[str, str] = {}
         if user_input is not None:
-            station = stations[user_input[CONF_STATION_ID]]
-            return self.async_create_entry(
-                title=station.name or station.id,
-                data={CONF_STATION_ID: station.id},
-                unique_id=station.id,
-            )
+            if (station := stations.get(user_input[CONF_STATION_ID])) is None:
+                errors["base"] = "station_not_found"
+            else:
+                return self.async_create_entry(
+                    title=station.name or station.id,
+                    data={CONF_STATION_ID: station.id},
+                    unique_id=station.id,
+                )
+        added = {subentry.unique_id for subentry in entry.subentries.values()}
         return self.async_show_form(
             step_id="user",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_STATION_ID): SelectSelector(
                         SelectSelectorConfig(
-                            options=_station_options(self.hass, stations.values()),
+                            options=_station_options(
+                                self.hass,
+                                (
+                                    station
+                                    for station in stations.values()
+                                    if station.id not in added
+                                ),
+                            ),
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     )
                 }
             ),
+            errors=errors,
         )

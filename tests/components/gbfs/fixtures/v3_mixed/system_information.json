@@ -1,0 +1,22 @@
+{
+  "last_updated": "2026-11-05T12:00:00Z",
+  "ttl": 300,
+  "version": "3.0",
+  "data": {
+    "system_id": "mixed_bikes",
+    "languages": ["en"],
+    "name": [
+      {
+        "text": "Mixed Bikes",
+        "language": "en"
+      }
+    ],
+    "operator": [
+      {
+        "text": "Mixed Mobility",
+        "language": "en"
+      }
+    ],
+    "timezone": "America/New_York"
+  }
+}

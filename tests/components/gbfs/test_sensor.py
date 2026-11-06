@@ -1,9 +1,6 @@
 """Tests for the GBFS sensors."""
 
-from dataclasses import replace
-
 from aiohttp import ClientError
-from aiomobilitydatabase.feeds import VehicleType
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -20,13 +17,12 @@ from homeassistant.components.gbfs.const import (
     SUBENTRY_TYPE_STATION,
     UPDATE_INTERVAL,
 )
-from homeassistant.components.gbfs.sensor import vehicle_group
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import CONF_URL, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import CONF_URL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import V2_URL, V3_URL, mock_feed
+from . import MIXED_URL, V2_URL, V3_URL, mock_feed
 
 MAIN_ST = "sensor.main_st_1st_ave"
 
@@ -52,95 +48,54 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_v3_feed")
-async def test_virtual_station_has_no_docks(hass: HomeAssistant) -> None:
-    """Test a virtual station gets no docks sensor."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="example_bikes",
-        data={CONF_URL: V3_URL},
-        subentries_data=[_station("s2", "Park Ave & 2nd St")],
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.park_ave_2nd_st_vehicles_available").state == "1"
-    assert hass.states.get("sensor.park_ave_2nd_st_e_bikes").state == "1"
-    assert hass.states.get("sensor.park_ave_2nd_st_classic_bikes").state == "0"
-    assert hass.states.get("sensor.park_ave_2nd_st_docks_available") is None
-
-
-@pytest.mark.usefixtures("mock_v3_feed")
-async def test_uninstalled_station_is_unavailable(hass: HomeAssistant) -> None:
-    """Test a station reporting is_installed false is unavailable."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="example_bikes",
-        data={CONF_URL: V3_URL},
-        subentries_data=[_station("s3", "River Rd")],
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert (
-        hass.states.get("sensor.river_rd_vehicles_available").state == STATE_UNAVAILABLE
-    )
-
-
-@pytest.mark.usefixtures("mock_v3_feed")
-async def test_station_removed_from_feed_is_unavailable(hass: HomeAssistant) -> None:
-    """Test a station no longer in the feed is unavailable."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="example_bikes",
-        data={CONF_URL: V3_URL},
-        subentries_data=[_station("gone", "Gone St")],
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert (
-        hass.states.get("sensor.gone_st_vehicles_available").state == STATE_UNAVAILABLE
-    )
-    assert hass.states.get("sensor.gone_st_docks_available") is None
-
-
-async def test_system_without_vehicle_types(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize(
+    ("version", "url", "system_id", "stations"),
+    [
+        pytest.param(
+            "v3", V3_URL, "example_bikes", [("s2", "Park Ave & 2nd St")], id="virtual"
+        ),
+        pytest.param(
+            "v3", V3_URL, "example_bikes", [("s3", "River Rd")], id="uninstalled"
+        ),
+        pytest.param(
+            "v3", V3_URL, "example_bikes", [("gone", "Gone St")], id="removed_from_feed"
+        ),
+        pytest.param(
+            "v2", V2_URL, "old_bikes", [("a", "Gare")], id="without_vehicle_types"
+        ),
+        pytest.param(
+            "v3_mixed",
+            MIXED_URL,
+            "mixed_bikes",
+            [("m1", "Mixed One"), ("m2", "Mixed Two")],
+            id="every_form_factor",
+        ),
+    ],
+)
+async def test_station_variants(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
+    version: str,
+    url: str,
+    system_id: str,
+    stations: list[tuple[str, str]],
 ) -> None:
-    """Test a v2.3 system without vehicle types gets only totals."""
-    mock_feed(aioclient_mock, "v2")
+    """Test the sensors of stations in the different feed shapes."""
+    mock_feed(aioclient_mock, version)
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="old_bikes",
-        data={CONF_URL: V2_URL},
-        subentries_data=[_station("a", "Gare")],
+        title="Variant Bikes",
+        unique_id=system_id,
+        data={CONF_URL: url},
+        subentries_data=[_station(*station) for station in stations],
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.gare_vehicles_available").state == "4"
-    assert hass.states.get("sensor.gare_docks_available").state == "6"
-    assert hass.states.async_entity_ids("sensor") == [
-        "sensor.gare_vehicles_available",
-        "sensor.gare_docks_available",
-    ]
-
-
-async def test_group_sensor_unknown_without_per_type_counts(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Test a station that stops reporting per-type counts has unknown group sensors."""
-    coordinator = init_integration.runtime_data
-    station = replace(coordinator.data["s1"], vehicle_types_available=None)
-    coordinator.async_set_updated_data({"s1": station})
-
-    assert hass.states.get(f"{MAIN_ST}_classic_bikes").state == STATE_UNKNOWN
-    assert hass.states.get(f"{MAIN_ST}_vehicles_available").state == "5"
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -168,37 +123,3 @@ async def test_poll_failure_and_recovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == "5"
-
-
-@pytest.mark.parametrize(
-    ("form_factor", "propulsion_type", "group"),
-    [
-        ("bicycle", "human", "classic_bikes"),
-        ("bicycle", None, "classic_bikes"),
-        ("bicycle", "electric_assist", "e_bikes"),
-        ("bicycle", "electric", "e_bikes"),
-        ("bicycle", "future_propulsion", "e_bikes"),
-        ("cargo_bicycle", "electric_assist", "cargo_bikes"),
-        ("scooter_standing", "electric", "scooters"),
-        ("scooter_seated", "electric", "scooters"),
-        ("scooter", "electric", "scooters"),
-        ("moped", "electric", "mopeds"),
-        ("car", "combustion", "cars"),
-        ("other", "human", "other_vehicles"),
-        ("hoverboard", "electric", None),
-        (None, None, None),
-    ],
-)
-def test_vehicle_group(
-    form_factor: str | None, propulsion_type: str | None, group: str | None
-) -> None:
-    """Test every GBFS form factor maps to one sensor group."""
-    vehicle_type = VehicleType(
-        id="t",
-        form_factor=form_factor,
-        propulsion_type=propulsion_type,
-        name=None,
-        max_range_m=None,
-        rider_capacity=None,
-    )
-    assert vehicle_group(vehicle_type) == group

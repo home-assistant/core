@@ -215,3 +215,1677 @@
     'state': '5',
   })
 # ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_cargo_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed One'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_one_cargo_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cargo bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cargo bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cargo_bikes',
+    'unique_id': 'mixed_bikes_m1_cargo_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_cargo_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed One Cargo bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_one_cargo_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_cars-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed One'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_one_cars',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cars',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cars',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cars',
+    'unique_id': 'mixed_bikes_m1_cars',
+    'unit_of_measurement': 'cars',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_cars-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed One Cars',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cars',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_one_cars',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_classic_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed One'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_one_classic_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Classic bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Classic bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'classic_bikes',
+    'unique_id': 'mixed_bikes_m1_classic_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_classic_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed One Classic bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_one_classic_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_docks_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed One'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_one_docks_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Docks available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Docks available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'docks_available',
+    'unique_id': 'mixed_bikes_m1_docks_available',
+    'unit_of_measurement': 'docks',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_docks_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed One Docks available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'docks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_one_docks_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_e_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed One'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_one_e_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'E-bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'E-bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'e_bikes',
+    'unique_id': 'mixed_bikes_m1_e_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_e_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed One E-bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_one_e_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_mopeds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed One'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_one_mopeds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mopeds',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mopeds',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mopeds',
+    'unique_id': 'mixed_bikes_m1_mopeds',
+    'unit_of_measurement': 'mopeds',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_mopeds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed One Mopeds',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'mopeds',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_one_mopeds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_other_vehicles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed One'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_one_other_vehicles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Other vehicles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Other vehicles',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'other_vehicles',
+    'unique_id': 'mixed_bikes_m1_other_vehicles',
+    'unit_of_measurement': 'vehicles',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_other_vehicles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed One Other vehicles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'vehicles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_one_other_vehicles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_scooters-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed One'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_one_scooters',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scooters',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scooters',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scooters',
+    'unique_id': 'mixed_bikes_m1_scooters',
+    'unit_of_measurement': 'scooters',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_scooters-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed One Scooters',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'scooters',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_one_scooters',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_vehicles_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed One'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m1')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_one_vehicles_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicles available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicles available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicles_available',
+    'unique_id': 'mixed_bikes_m1_vehicles_available',
+    'unit_of_measurement': 'vehicles',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_one_vehicles_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed One Vehicles available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'vehicles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_one_vehicles_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '81',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_cargo_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed Two'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_two_cargo_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cargo bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cargo bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cargo_bikes',
+    'unique_id': 'mixed_bikes_m2_cargo_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_cargo_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed Two Cargo bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_two_cargo_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_cars-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed Two'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_two_cars',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cars',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cars',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cars',
+    'unique_id': 'mixed_bikes_m2_cars',
+    'unit_of_measurement': 'cars',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_cars-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed Two Cars',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cars',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_two_cars',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_classic_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed Two'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_two_classic_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Classic bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Classic bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'classic_bikes',
+    'unique_id': 'mixed_bikes_m2_classic_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_classic_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed Two Classic bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_two_classic_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_docks_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed Two'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_two_docks_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Docks available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Docks available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'docks_available',
+    'unique_id': 'mixed_bikes_m2_docks_available',
+    'unit_of_measurement': 'docks',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_docks_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed Two Docks available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'docks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_two_docks_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_e_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed Two'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_two_e_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'E-bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'E-bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'e_bikes',
+    'unique_id': 'mixed_bikes_m2_e_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_e_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed Two E-bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_two_e_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_mopeds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed Two'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_two_mopeds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mopeds',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mopeds',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mopeds',
+    'unique_id': 'mixed_bikes_m2_mopeds',
+    'unit_of_measurement': 'mopeds',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_mopeds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed Two Mopeds',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'mopeds',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_two_mopeds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_other_vehicles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed Two'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_two_other_vehicles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Other vehicles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Other vehicles',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'other_vehicles',
+    'unique_id': 'mixed_bikes_m2_other_vehicles',
+    'unit_of_measurement': 'vehicles',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_other_vehicles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed Two Other vehicles',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'vehicles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_two_other_vehicles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_scooters-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed Two'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_two_scooters',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scooters',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scooters',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scooters',
+    'unique_id': 'mixed_bikes_m2_scooters',
+    'unit_of_measurement': 'scooters',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_scooters-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed Two Scooters',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'scooters',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_two_scooters',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_vehicles_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Mixed Two'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'mixed_bikes_m2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mixed_two_vehicles_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicles available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicles available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicles_available',
+    'unique_id': 'mixed_bikes_m2_vehicles_available',
+    'unit_of_measurement': 'vehicles',
+  })
+# ---
+# name: test_station_variants[every_form_factor][sensor.mixed_two_vehicles_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mixed Two Vehicles available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'vehicles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mixed_two_vehicles_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_station_variants[removed_from_feed][sensor.gone_st_classic_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Gone St'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_gone')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gone_st_classic_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Classic bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Classic bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'classic_bikes',
+    'unique_id': 'example_bikes_gone_classic_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_station_variants[removed_from_feed][sensor.gone_st_classic_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gone St Classic bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gone_st_classic_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_station_variants[removed_from_feed][sensor.gone_st_docks_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Gone St'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_gone')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gone_st_docks_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Docks available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Docks available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'docks_available',
+    'unique_id': 'example_bikes_gone_docks_available',
+    'unit_of_measurement': 'docks',
+  })
+# ---
+# name: test_station_variants[removed_from_feed][sensor.gone_st_docks_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gone St Docks available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'docks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gone_st_docks_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_station_variants[removed_from_feed][sensor.gone_st_e_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Gone St'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_gone')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gone_st_e_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'E-bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'E-bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'e_bikes',
+    'unique_id': 'example_bikes_gone_e_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_station_variants[removed_from_feed][sensor.gone_st_e_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gone St E-bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gone_st_e_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_station_variants[removed_from_feed][sensor.gone_st_vehicles_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Gone St'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_gone')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gone_st_vehicles_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicles available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicles available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicles_available',
+    'unique_id': 'example_bikes_gone_vehicles_available',
+    'unit_of_measurement': 'vehicles',
+  })
+# ---
+# name: test_station_variants[removed_from_feed][sensor.gone_st_vehicles_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gone St Vehicles available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'vehicles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gone_st_vehicles_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_station_variants[uninstalled][sensor.river_rd_classic_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='River Rd'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_s3')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.river_rd_classic_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Classic bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Classic bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'classic_bikes',
+    'unique_id': 'example_bikes_s3_classic_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_station_variants[uninstalled][sensor.river_rd_classic_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'River Rd Classic bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.river_rd_classic_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_station_variants[uninstalled][sensor.river_rd_docks_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='River Rd'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_s3')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.river_rd_docks_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Docks available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Docks available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'docks_available',
+    'unique_id': 'example_bikes_s3_docks_available',
+    'unit_of_measurement': 'docks',
+  })
+# ---
+# name: test_station_variants[uninstalled][sensor.river_rd_docks_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'River Rd Docks available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'docks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.river_rd_docks_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_station_variants[uninstalled][sensor.river_rd_e_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='River Rd'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_s3')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.river_rd_e_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'E-bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'E-bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'e_bikes',
+    'unique_id': 'example_bikes_s3_e_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_station_variants[uninstalled][sensor.river_rd_e_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'River Rd E-bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.river_rd_e_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_station_variants[uninstalled][sensor.river_rd_vehicles_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='River Rd'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_s3')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.river_rd_vehicles_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicles available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicles available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicles_available',
+    'unique_id': 'example_bikes_s3_vehicles_available',
+    'unit_of_measurement': 'vehicles',
+  })
+# ---
+# name: test_station_variants[uninstalled][sensor.river_rd_vehicles_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'River Rd Vehicles available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'vehicles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.river_rd_vehicles_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_station_variants[virtual][sensor.park_ave_2nd_st_classic_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Park Ave & 2nd St'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_s2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.park_ave_2nd_st_classic_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Classic bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Classic bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'classic_bikes',
+    'unique_id': 'example_bikes_s2_classic_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_station_variants[virtual][sensor.park_ave_2nd_st_classic_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Park Ave & 2nd St Classic bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.park_ave_2nd_st_classic_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_station_variants[virtual][sensor.park_ave_2nd_st_e_bikes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Park Ave & 2nd St'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_s2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.park_ave_2nd_st_e_bikes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'E-bikes',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'E-bikes',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'e_bikes',
+    'unique_id': 'example_bikes_s2_e_bikes',
+    'unit_of_measurement': 'bikes',
+  })
+# ---
+# name: test_station_variants[virtual][sensor.park_ave_2nd_st_e_bikes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Park Ave & 2nd St E-bikes',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.park_ave_2nd_st_e_bikes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_station_variants[virtual][sensor.park_ave_2nd_st_vehicles_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Park Ave & 2nd St'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'example_bikes_s2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.park_ave_2nd_st_vehicles_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicles available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicles available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicles_available',
+    'unique_id': 'example_bikes_s2_vehicles_available',
+    'unit_of_measurement': 'vehicles',
+  })
+# ---
+# name: test_station_variants[virtual][sensor.park_ave_2nd_st_vehicles_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Park Ave & 2nd St Vehicles available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'vehicles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.park_ave_2nd_st_vehicles_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_station_variants[without_vehicle_types][sensor.gare_docks_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Gare'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'old_bikes_a')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gare_docks_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Docks available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Docks available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'docks_available',
+    'unique_id': 'old_bikes_a_docks_available',
+    'unit_of_measurement': 'docks',
+  })
+# ---
+# name: test_station_variants[without_vehicle_types][sensor.gare_docks_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gare Docks available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'docks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gare_docks_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_station_variants[without_vehicle_types][sensor.gare_vehicles_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ConfigSubentry subentry_type='station' title='Gare'>,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('gbfs', 'old_bikes_a')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gare_vehicles_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicles available',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vehicles available',
+    'platform': 'gbfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicles_available',
+    'unique_id': 'old_bikes_a_vehicles_available',
+    'unit_of_measurement': 'vehicles',
+  })
+# ---
+# name: test_station_variants[without_vehicle_types][sensor.gare_vehicles_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gare Vehicles available',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'vehicles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gare_vehicles_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
