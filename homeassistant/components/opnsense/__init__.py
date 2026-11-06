@@ -1,5 +1,6 @@
 """Support for OPNsense Routers."""
 
+from aiohttp import ClientError, ClientResponseError
 from aiopnsense import (
     OPNsenseBelowMinFirmware,
     OPNsenseClient,
@@ -47,6 +48,7 @@ async def async_setup_entry(
         config_entry.data[CONF_API_SECRET],
         session,
         opts={"verify_ssl": config_entry.data[CONF_VERIFY_SSL]},
+        throw_errors=True,
     )
     tracker_interfaces = config_entry.data.get(CONF_TRACKER_INTERFACES, [])
     firmware_privilege_missing = False
@@ -93,13 +95,19 @@ async def async_setup_entry(
             translation_key="invalid_auth",
             translation_placeholders={"url": url},
         ) from err
-    except OPNsensePrivilegeMissing as err:
+    except (OPNsensePrivilegeMissing, ClientResponseError) as err:
+        if isinstance(err, ClientResponseError) and err.status != 403:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"url": url},
+            ) from err
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="privilege_missing",
             translation_placeholders={"url": url},
         ) from err
-    except OPNsenseConnectionError as err:
+    except (OPNsenseConnectionError, ClientError, TimeoutError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",

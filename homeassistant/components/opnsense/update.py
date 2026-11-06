@@ -6,6 +6,7 @@ from functools import partial
 import logging
 from typing import Any, cast, override
 
+from aiohttp import ClientError
 from aiopnsense import OPNsenseConnectionError, OPNsenseTimeoutError
 from yarl import URL
 
@@ -55,7 +56,9 @@ async def async_setup_entry(
 
     coordinator = OPNsenseFirmwareCoordinator(hass, entry, entry.runtime_data.client)
     entry.runtime_data.update_coordinator = coordinator
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        coordinator.data = {}
     async_add_entities([OPNsenseFirmwareUpdate(coordinator, entry)])
 
 
@@ -163,7 +166,12 @@ class OPNsenseFirmwareUpdate(
             self._upgrade_status_polling = True
             try:
                 status = await self.coordinator.client.upgrade_status()
-            except (OPNsenseConnectionError, OPNsenseTimeoutError) as err:
+            except (
+                OPNsenseConnectionError,
+                OPNsenseTimeoutError,
+                ClientError,
+                TimeoutError,
+            ) as err:
                 if dt_util.utcnow() - upgrade_started < UPGRADE_TIMEOUT:
                     _LOGGER.debug("Unable to poll OPNsense upgrade status: %s", err)
                     return
@@ -288,15 +296,25 @@ class OPNsenseFirmwareUpdate(
         if update_type in ("update", "upgrade"):
             self._upgrade_in_progress = True
             self.async_write_ha_state()
+            generation = self._upgrade_status_generation
             response = None
             try:
                 response = await self.coordinator.client.upgrade_firmware(
                     type=update_type
                 )
+            except (ClientError, TimeoutError) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="firmware_update_failed",
+                ) from err
             finally:
-                if not response or response.get("status") != "ok":
+                if generation == self._upgrade_status_generation and (
+                    not response or response.get("status") != "ok"
+                ):
                     self._upgrade_in_progress = False
                     self.async_write_ha_state()
+            if generation != self._upgrade_status_generation:
+                return
             if response and response.get("status") == "ok":
                 self._upgrade_started = dt_util.utcnow()
                 self._upgrade_status_generation += 1

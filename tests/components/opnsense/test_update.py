@@ -2,8 +2,9 @@
 
 from asyncio import Event
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp import ClientConnectionError, ClientResponseError
 from aiopnsense import OPNsenseConnectionError, OPNsensePrivilegeMissing
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -309,6 +310,55 @@ async def test_firmware_install_concurrent_calls(
         await install_task
 
 
+@pytest.mark.parametrize("response_status", ["ok", "failure"])
+async def test_firmware_install_response_after_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    response_status: str,
+) -> None:
+    """An in-flight install must not start polling after the entity unloads."""
+    request_started = Event()
+    finish_request = Event()
+
+    async def start_upgrade(*, type: str) -> dict[str, str]:
+        request_started.set()
+        await finish_request.wait()
+        return {"status": response_status}
+
+    mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
+    mock_opnsense_client.upgrade_firmware.side_effect = start_upgrade
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.mock_title_firmware"},
+            blocking=True,
+        )
+    )
+    await request_started.wait()
+
+    try:
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    finally:
+        finish_request.set()
+        await install_task
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes["restored"]
+    mock_opnsense_client.upgrade_status.assert_not_awaited()
+
+
 @pytest.mark.parametrize("terminal_status", ["done", "reboot"])
 async def test_firmware_upgrade_finishes(
     hass: HomeAssistant,
@@ -340,17 +390,28 @@ async def test_firmware_upgrade_finishes(
     mock_opnsense_client.upgrade_status.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            OPNsenseConnectionError("router is rebooting"), id="library-error"
+        ),
+        pytest.param(ClientConnectionError("router is rebooting"), id="client-error"),
+        pytest.param(TimeoutError(), id="timeout"),
+    ],
+)
 async def test_firmware_upgrade_retries_error_status(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opnsense_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    error: Exception,
 ) -> None:
     """Test transient firmware errors keep upgrade polling active."""
     mock_opnsense_client.get_firmware_update_info.return_value["status"] = "update"
     mock_opnsense_client.upgrade_firmware.return_value = {"status": "ok"}
     mock_opnsense_client.upgrade_status.side_effect = [
-        OPNsenseConnectionError("router is rebooting"),
+        error,
         {"status": "error"},
         {"status": "done"},
     ]
@@ -589,6 +650,13 @@ async def test_firmware_upgrade_unload(
             OPNsenseConnectionError,
             id="connection-error",
         ),
+        pytest.param(
+            None,
+            ClientConnectionError("connection failed"),
+            HomeAssistantError,
+            id="client-error",
+        ),
+        pytest.param(None, TimeoutError(), HomeAssistantError, id="timeout"),
     ],
 )
 async def test_firmware_install_failure(
@@ -597,7 +665,7 @@ async def test_firmware_install_failure(
     mock_opnsense_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
     response: dict[str, str] | None,
-    error: OPNsenseConnectionError | None,
+    error: Exception | None,
     expected_error: type[Exception],
 ) -> None:
     """Test failed firmware starts clear progress and allow a retry."""
@@ -697,6 +765,48 @@ async def test_firmware_privilege_missing_keeps_tracker_and_recovers(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
+async def test_firmware_privilege_revoked_and_restored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Detect a firmware HTTP 403 after setup and clear the repair on recovery."""
+    with patch(
+        "homeassistant.components.opnsense.OPNsenseClient",
+        return_value=mock_opnsense_client,
+    ) as client_factory:
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert client_factory.call_args.kwargs["throw_errors"] is True
+    issue_id = get_firmware_privilege_issue_id(mock_config_entry.entry_id)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    mock_opnsense_client.get_firmware_update_info.side_effect = ClientResponseError(
+        request_info=Mock(), history=(), status=403, message="Forbidden"
+    )
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_opnsense_client.get_firmware_update_info.side_effect = None
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.state == "off"
+
+
 async def test_firmware_privilege_missing_issue_cleared_on_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -767,6 +877,47 @@ async def test_disabled_update_does_not_fetch_firmware_status(
 
     mock_opnsense_client.get_firmware_update_info.assert_not_awaited()
     mock_opnsense_client.get_arp_table.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "firmware_response",
+    [
+        pytest.param(None, id="no-response"),
+        pytest.param({}, id="empty-response"),
+        pytest.param(
+            OPNsenseConnectionError("connection failed"), id="connection-error"
+        ),
+    ],
+)
+async def test_firmware_initial_failure_recovers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opnsense_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    firmware_response: dict[str, str] | Exception | None,
+) -> None:
+    """Keep the firmware entity available for polling after an initial failure."""
+    mock_opnsense_client.get_firmware_update_info.side_effect = [
+        firmware_response,
+        {"product": {"product_version": "25.7.8", "product_latest": "25.7.8"}},
+    ]
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.mock_title_firmware")
+    assert state is not None
+    assert state.state == "off"
+    assert state.attributes["installed_version"] == "25.7.8"
+    assert mock_opnsense_client.get_firmware_update_info.await_count == 2
 
 
 async def test_firmware_update_unavailable(

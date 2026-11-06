@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
+from aiohttp import ClientResponseError
 from aiopnsense import (
     OPNsenseBelowMinFirmware,
     OPNsenseClient,
@@ -108,7 +109,11 @@ class OPNsenseFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch firmware status."""
         try:
             firmware_info = await self.client.get_firmware_update_info()
-        except OPNsensePrivilegeMissing:
+        except (OPNsensePrivilegeMissing, ClientResponseError) as err:
+            if isinstance(err, ClientResponseError) and err.status != 403:
+                raise UpdateFailed(
+                    f"Error communicating with OPNsense router: {err}"
+                ) from err
             self.entry.runtime_data.firmware_privilege_missing = True
             self._create_firmware_privilege_issue()
             return {}

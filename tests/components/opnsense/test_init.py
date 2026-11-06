@@ -2,6 +2,7 @@
 
 from unittest import mock
 
+from aiohttp import ClientResponseError
 from aiopnsense import (
     OPNsenseBelowMinFirmware,
     OPNsenseConnectionError,
@@ -94,9 +95,20 @@ async def test_setup_entry_tracker_interface_not_found(
     }
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(OPNsensePrivilegeMissing(), id="library-error"),
+        pytest.param(
+            ClientResponseError(request_info=mock.Mock(), history=(), status=403),
+            id="http-forbidden",
+        ),
+    ],
+)
 async def test_setup_entry_tracker_interface_privilege_missing(
     hass: HomeAssistant,
     mock_opnsense_client: mock.AsyncMock,
+    error: Exception,
 ) -> None:
     """Test tracker setup still fails when interface privileges are missing."""
     entry = MockConfigEntry(
@@ -110,7 +122,7 @@ async def test_setup_entry_tracker_interface_privilege_missing(
         },
     )
     entry.add_to_hass(hass)
-    mock_opnsense_client.get_interfaces.side_effect = OPNsensePrivilegeMissing
+    mock_opnsense_client.get_interfaces.side_effect = error
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
