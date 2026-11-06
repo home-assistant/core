@@ -61,7 +61,7 @@ from .issue import deprecated_notify_action_call
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ICON = "icon"
+_ATTR_ICON = "icon"
 
 
 async def async_setup_entry(
@@ -116,7 +116,7 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
                 self.hass, kwargs.pop(NFAndroidTVServiceArgument.IMAGE)
             )
         if NFAndroidTVServiceArgument.ICON in kwargs:
-            kwargs[ATTR_ICON] = await _resolve_media(
+            kwargs[_ATTR_ICON] = await _resolve_media(
                 self.hass, kwargs.pop(NFAndroidTVServiceArgument.ICON)
             )
         if NFAndroidTVServiceArgument.DURATION in kwargs:
@@ -292,7 +292,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         translation_key="invalid_notification_image",
                         translation_placeholders={"type": type(imagedata).__name__},
                     )
-            if icondata := data.get(ATTR_ICON):
+            if icondata := data.get(_ATTR_ICON):
                 if isinstance(icondata, str):
                     icondata = (
                         self.load_file(url=icondata)
