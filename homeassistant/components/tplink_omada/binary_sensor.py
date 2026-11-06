@@ -146,7 +146,8 @@ class OmadaGatewayPortBinarySensor(
         )
         if port is None:
             # The gateway no longer reports this port (e.g. after a firmware
-            # update or a port reconfiguration) — leave the state as-is.
+            # update or a port reconfiguration) — the entity becomes
+            # unavailable instead of keeping a stale state.
             return
         self._attr_is_on = self.entity_description.update_func(port)
 
@@ -156,3 +157,12 @@ class OmadaGatewayPortBinarySensor(
         """Handle updated data from the coordinator."""
         self._do_update()
         self.async_write_ha_state()
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return availability based on the port still being reported."""
+        gateway = self.coordinator.data[self.device.mac]
+        return super().available and any(
+            p.port_number == self._port_number for p in gateway.port_status
+        )

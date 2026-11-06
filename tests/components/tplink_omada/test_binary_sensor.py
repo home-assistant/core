@@ -136,7 +136,7 @@ async def _remove_test_device(
     mock_omada_site_client.get_devices.return_value = devices
 
 
-async def test_gateway_port_disappears_from_port_status_does_not_crash(
+async def test_gateway_port_disappears_from_port_status_becomes_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_omada_client: MagicMock,
@@ -144,14 +144,16 @@ async def test_gateway_port_disappears_from_port_status_does_not_crash(
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a port vanishing from port_status does not raise in the listener."""
+    """Test a port vanishing from port_status makes its sensor unavailable."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    entity_id = "binary_sensor.test_router_port_1_lan_status"
+    assert hass.states.get(entity_id) is not None
+
     # The gateway reboots and reports one fewer port in portStats
-    site_client = mock_omada_site_client.get_site_client.return_value
-    gateway = site_client.get_gateway.return_value
+    gateway = mock_omada_site_client.get_gateway.return_value
     gateway.raw_data["portStats"] = [
         p for p in gateway.raw_data["portStats"] if p.get("port") != 1
     ]
@@ -161,6 +163,10 @@ async def test_gateway_port_disappears_from_port_status_does_not_crash(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    # The port 1 sensors still exist and no StopIteration leaked into the logs
-    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is not None
-    assert "StopIteration" not in caplog.text
+    # The port 1 sensor exists and becomes unavailable, without errors from
+    # the gateway coordinator
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.state == "unavailable"
+    errors = [r.getMessage() for r in caplog.records if r.levelno >= logging.ERROR]
+    assert not any("Omada API Data - Gateway" in msg for msg in errors)
