@@ -36,7 +36,6 @@ PROVISIONING_TIMEOUT: Final = 35  # 35 seconds to wait for device to connect to 
 CONF_SSID: Final = "ssid"
 
 CONF_COAP_PORT: Final = "coap_port"
-FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
 # max BLOCK light transition time in milliseconds (min=0)
 BLOCK_MAX_TRANSITION_TIME_MS: Final = 5000
@@ -251,6 +250,8 @@ OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
 DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
 OPEN_WIFI_AP_ISSUE_ID = "open_wifi_ap_{unique}"
 RTSP_DISABLED_ISSUE_ID = "rtsp_disabled_{unique}"
+IR_RAW_RECEIVE_DISABLED_ISSUE_ID = "ir_raw_receive_disabled_{unique}"
+IR_RAW_RECEIVE_MIN_FIRMWARE = 20260903
 COIOT_UNCONFIGURED_ISSUE_ID = "coiot_unconfigured_{unique}"
 
 

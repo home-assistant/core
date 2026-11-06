@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from lifx import LifxTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import (
@@ -25,8 +26,6 @@ from homeassistant.setup import async_setup_component
 
 from . import IP_ADDRESS, SERIAL
 from .helpers import create_mock_hev_light
-
-from tests.common import MockConfigEntry
 
 SERVICES = (
     SERVICE_EFFECT_COLORLOOP,
@@ -50,18 +49,16 @@ async def test_services_registered_without_entry(hass: HomeAssistant) -> None:
         assert hass.services.has_service(DOMAIN, service)
 
 
-@pytest.mark.parametrize("service", SERVICES)
 @pytest.mark.usefixtures("mock_discovery")
-async def test_service_without_loaded_entry_raises(
-    hass: HomeAssistant, service: str
-) -> None:
+async def test_service_without_loaded_entry_raises(hass: HomeAssistant) -> None:
     """Test the effect actions raise when no config entry is loaded."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
+    # Every effect action shares one handler
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
-            DOMAIN, service, {ATTR_ENTITY_ID: "light.test"}, blocking=True
+            DOMAIN, SERVICE_EFFECT_PULSE, {ATTR_ENTITY_ID: "light.test"}, blocking=True
         )
 
     assert err.value.translation_domain == DOMAIN

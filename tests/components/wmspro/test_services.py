@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from . import setup_config_entry
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

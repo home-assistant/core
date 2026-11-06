@@ -24,7 +24,7 @@ PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> None:
     """Set up Anova from a config entry."""
     api = AnovaApi(
         aiohttp_client.async_get_clientsession(hass),
@@ -61,18 +61,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> boo
     coordinators = [AnovaCoordinator(hass, entry, device) for device in devices]
     entry.runtime_data = AnovaData(api_jwt=api.jwt, coordinators=coordinators, api=api)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Disconnect from WS
-        await entry.runtime_data.api.disconnect_websocket()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Disconnect from WS
+    await entry.runtime_data.api.disconnect_websocket()
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> None:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
@@ -86,5 +84,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> b
     _LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
     )
-
-    return True

@@ -234,7 +234,7 @@ class KnxUiSelect(_KNXSelect, KnxUiEntity):
 
         self._device = RawValue(
             knx_module.xknx,
-            name=config.entity.xknx_name,
+            name=config.entity.name,
             payload_length=payload_length,
             group_address=group_address.write,
             group_address_state=state_and_passive(group_address),

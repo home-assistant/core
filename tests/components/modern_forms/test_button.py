@@ -2,14 +2,14 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, init_integration_gen4
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_restart_button(

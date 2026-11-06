@@ -8,15 +8,7 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from habluetooth.wrappers import HaBleakClientWrapper, HaBleakScannerWrapper
 import pytest
-
-from homeassistant.components.bluetooth import (
-    BaseHaRemoteScanner,
-    BaseHaScanner,
-    HaBluetoothConnector,
-)
-from homeassistant.core import HomeAssistant
-
-from . import (
+from pytest_homeassistant.components.bluetooth import (
     FakeScannerMixin,
     MockBleakClient,
     _get_manager,
@@ -26,6 +18,13 @@ from . import (
     inject_advertisement_with_source,
     patch_bleak_backend_type,
 )
+
+from homeassistant.components.bluetooth import (
+    BaseHaRemoteScanner,
+    BaseHaScanner,
+    HaBluetoothConnector,
+)
+from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.usefixtures("enable_bluetooth")

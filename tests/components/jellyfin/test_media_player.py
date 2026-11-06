@@ -4,6 +4,8 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.components.media_player import (
@@ -33,15 +35,13 @@ from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import async_load_json_fixture
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_media_player(
@@ -312,7 +312,7 @@ async def test_services_shuffle(
         DOMAIN,
         "play_media_shuffle",
         {
-            ATTR_ENTITY_ID: state.entity_id,
+            CommonServiceArgument.ENTITY_ID: state.entity_id,
             "media_content_id": "ITEM-UUID",
         },
         blocking=True,

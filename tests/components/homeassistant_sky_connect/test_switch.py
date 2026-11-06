@@ -4,6 +4,7 @@ from unittest.mock import Mock, call, patch
 
 from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
 from yarl import URL
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import USB_DATA_ZBT1
-
-from tests.common import MockConfigEntry, mock_restore_cache
 
 SWITCH_ENTITY_ID = "switch.home_assistant_connect_zbt_1_9e2adbd7_beta_firmware_updates"
 

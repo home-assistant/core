@@ -2,7 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
+import httpx
+from openai import AuthenticationError, OpenAIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_open_router import (
     OpenRouterAuthenticationError,
     OpenRouterConnectionError,
@@ -19,7 +22,7 @@ from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from . import setup_integration
 
 
 async def test_migrate_entry_from_v1_1_to_v1_4(
@@ -70,7 +73,7 @@ async def test_migrate_entry_from_v1_1_to_v1_4(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -139,7 +142,7 @@ async def test_migrate_entry_from_v1_2_to_v1_4(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -190,7 +193,7 @@ async def test_migrate_entry_web_search_not_reapplied(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -232,7 +235,7 @@ async def test_migrate_entry_v1_3_to_v1_4_unknown_model(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -272,7 +275,7 @@ async def test_migrate_entry_v1_3_to_v1_4_keeps_existing_modalities(
 
     with patch(
         "homeassistant.components.open_router.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -370,3 +373,43 @@ async def test_migrate_entry_from_future_version_fails(
     assert entry.version == 100
     assert entry.minor_version == 99
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "state", "reason"),
+    [
+        pytest.param(
+            AuthenticationError(
+                "Unauthorized",
+                response=httpx.Response(
+                    401, request=httpx.Request("GET", "https://openrouter.ai")
+                ),
+                body=None,
+            ),
+            ConfigEntryState.SETUP_ERROR,
+            "Invalid API key",
+            id="authentication_error",
+        ),
+        pytest.param(
+            OpenAIError("boom"),
+            ConfigEntryState.SETUP_RETRY,
+            "Error communicating with the OpenRouter API: boom",
+            id="api_error",
+        ),
+    ],
+)
+async def test_setup_entry_errors(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    state: ConfigEntryState,
+    reason: str,
+) -> None:
+    """Test setup errors when the API cannot be reached."""
+    mock_openai_client.with_options.return_value.models.list.side_effect = side_effect
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is state
+    assert mock_config_entry.reason == reason

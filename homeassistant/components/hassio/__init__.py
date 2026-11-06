@@ -1,10 +1,12 @@
 """Support for Hass.io."""
 
 import asyncio
+from collections.abc import Coroutine
 from functools import partial
 import logging
 import os
 import struct
+from typing import Any
 
 from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import (
@@ -16,10 +18,11 @@ from aiohasupervisor.models import (
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
-from homeassistant.components import frontend
+from homeassistant.components import frontend, network
 from homeassistant.components.homeassistant import async_set_stop_handler
 from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.components.onboarding import async_is_onboarded
+from homeassistant.components.system_log import async_register_log_reader
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE, HASSIO_USER_NAME, Platform
 from homeassistant.core import Event, HomeAssistant, callback
@@ -31,7 +34,8 @@ from homeassistant.helpers import (
     issue_registry as ir,
     system_state,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.typing import ConfigType
 
@@ -53,15 +57,22 @@ from . import (  # noqa: F401
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState
 from .addon_panel import async_setup_addon_panel, async_setup_addon_panel_coordinator
 from .auth import async_setup_auth_view
+from .auto_update import AutoUpdateManager
 from .config import HassioConfigStore, StoredHassioConfig
 from .config_entry import async_get_hassio_entry
 from .const import (
     ADDONS_COORDINATOR,
-    DATA_COMPONENT,
-    DATA_HASSIO_HOST,
+    ATTR_UPDATE_KEY,
+    ATTR_WS_EVENT,
+    DATA_AUTO_UPDATE,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     ENTRY_DATA_USER,
+    ENV_SUPERVISOR,
+    ENV_SUPERVISOR_SOCKET,
+    ENV_SUPERVISOR_TOKEN,
+    EVENT_SUPERVISOR_EVENT,
+    EVENT_SUPERVISOR_UPDATE,
     ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
     ISSUE_MOUNT_MOUNT_FAILED,
     JOBS_COORDINATOR,
@@ -70,6 +81,7 @@ from .const import (
     OPTION_ADD_ON_BACKUP_RETAIN_COPIES,
     OPTION_CORE_BACKUP_BEFORE_UPDATE,
     STATS_COORDINATOR,
+    UPDATE_KEY_NETWORK,
 )
 from .coordinator import (
     HassioAddOnDataUpdateCoordinator,
@@ -94,7 +106,13 @@ from .coordinator import (
 )
 from .discovery import async_setup_discovery_view
 from .exceptions import HassioNotReadyError
-from .handler import HassIO, async_update_diagnostics, get_supervisor_client
+from .handler import (
+    HassioAPIError,
+    async_update_diagnostics,
+    get_supervisor_client,
+    get_supervisor_connection,
+    get_supervisor_passthrough_client,
+)
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
 from .services import async_setup_services
@@ -104,6 +122,7 @@ from .websocket_api import async_load_websocket_api
 # All references to addons will eventually be refactored and deprecated
 get_apps_list = get_addons_list
 __all__ = [
+    "DOMAIN",
     "AddonError",
     "AddonInfo",
     "AddonManager",
@@ -138,6 +157,12 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+NETWORK_RELOAD_COOLDOWN = 10
+
+# Journal lines read for the log stream, on slow system reading can be as slow as ~1 s per 1,000
+CORE_LOG_LINES = 5000
+CORE_LOG_TIMEOUT = 30
 
 
 DEPRECATION_URL = (
@@ -317,21 +342,39 @@ def _check_deprecated_setup(hass: HomeAssistant) -> None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hass.io component."""
-    # Check local setup
-    for env in ("SUPERVISOR", "SUPERVISOR_TOKEN"):
-        if os.environ.get(env):
-            continue
-        _LOGGER.error("Missing %s environment variable", env)
+    missing_env: str | None = None
+    if not os.environ.get(ENV_SUPERVISOR):
+        missing_env = ENV_SUPERVISOR
+    elif not os.environ.get(ENV_SUPERVISOR_SOCKET) and not os.environ.get(
+        ENV_SUPERVISOR_TOKEN
+    ):
+        missing_env = f"{ENV_SUPERVISOR_SOCKET} or {ENV_SUPERVISOR_TOKEN}"
+    if missing_env:
+        _LOGGER.error("Missing %s environment variable", missing_env)
         if config_entries := hass.config_entries.async_entries(DOMAIN):
             hass.async_create_task(
                 hass.config_entries.async_remove(config_entries[0].entry_id)
             )
         return False
 
-    host = os.environ["SUPERVISOR"]
-    websession = async_get_clientsession(hass)
-    hass.data[DATA_COMPONENT] = HassIO(hass.loop, websession, host)
-    hass.data[DATA_HASSIO_HOST] = host
+    async def _async_read_core_log() -> list[str]:
+        """Return the end of the log of Home Assistant since it started."""
+        supervisor = get_supervisor_passthrough_client(hass)
+        try:
+            text: str = await supervisor.send_command(
+                "/core/logs/latest",
+                method="get",
+                return_text=True,
+                timeout=CORE_LOG_TIMEOUT,
+                params={"lines": CORE_LOG_LINES},
+            )
+        except HassioAPIError as err:
+            _LOGGER.debug("Could not read the Home Assistant log: %s", err)
+            return []
+        return text.splitlines()
+
+    # Without a log file, Home Assistant only logs to the Supervisor journal
+    async_register_log_reader(hass, _async_read_core_log)
 
     legacy_store = HassioConfigStore(hass)
     legacy_data = await legacy_store.async_load()
@@ -347,7 +390,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     async_load_websocket_api(hass)
-    hass.http.register_view(HassIOView(host, websession))
+    hass.http.register_view(HassIOView(get_supervisor_connection(hass)))
     async_setup_services(hass)
     async_setup_discovery_view(hass)
     async_setup_auth_view(hass)
@@ -370,7 +413,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
     # Deprecated in 2026.8: remove this legacy store migration path after the
     # deprecation window for .storage/hassio has elapsed.
@@ -456,6 +499,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     issues_coordinator = SupervisorIssuesCoordinator(hass, entry)
     hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues_coordinator
 
+    auto_update = AutoUpdateManager(hass, entry, coordinator)
+    await auto_update.async_setup()
+    hass.data[DATA_AUTO_UPDATE] = auto_update
+
     @callback
     def _refresh_main_coordinator_on_mount_issue(_: IssueSubscriptionEvent) -> None:
         coordinator.config_entry.async_create_task(hass, coordinator.async_refresh())
@@ -485,6 +532,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 event_callback=_mirror_host_reboot_required,
                 key=ISSUE_KEY_SYSTEM_REBOOT_REQUIRED,
             )
+        )
+    )
+
+    network_reload_debouncer = Debouncer[Coroutine[Any, Any, None]](
+        hass,
+        _LOGGER,
+        cooldown=NETWORK_RELOAD_COOLDOWN,
+        immediate=True,
+        function=partial(network.async_reload_adapters, hass),
+        background=True,
+    )
+    entry.async_on_unload(network_reload_debouncer.async_shutdown)
+
+    @callback
+    def _async_handle_supervisor_network_event(event: dict[str, Any]) -> None:
+        """Handle supervisor network update events."""
+        if (
+            event.get(ATTR_WS_EVENT) != EVENT_SUPERVISOR_UPDATE
+            or event.get(ATTR_UPDATE_KEY) != UPDATE_KEY_NETWORK
+        ):
+            return
+
+        network_reload_debouncer.async_schedule_call()
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, EVENT_SUPERVISOR_EVENT, _async_handle_supervisor_network_event
         )
     )
 
@@ -572,18 +646,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if remove_legacy_store:
         await legacy_store.async_remove()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    # Pop coordinators and entry-level data
-    hass.data.pop(MAIN_COORDINATOR, None)
-    hass.data.pop(ADDONS_COORDINATOR, None)
-    hass.data.pop(STATS_COORDINATOR, None)
-    hass.data.pop(JOBS_COORDINATOR, None)
-    hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
-
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        # Pop coordinators and entry-level data
+        hass.data.pop(MAIN_COORDINATOR, None)
+        hass.data.pop(ADDONS_COORDINATOR, None)
+        hass.data.pop(STATS_COORDINATOR, None)
+        hass.data.pop(JOBS_COORDINATOR, None)
+        hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
+        hass.data.pop(DATA_AUTO_UPDATE, None)

@@ -1,11 +1,13 @@
 """Common fixtures for the Infrared tests."""
 
 import pytest
+from pytest_homeassistant.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredEntity,
+)
 
 from homeassistant.components.infrared import DATA_COMPONENT
 from homeassistant.core import HomeAssistant
-
-from .common import MockInfraredEmitterEntity, MockInfraredEntity
 
 
 @pytest.fixture(params=[MockInfraredEntity, MockInfraredEmitterEntity])

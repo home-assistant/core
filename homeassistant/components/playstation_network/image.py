@@ -7,19 +7,18 @@ from typing import TYPE_CHECKING, override
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import (
     PlayStationNetworkBaseCoordinator,
     PlaystationNetworkConfigEntry,
-    PlaystationNetworkData,
     PlaystationNetworkFriendDataCoordinator,
     PlaystationNetworkUserDataCoordinator,
 )
 from .entity import PlaystationNetworkServiceEntity
-from .helpers import get_game_title_info
+from .helpers import PlaystationNetworkData, get_game_title_info
 
 PARALLEL_UPDATES = 0
 
@@ -128,6 +127,7 @@ class PlaystationNetworkImageBaseEntity(PlaystationNetworkServiceEntity, ImageEn
         self._attr_image_url = self.entity_description.image_url_fn(coordinator.data)
         self._attr_image_last_updated = dt_util.utcnow()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

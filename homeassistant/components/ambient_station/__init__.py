@@ -53,7 +53,7 @@ def async_hydrate_station_data(data: dict[str, Any]) -> dict[str, Any]:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AmbientStationConfigEntry
-) -> bool:
+) -> None:
     """Set up the Ambient PWS as config entry."""
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
@@ -82,21 +82,18 @@ async def async_setup_entry(
         )
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AmbientStationConfigEntry
-) -> bool:
+) -> None:
     """Unload an Ambient PWS config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.async_create_task(entry.runtime_data.ws_disconnect(), eager_start=True)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    hass.async_create_task(entry.runtime_data.ws_disconnect(), eager_start=True)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: AmbientStationConfigEntry
+) -> None:
     """Migrate old entry."""
     version = entry.version
 
@@ -115,14 +112,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     LOGGER.info("Migration to version %s successful", version)
 
-    return True
-
 
 class AmbientStation:
     """Define a class to handle the Ambient websocket."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, websocket: Websocket
+        self,
+        hass: HomeAssistant,
+        entry: AmbientStationConfigEntry,
+        websocket: Websocket,
     ) -> None:
         """Initialize."""
         self._entry = entry

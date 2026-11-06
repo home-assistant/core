@@ -565,6 +565,11 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_haven._tcp.local.": [
+        {
+            "domain": "haven_iaq",
+        },
+    ],
     "_heos-audio._tcp.local.": [
         {
             "domain": "heos",
@@ -716,6 +721,16 @@ ZEROCONF = {
             "name": "velux_klf_lan_*",
         },
     ],
+    "_https._tcp.local.": [
+        {
+            "domain": "grandstream_home",
+            "name": "gds_*",
+        },
+        {
+            "domain": "grandstream_home",
+            "name": "gsc_*",
+        },
+    ],
     "_hue._tcp.local.": [
         {
             "domain": "hue",
@@ -724,6 +739,11 @@ ZEROCONF = {
     "_hwenergy._tcp.local.": [
         {
             "domain": "homewizard",
+        },
+    ],
+    "_indi-allsky._tcp.local.": [
+        {
+            "domain": "indi_allsky",
         },
     ],
     "_iometer._tcp.local.": [
@@ -799,6 +819,12 @@ ZEROCONF = {
             "domain": "lutron_caseta",
             "properties": {
                 "SYSTYPE": "ra2select*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "athena*",
             },
         },
     ],
@@ -914,6 +940,11 @@ ZEROCONF = {
             "domain": "bitvis",
         },
     ],
+    "_powersensor._udp.local.": [
+        {
+            "domain": "powersensor_au",
+        },
+    ],
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
@@ -963,6 +994,15 @@ ZEROCONF = {
     "_shelly._tcp.local.": [
         {
             "domain": "shelly",
+        },
+    ],
+    "_ship._tcp.local.": [
+        {
+            "domain": "e3dc",
+            "properties": {
+                "brand": "hager energy",
+                "id": "*",
+            },
         },
     ],
     "_sideplay._tcp.local.": [

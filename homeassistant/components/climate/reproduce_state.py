@@ -4,40 +4,26 @@ import asyncio
 from collections.abc import Iterable
 from typing import Any
 
-from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
-    ATTR_FAN_MODE,
-    ATTR_HUMIDITY,
-    ATTR_HVAC_MODE,
-    ATTR_PRESET_MODE,
-    ATTR_SWING_HORIZONTAL_MODE,
-    ATTR_SWING_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN,
     HVAC_MODES,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_SWING_HORIZONTAL_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
 )
 
 # Maps a state attribute to the service call argument used to restore it.
 _STATE_ATTRIBUTE_TO_SERVICE_ARG: dict[ClimateEntityStateAttribute, str] = {
-    ClimateEntityStateAttribute.TARGET_TEMPERATURE: ATTR_TEMPERATURE,
-    ClimateEntityStateAttribute.TARGET_TEMP_HIGH: ATTR_TARGET_TEMP_HIGH,
-    ClimateEntityStateAttribute.TARGET_TEMP_LOW: ATTR_TARGET_TEMP_LOW,
-    ClimateEntityStateAttribute.PRESET_MODE: ATTR_PRESET_MODE,
-    ClimateEntityStateAttribute.SWING_MODE: ATTR_SWING_MODE,
-    ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: ATTR_SWING_HORIZONTAL_MODE,
-    ClimateEntityStateAttribute.FAN_MODE: ATTR_FAN_MODE,
-    ClimateEntityStateAttribute.TARGET_HUMIDITY: ATTR_HUMIDITY,
+    ClimateEntityStateAttribute.TARGET_TEMPERATURE: ClimateServiceArgument.TEMPERATURE,
+    ClimateEntityStateAttribute.TARGET_TEMP_HIGH: ClimateServiceArgument.TARGET_TEMP_HIGH,
+    ClimateEntityStateAttribute.TARGET_TEMP_LOW: ClimateServiceArgument.TARGET_TEMP_LOW,
+    ClimateEntityStateAttribute.PRESET_MODE: ClimateServiceArgument.PRESET_MODE,
+    ClimateEntityStateAttribute.SWING_MODE: ClimateServiceArgument.SWING_MODE,
+    ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: ClimateServiceArgument.SWING_HORIZONTAL_MODE,
+    ClimateEntityStateAttribute.FAN_MODE: ClimateServiceArgument.FAN_MODE,
+    ClimateEntityStateAttribute.TARGET_HUMIDITY: ClimateServiceArgument.HUMIDITY,
 }
 
 
@@ -67,7 +53,11 @@ async def _async_reproduce_states(
         )
 
     if state.state in HVAC_MODES:
-        await call_service(SERVICE_SET_HVAC_MODE, [], {ATTR_HVAC_MODE: state.state})
+        await call_service(
+            ClimateService.SET_HVAC_MODE,
+            [],
+            {ClimateServiceArgument.HVAC_MODE: state.state},
+        )
 
     if (
         state.attributes.get(ClimateEntityStateAttribute.TARGET_TEMPERATURE) is not None
@@ -76,7 +66,7 @@ async def _async_reproduce_states(
         or state.attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_LOW) is not None
     ):
         await call_service(
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             [
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE,
                 ClimateEntityStateAttribute.TARGET_TEMP_HIGH,
@@ -89,7 +79,7 @@ async def _async_reproduce_states(
         and state.attributes[ClimateEntityStateAttribute.PRESET_MODE] is not None
     ):
         await call_service(
-            SERVICE_SET_PRESET_MODE, [ClimateEntityStateAttribute.PRESET_MODE]
+            ClimateService.SET_PRESET_MODE, [ClimateEntityStateAttribute.PRESET_MODE]
         )
 
     if (
@@ -97,7 +87,7 @@ async def _async_reproduce_states(
         and state.attributes[ClimateEntityStateAttribute.SWING_MODE] is not None
     ):
         await call_service(
-            SERVICE_SET_SWING_MODE, [ClimateEntityStateAttribute.SWING_MODE]
+            ClimateService.SET_SWING_MODE, [ClimateEntityStateAttribute.SWING_MODE]
         )
 
     if (
@@ -106,7 +96,7 @@ async def _async_reproduce_states(
         is not None
     ):
         await call_service(
-            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            ClimateService.SET_SWING_HORIZONTAL_MODE,
             [ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE],
         )
 
@@ -114,11 +104,13 @@ async def _async_reproduce_states(
         ClimateEntityStateAttribute.FAN_MODE in state.attributes
         and state.attributes[ClimateEntityStateAttribute.FAN_MODE] is not None
     ):
-        await call_service(SERVICE_SET_FAN_MODE, [ClimateEntityStateAttribute.FAN_MODE])
+        await call_service(
+            ClimateService.SET_FAN_MODE, [ClimateEntityStateAttribute.FAN_MODE]
+        )
 
     if ClimateEntityStateAttribute.TARGET_HUMIDITY in state.attributes:
         await call_service(
-            SERVICE_SET_HUMIDITY, [ClimateEntityStateAttribute.TARGET_HUMIDITY]
+            ClimateService.SET_HUMIDITY, [ClimateEntityStateAttribute.TARGET_HUMIDITY]
         )
 
 

@@ -66,7 +66,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.coinbase.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -151,7 +151,7 @@ async def test_form_invalid_auth(
         _patch_success(),
         patch(
             "homeassistant.components.coinbase.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -188,7 +188,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         _patch_success(),
         patch(
             "homeassistant.components.coinbase.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -225,7 +225,7 @@ async def test_form_catch_all_exception(hass: HomeAssistant) -> None:
         _patch_success(),
         patch(
             "homeassistant.components.coinbase.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -413,14 +413,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         config_entry = await init_mock_coinbase(hass)
 
     # Start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -467,14 +460,7 @@ async def test_reauth_flow_invalid_auth(hass: HomeAssistant) -> None:
         config_entry = await init_mock_coinbase(hass)
 
     # Start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     # Test invalid auth during reauth
     api_auth_error_key = HTTPError("invalid api key")

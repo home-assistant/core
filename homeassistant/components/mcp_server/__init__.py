@@ -23,7 +23,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) -> None:
     """Migrate a config entry."""
     if entry.version == 1 and entry.minor_version == 1:
         # 1.1 -> 1.2: Endpoints served before this option existed stay open.
@@ -51,19 +51,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) 
             minor_version=4,
         )
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) -> None:
     """Set up Model Context Protocol Server from a config entry."""
 
     entry.runtime_data = SessionManager()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) -> None:
     """Unload a config entry."""
     session_manager = entry.runtime_data
     session_manager.close()
-    return True

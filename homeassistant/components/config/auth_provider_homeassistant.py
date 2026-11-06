@@ -1,18 +1,25 @@
 """Offer API to configure the Home Assistant auth provider."""
 
+import asyncio
 from typing import Any
 
 import probatio
 
-from homeassistant.auth.providers import homeassistant as auth_ha
+from homeassistant.auth.providers import InvalidStepUpError, homeassistant as auth_ha
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
+from homeassistant.util.hass_dict import HassKey
+
+CREATE_LOCK: HassKey[asyncio.Lock] = HassKey(
+    "config_auth_provider_homeassistant_create_lock"
+)
 
 
 @callback
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Home Assistant views."""
+    hass.data[CREATE_LOCK] = asyncio.Lock()
     websocket_api.async_register_command(hass, websocket_create)
     websocket_api.async_register_command(hass, websocket_delete)
     websocket_api.async_register_command(hass, websocket_change_password)
@@ -51,12 +58,28 @@ async def websocket_create(
         )
         return
 
-    await provider.async_add_auth(msg["username"], msg["password"])
+    if user.is_owner and not connection.user.is_owner:
+        raise Unauthorized(context=connection.context(msg))
 
-    credentials = await provider.async_get_or_create_credentials(
-        {"username": msg["username"]}
-    )
-    await hass.auth.async_link_user(user, credentials)
+    # Serialize the check with the link so concurrent requests can't both
+    # pass it and attach two passwords.
+    async with hass.data[CREATE_LOCK]:
+        # A second password would let an admin log in as the user without
+        # going through the owner-only admin_change_password command.
+        if provider.async_get_username(user) is not None:
+            connection.send_error(
+                msg["id"],
+                "credentials_exist",
+                "User already has credentials for this provider",
+            )
+            return
+
+        await provider.async_add_auth(msg["username"], msg["password"])
+
+        credentials = await provider.async_get_or_create_credentials(
+            {"username": msg["username"]}
+        )
+        await hass.auth.async_link_user(user, credentials)
 
     connection.send_result(msg["id"])
 
@@ -92,9 +115,10 @@ async def websocket_delete(
             )
             return
 
-        await hass.auth.async_remove_credentials(credentials)
-
-        connection.send_result(msg["id"])
+        # Deleting the password of this session ends it, so that waits for the result.
+        with connection.async_defer_auth_close():
+            await hass.auth.async_remove_credentials(credentials)
+            connection.send_result(msg["id"])
         return
 
     await provider.async_remove_auth(msg["username"])
@@ -121,21 +145,18 @@ async def websocket_change_password(
         return
 
     provider = auth_ha.async_get_provider(hass)
-    username = None
-    for credential in user.credentials:
-        if credential.auth_provider_type == provider.type:
-            username = credential.data["username"]
-            break
 
-    if username is None:
+    if (username := provider.async_get_username(user)) is None:
         connection.send_error(
             msg["id"], "credentials_not_found", "Credentials not found"
         )
         return
 
     try:
-        await provider.async_validate_login(username, msg["current_password"])
-    except auth_ha.InvalidAuth:
+        await provider.async_verify_step_up(
+            user, {"password": msg["current_password"]}, None
+        )
+    except InvalidStepUpError:
         connection.send_error(
             msg["id"], "invalid_current_password", "Invalid current password"
         )
@@ -172,13 +193,7 @@ async def websocket_admin_change_password(
 
     provider = auth_ha.async_get_provider(hass)
 
-    username = None
-    for credential in user.credentials:
-        if credential.auth_provider_type == provider.type:
-            username = credential.data["username"]
-            break
-
-    if username is None:
+    if (username := provider.async_get_username(user)) is None:
         connection.send_error(
             msg["id"], "credentials_not_found", "Credentials not found"
         )

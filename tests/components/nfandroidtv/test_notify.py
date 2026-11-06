@@ -1,23 +1,21 @@
 """Tests for the Notifications for Android TV / Fire TV notify platform."""
 
 from collections.abc import AsyncGenerator
+import errno
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 from notifications_android_tv.notifications import ConnectError
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
 from homeassistant.components.nfandroidtv.const import (
-    ATTR_BGCOLOR,
-    ATTR_DURATION,
-    ATTR_FONTSIZE,
-    ATTR_IMAGE,
-    ATTR_INTERACTIVE,
-    ATTR_POSITION,
-    ATTR_TRANSPARENCY,
     DOMAIN,
+    NFAndroidTVService,
+    NFAndroidTVServiceArgument,
 )
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
@@ -28,19 +26,17 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     CONF_NAME,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import NAME
-
-from tests.common import AsyncMock, MockConfigEntry, snapshot_platform
 
 LEGACY_SERVICE_NAME = "android_tv_fire_tv_1_2_3_4"
 ENTITY_ID = "notify.android_tv_fire_tv_1_2_3_4"
@@ -201,17 +197,17 @@ async def test_nfandroidtv_send_message(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NFAndroidTVService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MESSAGE: "Hello",
-            ATTR_TITLE: "World",
-            ATTR_POSITION: "center",
-            ATTR_DURATION: {"seconds": 30},
-            ATTR_INTERACTIVE: True,
-            ATTR_BGCOLOR: "teal",
-            ATTR_FONTSIZE: "large",
-            ATTR_TRANSPARENCY: "75%",
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            NFAndroidTVServiceArgument.MESSAGE: "Hello",
+            NFAndroidTVServiceArgument.TITLE: "World",
+            NFAndroidTVServiceArgument.POSITION: "center",
+            NFAndroidTVServiceArgument.DURATION: {"seconds": 30},
+            NFAndroidTVServiceArgument.INTERACTIVE: True,
+            NFAndroidTVServiceArgument.BACKGROUND_COLOR: "teal",
+            NFAndroidTVServiceArgument.FONTSIZE: "large",
+            NFAndroidTVServiceArgument.TRANSPARENCY: "75%",
         },
         blocking=True,
     )
@@ -257,12 +253,12 @@ async def test_nfandroidtv_send_message_camera_snapshot(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NFAndroidTVService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
-                ATTR_IMAGE: {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NFAndroidTVServiceArgument.MESSAGE: "Hello",
+                NFAndroidTVServiceArgument.TITLE: "World",
+                NFAndroidTVServiceArgument.IMAGE: {
                     "media_content_id": "media-source://camera/camera.demo_camera",
                     "media_content_type": "image/jpeg",
                 },
@@ -305,12 +301,12 @@ async def test_nfandroidtv_send_message_image_snapshot(
     ) as mock_get_image:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NFAndroidTVService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
-                ATTR_ICON: {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NFAndroidTVServiceArgument.MESSAGE: "Hello",
+                NFAndroidTVServiceArgument.TITLE: "World",
+                NFAndroidTVServiceArgument.ICON: {
                     "media_content_id": "media-source://image/image.test",
                     "media_content_type": "image/png",
                 },
@@ -348,12 +344,12 @@ async def test_nfandroidtv_send_message_local_media_source(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NFAndroidTVService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MESSAGE: "Hello",
-            ATTR_TITLE: "World",
-            ATTR_ICON: {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            NFAndroidTVServiceArgument.MESSAGE: "Hello",
+            NFAndroidTVServiceArgument.TITLE: "World",
+            NFAndroidTVServiceArgument.ICON: {
                 "media_content_id": "media-source://media_source/local/screenshot.jpg",
                 "media_content_type": "image/jpeg",
             },
@@ -401,12 +397,12 @@ async def test_nfandroidtv_send_message_unsupported_source(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NFAndroidTVService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
-                ATTR_IMAGE: {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NFAndroidTVServiceArgument.MESSAGE: "Hello",
+                NFAndroidTVServiceArgument.TITLE: "World",
+                NFAndroidTVServiceArgument.IMAGE: {
                     "media_content_id": "media-source://media_source/local/screenshot.png",
                     "media_content_type": "image/png",
                 },
@@ -435,24 +431,33 @@ async def test_nfandroidtv_send_message_media_not_readable(
     assert state
     assert state.state == STATE_UNKNOWN
     with (
-        patch("pathlib.Path.read_bytes", side_effect=FileNotFoundError),
+        patch(
+            "pathlib.Path.read_bytes",
+            side_effect=FileNotFoundError(
+                errno.ENOENT, "No such file or directory", "/media/screenshot.jpg"
+            ),
+        ),
         pytest.raises(HomeAssistantError) as err,
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NFAndroidTVService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
-                ATTR_IMAGE: {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NFAndroidTVServiceArgument.MESSAGE: "Hello",
+                NFAndroidTVServiceArgument.TITLE: "World",
+                NFAndroidTVServiceArgument.IMAGE: {
                     "media_content_id": "media-source://media_source/local/screenshot.jpg",
                     "media_content_type": "image/jpeg",
                 },
             },
             blocking=True,
         )
-    assert err.value.translation_key == "media_not_readable"
+    assert err.value.translation_key == "os_read_not_found"
+    assert err.value.translation_placeholders == {
+        "path": str(Path("tests/testing_config/media/screenshot.jpg").resolve())
+    }
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
 
 
 @pytest.mark.parametrize(
@@ -482,11 +487,11 @@ async def test_nfandroidtv_send_message_exception(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NFAndroidTVService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                NFAndroidTVServiceArgument.MESSAGE: "Hello",
+                NFAndroidTVServiceArgument.TITLE: "World",
             },
             blocking=True,
         )

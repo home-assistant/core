@@ -3,14 +3,13 @@
 from unittest.mock import AsyncMock
 
 from pynintendoauth.exceptions import InvalidOAuthConfigurationException
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_invalid_authentication(

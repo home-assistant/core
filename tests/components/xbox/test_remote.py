@@ -5,6 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 from httpx2 import HTTPStatusError, RequestError, TimeoutException
 import pytest
+from pytest_homeassistant.common import (
+    Mock,
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from pythonxbox.api.provider.smartglass.models import CommandResponse, InputKeyType
 from syrupy.assertion import SnapshotAssertion
 
@@ -25,13 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import (
-    Mock,
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.fixture(autouse=True)

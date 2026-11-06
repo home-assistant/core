@@ -2,3 +2,47 @@
 # name: test_setup[default]
   dict_keys(['refresh_system', 'set_system_mode', 'set_zone_override', 'set_dhw_override'])
 # ---
+# name: test_setup_non_default_location[sys_004-location_idx_1]
+  list([
+    'button.reset_name_3935922',
+    'button.reset_name_4368406',
+    'button.reset_summer_house',
+    'climate.name_3935922',
+    'climate.name_4368406',
+    'climate.summer_house',
+  ])
+# ---
+# name: test_setup_non_default_location[sys_004-location_idx_2]
+  list([
+    'button.reset_bathroom_dn',
+    'button.reset_bathroom_up',
+    'button.reset_dead_zone',
+    'button.reset_front_room',
+    'button.reset_kids_room',
+    'button.reset_kitchen',
+    'button.reset_main_bedroom',
+    'button.reset_main_room',
+    'button.reset_my_home',
+    'button.reset_spare_room',
+    'climate.bathroom_dn',
+    'climate.bathroom_up',
+    'climate.dead_zone',
+    'climate.front_room',
+    'climate.kids_room',
+    'climate.kitchen',
+    'climate.main_bedroom',
+    'climate.main_room',
+    'climate.my_home',
+    'climate.spare_room',
+  ])
+# ---
+# name: test_setup_non_default_location[sys_006-location_idx_1]
+  list([
+    'button.reset_main_room',
+    'button.reset_my_home_2',
+    'button.reset_my_home_2_dhw',
+    'climate.main_room',
+    'climate.my_home_2',
+    'water_heater.domestic_hot_water',
+  ])
+# ---

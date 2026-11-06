@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 
 from . import create_mock_device, create_mock_entry
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

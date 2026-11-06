@@ -8,14 +8,14 @@ import traceback
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import async_capture_events
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components import system_log
 from homeassistant.components.system_log.const import SERVICE_CLEAR, SERVICE_WRITE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_capture_events
-from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger("test_logger")
 BASIC_CONFIG = {"system_log": {"max_entries": 2}}

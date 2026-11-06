@@ -4,6 +4,7 @@ from http import HTTPStatus
 
 import httpx2
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 import respx
 
 from homeassistant.components.rest import DOMAIN
@@ -46,8 +47,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 NAME = "foo"
 DEVICE_CLASS = SwitchDeviceClass.SWITCH

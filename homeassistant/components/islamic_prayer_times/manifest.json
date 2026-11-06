@@ -1,6 +1,7 @@
 {
   "domain": "islamic_prayer_times",
   "name": "Islamic Prayer Times",
+  "categories": ["productivity_information.calendars_todos"],
   "codeowners": ["@engrbm87", "@cpfair"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/islamic_prayer_times",

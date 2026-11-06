@@ -5,6 +5,7 @@ import errno
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
@@ -23,8 +24,6 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import TEST_CAM_NAME
-
-from tests.common import MockConfigEntry
 
 TEST_FILE = "/test/snapshot.jpg"
 TEST_CAMERA_ID = f"{Platform.CAMERA}.{TEST_CAM_NAME}_fluent"

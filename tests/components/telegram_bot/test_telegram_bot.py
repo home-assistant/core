@@ -2,7 +2,6 @@
 
 import base64
 import errno
-from http import HTTPStatus
 import io
 import os
 from pathlib import Path
@@ -11,6 +10,12 @@ from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import httpx2
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_load_fixture,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from telegram import (
     Chat,
     File,
@@ -33,38 +38,15 @@ from homeassistant.components.telegram_bot.bot import (
     _read_file_as_bytesio,
 )
 from homeassistant.components.telegram_bot.const import (
-    ATTR_AUTHENTICATION,
-    ATTR_CALLBACK_QUERY_ID,
     ATTR_CAPTION,
-    ATTR_CHAT_ACTION,
     ATTR_CHAT_ID,
-    ATTR_DIRECTORY_PATH,
-    ATTR_DISABLE_NOTIF,
-    ATTR_DISABLE_WEB_PREV,
-    ATTR_FILE,
-    ATTR_FILE_ID,
-    ATTR_FILE_NAME,
-    ATTR_KEYBOARD,
-    ATTR_KEYBOARD_INLINE,
-    ATTR_MEDIA,
     ATTR_MEDIA_TYPE,
-    ATTR_MESSAGE,
     ATTR_MESSAGE_ID,
-    ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
-    ATTR_OPTIONS,
     ATTR_PARSER,
-    ATTR_PASSWORD,
-    ATTR_QUESTION,
     ATTR_REPLY_TO_MSGID,
-    ATTR_SHOW_ALERT,
-    ATTR_STICKER_ID,
-    ATTR_TARGET,
     ATTR_URL,
-    ATTR_USERNAME,
-    ATTR_VERIFY_SSL,
     CHAT_ACTION_TYPING,
-    CONF_CONFIG_ENTRY_ID,
     DOMAIN,
     PARSER_HTML,
     PARSER_MD,
@@ -72,58 +54,35 @@ from homeassistant.components.telegram_bot.const import (
     PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     SECTION_ADDITIONAL_SETTINGS,
-    SERVICE_ANSWER_CALLBACK_QUERY,
-    SERVICE_DELETE_MESSAGE,
-    SERVICE_EDIT_CAPTION,
-    SERVICE_EDIT_MESSAGE,
-    SERVICE_EDIT_MESSAGE_MEDIA,
-    SERVICE_EDIT_REPLYMARKUP,
-    SERVICE_LEAVE_CHAT,
-    SERVICE_SEND_ANIMATION,
-    SERVICE_SEND_CHAT_ACTION,
-    SERVICE_SEND_DOCUMENT,
-    SERVICE_SEND_LOCATION,
-    SERVICE_SEND_MEDIA_GROUP,
-    SERVICE_SEND_MESSAGE,
-    SERVICE_SEND_PHOTO,
-    SERVICE_SEND_POLL,
-    SERVICE_SEND_STICKER,
-    SERVICE_SEND_VIDEO,
-    SERVICE_SEND_VOICE,
+    TelegramBotService,
+    TelegramBotServiceArgument,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_SERVICE,
     CONF_API_KEY,
     CONF_PLATFORM,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    CommonServiceArgument,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     Context,
-    Event,
     HomeAssistant,
     ServiceResponse,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import write_utf8_file
-
-from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
-from tests.typing import ClientSessionGenerator
 
 
 async def test_webhook_platform_init(hass: HomeAssistant, webhook_bot) -> None:
     """Test initialization of the webhooks platform."""
-    assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
+    assert hass.services.has_service(DOMAIN, TelegramBotService.SEND_MESSAGE) is True
 
 
 @pytest.mark.usefixtures("mock_external_calls", "mock_polling_calls")
@@ -136,7 +95,7 @@ async def test_polling_platform_init(
     await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
+    assert hass.services.has_service(DOMAIN, TelegramBotService.SEND_MESSAGE) is True
 
 
 async def test_polling_platform_init_failed(
@@ -154,6 +113,24 @@ async def test_polling_platform_init_failed(
 
     mock_get_me.assert_called_once()
     assert mock_polling_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_external_calls")
+async def test_polling_platform_setup_failed(
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup fails when the bot platform cannot be set up."""
+    with patch(
+        "homeassistant.components.telegram_bot.polling.async_setup_bot_platform",
+        side_effect=RuntimeError("mock platform error"),
+    ):
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_polling_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_polling_config_entry.reason == "Failed to set up the Telegram bot"
 
 
 async def test_polling_platform_init_failed_does_not_log_token(
@@ -189,48 +166,54 @@ async def test_polling_platform_init_failed_does_not_log_token(
     ("service", "input"),
     [
         (
-            SERVICE_SEND_MESSAGE,
-            {ATTR_MESSAGE: "test_message", ATTR_MESSAGE_THREAD_ID: "123"},
-        ),
-        (
-            SERVICE_SEND_MESSAGE,
+            TelegramBotService.SEND_MESSAGE,
             {
-                ATTR_KEYBOARD: ["/command1, /command2", "/command3"],
-                ATTR_MESSAGE: "test_message",
-                ATTR_PARSER: PARSER_HTML,
-                ATTR_DISABLE_NOTIF: True,
-                ATTR_DISABLE_WEB_PREV: True,
-                ATTR_MESSAGE_TAG: "mock_tag",
-                ATTR_REPLY_TO_MSGID: 12345,
+                TelegramBotServiceArgument.MESSAGE: "test_message",
+                TelegramBotServiceArgument.MESSAGE_THREAD_ID: "123",
             },
         ),
         (
-            SERVICE_SEND_MESSAGE,
+            TelegramBotService.SEND_MESSAGE,
             {
-                ATTR_KEYBOARD: [],
-                ATTR_MESSAGE: "test_message",
+                TelegramBotServiceArgument.KEYBOARD: [
+                    "/command1, /command2",
+                    "/command3",
+                ],
+                TelegramBotServiceArgument.MESSAGE: "test_message",
+                TelegramBotServiceArgument.PARSE_MODE: PARSER_HTML,
+                TelegramBotServiceArgument.DISABLE_NOTIFICATION: True,
+                TelegramBotServiceArgument.DISABLE_WEB_PAGE_PREVIEW: True,
+                TelegramBotServiceArgument.MESSAGE_TAG: "mock_tag",
+                TelegramBotServiceArgument.REPLY_TO_MESSAGE_ID: 12345,
             },
         ),
         (
-            SERVICE_SEND_STICKER,
+            TelegramBotService.SEND_MESSAGE,
             {
-                ATTR_STICKER_ID: "1",
-                ATTR_MESSAGE_THREAD_ID: "123",
+                TelegramBotServiceArgument.KEYBOARD: [],
+                TelegramBotServiceArgument.MESSAGE: "test_message",
             },
         ),
         (
-            SERVICE_SEND_POLL,
+            TelegramBotService.SEND_STICKER,
             {
-                ATTR_QUESTION: "Question",
-                ATTR_OPTIONS: ["Yes", "No"],
+                TelegramBotServiceArgument.STICKER_ID: "1",
+                TelegramBotServiceArgument.MESSAGE_THREAD_ID: "123",
             },
         ),
         (
-            SERVICE_SEND_LOCATION,
+            TelegramBotService.SEND_POLL,
             {
-                ATTR_MESSAGE_THREAD_ID: "123",
-                ATTR_LONGITUDE: "1.123",
-                ATTR_LATITUDE: "1.123",
+                TelegramBotServiceArgument.QUESTION: "Question",
+                TelegramBotServiceArgument.OPTIONS: ["Yes", "No"],
+            },
+        ),
+        (
+            TelegramBotService.SEND_LOCATION,
+            {
+                TelegramBotServiceArgument.MESSAGE_THREAD_ID: "123",
+                TelegramBotServiceArgument.LONGITUDE: "1.123",
+                TelegramBotServiceArgument.LATITUDE: "1.123",
             },
         ),
     ],
@@ -276,9 +259,9 @@ async def test_send_message(
     [
         (
             {
-                ATTR_MESSAGE: "test_message",
-                ATTR_PARSER: PARSER_PLAIN_TEXT,
-                ATTR_KEYBOARD_INLINE: "command1:/cmd1,/cmd2,mock_link:https://mock_link",
+                TelegramBotServiceArgument.MESSAGE: "test_message",
+                TelegramBotServiceArgument.PARSE_MODE: PARSER_PLAIN_TEXT,
+                TelegramBotServiceArgument.INLINE_KEYBOARD: "command1:/cmd1,/cmd2,mock_link:https://mock_link",
             },
             InlineKeyboardMarkup(
                 # 1 row with 3 buttons
@@ -293,9 +276,9 @@ async def test_send_message(
         ),
         (
             {
-                ATTR_MESSAGE: "test_message",
-                ATTR_PARSER: PARSER_PLAIN_TEXT,
-                ATTR_KEYBOARD_INLINE: [
+                TelegramBotServiceArgument.MESSAGE: "test_message",
+                TelegramBotServiceArgument.PARSE_MODE: PARSER_PLAIN_TEXT,
+                TelegramBotServiceArgument.INLINE_KEYBOARD: [
                     [["command1", "/cmd1"]],
                     [["mock_link", "https://mock_link"]],
                 ],
@@ -335,7 +318,7 @@ async def test_send_message_with_inline_keyboard(
     ) as mock_send_message:
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            TelegramBotService.SEND_MESSAGE,
             input,
             blocking=True,
             context=context,
@@ -351,7 +334,6 @@ async def test_send_message_with_inline_keyboard(
             disable_notification=False,
             reply_to_message_id=None,
             reply_markup=expected,
-            read_timeout=None,
             message_thread_id=None,
         )
 
@@ -393,10 +375,10 @@ async def test_send_sticker_partial_error(
         with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_SEND_STICKER,
+                TelegramBotService.SEND_STICKER,
                 {
-                    ATTR_URL: "https://mock_sticker_url",
-                    ATTR_CHAT_ID: [123456, 654321],
+                    TelegramBotServiceArgument.URL: "https://mock_sticker_url",
+                    TelegramBotServiceArgument.CHAT_ID: [123456, 654321],
                 },
                 blocking=True,
                 return_response=True,
@@ -427,9 +409,9 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
         with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_SEND_STICKER,
+                TelegramBotService.SEND_STICKER,
                 {
-                    ATTR_STICKER_ID: "mock sticker id",
+                    TelegramBotServiceArgument.STICKER_ID: "mock sticker id",
                 },
                 blocking=True,
             )
@@ -452,10 +434,10 @@ async def test_send_message_with_invalid_inline_keyboard(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            TelegramBotService.SEND_MESSAGE,
             {
-                ATTR_MESSAGE: "test_message",
-                ATTR_KEYBOARD_INLINE: 1,
+                TelegramBotServiceArgument.MESSAGE: "test_message",
+                TelegramBotServiceArgument.INLINE_KEYBOARD: 1,
             },
             blocking=True,
             return_response=True,
@@ -564,8 +546,8 @@ def _assert_download_file_response(
 
 async def test_send_chat_action(
     hass: HomeAssistant,
-    webhook_bot,
     mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
 ) -> None:
     """Test the send_chat_action service."""
     mock_broadcast_config_entry.add_to_hass(hass)
@@ -578,12 +560,12 @@ async def test_send_chat_action(
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_CHAT_ACTION,
+            TelegramBotService.SEND_CHAT_ACTION,
             {
-                CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
-                ATTR_CHAT_ID: [123456],
-                ATTR_CHAT_ACTION: CHAT_ACTION_TYPING,
-                ATTR_MESSAGE_THREAD_ID: 123,
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
+                TelegramBotServiceArgument.CHAT_ID: [123456],
+                TelegramBotServiceArgument.CHAT_ACTION: CHAT_ACTION_TYPING,
+                TelegramBotServiceArgument.MESSAGE_THREAD_ID: 123,
             },
             blocking=True,
             return_response=True,
@@ -599,11 +581,11 @@ async def test_send_chat_action(
 @pytest.mark.parametrize(
     "service",
     [
-        SERVICE_SEND_PHOTO,
-        SERVICE_SEND_ANIMATION,
-        SERVICE_SEND_VIDEO,
-        SERVICE_SEND_VOICE,
-        SERVICE_SEND_DOCUMENT,
+        TelegramBotService.SEND_PHOTO,
+        TelegramBotService.SEND_ANIMATION,
+        TelegramBotService.SEND_VIDEO,
+        TelegramBotService.SEND_VOICE,
+        TelegramBotService.SEND_DOCUMENT,
     ],
 )
 async def test_send_file(hass: HomeAssistant, webhook_bot, service: str) -> None:
@@ -622,8 +604,8 @@ async def test_send_file(hass: HomeAssistant, webhook_bot, service: str) -> None
             DOMAIN,
             service,
             {
-                ATTR_FILE: "/media/dummy",
-                ATTR_MESSAGE_THREAD_ID: "123",
+                TelegramBotServiceArgument.FILE: "/media/dummy",
+                TelegramBotServiceArgument.MESSAGE_THREAD_ID: "123",
             },
             blocking=True,
             context=context,
@@ -652,8 +634,11 @@ async def test_send_message_thread(hass: HomeAssistant, webhook_bot) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "test_message", ATTR_MESSAGE_THREAD_ID: "123"},
+        TelegramBotService.SEND_MESSAGE,
+        {
+            TelegramBotServiceArgument.MESSAGE: "test_message",
+            TelegramBotServiceArgument.MESSAGE_THREAD_ID: "123",
+        },
         blocking=True,
         context=context,
     )
@@ -1119,17 +1104,25 @@ async def test_multiple_config_entries_error(
     await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # setup the second entry
-    mock_broadcast_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    # setup the second entry, a different bot with its own token
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="mock api key 2",
+        data={**mock_broadcast_config_entry.data, CONF_API_KEY: "mock api key 2"},
+        options=mock_broadcast_config_entry.options,
+        minor_version=mock_broadcast_config_entry.minor_version,
+    )
+    second_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(second_entry.entry_id)
     await hass.async_block_till_done()
+    assert second_entry.state is ConfigEntryState.LOADED
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            TelegramBotService.SEND_MESSAGE,
             {
-                ATTR_MESSAGE: "mock message",
+                TelegramBotServiceArgument.MESSAGE: "mock message",
             },
             blocking=True,
             return_response=True,
@@ -1154,11 +1147,11 @@ async def test_send_message_with_config_entry(
     with pytest.raises(HomeAssistantError) as err:
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            TelegramBotService.SEND_MESSAGE,
             {
-                CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
-                ATTR_MESSAGE: "mock message",
-                ATTR_CHAT_ID: [123456, 1],
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
+                TelegramBotServiceArgument.MESSAGE: "mock message",
+                TelegramBotServiceArgument.CHAT_ID: [123456, 1],
             },
             blocking=True,
             return_response=True,
@@ -1175,11 +1168,11 @@ async def test_send_message_with_config_entry(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        TelegramBotService.SEND_MESSAGE,
         {
-            CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
-            ATTR_MESSAGE: "mock message",
-            ATTR_CHAT_ID: 123456,
+            CommonServiceArgument.CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
+            TelegramBotServiceArgument.MESSAGE: "mock message",
+            TelegramBotServiceArgument.CHAT_ID: 123456,
         },
         blocking=True,
         return_response=True,
@@ -1218,9 +1211,9 @@ async def test_send_message_no_chat_id_error(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            TelegramBotService.SEND_MESSAGE,
             {
-                ATTR_MESSAGE: "mock message",
+                TelegramBotServiceArgument.MESSAGE: "mock message",
             },
             blocking=True,
             return_response=True,
@@ -1246,10 +1239,10 @@ async def test_send_message_config_entry_error(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            TelegramBotService.SEND_MESSAGE,
             {
-                CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
-                ATTR_MESSAGE: "mock message",
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
+                TelegramBotServiceArgument.MESSAGE: "mock message",
             },
             blocking=True,
             return_response=True,
@@ -1258,6 +1251,39 @@ async def test_send_message_config_entry_error(
     await hass.async_block_till_done()
     assert err.value.translation_key == "entry_not_loaded"
     assert err.value.translation_placeholders == {"telegram_bot": "Mock Title"}
+
+
+async def test_send_message_config_entry_wrong_domain(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message with a config entry of another integration."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    other_entry = MockConfigEntry(domain="other", title="Other entry")
+    other_entry.add_to_hass(hass)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            TelegramBotService.SEND_MESSAGE,
+            {
+                CommonServiceArgument.CONFIG_ENTRY_ID: other_entry.entry_id,
+                TelegramBotServiceArgument.MESSAGE: "mock message",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "service_config_entry_wrong_domain"
+    assert err.value.translation_placeholders == {
+        "domain": DOMAIN,
+        "entry_title": "Other entry",
+    }
 
 
 async def test_delete_message(
@@ -1275,8 +1301,11 @@ async def test_delete_message(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DELETE_MESSAGE,
-            {ATTR_CHAT_ID: 1, ATTR_MESSAGE_ID: "last"},
+            TelegramBotService.DELETE_MESSAGE,
+            {
+                TelegramBotServiceArgument.CHAT_ID: 1,
+                TelegramBotServiceArgument.MESSAGE_ID: "last",
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -1291,8 +1320,8 @@ async def test_delete_message(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "mock message"},
+        TelegramBotService.SEND_MESSAGE,
+        {TelegramBotServiceArgument.MESSAGE: "mock message"},
         blocking=True,
         return_response=True,
     )
@@ -1312,8 +1341,11 @@ async def test_delete_message(
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DELETE_MESSAGE,
-            {ATTR_CHAT_ID: 123456, ATTR_MESSAGE_ID: "last"},
+            TelegramBotService.DELETE_MESSAGE,
+            {
+                TelegramBotServiceArgument.CHAT_ID: 123456,
+                TelegramBotServiceArgument.MESSAGE_ID: "last",
+            },
             blocking=True,
         )
 
@@ -1367,15 +1399,15 @@ async def test_edit_message_media(
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EDIT_MESSAGE_MEDIA,
+            TelegramBotService.EDIT_MESSAGE_MEDIA,
             {
-                ATTR_CAPTION: "mock caption",
-                ATTR_FILE: "/tmp/mock",  # noqa: S108
-                ATTR_MEDIA_TYPE: media_type,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_CHAT_ID: 123456,
-                ATTR_KEYBOARD_INLINE: "/mock",
-                ATTR_PARSER: PARSER_MD,
+                TelegramBotServiceArgument.CAPTION: "mock caption",
+                TelegramBotServiceArgument.FILE: "/tmp/mock",  # noqa: S108
+                TelegramBotServiceArgument.MEDIA_TYPE: media_type,
+                TelegramBotServiceArgument.MESSAGE_ID: 12345,
+                TelegramBotServiceArgument.CHAT_ID: 123456,
+                TelegramBotServiceArgument.INLINE_KEYBOARD: "/mock",
+                TelegramBotServiceArgument.PARSE_MODE: PARSER_MD,
             },
             blocking=True,
         )
@@ -1408,12 +1440,12 @@ async def test_edit_message(
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EDIT_MESSAGE,
+            TelegramBotService.EDIT_MESSAGE,
             {
-                ATTR_MESSAGE: "mock message",
-                ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_PARSER: PARSER_PLAIN_TEXT,
+                TelegramBotServiceArgument.MESSAGE: "mock message",
+                TelegramBotServiceArgument.CHAT_ID: 123456,
+                TelegramBotServiceArgument.MESSAGE_ID: 12345,
+                TelegramBotServiceArgument.PARSE_MODE: PARSER_PLAIN_TEXT,
             },
             blocking=True,
         )
@@ -1427,7 +1459,6 @@ async def test_edit_message(
         parse_mode=None,
         disable_web_page_preview=None,
         reply_markup=None,
-        read_timeout=None,
     )
 
     with patch(
@@ -1436,12 +1467,12 @@ async def test_edit_message(
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EDIT_CAPTION,
+            TelegramBotService.EDIT_CAPTION,
             {
-                ATTR_CAPTION: "mock caption",
-                ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_PARSER: PARSER_MD2,
+                TelegramBotServiceArgument.CAPTION: "mock caption",
+                TelegramBotServiceArgument.CHAT_ID: 123456,
+                TelegramBotServiceArgument.MESSAGE_ID: 12345,
+                TelegramBotServiceArgument.PARSE_MODE: PARSER_MD2,
             },
             blocking=True,
         )
@@ -1453,7 +1484,6 @@ async def test_edit_message(
         inline_message_id=None,
         caption="mock caption",
         reply_markup=None,
-        read_timeout=None,
         parse_mode=PARSER_MD2,
     )
 
@@ -1463,8 +1493,12 @@ async def test_edit_message(
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_EDIT_REPLYMARKUP,
-            {ATTR_KEYBOARD_INLINE: [], ATTR_CHAT_ID: 123456, ATTR_MESSAGE_ID: 12345},
+            TelegramBotService.EDIT_REPLYMARKUP,
+            {
+                TelegramBotServiceArgument.INLINE_KEYBOARD: [],
+                TelegramBotServiceArgument.CHAT_ID: 123456,
+                TelegramBotServiceArgument.MESSAGE_ID: 12345,
+            },
             blocking=True,
         )
 
@@ -1505,11 +1539,11 @@ async def test_answer_callback_query(
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ANSWER_CALLBACK_QUERY,
+            TelegramBotService.ANSWER_CALLBACK_QUERY,
             {
-                ATTR_MESSAGE: "mock message",
-                ATTR_CALLBACK_QUERY_ID: 123456,
-                ATTR_SHOW_ALERT: True,
+                TelegramBotServiceArgument.MESSAGE: "mock message",
+                TelegramBotServiceArgument.CALLBACK_QUERY_ID: 123456,
+                TelegramBotServiceArgument.SHOW_ALERT: True,
             },
             blocking=True,
         )
@@ -1520,7 +1554,6 @@ async def test_answer_callback_query(
         123456,
         text="mock message",
         show_alert=True,
-        read_timeout=None,
     )
 
 
@@ -1540,9 +1573,9 @@ async def test_leave_chat(
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_LEAVE_CHAT,
+            TelegramBotService.LEAVE_CHAT,
             {
-                ATTR_CHAT_ID: 123456,
+                TelegramBotServiceArgument.CHAT_ID: 123456,
             },
             blocking=True,
         )
@@ -1569,9 +1602,9 @@ async def test_send_video(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_VIDEO,
+            TelegramBotService.SEND_VIDEO,
             {
-                ATTR_FILE: "/mock/file",
+                TelegramBotServiceArgument.FILE: "/mock/file",
             },
             blocking=True,
         )
@@ -1586,11 +1619,11 @@ async def test_send_video(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_VIDEO,
+            TelegramBotService.SEND_VIDEO,
             {
-                ATTR_URL: "https://mock",
-                ATTR_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
-                ATTR_PASSWORD: "mock password",
+                TelegramBotServiceArgument.URL: "https://mock",
+                TelegramBotServiceArgument.AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
+                TelegramBotServiceArgument.PASSWORD: "mock password",
             },
             blocking=True,
         )
@@ -1606,10 +1639,10 @@ async def test_send_video(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_VIDEO,
+            TelegramBotService.SEND_VIDEO,
             {
-                ATTR_URL: "https://mock",
-                ATTR_AUTHENTICATION: HTTP_BEARER_AUTHENTICATION,
+                TelegramBotServiceArgument.URL: "https://mock",
+                TelegramBotServiceArgument.AUTHENTICATION: HTTP_BEARER_AUTHENTICATION,
             },
             blocking=True,
         )
@@ -1625,7 +1658,7 @@ async def test_send_video(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_VIDEO,
+            TelegramBotService.SEND_VIDEO,
             {},
             blocking=True,
         )
@@ -1643,9 +1676,9 @@ async def test_send_video(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_VIDEO,
+            TelegramBotService.SEND_VIDEO,
             {
-                ATTR_FILE: "/tmp/not-exists",  # noqa: S108
+                TelegramBotServiceArgument.FILE: "/tmp/not-exists",  # noqa: S108
             },
             blocking=True,
         )
@@ -1663,9 +1696,9 @@ async def test_send_video(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_VIDEO,
+        TelegramBotService.SEND_VIDEO,
         {
-            ATTR_FILE: "/tmp/mock",  # noqa: S108
+            TelegramBotServiceArgument.FILE: "/tmp/mock",  # noqa: S108
         },
         blocking=True,
         return_response=True,
@@ -1691,12 +1724,12 @@ async def test_send_video(
 
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_VIDEO,
+            TelegramBotService.SEND_VIDEO,
             {
-                ATTR_URL: "https://mock",
-                ATTR_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
-                ATTR_USERNAME: "mock_bot",
-                ATTR_PASSWORD: "mock password",
+                TelegramBotServiceArgument.URL: "https://mock",
+                TelegramBotServiceArgument.AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
+                TelegramBotServiceArgument.USERNAME: "mock_bot",
+                TelegramBotServiceArgument.PASSWORD: "mock password",
             },
             blocking=True,
             return_response=True,
@@ -1719,7 +1752,9 @@ async def test_send_video(
     ("service_data", "get_kwargs", "translation_key", "translation_placeholders"),
     [
         pytest.param(
-            {ATTR_URL: "http://10.0.0.1:10443/webhook/secret-token/takePicture"},
+            {
+                TelegramBotServiceArgument.URL: "http://10.0.0.1:10443/webhook/secret-token/takePicture"
+            },
             {
                 "side_effect": httpx2.RemoteProtocolError(
                     "Server disconnected without sending a response."
@@ -1734,10 +1769,10 @@ async def test_send_video(
         ),
         pytest.param(
             {
-                ATTR_URL: "https://user:secret@mock:8443/path?token=secret",
-                ATTR_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-                ATTR_USERNAME: "mock_bot",
-                ATTR_PASSWORD: "mock password",
+                TelegramBotServiceArgument.URL: "https://user:secret@mock:8443/path?token=secret",
+                TelegramBotServiceArgument.AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+                TelegramBotServiceArgument.USERNAME: "mock_bot",
+                TelegramBotServiceArgument.PASSWORD: "mock password",
             },
             {"return_value": AsyncMock(status_code=404, text="Success")},
             "failed_to_load_url_status",
@@ -1745,7 +1780,7 @@ async def test_send_video(
             id="status_code",
         ),
         pytest.param(
-            {ATTR_URL: "https://mock"},
+            {TelegramBotServiceArgument.URL: "https://mock"},
             {"return_value": AsyncMock(status_code=200, content=b"")},
             "failed_to_load_url_empty",
             {"url": "https://mock"},
@@ -1753,10 +1788,10 @@ async def test_send_video(
         ),
         pytest.param(
             {
-                ATTR_URL: "invalid url",
-                ATTR_VERIFY_SSL: True,
-                ATTR_AUTHENTICATION: HTTP_BEARER_AUTHENTICATION,
-                ATTR_PASSWORD: "mock password",
+                TelegramBotServiceArgument.URL: "invalid url",
+                TelegramBotServiceArgument.VERIFY_SSL: True,
+                TelegramBotServiceArgument.AUTHENTICATION: HTTP_BEARER_AUTHENTICATION,
+                TelegramBotServiceArgument.PASSWORD: "mock password",
             },
             {
                 "side_effect": httpx2.UnsupportedProtocol(
@@ -1795,7 +1830,7 @@ async def test_send_video_url_error(
         pytest.raises(HomeAssistantError) as err,
     ):
         await hass.services.async_call(
-            DOMAIN, SERVICE_SEND_VIDEO, service_data, blocking=True
+            DOMAIN, TelegramBotService.SEND_VIDEO, service_data, blocking=True
         )
 
     assert err.value.translation_domain == DOMAIN
@@ -1821,8 +1856,8 @@ async def test_set_message_reaction(
             DOMAIN,
             "set_message_reaction",
             {
-                ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGE_ID: 54321,
+                TelegramBotServiceArgument.CHAT_ID: 123456,
+                TelegramBotServiceArgument.MESSAGE_ID: 54321,
                 "reaction": "👍",
                 "is_big": True,
             },
@@ -1835,7 +1870,6 @@ async def test_set_message_reaction(
         54321,
         reaction="👍",
         is_big=True,
-        read_timeout=None,
     )
 
 
@@ -1857,10 +1891,10 @@ async def test_send_message_draft(
             DOMAIN,
             "send_message_draft",
             {
-                ATTR_CHAT_ID: 123456,
-                ATTR_MESSAGE: "_Thinking..._",
-                ATTR_MESSAGE_THREAD_ID: "123",
-                ATTR_PARSER: PARSER_MD2,
+                TelegramBotServiceArgument.CHAT_ID: 123456,
+                TelegramBotServiceArgument.MESSAGE: "_Thinking..._",
+                TelegramBotServiceArgument.MESSAGE_THREAD_ID: "123",
+                TelegramBotServiceArgument.PARSE_MODE: PARSER_MD2,
                 "draft_id": "3456",
             },
             blocking=True,
@@ -1873,7 +1907,6 @@ async def test_send_message_draft(
         text="_Thinking..._",
         message_thread_id=123,
         parse_mode=PARSER_MD2,
-        read_timeout=None,
     )
 
 
@@ -1881,71 +1914,71 @@ async def test_send_message_draft(
     ("service", "input"),
     [
         (
-            SERVICE_SEND_MESSAGE,
+            TelegramBotService.SEND_MESSAGE,
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGE: "test_message",
-                ATTR_MESSAGE_THREAD_ID: "123",
+                TelegramBotServiceArgument.CHAT_ID: 654321,
+                TelegramBotServiceArgument.MESSAGE: "test_message",
+                TelegramBotServiceArgument.MESSAGE_THREAD_ID: "123",
             },
         ),
         (
-            SERVICE_SEND_PHOTO,
+            TelegramBotService.SEND_PHOTO,
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_FILE: "/media/dummy",
+                TelegramBotServiceArgument.CHAT_ID: 654321,
+                TelegramBotServiceArgument.FILE: "/media/dummy",
             },
         ),
         (
-            SERVICE_SEND_VIDEO,
+            TelegramBotService.SEND_VIDEO,
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_FILE: "/media/dummy",
+                TelegramBotServiceArgument.CHAT_ID: 654321,
+                TelegramBotServiceArgument.FILE: "/media/dummy",
             },
         ),
         (
-            SERVICE_SEND_ANIMATION,
+            TelegramBotService.SEND_ANIMATION,
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_FILE: "/media/dummy",
+                TelegramBotServiceArgument.CHAT_ID: 654321,
+                TelegramBotServiceArgument.FILE: "/media/dummy",
             },
         ),
         (
-            SERVICE_SEND_DOCUMENT,
+            TelegramBotService.SEND_DOCUMENT,
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_FILE: "/media/dummy",
+                TelegramBotServiceArgument.CHAT_ID: 654321,
+                TelegramBotServiceArgument.FILE: "/media/dummy",
             },
         ),
         (
-            SERVICE_SEND_VOICE,
+            TelegramBotService.SEND_VOICE,
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_FILE: "/media/dummy",
+                TelegramBotServiceArgument.CHAT_ID: 654321,
+                TelegramBotServiceArgument.FILE: "/media/dummy",
             },
         ),
         (
-            SERVICE_SEND_STICKER,
+            TelegramBotService.SEND_STICKER,
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_STICKER_ID: "1",
-                ATTR_MESSAGE_THREAD_ID: "123",
+                TelegramBotServiceArgument.CHAT_ID: 654321,
+                TelegramBotServiceArgument.STICKER_ID: "1",
+                TelegramBotServiceArgument.MESSAGE_THREAD_ID: "123",
             },
         ),
         (
-            SERVICE_SEND_POLL,
+            TelegramBotService.SEND_POLL,
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_QUESTION: "Question",
-                ATTR_OPTIONS: ["Yes", "No"],
+                TelegramBotServiceArgument.CHAT_ID: 654321,
+                TelegramBotServiceArgument.QUESTION: "Question",
+                TelegramBotServiceArgument.OPTIONS: ["Yes", "No"],
             },
         ),
         (
-            SERVICE_SEND_LOCATION,
+            TelegramBotService.SEND_LOCATION,
             {
-                ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGE_THREAD_ID: "123",
-                ATTR_LONGITUDE: "1.123",
-                ATTR_LATITUDE: "1.123",
+                TelegramBotServiceArgument.CHAT_ID: 654321,
+                TelegramBotServiceArgument.MESSAGE_THREAD_ID: "123",
+                TelegramBotServiceArgument.LONGITUDE: "1.123",
+                TelegramBotServiceArgument.LATITUDE: "1.123",
             },
         ),
     ],
@@ -2005,174 +2038,24 @@ async def test_notify_entity_send_message(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
-        {ATTR_ENTITY_ID: "notify.mock_chat_2", ATTR_MESSAGE: "test_message"},
-        blocking=True,
-        return_response=True,
-    )
-
-    assert response == {
-        "chats": [
-            {
-                ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_2",
-            }
-        ]
-    }
-
-
-@pytest.mark.parametrize(
-    ("event", "expected_action_origin"),
-    [
-        (
-            Event("automation_triggered", {ATTR_ENTITY_ID: "automation.automation_0"}),
-            "automation.automation_0",
-        ),
-        (
-            Event("call_service", {ATTR_DOMAIN: "script", ATTR_SERVICE: "mock_script"}),
-            "script.mock_script",
-        ),
-        (
-            None,
-            "call_service",
-        ),
-    ],
-)
-async def test_migrate_chat_id(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_broadcast_config_entry: MockConfigEntry,
-    mock_external_calls: None,
-    issue_registry: IssueRegistry,
-    event: Event | None,
-    expected_action_origin: str,
-) -> None:
-    """Test send message using chat_id as target."""
-
-    mock_broadcast_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    context = Context()
-    context.origin_event = event
-    response = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEND_MESSAGE,
-        {ATTR_TARGET: 654321, ATTR_MESSAGE: "test_message"},
-        blocking=True,
-        context=context,
-        return_response=True,
-    )
-
-    assert response == {
-        "chats": [
-            {
-                ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGE_ID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_chat_2",
-            }
-        ]
-    }
-
-    issue_id = (
-        f"migrate_chat_ids_in_target_{expected_action_origin}_{SERVICE_SEND_MESSAGE}"
-    )
-    issue = issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id=issue_id,
-    )
-    assert issue is not None
-    assert issue.domain == DOMAIN
-    assert issue.translation_key == "migrate_chat_ids_in_target"
-    assert issue.translation_placeholders == {
-        "integration_title": "Telegram Bot",
-        "action": "telegram_bot.send_message",
-        "action_origin": expected_action_origin,
-        "chat_ids": "654321",
-        "telegram_bot_entities_url": ("/config/entities?domain=telegram_bot"),
-        "example_old": (
-            "```yaml\naction: send_message\ndata:\n"
-            "  target:  # to be updated\n"
-            "    - 1234567890\n...\n```"
-        ),
-        "example_new_entity_id": (
-            "```yaml\naction: send_message\ndata:\n"
-            "  entity_id:\n"
-            "    - notify.telegram_bot_1234567890_1234567890"
-            "  # replace with your notify entity\n...\n```"
-        ),
-        "example_new_chat_id": (
-            "```yaml\naction: send_message\ndata:\n"
-            "  chat_id:\n"
-            "    - 1234567890"
-            "  # replace with your chat_id\n...\n```"
-        ),
-    }
-
-    # fix the issue via repair flow
-
-    client = await hass_client()
-    resp = await client.post(
-        "/api/repairs/issues/fix",
-        json={"handler": DOMAIN, "issue_id": issue.issue_id},
-    )
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data == {
-        "type": "form",
-        "flow_id": flow_id,
-        "handler": DOMAIN,
-        "step_id": "confirm",
-        "data_schema": [],
-        "errors": None,
-        "description_placeholders": {
-            "integration_title": "Telegram Bot",
-            "action": "telegram_bot.send_message",
-            "action_origin": expected_action_origin,
-            "chat_ids": "654321",
-            "telegram_bot_entities_url": "/config/entities?domain=telegram_bot",
-            "example_old": (
-                "```yaml\naction: send_message\ndata:\n"
-                "  target:  # to be updated\n"
-                "    - 1234567890\n...\n```"
-            ),
-            "example_new_entity_id": (
-                "```yaml\naction: send_message\ndata:\n"
-                "  entity_id:\n"
-                "    - notify.telegram_bot_1234567890_1234567890"
-                "  # replace with your notify entity\n...\n```"
-            ),
-            "example_new_chat_id": (
-                "```yaml\naction: send_message\ndata:\n"
-                "  chat_id:\n"
-                "    - 1234567890"
-                "  # replace with your chat_id\n...\n```"
-            ),
+        TelegramBotService.SEND_MESSAGE,
+        {
+            CommonServiceArgument.ENTITY_ID: "notify.mock_chat_2",
+            TelegramBotServiceArgument.MESSAGE: "test_message",
         },
-        "last_step": None,
-        "preview": None,
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        "chats": [
+            {
+                ATTR_CHAT_ID: 654321,
+                ATTR_MESSAGE_ID: 12345,
+                ATTR_ENTITY_ID: "notify.mock_chat_2",
+            }
+        ]
     }
-
-    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data == {
-        "type": "create_entry",
-        "flow_id": flow_id,
-        "handler": DOMAIN,
-        "description": None,
-        "description_placeholders": None,
-    }
-
-    # verify issue is resolved
-    assert not issue_registry.async_get_issue(DOMAIN, "deprecated_timeout_parameter")
 
 
 async def test_notify_entity_not_found(
@@ -2189,10 +2072,10 @@ async def test_notify_entity_not_found(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            TelegramBotService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.non_existent_entity",
-                ATTR_MESSAGE: "test_message",
+                CommonServiceArgument.ENTITY_ID: "notify.non_existent_entity",
+                TelegramBotServiceArgument.MESSAGE: "test_message",
             },
             blocking=True,
             return_response=True,
@@ -2204,107 +2087,41 @@ async def test_notify_entity_not_found(
     }
 
 
-@pytest.mark.parametrize(
-    ("event", "expected_action_origin"),
-    [
-        (
-            Event("automation_triggered", {ATTR_ENTITY_ID: "automation.automation_0"}),
-            "automation.automation_0",
-        ),
-        (
-            Event("call_service", {ATTR_DOMAIN: "script", ATTR_SERVICE: "mock_script"}),
-            "script.mock_script",
-        ),
-        (
-            None,
-            "call_service",
-        ),
-    ],
-)
-async def test_deprecated_timeout_parameter(
+async def test_notify_entity_other_integration(
     hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
-    issue_registry: IssueRegistry,
-    event: Event | None,
-    expected_action_origin: str,
 ) -> None:
-    """Test send message using the deprecated timeout parameter."""
-
+    """Test send message to a notify entity of another integration."""
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # trigger service call
-    context = Context()
-    context.origin_event = event
-    await hass.services.async_call(
-        DOMAIN,
-        "send_message",
-        {"message": "test message", "timeout": 5},
-        blocking=True,
-        context=context,
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "notify",
+        "other",
+        "unique_id",
+        config_entry=other_entry,
+        suggested_object_id="other",
     )
 
-    # check issue is created correctly
-    issue = issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="deprecated_timeout_parameter",
-    )
-    assert issue is not None
-    assert issue.domain == DOMAIN
-    assert issue.translation_key == "deprecated_timeout_parameter"
-    assert issue.translation_placeholders == {
-        "integration_title": "Telegram Bot",
-        "action": "telegram_bot.send_message",
-        "action_origin": expected_action_origin,
-    }
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            TelegramBotService.SEND_MESSAGE,
+            {
+                CommonServiceArgument.ENTITY_ID: "notify.other",
+                TelegramBotServiceArgument.MESSAGE: "test_message",
+            },
+            blocking=True,
+            return_response=True,
+        )
 
-    # fix the issue via repair flow
-
-    client = await hass_client()
-    resp = await client.post(
-        "/api/repairs/issues/fix",
-        json={"handler": DOMAIN, "issue_id": issue.issue_id},
-    )
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data == {
-        "type": "form",
-        "flow_id": flow_id,
-        "handler": DOMAIN,
-        "step_id": "confirm",
-        "data_schema": [],
-        "errors": None,
-        "description_placeholders": {
-            "integration_title": "Telegram Bot",
-            "action": "telegram_bot.send_message",
-            "action_origin": expected_action_origin,
-        },
-        "last_step": None,
-        "preview": None,
-    }
-
-    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
-    assert data == {
-        "type": "create_entry",
-        "flow_id": flow_id,
-        "handler": DOMAIN,
-        "description": None,
-        "description_placeholders": None,
-    }
-
-    # verify issue is resolved
-    assert not issue_registry.async_get_issue(DOMAIN, "deprecated_timeout_parameter")
+    assert err.value.translation_key == "invalid_notify_entity"
+    assert err.value.translation_placeholders == {ATTR_ENTITY_ID: "notify.other"}
 
 
 @pytest.mark.parametrize(
@@ -2316,13 +2133,16 @@ async def test_deprecated_timeout_parameter(
     [
         pytest.param(
             "file_name1.jpg",
-            {ATTR_FILE_ID: "some-file-id-1"},
+            {TelegramBotServiceArgument.FILE_ID: "some-file-id-1"},
             lambda hass: f"{hass.config.path(DOMAIN)}/file_name1.jpg",
             id="no_custom_name",
         ),
         pytest.param(
             "file_name2.jpg",
-            {ATTR_FILE_ID: "some-file-id-2", ATTR_FILE_NAME: "custom_name2.jpg"},
+            {
+                TelegramBotServiceArgument.FILE_ID: "some-file-id-2",
+                TelegramBotServiceArgument.FILE_NAME: "custom_name2.jpg",
+            },
             lambda hass: f"{hass.config.path(DOMAIN)}/custom_name2.jpg",
             id="custom_name",
         ),
@@ -2346,7 +2166,7 @@ async def test_download_file_no_custom_dir(
     # verify dir exists, if not create it
     await hass.async_add_executor_job(os.makedirs, download_dir, 0o777, True)
 
-    file_id = schema_request[ATTR_FILE_ID]
+    file_id = schema_request[TelegramBotServiceArgument.FILE_ID]
     telegram_file = File(
         file_id=file_id,
         file_unique_id="file_unique_id",
@@ -2386,7 +2206,7 @@ async def test_download_file_no_custom_dir(
         pytest.param(
             "file_name3.jpg",
             {
-                ATTR_FILE_ID: "some-file-id-3",
+                TelegramBotServiceArgument.FILE_ID: "some-file-id-3",
             },
             lambda path: f"{path}/file_name3.jpg",
             id="no_custom_name_custom_dir",
@@ -2394,8 +2214,8 @@ async def test_download_file_no_custom_dir(
         pytest.param(
             "file_name4.jpg",
             {
-                ATTR_FILE_ID: "some-file-id-4",
-                ATTR_FILE_NAME: "custom_name4.jpg",
+                TelegramBotServiceArgument.FILE_ID: "some-file-id-4",
+                TelegramBotServiceArgument.FILE_NAME: "custom_name4.jpg",
             },
             lambda path: f"{path}/custom_name4.jpg",
             id="custom_name_custom_dir",
@@ -2417,10 +2237,10 @@ async def test_download_file_custom_dir(
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    schema_request[ATTR_DIRECTORY_PATH] = tmp_path.as_posix()
+    schema_request[TelegramBotServiceArgument.DIRECTORY_PATH] = tmp_path.as_posix()
     expected_path = expected_download_path(tmp_path.as_posix())
 
-    file_id = schema_request[ATTR_FILE_ID]
+    file_id = schema_request[TelegramBotServiceArgument.FILE_ID]
     telegram_file = File(
         file_id=file_id,
         file_unique_id="file_unique_id",
@@ -2465,17 +2285,19 @@ async def test_download_file_directory_created_successfully(
     download_path = os.path.join(tmp_path.as_posix(), "download_dir")
 
     schema_request = {
-        ATTR_FILE_ID: "file-id-for-new-dir",
-        ATTR_DIRECTORY_PATH: download_path,
-        ATTR_FILE_NAME: "dont_care.jpg",
+        TelegramBotServiceArgument.FILE_ID: "file-id-for-new-dir",
+        TelegramBotServiceArgument.DIRECTORY_PATH: download_path,
+        TelegramBotServiceArgument.FILE_NAME: "dont_care.jpg",
     }
 
-    expected_path = os.path.join(download_path, schema_request[ATTR_FILE_NAME])
+    expected_path = os.path.join(
+        download_path, schema_request[TelegramBotServiceArgument.FILE_NAME]
+    )
 
     telegram_file = File(
-        file_id=schema_request[ATTR_FILE_ID],
+        file_id=schema_request[TelegramBotServiceArgument.FILE_ID],
         file_unique_id="file_unique_id",
-        file_path=f"file/path/{schema_request[ATTR_FILE_NAME]}",
+        file_path=f"file/path/{schema_request[TelegramBotServiceArgument.FILE_NAME]}",
     )
     file_content = "file content for new dir"
     (
@@ -2490,7 +2312,7 @@ async def test_download_file_directory_created_successfully(
     _assert_download_file_mocks_calls(
         file_content,
         expected_path,
-        schema_request[ATTR_FILE_ID],
+        schema_request[TelegramBotServiceArgument.FILE_ID],
         get_file_mock,
         download_as_bytearray_mock,
         write_called,
@@ -2511,9 +2333,9 @@ async def test_download_file_when_bot_failed_to_get_file(
     await hass.async_block_till_done()
 
     schema_request = {
-        ATTR_FILE_ID: "some-file-id",
-        ATTR_DIRECTORY_PATH: tmp_path.as_posix(),
-        ATTR_FILE_NAME: "custom_name.jpg",
+        TelegramBotServiceArgument.FILE_ID: "some-file-id",
+        TelegramBotServiceArgument.DIRECTORY_PATH: tmp_path.as_posix(),
+        TelegramBotServiceArgument.FILE_NAME: "custom_name.jpg",
     }
 
     with (
@@ -2549,12 +2371,12 @@ async def test_download_file_when_empty_file_path(
     await hass.async_block_till_done()
 
     schema_request = {
-        ATTR_FILE_ID: "some-file-id",
-        ATTR_DIRECTORY_PATH: tmp_path.as_posix(),
-        ATTR_FILE_NAME: "custom_name.jpg",
+        TelegramBotServiceArgument.FILE_ID: "some-file-id",
+        TelegramBotServiceArgument.DIRECTORY_PATH: tmp_path.as_posix(),
+        TelegramBotServiceArgument.FILE_NAME: "custom_name.jpg",
     }
     telegram_file = File(
-        file_id=schema_request[ATTR_FILE_ID],
+        file_id=schema_request[TelegramBotServiceArgument.FILE_ID],
         file_unique_id="file_unique_id",
     )
 
@@ -2588,15 +2410,15 @@ async def test_download_file_when_error_when_downloading(
     await hass.async_block_till_done()
 
     schema_request = {
-        ATTR_FILE_ID: "some-file-id",
-        ATTR_DIRECTORY_PATH: tmp_path.as_posix(),
-        ATTR_FILE_NAME: "custom_name.jpg",
+        TelegramBotServiceArgument.FILE_ID: "some-file-id",
+        TelegramBotServiceArgument.DIRECTORY_PATH: tmp_path.as_posix(),
+        TelegramBotServiceArgument.FILE_NAME: "custom_name.jpg",
     }
 
     telegram_file = File(
-        file_id=schema_request[ATTR_FILE_ID],
+        file_id=schema_request[TelegramBotServiceArgument.FILE_ID],
         file_unique_id="file_unique_id",
-        file_path=f"file/path/{schema_request[ATTR_FILE_NAME]}",
+        file_path=f"file/path/{schema_request[TelegramBotServiceArgument.FILE_NAME]}",
     )
 
     with (
@@ -2671,9 +2493,9 @@ async def test_download_file_write_error(
             DOMAIN,
             "download_file",
             {
-                ATTR_FILE_ID: "some-file-id",
-                ATTR_DIRECTORY_PATH: directory_path,
-                ATTR_FILE_NAME: "custom_name.jpg",
+                TelegramBotServiceArgument.FILE_ID: "some-file-id",
+                TelegramBotServiceArgument.DIRECTORY_PATH: directory_path,
+                TelegramBotServiceArgument.FILE_NAME: "custom_name.jpg",
             },
             blocking=True,
             return_response=True,
@@ -2721,9 +2543,9 @@ async def test_download_file_create_directory_error(
             DOMAIN,
             "download_file",
             {
-                ATTR_FILE_ID: "some-file-id",
-                ATTR_DIRECTORY_PATH: directory_path,
-                ATTR_FILE_NAME: "custom_name.jpg",
+                TelegramBotServiceArgument.FILE_ID: "some-file-id",
+                TelegramBotServiceArgument.DIRECTORY_PATH: directory_path,
+                TelegramBotServiceArgument.FILE_NAME: "custom_name.jpg",
             },
             blocking=True,
             return_response=True,
@@ -2766,8 +2588,8 @@ async def test_download_file_rejects_invalid_directory_path(
             DOMAIN,
             "download_file",
             {
-                ATTR_FILE_ID: "some-file-id",
-                ATTR_DIRECTORY_PATH: directory_path,
+                TelegramBotServiceArgument.FILE_ID: "some-file-id",
+                TelegramBotServiceArgument.DIRECTORY_PATH: directory_path,
             },
             blocking=True,
             return_response=True,
@@ -2814,9 +2636,9 @@ async def test_download_file_rejects_invalid_file_name(
             DOMAIN,
             "download_file",
             {
-                ATTR_FILE_ID: "some-file-id",
-                ATTR_DIRECTORY_PATH: tmp_path.as_posix(),
-                ATTR_FILE_NAME: file_name,
+                TelegramBotServiceArgument.FILE_ID: "some-file-id",
+                TelegramBotServiceArgument.DIRECTORY_PATH: tmp_path.as_posix(),
+                TelegramBotServiceArgument.FILE_NAME: file_name,
             },
             blocking=True,
             return_response=True,
@@ -2845,9 +2667,9 @@ async def test_send_media_group(
 
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MEDIA_GROUP,
+            TelegramBotService.SEND_MEDIA_GROUP,
             {
-                ATTR_MEDIA: [
+                TelegramBotServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
                         ATTR_URL: "https://mock/photo.jpg",
@@ -2916,10 +2738,10 @@ async def test_send_media_group_caption_parse_mode(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SEND_MEDIA_GROUP,
+            TelegramBotService.SEND_MEDIA_GROUP,
             {
-                ATTR_PARSER: PARSER_MD,
-                ATTR_MEDIA: [
+                TelegramBotServiceArgument.PARSE_MODE: PARSER_MD,
+                TelegramBotServiceArgument.MEDIA: [
                     {
                         ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
                         ATTR_URL: "https://mock/photo.jpg",
@@ -2935,7 +2757,7 @@ async def test_send_media_group_caption_parse_mode(
             return_response=True,
         )
 
-    media = mock_send_media_group.call_args.kwargs[ATTR_MEDIA]
+    media = mock_send_media_group.call_args.kwargs["media"]
     assert media[0].caption == "*bold*"
     assert media[0].parse_mode == PARSER_MD
 
@@ -2970,9 +2792,9 @@ async def test_download_file_rejects_directory_outside_allowlist(
             DOMAIN,
             "download_file",
             {
-                ATTR_FILE_ID: "some-file-id",
-                ATTR_DIRECTORY_PATH: directory.as_posix(),
-                ATTR_FILE_NAME: "payload.jpg",
+                TelegramBotServiceArgument.FILE_ID: "some-file-id",
+                TelegramBotServiceArgument.DIRECTORY_PATH: directory.as_posix(),
+                TelegramBotServiceArgument.FILE_NAME: "payload.jpg",
             },
             blocking=True,
             return_response=True,
@@ -3017,9 +2839,9 @@ async def test_download_file_rejects_symlink_out_of_allowlist(
             DOMAIN,
             "download_file",
             {
-                ATTR_FILE_ID: "some-file-id",
-                ATTR_DIRECTORY_PATH: escape.as_posix(),
-                ATTR_FILE_NAME: "payload.jpg",
+                TelegramBotServiceArgument.FILE_ID: "some-file-id",
+                TelegramBotServiceArgument.DIRECTORY_PATH: escape.as_posix(),
+                TelegramBotServiceArgument.FILE_NAME: "payload.jpg",
             },
             blocking=True,
             return_response=True,

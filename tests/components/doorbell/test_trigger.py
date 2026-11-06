@@ -3,13 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.doorbell.trigger import TRIGGERS
-from homeassistant.components.event import ATTR_EVENT_TYPE
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     BasicTriggerStateDescription,
     TargetSupport,
     arm_trigger,
@@ -19,6 +13,11 @@ from tests.components.common import (
     set_or_remove_state,
     target_entities,
 )
+
+from homeassistant.components.doorbell.trigger import TRIGGERS
+from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture

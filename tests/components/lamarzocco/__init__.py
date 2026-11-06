@@ -1,12 +1,11 @@
 """Mock inputs for tests."""
 
 from pylamarzocco.const import ModelName
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from tests.common import MockConfigEntry
 
 HOST_SELECTION = {
     CONF_HOST: "192.168.1.1",

@@ -8,6 +8,11 @@ from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_CAMERA, MODEL_EM3
 from aioshelly.exceptions import NotInitialized
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homeassistant import (
@@ -57,12 +62,6 @@ from . import (
     register_entity,
 )
 from .conftest import MOCK_BLOCKS, MOCK_CONFIG, MOCK_SHELLY_RPC, MOCK_STATUS_RPC
-
-from tests.common import (
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    mock_restore_cache_with_extra_data,
-)
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
@@ -144,7 +143,7 @@ async def test_block_sensor_em3(
     monkeypatch.setattr(mock_block_device, "blocks", blocks)
     await init_integration(hass, 1, model=MODEL_EM3)
 
-    assert hass.states.get(f"{SENSOR_DOMAIN}.grid_l1_power")
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_grid_l1_power")
     assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_phase_b_power")
     assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_phase_c_power")
 
@@ -731,33 +730,6 @@ async def test_rpc_restored_sleeping_sensor(
     assert state.state == "22.9"
 
 
-async def test_rpc_restored_sensor_when_not_initialized(
-    hass: HomeAssistant,
-    mock_rpc_device: Mock,
-    device_registry: DeviceRegistry,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test restored mains-powered RPC sensor when device is not initialized."""
-    entry = await init_integration(hass, 2, skip_setup=True)
-    device = register_device(device_registry, entry)
-    entity_id = register_entity(
-        hass,
-        SENSOR_DOMAIN,
-        "test_name_temperature",
-        "temperature:0-temperature_tc",
-        entry,
-        device_id=device.id,
-    )
-
-    monkeypatch.setattr(mock_rpc_device, "initialized", False)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_UNAVAILABLE
-
-
 async def test_rpc_restored_sleeping_sensor_no_last_state(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -918,6 +890,42 @@ async def test_rpc_restored_sleeping_last_seen_sensor(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "2026-10-08T10:00:00+00:00"
+
+
+async def test_rpc_restored_sleeping_device_adds_new_sensor(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a sensor missing from the registry is added once a restored device wakes."""
+    entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
+    device = register_device(device_registry, entry)
+    register_entity(
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "temperature:0-temperature_tc",
+        entry,
+        device_id=device.id,
+    )
+    entity_id = f"{SENSOR_DOMAIN}.test_name_last_seen"
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Entities can only be restored from the registry while the device sleeps
+    assert hass.states.get(entity_id) is None
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id)
+    assert entity_registry.async_get(entity_id)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -2518,3 +2526,44 @@ async def test_rpc_storage_fs_free_sensor_removal(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(entity_id) is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("source", "expected_state"),
+    [
+        pytest.param("init", "init", id="lowercase"),
+        pytest.param("WS_in", "ws_in", id="mixed_case"),
+        pytest.param("RPC Set", "rpc_set", id="with_space"),
+        pytest.param("New Source", "new_source", id="unknown_source"),
+    ],
+)
+@pytest.mark.parametrize(
+    "component", ["switch", "light", "cct", "rgb", "rgbw", "rgbcct", "cb"]
+)
+async def test_rpc_last_command_source_sensor(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+    source: str,
+    expected_state: str,
+    component: str,
+) -> None:
+    """Test RPC last command source sensor."""
+    status = {f"{component}:0": {"id": 0, "output": True, "source": source}}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    config = {f"{component}:0": {"id": 0}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    entity_id = f"{SENSOR_DOMAIN}.test_name_last_command_source"
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == expected_state
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == f"123456789ABC-{component}:0-{component}_source"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC

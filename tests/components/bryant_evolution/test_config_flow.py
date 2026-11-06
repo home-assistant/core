@@ -4,6 +4,7 @@ from unittest.mock import DEFAULT, AsyncMock, patch
 
 from evolutionhttp import BryantEvolutionLocalClient, ZoneInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.bryant_evolution.const import CONF_SYSTEM_ZONE, DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:

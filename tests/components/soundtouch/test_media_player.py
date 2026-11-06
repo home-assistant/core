@@ -3,6 +3,7 @@
 from datetime import timedelta
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from requests_mock import Mocker
 
 from homeassistant.components.media_player import (
@@ -35,8 +36,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import DEVICE_1_ENTITY_ID, DEVICE_2_ENTITY_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def setup_soundtouch(hass: HomeAssistant, *mock_entries: MockConfigEntry):

@@ -6,9 +6,10 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
+from midealocal.devices.b0 import DeviceAttributes as B0Attributes
 from midealocal.devices.b1 import DeviceAttributes as B1Attributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
-from midealocal.devices.ca import MideaCADevice
+from midealocal.devices.ca import DeviceAttributes as CAAttributes, MideaCADevice
 from midealocal.devices.da import DeviceAttributes as DAAttributes
 from midealocal.devices.db import DeviceAttributes as DBAttributes, MideaDBDevice
 from midealocal.devices.dc import DeviceAttributes as DCAttributes
@@ -17,6 +18,7 @@ from midealocal.devices.ea import DeviceAttributes as EAAttributes, MideaEADevic
 from midealocal.devices.ec import DeviceAttributes as ECAttributes, MideaECDevice
 from midealocal.devices.ed import DeviceAttributes as EDAttributes
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.midea.sensor import SENSOR_ENTITIES
@@ -27,8 +29,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DummyDevice, SetDeviceAttribute, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -57,6 +57,34 @@ from tests.common import MockConfigEntry, snapshot_platform
         ),
         pytest.param(
             DummyDevice(
+                DeviceType.B0,
+                attributes={
+                    B0Attributes.door: False,
+                    B0Attributes.status: "working",
+                    B0Attributes.time_remaining: 1.5,
+                    B0Attributes.mode: "microwave",
+                    B0Attributes.fire_power: "medium_high",
+                    B0Attributes.child_lock: False,
+                },
+            ),
+            id="b0",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.B0,
+                attributes={
+                    B0Attributes.door: False,
+                    B0Attributes.status: "default",
+                    B0Attributes.time_remaining: 0,
+                    B0Attributes.mode: "none",
+                    B0Attributes.fire_power: None,
+                    B0Attributes.child_lock: False,
+                },
+            ),
+            id="b0_idle",
+        ),
+        pytest.param(
+            DummyDevice(
                 DeviceType.B1,
                 attributes={
                     B1Attributes.status: "working",
@@ -82,6 +110,19 @@ from tests.common import MockConfigEntry, snapshot_platform
                 },
             ),
             id="c3",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.CA,
+                attributes={
+                    CAAttributes.energy_consumption: 350,
+                    CAAttributes.refrigerator_actual_temp: 5,
+                    CAAttributes.freezer_actual_temp: 1,
+                    CAAttributes.flex_zone_actual_temp: 4,
+                    CAAttributes.right_flex_zone_actual_temp: 3,
+                },
+            ),
+            id="ca",
         ),
         pytest.param(
             DummyDevice(

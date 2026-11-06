@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -118,7 +117,7 @@ class PingSensor(PingEntity, SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: PingConfigEntry,
         description: PingSensorEntityDescription,
         coordinator: PingUpdateCoordinator,
     ) -> None:
@@ -133,7 +132,9 @@ class PingSensor(PingEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.coordinator.data.is_alive
+        return super().available and self.entity_description.has_fn(
+            self.coordinator.data
+        )
 
     @property
     @override

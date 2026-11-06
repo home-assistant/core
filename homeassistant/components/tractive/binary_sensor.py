@@ -19,6 +19,8 @@ from .const import ATTR_POWER_SAVING
 from .coordinator import TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
 
+PARALLEL_UPDATES = 0
+
 
 class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
     """Tractive sensor."""
@@ -42,12 +44,6 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
         is_on: bool | None = getattr(self._tracker_status, self.entity_description.key)
         return is_on
 
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and self.is_on is not None
-
 
 @dataclass(frozen=True, kw_only=True)
 class TractiveBinarySensorEntityDescription(BinarySensorEntityDescription):
@@ -67,6 +63,7 @@ SENSOR_TYPES = [
         key=ATTR_POWER_SAVING,
         translation_key="tracker_power_saving",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 ]
 
@@ -76,7 +73,7 @@ async def async_setup_entry(
     entry: TractiveConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Tractive device trackers."""
+    """Set up Tractive binary sensors."""
     coordinator = entry.runtime_data
 
     async_add_entities(

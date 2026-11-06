@@ -8,6 +8,12 @@ from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_fire_time_changed,
+    mock_integration,
+)
 
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
 from homeassistant.components.raspberry_pi.const import DOMAIN
@@ -15,13 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_fire_time_changed,
-    mock_integration,
-)
 
 RPI_FIRMWARE_ENTITY_ID = "update.raspberry_pi_5_firmware"
 
@@ -31,7 +30,7 @@ def mock_rpi_power() -> Generator[None]:
     """Mock the rpi_power integration."""
     with patch(
         "homeassistant.components.rpi_power.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

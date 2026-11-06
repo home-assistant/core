@@ -9,6 +9,8 @@ from unittest.mock import Mock
 from freezegun.api import FrozenDateTimeFactory
 from httplib2 import Response
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_tasks.coordinator import UPDATE_INTERVAL
@@ -30,9 +32,6 @@ from .conftest import (
     LIST_TASKS_RESPONSE_WATER,
     create_response_object,
 )
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "todo.my_tasks"
 EMPTY_RESPONSE = {}

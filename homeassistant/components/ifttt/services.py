@@ -7,32 +7,37 @@ import probatio
 import pyfttt
 import requests
 
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    ATTR_EVENT,
-    ATTR_TARGET,
-    ATTR_VALUE1,
-    ATTR_VALUE2,
-    ATTR_VALUE3,
     DATA_API_KEYS,
+    DATA_IFTTT_ALARM,
     DOMAIN,
-    SERVICE_TRIGGER,
+    IftttService,
+    IftttServiceArgument,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_TRIGGER_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_EVENT): cv.string,
-        probatio.Optional(ATTR_TARGET): probatio.All(
+        probatio.Required(IftttServiceArgument.EVENT): cv.string,
+        probatio.Optional(IftttServiceArgument.TARGET): probatio.All(
             probatio.EnsureList(), [cv.string]
         ),
-        probatio.Optional(ATTR_VALUE1): cv.string,
-        probatio.Optional(ATTR_VALUE2): cv.string,
-        probatio.Optional(ATTR_VALUE3): cv.string,
+        probatio.Optional(IftttServiceArgument.VALUE1): cv.string,
+        probatio.Optional(IftttServiceArgument.VALUE2): cv.string,
+        probatio.Optional(IftttServiceArgument.VALUE3): cv.string,
+    }
+)
+
+PUSH_ALARM_STATE_SERVICE_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CommonServiceArgument.ENTITY_ID): cv.entity_ids,
+        probatio.Required(IftttServiceArgument.STATE): cv.string,
     }
 )
 
@@ -40,11 +45,11 @@ SERVICE_TRIGGER_SCHEMA = probatio.Schema(
 def _trigger_service(call: ServiceCall) -> None:
     """Handle IFTTT trigger service calls."""
     api_keys = call.hass.data.get(DATA_API_KEYS, {})
-    event = call.data[ATTR_EVENT]
-    targets = call.data.get(ATTR_TARGET, list(api_keys))
-    value1 = call.data.get(ATTR_VALUE1)
-    value2 = call.data.get(ATTR_VALUE2)
-    value3 = call.data.get(ATTR_VALUE3)
+    event = call.data[IftttServiceArgument.EVENT]
+    targets = call.data.get(IftttServiceArgument.TARGET, list(api_keys))
+    value1 = call.data.get(IftttServiceArgument.VALUE1)
+    value2 = call.data.get(IftttServiceArgument.VALUE2)
+    value3 = call.data.get(IftttServiceArgument.VALUE3)
 
     target_keys = {}
     for target in targets:
@@ -65,9 +70,28 @@ def _trigger_service(call: ServiceCall) -> None:
         ) from err
 
 
+async def _push_state_update(service: ServiceCall) -> None:
+    """Set the service state as device state attribute."""
+    entity_ids = service.data.get(CommonServiceArgument.ENTITY_ID)
+    state = service.data.get(IftttServiceArgument.STATE)
+    devices = service.hass.data.get(DATA_IFTTT_ALARM, [])
+    if entity_ids:
+        devices = [d for d in devices if d.entity_id in entity_ids]
+
+    for device in devices:
+        device.push_alarm_state(state)
+        device.async_schedule_update_ha_state()
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the IFTTT integration."""
     hass.services.async_register(
-        DOMAIN, SERVICE_TRIGGER, _trigger_service, schema=SERVICE_TRIGGER_SCHEMA
+        DOMAIN, IftttService.TRIGGER, _trigger_service, schema=SERVICE_TRIGGER_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        IftttService.PUSH_ALARM_STATE,
+        _push_state_update,
+        schema=PUSH_ALARM_STATE_SERVICE_SCHEMA,
     )

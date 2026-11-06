@@ -13,6 +13,7 @@ from airgradient import (
     ConfigurationControl,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -20,8 +21,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 OLD_ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("10.0.0.131"),

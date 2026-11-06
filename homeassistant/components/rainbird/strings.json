@@ -42,6 +42,9 @@
     "button": {
       "run_program": {
         "name": "Run {program}"
+      },
+      "sync_time": {
+        "name": "Sync time"
       }
     },
     "number": {

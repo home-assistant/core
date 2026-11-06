@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from velbusaio.exceptions import VelbusConnectionFailed
 
-from homeassistant.components.usb import SerialDevice
 from homeassistant.components.velbus.const import CONF_TLS, CONF_VLP_FILE, DOMAIN
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SOURCE
@@ -20,8 +20,6 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from . import init_integration
 from .const import PORT_SERIAL
 
-from tests.common import MockConfigEntry
-
 DISCOVERY_INFO = UsbServiceInfo(
     device=PORT_SERIAL,
     pid="10CF",
@@ -30,18 +28,6 @@ DISCOVERY_INFO = UsbServiceInfo(
     description="Velbus VMB1USB",
     manufacturer="Velleman",
 )
-
-USB_DEV = "/dev/ttyACME100 - Some serial port, s/n: 1234 - Virtual serial port"
-
-
-def com_port() -> SerialDevice:
-    """Mock of a serial port."""
-    return SerialDevice(
-        device=PORT_SERIAL,
-        serial_number="1234",
-        manufacturer="Virtual serial port",
-        description="Some serial port",
-    )
 
 
 @pytest.fixture
@@ -79,7 +65,7 @@ def override_async_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with (
         patch(
-            "homeassistant.components.velbus.async_setup_entry", return_value=True
+            "homeassistant.components.velbus.async_setup_entry", return_value=None
         ) as mock,
     ):
         yield mock
@@ -207,10 +193,6 @@ async def test_user_network_connect_failure(
 
 
 @pytest.mark.usefixtures("controller_connection_failed")
-@patch(
-    "homeassistant.components.velbus.config_flow.usb.async_scan_serial_ports",
-    new=AsyncMock(return_value=[com_port()]),
-)
 async def test_user_usb_connect_failure(hass: HomeAssistant) -> None:
     """Test user usb step."""
     result = await hass.config_entries.flow.async_init(
@@ -224,7 +206,7 @@ async def test_user_usb_connect_failure(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_PORT: USB_DEV,
+            CONF_PORT: PORT_SERIAL,
         },
     )
     assert result
@@ -235,7 +217,7 @@ async def test_user_usb_connect_failure(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_PORT: USB_DEV,
+                CONF_PORT: PORT_SERIAL,
             },
         )
     assert result.get("step_id") == "vlp"
@@ -244,10 +226,6 @@ async def test_user_usb_connect_failure(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("controller")
-@patch(
-    "homeassistant.components.velbus.config_flow.usb.async_scan_serial_ports",
-    new=AsyncMock(return_value=[com_port()]),
-)
 async def test_user_usb_success(hass: HomeAssistant) -> None:
     """Test user usb step."""
     result = await hass.config_entries.flow.async_init(
@@ -261,7 +239,7 @@ async def test_user_usb_success(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_PORT: USB_DEV,
+            CONF_PORT: PORT_SERIAL,
         },
     )
     assert result
@@ -309,7 +287,7 @@ async def test_vlp_step_no_modules(
     with (
         patch(
             "homeassistant.components.velbus.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "velbusaio.vlp_reader.VlpFile.read",
@@ -372,7 +350,7 @@ async def test_vlp_step_success(
     with (
         patch(
             "homeassistant.components.velbus.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "velbusaio.vlp_reader.VlpFile.read",
@@ -574,10 +552,6 @@ async def test_network_abort_if_already_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("controller")
-@patch(
-    "homeassistant.components.velbus.config_flow.usb.async_scan_serial_ports",
-    new=AsyncMock(return_value=[com_port()]),
-)
 async def test_flow_usb(hass: HomeAssistant) -> None:
     """Test usb discovery flow."""
     result = await hass.config_entries.flow.async_init(
@@ -599,10 +573,6 @@ async def test_flow_usb(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("controller")
-@patch(
-    "homeassistant.components.velbus.config_flow.usb.async_scan_serial_ports",
-    new=AsyncMock(return_value=[com_port()]),
-)
 async def test_flow_usb_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if Velbus USB discovbery aborts in case it is already setup."""
     entry = MockConfigEntry(
@@ -623,7 +593,7 @@ async def test_flow_usb_if_already_setup(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_PORT: USB_DEV,
+            CONF_PORT: PORT_SERIAL,
         },
     )
     assert result
@@ -632,10 +602,6 @@ async def test_flow_usb_if_already_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("controller_connection_failed")
-@patch(
-    "homeassistant.components.velbus.config_flow.usb.async_scan_serial_ports",
-    new=AsyncMock(return_value=[com_port()]),
-)
 async def test_flow_usb_failed(hass: HomeAssistant) -> None:
     """Test usb discovery flow with a failed velbus test."""
     result = await hass.config_entries.flow.async_init(

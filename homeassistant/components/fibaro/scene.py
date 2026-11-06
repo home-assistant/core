@@ -35,8 +35,6 @@ class FibaroScene(Scene):
         self._fibaro_scene = fibaro_scene
 
         room_name = controller.get_room_name(fibaro_scene.room_id)
-        if not room_name:
-            room_name = "Unknown"
 
         self._attr_name = f"{room_name} {fibaro_scene.name}"
         # Legacy format, kept as migrating existing unique IDs is not worth the risk

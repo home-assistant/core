@@ -122,6 +122,9 @@
       "rf_strength": {
         "name": "RF strength"
       },
+      "setpoint_end_time": {
+        "name": "Setpoint end time"
+      },
       "sum_rain_1": {
         "name": "Precipitation last hour"
       },
@@ -156,8 +159,17 @@
     "entry_not_loaded": {
       "message": "The Netatmo integration is not loaded. Please set it up before calling this action."
     },
+    "homes_unavailable": {
+      "message": "Could not fetch the homes from the Netatmo API."
+    },
     "missing_scopes": {
       "message": "The Netatmo token is missing the required scopes: {scopes}."
+    },
+    "no_floodlight": {
+      "message": "{device_type} <{device_name}> does not have a floodlight."
+    },
+    "persons_not_registered": {
+      "message": "Person(s) not registered: {persons}."
     }
   },
   "issues": {

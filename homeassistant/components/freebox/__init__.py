@@ -31,7 +31,7 @@ _STATIC_UNIQUE_ID_MIGRATIONS: tuple[tuple[Platform, str, str], ...] = (
 )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> None:
     """Migrate old config entries."""
     if entry.version < 2:
         api = await get_api(hass, entry.data[CONF_HOST])
@@ -77,10 +77,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) ->
 
         hass.config_entries.async_update_entry(entry, version=2)
 
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> None:
     """Set up Freebox entry."""
     api = await get_api(hass, entry.data[CONF_HOST])
     # The library raises its own error only for a request the router refused,
@@ -118,8 +116,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> b
 
     # Register the router device up front so child devices (home devices, disks)
     # can deterministically resolve it as their via_device on any platform.
-    dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **router.device_info
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=router.device_info
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -133,9 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> b
     )
     entry.async_on_unload(router.close)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

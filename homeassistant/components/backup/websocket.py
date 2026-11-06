@@ -479,5 +479,7 @@ async def handle_subscribe_events(
 
     manager = hass.data[DATA_MANAGER]
     on_event(manager.last_event)
+    for upload_event in manager.last_upload_events.values():
+        on_event(upload_event)
     connection.subscriptions[msg["id"]] = manager.async_subscribe_events(on_event)
     connection.send_result(msg["id"])
