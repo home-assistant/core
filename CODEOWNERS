@@ -1607,8 +1607,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/rainbird/ @konikvranik @allenporter
 /homeassistant/components/rainbowminer/ @El1t3Mult1pl3x0r
 /tests/components/rainbowminer/ @El1t3Mult1pl3x0r
-/homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
-/tests/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
+/homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert
+/tests/components/rainforest_eagle/ @gtdiehl @jcalbert
 /homeassistant/components/rainforest_raven/ @cottsay
 /tests/components/rainforest_raven/ @cottsay
 /homeassistant/components/rainmachine/ @bachya
