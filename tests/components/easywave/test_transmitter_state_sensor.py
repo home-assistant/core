@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from easywave_home_control.codec import ButtonFunction, ButtonPushEvent
 from easywave_home_control.codec.events import EasywaveButton
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.easywave.const import (
     CONF_BUTTON_COUNT,
@@ -29,8 +30,6 @@ from .conftest import (
     async_stop_easywave_listener,
     mock_easywave_transceiver,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_DEVICE_ID = f"transmitter_{MOCK_TRANSMITTER_SERIAL}"
 

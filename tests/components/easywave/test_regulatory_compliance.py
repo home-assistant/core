@@ -1,5 +1,7 @@
 """Tests for regulatory compliance in the Easywave Core integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.easywave.const import (
     ALLOWED_COUNTRIES_868MHZ,
     DOMAIN,
@@ -13,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from .conftest import async_setup_easywave_entry, mock_easywave_transceiver
-
-from tests.common import MockConfigEntry
 
 # CEPT member states (ISO 3166-1 alpha-2), per https://www.cept.org/cept/membership-and-observers
 CEPT_COUNTRIES_868MHZ: frozenset[str] = frozenset(

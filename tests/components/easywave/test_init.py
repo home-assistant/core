@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.easywave import async_remove_config_entry_device
 from homeassistant.components.easywave.const import (
     CONF_DEVICE_TITLE,
@@ -31,8 +33,6 @@ from .conftest import (
     async_setup_easywave_entry,
     mock_easywave_transceiver,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_relies_on_unload_callback_when_not_ready(
@@ -208,7 +208,9 @@ async def test_unload_entry(
     await async_setup_easywave_entry(hass, mock_config_entry, transceiver)
     transceiver.dispose.reset_mock()
 
-    with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
+    with patch.object(
+        hass.config_entries, "async_unload_platforms_or_raise", new_callable=AsyncMock
+    ):
         result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     assert result is True

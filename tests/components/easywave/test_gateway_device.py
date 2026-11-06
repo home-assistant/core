@@ -1,13 +1,13 @@
 """Tests for Easywave gateway device registry helpers."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.easywave.const import CONF_USB_PRODUCT, DOMAIN
 from homeassistant.components.easywave.gateway_device import update_gateway_device
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import MOCK_ENTRY_DATA, MOCK_GATEWAY_TITLE
-
-from tests.common import MockConfigEntry
 
 
 async def test_update_gateway_device_registers_versions(

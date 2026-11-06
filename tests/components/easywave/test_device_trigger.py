@@ -1,6 +1,8 @@
 """Tests for Easywave device triggers."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant.components import automation, device_automation
@@ -34,9 +36,6 @@ from .conftest import (
     _transmitter_device_record,
     async_setup_easywave_entry,
 )
-
-from tests.common import MockConfigEntry, async_get_device_automations
-from tests.typing import WebSocketGenerator
 
 NEO_SENSOR_CAPABILITIES = (1 << 4) | (1 << 5)
 

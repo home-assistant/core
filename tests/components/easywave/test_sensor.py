@@ -1,13 +1,13 @@
 """Tests for the sensor platform of the Easywave Core integration."""
 
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+
 from homeassistant.components.easywave.const import DOMAIN, EVENT_EASYWAVE
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import async_setup_easywave_entry, mock_easywave_transceiver
-
-from tests.common import MockConfigEntry, async_capture_events
 
 
 async def test_sensor_setup_entry(
@@ -47,7 +47,6 @@ async def test_gateway_sensor_reports_connected_after_coordinator_update(
     assert entity_id is not None
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await mock_config_entry.runtime_data.coordinator.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -148,7 +147,6 @@ async def test_gateway_sensor_fires_disconnected_event_on_transition(
 
     events = async_capture_events(hass, EVENT_EASYWAVE)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await coordinator.async_refresh()
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state is not None
@@ -186,7 +184,6 @@ async def test_gateway_sensor_reports_disconnected_when_link_is_down(
     assert entity_id is not None
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     transceiver.is_connected = False

@@ -2,6 +2,8 @@
 
 from typing import override
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.easywave.const import (
     CONF_BUTTON_COUNT,
     CONF_ENTRY_TYPE,
@@ -28,8 +30,6 @@ from .conftest import (
     MOCK_TRANSMITTER_SERIAL,
     async_setup_easywave_entry,
 )
-
-from tests.common import MockConfigEntry
 
 
 class _EntityWithoutDeviceInfo(EasywaveChildEntity):

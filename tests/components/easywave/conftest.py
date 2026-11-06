@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.easywave.const import (
     BUCKET_SUBENTRY_TITLES,
@@ -38,8 +39,6 @@ from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

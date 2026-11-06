@@ -67,7 +67,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> None:
     """Set up the Easywave gateway config entry."""
     usb_pid = entry.data.get(CONF_USB_PID)
     frequency = get_frequency_for_pid(usb_pid)
@@ -134,7 +134,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     # After platforms finish adding/restoring entities so early telegrams are not lost.
     coordinator.enable_telegram_reception()
-    return True
 
 
 async def _async_reload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> None:
@@ -142,9 +141,9 @@ async def _async_reload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> None:
     """Unload the gateway config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> None:

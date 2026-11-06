@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.easywave.config_flow import EasywaveConfigFlow
 from homeassistant.components.easywave.config_flow_subentry import (
@@ -23,8 +24,6 @@ from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -128,6 +127,7 @@ async def test_user_flow_single_port_uses_known_manufacturer_fallback(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "easywave_12345"
     assert result["data"]["usb_manufacturer"] == "ELDAT"
 
 
@@ -234,6 +234,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "easywave_12345"
     assert result["title"] == "RX11 USB Transceiver"
     assert result["data"][CONF_DEVICE_PATH] == "/dev/ttyACM0"
     assert result["data"][CONF_USB_VID] == 0x155A
@@ -258,6 +259,7 @@ async def test_user_flow_cannot_connect_on_confirm(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -285,6 +287,7 @@ async def test_user_flow_recovers_after_cannot_connect(hass: HomeAssistant) -> N
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "easywave_12345"
     assert result["data"][CONF_DEVICE_PATH] == "/dev/ttyACM0"
     assert mock_transceiver.connect.await_count == 2
 
@@ -323,6 +326,7 @@ async def test_user_flow_cannot_connect_when_dispose_fails(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     mock_transceiver.dispose.assert_awaited()
 
@@ -358,6 +362,7 @@ async def test_user_flow_cannot_connect_on_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     mock_transceiver.dispose.assert_awaited()
 
@@ -384,6 +389,7 @@ async def test_user_flow_unknown_error_on_unexpected_validation_failure(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
     mock_transceiver.dispose.assert_awaited()
 
@@ -435,6 +441,7 @@ async def test_user_flow_offers_proxy_rx11_when_no_local_stick(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "easywave_12345"
     assert result["data"][CONF_DEVICE_PATH] == PROXY_PATH
     assert mock_transceiver_cls.call_args.kwargs["device_path"] == PROXY_PATH
     assert mock_transceiver_cls.call_args.kwargs["allow_replacement"] is False
@@ -464,6 +471,7 @@ async def test_usb_discovery_validates_proxy_url(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "easywave_12345"
     assert result["data"][CONF_DEVICE_PATH] == PROXY_PATH
     assert mock_transceiver_cls.call_args.kwargs["device_path"] == PROXY_PATH
     assert mock_transceiver_cls.call_args.kwargs["allow_replacement"] is False
@@ -527,6 +535,7 @@ async def test_user_flow_device_disappeared(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ports"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "device_no_longer_available"}
 
 
@@ -582,6 +591,7 @@ async def test_usb_discovery_flow_creates_entry(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "easywave_12345"
     assert result["title"] == "RX11 USB Transceiver"
     assert result["data"][CONF_USB_VID] == 0x155A
     assert result["data"][CONF_USB_PID] == 0x1014
