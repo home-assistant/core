@@ -4,6 +4,7 @@
   "categories": ["vehicles_transport.flights"],
   "codeowners": ["@DurgNomis-drol"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/iss",
   "integration_type": "service",
   "iot_class": "cloud_polling",

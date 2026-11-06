@@ -4,6 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from my_pv import MyPVDeviceMainMode
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -152,7 +153,7 @@ def mock_my_pv_client(
         client.is_on = True
         client.turn_on = AsyncMock(return_value=True)
         client.turn_off = AsyncMock(return_value=True)
-        client.supports_main_mode = Mock(return_value=True)
+        client.primary_mode = MyPVDeviceMainMode.HOT_WATER
         client.current_temperature = 54.3
         client.target_temperature = 62.1
         client.set_target_temperature = AsyncMock(return_value=True)

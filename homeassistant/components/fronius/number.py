@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final, override
+from typing import Any, Final, override
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
@@ -19,9 +19,7 @@ from .entity import (
     ModbusValues,
     async_add_entities_for_seen_keys,
 )
-
-if TYPE_CHECKING:
-    from . import FroniusConfigEntry
+from .solar_net import FroniusConfigEntry
 
 # writes go to one device at a time
 PARALLEL_UPDATES: Final = 1
@@ -49,6 +47,9 @@ def _modbus_value(key: str) -> Callable[[ModbusValues], float | None]:
     return lambda values: values.get(key)
 
 
+# The battery rates are signed: a negative one turns the direction around, so
+# a discharge limit of -100% forces charging at full power - the registers as
+# Fronius documents them and other controllers write them.
 MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
     FroniusNumberEntityDescription(
         key="ac_power_limit",
@@ -69,7 +70,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
         field="charge_limit",
         enable_field="charge_limit_enabled",
         native_unit_of_measurement=PERCENTAGE,
-        native_min_value=0,
+        native_min_value=-100,
         native_max_value=100,
         native_step=1,
         entity_category=EntityCategory.CONFIG,
@@ -81,7 +82,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
         field="discharge_limit",
         enable_field="discharge_limit_enabled",
         native_unit_of_measurement=PERCENTAGE,
-        native_min_value=0,
+        native_min_value=-100,
         native_max_value=100,
         native_step=1,
         entity_category=EntityCategory.CONFIG,

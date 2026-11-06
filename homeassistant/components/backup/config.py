@@ -13,7 +13,7 @@ from cronsim import CronSim
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
@@ -185,14 +185,14 @@ class BackupConfig:
     def update(
         self,
         *,
-        agents: dict[str, AgentParametersDict] | UndefinedType = UNDEFINED,
-        automatic_backups_configured: bool | UndefinedType = UNDEFINED,
-        create_backup: CreateBackupParametersDict | UndefinedType = UNDEFINED,
-        retention: RetentionParametersDict | UndefinedType = UNDEFINED,
-        schedule: ScheduleParametersDict | UndefinedType = UNDEFINED,
+        agents: dict[str, AgentParametersDict] | Undefined = Undefined,
+        automatic_backups_configured: bool | Undefined = Undefined,
+        create_backup: CreateBackupParametersDict | Undefined = Undefined,
+        retention: RetentionParametersDict | Undefined = Undefined,
+        schedule: ScheduleParametersDict | Undefined = Undefined,
     ) -> None:
         """Update config."""
-        if agents is not UNDEFINED:
+        if agents is not Undefined:
             for agent_id, agent_config in agents.items():
                 agent_retention = agent_config.get("retention")
                 if agent_retention is None:
@@ -224,18 +224,18 @@ class BackupConfig:
                     # There's a single retention application method
                     # for both global and agent retention settings.
                     self.data.retention.apply(self._manager)
-        if automatic_backups_configured is not UNDEFINED:
+        if automatic_backups_configured is not Undefined:
             self.data.automatic_backups_configured = automatic_backups_configured
-        if create_backup is not UNDEFINED:
+        if create_backup is not Undefined:
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
             if "agent_ids" in create_backup:
                 check_unavailable_agents(self._hass, self._manager)
-        if retention is not UNDEFINED:
+        if retention is not Undefined:
             new_retention = RetentionConfig(**retention)
             if new_retention != self.data.retention:
                 self.data.retention = new_retention
                 self.data.retention.apply(self._manager)
-        if schedule is not UNDEFINED:
+        if schedule is not Undefined:
             new_schedule = BackupSchedule(**schedule)
             if new_schedule.to_dict() != self.data.schedule.to_dict():
                 self.data.schedule = new_schedule
@@ -254,6 +254,25 @@ class BackupConfig:
                 new_agent_id if agent_id == old_agent_id else agent_id
                 for agent_id in self.data.create_backup.agent_ids
             ],
+        )
+        self._manager.store.save()
+
+    @callback
+    def remove_agent(self, agent_id: str) -> None:
+        """Remove an agent from the agent settings and automatic backup agents."""
+        self.data.agents.pop(agent_id, None)
+        self.data.create_backup = replace(
+            self.data.create_backup,
+            agent_ids=[
+                configured_agent_id
+                for configured_agent_id in self.data.create_backup.agent_ids
+                if configured_agent_id != agent_id
+            ],
+        )
+        ir.async_delete_issue(
+            self._hass,
+            DOMAIN,
+            f"{AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID}_{agent_id}",
         )
         self._manager.store.save()
 
@@ -553,7 +572,10 @@ class BackupSchedule:
         self._unschedule_next(manager)
         now = dt_util.now()
         if (cron_event := self.cron_event) is None:
-            seed_time = manager.config.data.last_completed_automatic_backup or now
+            # The stored timestamp has a fixed UTC offset, which does not follow DST
+            seed_time = dt_util.as_local(
+                manager.config.data.last_completed_automatic_backup or now
+            )
             cron_event = self.cron_event = CronSim(cron_pattern, seed_time)
         next_time = next(cron_event)
 
@@ -782,7 +804,7 @@ def check_unavailable_agents(hass: HomeAssistant, manager: BackupManager) -> Non
             missing_agent_ids,
         )
 
-    with ir.async_begin_issues_refresh(
+    with ir.async_refresh_issues(
         hass,
         DOMAIN,
         issue_id_pattern=f"{AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID}_",

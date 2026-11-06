@@ -7,7 +7,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kill_container',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_kill',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_kill',
     'unit_of_measurement': None,
   })
 # ---
@@ -57,7 +57,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -82,7 +82,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause_container',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_pause',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_pause',
     'unit_of_measurement': None,
   })
 # ---
@@ -107,7 +107,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -132,7 +132,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'recreate_container',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_recreate',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_recreate',
     'unit_of_measurement': None,
   })
 # ---
@@ -157,7 +157,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -182,7 +182,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restart_container',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_restart',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_restart',
     'unit_of_measurement': None,
   })
 # ---
@@ -208,7 +208,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05')]>,
     'disabled_by': None,
@@ -233,7 +233,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'resume_container',
-    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_resume',
+    'unique_id': 'portainer_test_entry_123_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_resume',
     'unit_of_measurement': None,
   })
 # ---
@@ -258,7 +258,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_2')]>,
     'disabled_by': None,
@@ -309,7 +309,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -334,7 +334,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kill_container',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_kill',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_kill',
     'unit_of_measurement': None,
   })
 # ---
@@ -359,7 +359,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -384,7 +384,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause_container',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_pause',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_pause',
     'unit_of_measurement': None,
   })
 # ---
@@ -409,7 +409,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -434,7 +434,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'recreate_container',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_recreate',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_recreate',
     'unit_of_measurement': None,
   })
 # ---
@@ -459,7 +459,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -484,7 +484,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restart_container',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_restart',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_restart',
     'unit_of_measurement': None,
   })
 # ---
@@ -510,7 +510,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_focused_einstein')]>,
     'disabled_by': None,
@@ -535,7 +535,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'resume_container',
-    'unique_id': 'portainer_test_entry_123_focused_einstein_resume',
+    'unique_id': 'portainer_test_entry_123_1_focused_einstein_resume',
     'unit_of_measurement': None,
   })
 # ---
@@ -560,7 +560,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -585,7 +585,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kill_container',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_kill',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_kill',
     'unit_of_measurement': None,
   })
 # ---
@@ -610,7 +610,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -635,7 +635,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause_container',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_pause',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_pause',
     'unit_of_measurement': None,
   })
 # ---
@@ -660,7 +660,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -685,7 +685,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'recreate_container',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_recreate',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_recreate',
     'unit_of_measurement': None,
   })
 # ---
@@ -710,7 +710,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -735,7 +735,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restart_container',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_restart',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_restart',
     'unit_of_measurement': None,
   })
 # ---
@@ -761,7 +761,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_funny_chatelet')]>,
     'disabled_by': None,
@@ -786,7 +786,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'resume_container',
-    'unique_id': 'portainer_test_entry_123_funny_chatelet_resume',
+    'unique_id': 'portainer_test_entry_123_1_funny_chatelet_resume',
     'unit_of_measurement': None,
   })
 # ---
@@ -811,7 +811,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -861,7 +861,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -912,7 +912,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -962,7 +962,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1')]>,
     'disabled_by': None,
@@ -1012,7 +1012,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -1037,7 +1037,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kill_container',
-    'unique_id': 'portainer_test_entry_123_practical_morse_kill',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_kill',
     'unit_of_measurement': None,
   })
 # ---
@@ -1062,7 +1062,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -1087,7 +1087,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause_container',
-    'unique_id': 'portainer_test_entry_123_practical_morse_pause',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_pause',
     'unit_of_measurement': None,
   })
 # ---
@@ -1112,7 +1112,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -1137,7 +1137,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'recreate_container',
-    'unique_id': 'portainer_test_entry_123_practical_morse_recreate',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_recreate',
     'unit_of_measurement': None,
   })
 # ---
@@ -1162,7 +1162,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -1187,7 +1187,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restart_container',
-    'unique_id': 'portainer_test_entry_123_practical_morse_restart',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_restart',
     'unit_of_measurement': None,
   })
 # ---
@@ -1213,7 +1213,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_practical_morse')]>,
     'disabled_by': None,
@@ -1238,7 +1238,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'resume_container',
-    'unique_id': 'portainer_test_entry_123_practical_morse_resume',
+    'unique_id': 'portainer_test_entry_123_1_practical_morse_resume',
     'unit_of_measurement': None,
   })
 # ---
@@ -1263,7 +1263,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -1288,7 +1288,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kill_container',
-    'unique_id': 'portainer_test_entry_123_serene_banach_kill',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_kill',
     'unit_of_measurement': None,
   })
 # ---
@@ -1313,7 +1313,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -1338,7 +1338,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause_container',
-    'unique_id': 'portainer_test_entry_123_serene_banach_pause',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_pause',
     'unit_of_measurement': None,
   })
 # ---
@@ -1363,7 +1363,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -1388,7 +1388,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'recreate_container',
-    'unique_id': 'portainer_test_entry_123_serene_banach_recreate',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_recreate',
     'unit_of_measurement': None,
   })
 # ---
@@ -1413,7 +1413,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -1438,7 +1438,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restart_container',
-    'unique_id': 'portainer_test_entry_123_serene_banach_restart',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_restart',
     'unit_of_measurement': None,
   })
 # ---
@@ -1464,7 +1464,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_serene_banach')]>,
     'disabled_by': None,
@@ -1489,7 +1489,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'resume_container',
-    'unique_id': 'portainer_test_entry_123_serene_banach_resume',
+    'unique_id': 'portainer_test_entry_123_1_serene_banach_resume',
     'unit_of_measurement': None,
   })
 # ---
@@ -1514,7 +1514,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -1539,7 +1539,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'kill_container',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_kill',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_kill',
     'unit_of_measurement': None,
   })
 # ---
@@ -1564,7 +1564,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -1589,7 +1589,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pause_container',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_pause',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_pause',
     'unit_of_measurement': None,
   })
 # ---
@@ -1614,7 +1614,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -1639,7 +1639,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'recreate_container',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_recreate',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_recreate',
     'unit_of_measurement': None,
   })
 # ---
@@ -1664,7 +1664,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -1689,7 +1689,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restart_container',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_restart',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_restart',
     'unit_of_measurement': None,
   })
 # ---
@@ -1715,7 +1715,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stoic_turing')]>,
     'disabled_by': None,
@@ -1740,7 +1740,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'resume_container',
-    'unique_id': 'portainer_test_entry_123_stoic_turing_resume',
+    'unique_id': 'portainer_test_entry_123_1_stoic_turing_resume',
     'unit_of_measurement': None,
   })
 # ---
@@ -1765,7 +1765,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': None,
+    'config_subentry_id': <ConfigSubentry subentry_type='environment' title='my-environment'>,
     'device_class': None,
     'device_id': <DeviceEntry identifiers=[('portainer', 'portainer_test_entry_123_1_stack_1')]>,
     'disabled_by': None,

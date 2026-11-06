@@ -1,0 +1,86 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'available': True,
+    'device': dict({
+      'can_next': False,
+      'can_pause': True,
+      'can_play': True,
+      'can_previous': False,
+      'can_seek_rel_time': False,
+      'can_stop': True,
+      'device_type': 'urn:schemas-upnp-org:device:MediaRenderer:1',
+      'has_next_transport_uri': False,
+      'has_play_media': True,
+      'has_presets': True,
+      'has_volume_level': True,
+      'has_volume_mute': False,
+      'manufacturer': 'device_manufacturer',
+      'model_description': 'Test renderer',
+      'model_name': 'device_model_name',
+      'model_number': '1.0',
+      'services': dict({
+        'urn:schemas-upnp-org:service:AVTransport:1': list([
+          'Pause',
+          'Play',
+          'Stop',
+        ]),
+        'urn:schemas-upnp-org:service:ConnectionManager:1': list([
+          'GetProtocolInfo',
+        ]),
+        'urn:schemas-upnp-org:service:RenderingControl:1': list([
+          'GetVolume',
+          'SetVolume',
+        ]),
+      }),
+      'sink_protocol_info': list([
+        'http-get:*:audio/mpeg:*',
+        'http-get:*:video/mp4:*',
+      ]),
+      'transport_state': 'STOPPED',
+      'valid_play_modes': list([
+        'NORMAL',
+        'REPEAT_ALL',
+      ]),
+    }),
+    'device_type': 'urn:schemas-upnp-org:device:MediaRenderer:1',
+    'options': dict({
+      'browse_unfiltered': False,
+      'callback_url_override_set': True,
+      'listen_port': 2222,
+      'poll_availability': True,
+    }),
+    'state': 'idle',
+    'supported_features': 479749,
+  })
+# ---
+# name: test_diagnostics_disconnected
+  dict({
+    'available': False,
+    'device': None,
+    'device_type': 'urn:schemas-upnp-org:device:MediaRenderer:1',
+    'options': dict({
+      'browse_unfiltered': False,
+      'callback_url_override_set': False,
+      'listen_port': None,
+      'poll_availability': False,
+    }),
+    'state': 'off',
+    'supported_features': 0,
+  })
+# ---
+# name: test_diagnostics_entity_disabled
+  dict({
+    'available': None,
+    'device': None,
+    'device_type': 'urn:schemas-upnp-org:device:MediaRenderer:1',
+    'options': dict({
+      'browse_unfiltered': False,
+      'callback_url_override_set': False,
+      'listen_port': None,
+      'poll_availability': False,
+    }),
+    'state': None,
+    'supported_features': None,
+  })
+# ---

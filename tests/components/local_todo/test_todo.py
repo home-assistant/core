@@ -606,7 +606,7 @@ async def test_move_item_unknown(
     resp = await ws_move_item("unknown", "item-2")
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
-    assert "not found in todo list" in resp["error"]["message"]
+    assert "not found in to-do list" in resp["error"]["message"]
 
 
 async def test_move_item_previous_unknown(
@@ -630,7 +630,7 @@ async def test_move_item_previous_unknown(
     resp = await ws_move_item(items[0]["uid"], "unknown")
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
-    assert "not found in todo list" in resp["error"]["message"]
+    assert "not found in to-do list" in resp["error"]["message"]
 
 
 @pytest.mark.parametrize(

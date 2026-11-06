@@ -88,6 +88,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
             async_dispatcher_connect(self.hass, SIGNAL_WEBHOOK, self._webhook_event)
         )
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Update the value of the sensor."""

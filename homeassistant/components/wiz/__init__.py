@@ -68,7 +68,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> None:
         await bulb.getMac()
     except WIZ_CONNECT_EXCEPTIONS as err:
         await bulb.async_close()
-        raise ConfigEntryNotReady(f"{ip_address}: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"ip_address": ip_address},
+        ) from err
 
     if bulb.mac != entry.unique_id:
         # The ip address of the bulb has changed and its likely offline
@@ -77,7 +81,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> None:
         # online the ip will get updated and setup will proceed.
         await bulb.async_close()
         raise ConfigEntryNotReady(
-            f"Found bulb {bulb.mac} at {ip_address}, expected {entry.unique_id}"
+            translation_domain=DOMAIN,
+            translation_key="unexpected_device",
+            translation_placeholders={
+                "mac": str(bulb.mac),
+                "ip_address": ip_address,
+                "expected_mac": str(entry.unique_id),
+            },
         )
 
     coordinator = WizCoordinator(hass, entry, bulb)

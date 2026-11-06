@@ -1,6 +1,6 @@
 """Test the Reolink light platform."""
 
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -109,7 +109,7 @@ async def test_light_turn_off(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    reolink_host.set_whiteled.assert_called_with(0, state=False)
+    reolink_host.set_whiteled.assert_called_with(0, state=False, brightness=None)
 
     reolink_host.set_whiteled.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
@@ -143,9 +143,7 @@ async def test_light_turn_on(
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 51, ATTR_COLOR_TEMP_KELVIN: 4000},
         blocking=True,
     )
-    reolink_host.set_whiteled.assert_has_calls(
-        [call(0, brightness=20), call(0, state=True)]
-    )
+    reolink_host.set_whiteled.assert_called_once_with(0, state=True, brightness=20)
     reolink_host.baichuan.set_floodlight.assert_called_with(0, color_temp=4000)
 
 

@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, KebaServiceArgument
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -169,7 +169,7 @@ class KebaHandler(KebaKeContact):
     async def async_set_energy(self, param):
         """Set energy target in async way."""
         try:
-            energy = param["energy"]
+            energy = param[KebaServiceArgument.ENERGY]
             await self.set_energy(float(energy))
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
@@ -178,7 +178,7 @@ class KebaHandler(KebaKeContact):
     async def async_set_current(self, param):
         """Set current maximum in async way."""
         try:
-            current = param["current"]
+            current = param[KebaServiceArgument.CURRENT]
             await self.set_current(float(current))
             # No fast polling as this function might be called regularly
         except (KeyError, ValueError) as ex:
@@ -207,9 +207,9 @@ class KebaHandler(KebaKeContact):
     async def async_set_failsafe(self, param=None):
         """Set failsafe mode in async way."""
         try:
-            timeout = param[CONF_FS_TIMEOUT]
-            fallback = param[CONF_FS_FALLBACK]
-            persist = param[CONF_FS_PERSIST]
+            timeout = param[KebaServiceArgument.FAILSAFE_TIMEOUT]
+            fallback = param[KebaServiceArgument.FAILSAFE_FALLBACK]
+            persist = param[KebaServiceArgument.FAILSAFE_PERSIST]
             await self.set_failsafe(int(timeout), float(fallback), bool(persist))
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:

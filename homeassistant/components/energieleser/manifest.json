@@ -4,6 +4,7 @@
   "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
   "codeowners": ["@AjinkyaGokhale", "@NiccoFink"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/energieleser",
   "integration_type": "device",
   "iot_class": "local_polling",
