@@ -83,6 +83,10 @@ async def test_occupancy_sensor(
     [
         ("eve_contact_sensor", "binary_sensor.eve_door_door"),
         ("mock_leak_sensor", "binary_sensor.water_leak_detector_water_leak"),
+        (
+            "mock_generic_boolean_sensor",
+            "binary_sensor.generic_boolean_sensor_state",
+        ),
     ],
 )
 async def test_boolean_state_sensors(
