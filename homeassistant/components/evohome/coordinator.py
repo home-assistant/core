@@ -36,6 +36,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, SCHEDULE_MAX_AGE
 
 type _Schedule = list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT]
+type _HighPrecisionTemps = dict[str, float | None]  # by DHW/zone id
 
 _ERR_SCHEDULE_UPDATE: Final = (
     "%s: Failed to update the schedule (keeping any previous one): %s"
@@ -62,7 +63,7 @@ class _EvoCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         )
 
 
-class EvoAccountCoordinator(_EvoCoordinator[dict[str, float | None]]):
+class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
     """Coordinator for an evohome account (the user's config, high-precision temps).
 
     Its data is the latest high-precision temperatures, by DHW/zone id. They are
@@ -107,7 +108,7 @@ class EvoAccountCoordinator(_EvoCoordinator[dict[str, float | None]]):
             raise UpdateFailed(err) from err
 
     @override
-    async def _async_update_data(self) -> dict[str, float | None]:
+    async def _async_update_data(self) -> _HighPrecisionTemps:
         """Get the latest high-precision temperatures of the account's locations.
 
         Never raises UpdateFailed, as the temperatures are optional.
@@ -138,7 +139,7 @@ class EvoAccountCoordinator(_EvoCoordinator[dict[str, float | None]]):
                 ),
                 err,
             )
-            temps: dict[str, float | None] = {}  # now considered stale
+            temps: _HighPrecisionTemps = {}  # now considered stale
 
         else:
             temps = {}
