@@ -275,6 +275,24 @@ async def test_stdev_not_enough_sensor_values(
     assert "Error while dispatching event" not in caplog.text
 
 
+async def test_stdev_single_member(hass: HomeAssistant) -> None:
+    """Test a standard deviation group with a single member sets up as unknown."""
+    hass.states.async_set("sensor.test_1", str(VALUES[0]))
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": DOMAIN,
+            "name": "test_stdev",
+            "type": "stdev",
+            "entities": ["sensor.test_1"],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_stdev").state == STATE_UNKNOWN
+
+
 @pytest.mark.parametrize(
     "sensor_type",
     ["min", "max", "mean", "median", "last", "range", "stdev", "sum", "product"],
