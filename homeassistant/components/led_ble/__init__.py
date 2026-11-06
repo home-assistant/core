@@ -17,7 +17,7 @@ from .coordinator import LEDBLEConfigEntry, LEDBLECoordinator, LEDBLEData
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LEDBLEConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LEDBLEConfigEntry) -> None:
     """Set up LED BLE from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(hass, address.upper(), True)
@@ -89,7 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LEDBLEConfigEntry) -> bo
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
     )
-    return True
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: LEDBLEConfigEntry) -> None:
@@ -98,9 +97,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: LEDBLEConfigEntry) 
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LEDBLEConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LEDBLEConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.device.stop()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.device.stop()

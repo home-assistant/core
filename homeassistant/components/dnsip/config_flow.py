@@ -9,7 +9,6 @@ from aiodns.error import DNSError
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -19,6 +18,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 
+from . import DnsIPConfigEntry
 from .const import (
     CONF_ADDITIONAL_OPTIONS,
     CONF_HOSTNAME,
@@ -43,9 +43,9 @@ DATA_SCHEMA = probatio.Schema(
             probatio.Schema(
                 {
                     probatio.Optional(CONF_RESOLVER): cv.string,
-                    probatio.Optional(CONF_PORT): cv.port,
+                    probatio.Optional(CONF_PORT): probatio.Port(),
                     probatio.Optional(CONF_RESOLVER_IPV6): cv.string,
-                    probatio.Optional(CONF_PORT_IPV6): cv.port,
+                    probatio.Optional(CONF_PORT_IPV6): probatio.Port(),
                 }
             ),
             SectionConfig(collapsed=True),
@@ -101,7 +101,7 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: DnsIPConfigEntry,
     ) -> DnsIPOptionsFlowHandler:
         """Return Option handler."""
         return DnsIPOptionsFlowHandler()
@@ -216,9 +216,9 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithReload):
             probatio.Schema(
                 {
                     probatio.Optional(CONF_RESOLVER): cv.string,
-                    probatio.Optional(CONF_PORT): cv.port,
+                    probatio.Optional(CONF_PORT): probatio.Port(),
                     probatio.Optional(CONF_RESOLVER_IPV6): cv.string,
-                    probatio.Optional(CONF_PORT_IPV6): cv.port,
+                    probatio.Optional(CONF_PORT_IPV6): probatio.Port(),
                 }
             ),
             self.config_entry.options,

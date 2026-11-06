@@ -2,7 +2,6 @@
 
 from typing import Any, cast, override
 
-import probatio
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW, AtaDevice, AtwDevice
 import pymelcloud.ata_device as ata
 import pymelcloud.atw_device as atw
@@ -27,7 +26,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -36,9 +34,6 @@ from .const import (
     ATTR_VANE_HORIZONTAL_POSITIONS,
     ATTR_VANE_VERTICAL,
     ATTR_VANE_VERTICAL_POSITIONS,
-    CONF_POSITION,
-    SERVICE_SET_VANE_HORIZONTAL,
-    SERVICE_SET_VANE_VERTICAL,
 )
 from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
 from .entity import MelCloudEntity
@@ -102,23 +97,11 @@ async def async_setup_entry(
     )
     async_add_entities(entities)
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_VANE_HORIZONTAL,
-        {probatio.Required(CONF_POSITION): cv.string},
-        "async_set_vane_horizontal",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_VANE_VERTICAL,
-        {probatio.Required(CONF_POSITION): cv.string},
-        "async_set_vane_vertical",
-    )
-
 
 class MelCloudClimate(MelCloudEntity, ClimateEntity):
     """Base climate device."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
 
     def __init__(
@@ -235,13 +218,13 @@ class AtaDeviceClimate(MelCloudClimate):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.room_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._device.target_temperature
 
@@ -457,13 +440,13 @@ class AtwDeviceZoneClimate(MelCloudClimate):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zone.room_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._zone.target_temperature
 
@@ -471,6 +454,6 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self._zone.set_target_temperature(
-            kwargs.get(ATTR_TEMPERATURE, self.target_temperature)
+            kwargs.get(ATTR_TEMPERATURE, self.native_target_temperature)
         )
         await self.coordinator.async_request_refresh()

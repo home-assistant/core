@@ -75,6 +75,14 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         self.async_update_listeners()
 
     @override
+    async def async_shutdown(self) -> None:
+        """Cancel the listener update timer and shut down the coordinator."""
+        if self.listener_unsub:
+            self.listener_unsub()
+            self.listener_unsub = None
+        await super().async_shutdown()
+
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         data = None

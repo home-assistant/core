@@ -17,9 +17,8 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: YouTubeConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
     sensor_data: dict[str, Any] = {}
-    for channel_id, channel_data in coordinator.data.items():
+    for channel_id, channel_data in entry.runtime_data.data.items():
         channel_copy = dict(channel_data)
         # Strip verbose description field from all video entries.
         for attr in (

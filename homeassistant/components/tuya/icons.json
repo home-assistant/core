@@ -10,6 +10,9 @@
       "drop": {
         "default": "mdi:package-down"
       },
+      "fall": {
+        "default": "mdi:human-handsdown"
+      },
       "feeding": {
         "default": "mdi:information"
       },
@@ -83,6 +86,9 @@
       "near_detection": {
         "default": "mdi:signal-distance-variant"
       },
+      "speed": {
+        "default": "mdi:speedometer"
+      },
       "temperature": {
         "default": "mdi:thermometer"
       },
@@ -135,6 +141,9 @@
       },
       "motion_sensitivity": {
         "default": "mdi:motion-sensor"
+      },
+      "pump_mode": {
+        "default": "mdi:pump"
       },
       "record_mode": {
         "default": "mdi:record-rec"
@@ -209,6 +218,9 @@
       },
       "pm25": {
         "default": "mdi:molecule"
+      },
+      "pump_speed": {
+        "default": "mdi:speedometer"
       },
       "remaining_time": {
         "default": "mdi:timer"

@@ -1,8 +1,10 @@
 {
   "domain": "ptdevices",
   "name": "PTDevices",
+  "categories": ["water"],
   "codeowners": ["@ParemTech-Inc", "@frogman85978"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/ptdevices",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

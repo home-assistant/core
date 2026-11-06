@@ -4,12 +4,17 @@
     'data': dict({
       'booted_at': '2019-11-11T09:10:02+00:00',
       'counters': dict({
-        'impressions_completed': None,
+        'impressions_completed': 2468,
         'impressions_completed_col': dict({
+          'full-color': 968,
+          'monochrome': 1500,
         }),
-        'media_sheets_completed': None,
-        'pages_completed': None,
+        'media_sheets_completed': 1234,
+        'pages_completed': 1234,
         'supported': list([
+          'impressions_completed',
+          'pages_completed',
+          'media_sheets_completed',
         ]),
       }),
       'info': dict({

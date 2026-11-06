@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from solarlog_cli.solarlog_models import EnergyData, InverterData, SolarlogData
 
 from homeassistant.components.solarlog.const import CONF_HAS_PWD, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TIMEOUT
 
 from .const import HOST
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -80,7 +79,7 @@ def mock_solarlog_connector():
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.solarlog.async_setup_entry", return_value=True
+        "homeassistant.components.solarlog.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

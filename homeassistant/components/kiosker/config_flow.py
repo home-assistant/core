@@ -27,20 +27,20 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
-        probatio.Required(CONF_API_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
         probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
         probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_SSL_VERIFY): bool,
     }
 )
 STEP_ZEROCONF_CONFIRM_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
         probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_SSL_VERIFY): bool,
     }
 )
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
     }
 )
 

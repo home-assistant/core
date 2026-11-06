@@ -47,7 +47,7 @@ def _lookin_controlled_device_to_device_info(
         configuration_url=f"http://{host}/data/{uuid}",
     )
     if via_device_id is not None:
-        device_info["via_device_id"] = via_device_id
+        device_info.via_device_id = via_device_id
     return device_info
 
 
@@ -65,8 +65,6 @@ class LookinDeviceCoordinatorEntity(
     LookinDeviceMixIn, CoordinatorEntity[LookinDataUpdateCoordinator[MeteoSensor]]
 ):
     """A lookin device entity on the device itself that uses the coordinator."""
-
-    _attr_should_poll = False
 
     def __init__(self, lookin_data: LookinData) -> None:
         """Init the lookin device entity."""
@@ -101,7 +99,6 @@ class LookinCoordinatorEntity(
 ):
     """A lookin device entity for an external device that uses the coordinator."""
 
-    _attr_should_poll = False
     _attr_assumed_state = True
 
     def __init__(

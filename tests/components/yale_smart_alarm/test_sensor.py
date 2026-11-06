@@ -2,11 +2,10 @@
 
 from unittest.mock import Mock
 
+from pytest_homeassistant.common import MockConfigEntry
 from yalesmartalarmclient import YaleSmartAlarmData
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_coordinator_setup_and_update_errors(

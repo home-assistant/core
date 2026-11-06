@@ -84,6 +84,17 @@
       }
     }
   },
+  "exceptions": {
+    "change_beyond_duration": {
+      "message": "Cannot change timer {entity_id} beyond its duration."
+    },
+    "change_negative_remaining": {
+      "message": "Cannot change timer {entity_id} to a negative remaining time."
+    },
+    "timer_not_running": {
+      "message": "Timer {entity_id} is not running. Only active timers can be changed."
+    }
+  },
   "services": {
     "cancel": {
       "description": "Resets a timer's duration to the last known initial value without firing the timer finished event.",

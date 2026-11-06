@@ -1,6 +1,5 @@
 """Base entity for the HomeWizard integration."""
 
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, ATTR_SERIAL_NUMBER
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,9 +18,9 @@ def create_main_device_info(
         model=coordinator.data.device.model_name,
     )
     if (serial_number := coordinator.data.device.serial) is not None:
-        device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, serial_number)}
-        device_info[ATTR_IDENTIFIERS] = {(DOMAIN, serial_number)}
-        device_info[ATTR_SERIAL_NUMBER] = serial_number
+        device_info.connections = {(CONNECTION_NETWORK_MAC, serial_number)}
+        device_info.identifiers = {(DOMAIN, serial_number)}
+        device_info.serial_number = serial_number
     return device_info
 
 

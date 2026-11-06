@@ -22,7 +22,7 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, AlarmControlPanelState
+from . import AlarmControlPanelState
 from .const import (
     CONDITION_ARMED_AWAY,
     CONDITION_ARMED_CUSTOM_BYPASS,
@@ -31,6 +31,7 @@ from .const import (
     CONDITION_ARMED_VACATION,
     CONDITION_DISARMED,
     CONDITION_TRIGGERED,
+    DOMAIN,
     AlarmControlPanelEntityFeature,
 )
 

@@ -8,17 +8,11 @@ import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.components.rest import create_rest_data_from_config
-from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_TIMEOUT,
-)
-from homeassistant.components.rest.schema import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_METHOD,
-    METHODS,
-)
-from homeassistant.components.sensor import CONF_STATE_CLASS, DEVICE_CLASS_UNITS
+from homeassistant.components.rest.const import DEFAULT_METHOD, METHODS  # pylint: disable=home-assistant-component-root-import
+from homeassistant.components.rest.data import DEFAULT_TIMEOUT  # pylint: disable=home-assistant-component-root-import
+from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -63,10 +57,12 @@ from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
+    UnitOfMeasurementSelector,
+    UnitOfMeasurementSelectorConfig,
 )
 from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 
-from . import COMBINED_SCHEMA
+from . import COMBINED_SCHEMA, ScrapeConfigEntry
 from .const import (
     CONF_ADDITIONAL,
     CONF_AUTH,
@@ -107,7 +103,7 @@ RESOURCE_SETUP = probatio.Schema(
                             type=TextSelectorType.TEXT, autocomplete="username"
                         )
                     ),
-                    probatio.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -158,19 +154,14 @@ SENSOR_SETTINGS = probatio.Schema(
                         DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
                     probatio.Optional(CONF_STATE_CLASS): StateClassSelector(),
-                    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
-                        SelectSelectorConfig(
-                            options=list(
-                                {
-                                    str(unit)
-                                    for units in DEVICE_CLASS_UNITS.values()
-                                    for unit in units
-                                    if unit is not None
-                                }
-                            ),
-                            mode=SelectSelectorMode.DROPDOWN,
-                            custom_value=True,
-                            sort=True,
+                    probatio.Optional(
+                        CONF_UNIT_OF_MEASUREMENT
+                    ): UnitOfMeasurementSelector(
+                        UnitOfMeasurementSelectorConfig(
+                            context={
+                                "filter_device_class": CONF_DEVICE_CLASS,
+                                "filter_state_class": CONF_STATE_CLASS,
+                            }
                         )
                     ),
                 }
@@ -213,7 +204,7 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> ScrapeOptionFlow:
+    def async_get_options_flow(config_entry: ScrapeConfigEntry) -> ScrapeOptionFlow:
         """Get the options flow for this handler."""
         return ScrapeOptionFlow()
 
@@ -221,7 +212,7 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: ScrapeConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {"entity": ScrapeSubentryFlowHandler}
@@ -306,7 +297,7 @@ class ScrapeSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """User flow to reconfigure a sensor subentry."""
         if user_input is not None:
-            self.async_update_and_abort(
+            return self.async_update_and_abort(
                 self._get_entry(), self._get_reconfigure_subentry(), data=user_input
             )
 

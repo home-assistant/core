@@ -108,7 +108,7 @@ SERVICE_PUBLISH_SCHEMA = probatio.All(
             probatio.Optional(ATTR_TITLE): cv.string,
             probatio.Optional(ATTR_MESSAGE): cv.string,
             probatio.Optional(ATTR_MARKDOWN): cv.boolean,
-            probatio.Optional(ATTR_TAGS): probatio.All(cv.ensure_list, [str]),
+            probatio.Optional(ATTR_TAGS): probatio.All(probatio.EnsureList(), [str]),
             probatio.Optional(ATTR_PRIORITY): probatio.All(
                 probatio.Coerce(int), probatio.Range(1, 5)
             ),
@@ -133,12 +133,22 @@ SERVICE_PUBLISH_SCHEMA = probatio.All(
             ): MediaSelector({"accept": ["*/*"]}),
             probatio.Optional(ATTR_FILENAME): cv.string,
             probatio.Optional(ATTR_ACTIONS): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 probatio.Length(
                     max=MAX_ACTIONS_ALLOWED,
                     msg="Too many actions defined. A maximum of 3 is supported",
                 ),
-                [probatio.Any(VIEW_SCHEMA, BROADCAST_SCHEMA, HTTP_SCHEMA, COPY_SCHEMA)],
+                [
+                    probatio.TaggedUnion(
+                        ATTR_ACTION,
+                        {
+                            "view": VIEW_SCHEMA,
+                            "broadcast": BROADCAST_SCHEMA,
+                            "http": HTTP_SCHEMA,
+                            "copy": COPY_SCHEMA,
+                        },
+                    )
+                ],
             ),
         }
     ),

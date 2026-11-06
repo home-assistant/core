@@ -2,9 +2,9 @@
 
 from typing import Any
 
-from homeassistant.components.cover import CoverEntity, CoverEntityFeature, CoverState
+from pytest_homeassistant.common import MockEntity
 
-from tests.common import MockEntity
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature, CoverState
 
 
 class MockCover(MockEntity, CoverEntity):

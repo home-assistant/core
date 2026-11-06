@@ -1,4 +1,4 @@
-"""Constants for the Flow-it integration."""
+"""Constants for the AriaQ integration."""
 
 DOMAIN = "flow_it"
 

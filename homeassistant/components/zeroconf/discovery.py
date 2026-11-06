@@ -255,13 +255,10 @@ class ZeroconfDiscovery:
 
     def _async_dismiss_discoveries(self, name: str) -> None:
         """Dismiss all discoveries for the given name."""
-        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+        self.hass.config_entries.flow.async_dismiss_discovery_flows(
             _ZeroconfServiceInfo,
             lambda service_info: bool(service_info.name == name),
-        ):
-            if flow.get("context", {}).get("dismiss_protected"):
-                continue
-            self.hass.config_entries.flow.async_abort(flow["flow_id"])
+        )
 
     @callback
     def async_service_update(

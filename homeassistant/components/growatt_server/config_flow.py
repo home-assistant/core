@@ -9,7 +9,7 @@ from growattServer import GrowattV1ApiErrorCode
 import probatio
 import requests
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -34,6 +34,7 @@ from .const import (
     LOGIN_INVALID_AUTH_CODE,
     SERVER_URLS_NAMES,
 )
+from .coordinator import GrowattConfigEntry
 
 _URL_TO_REGION = {v: k for k, v in SERVER_URLS_NAMES.items()}
 
@@ -92,7 +93,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_step_credentials(
         self,
         step_id: str,
-        entry: ConfigEntry,
+        entry: GrowattConfigEntry,
         user_input: dict[str, Any] | None,
     ) -> ConfigFlowResult:
         """Handle credential update for both reauth and reconfigure."""
@@ -189,7 +190,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME,
                         default=entry.data.get(CONF_USERNAME),
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Required(
                         CONF_REGION, default=current_region
                     ): SelectSelector(
@@ -203,7 +204,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         elif auth_type == AUTH_API_TOKEN:
             data_schema = probatio.Schema(
                 {
-                    probatio.Required(CONF_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_TOKEN)): str,
                     probatio.Required(
                         CONF_REGION, default=current_region
                     ): SelectSelector(
@@ -328,7 +329,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = probatio.Schema(
             {
                 probatio.Required(CONF_USERNAME): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 probatio.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
                     SelectSelectorConfig(
                         options=list(SERVER_URLS_NAMES.keys()),
@@ -349,7 +350,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Show the API token form to the user."""
         data_schema = probatio.Schema(
             {
-                probatio.Required(CONF_TOKEN): str,
+                probatio.Required(probatio.Secret(CONF_TOKEN)): str,
                 probatio.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
                     SelectSelectorConfig(
                         options=list(SERVER_URLS_NAMES.keys()),

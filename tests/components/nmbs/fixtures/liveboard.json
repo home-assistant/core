@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "timestamp": "1760011200",
+  "station": "Brussel-Noord/Bruxelles-Nord",
+  "stationinfo": {
+    "@id": "http://irail.be/stations/NMBS/008812005",
+    "id": "BE.NMBS.008812005",
+    "name": "Brussels-North",
+    "locationX": "4.360846",
+    "locationY": "50.859663",
+    "standardname": "Brussel-Noord/Bruxelles-Nord"
+  },
+  "departures": {
+    "departure": [
+      {
+        "id": "http://irail.be/departures/1",
+        "station": "Blankenberge",
+        "stationinfo": {
+          "@id": "http://irail.be/stations/NMBS/008815701",
+          "id": "BE.NMBS.008815701",
+          "name": "Blankenberge",
+          "locationX": "3.133333",
+          "locationY": "51.313611",
+          "standardname": "Blankenberge"
+        },
+        "time": "1760011500",
+        "delay": "600",
+        "canceled": "0",
+        "left": "0",
+        "isExtra": "0",
+        "vehicle": "BE.NMBS.IC1832",
+        "vehicleinfo": {
+          "name": "IC 1832",
+          "shortname": "IC1832",
+          "number": "1832",
+          "type": "IC",
+          "locationX": "4.36",
+          "locationY": "50.85",
+          "@id": "http://irail.be/vehicle/IC1832"
+        },
+        "platform": "3",
+        "platforminfo": {
+          "name": "3",
+          "normal": "1"
+        },
+        "occupancy": {
+          "@id": "http://irail.be/occupancy/medium",
+          "name": "medium"
+        },
+        "departureConnection": "http://irail.be/connections/2"
+      }
+    ]
+  },
+  "arrivals": null
+}

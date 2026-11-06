@@ -1,5 +1,7 @@
 """Tests for the sensors provided by the Pure Energie integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.pure_energie.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -17,8 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
-
 
 async def test_sensors(
     hass: HomeAssistant,
@@ -27,8 +27,8 @@ async def test_sensors(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Pure Energie - SmartBridge sensors."""
-    state = hass.states.get("sensor.pem_energy_consumption_total")
-    entry = entity_registry.async_get("sensor.pem_energy_consumption_total")
+    state = hass.states.get("sensor.home_energy_consumption")
+    entry = entity_registry.async_get("sensor.home_energy_consumption")
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_energy_consumption_total"
@@ -39,8 +39,8 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.pem_energy_production_total")
-    entry = entity_registry.async_get("sensor.pem_energy_production_total")
+    state = hass.states.get("sensor.home_energy_production")
+    entry = entity_registry.async_get("sensor.home_energy_production")
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_energy_production_total"
@@ -51,8 +51,8 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.pem_power_flow")
-    entry = entity_registry.async_get("sensor.pem_power_flow")
+    state = hass.states.get("sensor.home_power_flow")
+    entry = entity_registry.async_get("sensor.home_power_flow")
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_power_flow"

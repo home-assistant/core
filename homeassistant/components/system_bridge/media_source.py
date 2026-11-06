@@ -28,7 +28,11 @@ def _get_loaded_entry(hass: HomeAssistant, entry_id: str) -> SystemBridgeConfigE
     entry: SystemBridgeConfigEntry | None = hass.config_entries.async_get_entry(
         entry_id
     )
-    if entry is None or entry.state is not ConfigEntryState.LOADED:
+    if (
+        entry is None
+        or entry.domain != DOMAIN
+        or entry.state is not ConfigEntryState.LOADED
+    ):
         raise ValueError("Invalid entry")
     return entry
 
@@ -212,7 +216,7 @@ def _build_media_item(
         domain=DOMAIN,
         identifier=f"{path}/{media_file.name}{ext}",
         media_class=media_class,
-        media_content_type=media_file.content_type,
+        media_content_type=media_file.content_type or "",
         title=media_file.name,
         can_play=not media_file.is_directory,
         can_expand=media_file.is_directory,

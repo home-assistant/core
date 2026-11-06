@@ -1,6 +1,12 @@
 """Tests for light platform."""
 
+import pytest
 from pywizlight import PilotBuilder, PilotParser
+from pywizlight.exceptions import (
+    WizLightConnectionError,
+    WizLightMethodNotFound,
+    WizLightTimeOutError,
+)
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -20,6 +26,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import (
@@ -70,6 +77,31 @@ async def test_light_operation(
 
     await async_push_update(hass, bulb, {"mac": FAKE_MAC, "state": True})
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        (WizLightConnectionError("Network is unreachable"), "communication_error"),
+        (WizLightTimeOutError("The request to the bulb timed out"), "timeout"),
+        (WizLightMethodNotFound("Method not found"), "not_supported"),
+    ],
+)
+async def test_light_operation_fails(
+    hass: HomeAssistant, error: Exception, translation_key: str
+) -> None:
+    """Test a light command raises a translated HomeAssistantError on device errors."""
+    bulb, _ = await async_setup_integration(hass)
+    entity_id = "light.mock_title"
+
+    bulb.turn_on.side_effect = error
+    bulb.turn_off.side_effect = error
+    for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                LIGHT_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            )
+        assert exc_info.value.translation_key == translation_key
 
 
 async def test_rgbww_light(hass: HomeAssistant) -> None:
