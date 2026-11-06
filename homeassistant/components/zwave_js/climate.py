@@ -493,7 +493,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         case rounding pushed an already-validated value outside the device's
         range.
         """
-        if self.temperature_unit != UnitOfTemperature.FAHRENHEIT:
+        if self.native_temperature_unit != UnitOfTemperature.FAHRENHEIT:
             return temp
         rounded = round(temp * 2) / 2
         return min(max(rounded, self.min_temp), self.max_temp)
