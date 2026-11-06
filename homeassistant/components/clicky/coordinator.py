@@ -1,6 +1,5 @@
 """Coordinator to handle Clicky API access."""
 
-from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -11,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ class ClickyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(minutes=1),
+            update_interval=UPDATE_INTERVAL,
         )
 
         self.client = client
