@@ -180,12 +180,6 @@
           "disconnected": "Disconnected"
         }
       },
-      "neo_sensor_humidity": {
-        "name": "Humidity"
-      },
-      "neo_sensor_temperature": {
-        "name": "Temperature"
-      },
       "transmitter_last_button": {
         "name": "State",
         "state": {

@@ -52,7 +52,7 @@ async def test_async_format_neo_sensor_list(
     learned_device: dict[str, Any],
     expected: str,
 ) -> None:
-    """Supported neo sensor capabilities are listed with entity translations."""
+    """Supported neo sensor capabilities are listed with device class names."""
     helper = _LearningHelper()
     helper.hass = hass
 
@@ -61,8 +61,8 @@ async def test_async_format_neo_sensor_list(
 
 async def test_config_flow_translation_keys_exist(hass: HomeAssistant) -> None:
     """Verify strings used by the config flow resolve via the translation loader."""
-    entity_translations = await async_get_translations(
-        hass, LOCALE_EN, "entity", integrations=[DOMAIN]
+    sensor_translations = await async_get_translations(
+        hass, LOCALE_EN, "entity_component", integrations=["sensor"]
     )
     selector_translations = await async_get_translations(
         hass, LOCALE_EN, "selector", integrations=[DOMAIN]
@@ -75,12 +75,14 @@ async def test_config_flow_translation_keys_exist(hass: HomeAssistant) -> None:
         config_flow=True,
     )
 
-    entity_prefix = f"component.{DOMAIN}.entity.sensor."
     assert (
-        entity_translations[f"{entity_prefix}neo_sensor_temperature.name"]
+        sensor_translations["component.sensor.entity_component.temperature.name"]
         == "Temperature"
     )
-    assert entity_translations[f"{entity_prefix}neo_sensor_humidity.name"] == "Humidity"
+    assert (
+        sensor_translations["component.sensor.entity_component.humidity.name"]
+        == "Humidity"
+    )
     assert (
         selector_translations[
             f"component.{DOMAIN}.selector.sensor_type.options.unknown"

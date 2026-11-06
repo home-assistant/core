@@ -164,21 +164,22 @@ class EasywaveDeviceFlowMixin:
     ) -> str:
         """Return a translated bullet list of supported neo sensor measurements."""
         language = self.hass.config.language
-        entity_translations = await translation.async_get_translations(
-            self.hass, language, "entity", integrations=[DOMAIN]
+        sensor_translations = await translation.async_get_translations(
+            self.hass, language, "entity_component", integrations=["sensor"]
         )
         selector_translations = await translation.async_get_translations(
             self.hass, language, "selector", integrations=[DOMAIN]
         )
-        entity_prefix = f"component.{DOMAIN}.entity.sensor."
         items: list[str] = []
         if learned_device.get("measures_temperature"):
             items.append(
-                entity_translations[f"{entity_prefix}neo_sensor_temperature.name"]
+                sensor_translations[
+                    "component.sensor.entity_component.temperature.name"
+                ]
             )
         if learned_device.get("measures_humidity"):
             items.append(
-                entity_translations[f"{entity_prefix}neo_sensor_humidity.name"]
+                sensor_translations["component.sensor.entity_component.humidity.name"]
             )
         if not items:
             unknown = selector_translations[
