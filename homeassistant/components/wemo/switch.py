@@ -57,6 +57,7 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
     wemo: Switch
     _on_since: datetime | None = None
     _on_for: int | None = None
+    _on_since_sample: int | None = None
 
     @property
     @override
@@ -101,9 +102,9 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
         ``on_for`` increases only while the outlet is on or in standby, so
         subtracting it from now is an absolute start time. While off it is the
         finished length of the last on period and would walk forward every poll.
-        A decrease while still on is a new period whose off poll was missed.
-        An unchanged value is a stale sample: subscribed devices that are on
-        skip the coordinator refresh, which still notifies entities.
+        A fresh read with a shorter or equal ``on_for`` is a new period whose
+        off poll was missed. The cached start is reused only when the
+        coordinator did not read the device again.
         """
         wemo = self.wemo
         if not isinstance(wemo, Insight):
@@ -111,20 +112,24 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
         if wemo.standby_state not in (StandbyState.ON, StandbyState.STANDBY):
             self._on_since = None
             self._on_for = None
+            self._on_since_sample = None
             return None
 
         on_for = wemo.on_for
-        if self._on_since is not None and on_for == self._on_for:
+        sample = self.coordinator.state_sample
+        if self._on_since is not None and sample == self._on_since_sample:
             return self._on_since
 
         candidate = (dt_util.utcnow() - timedelta(seconds=on_for)).replace(
             microsecond=0
         )
-        # Drop the cached start before the drift window. A shorter on_for is a
-        # new period, and the new start can still fall inside that window.
-        if self._on_for is not None and on_for < self._on_for:
+        # Drop the cached start before the drift window. An equal or shorter
+        # on_for from a new read is a new period, and that start can still
+        # fall inside the window.
+        if self._on_for is not None and on_for <= self._on_for:
             self._on_since = None
         self._on_for = on_for
+        self._on_since_sample = sample
         previous = self._on_since
         if previous is not None and abs(candidate - previous) <= _ON_SINCE_DRIFT:
             return previous

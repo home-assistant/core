@@ -103,6 +103,8 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
         self.wemo = wemo
         self.device_id: str | None = None
         self.device_info = _create_device_info(wemo)
+        # Bumped only when get_state runs. A skipped poll leaves this unchanged.
+        self.state_sample = 0
         self.supports_long_press = isinstance(wemo, LongPressMixin)
         self.update_lock = asyncio.Lock()
 
@@ -266,6 +268,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
                     translation_domain=DOMAIN,
                     translation_key="update_failed",
                 ) from err
+            self.state_sample += 1
 
 
 def _create_device_info(wemo: WeMoDevice) -> DeviceInfo:
