@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 import socket
 from unittest.mock import Mock, patch
 
+import aiodns
 import aiohttp
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
@@ -414,6 +415,18 @@ async def test_async_mdnsresolver(
     resp = await session.post("http://localhost/xyz", json={"x": 1})
     assert resp.status == 200
     assert await resp.json() == {"x": 1}
+
+
+@pytest.mark.usefixtures("disable_mock_zeroconf_resolver")
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_resolver_tries(hass: HomeAssistant) -> None:
+    """Test the resolver is created with the configured number of tries."""
+    with patch(
+        "aiohttp.resolver.aiodns.DNSResolver", wraps=aiodns.DNSResolver
+    ) as mock_dns_resolver:
+        resolver = client._async_make_resolver(hass)
+    await resolver.real_close()
+    mock_dns_resolver.assert_called_once_with(tries=client.DNS_RESOLVER_TRIES)
 
 
 async def test_resolver_is_singleton(hass: HomeAssistant) -> None:
