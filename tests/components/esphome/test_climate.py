@@ -556,6 +556,72 @@ async def test_climate_set_temperature_unsupported_mode(
     mock_client.climate_command.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "mode",
+    [
+        pytest.param(ClimateMode.OFF, id="off"),
+        pytest.param(ClimateMode.AUTO, id="auto"),
+        pytest.param(ClimateMode.HEAT_COOL, id="heat_cool"),
+    ],
+)
+async def test_climate_set_temperature_with_range_in_any_mode(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    mode: ClimateMode,
+) -> None:
+    """Test a single target is ignored when a full range is also given."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            feature_flags=ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE,
+            supported_modes=[
+                ClimateMode.OFF,
+                ClimateMode.HEAT,
+                ClimateMode.COOL,
+                ClimateMode.AUTO,
+                ClimateMode.HEAT_COOL,
+            ],
+            visual_min_temperature=10.0,
+            visual_max_temperature=30.0,
+        )
+    ]
+    states = [
+        ClimateState(
+            key=1,
+            mode=mode,
+            target_temperature_low=18,
+            target_temperature_high=24,
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "climate.test_my_climate",
+            ATTR_TEMPERATURE: 21,
+            ATTR_TARGET_TEMP_LOW: 20,
+            ATTR_TARGET_TEMP_HIGH: 23,
+        },
+        blocking=True,
+    )
+
+    mock_client.climate_command.assert_called_once_with(
+        key=1,
+        target_temperature_low=20,
+        target_temperature_high=23,
+        device_id=0,
+    )
+
+
 async def test_climate_entity_with_inf_value(
     hass: HomeAssistant,
     mock_client: APIClient,

@@ -320,7 +320,8 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             data["mode"] = _CLIMATE_MODES.from_hass(
                 cast(HVACMode, kwargs[ATTR_HVAC_MODE])
             )
-        if ATTR_TEMPERATURE in kwargs:
+        has_range = ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs
+        if ATTR_TEMPERATURE in kwargs and not has_range:
             if not self._feature_flags & (
                 ClimateFeature.REQUIRES_TWO_POINT_TARGET_TEMPERATURE
                 | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE
