@@ -369,6 +369,33 @@ async def test_purge_old_events(hass: HomeAssistant, recorder_mock: Recorder) ->
         assert events.count() == 2
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+async def test_purge_entity_ids_above_sqlite_variable_limit(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test purging more unused entity ids than SQLite allows in one statement."""
+    # SQLite's default limit is 32766 bound variables per statement
+    entity_id_count = 32767
+    with session_scope(hass=hass) as session:
+        session.bulk_insert_mappings(
+            StatesMeta,
+            [
+                {"entity_id": f"device_tracker.unused_{index}"}
+                for index in range(entity_id_count)
+            ],
+        )
+
+    with patch(
+        "homeassistant.components.recorder.purge.repack_database"
+    ) as mock_repack:
+        finished = purge_old_data(recorder_mock, dt_util.utcnow(), repack=True)
+
+    assert finished
+    mock_repack.assert_called_once()
+    with session_scope(hass=hass) as session:
+        assert session.query(StatesMeta).count() == 0
+
+
 async def test_purge_old_recorder_runs(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
