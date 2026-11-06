@@ -325,7 +325,8 @@ class Scanner:
         location = ssdp_device.location
         _, info_desc = self._description_cache.peek_description_dict(location)
         if (
-            info_desc is not None
+            location is not None
+            and info_desc is not None
             and dst == _ROOT_DEVICE
             and _description_is_stale(ssdp_device, info_desc)
         ):
