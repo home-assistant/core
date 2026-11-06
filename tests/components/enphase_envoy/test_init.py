@@ -1185,11 +1185,8 @@ async def test_init_no_solar(
         in caplog.text
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
-        title="Envoy 1234",
-        unique_id="1234",
+    hass.config_entries.async_update_entry(
+        entry,
         data={
             CONF_HOST: "1.1.1.1",
             CONF_NAME: "Envoy 1234",
@@ -1199,8 +1196,9 @@ async def test_init_no_solar(
             CONF_NO_SOLAR: False,
         },
     )
-
-    await setup_integration(hass, entry)
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
 
     assert (
         f"Using options: {EnvoyOptions.V2_ACB_MODE.name}  for Envoy Envoy 1234"
