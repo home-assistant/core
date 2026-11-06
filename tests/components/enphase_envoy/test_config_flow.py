@@ -5,11 +5,13 @@ import logging
 from unittest.mock import AsyncMock
 
 from pyenphase import EnvoyAuthenticationError, EnvoyError, EnvoyTokenAuth
+from pyenphase.const import EnvoyOptions
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.enphase_envoy.const import (
     CONF_MANUAL_TOKEN,
+    CONF_NO_SOLAR,
     DOMAIN,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
@@ -60,6 +62,7 @@ async def test_form(hass: HomeAssistant, mock_envoy: AsyncMock) -> None:
         CONF_PASSWORD: "test-password",
         CONF_MANUAL_TOKEN: False,
         CONF_TOKEN: mock_envoy.auth.token,
+        CONF_NO_SOLAR: False,
     }
 
 
@@ -94,6 +97,7 @@ async def test_user_no_serial_number(
         CONF_MANUAL_TOKEN: False,
         # mock always fills token
         CONF_TOKEN: mock_envoy.auth.token,
+        CONF_NO_SOLAR: False,
     }
 
 
@@ -199,6 +203,7 @@ async def test_zeroconf(
         CONF_PASSWORD: "test-password",
         CONF_MANUAL_TOKEN: False,
         CONF_TOKEN: mock_envoy.auth.token,
+        CONF_NO_SOLAR: False,
     }
 
 
@@ -259,6 +264,7 @@ async def test_form_host_already_exists(
     assert config_entry.data[CONF_HOST] == "1.1.1.2"
     assert config_entry.data[CONF_USERNAME] == "test-username"
     assert config_entry.data[CONF_PASSWORD] == "changed-password"
+    assert not config_entry.data[CONF_NO_SOLAR]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -643,6 +649,7 @@ async def test_reconfigure(
     assert config_entry.data[CONF_HOST] == "1.1.1.2"
     assert config_entry.data[CONF_USERNAME] == "test-username2"
     assert config_entry.data[CONF_PASSWORD] == "test-password2"
+    assert not config_entry.data[CONF_NO_SOLAR]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -677,6 +684,7 @@ async def test_reconfigure_nochange(
     assert config_entry.data[CONF_HOST] == "1.1.1.1"
     assert config_entry.data[CONF_USERNAME] == "test-username"
     assert config_entry.data[CONF_PASSWORD] == "test-password"
+    assert not config_entry.data[CONF_NO_SOLAR]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -770,6 +778,7 @@ async def test_reconfigure_auth_failure(
     assert config_entry.data[CONF_HOST] == "1.1.1.2"
     assert config_entry.data[CONF_USERNAME] == "test-username"
     assert config_entry.data[CONF_PASSWORD] == "changed-password"
+    assert not config_entry.data[CONF_NO_SOLAR]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -822,11 +831,13 @@ async def test_reconfigure_change_ip_to_existing(
     assert config_entry.data[CONF_HOST] == "1.1.1.2"
     assert config_entry.data[CONF_USERNAME] == "test-username"
     assert config_entry.data[CONF_PASSWORD] == "test-password2"
+    assert not config_entry.data[CONF_NO_SOLAR]
 
     # unchanged other entry
     assert other_entry.data[CONF_HOST] == "1.1.1.2"
     assert other_entry.data[CONF_USERNAME] == "other-username"
     assert other_entry.data[CONF_PASSWORD] == "other-password"
+    assert CONF_NO_SOLAR not in other_entry.data
 
 
 async def test_form_configure_manual_token(
@@ -887,6 +898,7 @@ async def test_form_configure_manual_token(
         CONF_NAME: "Envoy 1234",
         CONF_MANUAL_TOKEN: True,
         CONF_TOKEN: token,
+        CONF_NO_SOLAR: False,
     }
 
 
@@ -950,6 +962,7 @@ async def test_form_switch_between_token_modes(
         CONF_MANUAL_TOKEN: False,
         # in auto mode the verification will retrieve token from envoy
         CONF_TOKEN: mock_envoy.auth.token,
+        CONF_NO_SOLAR: False,
     }
 
 
@@ -1197,3 +1210,134 @@ async def test_reconfigure_switch_from_token(
     assert config_entry.data[CONF_PASSWORD] == "test-password2"
     assert config_entry.data[CONF_TOKEN] == mock_envoy.auth.token
     assert not config_entry.data[CONF_MANUAL_TOKEN]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_to_no_solar_on(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_envoy: AsyncMock
+) -> None:
+    """Test we get the reconfigure form and apply NO SOLAR mode."""
+    await setup_integration(hass, config_entry)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    # original entry
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_USERNAME] == "test-username"
+    assert config_entry.data[CONF_PASSWORD] == "test-password"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_NO_SOLAR: True,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # unchanged original entry
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_USERNAME] == "test-username"
+    assert config_entry.data[CONF_PASSWORD] == "test-password"
+    assert config_entry.data[CONF_NO_SOLAR]
+
+
+async def test_reauth_manaual_token_switch_to_no_solar_on(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test reauth in manual token mode switch no solar on."""
+    await setup_integration(hass, config_entry)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    # user opts to switch to manual token
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_MANUAL_TOKEN: True,
+        },
+    )
+    await hass.async_block_till_done()
+    # no config update only form mode switch
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["errors"] == {}
+
+    # user enters token and enables NO SOLAR
+    token = envoy_token()
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_TOKEN: token,
+            CONF_MANUAL_TOKEN: True,
+            CONF_NO_SOLAR: True,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_TOKEN] == token
+    assert config_entry.data[CONF_MANUAL_TOKEN]
+    assert config_entry.data[CONF_NO_SOLAR]
+
+
+async def test_form_configure_no_solar_on(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test user step selecting to use no solar mode."""
+    caplog.set_level(logging.DEBUG)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    caplog.clear()
+
+    # test user enabling no_solar mode
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_NO_SOLAR: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Envoy 1234"
+    assert result["result"].unique_id == "1234"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_NAME: "Envoy 1234",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+        CONF_MANUAL_TOKEN: False,
+        CONF_TOKEN: mock_envoy.auth.token,
+        CONF_NO_SOLAR: True,
+    }
+
+    assert (
+        f"Validating Envoy with host: 1.1.1.1 and options: {EnvoyOptions.V2_ACB_MODE.name} {EnvoyOptions.NO_SOLAR.name}"
+        in caplog.text
+    )

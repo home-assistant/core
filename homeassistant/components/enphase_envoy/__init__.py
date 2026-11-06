@@ -1,25 +1,37 @@
 """The Enphase Envoy integration."""
 
+import logging
 from typing import TYPE_CHECKING
 
 from pyenphase import Envoy
+from pyenphase.const import EnvoyOptions
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_NO_SOLAR, DOMAIN, PLATFORMS
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> None:
     """Set up Enphase Envoy from a config entry."""
 
     host = entry.data[CONF_HOST]
+    options = EnvoyOptions.V2_ACB_MODE | (
+        EnvoyOptions.NO_SOLAR
+        if (ns := entry.data.get(CONF_NO_SOLAR, False))
+        else EnvoyOptions(0)
+    )
+    s = f"{EnvoyOptions.V2_ACB_MODE.name} {EnvoyOptions.NO_SOLAR.name if ns else ''}"
+    _LOGGER.debug("Using options: %s for Envoy %s", s, entry.data[CONF_NAME])
+
     session = async_create_clientsession(hass, verify_ssl=False)
-    envoy = Envoy(host, session)
+    envoy = Envoy(host, session, envoy_options=options)
     coordinator = EnphaseUpdateCoordinator(hass, envoy, entry, session)
 
     await coordinator.async_config_entry_first_refresh()
