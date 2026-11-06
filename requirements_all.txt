@@ -307,7 +307,7 @@ aioharmony==1.0.10
 aiohasupervisor==0.10.0
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.41.0
+aiohomeconnect==0.42.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==4.0.1
