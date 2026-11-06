@@ -144,15 +144,22 @@ async def _async_service_temperature_set(
             )
 
             _LOGGER.debug(
-                "Check valid temperature %d %s (%d %s) in range %d %s - %d %s",
+                (
+                    "Check valid temperature %g %s in range %g %s - %g %s"
+                    " (%g %s in range %g %s - %g %s)"
+                ),
                 check_temp,
                 temp_unit,
-                temp,
-                hass.config.units.temperature_unit,
                 min_temp,
                 temp_unit,
                 max_temp,
                 temp_unit,
+                temp,
+                hass.config.units.temperature_unit,
+                shown_min_temp,
+                hass.config.units.temperature_unit,
+                shown_max_temp,
+                hass.config.units.temperature_unit,
             )
             if (check_temp < min_temp and temp < shown_min_temp) or (
                 check_temp > max_temp and temp > shown_max_temp
