@@ -218,8 +218,6 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
                 issue_date = parse_issue_date(issue_date_input)
                 if issue_date is None:
                     issue_date = today
-                    if issue_date_input:
-                        errors[CONF_API_KEY_DATE] = "invalid_date"
                 elif issue_date > today:
                     errors[CONF_API_KEY_DATE] = "invalid_date"
 
@@ -295,8 +293,6 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
                 issue_date = parse_issue_date(issue_date_input)
                 if issue_date is None:
                     issue_date = today
-                    if issue_date_input:
-                        errors[CONF_API_KEY_DATE] = "invalid_date"
                 elif issue_date > today:
                     errors[CONF_API_KEY_DATE] = "invalid_date"
 

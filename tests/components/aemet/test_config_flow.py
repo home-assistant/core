@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aemet_opendata.exceptions import AuthError
+from aemet_opendata.exceptions import AemetError, AuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -402,6 +402,35 @@ async def test_form_auth_error(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+    """Test setting up with an API connection error."""
+    mocked_aemet = MagicMock()
+    mocked_aemet.select_coordinates.side_effect = AemetError
+
+    with patch(
+        "homeassistant.components.aemet.config_flow.AEMET",
+        return_value=mocked_aemet,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
+        )
+
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        mocked_aemet.select_coordinates = AsyncMock()
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_form_with_reminder_and_date(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -532,6 +561,61 @@ async def test_reauth(
     assert entry.data[CONF_API_KEY_DATE] == expected_date
     assert entry.options == {CONF_API_KEY_REMINDER: reminder_enabled}
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_reauth_invalid_api_key(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test reauthentication handles an invalid API key."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2021-02-01 12:00:00+00:00")
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="40.30403754--3.72935236",
+        data={
+            CONF_API_KEY: "foo",
+            CONF_API_KEY_DATE: "2021-01-01",
+            CONF_LATITUDE: 40.30403754,
+            CONF_LONGITUDE: -3.72935236,
+        },
+        options={CONF_API_KEY_REMINDER: True},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    mocked_aemet = MagicMock()
+    mocked_aemet.select_coordinates.side_effect = AuthError
+
+    with patch(
+        "homeassistant.components.aemet.config_flow.AEMET",
+        return_value=mocked_aemet,
+    ):
+        result = await entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "new-key"},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "invalid_api_key"}
+        assert entry.data[CONF_API_KEY] == "foo"
+        assert entry.data[CONF_API_KEY_DATE] == "2021-01-01"
+
+        mocked_aemet.select_coordinates = AsyncMock()
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "new-key"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_API_KEY] == "new-key"
+    assert entry.data[CONF_API_KEY_DATE] == "2021-02-01"
+    assert entry.options == {CONF_API_KEY_REMINDER: True}
 
 
 async def test_reauth_invalid_future_date(

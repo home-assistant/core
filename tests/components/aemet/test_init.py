@@ -11,6 +11,7 @@ from homeassistant.components import persistent_notification as pn
 from homeassistant.components.aemet.const import (
     CONF_API_KEY_DATE,
     CONF_API_KEY_REMINDER,
+    CONF_RADAR_UPDATES,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -60,6 +61,35 @@ async def test_unload_entry(
 
         assert hass.states.get("weather.aemet") is None
         assert entity_registry.async_get("weather.aemet") is None
+
+
+async def test_update_options_reloads_entry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test updating options reloads the config entry."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to("2021-01-09 12:00:00+00:00")
+    with patch(
+        "homeassistant.components.aemet.AEMET.api_call",
+        side_effect=mock_api_call,
+    ):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, unique_id="aemet_unique_id", data=CONFIG
+        )
+        config_entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+
+        hass.config_entries.async_update_entry(
+            config_entry, options={CONF_RADAR_UPDATES: True}
+        )
+        await hass.async_block_till_done()
+
+        assert config_entry.state is ConfigEntryState.LOADED
+        assert config_entry.options[CONF_RADAR_UPDATES] is True
 
 
 @pytest.mark.parametrize("reminder_enabled", [False, True])
