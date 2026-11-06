@@ -44,6 +44,8 @@ from .const import (
 )
 from .coordinator import MeteoFranceConfigEntry, MeteoFranceForecastUpdateCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 def format_condition(condition: str, force_day: bool = False) -> str:
     """Return condition from dict CONDITION_MAP."""
