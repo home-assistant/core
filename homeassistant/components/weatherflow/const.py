@@ -1,14 +1,16 @@
 """Constants for the WeatherFlow integration."""
 
 import logging
+from typing import TYPE_CHECKING
 
-from homeassistant.config_entries import ConfigEntry
+if TYPE_CHECKING:
+    from . import WeatherFlowConfigEntry
 
 DOMAIN = "weatherflow"
 LOGGER = logging.getLogger(__package__)
 
 
-def format_dispatch_call(config_entry: ConfigEntry) -> str:
+def format_dispatch_call(config_entry: WeatherFlowConfigEntry) -> str:
     """Construct a dispatch call from a ConfigEntry."""
     return f"{config_entry.domain}_{config_entry.entry_id}_add"
 
