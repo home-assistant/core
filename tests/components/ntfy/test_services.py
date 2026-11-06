@@ -14,8 +14,7 @@ from pytest_homeassistant.common import AsyncMock, MockConfigEntry, patch
 from yarl import URL
 
 from homeassistant.components import media_source
-from homeassistant.components.ntfy.const import DOMAIN
-from homeassistant.components.ntfy.services import NtfyService, NtfyServiceArgument
+from homeassistant.components.ntfy.const import DOMAIN, NtfyService, NtfyServiceArgument
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant

@@ -25,10 +25,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, NtfyServiceArgument
 from .coordinator import NtfyConfigEntry
 from .entity import NtfyBaseEntity
-from .services import ACTIONS_MAP, ATTR_ACTION, NtfyServiceArgument
+from .services import ACTIONS_MAP, ATTR_ACTION
 
 _LOGGER = logging.getLogger(__name__)
 

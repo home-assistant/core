@@ -1,7 +1,6 @@
 """Service registration for ntfy integration."""
 
 from datetime import timedelta
-from enum import StrEnum
 from typing import Any
 
 from aiontfy import BroadcastAction, CopyAction, HttpAction, ViewAction
@@ -13,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import MediaSelector
 
-from .const import DOMAIN
+from .const import DOMAIN, NtfyService, NtfyServiceArgument
 
 GRP_ATTACHMENT = "attachment"
 MSG_ATTACHMENT = "Only one attachment source is allowed: URL or local file"
@@ -38,34 +37,6 @@ ACTIONS_MAP = {
     ATTR_COPY: CopyAction,
 }
 MAX_ACTIONS_ALLOWED = 3  # ntfy only supports up to 3 actions per notification
-
-
-class NtfyService(StrEnum):
-    """Store keys for ntfy services."""
-
-    PUBLISH = "publish"
-    CLEAR = "clear"
-    DELETE = "delete"
-
-
-class NtfyServiceArgument(StrEnum):
-    """Store keys for ntfy service arguments."""
-
-    TITLE = "title"
-    MESSAGE = "message"
-    MARKDOWN = "markdown"
-    TAGS = "tags"
-    PRIORITY = "priority"
-    CLICK = "click"
-    DELAY = "delay"
-    ATTACH = "attach"
-    ATTACH_FILE = "attach_file"
-    FILENAME = "filename"
-    EMAIL = "email"
-    CALL = "call"
-    ICON = "icon"
-    ACTIONS = "actions"
-    SEQUENCE_ID = "sequence_id"
 
 
 def validate_filename(params: dict[str, Any]) -> dict[str, Any]:
