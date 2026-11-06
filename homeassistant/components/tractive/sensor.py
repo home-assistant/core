@@ -83,6 +83,7 @@ HEALTH_STATUS_OPTIONS = [
     "infrequent",
     "normal",
     "not_enough_data_today",
+    "not_synced_yet",
 ]
 
 SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (

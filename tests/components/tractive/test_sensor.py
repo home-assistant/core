@@ -37,7 +37,7 @@ async def test_sensor(
             minutes_night_sleep=300,
             minutes_rest=122,
             weight=23700,
-            bark_status="normal",
+            bark_status="not_synced_yet",
             resting_heart_rate_status="normal",
             resting_respiratory_rate_status="elevated",
             scratch_status="not_enough_data_today",
