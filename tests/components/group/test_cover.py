@@ -986,8 +986,6 @@ async def test_device_class(
     with assert_setup_component(1, COVER_DOMAIN):
         await async_setup_component(hass, COVER_DOMAIN, config)
     await hass.async_block_till_done()
-    hass.states.async_set(DEMO_COVER, CoverState.OPEN, {})
-    await hass.async_block_till_done()
 
     state = hass.states.get(COVER_GROUP)
     assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_device_class
