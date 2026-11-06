@@ -3,7 +3,6 @@
 import logging
 from typing import Any
 
-import attr
 import probatio
 
 from homeassistant import config_entries
@@ -16,6 +15,7 @@ from homeassistant.helpers import (
     label_registry as lr,
 )
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.typing import Undefined
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -350,17 +350,18 @@ def websocket_get_automatic_entity_ids(
     registry = er.async_get(hass)
 
     entity_ids = msg["entity_ids"]
-    overrides: dict[str, dict[str, Any]] = msg.get("overrides", {})
+    overrides: dict[str, dict[str, str | None]] = msg.get("overrides", {})
     automatic_entity_ids: dict[str, str | None] = {}
     reserved_entity_ids: set[str] = set()
     for entity_id in entity_ids:
         if not (entry := registry.entities.get(entity_id)):
             automatic_entity_ids[entity_id] = None
             continue
-        if entity_overrides := overrides.get(entity_id):
-            entry = attr.evolve(entry, **entity_overrides)
+        entity_overrides = overrides.get(entity_id, {})
         new_entity_id = registry.async_regenerate_entity_id(
             entry,
+            area_id=entity_overrides.get("area_id", Undefined),
+            name=entity_overrides.get("name", Undefined),
             reserved_entity_ids=reserved_entity_ids,
         )
         automatic_entity_ids[entity_id] = new_entity_id

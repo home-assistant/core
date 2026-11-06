@@ -1360,6 +1360,57 @@ def test_generate_entity_id_next_name_part(
     assert entity_registry.async_regenerate_entity_id(entry) == "sensor.garage_power"
 
 
+def test_regenerate_entity_id_overrides(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test regenerating an entity ID with unsaved name and area changes."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    kitchen = area_registry.async_create("Kitchen")
+    garage = area_registry.async_create("Garage")
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "lamp")},
+        name="Lamp",
+    )
+    device_registry.async_update_device(device.id, area_id=kitchen.id)
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "1234",
+        config_entry=config_entry,
+        device_id=device.id,
+        has_entity_name=True,
+        object_id_base="Power",
+        original_name="Power",
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, area_id=garage.id, name="Stored"
+    )
+    assert entity_registry.async_regenerate_entity_id(entry) == "sensor.garage_stored"
+
+    assert (
+        entity_registry.async_regenerate_entity_id(entry, name="Energy")
+        == "sensor.garage_energy"
+    )
+    assert (
+        entity_registry.async_regenerate_entity_id(entry, area_id=None)
+        == "sensor.kitchen_lamp_stored"
+    )
+    assert (
+        entity_registry.async_regenerate_entity_id(entry, area_id=None, name=None)
+        == "sensor.kitchen_lamp_power"
+    )
+
+    # The overrides are not stored
+    assert entity_registry.async_get(entry.entity_id) == entry
+
+
 def test_next_name_part(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
