@@ -777,7 +777,6 @@ async def test_temperature_validation_display_rounding(
                 blocking=True,
             )
         assert exc.value.translation_key == "temp_out_of_range"
-        # The error shows the sent temperature and the shown limits
         assert exc.value.translation_placeholders == {
             "check_temp": str(temperature),
             "min_temp": "16",
