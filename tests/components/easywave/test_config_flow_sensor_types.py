@@ -115,21 +115,26 @@ async def test_config_flow_sensor_list_uses_language_fallback(
     assert sensor_list == "• Temperature\n• Humidity"
 
 
-async def test_listen_for_telegram_resumes_after_suspend_failure() -> None:
-    """Learning resumes telegram reception when suspending the listener fails."""
+async def test_listen_for_telegram_leaves_the_receive_armed() -> None:
+    """Learning does not cancel or replace the listener receive."""
     helper = _LearningHelper()
     coordinator = MagicMock()
     coordinator.begin_learning = AsyncMock(return_value=True)
     coordinator.end_learning = MagicMock()
-    coordinator.suspend_telegram_listener = AsyncMock(side_effect=OSError("usb busy"))
-    coordinator.resume_telegram_listener = MagicMock()
+    coordinator.transceiver.is_connected = True
 
-    with pytest.raises(OSError, match="usb busy"):
-        await helper._listen_for_telegram(
-            coordinator, accept_telegram=lambda _telegram: None
-        )
+    async def _wait(*_args: object, **_kwargs: object) -> None:
+        coordinator.transceiver.is_connected = False
 
-    coordinator.resume_telegram_listener.assert_called_once()
+    coordinator.wait_for_learning_telegram = AsyncMock(side_effect=_wait)
+
+    result = await helper._listen_for_telegram(
+        coordinator, accept_telegram=lambda _telegram: None
+    )
+
+    assert result is None
+    coordinator.transceiver.receive_telegram.assert_not_called()
+    coordinator.suspend_telegram_listener.assert_not_called()
     coordinator.end_learning.assert_called_once()
 
 
@@ -154,23 +159,20 @@ async def test_listen_for_telegram_exits_when_gateway_disconnects() -> None:
     coordinator = MagicMock()
     coordinator.begin_learning = AsyncMock(return_value=True)
     coordinator.end_learning = MagicMock()
-    coordinator.suspend_telegram_listener = AsyncMock()
-    coordinator.resume_telegram_listener = MagicMock()
     coordinator.transceiver.is_connected = True
 
-    async def receive_side_effect(*_args: object, **_kwargs: object) -> None:
+    async def wait_side_effect(*_args: object, **_kwargs: object) -> None:
         coordinator.transceiver.is_connected = False
 
-    coordinator.transceiver.receive_telegram = AsyncMock(
-        side_effect=receive_side_effect
-    )
+    coordinator.wait_for_learning_telegram = AsyncMock(side_effect=wait_side_effect)
 
     result = await helper._listen_for_telegram(
         coordinator, accept_telegram=lambda _telegram: None
     )
 
     assert result is None
-    coordinator.transceiver.receive_telegram.assert_awaited_once()
+    coordinator.wait_for_learning_telegram.assert_awaited_once()
+    coordinator.transceiver.receive_telegram.assert_not_called()
 
 
 async def test_await_learning_task_uses_entry_background_task(

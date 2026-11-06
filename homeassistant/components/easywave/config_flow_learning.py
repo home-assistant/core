@@ -90,10 +90,11 @@ class EasywaveDeviceFlowMixin:
 
     def _get_coordinator(self) -> Any | None:
         """Return the gateway coordinator or None."""
-        entry = self._get_entry()
-        if entry.runtime_data is not None:
-            return entry.runtime_data.coordinator
-        return None
+        # Unset before setup and deleted on unload; reading it raises AttributeError.
+        runtime_data = getattr(self._get_entry(), "runtime_data", None)
+        if runtime_data is None:
+            return None
+        return runtime_data.coordinator
 
     def _get_bucket_subentry(self, subentry_type: str) -> Any | None:
         """Return the bucket subentry for a device type, if it exists."""
@@ -207,13 +208,12 @@ class EasywaveDeviceFlowMixin:
         learn_step: str,
     ) -> SubentryFlowResult:
         """Run or collect a background learning task with progress UI."""
-        coordinator = self._get_coordinator()
-        if coordinator is None or not coordinator.transceiver.is_connected:
-            return self.async_abort(reason="device_not_connected")
-        if coordinator.is_learning_busy():
-            return self.async_abort(reason="learning_in_progress")
-
         if self._learn_task is None:
+            coordinator = self._get_coordinator()
+            if coordinator is None or not coordinator.transceiver.is_connected:
+                return self.async_abort(reason="device_not_connected")
+            if coordinator.is_learning_busy():
+                return self.async_abort(reason="learning_in_progress")
             # Bind to the entry so unload cancels learning before dispose cleanup.
             self._learn_task = self._get_entry().async_create_background_task(
                 self.hass,
@@ -302,28 +302,22 @@ class EasywaveDeviceFlowMixin:
     async def _listen_for_telegram(
         self, coordinator: Any, *, accept_telegram: Any
     ) -> dict[str, Any] | None:
-        """Listen for a matching telegram with exclusive hardware access."""
+        """Collect a learn telegram from the listener's single receive."""
         if not await coordinator.begin_learning():
             return None
         try:
-            try:
-                await coordinator.suspend_telegram_listener()
-                deadline = time.monotonic() + LEARNING_TIMEOUT
-                while time.monotonic() < deadline:
+            deadline = time.monotonic() + LEARNING_TIMEOUT
+            while time.monotonic() < deadline:
+                if not coordinator.transceiver.is_connected:
+                    return None
+                remaining = deadline - time.monotonic()
+                telegram = await coordinator.wait_for_learning_telegram(remaining)
+                if telegram is None:
                     if not coordinator.transceiver.is_connected:
                         return None
-                    remaining = deadline - time.monotonic()
-                    telegram = await coordinator.transceiver.receive_telegram(
-                        timeout=min(remaining, 10.0)
-                    )
-                    if telegram is None:
-                        if not coordinator.transceiver.is_connected:
-                            return None
-                        continue
-                    if learned := accept_telegram(telegram):
-                        return learned
-            finally:
-                coordinator.resume_telegram_listener()
+                    continue
+                if learned := accept_telegram(telegram):
+                    return learned
         finally:
             coordinator.end_learning()
         return None

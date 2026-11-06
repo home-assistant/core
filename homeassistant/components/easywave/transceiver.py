@@ -287,8 +287,13 @@ class RX11Transceiver:
             return False
         return await self._gateway.connect()
 
-    async def receive_telegram(self, timeout: float = 30.0) -> EwbRcvEvent | None:
-        """Wait for an EW/EWneo telegram."""
+    async def receive_telegram(
+        self, timeout: float | None = None
+    ) -> EwbRcvEvent | None:
+        """Wait for an EW/EWneo telegram.
+
+        ``timeout=None`` waits until a telegram arrives or the listen is cancelled.
+        """
         return await self._gateway.ew.receive_ex(timeout=timeout)
 
     async def cancel_pending_receives(self) -> None:

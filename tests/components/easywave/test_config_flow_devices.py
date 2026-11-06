@@ -1,6 +1,7 @@
 """Tests for the Easywave config flow — device learning sub-flows."""
 
 import asyncio
+from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from easywave_home_control.codec import (
@@ -11,6 +12,7 @@ from easywave_home_control.codec import (
 )
 from easywave_home_control.codec.events import EasywaveButton
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.easywave.config_flow_device import (
     _normalize_learned_sensor,
@@ -46,8 +48,6 @@ from .conftest import (
     _entry_with_subentries,
     _transmitter_device_record,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def _start_transmitter_flow(
@@ -122,6 +122,13 @@ def _make_coordinator(
         )
     else:
         coordinator.transceiver.receive_telegram = AsyncMock(return_value=telegram)
+
+    async def _wait_for_learning_telegram(*args: object, **kwargs: object) -> object:
+        return await coordinator.transceiver.receive_telegram(*args, **kwargs)
+
+    coordinator.wait_for_learning_telegram = AsyncMock(
+        side_effect=_wait_for_learning_telegram
+    )
     coordinator.suspend_telegram_listener = AsyncMock()
     coordinator.resume_telegram_listener = MagicMock()
     coordinator.is_learning_busy = MagicMock(return_value=False)
@@ -442,13 +449,28 @@ async def test_device_flow_aborts_when_learning_in_progress(
     assert result["reason"] == "learning_in_progress"
 
 
+@pytest.mark.parametrize(
+    "clear_runtime_data",
+    [
+        pytest.param(
+            lambda entry: setattr(entry, "runtime_data", None),
+            id="runtime_data_none",
+        ),
+        pytest.param(
+            lambda entry: object.__delattr__(entry, "runtime_data"),
+            id="runtime_data_missing",
+        ),
+    ],
+)
 async def test_device_flow_aborts_without_runtime_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    clear_runtime_data: Callable[[MockConfigEntry], None],
 ) -> None:
     """Test that the device flow aborts when the gateway is not set up."""
     mock_config_entry.add_to_hass(hass)
     mock_config_entry.runtime_data = None
+    clear_runtime_data(mock_config_entry)
 
     result = await _start_device_flow(hass, mock_config_entry)
 
@@ -796,6 +818,40 @@ async def test_neo_sensor_learning_aborts_when_gateway_disconnects(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "device_not_connected"
+
+
+async def test_learning_progress_survives_disconnect_and_own_lock(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A running learn task stays on the progress path after the stick drops."""
+    release = asyncio.Event()
+
+    async def _receive(*_args: object, **_kwargs: object) -> None:
+        await release.wait()
+
+    coordinator = _make_coordinator()
+    coordinator.transceiver.receive_telegram = AsyncMock(side_effect=_receive)
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
+
+    result = await _start_device_flow(hass, mock_config_entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "buttons_1"}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    coordinator.transceiver.is_connected = False
+    coordinator.is_learning_busy.return_value = True
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "learn_timeout_transmitter"
 
 
 async def test_learning_task_oserror_shows_timeout(

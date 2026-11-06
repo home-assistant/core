@@ -11,7 +11,13 @@ from easywave_home_control.codec import (
     ButtonReleaseEvent,
 )
 from easywave_home_control.codec.events import EasywaveButton
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 from homeassistant.components.easywave.const import (
     DEVICE_SCAN_INTERVAL,
@@ -41,8 +47,6 @@ from .conftest import (
     mock_easywave_transceiver,
 )
 
-from tests.common import MockConfigEntry, async_capture_events
-
 
 @pytest.fixture
 def mock_transceiver() -> MagicMock:
@@ -69,7 +73,20 @@ def coordinator(
     """Return an EasywaveCoordinator instance."""
     mock_entry.add_to_hass(hass)
     mock_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
-    return EasywaveCoordinator(hass, mock_transceiver, mock_entry)
+    coordinator = EasywaveCoordinator(hass, mock_transceiver, mock_entry)
+    # A listener is required for the coordinator to schedule its own refresh.
+    coordinator.async_add_listener(lambda: None)
+    return coordinator
+
+
+async def async_fire_coordinator_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Advance time so the coordinator refreshes on its own schedule."""
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 def test_coordinator_init(
@@ -202,11 +219,12 @@ async def test_transceiver_disconnect_is_noop_when_already_offline(
 
 async def test_refresh_returns_connected_data_when_online(
     coordinator: EasywaveCoordinator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Periodic refresh returns connected data when online."""
     await coordinator.async_config_entry_first_refresh()
 
-    await coordinator.async_refresh()
+    await async_fire_coordinator_refresh(coordinator.hass, freezer)
 
     assert coordinator.data == {
         "is_connected": True,
@@ -219,6 +237,7 @@ async def test_refresh_reconnects_and_updates_gateway_versions(
     mock_transceiver: MagicMock,
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Periodic refresh reconnects from offline and updates gateway versions."""
     device_registry.async_get_or_create(
@@ -243,7 +262,7 @@ async def test_refresh_reconnects_and_updates_gateway_versions(
     mock_transceiver.fw_version = "FW 2.3.4"
 
     with caplog.at_level(logging.INFO):
-        await coordinator.async_refresh()
+        await async_fire_coordinator_refresh(coordinator.hass, freezer)
 
     mock_transceiver.reconnect.assert_awaited_once()
     assert coordinator.is_offline is False
@@ -265,13 +284,14 @@ async def test_refresh_reconnects_and_updates_gateway_versions(
 async def test_refresh_stays_offline_when_reconnect_fails(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Periodic refresh stays offline when reconnect fails."""
     await coordinator.async_config_entry_first_refresh()
     coordinator.is_offline = True
     mock_transceiver.reconnect = AsyncMock(return_value=False)
 
-    await coordinator.async_refresh()
+    await async_fire_coordinator_refresh(coordinator.hass, freezer)
 
     mock_transceiver.reconnect.assert_awaited_once()
     assert coordinator.is_offline is True
@@ -281,13 +301,14 @@ async def test_refresh_stays_offline_when_reconnect_fails(
 async def test_refresh_skips_reconnect_while_learning(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Periodic refresh does not reconnect during a device learning session."""
     await coordinator.async_config_entry_first_refresh()
     coordinator.is_offline = True
     assert await coordinator.begin_learning() is True
 
-    await coordinator.async_refresh()
+    await async_fire_coordinator_refresh(coordinator.hass, freezer)
 
     mock_transceiver.reconnect.assert_not_called()
     assert coordinator.is_offline is True
@@ -334,12 +355,13 @@ async def test_connected_callback_restores_online_state(
 async def test_refresh_detects_lost_connection(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Periodic refresh detects connection loss during polling."""
     await coordinator.async_config_entry_first_refresh()
     mock_transceiver.is_connected = False
 
-    await coordinator.async_refresh()
+    await async_fire_coordinator_refresh(coordinator.hass, freezer)
 
     assert coordinator.is_offline is True
     assert coordinator.data == {"is_connected": False, "device_path": None}
@@ -348,13 +370,14 @@ async def test_refresh_detects_lost_connection(
 async def test_refresh_reraises_update_failed(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """UpdateFailed from reconnect is recorded during refresh."""
     await coordinator.async_config_entry_first_refresh()
     coordinator.is_offline = True
     mock_transceiver.reconnect = AsyncMock(side_effect=UpdateFailed("fail"))
 
-    await coordinator.async_refresh()
+    await async_fire_coordinator_refresh(coordinator.hass, freezer)
 
     assert coordinator.is_offline is True
     assert coordinator.last_update_success is False
@@ -364,13 +387,14 @@ async def test_refresh_reraises_update_failed(
 async def test_refresh_wraps_reconnect_os_error_in_update_failed(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """OS errors during reconnect are wrapped in UpdateFailed."""
     await coordinator.async_config_entry_first_refresh()
     coordinator.is_offline = True
     mock_transceiver.reconnect = AsyncMock(side_effect=OSError("boom"))
 
-    await coordinator.async_refresh()
+    await async_fire_coordinator_refresh(coordinator.hass, freezer)
 
     assert coordinator.is_offline is True
     assert coordinator.last_update_success is False
@@ -381,17 +405,63 @@ async def test_refresh_wraps_reconnect_os_error_in_update_failed(
 async def test_refresh_wraps_os_error_in_update_failed(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """OS errors while reading connection state are wrapped in UpdateFailed."""
     await coordinator.async_config_entry_first_refresh()
     type(mock_transceiver).is_connected = PropertyMock(side_effect=OSError("boom"))
 
-    await coordinator.async_refresh()
+    await async_fire_coordinator_refresh(coordinator.hass, freezer)
 
     assert coordinator.is_offline is True
     assert coordinator.last_update_success is False
     assert isinstance(coordinator.last_exception, UpdateFailed)
     assert str(coordinator.last_exception) == "Update failed: boom"
+
+
+async def test_learning_reads_the_armed_receive(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Learning waits on the listener receive and does not open a second RCV."""
+    release = asyncio.Event()
+    telegram = ButtonPushEvent(
+        transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+        button=EasywaveButton.A,
+        function=ButtonFunction.DEFAULT,
+        should_ignore=False,
+    )
+    started = False
+
+    async def receive_side_effect(timeout: float | None = None) -> ButtonPushEvent:
+        nonlocal started
+        if not started:
+            started = True
+            await release.wait()
+            return telegram
+        await asyncio.Event().wait()
+        raise AssertionError
+
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.enable_telegram_reception()
+
+    try:
+        assert await coordinator.begin_learning()
+        await asyncio.sleep(0)
+        assert mock_transceiver.receive_telegram.await_count == 1
+
+        waiter = asyncio.create_task(coordinator.wait_for_learning_telegram(5))
+        await asyncio.sleep(0)
+        assert mock_transceiver.receive_telegram.await_count == 1
+        assert not waiter.done()
+
+        release.set()
+        assert await waiter is telegram
+    finally:
+        coordinator.end_learning()
+        await coordinator.suspend_telegram_listener()
+        await coordinator.async_shutdown()
 
 
 async def test_telegram_listener_restarts_after_suspend_resume(

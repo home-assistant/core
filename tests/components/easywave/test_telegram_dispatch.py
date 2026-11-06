@@ -18,6 +18,7 @@ from easywave_home_control.codec.sensors import (
     SensorMeasurementPayload,
     SensorPayloadFormat,
 )
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components.easywave.const import (
     DOMAIN,
@@ -45,8 +46,6 @@ from .conftest import (
     async_stop_easywave_listener,
     mock_easywave_transceiver,
 )
-
-from tests.common import MockConfigEntry, async_capture_events
 
 NEO_SENSOR_CAPABILITIES = (1 << 4) | (1 << 5)
 
@@ -240,7 +239,7 @@ def _temperature_event(serial: str = MOCK_NEO_SENSOR_SERIAL) -> SensorTelegramEv
             payload_format=SensorPayloadFormat.NEO,
             should_ignore=False,
             has_reference=False,
-            raw_value=2630,
+            raw_value=5989,
             reference_value=0,
             max_interval=TimerDuration(mantissa=0, exponent=0, factor_minutes=15.0),
         ),
@@ -320,7 +319,7 @@ def _humidity_event(serial: str = MOCK_NEO_SENSOR_SERIAL) -> SensorTelegramEvent
             payload_format=SensorPayloadFormat.NEO,
             should_ignore=False,
             has_reference=False,
-            raw_value=5500,
+            raw_value=2252,
             reference_value=0,
             max_interval=TimerDuration(mantissa=0, exponent=0, factor_minutes=15.0),
         ),
@@ -588,10 +587,10 @@ async def test_neo_sensor_humidity_restores_last_known_state(
     await _teardown_entry(hass, entry)
 
 
-async def test_coordinator_ignores_sensor_measurement_marked_should_ignore(
+async def test_coordinator_applies_sensor_measurement_marked_should_ignore(
     hass: HomeAssistant,
 ) -> None:
-    """Sensor measurements flagged to ignore do not update entity state."""
+    """Sensor measurements still update entity state when should_ignore is set."""
     transceiver = mock_easywave_transceiver()
     entry = _entry_with_subentries(
         _neo_sensor_device_record(capabilities=NEO_SENSOR_CAPABILITIES)
@@ -607,7 +606,7 @@ async def test_coordinator_ignores_sensor_measurement_marked_should_ignore(
             payload_format=SensorPayloadFormat.NEO,
             should_ignore=True,
             has_reference=False,
-            raw_value=2630,
+            raw_value=5989,
             reference_value=0,
             max_interval=TimerDuration(mantissa=0, exponent=0, factor_minutes=15.0),
         ),
@@ -623,7 +622,7 @@ async def test_coordinator_ignores_sensor_measurement_marked_should_ignore(
         assert entity_id is not None
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == "unknown"
+        assert state.state == "26.3"
 
     await _run_dispatch_test(hass, entry, transceiver, _assert_state, ignored_event)
 

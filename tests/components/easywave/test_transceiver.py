@@ -288,6 +288,7 @@ def test_gateway_config_disables_library_auto_reconnect(
 
     gateway_config = mock_gateway_cls.call_args.args[0]
     assert gateway_config.auto_reconnect is False
+    assert gateway_config.auto_listen is False
 
 
 def test_resolve_gateway_port_prefers_usb_serial() -> None:

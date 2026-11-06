@@ -79,6 +79,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._sensor_entities: list[Any] = []
         self._listener_task: asyncio.Task[None] | None = None
         self._learning_lock = asyncio.Lock()
+        self._learning_queue: asyncio.Queue[EwbRcvEvent | None] | None = None
         self._shutting_down = False
         self._ha_started = self.hass.state is CoreState.running
         self._gateway_last_status = "disconnected"
@@ -97,15 +98,40 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self._learning_lock.locked()
 
     async def begin_learning(self) -> bool:
-        """Try to acquire exclusive access for a device learning session."""
+        """Arm learning on the single receive already held by the listener.
+
+        A second RCV IRP supersedes the first, so learning does not open one.
+        The listener is started only when no receive is in flight.
+        """
         if self._learning_lock.locked():
             return False
         await self._learning_lock.acquire()
+        self._learning_queue = asyncio.Queue()
+        self.ensure_telegram_listener()
         return True
 
     def end_learning(self) -> None:
         """Release a device learning session lock."""
+        self._learning_queue = None
         self._learning_lock.release()
+        if not self._shutting_down and not self._has_telegram_listeners:
+            self._stop_telegram_listener()
+
+    async def wait_for_learning_telegram(self, timeout: float) -> EwbRcvEvent | None:
+        """Return the next telegram from the listener, or None on timeout."""
+        queue = self._learning_queue
+        if queue is None:
+            return None
+        try:
+            return await asyncio.wait_for(queue.get(), timeout)
+        except TimeoutError:
+            return None
+
+    def _offer_learning_telegram(self, telegram: EwbRcvEvent | None) -> None:
+        """Hand a listener telegram to an active learning session."""
+        queue = self._learning_queue
+        if queue is not None:
+            queue.put_nowait(telegram)
 
     @callback
     def _mark_shutting_down(self) -> None:
@@ -274,7 +300,6 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except UpdateFailed:
             raise
         except (OSError, TimeoutError) as err:
-            _LOGGER.warning("Error updating coordinator data: %s", err)
             self.is_offline = True
             self._stop_telegram_listener()
             self._sync_gateway_connection_events()
@@ -368,6 +393,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._transmitter_entities
             or self._sensor_entities
             or self._configured_transmitters()
+            or self._learning_lock.locked()
         )
 
     def register_transmitter_entities(self, entities: list[Any]) -> None:
@@ -437,10 +463,10 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._listener_task = None
 
     async def suspend_telegram_listener(self) -> None:
-        """Pause the telegram listener so a learning task has exclusive hardware access.
+        """Stop the listener task and cancel its in-flight receive.
 
-        Stops the listener task and cancels any EWB_RCV that was in-flight on the
-        hardware, leaving a clean slate for the learning loop.
+        Learning and sends leave that receive armed. A second RCV IRP would
+        supersede it.
         """
         task = self._stop_telegram_listener()
         if task is not None:
@@ -458,7 +484,8 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             while not self.is_offline and self._has_telegram_listeners:
                 try:
-                    telegram = await self.transceiver.receive_telegram(timeout=30.0)
+                    telegram = await self.transceiver.receive_telegram()
+                    self._offer_learning_telegram(telegram)
                     if telegram is None:
                         if not self.transceiver.is_connected:
                             self._handle_disconnect()
@@ -550,9 +577,6 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 type(event.payload).__name__,
             )
             return
-        if event.payload.should_ignore:
-            return
-
         matched = False
         for entity in list(self._sensor_entities):
             if _serial_hex_matches(event.sensor_serial, entity.sensor_serial):
