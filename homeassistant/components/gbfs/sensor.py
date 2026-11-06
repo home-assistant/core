@@ -117,7 +117,7 @@ async def async_setup_entry(
     for subentry_id, subentry in entry.subentries.items():
         station = coordinator.data.stations.get(subentry.data[CONF_STATION_ID])
         descriptions = [VEHICLES_AVAILABLE]
-        if station is None or station.docks_available is not None:
+        if station is None or station.is_virtual_station is not True:
             descriptions.append(DOCKS_AVAILABLE)
         descriptions.extend(group_descriptions)
         async_add_entities(

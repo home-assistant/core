@@ -167,6 +167,33 @@ async def test_reconfigure(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+async def test_reconfigure_retrying_entry(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring an entry whose setup failed reloads it."""
+    aioclient_mock.get(V3_URL, exc=ClientError())
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    aioclient_mock.clear_requests()
+    mock_feed(aioclient_mock, "v3")
+    aioclient_mock.get(
+        MIRROR_URL, text=await async_load_fixture(hass, "v3/gbfs.json", DOMAIN)
+    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: MIRROR_URL}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_URL: MIRROR_URL}
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
 @pytest.mark.parametrize(("url", "serve", "error"), URL_ERROR_CASES)
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_errors(

@@ -192,3 +192,41 @@ async def test_new_vehicle_type_counts_in_its_group(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "6"
+
+
+async def test_docks_sensor_for_station_without_status_at_setup(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a docked station without a status row still gets a docks sensor."""
+
+    def drop_s1(document: dict[str, Any]) -> None:
+        document["data"]["stations"] = [
+            station
+            for station in document["data"]["stations"]
+            if station["station_id"] != "s1"
+        ]
+
+    await serve_edited_v3_feed(hass, aioclient_mock, {"station_status": drop_s1})
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Variant Bikes",
+        unique_id="example_bikes",
+        data={CONF_URL: V3_URL},
+        subentries_data=[_station("s1", "Main St & 1st Ave")],
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = f"{MAIN_ST}_docks_available"
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    aioclient_mock.clear_requests()
+    mock_feed(aioclient_mock, "v3")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "5"
