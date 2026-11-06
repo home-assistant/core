@@ -80,6 +80,27 @@ DAILY = [
         sunrise_epoch=1788318000,
         sunset_epoch=1788368400,
         confidence="g",
+        max_temp_ensemble={
+            "p000": 16.4,
+            "p025": 17.5,
+            "p050": 18.1,
+            "p075": 18.6,
+            "p100": 19.9,
+        },
+        min_temp_ensemble={
+            "p000": 7.2,
+            "p025": 8.4,
+            "p050": 9.1,
+            "p075": 9.6,
+            "p100": 10.8,
+        },
+        precip_accum_ensemble={
+            "p010": None,
+            "p025": 0.3,
+            "p050": 1.1,
+            "p075": 2.4,
+            "p090": 4.7,
+        },
     ),
     DailyForecast(
         date="2026-09-03",
