@@ -44,6 +44,8 @@ from .const import (
 )
 from .coordinator import MeteoFranceAlertUpdateCoordinator, MeteoFranceConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class MeteoFranceSensorEntityDescription(SensorEntityDescription):
