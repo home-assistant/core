@@ -38,7 +38,19 @@
         "data_description": {
           "api_key": "[%key:component::smartyplants::config::step::user::data_description::api_key%]"
         },
-        "description": "Update the API key. Home Assistant has no address reachable from the internet, so there is no webhook URL to offer and the integration polls.",
+        "description": "Update the API key. This integration was set up without a webhook, so there is no signing secret to change and readings arrive by polling.",
+        "title": "[%key:component::smartyplants::config::step::reconfigure::title%]"
+      },
+      "reconfigure_secret": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "webhook_secret": "[%key:component::smartyplants::config::step::webhook::data::webhook_secret%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::smartyplants::config::step::user::data_description::api_key%]",
+          "webhook_secret": "[%key:component::smartyplants::config::step::reconfigure::data_description::webhook_secret%]"
+        },
+        "description": "Update the API key, or the signing secret used to verify pushed updates. Home Assistant currently has no address reachable from the internet, so the webhook URL cannot be shown. The webhook you already added in the SmartyPlants app is unaffected, and its secret can still be changed here, or cleared to use polling only.",
         "title": "[%key:component::smartyplants::config::step::reconfigure::title%]"
       },
       "user": {

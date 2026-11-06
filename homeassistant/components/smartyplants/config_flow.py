@@ -136,11 +136,16 @@ class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Change the API key, and the secret when a webhook can be offered."""
-        webhook_url = self._webhook_url(self._get_reconfigure_entry())
-        if webhook_url is None:
-            # Nothing to paste into the app, so a secret is no use here.
+        """Change the API key, and the secret when the entry has a webhook."""
+        entry = self._get_reconfigure_entry()
+        if entry.data.get(CONF_WEBHOOK_ID) is None:
+            # No webhook was ever set up, so there is no secret to collect.
             return await self.async_step_reconfigure_key(user_input)
+
+        if (webhook_url := self._webhook_url(entry)) is None:
+            # The endpoint stays registered whether or not an address can be
+            # worked out, so the secret is still worth collecting.
+            return await self.async_step_reconfigure_secret(user_input)
 
         return await self._async_reconfigure(
             user_input,
@@ -150,10 +155,21 @@ class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"webhook_url": webhook_url},
         )
 
+    async def async_step_reconfigure_secret(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the key or the secret, with no URL to show alongside it."""
+        return await self._async_reconfigure(
+            user_input,
+            step_id="reconfigure_secret",
+            data_schema=RECONFIGURE_SCHEMA,
+            collects_secret=True,
+        )
+
     async def async_step_reconfigure_key(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Change only the API key, when there is no webhook URL to show."""
+        """Change only the API key, for an entry that has no webhook."""
         return await self._async_reconfigure(
             user_input,
             step_id="reconfigure_key",
@@ -163,11 +179,9 @@ class SmartyPlantsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _webhook_url(self, entry: SmartyPlantsConfigEntry) -> str | None:
         """Return the push URL for this entry, when there is one to show."""
-        if (webhook_id := entry.data.get(CONF_WEBHOOK_ID)) is None:
-            return None
         try:
             return hass_webhook.async_generate_url(
-                self.hass, webhook_id, allow_internal=False
+                self.hass, entry.data[CONF_WEBHOOK_ID], allow_internal=False
             )
         except NoURLAvailableError:
             return None
