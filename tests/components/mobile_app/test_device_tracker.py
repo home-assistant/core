@@ -137,6 +137,28 @@ async def setup_zone(hass: HomeAssistant) -> None:
             },
             "School",
         ),
+        # Raw fix is accepted but not used, zone is determined by gps
+        (
+            {"gps": [10, 20], "raw_gps": [10, 22], "raw_gps_accuracy": 5},
+            {
+                "latitude": 10,
+                "longitude": 20,
+                "gps_accuracy": 30,
+                "in_zones": ["zone.home"],
+            },
+            "home",
+        ),
+        # Raw fix without accuracy is accepted
+        (
+            {"gps": [10, 20], "raw_gps": [10, 22]},
+            {
+                "latitude": 10,
+                "longitude": 20,
+                "gps_accuracy": 30,
+                "in_zones": ["zone.home"],
+            },
+            "home",
+        ),
         # Send in_zones only - first zone determines state
         (
             {"in_zones": ["zone.home"]},
@@ -362,6 +384,38 @@ async def test_restoring_location(
                 }
             },
         ),
+        # Raw fix is persisted
+        (
+            {"gps": [10, 20], "raw_gps": [10, 22], "raw_gps_accuracy": 5},
+            "home",
+            {
+                "friendly_name": "Test 1",
+                "source_type": "gps",
+                "battery_level": 40,
+                "altitude": 50.0,
+                "course": 60,
+                "speed": 70,
+                "vertical_accuracy": 80,
+                "latitude": 10.0,
+                "longitude": 20.0,
+                "gps_accuracy": 30,
+                "in_zones": ["zone.home"],
+                "tracking_type": "position",
+            },
+            {
+                "data": {
+                    "gps_accuracy": 30,
+                    "battery": 40,
+                    "altitude": 50.0,
+                    "course": 60,
+                    "speed": 70,
+                    "vertical_accuracy": 80,
+                    "gps": [10, 20],
+                    "raw_gps": [10, 22],
+                    "raw_gps_accuracy": 5,
+                }
+            },
+        ),
         # location_name only
         (
             {"location_name": "office"},
@@ -490,6 +544,25 @@ async def test_saving_state(
                 "tracking_type": "position",
             },
         ),
+        # Raw fix is restored, zone is determined by gps
+        (
+            {
+                "gps": [10.0, 20.0],
+                "gps_accuracy": 30,
+                "raw_gps": [10.0, 22.0],
+                "raw_gps_accuracy": 5,
+            },
+            "home",
+            {
+                "friendly_name": "Test 1",
+                "source_type": "gps",
+                "latitude": 10.0,
+                "longitude": 20.0,
+                "gps_accuracy": 30,
+                "in_zones": ["zone.home"],
+                "tracking_type": "position",
+            },
+        ),
         # Coordinates outside any zone
         (
             {
@@ -574,6 +647,7 @@ async def test_saving_state(
 )
 async def test_restoring_state(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     restored_data: dict[str, Any],
     expected_state: str,
@@ -596,6 +670,15 @@ async def test_restoring_state(
     assert state is not None
     assert state.state == expected_state
     assert state.attributes == expected_attributes
+
+    # Saving again must persist all restored data, not just what the state shows
+    await async_mock_restore_state_shutdown_restart(hass)
+    saved = next(
+        item
+        for item in hass_storage[RESTORE_STATE_KEY]["data"]
+        if item["state"]["entity_id"] == "device_tracker.test_1_2"
+    )
+    assert saved["extra_data"] == {"data": restored_data}
 
 
 @pytest.mark.usefixtures("setup_zone")
@@ -723,6 +806,10 @@ async def test_restoring_state_legacy_fallback(
         {"gps_accuracy": "not-a-number"},
         # in_zones contains a non-zone entity_id
         {"in_zones": ["sensor.foo"]},
+        # raw_gps latitude out of range
+        {"raw_gps": [100.0, 20.0], "raw_gps_accuracy": 5},
+        # raw_gps_accuracy rejected by cv.positive_float
+        {"raw_gps": [10.0, 20.0], "raw_gps_accuracy": -1},
     ],
 )
 async def test_restoring_state_invalid_extra_data(

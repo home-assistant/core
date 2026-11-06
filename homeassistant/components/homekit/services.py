@@ -1,12 +1,13 @@
 """Services for the HomeKit integration."""
 
 import asyncio
+from enum import StrEnum
 import logging
 from typing import cast
 
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, SERVICE_RELOAD
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -18,23 +19,31 @@ from homeassistant.helpers.target import (
 )
 from homeassistant.util.async_ import create_eager_task
 
-from .const import (
-    DOMAIN,
-    SERVICE_HOMEKIT_RESET_ACCESSORY,
-    SERVICE_HOMEKIT_UNPAIR,
-    STATUS_RUNNING,
-)
+from .const import DOMAIN, STATUS_RUNNING
 from .util import async_all_homekit_instances, async_update_entries_from_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
+
+class HomeKitService(StrEnum):
+    """Store keys for HomeKit services."""
+
+    RELOAD = "reload"
+    RESET_ACCESSORY = "reset_accessory"
+    UNPAIR = "unpair"
+
+
 RESET_ACCESSORY_SERVICE_SCHEMA = probatio.Schema(
-    {probatio.Required(ATTR_ENTITY_ID): cv.entity_ids}
+    {probatio.Required(CommonServiceArgument.ENTITY_ID): cv.entity_ids}
 )
 
 
 UNPAIR_SERVICE_SCHEMA = probatio.Schema(
-    {probatio.Required(ATTR_DEVICE_ID): probatio.All(probatio.EnsureList(), [str])}
+    {
+        probatio.Required(CommonServiceArgument.DEVICE_ID): probatio.All(
+            probatio.EnsureList(), [str]
+        )
+    }
 )
 
 
@@ -49,7 +58,7 @@ async def _async_handle_homekit_reset_accessory(service: ServiceCall) -> None:
             )
             continue
 
-        entity_ids = cast(list[str], service.data.get("entity_id"))
+        entity_ids = cast(list[str], service.data.get(CommonServiceArgument.ENTITY_ID))
         await homekit.async_reset_accessories(entity_ids)
 
 
@@ -110,19 +119,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the HomeKit integration."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_HOMEKIT_RESET_ACCESSORY,
+        HomeKitService.RESET_ACCESSORY,
         _async_handle_homekit_reset_accessory,
         schema=RESET_ACCESSORY_SERVICE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_HOMEKIT_UNPAIR,
+        HomeKitService.UNPAIR,
         _async_handle_homekit_unpair,
         schema=UNPAIR_SERVICE_SCHEMA,
     )
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_RELOAD,
+        HomeKitService.RELOAD,
         _handle_homekit_reload,
     )

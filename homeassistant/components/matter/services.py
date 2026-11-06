@@ -8,27 +8,15 @@ from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
-    ATTR_CREDENTIAL_DATA,
-    ATTR_CREDENTIAL_INDEX,
-    ATTR_CREDENTIAL_RULE,
-    ATTR_CREDENTIAL_TYPE,
-    ATTR_USER_INDEX,
-    ATTR_USER_NAME,
-    ATTR_USER_STATUS,
-    ATTR_USER_TYPE,
     CLEAR_ALL_INDEX,
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
     DOMAIN,
     SERVICE_CREDENTIAL_TYPES,
     USER_TYPE_REVERSE_MAP,
+    MatterService,
+    MatterServiceArgument,
 )
-
-ATTR_DURATION = "duration"
-ATTR_EMERGENCY_BOOST = "emergency_boost"
-ATTR_TEMPORARY_SETPOINT = "temporary_setpoint"
-
-SERVICE_WATER_HEATER_BOOST = "water_heater_boost"
 
 
 @callback
@@ -38,15 +26,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_WATER_HEATER_BOOST,
+        MatterService.WATER_HEATER_BOOST,
         entity_domain=WATER_HEATER_DOMAIN,
         schema={
             # duration >=1
-            probatio.Required(ATTR_DURATION): probatio.All(
+            probatio.Required(MatterServiceArgument.DURATION): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=1)
             ),
-            probatio.Optional(ATTR_EMERGENCY_BOOST): cv.boolean,
-            probatio.Optional(ATTR_TEMPORARY_SETPOINT): probatio.All(
+            probatio.Optional(MatterServiceArgument.EMERGENCY_BOOST): cv.boolean,
+            probatio.Optional(MatterServiceArgument.TEMPORARY_SETPOINT): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=30, max=65)
             ),
         },
@@ -57,17 +45,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "set_lock_user",
+        MatterService.SET_LOCK_USER,
         entity_domain=LOCK_DOMAIN,
         schema={
-            probatio.Optional(ATTR_USER_INDEX): probatio.All(
+            probatio.Optional(MatterServiceArgument.USER_INDEX): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=1)
             ),
-            probatio.Optional(ATTR_USER_NAME): probatio.Any(str, None),
-            probatio.Optional(ATTR_USER_TYPE): probatio.In(
+            probatio.Optional(MatterServiceArgument.USER_NAME): probatio.Any(str, None),
+            probatio.Optional(MatterServiceArgument.USER_TYPE): probatio.In(
                 USER_TYPE_REVERSE_MAP.keys()
             ),
-            probatio.Optional(ATTR_CREDENTIAL_RULE): probatio.In(
+            probatio.Optional(MatterServiceArgument.CREDENTIAL_RULE): probatio.In(
                 CREDENTIAL_RULE_REVERSE_MAP.keys()
             ),
         },
@@ -77,10 +65,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "clear_lock_user",
+        MatterService.CLEAR_LOCK_USER,
         entity_domain=LOCK_DOMAIN,
         schema={
-            probatio.Required(ATTR_USER_INDEX): probatio.All(
+            probatio.Required(MatterServiceArgument.USER_INDEX): probatio.All(
                 probatio.Coerce(int),
                 probatio.Any(probatio.Range(min=1), CLEAR_ALL_INDEX),
             ),
@@ -92,7 +80,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "get_lock_info",
+        MatterService.GET_LOCK_INFO,
         entity_domain=LOCK_DOMAIN,
         schema={},
         func="async_get_lock_info",
@@ -102,7 +90,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "get_lock_users",
+        MatterService.GET_LOCK_USERS,
         entity_domain=LOCK_DOMAIN,
         schema={},
         func="async_get_lock_users",
@@ -113,23 +101,23 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "set_lock_credential",
+        MatterService.SET_LOCK_CREDENTIAL,
         entity_domain=LOCK_DOMAIN,
         schema={
-            probatio.Required(ATTR_CREDENTIAL_TYPE): probatio.In(
+            probatio.Required(MatterServiceArgument.CREDENTIAL_TYPE): probatio.In(
                 SERVICE_CREDENTIAL_TYPES
             ),
-            probatio.Required(ATTR_CREDENTIAL_DATA): cv.string,
-            probatio.Optional(ATTR_CREDENTIAL_INDEX): probatio.All(
+            probatio.Required(MatterServiceArgument.CREDENTIAL_DATA): cv.string,
+            probatio.Optional(MatterServiceArgument.CREDENTIAL_INDEX): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=0)
             ),
-            probatio.Optional(ATTR_USER_INDEX): probatio.All(
+            probatio.Optional(MatterServiceArgument.USER_INDEX): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=1)
             ),
-            probatio.Optional(ATTR_USER_STATUS): probatio.In(
+            probatio.Optional(MatterServiceArgument.USER_STATUS): probatio.In(
                 ["occupied_enabled", "occupied_disabled"]
             ),
-            probatio.Optional(ATTR_USER_TYPE): probatio.In(
+            probatio.Optional(MatterServiceArgument.USER_TYPE): probatio.In(
                 USER_TYPE_REVERSE_MAP.keys()
             ),
         },
@@ -140,13 +128,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "clear_lock_credential",
+        MatterService.CLEAR_LOCK_CREDENTIAL,
         entity_domain=LOCK_DOMAIN,
         schema={
-            probatio.Required(ATTR_CREDENTIAL_TYPE): probatio.In(
+            probatio.Required(MatterServiceArgument.CREDENTIAL_TYPE): probatio.In(
                 SERVICE_CREDENTIAL_TYPES
             ),
-            probatio.Required(ATTR_CREDENTIAL_INDEX): probatio.All(
+            probatio.Required(MatterServiceArgument.CREDENTIAL_INDEX): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=0)
             ),
         },
@@ -156,13 +144,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "get_lock_credential_status",
+        MatterService.GET_LOCK_CREDENTIAL_STATUS,
         entity_domain=LOCK_DOMAIN,
         schema={
-            probatio.Required(ATTR_CREDENTIAL_TYPE): probatio.In(
+            probatio.Required(MatterServiceArgument.CREDENTIAL_TYPE): probatio.In(
                 CREDENTIAL_TYPE_REVERSE_MAP.keys()
             ),
-            probatio.Required(ATTR_CREDENTIAL_INDEX): probatio.All(
+            probatio.Required(MatterServiceArgument.CREDENTIAL_INDEX): probatio.All(
                 probatio.Coerce(int), probatio.Range(min=0)
             ),
         },

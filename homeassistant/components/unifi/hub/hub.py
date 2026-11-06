@@ -18,6 +18,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, LOGGER, PLATFORMS
+from .adoption import UnifiDeviceAdoption
 from .config import UnifiConfig
 from .connection import UnifiConnectionManager
 from .entity_helper import UnifiEntityHelper
@@ -44,6 +45,7 @@ class UnifiHub:
         self.hass = hass
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
+        self.entry_data = config_entry.data
         self.connection = UnifiConnectionManager(
             hass,
             config_entry,
@@ -54,6 +56,7 @@ class UnifiHub:
         config_entry.async_on_unload(self.connection.stop)
         self.websocket = UnifiWebsocket(self.connection)
         self.entity_loader = UnifiEntityLoader(self)
+        self.adoption = UnifiDeviceAdoption(self)
         self._entity_helper = UnifiEntityHelper(hass, api)
 
         self.site = config_entry.data[CONF_SITE_ID]
@@ -182,11 +185,13 @@ class UnifiHub:
     async def async_config_entry_updated(
         hass: HomeAssistant, config_entry: UnifiConfigEntry
     ) -> None:
-        """Apply updated options to the hub.
-
-        Config flows reload the entry after they change its data.
-        """
+        """Reload when the data changed, otherwise apply updated options."""
         hub = config_entry.runtime_data
+        if config_entry.data != hub.entry_data:
+            # Updates arriving before the reload replaces the hub are handled
+            hub.entry_data = config_entry.data
+            hass.config_entries.async_schedule_reload(config_entry.entry_id)
+            return
         hub.config = UnifiConfig.from_config_entry(config_entry)
         async_dispatcher_send(hass, hub.signal_options_update)
 
