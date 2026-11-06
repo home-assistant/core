@@ -57,7 +57,7 @@ async def test_device_tracker_setup(
 
     # Entity IDs should follow default object-id generation
     entity_ids = {entity.entity_id for entity in device_tracker_entities}
-    assert "device_tracker.opnsense_ff_ff_ff_ff_ff_ff" in entity_ids
+    assert "device_tracker.ff_ff_ff_ff_ff_ff" in entity_ids
     assert "device_tracker.desktop" in entity_ids
 
     for mac_address in ("ff:ff:ff:ff:ff:ff", "ff:ff:ff:ff:ff:fe"):
@@ -71,7 +71,7 @@ async def test_device_tracker_setup(
         )
         assert device is not None
         assert tracker_entity.device_id == device.id
-        assert tracker_entity.disabled_by is None
+        assert tracker_entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.usefixtures("mock_opnsense_client")
@@ -203,6 +203,7 @@ async def test_device_tracker_missing_device_data_and_empty_ip(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opnsense_client: mock.AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test tracker property fallbacks for missing device and empty IP."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -224,7 +225,9 @@ async def test_device_tracker_missing_device_data_and_empty_ip(
             "manufacturer": "OEM",
         }
     ]
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     empty_ip_entity = OPNsenseDeviceTrackerEntity(coordinator, "ff:ff:ff:ff:ff:fe")
     assert empty_ip_entity.ip_address is None

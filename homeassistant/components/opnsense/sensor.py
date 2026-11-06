@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -71,7 +71,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensor entities for OPNsense."""
     coordinator = entry.runtime_data.coordinator
-    tracked_sensor_entities: set[str] = set()
+    tracked_sensor_devices = entry.runtime_data.tracked_sensor_devices
 
     @callback
     def _async_add_new_entities() -> None:
@@ -81,18 +81,17 @@ async def async_setup_entry(
 
         entities: list[OPNsenseSensorEntity] = []
         for mac_address in coordinator.data:
-            for sensor_description in SENSOR_DESCRIPTIONS:
-                unique_id = f"{mac_address}_{sensor_description.key}"
-                if unique_id in tracked_sensor_entities:
-                    continue
-                entities.append(
-                    OPNsenseSensorEntity(
-                        coordinator,
-                        mac_address,
-                        sensor_description,
-                    )
+            if mac_address in tracked_sensor_devices:
+                continue
+            entities.extend(
+                OPNsenseSensorEntity(
+                    coordinator,
+                    mac_address,
+                    sensor_description,
                 )
-                tracked_sensor_entities.add(unique_id)
+                for sensor_description in SENSOR_DESCRIPTIONS
+            )
+            tracked_sensor_devices.add(mac_address)
 
         if entities:
             async_add_entities(entities)
@@ -119,10 +118,12 @@ class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity)
         self.entity_description = description
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._mac_address = mac_address
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, mac_address)},
-            name=mac_address,
-        )
+        connection = (dr.CONNECTION_NETWORK_MAC, mac_address)
+        self._attr_device_info = dr.DeviceInfo(connections={connection})
+        if not dr.async_get(coordinator.hass).async_get_device_by_connection(
+            connection, coordinator.config_entry.entry_id
+        ):
+            self._attr_device_info["name"] = mac_address
         if self.available:
             device_data = self.device_data
             if device_data is not None:

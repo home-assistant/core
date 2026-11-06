@@ -3,7 +3,7 @@
 from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -18,12 +18,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for OPNsense component."""
-    client = entry.runtime_data.client
-    interfaces = entry.runtime_data.tracker_interfaces
+    coordinator = entry.runtime_data.coordinator
     tracked_devices = entry.runtime_data.tracked_devices
-
-    coordinator = OPNsenseDeviceTrackerCoordinator(hass, entry, client, interfaces)
-    entry.runtime_data.tracker_coordinator = coordinator
 
     @callback
     def _async_add_new_entities() -> None:
@@ -43,7 +39,7 @@ async def async_setup_entry(
                 )
                 and device_entry.name != hostname
             ):
-                device_registry.async_update_device(device_entry.id, name=hostname)
+                device_registry.async_update_device(device_entry.id, name=str(hostname))
 
         entities = []
         for mac_address in coordinator.data:

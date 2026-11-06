@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import sensor
 from homeassistant.components.opnsense.sensor import (
@@ -18,8 +19,6 @@ from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
 from .const import ARP
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_opnsense_client")

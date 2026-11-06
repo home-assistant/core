@@ -1,6 +1,6 @@
 """Coordinator for OPNsense device tracker updates."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 from typing import override
 
@@ -35,6 +35,8 @@ class OPNsenseRuntimeData:
     """Runtime data for OPNsense config entries."""
 
     coordinator: OPNsenseCoordinator
+    tracked_devices: set[str] = field(default_factory=set)
+    tracked_sensor_devices: set[str] = field(default_factory=set)
 
 
 class OPNsenseCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]):
