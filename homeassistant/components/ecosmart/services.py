@@ -10,7 +10,7 @@ from aioecosmart import (
 )
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -35,7 +35,7 @@ class EcosmartService(StrEnum):
 
 GET_FORECASTS_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): DeviceSelector(
+        probatio.Required(CommonServiceArgument.DEVICE_ID): DeviceSelector(
             {"filter": [{"integration": DOMAIN}]}
         ),
     }
@@ -95,7 +95,7 @@ async def _async_get_forecasts(call: ServiceCall) -> ServiceResponse:
     sensor's request budget is untouched until someone asks.
     """
     coordinator, poc = _coordinator_and_grid_exit_point(
-        call.hass, call.data[ATTR_DEVICE_ID]
+        call.hass, call.data[CommonServiceArgument.DEVICE_ID]
     )
     try:
         forecast = await coordinator.client.forecast(poc, FORECAST_HOURS)

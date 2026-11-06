@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from .types import ScreenLogicConfigEntry
+from .coordinator import ScreenLogicConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

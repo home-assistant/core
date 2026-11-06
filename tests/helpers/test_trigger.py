@@ -3979,7 +3979,7 @@ async def test_entity_filter_device_class_unknown_entity(
     """Test entity_filter excludes entities not in state machine or registry."""
     trig = _make_trigger(hass, {"sensor": DomainSpec(device_class="humidity")})
 
-    # Entity not in state machine and not in entity registry -> UNDEFINED
+    # Entity not in state machine and not in entity registry -> Undefined
     entities = {"sensor.nonexistent"}
     result = trig.entity_filter(entities)
     assert result == set()

@@ -1,11 +1,16 @@
 """Alexa Devices integration."""
 
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
+from pathlib import Path
+
+from aioamazondevices.api import SETTINGS_FILENAME
 
 from homeassistant.const import CONF_COUNTRY, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv, httpx_client
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
@@ -95,34 +100,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> No
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
+def _move_legacy_settings(hass: HomeAssistant) -> None:
+    """Move library settings from the config root into .storage."""
+    old_dir = Path(hass.config.path(DOMAIN))
+    old_file = old_dir / SETTINGS_FILENAME
+    new_file = Path(hass.config.path(STORAGE_DIR, DOMAIN, SETTINGS_FILENAME))
+    if not old_file.exists() or new_file.exists():
+        return
+    new_file.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        old_file.replace(new_file)
+    except FileNotFoundError:
+        if new_file.exists():
+            return
+        raise
+    # Only removed when empty, debug dumps may still be there
+    with suppress(OSError):
+        old_dir.rmdir()
+
+
 async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> None:
     """Migrate old entry."""
 
     if entry.version == 1 and entry.minor_version < 3:
-        if CONF_SITE in entry.data:
-            # Site in data (wrong place), just move to login data
-            new_data = entry.data.copy()
-            new_data[CONF_LOGIN_DATA][CONF_SITE] = new_data[CONF_SITE]
-            new_data.pop(CONF_SITE)
-            hass.config_entries.async_update_entry(
-                entry, data=new_data, version=1, minor_version=3
-            )
-            return
-
-        if CONF_SITE in entry.data[CONF_LOGIN_DATA]:
-            # Site is there, just update version to avoid future migrations
-            hass.config_entries.async_update_entry(entry, version=1, minor_version=3)
-            return
-
         LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
-        # Convert country in domain
-        country = entry.data[CONF_COUNTRY].lower()
-        domain = COUNTRY_DOMAINS.get(country, country)
-
-        # Add site to login data
         new_data = entry.data.copy()
-        new_data[CONF_LOGIN_DATA][CONF_SITE] = f"https://www.amazon.{domain}"
+        if CONF_SITE in new_data:
+            # Site in data (wrong place), just move to login data
+            new_data[CONF_LOGIN_DATA][CONF_SITE] = new_data.pop(CONF_SITE)
+        elif CONF_SITE not in new_data[CONF_LOGIN_DATA]:
+            # Convert country in domain
+            country = new_data[CONF_COUNTRY].lower()
+            domain = COUNTRY_DOMAINS.get(country, country)
+            new_data[CONF_LOGIN_DATA][CONF_SITE] = f"https://www.amazon.{domain}"
 
         hass.config_entries.async_update_entry(
             entry, data=new_data, version=1, minor_version=3
@@ -131,6 +142,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
         LOGGER.info(
             "Migration to version %s.%s successful", entry.version, entry.minor_version
         )
+
+    if entry.version == 1 and entry.minor_version < 4:
+        await hass.async_add_executor_job(_move_legacy_settings, hass)
+        hass.config_entries.async_update_entry(entry, version=1, minor_version=4)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> None:
