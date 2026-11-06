@@ -49,7 +49,7 @@ PRESSED_EVENT_TYPES: tuple[ButtonEventType, ...] = (
     ButtonEventType.PRESS_START,
 )
 # Ordered by preference: only the first type an entity declares fires the
-# trigger. Repeating while held needs both, to know when the hold ends.
+# trigger.
 HELD_EVENT_TYPES: tuple[ButtonEventType, ...] = (
     ButtonEventType.LONG_PRESS_START,
     ButtonEventType.LONG_PRESS_END,
@@ -160,7 +160,11 @@ class ButtonHeldTrigger(StatelessEntityTriggerBase):
         event_types = (
             state.attributes.get(EventEntityCapabilityAttribute.EVENT_TYPES) or ()
         )
-        return all(event_type in event_types for event_type in HELD_EVENT_TYPES)
+        # Needs both, to know when the hold ends.
+        return (
+            ButtonEventType.LONG_PRESS_START in event_types
+            and ButtonEventType.LONG_PRESS_END in event_types
+        )
 
     @override
     async def async_attach_runner(
