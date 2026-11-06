@@ -276,6 +276,51 @@ async def test_insight_on_since_holds_when_refresh_is_skipped(
         assert state.attributes[ATTR_ON_LATEST_TIME] == on_since
 
 
+async def test_insight_binary_state_subscription_keeps_on_since(
+    hass: HomeAssistant,
+    pywemo_registry: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A BinaryState push must not move the cached on period start.
+
+    That callback calls get_state(False), which does not reload Insight on_for.
+    """
+    freezer.move_to("2026-11-06T12:00:00+00:00")
+    await async_setup_component(hass, HA_DOMAIN, {})
+    with create_pywemo_device(pywemo_registry, "Insight") as insight:
+        wemo_entity = await async_create_wemo_entity(hass, insight, "")
+        assert wemo_entity is not None
+
+        async def async_update() -> None:
+            await hass.services.async_call(
+                HA_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
+                blocking=True,
+            )
+
+        insight.standby_state = pywemo.StandbyState.ON
+        insight.get_state.return_value = 1
+        await async_update()
+        state = hass.states.get(wemo_entity.entity_id)
+        assert state is not None
+        on_since = state.attributes[ATTR_ON_LATEST_TIME]
+
+        insight.subscription_update.return_value = True
+        pywemo_registry.is_subscribed.return_value = True
+        freezer.tick(timedelta(seconds=90))
+        await hass.async_add_executor_job(
+            pywemo_registry.callbacks[insight.name],
+            insight,
+            "BinaryState",
+            "1",
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get(wemo_entity.entity_id)
+        assert state is not None
+        assert state.attributes[ATTR_ON_LATEST_TIME] == on_since
+
+
 async def test_insight_on_since_advances_on_fresh_equal_on_for(
     hass: HomeAssistant,
     pywemo_registry: MagicMock,

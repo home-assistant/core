@@ -103,7 +103,8 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
         self.wemo = wemo
         self.device_id: str | None = None
         self.device_info = _create_device_info(wemo)
-        # Bumped only when get_state runs. A skipped poll leaves this unchanged.
+        # Bumped only when Insight timing (on_for) is fetched, not when
+        # get_state returns a cached binary state.
         self.state_sample = 0
         self.supports_long_press = isinstance(wemo, LongPressMixin)
         self.update_lock = asyncio.Lock()
@@ -131,10 +132,12 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
             )
         else:
             updated = self.wemo.subscription_update(event_type, params)
+            # InsightParams carries a fresh on_for. BinaryState does not.
+            insight_timing = event_type == Insight.EVENT_TYPE_INSIGHT_PARAMS
             self.hass.loop.call_soon_threadsafe(
                 partial(
                     self.hass.async_create_background_task,
-                    self._async_subscription_callback(updated),
+                    self._async_subscription_callback(updated, insight_timing),
                     f"{self.name} subscription_callback",
                     eager_start=True,
                 )
@@ -203,7 +206,9 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
                 await getattr(self, f"_async_set_{field.name}")(new_value)
         self.options = options
 
-    async def _async_subscription_callback(self, updated: bool) -> None:
+    async def _async_subscription_callback(
+        self, updated: bool, insight_timing: bool = False
+    ) -> None:
         """Update the state by the Wemo device."""
         # If an update is in progress, we don't do anything.
         if self.update_lock.locked():
@@ -220,6 +225,8 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
             self.last_update_success = False
             _LOGGER.exception("Unexpected error fetching %s data", self.name)
         else:
+            if insight_timing:
+                self.state_sample += 1
             self.async_set_updated_data(None)
 
     @property
@@ -268,7 +275,9 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
                     translation_domain=DOMAIN,
                     translation_key="update_failed",
                 ) from err
-            self.state_sample += 1
+            # get_state(False) does not call update_insight_params.
+            if force_update:
+                self.state_sample += 1
 
 
 def _create_device_info(wemo: WeMoDevice) -> DeviceInfo:
