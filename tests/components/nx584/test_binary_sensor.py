@@ -14,6 +14,7 @@ from homeassistant.components.nx584 import binary_sensor as nx584
 from homeassistant.components.nx584.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_HOST, TEST_PORT
@@ -48,6 +49,26 @@ async def test_nx584_sensor_setup_defaults(
     ):
         assert hass.states.get(entity_id).attributes["device_class"] == "opening"
     mock_watcher.return_value.start.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_client", "mock_watcher")
+async def test_nx584_sensor_unique_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the zone sensors are registered with the zone number in the unique ID."""
+    await _async_setup_entry(hass, mock_config_entry)
+
+    for entity_id, zone in (
+        ("binary_sensor.front", 1),
+        ("binary_sensor.back", 2),
+        ("binary_sensor.inside", 3),
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.unique_id == f"{mock_config_entry.entry_id}_{zone}"
+        assert entry.config_entry_id == mock_config_entry.entry_id
 
 
 @pytest.mark.usefixtures("mock_client")
@@ -128,7 +149,7 @@ async def test_nx584_sensor_setup_no_zones(
 def test_nx584_zone_sensor_normal() -> None:
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True}
-    sensor = nx584.NX584ZoneSensor(zone, "motion")
+    sensor = nx584.NX584ZoneSensor(zone, "motion", "entry_id")
     assert sensor.name == "foo"
     assert not sensor.should_poll
     assert sensor.is_on
@@ -142,7 +163,7 @@ def test_nx584_zone_sensor_normal() -> None:
 def test_nx584_zone_sensor_bypassed() -> None:
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True, "bypassed": True}
-    sensor = nx584.NX584ZoneSensor(zone, "motion")
+    sensor = nx584.NX584ZoneSensor(zone, "motion", "entry_id")
     assert sensor.name == "foo"
     assert not sensor.should_poll
     assert sensor.is_on
@@ -161,8 +182,8 @@ def test_nx584_watcher_process_zone_event(mock_update) -> None:
     zone1 = {"number": 1, "name": "foo", "state": True}
     zone2 = {"number": 2, "name": "bar", "state": True}
     zones = {
-        1: nx584.NX584ZoneSensor(zone1, "motion"),
-        2: nx584.NX584ZoneSensor(zone2, "motion"),
+        1: nx584.NX584ZoneSensor(zone1, "motion", "entry_id"),
+        2: nx584.NX584ZoneSensor(zone2, "motion", "entry_id"),
     }
     watcher = nx584.NX584Watcher(None, zones)
     watcher._process_zone_event({"zone": 1, "zone_state": False})
@@ -174,7 +195,7 @@ def test_nx584_watcher_process_zone_event(mock_update) -> None:
 def test_nx584_watcher_process_zone_event_updates_bypass(mock_update) -> None:
     """Test the processing of zone events updates bypass state."""
     zone = {"number": 1, "name": "foo", "state": True, "bypassed": False}
-    zones = {1: nx584.NX584ZoneSensor(zone, "motion")}
+    zones = {1: nx584.NX584ZoneSensor(zone, "motion", "entry_id")}
     watcher = nx584.NX584Watcher(None, zones)
 
     watcher._process_zone_event(
