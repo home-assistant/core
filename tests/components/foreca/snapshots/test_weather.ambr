@@ -4,6 +4,8 @@
     'weather.helsinki': dict({
       'forecast': list([
         dict({
+          'apparent_temperature': 16.6,
+          'cloud_coverage': 55,
           'condition': 'rainy',
           'datetime': '2026-09-02T00:00:00-07:00',
           'precipitation': 1.2,
@@ -16,6 +18,7 @@
           'wind_speed': 21.6,
         }),
         dict({
+          'cloud_coverage': None,
           'condition': 'snowy',
           'datetime': '2026-09-03T00:00:00-07:00',
           'precipitation': 0.4,

@@ -52,6 +52,7 @@ def _daily_to_forecast(day: DailyForecast) -> Forecast | None:
         condition=symbol_to_condition(day.symbol),
         native_temperature=day.max_temp,
         native_templow=day.min_temp,
+        native_apparent_temperature=day.max_feels_like_temp,
         native_precipitation=day.precip_accum,
         precipitation_probability=day.precip_prob,
         native_wind_speed=day.max_wind_speed,
@@ -59,6 +60,7 @@ def _daily_to_forecast(day: DailyForecast) -> Forecast | None:
         wind_bearing=day.wind_dir,
         native_pressure=day.pressure,
         native_dew_point=day.max_dew_point,
+        cloud_coverage=day.cloudiness,
         uv_index=day.uv_index,
     )
 
