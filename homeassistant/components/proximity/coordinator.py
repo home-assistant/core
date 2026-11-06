@@ -65,7 +65,7 @@ def tracked_entity_removed_issue_id(config_entry_id: str, entity_id: str) -> str
 
 @callback
 def async_create_tracked_entity_removed_issue(
-    hass: HomeAssistant, config_entry: ConfigEntry, entity_id: str
+    hass: HomeAssistant, config_entry: ProximityConfigEntry, entity_id: str
 ) -> None:
     """Create a repair issue for a removed tracked entity."""
     ir.async_create_issue(
