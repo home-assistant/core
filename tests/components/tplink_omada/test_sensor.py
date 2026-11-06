@@ -10,16 +10,29 @@ from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_array_fixture,
+    async_load_json_object_fixture,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client.definitions import DeviceStatus, DeviceStatusCategory
-from tplink_omada_client.devices import OmadaListDevice, OmadaSwitchPortDetails
+from tplink_omada_client.devices import (
+    OmadaListDevice,
+    OmadaSwitch,
+    OmadaSwitchPortDetails,
+)
 
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import (
     POLL_DEVICES,
     POLL_SWITCH_PORT,
+    OmadaDevicesCoordinator,
+    OmadaSwitchPortCoordinator,
+)
+from homeassistant.components.tplink_omada.sensor import (
+    OMADA_DEVICE_SENSORS,
+    OMADA_SWITCH_PORT_SENSORS,
+    OmadaDeviceSensor,
+    OmadaSwitchPortSensor,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -223,3 +236,39 @@ async def _set_test_device_status(
 
     mock_omada_site_client.get_devices.reset_mock()
     mock_omada_site_client.get_devices.return_value = devices
+
+
+async def test_entities_created_while_key_missing_are_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+) -> None:
+    """Test entities created before their key appears in coordinator data."""
+    mock_config_entry.add_to_hass(hass)
+
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    device = OmadaListDevice(devices_data[1])
+    switch_data = await async_load_json_object_fixture(
+        hass, "switch-TL-SG3210XHP-M2.json", DOMAIN
+    )
+    switch = OmadaSwitch(switch_data)
+    ports_data = await async_load_json_array_fixture(
+        hass, "switch-ports-TL-SG3210XHP-M2.json", DOMAIN
+    )
+    port = OmadaSwitchPortDetails(ports_data[0])
+
+    devices_coordinator = OmadaDevicesCoordinator(
+        hass, mock_config_entry, mock_omada_site_client
+    )
+    device_sensor = OmadaDeviceSensor(
+        devices_coordinator, device, OMADA_DEVICE_SENSORS[0]
+    )
+    assert device_sensor.available is False
+
+    port_coordinator = OmadaSwitchPortCoordinator(
+        hass, mock_config_entry, mock_omada_site_client, switch
+    )
+    port_sensor = OmadaSwitchPortSensor(
+        port_coordinator, switch, port, OMADA_SWITCH_PORT_SENSORS[0], "1"
+    )
+    assert port_sensor.available is False

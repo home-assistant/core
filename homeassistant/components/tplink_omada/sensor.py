@@ -193,7 +193,10 @@ class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity
         super().__init__(coordinator, device)
         self.entity_description = entity_description
         self._attr_unique_id = f"{device.mac}_{entity_description.key}"
-        if (current := coordinator.data.get(device.mac)) is not None:
+        if (
+            coordinator.data is not None
+            and (current := coordinator.data.get(device.mac)) is not None
+        ):
             self._attr_native_value = self.entity_description.update_func(current)
         else:
             self._attr_native_value = None
@@ -213,7 +216,11 @@ class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity
     @override
     def available(self) -> bool:
         """Return availability based on the device still being reported."""
-        return super().available and self.device.mac in self.coordinator.data
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self.device.mac in self.coordinator.data
+        )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -267,7 +274,10 @@ class OmadaSwitchPortSensor(
         self._port_id = port.port_id
         self._attr_unique_id = f"{device.mac}_{port.port_id}_{entity_description.key}"
         self._attr_translation_placeholders = {"port_name": port_name}
-        if (current := coordinator.data.get(port.port_id)) is not None:
+        if (
+            coordinator.data is not None
+            and (current := coordinator.data.get(port.port_id)) is not None
+        ):
             self._attr_native_value = self.entity_description.update_func(current)
         else:
             self._attr_native_value = None
@@ -287,4 +297,8 @@ class OmadaSwitchPortSensor(
     @override
     def available(self) -> bool:
         """Return availability based on the port still being reported."""
-        return super().available and self._port_id in self.coordinator.data
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self._port_id in self.coordinator.data
+        )
