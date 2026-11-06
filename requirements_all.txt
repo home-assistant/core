@@ -927,7 +927,7 @@ dynalite-devices==0.1.47
 dynalite-panel==0.0.4
 
 # homeassistant.components.e3dc
-e3dc-ess-modbus==0.1.0
+e3dc-ess-modbus==0.2.0
 
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
