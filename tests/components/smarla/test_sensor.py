@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from pysmarlaapi.federwiege.services.types import SpringStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration, update_property_listeners
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 SENSOR_ENTITIES = [
     {

@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import UnitOfLength
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -190,6 +190,15 @@ class ProximityTrackedEntitySensor(
         await super().async_added_to_hass()
         self.coordinator.async_add_entity_mapping(
             self.tracked_entity_id, self.entity_id
+        )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update entity mapping."""
+        super().async_entity_id_changed(old_entity_id)
+        self.coordinator.async_update_entity_mapping(
+            self.tracked_entity_id, old_entity_id, self.entity_id
         )
 
     @property

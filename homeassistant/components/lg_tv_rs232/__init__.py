@@ -12,7 +12,7 @@ from .const import CONF_SET_ID, LOGGER, QUERY_ATTRIBUTES, LGTVRS232ConfigEntry
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LGTVRS232ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LGTVRS232ConfigEntry) -> None:
     """Set up LG TV RS-232 from a config entry."""
     port = entry.data[CONF_DEVICE]
     tv = LGTV(port, set_id=entry.data[CONF_SET_ID])
@@ -39,14 +39,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LGTVRS232ConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LGTVRS232ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LGTVRS232ConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        await entry.runtime_data.disconnect()
-
-    return unload_ok
+    await entry.runtime_data.disconnect()

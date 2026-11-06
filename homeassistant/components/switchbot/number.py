@@ -7,7 +7,6 @@ import logging
 from typing import override
 
 import switchbot
-from switchbot import SwitchbotOperationError
 from switchbot.devices.meter_pro import MAX_TIME_OFFSET
 
 from homeassistant.components.number import (
@@ -20,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotEntity, exception_handler
+from .entity import SwitchbotConnectionPolledEntity, SwitchbotEntity, exception_handler
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(days=7)
@@ -38,9 +37,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     if isinstance(coordinator.device, switchbot.SwitchbotMeterProCO2):
-        async_add_entities(
-            [SwitchBotMeterProCO2DisplayTimeOffsetNumber(coordinator)], True
-        )
+        async_add_entities([SwitchBotMeterProCO2DisplayTimeOffsetNumber(coordinator)])
     elif isinstance(coordinator.device, switchbot.SwitchbotStandingFan):
         async_add_entities(
             SwitchBotStandingFanOscillationAngleNumber(coordinator, desc)
@@ -48,7 +45,9 @@ async def async_setup_entry(
         )
 
 
-class SwitchBotMeterProCO2DisplayTimeOffsetNumber(SwitchbotEntity, NumberEntity):
+class SwitchBotMeterProCO2DisplayTimeOffsetNumber(
+    SwitchbotConnectionPolledEntity, NumberEntity
+):
     """Number entity to set the time offset for Meter Pro CO2 devices."""
 
     _device: switchbot.SwitchbotMeterProCO2
@@ -59,8 +58,6 @@ class SwitchBotMeterProCO2DisplayTimeOffsetNumber(SwitchbotEntity, NumberEntity)
     _attr_native_max_value = _MAX_TIME_OFFSET_MINUTES
     _attr_native_step = 1.0
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_should_poll = True
-    _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the number entity."""
@@ -79,15 +76,9 @@ class SwitchBotMeterProCO2DisplayTimeOffsetNumber(SwitchbotEntity, NumberEntity)
         self.async_write_ha_state()
 
     @override
-    async def async_update(self) -> None:
+    async def _async_read_value(self) -> None:
         """Fetch the latest time offset from the device."""
-        try:
-            offset_seconds = await self._device.get_time_offset()
-        except SwitchbotOperationError:
-            _LOGGER.debug(
-                "Failed to update time offset for %s", self._address, exc_info=True
-            )
-            return
+        offset_seconds = await self._device.get_time_offset()
         self._attr_native_value = round(offset_seconds / _SECONDS_IN_MINUTE)
 
 

@@ -1,9 +1,14 @@
 """Coordinator for the LiteLLM integration."""
 
 from datetime import timedelta
-from typing import Any, cast, override
+from typing import override
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
+
+# The client imports its chat and audio resources lazily on first use, which
+# would happen inside the event loop. Import them with the integration instead.
+from openai.resources.audio import AsyncAudio  # noqa: F401
+from openai.resources.chat import AsyncChat  # noqa: F401
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL
@@ -40,8 +45,7 @@ class LiteLLMDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.client = AsyncOpenAI(
             base_url=config_entry.data[CONF_URL],
             api_key=config_entry.data.get(CONF_API_KEY) or PLACEHOLDER_API_KEY,
-            # Legacy HTTPX clients are supported at runtime only.
-            http_client=cast(Any, get_async_client(hass)),
+            http_client=get_async_client(hass),
         )
 
     @override

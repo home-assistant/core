@@ -2,7 +2,7 @@
 
 from typing import Any, Final, override
 
-from bsblan import BSBLANError, EntityInfo, State, get_hvac_action_category
+from bsblan import get_hvac_action_category
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -16,13 +16,13 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BSBLanConfigEntry, BSBLanData
-from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
+from .const import ATTR_TARGET_TEMPERATURE
 from .entity import BSBLanCircuitEntity
+from .helpers import circuit_temperature_bounds
 
 PARALLEL_UPDATES = 1
 
@@ -52,14 +52,6 @@ BSBLAN_TO_HA_HVAC_MODE: Final[dict[int, HVACMode]] = {
     2: HVACMode.AUTO,  # eco/reduced maps to AUTO with preset
     3: HVACMode.HEAT,
 }
-
-
-def _resolve_temperature_bound(*sources: EntityInfo[float] | None) -> float | None:
-    """Return the first usable temperature bound from the given sources."""
-    for source in sources:
-        if source is not None and source.value is not None:
-            return source.value
-    return None
 
 
 async def async_setup_entry(
@@ -95,43 +87,29 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         circuit: int,
     ) -> None:
         """Initialize BSBLAN climate device."""
-        super().__init__(data.fast_coordinator, data, circuit)
-        self._circuit = circuit
+        super().__init__(data.fast_coordinator, data.slow_coordinator, data, circuit)
         mac = format_mac(data.device.MAC)
 
         # Backward compatible unique ID: circuit 1 keeps old format
         if circuit == 1:
+            # Legacy format, kept as migrating existing unique IDs is not worth the risk
             self._attr_unique_id = f"{mac}-climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         else:
+            # Legacy format, kept as migrating existing unique IDs is not worth the risk
             self._attr_unique_id = f"{mac}-climate-{circuit}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
-        # Set temperature range from per-circuit static data. Standard BSB/LPB
-        # circuits expose the bounds via heating_protective_setpoint (714) and
-        # comfort_setpoint_max (716); min_temp/max_temp (15006/15007) exist
-        # only on PPS devices. Inactive parameters ("---") have value None.
-        if (static := data.static.get(circuit)) is not None:
-            if (
-                min_temp := _resolve_temperature_bound(
-                    static.heating_protective_setpoint, static.min_temp
-                )
-            ) is not None:
-                self._attr_min_temp = min_temp
-            if (
-                max_temp := _resolve_temperature_bound(
-                    static.comfort_setpoint_max, static.max_temp
-                )
-            ) is not None:
-                self._attr_max_temp = max_temp
-        self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
-
-    @property
-    def _circuit_state(self) -> State:
-        """Return the state for this circuit."""
-        return self.coordinator.data.states[self._circuit]
+        min_temp, max_temp = circuit_temperature_bounds(data.static.get(circuit))
+        if min_temp is not None:
+            self._attr_min_temp = min_temp
+        if max_temp is not None:
+            self._attr_max_temp = max_temp
+        self._attr_native_temperature_unit = (
+            data.fast_coordinator.client.get_temperature_unit
+        )
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (current_temp := self._circuit_state.current_temperature) is None:
             return None
@@ -139,7 +117,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (target_temp := self._circuit_state.target_temperature) is None:
             return None
@@ -166,8 +144,11 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         """Return the current running hvac action."""
         if (action := self._circuit_state.hvac_action) is None or action.value is None:
             return None
-        category = get_hvac_action_category(action.value)
-        return HVACAction(category.name.lower())
+        hvac_action = HVACAction(get_hvac_action_category(action.value).name.lower())
+        # In protection mode the circuit is off unless frost protection heats
+        if hvac_action is HVACAction.IDLE and self.hvac_mode is HVACMode.OFF:
+            return HVACAction.OFF
+        return hvac_action
 
     @property
     @override
@@ -207,11 +188,4 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
             elif kwargs[ATTR_PRESET_MODE] == PRESET_NONE:
                 data[ATTR_HVAC_MODE] = 1
 
-        try:
-            await self.coordinator.client.thermostat(**data, circuit=self._circuit)
-        except BSBLANError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_data_error",
-            ) from err
-        await self.coordinator.async_request_refresh()
+        await self._async_thermostat(**data)

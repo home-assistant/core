@@ -190,7 +190,7 @@ class NetatmoModuleEntity(NetatmoDeviceEntity):
             device.device.entity_id, device.parent_id
         )
         if via_device_id := device.data_handler.parent_device_ids.get(parent_id):
-            self._attr_device_info["via_device_id"] = via_device_id
+            self._attr_device_info.via_device_id = via_device_id
 
     @property
     @override

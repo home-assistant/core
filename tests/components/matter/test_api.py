@@ -21,6 +21,8 @@ from matter_server.common.models import (
     TopologyDirectionInfo,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.matter.api import (
     DEVICE_ID,
@@ -31,9 +33,6 @@ from homeassistant.components.matter.api import (
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_commission(

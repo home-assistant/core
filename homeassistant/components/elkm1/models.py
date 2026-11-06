@@ -5,6 +5,10 @@ from typing import Any
 
 from elkm1_lib import Elk
 
+from homeassistant.config_entries import ConfigEntry
+
+type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
+
 
 @dataclass(slots=True)
 class ELKM1Data:

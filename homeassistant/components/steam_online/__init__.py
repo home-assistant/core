@@ -13,7 +13,7 @@ from .coordinator import SteamConfigEntry, SteamDataUpdateCoordinator
 PLATFORMS = [Platform.IMAGE, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SteamConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SteamConfigEntry) -> None:
     """Set up Steam from a config entry."""
     coordinator = SteamDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -22,20 +22,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: SteamConfigEntry) -> boo
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    return True
-
 
 async def _async_update_listener(hass: HomeAssistant, entry: SteamConfigEntry) -> None:
     """Handle update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SteamConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SteamConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: SteamConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: SteamConfigEntry) -> None:
     """Migrate old entry."""
 
     if entry.version < 2:
@@ -73,4 +71,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SteamConfigEntry) -> b
                 device.id, new_identifiers={(DOMAIN, entry.unique_id)}
             )
         hass.config_entries.async_update_entry(entry, version=3, options={})
-    return True

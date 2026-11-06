@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import override
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -91,7 +90,6 @@ class PureEnergieSensorEntity(
     ) -> None:
         """Initialize Pure Energie sensor."""
         super().__init__(coordinator=entry.runtime_data)
-        self.entity_id = f"{SENSOR_DOMAIN}.pem_{description.key}"
         self.entity_description = description
         self._attr_unique_id = (
             f"{entry.runtime_data.data.device.n2g_id}_{description.key}"

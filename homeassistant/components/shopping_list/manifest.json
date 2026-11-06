@@ -1,6 +1,7 @@
 {
   "domain": "shopping_list",
   "name": "Shopping list",
+  "categories": ["productivity_information.shopping_groceries"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["http"],

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tesla_powerwall import GridStatus, PowerwallError
 
 from homeassistant.components.powerwall.const import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .mocks import _mock_powerwall_restricted, _mock_powerwall_with_fixtures
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "switch.mysite_off_grid_operation"
 

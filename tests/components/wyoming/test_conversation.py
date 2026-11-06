@@ -111,6 +111,7 @@ async def test_intent(
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "success"
     assert result.conversation_id == conversation_id
+    assert not result.continue_conversation
 
     # Verify that chat log recorded intent as tool call
     content: chat_log.AssistantContent | None = next(
@@ -379,6 +380,76 @@ async def test_handle(hass: HomeAssistant, init_wyoming_handle: ConfigEntry) -> 
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "success"
     assert result.conversation_id == conversation_id
+
+
+@pytest.mark.parametrize(
+    ("continue_conversation", "expected"),
+    [(True, True), (False, False), (None, False)],
+)
+async def test_handle_continue_conversation(
+    hass: HomeAssistant,
+    init_wyoming_handle: ConfigEntry,
+    continue_conversation: bool | None,
+    expected: bool,
+) -> None:
+    """Test the service can ask the client to listen again without a wake word."""
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        MockAsyncTcpClient(
+            [
+                Handled(
+                    text="Which room?", continue_conversation=continue_conversation
+                ).event()
+            ]
+        ),
+    ):
+        result = await conversation.async_converse(
+            hass=hass,
+            text="turn on the light",
+            conversation_id=None,
+            context=Context(),
+            language=hass.config.language,
+            agent_id="conversation.test_handle",
+        )
+
+    assert result.response.speech.get("plain", {}).get("speech") == "Which room?"
+    assert result.continue_conversation is expected
+
+
+async def test_handle_other_user(
+    hass: HomeAssistant, init_wyoming_handle: ConfigEntry
+) -> None:
+    """Test the text of a refused user is not sent to the service."""
+    agent_id = "conversation.test_handle"
+    conversation_id = "conversation-1234"
+
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        MockAsyncTcpClient([Handled(text="success").event()]),
+    ):
+        await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=conversation_id,
+            context=Context(user_id="owner-user-id"),
+            agent_id=agent_id,
+        )
+
+    client = MockAsyncTcpClient([Handled(text="success").event()])
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        client,
+    ):
+        result = await conversation.async_converse(
+            hass=hass,
+            text="other text",
+            conversation_id=conversation_id,
+            context=Context(user_id="other-user-id"),
+            agent_id=agent_id,
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert not client.written
 
 
 async def test_not_handled(

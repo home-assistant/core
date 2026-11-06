@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from eternalegypt.eternalegypt import Error
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netgear_lte.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from .conftest import CONF_DATA
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("setup_integration")

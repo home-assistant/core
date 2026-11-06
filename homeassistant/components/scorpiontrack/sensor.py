@@ -29,7 +29,6 @@ class ScorpionTrackSensorEntityDescription(SensorEntityDescription):
     """Describe a ScorpionTrack sensor."""
 
     value_fn: Callable[[ScorpionTrackVehicle], StateType | datetime]
-    available_fn: Callable[[ScorpionTrackVehicle], bool] = lambda _: True
     suggested_unit_fn: Callable[[ScorpionTrackShare], str] | None = None
 
 
@@ -50,7 +49,6 @@ SENSORS: tuple[ScorpionTrackSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda vehicle: vehicle.position.speed_kmh,
-        available_fn=lambda vehicle: vehicle.position.speed_kmh is not None,
         suggested_unit_fn=lambda share: (
             UnitOfSpeed.MILES_PER_HOUR
             if share.uses_miles
@@ -115,14 +113,6 @@ class ScorpionTrackSensor(ScorpionTrackEntity, SensorEntity):
             self._attr_suggested_unit_of_measurement = suggested_unit_fn(
                 coordinator.data
             )
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return super().available and self.entity_description.available_fn(
-            self.get_vehicle()
-        )
 
     @property
     @override

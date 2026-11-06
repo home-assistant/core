@@ -1,15 +1,14 @@
 """Test config flow."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant import config_entries
 from homeassistant.components.tasmota.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-
-from tests.common import MockConfigEntry
-from tests.typing import MqttMockHAClient
 
 
 async def test_mqtt_abort_if_existing_entry(
@@ -124,6 +123,7 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {"discovery_prefix": "tasmota/discovery"}
+    assert result["result"].unique_id == DOMAIN
 
 
 @pytest.mark.parametrize(
@@ -159,6 +159,7 @@ async def test_user_setup(
         result["flow_id"], user_input
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {"discovery_prefix": expected_prefix}
 
@@ -179,6 +180,11 @@ async def test_user_setup_invalid_topic_prefix(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_discovery_topic"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"discovery_prefix": "tasmota/discovery"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_single_instance(

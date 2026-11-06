@@ -25,7 +25,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> None:
     """Set up Kiosker from a config entry."""
 
     coordinator = KioskerDataUpdateCoordinator(hass, entry)
@@ -36,9 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

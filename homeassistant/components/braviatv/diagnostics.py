@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import BraviaTVConfigEntry
 
-TO_REDACT = {CONF_MAC, CONF_PIN, "macAddr"}
+TO_REDACT = {CONF_MAC, CONF_PIN, "macAddr", "unique_id"}
 
 
 async def async_get_config_entry_diagnostics(

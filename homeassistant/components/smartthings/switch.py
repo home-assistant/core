@@ -17,7 +17,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import INVALID_SWITCH_CATEGORIES, MAIN
+from .const import DOMAIN, INVALID_SWITCH_CATEGORIES, MAIN
 from .entity import SmartThingsEntity
 from .util import deprecate_entity
 
@@ -539,7 +539,7 @@ class SmartThingsDishwasherWashingOptionSwitch(SmartThingsCommandSwitch):
             == "false"
         ):
             raise ServiceValidationError(
-                "Can only be updated when remote control is enabled"
+                translation_domain=DOMAIN, translation_key="remote_control_status"
             )
         if (
             self.get_attribute_value(
@@ -548,7 +548,9 @@ class SmartThingsDishwasherWashingOptionSwitch(SmartThingsCommandSwitch):
             != "stop"
         ):
             raise ServiceValidationError(
-                "Can only be updated when dishwasher machine state is stop"
+                translation_domain=DOMAIN,
+                translation_key="dishwasher_machine_state",
+                translation_placeholders={"machine_state": "stop"},
             )
         selected_course = self.get_attribute_value(
             Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE, Attribute.WASHING_COURSE
@@ -566,7 +568,9 @@ class SmartThingsDishwasherWashingOptionSwitch(SmartThingsCommandSwitch):
             [],
         )
         if not course_settable:
-            raise ServiceValidationError("Option is not supported by selected cycle")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="option_not_supported"
+            )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:

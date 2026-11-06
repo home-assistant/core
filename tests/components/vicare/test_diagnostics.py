@@ -2,6 +2,9 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from PyViCare.PyViCareUtils import PyViCareDeviceCommunicationError
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
@@ -10,10 +13,6 @@ from homeassistant.core import HomeAssistant
 
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
@@ -71,10 +70,7 @@ async def test_diagnostics_scopes_features_to_their_device(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
     ):
         await setup_integration(hass, mock_config_entry)
 

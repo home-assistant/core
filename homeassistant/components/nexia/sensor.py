@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from nexia.const import UNIT_CELSIUS
 from nexia.sensor import NexiaSensor
@@ -331,6 +331,9 @@ class NexiaRoomIQSensor(NexiaRoomIQEntity, SensorEntity):
         """Initialize the sensor entity for a Nexia RoomIQ sensor."""
         super().__init__(coordinator, zone, sensor, description.key)
         self.entity_description = description
+        if TYPE_CHECKING:
+            assert self._attr_unique_id is not None
+        self._room_iq_monitor_id = self._attr_unique_id
 
     @property
     @override
@@ -359,11 +362,11 @@ class NexiaRoomIQSensor(NexiaRoomIQEntity, SensorEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Register this RoomIQ entity."""
-        self._zone.add_room_iq_monitor(self.entity_id)
+        self._zone.add_room_iq_monitor(self._room_iq_monitor_id)
         await super().async_added_to_hass()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this RoomIQ entity."""
         await super().async_will_remove_from_hass()
-        self._zone.remove_room_iq_monitor(self.entity_id)
+        self._zone.remove_room_iq_monitor(self._room_iq_monitor_id)

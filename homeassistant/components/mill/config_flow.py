@@ -85,7 +85,7 @@ class MillConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = probatio.Schema(
             {
                 probatio.Required(CONF_USERNAME): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
         if user_input is None:

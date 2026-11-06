@@ -2,11 +2,13 @@
 
 from typing import override
 
+from pajgps_api.models.device import Device
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import Device, PajGpsCoordinator
+from .coordinator import PajGpsCoordinator
 
 
 class PajGpsEntity(CoordinatorEntity[PajGpsCoordinator]):

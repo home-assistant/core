@@ -67,7 +67,7 @@ RETRY_EXCEPTIONS = (
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> None:
     """Set up Tessie config."""
     api_key = entry.data[CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
@@ -218,15 +218,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
     # connector entities can resolve their via_device parent at construction.
     device_registry = dr.async_get(hass)
     for energysite in energysites:
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id, **energysite.device
+        device_registry.async_get_or_create_from_info(
+            config_entry_id=entry.entry_id, device_info=energysite.device
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> None:
     """Unload Tessie Config."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

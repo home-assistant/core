@@ -54,17 +54,17 @@ class NamecheapDnsUpdateCoordinator(DataUpdateCoordinator[None]):
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="update_failed",
-                    translation_placeholders={CONF_DOMAIN: f"{host}.{domain}"},
+                    translation_placeholders={"domain": f"{host}.{domain}"},
                 )
         except AuthFailed as e:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
-                translation_placeholders={CONF_DOMAIN: f"{host}.{domain}"},
+                translation_placeholders={"domain": f"{host}.{domain}"},
             ) from e
         except ClientError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
-                translation_placeholders={CONF_DOMAIN: f"{host}.{domain}"},
+                translation_placeholders={"domain": f"{host}.{domain}"},
             ) from e

@@ -13,7 +13,7 @@ import probatio
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, FlowType
 from homeassistant.const import CONF_HOST
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -57,6 +57,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow: user, YAML import, HomeKit, and integration discovery."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     _discovered_controller_host: str | None = None
     _discovered_controller_uid: str | None = None
@@ -88,7 +89,9 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         request as part of start-up, and the import step itself will not be repeated.
         """
         if self._async_in_progress(include_uninitialized=True):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
         try:
             await izone_discovery.async_ensure_discovery(self.hass)
@@ -190,6 +193,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         controllers_lines = "\n".join(
             f"- {candidate.uid} ({candidate.host})" for candidate in candidates
         )
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="select_controller",
             data_schema=selection_schema,
@@ -259,12 +263,17 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 endpoint = await izone_discovery.async_discover_endpoint(
                     self.hass, device_uid
                 )
-                if endpoint is None:
-                    return self.async_abort(reason="no_devices_found")
-                endpoints = {**endpoints, endpoint.uid: endpoint}
+                if endpoint is not None:
+                    endpoints = {**endpoints, endpoint.uid: endpoint}
+        except pizone.EndpointVerifyError as err:
+            _LOGGER.debug("iZone controller did not verify: %s", err)
+            return self.async_abort(reason="cannot_connect")
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")
+
+        if endpoint is None:
+            return self.async_abort(reason="no_devices_found")
 
         self._discovered_controller_host = endpoint.host
 
@@ -396,6 +405,12 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             endpoint = await izone_discovery.async_discover_by_host(self.hass, host)
+        except pizone.EndpointVerifyError as err:
+            _LOGGER.debug("iZone controller did not verify: %s", err)
+            return self._async_show_manual_host_form(
+                errors={"base": "cannot_connect"},
+                suggested_values={CONF_HOST: host},
+            )
         except OSError:
             _LOGGER.debug("Unable to start iZone discovery service", exc_info=True)
             return self.async_abort(reason="discovery_failed")

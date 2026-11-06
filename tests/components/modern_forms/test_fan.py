@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -19,15 +20,14 @@ from homeassistant.components.fan import (
     SERVICE_SET_PRESET_MODE,
     FanEntityFeature,
 )
-from homeassistant.components.modern_forms.const import (
-    ATTR_SLEEP_TIME,
-    DOMAIN,
-    SERVICE_CLEAR_FAN_SLEEP_TIMER,
-    SERVICE_SET_FAN_SLEEP_TIMER,
-)
+from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.components.modern_forms.fan import (
     PRESET_MODE_BREEZE,
     PRESET_MODE_NORMAL,
+)
+from homeassistant.components.modern_forms.services import (
+    ModernFormsService,
+    ModernFormsServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -36,6 +36,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -47,8 +48,6 @@ from . import (
     modern_forms_breeze_active_call_mock,
     modern_forms_breeze_call_mock,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_fan_state(
@@ -115,8 +114,11 @@ async def test_sleep_timer_services(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_SLEEP_TIMER,
-            {ATTR_ENTITY_ID: "fan.modernformsfan_fan", ATTR_SLEEP_TIME: 1},
+            ModernFormsService.SET_FAN_SLEEP_TIMER,
+            {
+                CommonServiceArgument.ENTITY_ID: "fan.modernformsfan_fan",
+                ModernFormsServiceArgument.SLEEP_TIME: 1,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -125,8 +127,8 @@ async def test_sleep_timer_services(
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_FAN_SLEEP_TIMER,
-            {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
+            ModernFormsService.CLEAR_FAN_SLEEP_TIMER,
+            {CommonServiceArgument.ENTITY_ID: "fan.modernformsfan_fan"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -180,7 +182,6 @@ async def test_set_percentage(
             speed=6,
         )
 
-    await init_integration(hass, aioclient_mock)
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -408,8 +409,11 @@ async def test_fan_sleep_timer_not_supported_gen4(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_SLEEP_TIMER,
-            {ATTR_ENTITY_ID: "fan.modernformsfan_fan", ATTR_SLEEP_TIME: 1},
+            ModernFormsService.SET_FAN_SLEEP_TIMER,
+            {
+                CommonServiceArgument.ENTITY_ID: "fan.modernformsfan_fan",
+                ModernFormsServiceArgument.SLEEP_TIME: 1,
+            },
             blocking=True,
         )
 
@@ -427,8 +431,8 @@ async def test_clear_fan_sleep_timer_not_supported_gen4(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_FAN_SLEEP_TIMER,
-            {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
+            ModernFormsService.CLEAR_FAN_SLEEP_TIMER,
+            {CommonServiceArgument.ENTITY_ID: "fan.modernformsfan_fan"},
             blocking=True,
         )
 
