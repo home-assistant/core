@@ -46,9 +46,9 @@ class AerosmartEntity(CoordinatorEntity[AerosmartCoordinator]):
         )
         general = coordinator.device.general
         if (device_type := general.device_type) is not None:
-            device_info["model"] = str(device_type)
+            device_info.model = str(device_type)
         if (software_version := general.software_version) is not None:
-            device_info["sw_version"] = str(software_version)
+            device_info.sw_version = str(software_version)
         self._attr_device_info = device_info
 
     @property
