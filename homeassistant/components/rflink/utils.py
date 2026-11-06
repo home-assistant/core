@@ -29,6 +29,7 @@ def identify_event_type(event):
         return EVENT_KEY_SENSOR
     return "unknown"
 
+
 def create_issue_platform(hass: HomeAssistant, platform: str) -> None:
     """Create a deprecated platform config issue."""
     async_create_platform_config_not_supported_issue(
