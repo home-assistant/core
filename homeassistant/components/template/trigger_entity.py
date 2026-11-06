@@ -1,6 +1,6 @@
 """Trigger entity."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any, override
 
@@ -50,7 +50,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         AbstractTemplateEntity.__init__(self, hass, config)
 
         self._entity_variables: ScriptVariables | None = config.get(CONF_VARIABLES)
-        self._rendered_entity_variables: dict | None = None
+        self._rendered_entity_variables: Mapping[str, Any] | None = None
         self._state_render_error = False
         self._cond_func: condition.ConditionsChecker | None = None
 
@@ -361,7 +361,12 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         if not check_conditions(self._cond_func, variables):
             return
 
-        self.async_set_context(self.coordinator.data["context"])
+        if (context := self.coordinator.data["context"]) is None:
+            # A trigger without a context must not inherit the previous one
+            self._context = None
+            self._context_set = None
+        else:
+            self.async_set_context(context)
         if self._render_availability_template(variables):
             self._render_templates(variables)
 

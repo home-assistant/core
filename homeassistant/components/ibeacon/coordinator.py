@@ -36,6 +36,8 @@ from .const import (
     UPDATE_INTERVAL,
 )
 
+type IBeaconConfigEntry = ConfigEntry[IBeaconCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 MONOTONIC_TIME = time.monotonic
@@ -113,7 +115,10 @@ class IBeaconCoordinator:
     """Set up the iBeacon Coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, registry: dr.DeviceRegistry
+        self,
+        hass: HomeAssistant,
+        entry: IBeaconConfigEntry,
+        registry: dr.DeviceRegistry,
     ) -> None:
         """Initialize the Coordinator."""
         self.hass = hass
@@ -524,7 +529,7 @@ class IBeaconCoordinator:
                 )
 
     async def async_config_entry_updated(
-        self, hass: HomeAssistant, config_entry: ConfigEntry
+        self, hass: HomeAssistant, config_entry: IBeaconConfigEntry
     ) -> None:
         """Restore ignored nameless beacons when the allowlist is updated."""
 

@@ -1,5 +1,6 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
 
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -246,27 +247,118 @@ async def test_light_turn_on_service(
     )
     assert mock_bridge_v2.mock_requests[9]["json"]["timed_effects"]["duration"] == 6000
 
-    # test enabling effect should ignore color temperature
-    await hass.services.async_call(
-        "light",
-        "turn_on",
-        {"entity_id": test_light_id, "effect": "candle", "color_temp_kelvin": 2000},
-        blocking=True,
-    )
-    assert len(mock_bridge_v2.mock_requests) == 11
-    assert mock_bridge_v2.mock_requests[10]["json"]["effects"]["effect"] == "candle"
-    assert "color_temperature" not in mock_bridge_v2.mock_requests[10]["json"]
 
-    # test enabling effect should ignore xy color
+@pytest.mark.parametrize(
+    ("entity_id", "resource_id", "effect_status", "service_data", "expected_json"),
+    [
+        pytest.param(
+            "light.hue_light_with_color_and_color_temperature_1",
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "no_effect",
+            {"effect": "candle", "xy_color": [0.123, 0.456]},
+            {
+                "on": {"on": True},
+                "color": {"xy": {"x": 0.123, "y": 0.456}},
+                "effects_v2": {
+                    "action": {
+                        "effect": "candle",
+                        "parameters": {"color": {"xy": {"x": 0.123, "y": 0.456}}},
+                    }
+                },
+            },
+            id="effect_with_xy_color",
+        ),
+        pytest.param(
+            "light.hue_light_with_color_and_color_temperature_1",
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "no_effect",
+            {"effect": "fire", "color_temp_kelvin": 2500},
+            {
+                "on": {"on": True},
+                "color_temperature": {"mirek": 400},
+                "effects_v2": {
+                    "action": {
+                        "effect": "fire",
+                        "parameters": {"color_temperature": {"mirek": 400}},
+                    }
+                },
+            },
+            id="effect_with_color_temp",
+        ),
+        pytest.param(
+            "light.hue_light_with_color_and_color_temperature_1",
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "no_effect",
+            {"effect": "candle"},
+            {"on": {"on": True}, "effects": {"effect": "candle"}},
+            id="effect_without_color",
+        ),
+        pytest.param(
+            "light.hue_light_with_color_and_color_temperature_1",
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "candle",
+            {"effect": "off", "xy_color": [0.123, 0.456]},
+            {
+                "on": {"on": True},
+                "color": {"xy": {"x": 0.123, "y": 0.456}},
+                "effects_v2": {
+                    "action": {
+                        "effect": "no_effect",
+                        "parameters": {"color": {"xy": {"x": 0.123, "y": 0.456}}},
+                    }
+                },
+            },
+            id="effect_off_with_xy_color",
+        ),
+        pytest.param(
+            "light.hue_light_with_color_and_color_temperature_1",
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "no_effect",
+            {"xy_color": [0.123, 0.456]},
+            {"on": {"on": True}, "color": {"xy": {"x": 0.123, "y": 0.456}}},
+            id="xy_color_without_effect",
+        ),
+        pytest.param(
+            "light.test_room_hue_light_with_color_temperature_only",
+            "3a6710fa-4474-4eba-b533-5e6e72968feb",
+            "no_effect",
+            {"effect": "sunrise", "color_temp_kelvin": 2500, "transition": 6},
+            {
+                "on": {"on": True},
+                "timed_effects": {"effect": "sunrise", "duration": 6000},
+            },
+            id="timed_effect_ignores_color_temp",
+        ),
+    ],
+)
+async def test_light_turn_on_effect(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    entity_id: str,
+    resource_id: str,
+    effect_status: str,
+    service_data: dict[str, Any],
+    expected_json: dict[str, Any],
+) -> None:
+    """Test the request sent when turning on a light with an effect and/or color."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {"id": resource_id, "type": "light", "effects": {"status": effect_status}},
+    )
+    await hass.async_block_till_done()
+
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": test_light_id, "effect": "candle", "xy_color": [0.123, 0.123]},
+        {"entity_id": entity_id, **service_data},
         blocking=True,
     )
-    assert len(mock_bridge_v2.mock_requests) == 12
-    assert mock_bridge_v2.mock_requests[11]["json"]["effects"]["effect"] == "candle"
-    assert "xy_color" not in mock_bridge_v2.mock_requests[11]["json"]
+
+    assert len(mock_bridge_v2.mock_requests) == 1
+    assert mock_bridge_v2.mock_requests[0]["json"] == expected_json
 
 
 async def test_light_turn_off_service(

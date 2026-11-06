@@ -5,7 +5,7 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 from aiohomeconnect.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
-from aiohomeconnect.model import HomeAppliance
+from aiohomeconnect.model import ApplianceType, HomeAppliance
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -545,7 +545,7 @@ async def test_dhcp_flow_already_setup(
                 hostname="bosch-cookprocessor-123456789012345678",
                 macaddress="c8d778000000",
             ),
-            "CookProcessor",
+            ApplianceType.COOK_PROCESSOR,
         ),
         (
             DhcpServiceInfo(
@@ -553,7 +553,7 @@ async def test_dhcp_flow_already_setup(
                 hostname="BOSCH-HCS000000-68A40E000000",
                 macaddress="68a40e000000",
             ),
-            "Hob",
+            ApplianceType.HOB,
         ),
     ],
     indirect=["appliance"],
