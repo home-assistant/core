@@ -253,7 +253,10 @@ async def test_import_binary_sensor_only(
     ],
 )
 async def test_import_both_platforms(
-    hass: HomeAssistant, hass_config: ConfigType, domains: tuple[str, str]
+    hass: HomeAssistant,
+    hass_config: ConfigType,
+    entity_registry: er.EntityRegistry,
+    domains: tuple[str, str],
 ) -> None:
     """Test both YAML platforms of one server merge into a single entry."""
     await _async_setup_yaml(hass, hass_config, *domains)
@@ -277,6 +280,7 @@ async def test_import_both_platforms(
     assert hass.states.get("binary_sensor.inside").attributes["device_class"] == (
         "motion"
     )
+    assert entity_registry.async_get("binary_sensor.back") is None
 
 
 @pytest.mark.usefixtures("mock_client", "mock_watcher", "mock_hass_config")
