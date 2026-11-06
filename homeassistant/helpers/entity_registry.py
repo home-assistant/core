@@ -1581,8 +1581,7 @@ class EntityRegistry(BaseRegistry):
     ) -> str:
         """Regenerate an entity ID for an entry.
 
-        `area_id` and `name` replace the stored values, to preview
-        the entity ID of changes which are not saved yet.
+        Pass `area_id` or `name` to preview the entity ID for unsaved changes.
 
         Entity ID conflicts are checked against registered and
         currently existing entities, as well as provided
