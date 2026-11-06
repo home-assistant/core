@@ -1981,6 +1981,75 @@
       "type": "PLUGGABLE_MAINS_FAILURE_SURVEILLANCE",
       "updateState": "UP_TO_DATE"
     },
+    "3014F7110000000000000DLS": {
+      "availableFirmwareVersion": "1.18.6",
+      "connectionType": "HMIP_RF",
+      "deviceArchetype": "HMIP",
+      "firmwareVersion": "1.18.6",
+      "firmwareVersionInteger": 70150,
+      "functionalChannels": {
+        "0": {
+          "coProFaulty": false,
+          "coProRestartNeeded": false,
+          "coProUpdateFailure": false,
+          "configPending": false,
+          "deviceId": "3014F7110000000000000DLS",
+          "deviceOverheated": false,
+          "deviceOverloaded": false,
+          "deviceUndervoltage": false,
+          "dutyCycle": false,
+          "functionalChannelType": "DEVICE_BASE",
+          "groupIndex": 0,
+          "groups": [],
+          "index": 0,
+          "label": "",
+          "lowBat": false,
+          "routerModuleEnabled": false,
+          "routerModuleSupported": false,
+          "rssiDeviceValue": -72,
+          "rssiPeerValue": null,
+          "supportedOptionalFeatures": {
+            "IFeatureRssiValue": true,
+            "IOptionalFeatureDutyCycle": true,
+            "IOptionalFeatureLowBat": true
+          },
+          "temperatureOutOfRange": false,
+          "unreach": false
+        },
+        "1": {
+          "channelRole": "DOOR_LOCK_SENSOR",
+          "deviceId": "3014F7110000000000000DLS",
+          "doorLockDirection": "LEFT",
+          "doorLockNeutralPosition": "VERTICAL",
+          "doorLockTurns": 1,
+          "functionalChannelType": "DOOR_LOCK_SENSOR_CHANNEL",
+          "groupIndex": 1,
+          "groups": [],
+          "index": 1,
+          "label": "",
+          "lockState": "LOCKED"
+        }
+      },
+      "homeId": "00000000-0000-0000-0000-000000000001",
+      "id": "3014F7110000000000000DLS",
+      "label": "T\u00fcrschloss",
+      "lastStatusUpdate": 1793609199662,
+      "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+      "manuallyUpdateForced": true,
+      "manufacturerCode": 1,
+      "measuredAttributes": {
+        "1": {
+          "lockState": true
+        }
+      },
+      "modelId": 432,
+      "modelType": "HmIP-DLS",
+      "oem": "eQ-3",
+      "permanentlyReachable": false,
+      "serializedGlobalTradeItemNumber": "3014F7110000000000000DLS",
+      "type": "DOOR_LOCK_SENSOR",
+      "updateState": "UP_TO_DATE"
+    },
     "3014F7110000000000000049": {
       "availableFirmwareVersion": "1.4.8",
       "connectionType": "HMIP_RF",

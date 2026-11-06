@@ -946,6 +946,38 @@ async def test_hmip_multi_contact_interface(
     assert ha_state.state == STATE_UNKNOWN
 
 
+async def test_hmip_door_lock_sensor(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the lock state of a door lock sensor."""
+    entity_id = "binary_sensor.turschloss_lock"
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+            test_devices=["Türschloss"], test_groups=[]
+        )
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_hap.config_entry.entry_id
+    )
+
+    hmip_device = mock_hap.hmip_device_by_entity_id[entity_id]
+    await async_manipulate_test_data(
+        hass, hmip_device, "lockState", LockState.UNLOCKED, channel_real_index=1
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "lockState", None, channel_real_index=1
+    )
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
 def test_simple_binary_sensor_descriptions_no_overlap() -> None:
     """Every Device subclass must match at most one description group."""
     groups = list(SIMPLE_BINARY_SENSOR_DESCRIPTIONS)

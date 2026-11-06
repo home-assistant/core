@@ -8,7 +8,6 @@ import probatio
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -39,6 +38,7 @@ from .const import (
     PORT_80,
     PORT_5555,
 )
+from .coordinator import NetgearConfigEntry
 from .errors import CannotLoginException
 from .router import get_api
 
@@ -112,7 +112,7 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: NetgearConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler()
