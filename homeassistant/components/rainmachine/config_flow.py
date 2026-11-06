@@ -7,17 +7,13 @@ from regenmaschine import Client
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import RainMachineConfigEntry
 from .const import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
@@ -26,12 +22,7 @@ from .const import (
     DEFAULT_ZONE_RUN,
     DOMAIN,
 )
-
-
-@callback
-def get_client_controller(client: Client) -> Controller:
-    """Return the first local controller."""
-    return next(iter(client.controllers.values()))
+from .util import get_client_controller
 
 
 async def async_get_controller(
@@ -59,7 +50,7 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RainMachineConfigEntry,
     ) -> RainMachineOptionsFlowHandler:
         """Define the config flow to handle options."""
         return RainMachineOptionsFlowHandler()

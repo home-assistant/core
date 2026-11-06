@@ -27,11 +27,10 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .account import IcloudAccount
+from .account import IcloudAccount, IcloudConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -321,7 +320,7 @@ class IcloudMediaSource(MediaSource):
             mime_type,
         )
 
-    def _get_config_entries(self) -> list[ConfigEntry]:
+    def _get_config_entries(self) -> list[IcloudConfigEntry]:
         """Get iCloud config entries."""
         return self._hass.config_entries.async_entries(
             DOMAIN, include_disabled=False, include_ignore=False

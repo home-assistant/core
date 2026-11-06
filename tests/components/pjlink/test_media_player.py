@@ -12,39 +12,12 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import media_player
-from homeassistant.components.pjlink.const import (
-    CONF_ENCODING,
-    DEFAULT_ENCODING,
-    DEFAULT_PORT,
-    DOMAIN,
-)
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PLATFORM,
-    CONF_PORT,
-    Platform,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import setup_pjlink_entry
-
-_EXAMPLE_YAML_CONFIG = {
-    Platform.MEDIA_PLAYER: [
-        {
-            CONF_PLATFORM: DOMAIN,
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: DEFAULT_PORT,
-            CONF_PASSWORD: "test-password",
-            CONF_ENCODING: DEFAULT_ENCODING,
-        }
-    ]
-}
 
 
 @pytest.fixture(name="projector_from_address")
@@ -268,62 +241,6 @@ async def test_select_source(mocked_projector: MagicMock, hass: HomeAssistant) -
     )
 
     mocked_projector.set_input.assert_called_with("VGA", 1)
-
-
-async def test_yaml_import(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mocked_projector: MagicMock,
-) -> None:
-    """Test a YAML media player is imported and becomes an operational config entry."""
-    assert await async_setup_component(hass, media_player.DOMAIN, _EXAMPLE_YAML_CONFIG)
-    await hass.async_block_till_done()
-
-    # Verify the config entry was created
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-    # Verify a warning was issued about YAML deprecation
-    assert issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "error_str"),
-    [
-        (RuntimeError, "invalid_auth"),
-        (TimeoutError, "cannot_connect"),
-        (Exception, "unknown"),
-    ],
-)
-async def test_failed_yaml_import(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mocked_projector: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-    side_effect: type[Exception],
-    error_str: str,
-) -> None:
-    """Test a YAML media player is imported and becomes an operational config entry."""
-
-    with patch("pypjlink.Projector.from_address", side_effect=side_effect):
-        assert await async_setup_component(
-            hass, media_player.DOMAIN, _EXAMPLE_YAML_CONFIG
-        )
-        await hass.async_block_till_done()
-
-    # Verify the config entry was not created
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 0
-
-    # verify no flows still in progress
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 0
-
-    # Verify a warning was issued about YAML not being imported
-    assert issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_yaml_import_issue_{error_str}"
-    )
 
 
 _ERROR = ProjectorError("projector error")

@@ -1,10 +1,14 @@
 """Helpers for the Anglian Water integration."""
 
-from homeassistant.config_entries import ConfigEntry
+from typing import TYPE_CHECKING
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from .const import CONF_ACCOUNT_NUMBER, DOMAIN
+
+if TYPE_CHECKING:
+    from .coordinator import AnglianWaterConfigEntry
 
 LEARN_MORE_URL = "https://myaccount.anglianwater.co.uk/"
 
@@ -15,7 +19,7 @@ def consent_required_issue_id(account_number: str) -> str:
 
 
 def async_create_consent_required_issue(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: AnglianWaterConfigEntry
 ) -> None:
     """Create a repair issue directing the user to accept updated terms."""
     account_number = entry.data[CONF_ACCOUNT_NUMBER]
@@ -27,7 +31,7 @@ def async_create_consent_required_issue(
         severity=ir.IssueSeverity.ERROR,
         translation_key="consent_required",
         translation_placeholders={
-            CONF_ACCOUNT_NUMBER: account_number,
+            "account_number": account_number,
         },
         learn_more_url=LEARN_MORE_URL,
         config_entry_id=entry.entry_id,

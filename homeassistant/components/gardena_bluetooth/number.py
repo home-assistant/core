@@ -24,7 +24,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import DEGREE, PERCENTAGE, EntityCategory, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
@@ -170,6 +170,7 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
 
     entity_description: GardenaBluetoothNumberEntityDescription
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         data = self.coordinator.get_cached(self.entity_description.char)

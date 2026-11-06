@@ -6,7 +6,6 @@ from typing import Any, Literal
 from hole import Hole, HoleV5, HoleV6
 from hole.exceptions import HoleConnectionError, HoleError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -104,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> No
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> None:
     """Unload Pi-hole entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
