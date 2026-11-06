@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 
@@ -46,7 +46,7 @@ async def test_stale_sensor_value_returns_unavailable(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     tfa_me_config_entry: MockConfigEntry,
-    mock_tfa_me_client: MagicMock,
+    mock_tfa_me_client: AsyncMock,
 ) -> None:
     """Test stale sensor values are reported as unavailable."""
     payload = {
@@ -68,7 +68,7 @@ async def test_stale_sensor_value_returns_unavailable(
     # Move well beyond that timestamp.
     freezer.move_to("2025-11-26 15:20:00+00:00")
 
-    mock_tfa_me_client.async_get_sensors.return_value = payload
+    mock_tfa_me_client.return_value = payload
 
     assert await hass.config_entries.async_setup(tfa_me_config_entry.entry_id)
     await hass.async_block_till_done()

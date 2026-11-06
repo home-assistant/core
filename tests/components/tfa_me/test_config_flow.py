@@ -184,7 +184,7 @@ async def test_existing_entry_updates_host(
     assert old_host != new_host
 
     with patch(
-        "homeassistant.components.tfa_me.config_flow.resolve_tfa_host",
+        "homeassistant.components.tfa_me.config_flow.user_input_to_tfa_host",
         return_value=new_host,
     ):
         result = await hass.config_entries.flow.async_init(

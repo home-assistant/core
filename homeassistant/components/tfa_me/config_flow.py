@@ -19,7 +19,7 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_STATION_NAME, DOMAIN, VALID_JSON_MEASUREMENT_KEYS
-from .helper import resolve_tfa_host
+from .helper import user_input_to_tfa_host
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
             if not validator.is_valid_ip_or_tfa_me(address):
                 errors[CONF_IP_ADDRESS] = "invalid_ip_host"
             else:
-                host = resolve_tfa_host(address)
+                host = user_input_to_tfa_host(address)
                 session = async_get_clientsession(self.hass)
                 client = TFAmeClient(
                     host,
