@@ -10,11 +10,7 @@ from homeassistant.helpers import config_entry_oauth2_flow, llm
 
 from .application_credentials import authorization_server_context
 from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
-from .coordinator import (
-    ModelContextProtocolCoordinator,
-    TokenManager,
-    static_token_manager,
-)
+from .coordinator import ModelContextProtocolCoordinator, TokenManager
 from .types import ModelContextProtocolConfigEntry
 
 __all__ = [
@@ -62,9 +58,15 @@ async def _create_token_manager(
     """
     implementation = await async_get_config_entry_implementation(hass, entry)
     if not implementation:
-        if CONF_API_TOKEN in entry.data:
-            return static_token_manager(entry.data[CONF_API_TOKEN])
-        return None
+        if CONF_API_TOKEN not in entry.data:
+            return None
+
+        # Read on every request, as ongoing conversations keep their tools
+        # when a new token reloads the entry
+        async def api_token_manager() -> str:
+            return cast(str, entry.data[CONF_API_TOKEN])
+
+        return api_token_manager
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 

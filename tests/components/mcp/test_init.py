@@ -434,6 +434,31 @@ async def test_api_token(
     }
 
 
+@pytest.mark.usefixtures("fake_mcp_server")
+async def test_api_token_changed(
+    hass: HomeAssistant, config_entry_with_api_token: MockConfigEntry
+) -> None:
+    """Test tools held by an ongoing conversation use a new app token."""
+    await hass.config_entries.async_setup(config_entry_with_api_token.entry_id)
+    assert config_entry_with_api_token.state is ConfigEntryState.LOADED
+
+    api = next(
+        iter(api for api in llm.async_get_apis(hass) if api.name == TEST_API_NAME)
+    )
+    api_instance = await api.async_get_api_instance(create_llm_context())
+    hass.config_entries.async_update_entry(
+        config_entry_with_api_token,
+        data={**config_entry_with_api_token.data, CONF_API_TOKEN: "new-api-token"},
+    )
+    await api_instance.tools[0].async_call(
+        hass,
+        llm.ToolInput(tool_name="search_memory", tool_args={"query": "frogs"}),
+        create_llm_context(),
+    )
+
+    assert respx.calls.last.request.headers["Authorization"] == "Bearer new-api-token"
+
+
 @pytest.mark.usefixtures("credential", "fake_mcp_server")
 async def test_oauth_preferred_over_api_token(
     hass: HomeAssistant, config_entry_with_auth: MockConfigEntry
