@@ -124,7 +124,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Rflink cover platform."""
     if discovery_info is None:
-        create_issue_platform(hass, PLATFORM_DOMAIN),
+        create_issue_platform(hass, PLATFORM_DOMAIN)
         return
     async_add_entities(devices_from_config(discovery_info))
 

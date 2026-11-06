@@ -174,7 +174,7 @@ async def async_setup_platform(
             hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
     if discovery_info is None:
-        create_issue_platform(hass, PLATFORM_DOMAIN),
+        create_issue_platform(hass, PLATFORM_DOMAIN)
         return
     device_config = discovery_info[CONF_DEVICE_DEFAULTS]
     async_add_entities(devices_from_config(discovery_info))

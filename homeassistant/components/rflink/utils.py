@@ -1,7 +1,9 @@
 """RFLink integration utils."""
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import async_create_platform_config_not_supported_issue
+from homeassistant.helpers.entity_platform import (
+    async_create_platform_config_not_supported_issue,
+)
 
 from .const import DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_SENSOR
 
