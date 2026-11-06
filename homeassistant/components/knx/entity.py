@@ -1,11 +1,15 @@
 """Base classes for KNX entities."""
 
 from collections.abc import Callable
+from contextlib import AbstractContextManager
 import logging
+import time
 from typing import TYPE_CHECKING, Any, override
 
-from xknx.devices import Device as XknxDevice
+from xknx.devices import Cover as XknxCover, Device as XknxDevice, Light as XknxLight
+from xknx.telegram import telegram_context
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
+from xknx.telegram.apci import GroupValueWrite
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -14,11 +18,14 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import CONTEXT_RECENT_TIME_SECONDS, Entity
 from homeassistant.helpers.entity_platform import (
     EntityPlatform,
     async_get_current_platform,
@@ -28,11 +35,24 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, KnxEntityIdentifier
 from .storage.config_store import PlatformControllerBase
 from .storage.entity_store_schema import BaseEntityConfig, KnxEntityData
+from .telegrams import KnxTelegramContext
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _light_state_initialized(light: XknxLight) -> bool:
+    """Check that the switch or all configured color channels have a known state."""
+    if light.switch.initialized:
+        return light.switch.value is not None
+    # XKNX can report off after only one individual channel has responded.
+    return light.state is not None and all(
+        channel.is_on is not None
+        for channel in (light.red, light.green, light.blue, light.white)
+        if channel.switch.initialized or channel.brightness.initialized
+    )
 
 
 def _stable_group_address_repr(part: DeviceGroupAddress | int | str | None) -> str:
@@ -132,6 +152,11 @@ class _KnxEntityBase(Entity):
     _device: XknxDevice
 
     _knx_entity_identifier: KnxEntityIdentifier | None = None
+    _device_state_initialized = False
+    _service_context: Context | None = None
+    _service_context_set: float = 0
+    _travel_context: Context | None = None
+    _travel_context_until: float = 0
 
     @property
     @override
@@ -143,8 +168,94 @@ class _KnxEntityBase(Entity):
         """Request a state update from KNX bus."""
         await self._device.sync()
 
+    @callback
+    @override
+    def async_set_context(self, context: Context) -> None:
+        """Remember the context supplied by HA for a new action."""
+        self._travel_context = None
+        self._service_context = context
+        self._service_context_set = time.time()
+        super().async_set_context(context)
+
+    @property
+    def _recent_service_context(self) -> Context | None:
+        """Return the service cause without extending its window on feedback."""
+        if time.time() - self._service_context_set <= CONTEXT_RECENT_TIME_SECONDS:
+            return self._service_context
+        return None
+
+    def _telegram_context(self) -> AbstractContextManager[None]:
+        """Pass only a recent HA action cause to newly created telegrams."""
+        return telegram_context(self._recent_service_context)
+
     def after_update_callback(self, device: XknxDevice) -> None:
-        """Call after device was updated."""
+        """Apply the explicit cause and record relevant actor state transitions."""
+        if self.platform_data.domain in (
+            Platform.LIGHT,
+            Platform.SWITCH,
+            Platform.COVER,
+        ):
+            update = device.last_update
+            context = (
+                update.context if isinstance(update.context, Context) else Context()
+            )
+            state = self.state
+            if update.telegram is not None and not update.from_state_address:
+                # Commands received through passive addresses also replace HA causes.
+                if isinstance(context, KnxTelegramContext) or not isinstance(
+                    update.context, Context
+                ):
+                    self._service_context = None
+                elif context is not self._service_context:
+                    self._service_context = context
+                    self._service_context_set = time.time()
+            if isinstance(context, KnxTelegramContext):
+                if update.from_state_address:
+                    if (
+                        self._travel_context is not None
+                        and time.time() <= self._travel_context_until
+                    ):
+                        context = self._travel_context
+                    elif (service_context := self._recent_service_context) is not None:
+                        context = service_context
+            # Retargeting may change the travel cause without changing the HA state.
+            travel_context = context
+            if isinstance(context, KnxTelegramContext):
+                old_state = self.hass.states.get(self.entity_id)
+                can_attribute = old_state is not None and (
+                    (
+                        self._device_state_initialized
+                        and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                    )
+                    or (
+                        update.telegram is not None
+                        and isinstance(update.telegram.payload, GroupValueWrite)
+                    )
+                )
+                if can_attribute and old_state is not None and state is not None:
+                    if old_state.state != state:
+                        # Log the origin before the state event for live Activity.
+                        context.async_log(self.hass)
+                    elif old_state.context is not context:
+                        # Another entity logging this telegram does not attribute ours.
+                        context = Context()
+                else:
+                    context = travel_context = Context()
+            if isinstance(device, XknxCover) and not update.from_state_address:
+                self._travel_context = travel_context
+                # Keep the cause through the final feedback; feedback cannot renew it.
+                self._travel_context_until = (
+                    time.time() + device.remaining_travel_time() + 1
+                )
+            super().async_set_context(context)
+            self._device_state_initialized = (
+                state is not None
+                and not self.assumed_state
+                and (
+                    not isinstance(device, XknxLight)
+                    or _light_state_initialized(device)
+                )
+            )
         self.async_write_ha_state()
 
     @override

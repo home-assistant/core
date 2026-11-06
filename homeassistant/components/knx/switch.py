@@ -27,6 +27,7 @@ from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
     KnxYamlEntity,
+    _KnxEntityBase,
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
@@ -69,7 +70,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class _KnxSwitch(SwitchEntity, RestoreEntity):
+class _KnxSwitch(SwitchEntity, RestoreEntity, _KnxEntityBase):
     """Base class for a KNX switch."""
 
     _device: XknxSwitch
@@ -91,12 +92,14 @@ class _KnxSwitch(SwitchEntity, RestoreEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self._device.set_on()
+        with self._telegram_context():
+            await self._device.set_on()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self._device.set_off()
+        with self._telegram_context():
+            await self._device.set_off()
 
 
 class KnxYamlSwitch(_KnxSwitch, KnxYamlEntity):
