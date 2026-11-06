@@ -1,5 +1,7 @@
 """Tests for the select platform."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.select import (
@@ -25,20 +27,24 @@ async def test_humidifier_set_nightlight_level(
 ) -> None:
     """Test set of humidifier night light level."""
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
-            ATTR_OPTION: HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
-        },
-        blocking=True,
-    )
+    with patch(
+        "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
+    ) as mark_mock:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
+                ATTR_OPTION: HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
+            },
+            blocking=True,
+        )
 
     # Assert that setter API was invoked with the expected translated value
     humidifier_300s.set_nightlight_brightness.assert_called_once_with(
         HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP[HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM]
     )
+    mark_mock.assert_called_once()
 
 
 @pytest.mark.parametrize(
