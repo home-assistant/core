@@ -663,6 +663,7 @@ async def test_reconfigure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
     feed_zip: bytes,
     url: str,
 ) -> None:
@@ -684,6 +685,26 @@ async def test_reconfigure(
     result = await _submit_reconfigure(hass, result["flow_id"], url)
 
     await _assert_reconfigured(hass, mock_config_entry, result, url)
+    # The entry's update listener does the reload; the flow must not also do one.
+    assert "update listener" not in caplog.text
+
+
+async def test_reconfigure_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test reconfiguring a feed whose setup failed sets it up from the new URL."""
+    aioclient_mock.get(FEED_URL, exc=ClientError())
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(NEW_FEED_URL, content=NEW_FEED_ZIP)
+    result = await _submit_reconfigure(hass, result["flow_id"], NEW_FEED_URL)
+
+    await _assert_reconfigured(hass, mock_config_entry, result, NEW_FEED_URL)
 
 
 @pytest.mark.parametrize(
