@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.components.device_tracker import ATTR_GPS, ATTR_IP, ATTR_MAC
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
-from homeassistant.components.person import ATTR_USER_ID
+from homeassistant.components.person import PersonEntityStateAttribute
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
     STATE_HOME,
@@ -23,7 +23,7 @@ TO_REDACT = {
     EntityStateAttribute.LATITUDE,
     EntityStateAttribute.LONGITUDE,
     ATTR_MAC,
-    ATTR_USER_ID,
+    PersonEntityStateAttribute.USER_ID,
     "context",
     "location_name",
 }

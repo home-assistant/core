@@ -101,10 +101,10 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the netgear config flow."""
         self.placeholders = {
-            CONF_HOST: DEFAULT_HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_USERNAME: DEFAULT_USER,
-            CONF_SSL: False,
+            "host": DEFAULT_HOST,
+            "port": DEFAULT_PORT,
+            "username": DEFAULT_USER,
+            "ssl": False,
         }
         self.discovered = False
 

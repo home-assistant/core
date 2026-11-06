@@ -87,7 +87,7 @@ async def test_duplicate_statistics_handle_integrity_error(
     ]
 
     with (
-        patch.object(statistics, "_statistics_exists", return_value=False),
+        patch.object(statistics, "_statistic_ids_by_start", return_value={}),
         patch.object(
             statistics, "_insert_statistics", wraps=statistics._insert_statistics
         ) as insert_statistics_mock,

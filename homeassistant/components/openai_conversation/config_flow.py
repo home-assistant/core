@@ -13,7 +13,6 @@ from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -45,6 +44,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import VolDictType
 
+from . import OpenAIConfigEntry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
@@ -242,7 +242,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: OpenAIConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
@@ -328,7 +328,11 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         },
                     ): TemplateSelector(),
                     probatio.Optional(CONF_LLM_HASS_API): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=hass_apis,
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                        )
                     ),
                 }
             )
@@ -579,7 +583,6 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         "gpt-image-2.5-flare",
                         "gpt-image-2",
                         "gpt-image-1.5",
-                        "gpt-image-1",
                         "gpt-image-1-mini",
                     ],
                     mode=SelectSelectorMode.DROPDOWN,
@@ -632,7 +635,14 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return []
 
         models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
-            "gpt-6-luna": ["none", "low", "medium", "high", "xhigh", "max"],
+            ("gpt-6-luna", "gpt-6.1-terra"): [
+                "none",
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+                "max",
+            ],
             "gpt-6": ["low", "medium", "high", "xhigh", "max"],
             "gpt-5.6": ["none", "low", "medium", "high", "xhigh", "max"],
             ("gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro"): ["medium", "high", "xhigh"],
@@ -782,6 +792,7 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=[
+                            "gpt-transcribe",
                             "gpt-4o-transcribe",
                             "gpt-4o-mini-transcribe",
                             "whisper-1",

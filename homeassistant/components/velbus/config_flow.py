@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
@@ -164,7 +164,6 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         if not await self._test_connection():
             return self.async_abort(reason="cannot_connect")
         # call the config step
-        self._set_confirm_only()
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -176,7 +175,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders={CONF_NAME: self._title},
+            description_placeholders={"name": self._title},
         )
 
     async def _validate_vlp_file(self, file_path: str) -> None:

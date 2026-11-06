@@ -60,9 +60,9 @@ class OKOKScaleConfigFlow(ConfigFlow, domain=DOMAIN):
         title = device.title or device.get_device_name() or discovery_info.name
 
         if user_input is not None:
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=title, data={})
 
-        self._set_confirm_only()
         placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

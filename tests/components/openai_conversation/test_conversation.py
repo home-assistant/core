@@ -962,6 +962,15 @@ async def test_flex_tier_retry(
             CONF_TEMPERATURE: 0.5,
             CONF_TOP_P: 0.9,
         },
+        pytest.param(
+            {
+                CONF_CHAT_MODEL: "gpt-6.1-terra",
+                CONF_REASONING_EFFORT: "none",
+                CONF_TEMPERATURE: 0.5,
+                CONF_TOP_P: 0.9,
+            },
+            id="terra_none",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")

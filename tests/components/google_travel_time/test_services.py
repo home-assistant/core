@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from google_maps_routing_api import (
+    ComputeRoutesResponse,
     GoogleMapsRoutingApiAuthError,
     GoogleMapsRoutingApiConnectionTimeoutError,
     GoogleMapsRoutingApiError,
@@ -50,6 +51,7 @@ async def test_service_get_travel_times(
             {
                 "duration": 1620,
                 "duration_text": "27 mins",
+                "static_duration": 1560,
                 "static_duration_text": "26 mins",
                 "distance_meters": 21300,
                 "distance_text": "21.3 km",
@@ -204,6 +206,7 @@ async def test_service_get_transit_times(
             {
                 "duration": 1620,
                 "duration_text": "27 mins",
+                "static_duration": 1560,
                 "static_duration_text": "26 mins",
                 "distance_meters": 21300,
                 "distance_text": "21.3 km",
@@ -302,3 +305,34 @@ async def test_service_get_transit_times_errors(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+async def test_service_static_duration_falls_back_to_duration(
+    hass: HomeAssistant,
+    routes_mock: AsyncMock,
+    mock_config: MockConfigEntry,
+) -> None:
+    """Test static_duration is the duration when the API doesn't return it."""
+    routes_mock.async_compute_routes.return_value = ComputeRoutesResponse.from_dict(
+        {"routes": [{"distanceMeters": 21300, "duration": "1620s"}]}
+    )
+
+    response_data = await hass.services.async_call(
+        DOMAIN,
+        "get_travel_times",
+        {
+            "config_entry_id": mock_config.entry_id,
+            "origin": "location1",
+            "destination": "location2",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    route = response_data["routes"][0]
+    assert route["duration"] == 1620
+    assert route["static_duration"] == 1620

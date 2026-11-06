@@ -34,9 +34,9 @@ _MIN_RUNTIME_DURATION = 1
 class FlexitNumberEntityDescription(NumberEntityDescription):
     """Describes a Flexit number entity."""
 
-    native_value_fn: Callable[[FlexitBACnet], float]
-    native_max_value_fn: Callable[[FlexitBACnet], int]
-    native_min_value_fn: Callable[[FlexitBACnet], int]
+    native_value_fn: Callable[[FlexitBACnet], float | None]
+    native_max_value_fn: Callable[[FlexitBACnet], int | None]
+    native_min_value_fn: Callable[[FlexitBACnet], int | None]
     set_native_value_fn: Callable[[FlexitBACnet], Callable[[int], Awaitable[None]]]
 
 
@@ -69,7 +69,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_value_fn=lambda device: device.fan_setpoint_extract_air_away,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_away,
         native_unit_of_measurement=PERCENTAGE,
-        native_max_value_fn=lambda device: int(device.fan_setpoint_extract_air_home),
+        native_max_value_fn=lambda device: device.fan_setpoint_extract_air_home,
         native_min_value_fn=lambda _: _MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
@@ -81,7 +81,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_value_fn=lambda device: device.fan_setpoint_supply_air_away,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_away,
         native_unit_of_measurement=PERCENTAGE,
-        native_max_value_fn=lambda device: int(device.fan_setpoint_supply_air_home),
+        native_max_value_fn=lambda device: device.fan_setpoint_supply_air_home,
         native_min_value_fn=lambda _: _MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
@@ -142,7 +142,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_high,
         native_unit_of_measurement=PERCENTAGE,
         native_max_value_fn=lambda _: _MAX_FAN_SETPOINT,
-        native_min_value_fn=lambda device: int(device.fan_setpoint_extract_air_home),
+        native_min_value_fn=lambda device: device.fan_setpoint_extract_air_home,
     ),
     FlexitNumberEntityDescription(
         key="high_supply_fan_setpoint",
@@ -154,7 +154,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_high,
         native_unit_of_measurement=PERCENTAGE,
         native_max_value_fn=lambda _: _MAX_FAN_SETPOINT,
-        native_min_value_fn=lambda device: int(device.fan_setpoint_supply_air_home),
+        native_min_value_fn=lambda device: device.fan_setpoint_supply_air_home,
     ),
     FlexitNumberEntityDescription(
         key="home_extract_fan_setpoint",
@@ -166,7 +166,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_home,
         native_unit_of_measurement=PERCENTAGE,
         native_max_value_fn=lambda _: _MAX_FAN_SETPOINT,
-        native_min_value_fn=lambda device: int(device.fan_setpoint_extract_air_away),
+        native_min_value_fn=lambda device: device.fan_setpoint_extract_air_away,
     ),
     FlexitNumberEntityDescription(
         key="home_supply_fan_setpoint",
@@ -178,7 +178,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_home,
         native_unit_of_measurement=PERCENTAGE,
         native_max_value_fn=lambda _: _MAX_FAN_SETPOINT,
-        native_min_value_fn=lambda device: int(device.fan_setpoint_supply_air_away),
+        native_min_value_fn=lambda device: device.fan_setpoint_supply_air_away,
     ),
     FlexitNumberEntityDescription(
         key="fireplace_mode_runtime",
@@ -231,7 +231,20 @@ class FlexitNumber(FlexitEntity, NumberEntity):
 
     @property
     @override
-    def native_value(self) -> float:
+    def available(self) -> bool:
+        """Return whether the value and its limits are available."""
+        return (
+            super().available
+            and self.native_value is not None
+            and self.entity_description.native_min_value_fn(self.coordinator.device)
+            is not None
+            and self.entity_description.native_max_value_fn(self.coordinator.device)
+            is not None
+        )
+
+    @property
+    @override
+    def native_value(self) -> float | None:
         """Return the state of the number."""
         return self.entity_description.native_value_fn(self.coordinator.device)
 
@@ -239,13 +252,25 @@ class FlexitNumber(FlexitEntity, NumberEntity):
     @override
     def native_max_value(self) -> float:
         """Return the native max value of the number."""
-        return self.entity_description.native_max_value_fn(self.coordinator.device)
+        if (
+            value := self.entity_description.native_max_value_fn(
+                self.coordinator.device
+            )
+        ) is None:
+            return super().native_max_value
+        return value
 
     @property
     @override
     def native_min_value(self) -> float:
         """Return the native min value of the number."""
-        return self.entity_description.native_min_value_fn(self.coordinator.device)
+        if (
+            value := self.entity_description.native_min_value_fn(
+                self.coordinator.device
+            )
+        ) is None:
+            return super().native_min_value
+        return value
 
     @override
     async def async_set_native_value(self, value: float) -> None:
