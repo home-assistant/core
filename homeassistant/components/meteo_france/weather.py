@@ -89,6 +89,8 @@ class MeteoFranceWeather(
     """Representation of a weather condition."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
@@ -102,7 +104,6 @@ class MeteoFranceWeather(
     ) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
-        self._attr_name = self.coordinator.data.position["name"]
         self._mode = mode
         pos = self.coordinator.data.position
         self._attr_unique_id = f"{pos['lat']},{pos['lon']}"
@@ -127,7 +128,7 @@ class MeteoFranceWeather(
             identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
-            name=self.coordinator.name,
+            name=self.coordinator.data.position["name"],
         )
 
     @property
