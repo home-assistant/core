@@ -447,6 +447,27 @@ async def test_failed_pre_warm(
     assert await async_get_stream_source(hass, ENTITY_ID)
 
 
+async def test_proxy_death_during_pre_warm_discards_the_open(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
+) -> None:
+    """Test a proxy that dies while the camera wakes up is not published."""
+    await setup_integration(hass, mock_config_entry)
+
+    async def die_while_waking(*args: object, **kwargs: object) -> bool:
+        mock_live.proxy_died[CAMERA_ID]()
+        return True
+
+    mock_live.pre_warm.side_effect = die_while_waking
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await async_get_stream_source(hass, ENTITY_ID)
+
+    assert exc_info.value.translation_key == "stream_failed"
+    mock_live.stop_proxy.assert_awaited_once()
+    await hass.async_block_till_done()
+    assert not mock_config_entry.runtime_data.live_sessions.camera_ids
+
+
 async def test_cameras_are_isolated(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -664,6 +685,29 @@ async def test_removing_the_entity_closes_its_session_and_keeps_the_settings(
     assert CAMERA_ID not in entity.coordinator.live_sessions.camera_ids
     assert settings.preload_stream is True
     assert entity.stream is None
+
+
+async def test_queued_stream_request_does_not_open_after_removal(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_live: LiveMocks
+) -> None:
+    """Test a stream request queued behind another opens nothing once removal began."""
+    mock_live.pre_warm.side_effect = _hang
+    await setup_integration(hass, mock_config_entry)
+    assert await async_setup_component(hass, "stream", {})
+    entity = _entity(hass)
+    first = hass.async_create_task(entity.async_create_stream())
+    second = hass.async_create_task(entity.async_create_stream())
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+
+    await entity.async_will_remove_from_hass()
+    first.cancel()
+    await asyncio.gather(first, second, return_exceptions=True)
+    await hass.async_block_till_done()
+
+    assert entity.stream is None
+    assert not mock_config_entry.runtime_data.live_sessions.camera_ids
+    assert mock_live.open.await_count == 1
 
 
 async def test_close_all_releases_open_sessions(

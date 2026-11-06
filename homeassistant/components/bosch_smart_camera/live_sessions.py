@@ -207,13 +207,17 @@ class LiveSessions:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="stream_failed"
             ) from err
-        if not await pre_warm_rtsp(
-            port,
-            connection.username,
-            connection.password,
-            connection.host,
-            max_session_duration=connection.max_session_seconds,
+        if (
+            not await pre_warm_rtsp(
+                port,
+                connection.username,
+                connection.password,
+                connection.host,
+                max_session_duration=connection.max_session_seconds,
+            )
+            or self._proxies.get(camera_id) is not proxy
         ):
+            # The proxy may also have died while the camera was being woken.
             await stop_tls_proxy(camera_id, self._ports, self._servers)
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="stream_failed"
@@ -226,6 +230,8 @@ class LiveSessions:
         # The library reports a dead proxy late, when a newer one may be running.
         if self._proxies.get(camera_id) is not proxy:
             return
+        # Invalidate it for an open that is still waiting on the camera.
+        self._proxies[camera_id] = object()
         if session := self._sessions.pop(camera_id, None):
             session.cancel_renewal()
             session.on_changed(None)

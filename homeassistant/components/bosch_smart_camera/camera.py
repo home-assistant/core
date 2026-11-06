@@ -64,6 +64,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         Camera.__init__(self)
         self._camera_id = camera_id
         self._reopen_task: asyncio.Task[None] | None = None
+        self._removing = False
         # The TLS proxy only speaks TCP.
         self.stream_options[CONF_RTSP_TRANSPORT] = "tcp"
         self._attr_unique_id = camera_id
@@ -91,6 +92,9 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     @override
     async def stream_source(self) -> str | None:
         """Return the address of the live stream."""
+        if self._removing:
+            # A queued stream request must not open a session after removal began.
+            return None
         return await self.coordinator.live_sessions.async_get_url(
             self._camera_id, self._is_streaming, self._session_changed
         )
@@ -145,6 +149,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop the stream, its worker keeps retrying a closed proxy otherwise."""
+        self._removing = True
         if self._reopen_task:
             self._reopen_task.cancel()
             await asyncio.wait([self._reopen_task])
