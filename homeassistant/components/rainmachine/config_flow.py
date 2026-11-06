@@ -1,6 +1,6 @@
 """Config flow to configure the RainMachine component."""
 
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 import probatio
 from regenmaschine import Client
@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import RainMachineConfigEntry
 from .const import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
@@ -21,15 +22,7 @@ from .const import (
     DEFAULT_ZONE_RUN,
     DOMAIN,
 )
-
-if TYPE_CHECKING:
-    from . import RainMachineConfigEntry
-
-
-@callback
-def get_client_controller(client: Client) -> Controller:
-    """Return the first local controller."""
-    return next(iter(client.controllers.values()))
+from .util import get_client_controller
 
 
 async def async_get_controller(
