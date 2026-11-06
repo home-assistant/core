@@ -12,6 +12,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import SwitcherDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,6 +62,11 @@ class SwitcherEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
             # Availability is driven by the device broadcasts, so surface the
             # failure without marking the entity unavailable.
             raise HomeAssistantError(
-                f"Call api for {self.name} failed, api: '{api}', "
-                f"args: {args}, response/error: {response or error}"
+                translation_domain=DOMAIN,
+                translation_key="api_call_failed",
+                translation_placeholders={
+                    "entity": str(self.name),
+                    "api": api,
+                    "error": str(response or error),
+                },
             )

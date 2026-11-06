@@ -204,13 +204,14 @@ async def test_switch_control_fail(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device",
         side_effect=RuntimeError("fake error"),
     ) as mock_control_device:
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(HomeAssistantError) as exc_info:
             await hass.services.async_call(
                 SWITCH_DOMAIN,
                 SERVICE_TURN_ON,
                 {ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
+        assert exc_info.value.translation_key == "api_call_failed"
 
         assert mock_api.call_count == 2
         mock_control_device.assert_called_once_with(Command.ON)
