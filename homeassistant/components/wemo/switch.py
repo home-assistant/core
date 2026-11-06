@@ -56,6 +56,7 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
     # All wemo devices used with WemoSwitch are subclasses of Switch.
     wemo: Switch
     _on_since: datetime | None = None
+    _on_for: int | None = None
 
     @property
     @override
@@ -100,17 +101,25 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
         ``on_for`` increases only while the outlet is on or in standby, so
         subtracting it from now is an absolute start time. While off it is the
         finished length of the last on period and would walk forward every poll.
+        A decrease while still on is a new period whose off poll was missed.
         """
         wemo = self.wemo
         if not isinstance(wemo, Insight):
             return None
         if wemo.standby_state not in (StandbyState.ON, StandbyState.STANDBY):
             self._on_since = None
+            self._on_for = None
             return None
 
-        candidate = (dt_util.utcnow() - timedelta(seconds=wemo.on_for)).replace(
+        on_for = wemo.on_for
+        candidate = (dt_util.utcnow() - timedelta(seconds=on_for)).replace(
             microsecond=0
         )
+        # Drop the cached start before the drift window. A shorter on_for is a
+        # new period, and the new start can still fall inside that window.
+        if self._on_for is not None and on_for < self._on_for:
+            self._on_since = None
+        self._on_for = on_for
         previous = self._on_since
         if previous is not None and abs(candidate - previous) <= _ON_SINCE_DRIFT:
             return previous
