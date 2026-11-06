@@ -6,7 +6,7 @@ import probatio
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DOMAIN
@@ -16,7 +16,7 @@ from .util import async_get_entries
 SERVICE_RESTART = "restart"
 
 RESTART_SERVICE_SCHEMA = probatio.Schema(
-    {probatio.Required(ATTR_DEVICE_ID): cv.ensure_list}
+    {probatio.Required(ATTR_DEVICE_ID): probatio.EnsureList()}
 )
 
 
