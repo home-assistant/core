@@ -45,7 +45,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         await client.visitors_online()
     except AuthenticationError as error:
         raise InvalidAuth from error
-    except ConnectionError as error:
+    except (ConnectionError, TimeoutError) as error:
         raise CannotConnect from error
 
     return {"title": data[CONF_SITE_ID]}

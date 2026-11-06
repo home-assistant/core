@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ClickyConfigEntry) -> No
 
 async def async_unload_entry(hass: HomeAssistant, entry: ClickyConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
 
 
 def device_info(name: str) -> DeviceInfo:
