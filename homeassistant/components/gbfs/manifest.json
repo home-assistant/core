@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aiomobilitydatabase"],
   "quality_scale": "bronze",
-  "requirements": ["aiomobilitydatabase==0.6.0"]
+  "requirements": ["aiomobilitydatabase==0.6.1"]
 }

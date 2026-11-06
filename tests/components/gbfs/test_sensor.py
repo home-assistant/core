@@ -230,3 +230,25 @@ async def test_docks_sensor_for_station_without_status_at_setup(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "5"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_empty_vehicle_breakdown_counts_zero(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an empty per-type breakdown means no vehicles, not unknown."""
+
+    def empty_station(document: dict[str, Any]) -> None:
+        station = document["data"]["stations"][0]
+        station["num_vehicles_available"] = 0
+        station["vehicle_types_available"] = []
+
+    await serve_edited_v3_feed(hass, aioclient_mock, {"station_status": empty_station})
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{MAIN_ST}_classic_bikes").state == "0"
+    assert hass.states.get(f"{MAIN_ST}_e_bikes").state == "0"
