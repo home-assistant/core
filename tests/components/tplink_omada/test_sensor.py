@@ -1,6 +1,7 @@
 """Tests for TP-Link Omada sensor entities."""
 
 from datetime import timedelta
+import logging
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -142,6 +143,69 @@ async def test_sfp_port_has_no_poe_power_sensor(
     """Test SFP ports do not get a PoE power sensor."""
     assert hass.states.get("sensor.test_poe_switch_port_9_poe_power") is None
     assert hass.states.get("sensor.test_poe_switch_port_8_poe_power") is not None
+
+
+async def test_port_disappearing_from_coordinator_keeps_last_state(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a port no longer reported by the switch keeps its last known value."""
+    entity_id = "sensor.test_poe_switch_port_1_poe_power"
+    assert hass.states.get(entity_id).state == "2.7"
+
+    # Firmware update or port reconfiguration: the port is no longer reported
+    ports_data = await async_load_json_array_fixture(
+        hass, "switch-ports-TL-SG3210XHP-M2.json", DOMAIN
+    )
+    mock_omada_site_client.get_switch_ports.return_value = [
+        OmadaSwitchPortDetails(p) for p in ports_data if p.get("port") != 1
+    ]
+
+    with caplog.at_level(logging.ERROR):
+        freezer.tick(PORT_POLL_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # The sensor still exists and keeps its last known value, without errors
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.state == "2.7"
+    assert "KeyError" not in caplog.text
+    assert "Omada API Data - Test PoE Switch Ports" not in caplog.text
+
+
+async def test_device_disappearing_from_coordinator_keeps_last_state(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a device removed from the controller keeps its last known value."""
+    entity_id = "sensor.test_poe_switch_device_status"
+    assert hass.states.get(entity_id).state == "connected"
+
+    # The device is no longer returned by the controller
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    mock_omada_site_client.get_devices.return_value = [
+        OmadaListDevice(d) for d in devices_data if d.get("mac") != "54-AF-97-00-00-01"
+    ]
+
+    with caplog.at_level(logging.ERROR):
+        freezer.tick(POLL_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # The sensor still exists and keeps its last known value, without errors
+    # from the device list coordinator (the update coordinator has its own
+    # separate error handling for vanished devices and is out of scope here)
+    entity = hass.states.get(entity_id)
+    assert entity is not None
+    assert entity.state == "connected"
+    assert "Omada API Data - DeviceList" not in caplog.text
 
 
 async def _set_test_device_status(
