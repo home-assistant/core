@@ -299,3 +299,25 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_coordinator_unexpected_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an unexpected error is logged with its traceback and setup retries."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST},
+        title=f"BT Home Hub 5 ({MOCK_HOST})",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bt_home_hub_5.coordinator.get_devicelist",
+        side_effect=RuntimeError("Unexpected error"),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert "Unexpected error fetching bt_home_hub_5 data" in caplog.text

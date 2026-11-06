@@ -21,6 +21,10 @@
     }
   },
   "issues": {
+    "legacy_known_devices": {
+      "description": "BT Home Hub 5 now creates its own device tracker entities, but the following entries left over from the old YAML setup still exist in `{path}` for devices tracked by the router at `{host}`:\n\n{devices}\n\nThese legacy trackers are no longer updated and will show as away.\n\nRemove these entries from `{path}`, update any automations that use them to the new entities, and restart Home Assistant.",
+      "title": "Remove leftover known devices for BT Home Hub 5"
+    },
     "yaml_import_cannot_connect": {
       "description": "The YAML configuration for BT Home Hub 5 at `{host}` could not be imported.\n\nCheck that `{host}` is a reachable BT Home Hub 5, update your `configuration.yaml` if needed, and restart Home Assistant.",
       "title": "YAML configuration import failed"

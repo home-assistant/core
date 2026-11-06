@@ -43,9 +43,9 @@ class BTHomeHub5DataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             raise UpdateFailed(
                 f"Error communicating with BT Home Hub 5 at {self.host}: {err}"
             ) from err
-        except Exception as err:
+        except IndexError as err:
             raise UpdateFailed(
-                f"Unexpected error communicating with BT Home Hub 5 at {self.host}: {err}"
+                f"Unexpected response from BT Home Hub 5 at {self.host}"
             ) from err
 
         if data is None:
