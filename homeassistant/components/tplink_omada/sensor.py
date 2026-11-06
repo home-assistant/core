@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -193,14 +193,20 @@ class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity
         super().__init__(coordinator, device)
         self.entity_description = entity_description
         self._attr_unique_id = f"{device.mac}_{entity_description.key}"
+        if (current := coordinator.data.get(device.mac)) is not None:
+            self._attr_native_value = self.entity_description.update_func(current)
+        else:
+            self._attr_native_value = None
 
-    @property
+    @callback
     @override
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return self.entity_description.update_func(
-            self.coordinator.data[self.device.mac]
-        )
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data, keeping the last value if the device is gone."""
+        # The device may no longer be reported (e.g. it was removed from the
+        # controller) — keep the last known value instead of raising KeyError.
+        if (current := self.coordinator.data.get(self.device.mac)) is not None:
+            self._attr_native_value = self.entity_description.update_func(current)
+        super()._handle_coordinator_update()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -254,9 +260,18 @@ class OmadaSwitchPortSensor(
         self._port_id = port.port_id
         self._attr_unique_id = f"{device.mac}_{port.port_id}_{entity_description.key}"
         self._attr_translation_placeholders = {"port_name": port_name}
+        if (current := coordinator.data.get(port.port_id)) is not None:
+            self._attr_native_value = self.entity_description.update_func(current)
+        else:
+            self._attr_native_value = None
 
-    @property
+    @callback
     @override
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return self.entity_description.update_func(self.coordinator.data[self._port_id])
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data, keeping the last value if the port is gone."""
+        # The port may no longer be reported (e.g. after a firmware update or
+        # a port reconfiguration) — keep the last known value instead of
+        # raising KeyError.
+        if (current := self.coordinator.data.get(self._port_id)) is not None:
+            self._attr_native_value = self.entity_description.update_func(current)
+        super()._handle_coordinator_update()
