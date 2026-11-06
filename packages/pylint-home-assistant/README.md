@@ -176,6 +176,7 @@ Every check has a code following the
 | `W7454` | [`home-assistant-sequential-add-entities`](#w7454-home-assistant-sequential-add-entities) | Sequential `async_add_entities` calls should be grouped |
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
+| `W7462` | [`home-assistant-tests-uncalled-mock-assert`](#w7462-home-assistant-tests-uncalled-mock-assert) | Mock assertion method is asserted instead of called |
 
 ## `home_assistant_logger` checker
 
@@ -742,6 +743,25 @@ whose type cannot be inferred. So every use of these methods in
 it, unless the receiver is known to be something other than a coordinator,
 such as a mock.
 
+
+## `home_assistant_tests_uncalled_mock_assert` checker
+
+Detects tests that assert a mock assertion method instead of calling it.
+
+### `W7462`: `home-assistant-tests-uncalled-mock-assert`
+
+`assert mock.assert_called_once` only accesses the method. A bound method is
+always truthy, so the assertion always passes and the mock is never checked.
+Call the method instead:
+
+```python
+assert mock.assert_called_once  # <-- flagged
+mock.assert_called_once()
+```
+
+All `Mock` and `AsyncMock` assertion methods (`assert_called*`,
+`assert_awaited*`, `assert_not_called`, `assert_any_call`, ...) are checked,
+also inside `not`, `and` and `or`. The checker is scoped to test modules.
 
 ## `home_assistant_tests_config_flow_unique_id` checker
 
