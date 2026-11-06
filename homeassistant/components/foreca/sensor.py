@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
-from pyforeca import Observation
+from pyforeca import AirQualityForecast, Observation
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -40,7 +40,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import symbol_to_condition
+from .const import POLLUTANTS, symbol_to_condition
 from .coordinator import ForecaConfigEntry, ForecaCoordinator, ForecaWeatherData
 from .entity import ForecaEntity
 
@@ -79,6 +79,26 @@ def _observed(
         return value_fn(observation)
 
     return read
+
+
+def _air_quality(
+    value_fn: Callable[[AirQualityForecast], StateType],
+) -> Callable[[AirQualityForecast | None], StateType]:
+    """Read a value from the air quality of the hour in progress."""
+
+    def read(air_quality: AirQualityForecast | None) -> StateType:
+        if air_quality is None:
+            return None
+        return value_fn(air_quality)
+
+    return read
+
+
+def _pollutant(air_quality: AirQualityForecast) -> str | None:
+    """Return the dominant pollutant as an option key."""
+    if air_quality.pollutant is None:
+        return None
+    return POLLUTANTS.get(air_quality.pollutant)
 
 
 CURRENT_SENSORS: tuple[ForecaSensorEntityDescription[ForecaWeatherData], ...] = (
@@ -224,6 +244,67 @@ OBSERVATION_SENSORS: tuple[ForecaSensorEntityDescription[Observation | None], ..
 )
 
 
+AIR_QUALITY_SENSORS: tuple[
+    ForecaSensorEntityDescription[AirQualityForecast | None], ...
+] = (
+    ForecaSensorEntityDescription(
+        key="aqi",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_air_quality(lambda aq: aq.aqi),
+    ),
+    ForecaSensorEntityDescription(
+        key="dominant_pollutant",
+        translation_key="dominant_pollutant",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(POLLUTANTS.values()),
+        value_fn=_air_quality(_pollutant),
+    ),
+    ForecaSensorEntityDescription(
+        key="aqi_co",
+        translation_key="aqi_co",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_air_quality(lambda aq: aq.aqi_co),
+    ),
+    ForecaSensorEntityDescription(
+        key="aqi_no2",
+        translation_key="aqi_no2",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_air_quality(lambda aq: aq.aqi_no2),
+    ),
+    ForecaSensorEntityDescription(
+        key="aqi_o3",
+        translation_key="aqi_o3",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_air_quality(lambda aq: aq.aqi_o3),
+    ),
+    ForecaSensorEntityDescription(
+        key="aqi_so2",
+        translation_key="aqi_so2",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_air_quality(lambda aq: aq.aqi_so2),
+    ),
+    ForecaSensorEntityDescription(
+        key="aqi_pm10",
+        translation_key="aqi_pm10",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_air_quality(lambda aq: aq.aqi_pm10),
+    ),
+    ForecaSensorEntityDescription(
+        key="aqi_pm25",
+        translation_key="aqi_pm25",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_air_quality(lambda aq: aq.aqi_pm2p5),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ForecaConfigEntry,
@@ -231,19 +312,22 @@ async def async_setup_entry(
 ) -> None:
     """Add Foreca sensors for every configured location."""
     for subentry_id, coordinators in entry.runtime_data.items():
-        async_add_entities(
-            [
-                *(
-                    ForecaSensor(coordinators.weather, subentry_id, description)
-                    for description in CURRENT_SENSORS
-                ),
-                *(
-                    ForecaSensor(coordinators.observation, subentry_id, description)
-                    for description in OBSERVATION_SENSORS
-                ),
-            ],
-            config_subentry_id=subentry_id,
-        )
+        entities: list[SensorEntity] = [
+            *(
+                ForecaSensor(coordinators.weather, subentry_id, description)
+                for description in CURRENT_SENSORS
+            ),
+            *(
+                ForecaSensor(coordinators.observation, subentry_id, description)
+                for description in OBSERVATION_SENSORS
+            ),
+        ]
+        if coordinators.air_quality is not None:
+            entities.extend(
+                ForecaSensor(coordinators.air_quality, subentry_id, description)
+                for description in AIR_QUALITY_SENSORS
+            )
+        async_add_entities(entities, config_subentry_id=subentry_id)
 
 
 class ForecaSensor[DataT](ForecaEntity[ForecaCoordinator[DataT]], SensorEntity):
