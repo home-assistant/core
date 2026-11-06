@@ -68,7 +68,7 @@ async def _validate_input(
 
 
 def _is_location_already_configured(
-    entry: ConfigEntry,
+    entry: GoogleWeatherConfigEntry,
     new_data: dict[str, float],
     epsilon: float = 1e-4,
     exclude_subentry_id: str | None = None,
