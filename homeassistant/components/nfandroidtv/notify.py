@@ -22,7 +22,7 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
 )
-from homeassistant.const import ATTR_ICON, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -60,6 +60,8 @@ from .const import (
 from .issue import deprecated_notify_action_call
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_ICON = "icon"
 
 
 async def async_setup_entry(
