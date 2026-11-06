@@ -77,8 +77,11 @@
     }
   },
   "exceptions": {
-    "api_call_failed": {
-      "message": "Failed to send command {api} to {entity}: {error}"
+    "cannot_connect": {
+      "message": "Unable to connect to {entity}."
+    },
+    "command_failed": {
+      "message": "The command sent to {entity} was not successful."
     },
     "device_update_timeout": {
       "message": "Device {device} did not send an update for {seconds} seconds"
