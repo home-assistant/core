@@ -1,6 +1,7 @@
 {
   "domain": "tfa_me",
   "name": "TFA.me station",
+  "categories": ["sensors"],
   "codeowners": ["@DrMatthiasBlaschke"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tfa_me",
