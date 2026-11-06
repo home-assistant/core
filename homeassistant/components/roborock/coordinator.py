@@ -253,23 +253,19 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         else:
             self.last_home_update = dt_util.utcnow()
 
-    @property
-    def _cloud_api_issue_id(self) -> str:
-        """Return the cloud API issue id, unique per config entry and device."""
-        return f"cloud_api_used_{self.config_entry.entry_id}_{self.duid_slug}"
-
     async def _verify_api(self) -> None:
         """Verify that the api is reachable."""
         if self._device.is_connected:
             self._has_connected_locally |= self._device.is_local_connected
+            issue_id = f"cloud_api_used_{self.config_entry.entry_id}_{self.duid_slug}"
             if self._has_connected_locally:
-                async_delete_issue(self.hass, DOMAIN, self._cloud_api_issue_id)
+                async_delete_issue(self.hass, DOMAIN, issue_id)
             else:
                 self.update_interval = V1_CLOUD_NOT_CLEANING_INTERVAL
                 async_create_issue(
                     self.hass,
                     DOMAIN,
-                    self._cloud_api_issue_id,
+                    issue_id,
                     is_fixable=False,
                     severity=IssueSeverity.WARNING,
                     translation_key="cloud_api_used",
