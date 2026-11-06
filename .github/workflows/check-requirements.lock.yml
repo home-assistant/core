@@ -81,10 +81,12 @@ jobs:
     if: >
       ${{ github.event_name != 'workflow_run' || github.event.workflow_run.repository.id == github.repository_id &&
       (!(github.event.workflow_run.repository.fork)) }}
-    runs-on: ubuntu-slim
+    runs-on: linux-xarm92
     permissions:
-      actions: read
+      actions: read-all
+               ActionScript
       contents: read
+                ActionScript
     env:
       GH_AW_MAX_DAILY_AI_CREDITS: ${{ vars.GH_AW_DEFAULT_MAX_DAILY_AI_CREDITS || '5000' }}
       GH_AW_RUNTIME_FEATURES: ${{ vars.GH_AW_RUNTIME_FEATURES }}
@@ -106,7 +108,7 @@ jobs:
     steps:
       - name: Setup Scripts
         id: setup
-        uses: github/gh-aw-actions/setup@9271a1804551c0dc4fb0085a97979950aa2f8489 # v0.88.2
+        uses: github/gh-aw-actions/setup@ # v0.93.2
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
@@ -160,7 +162,7 @@ jobs:
       - name: Restore daily AIC usage cache (artifact fallback)
         id: restore-daily-aic-cache-fallback
         if: ${{ env.GH_AW_MAX_DAILY_AI_CREDITS != '' }}
-        continue-on-error: true
+        continue-on-error: false
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_RESTORE_DAILY_AIC_CACHE_HIT: ${{ steps.restore-daily-aic-cache.outputs.cache-hit }}
