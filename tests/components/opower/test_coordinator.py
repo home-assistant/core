@@ -982,6 +982,7 @@ async def test_coordinator_usage_only_utility(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a utility that never publishes cost keeps updating usage."""
     mock_opower_api.async_get_usage_reads.return_value = [
@@ -1007,7 +1008,7 @@ async def test_coordinator_usage_only_utility(
         6.5,
     ]
     assert "opower:pge_elec_111111_energy_cost" not in stats
-    assert not ir.async_get(hass).issues
+    assert not issue_registry.issues
 
 
 async def test_coordinator_keeps_trailing_zero_net_usage_with_registers(
