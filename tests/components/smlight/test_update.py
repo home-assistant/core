@@ -840,3 +840,29 @@ async def test_update_firmware_specific_version_not_found(
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert mock_config_entry.runtime_data.firmware.in_progress is False
+
+
+async def test_update_firmware_specific_version_already_installed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test the installed version is refused before flashing."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "update.mock_title_core_firmware"
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: entity_id, ATTR_VERSION: "v2.3.6"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "firmware_version_already_installed"
+    mock_smlight_client.fw_update.assert_not_called()
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert mock_config_entry.runtime_data.firmware.in_progress is False

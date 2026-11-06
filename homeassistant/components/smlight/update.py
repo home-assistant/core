@@ -140,6 +140,16 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
 
     def _get_firmware(self, version: str) -> Firmware:
         """Find a firmware version in the catalog of the device channel."""
+        if version == self.installed_version:
+            # The reboot wait in async_install relies on the version changing.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="firmware_version_already_installed",
+                translation_placeholders={
+                    "version": version,
+                    "device_name": str(self.name),
+                },
+            )
         firmware_list = self.entity_description.firmware_list(
             self.coordinator.data, self.idx
         )
