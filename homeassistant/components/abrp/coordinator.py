@@ -1,8 +1,10 @@
-"""Telemetry coordinator for the A Better Routeplanner integration."""
+"""Coordinators for the A Better Routeplanner integration."""
 
 import asyncio
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
+from typing import override
 
 from aioabrp import (
     AbrpApiError,
@@ -17,19 +19,21 @@ from aioabrp import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+GARAGE_SCAN_INTERVAL = timedelta(hours=1)
 
 
 @dataclass(frozen=True, slots=True)
 class AbrpData:
     """Runtime data stored on the config entry."""
 
-    vehicles: list[tuple[AbrpVehicle, VehicleModelDisplay | None]]
+    garage_coordinator: AbrpGarageCoordinator
     telemetry_coordinator: AbrpTelemetryCoordinator
 
 
@@ -39,7 +43,7 @@ type AbrpConfigEntry = ConfigEntry[AbrpData]
 async def async_fetch_garage(
     client: AbrpClient,
 ) -> list[tuple[AbrpVehicle, VehicleModelDisplay | None]]:
-    """Fetch the garage once at setup, pairing each vehicle with its display."""
+    """Fetch the garage, pairing each vehicle with its display."""
     try:
         raw_vehicles = await client.async_get_vehicles()
     except AbrpAuthError as err:
@@ -48,7 +52,7 @@ async def async_fetch_garage(
             translation_key="abrp_session_invalid",
         ) from err
     except AbrpApiError as err:
-        raise ConfigEntryNotReady(
+        raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="abrp_update_failed",
         ) from err
@@ -93,6 +97,34 @@ async def async_fetch_garage(
             raise result
         paired.append((raw, result))
     return paired
+
+
+class AbrpGarageCoordinator(
+    DataUpdateCoordinator[list[tuple[AbrpVehicle, VehicleModelDisplay | None]]]
+):
+    """Polls the garage so vehicles added in ABRP appear without a reload."""
+
+    config_entry: AbrpConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, entry: AbrpConfigEntry, client: AbrpClient
+    ) -> None:
+        """Initialize the garage coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN} garage",
+            update_interval=GARAGE_SCAN_INTERVAL,
+        )
+        self.client = client
+
+    @override
+    async def _async_update_data(
+        self,
+    ) -> list[tuple[AbrpVehicle, VehicleModelDisplay | None]]:
+        """Fetch the garage."""
+        return await async_fetch_garage(self.client)
 
 
 class AbrpTelemetryCoordinator(DataUpdateCoordinator[dict[int, Telemetry]]):
