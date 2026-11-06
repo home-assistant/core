@@ -1,6 +1,6 @@
 """Support for ReCollect Waste calendars."""
 
-import datetime
+import datetime as dt
 from typing import override
 
 from aiorecollect.client import PickupEvent
@@ -28,7 +28,7 @@ def async_get_calendar_event_from_pickup_event(
         description=f"Pickup types: {pickup_type_string}",
         location=pickup_event.area_name,
         start=pickup_event.date,
-        end=pickup_event.date + datetime.timedelta(days=1),
+        end=pickup_event.date + dt.timedelta(days=1),
     )
 
 
@@ -87,8 +87,8 @@ class ReCollectWasteCalendar(ReCollectWasteEntity, CalendarEntity):
     async def async_get_events(
         self,
         hass: HomeAssistant,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: dt.datetime,
+        end_date: dt.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         return [

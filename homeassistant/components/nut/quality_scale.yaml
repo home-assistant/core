@@ -35,10 +35,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: |
-      No custom service actions are registered
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

@@ -3,16 +3,18 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import threshold
 from homeassistant.components.threshold.config_flow import ConfigFlowHandler
-from homeassistant.components.threshold.const import DOMAIN
+from homeassistant.components.threshold.const import (
+    DOMAIN,
+    ThresholdEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -128,13 +130,13 @@ async def test_setup_and_remove_config_entry(
     state = hass.states.get(threshold_entity_id)
     assert state
     assert state.state == "on"
-    assert state.attributes["entity_id"] == input_sensor
-    assert state.attributes["hysteresis"] == 0.0
-    assert state.attributes["lower"] == -2.0
-    assert state.attributes["position"] == "below"
-    assert state.attributes["sensor_value"] == -10.0
-    assert state.attributes["type"] == "lower"
-    assert state.attributes["upper"] is None
+    assert state.attributes[ThresholdEntityStateAttribute.ENTITY_ID] == input_sensor
+    assert state.attributes[ThresholdEntityStateAttribute.HYSTERESIS] == 0.0
+    assert state.attributes[ThresholdEntityStateAttribute.LOWER] == -2.0
+    assert state.attributes[ThresholdEntityStateAttribute.POSITION] == "below"
+    assert state.attributes[ThresholdEntityStateAttribute.SENSOR_VALUE] == -10.0
+    assert state.attributes[ThresholdEntityStateAttribute.TYPE] == "lower"
+    assert state.attributes[ThresholdEntityStateAttribute.UPPER] is None
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(config_entry.entry_id)
@@ -168,11 +170,11 @@ async def test_entry_changed(
             domain, "test", name, suggested_object_id=name, device_id=device_entry.id
         )
 
-    def _get_device_config_entries(entry: er.RegistryEntry) -> set[str]:
+    def _get_device_config_entry_id(entry: er.RegistryEntry) -> str:
         assert entry.device_id
         device = device_registry.async_get(entry.device_id)
         assert device
-        return device.config_entries
+        return device.config_entry_id
 
     # Set up entities, with backing devices and config entries
     run1_entry = _create_mock_entity("sensor", "initial")
@@ -196,8 +198,8 @@ async def test_entry_changed(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.entry_id not in _get_device_config_entries(run1_entry)
-    assert config_entry.entry_id not in _get_device_config_entries(run2_entry)
+    assert _get_device_config_entry_id(run1_entry) != config_entry.entry_id
+    assert _get_device_config_entry_id(run2_entry) != config_entry.entry_id
     threshold_entity_entry = entity_registry.async_get(
         "binary_sensor.initial_my_threshold"
     )
@@ -210,8 +212,8 @@ async def test_entry_changed(
     await hass.async_block_till_done()
 
     # Check that the device association has updated
-    assert config_entry.entry_id not in _get_device_config_entries(run1_entry)
-    assert config_entry.entry_id not in _get_device_config_entries(run2_entry)
+    assert _get_device_config_entry_id(run1_entry) != config_entry.entry_id
+    assert _get_device_config_entry_id(run2_entry) != config_entry.entry_id
     threshold_entity_entry = entity_registry.async_get(
         "binary_sensor.initial_my_threshold"
     )
@@ -237,7 +239,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     assert threshold_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert threshold_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != threshold_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, threshold_entity_entry.entity_id)
 
@@ -285,7 +287,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     assert threshold_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert threshold_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != threshold_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, threshold_entity_entry.entity_id)
 
@@ -310,7 +312,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
 
     # Check that the threshold config entry is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert threshold_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != threshold_config_entry.entry_id
 
     # Check that the threshold config entry is not removed
     assert threshold_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -337,7 +339,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     assert threshold_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert threshold_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != threshold_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, threshold_entity_entry.entity_id)
 
@@ -360,7 +362,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
 
     # Check that the threshold config entry is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert threshold_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != threshold_config_entry.entry_id
 
     # Check that the threshold config entry is not removed
     assert threshold_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -393,9 +395,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     assert threshold_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert threshold_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != threshold_config_entry.entry_id
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
-    assert threshold_config_entry.entry_id not in sensor_device_2.config_entries
+    assert sensor_device_2.config_entry_id != threshold_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, threshold_entity_entry.entity_id)
 
@@ -418,9 +420,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
 
     # Check that the derivative config entry is not in any of the devices
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert threshold_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != threshold_config_entry.entry_id
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
-    assert threshold_config_entry.entry_id not in sensor_device_2.config_entries
+    assert sensor_device_2.config_entry_id != threshold_config_entry.entry_id
 
     # Check that the threshold config entry is not removed
     assert threshold_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -447,7 +449,7 @@ async def test_async_handle_source_entity_new_entity_id(
     assert threshold_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert threshold_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != threshold_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, threshold_entity_entry.entity_id)
 
@@ -467,7 +469,7 @@ async def test_async_handle_source_entity_new_entity_id(
 
     # Check that the helper config is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert threshold_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != threshold_config_entry.entry_id
 
     # Check that the threshold config entry is not removed
     assert threshold_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -509,7 +511,7 @@ async def test_migration_1_1(
     # Check that the helper config entry is not in the device and the helper entity
     # is linked to the source device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert threshold_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != threshold_config_entry.entry_id
     threshold_entity_entry = entity_registry.async_get(
         "binary_sensor.mock_title_my_threshold"
     )

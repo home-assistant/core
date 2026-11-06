@@ -2,7 +2,7 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
-import datetime
+import datetime as dt
 from functools import partial
 from http import HTTPStatus
 from ipaddress import AddressValueError, IPv4Address
@@ -13,13 +13,13 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
+import probatio
 from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
 from soco.core import SoCo, soco_reset
 from soco.events_base import Event as SonosEvent, SubscriptionBase
 from soco.exceptions import SoCoException
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
@@ -79,17 +79,17 @@ def _get_soco_uid(soco: SoCo) -> str:
     return soco.uid
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                MP_DOMAIN: vol.All(
+                MP_DOMAIN: probatio.All(
                     cv.deprecated(CONF_INTERFACE_ADDR),
-                    vol.Schema(
+                    probatio.Schema(
                         {
-                            vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
-                            vol.Optional(CONF_INTERFACE_ADDR): cv.string,
-                            vol.Optional(CONF_HOSTS): vol.All(
+                            probatio.Optional(CONF_ADVERTISE_ADDR): cv.string,
+                            probatio.Optional(CONF_INTERFACE_ADDR): cv.string,
+                            probatio.Optional(CONF_HOSTS): probatio.All(
                                 cv.ensure_list_csv, [cv.string]
                             ),
                         }
@@ -98,7 +98,7 @@ CONFIG_SCHEMA = vol.Schema(
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -120,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> None:
     """Set up Sonos from a config entry."""
     _LOGGER.debug("Setting up Sonos config entry: %s", entry.entry_id)
     soco_reset()
@@ -152,20 +152,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> boo
         hass, entry, data, hosts
     )
     await manager.setup_platforms_and_discovery()
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: SonosConfigEntry
-) -> bool:
+) -> None:
     """Unload a Sonos config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
-    soco_reset()
-    _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, PLATFORMS
+        )
+    finally:
+        await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
+        soco_reset()
+        _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
+
+
+@callback
+def _async_disabled_by_changed_filter(
+    event_data: dr.EventDeviceRegistryUpdatedData,
+) -> bool:
+    """Filter device registry events for disabled_by changes."""
+    return event_data["action"] == "update" and "disabled_by" in event_data["changes"]
 
 
 class SonosDiscoveryManager:
@@ -189,6 +197,37 @@ class SonosDiscoveryManager:
         self._known_invisible: set[SoCo] = set()
         self._manual_config_required = bool(hosts)
         self._stop_event = threading.Event()
+
+    @callback
+    def _async_device_registry_updated(
+        self, event: Event[dr.EventDeviceRegistryUpdatedData]
+    ) -> None:
+        """Take a speaker offline when its device is disabled."""
+        device = dr.async_get(self.hass).async_get(event.data["device_id"])
+        if (
+            device is None
+            or not device.disabled
+            or device.config_entry_id != self.entry.entry_id
+        ):
+            return
+
+        speaker = next(
+            (
+                self.data.discovered[identifier]
+                for domain, identifier in device.identifiers
+                if domain == DOMAIN and identifier in self.data.discovered
+            ),
+            None,
+        )
+        if speaker is None:
+            return
+
+        _LOGGER.debug("%s disabled, taking speaker offline", speaker.zone_name)
+        self.entry.async_create_background_task(
+            self.hass,
+            speaker.async_offline(),
+            f"sonos {speaker.uid} device disabled",
+        )
 
     async def async_shutdown(self) -> None:
         """Stop all running tasks."""
@@ -228,6 +267,7 @@ class SonosDiscoveryManager:
                 self.hass,
                 DOMAIN,
                 f"{UPNP_ISSUE_ID}_{ip_address}",
+                config_entry_id=self.entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="upnp_disabled",
@@ -304,8 +344,11 @@ class SonosDiscoveryManager:
                 eager_start=True,
             )
 
-        async def async_subscription_failed(now: datetime.datetime) -> None:
+        async def async_subscription_failed(now: dt.datetime) -> None:
             """Fallback logic if the subscription callback never arrives."""
+            # The timer outlives an unload, and the issue can't link to a removed entry
+            if self._stop_event.is_set():
+                return
             addr, port = sub.event_listener.address
             listener_address = f"{addr}:{port}"
             if advertise_ip := soco_config.EVENT_ADVERTISE_IP:
@@ -314,6 +357,7 @@ class SonosDiscoveryManager:
                 self.hass,
                 DOMAIN,
                 SUB_FAIL_ISSUE_ID,
+                config_entry_id=self.entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="subscriptions_failed",
@@ -469,9 +513,7 @@ class SonosDiscoveryManager:
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
 
-    async def async_poll_manual_hosts(
-        self, now: datetime.datetime | None = None
-    ) -> None:
+    async def async_poll_manual_hosts(self, now: dt.datetime | None = None) -> None:
         """Add and maintain Sonos devices from a manual configuration."""
 
         # Loop through each configured host and verify that
@@ -705,6 +747,13 @@ class SonosDiscoveryManager:
         """Set up platforms and discovery."""
         await self.hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
         self.entry.async_on_unload(
+            self.hass.bus.async_listen(
+                dr.EVENT_DEVICE_REGISTRY_UPDATED,
+                self._async_device_registry_updated,
+                event_filter=_async_disabled_by_changed_filter,
+            )
+        )
+        self.entry.async_on_unload(
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP,
                 self._async_stop_event_listener,
@@ -720,11 +769,13 @@ class SonosDiscoveryManager:
             )
             await self.async_poll_manual_hosts()
 
-        self.entry.async_on_unload(
-            await ssdp.async_register_callback(
-                self.hass, self._async_ssdp_discovered_player, {"st": UPNP_ST}
+        # Search responses carry "st" and advertisements carry "nt"
+        for match_dict in ({"st": UPNP_ST}, {"nt": UPNP_ST}):
+            self.entry.async_on_unload(
+                await ssdp.async_register_callback(
+                    self.hass, self._async_ssdp_discovered_player, match_dict
+                )
             )
-        )
 
         self.entry.async_on_unload(
             async_track_time_interval(

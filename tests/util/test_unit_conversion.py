@@ -692,6 +692,8 @@ _CONVERTED_VALUE: dict[
         (10, UnitOfEnergy.MEGA_CALORIE, 0.011622222, UnitOfEnergy.MEGA_WATT_HOUR),
         (10, UnitOfEnergy.GIGA_CALORIE, 10000, UnitOfEnergy.MEGA_CALORIE),
         (10, UnitOfEnergy.GIGA_CALORIE, 11.622222, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.KILO_WATT_HOUR, 0.3412956, UnitOfEnergy.THERM),
+        (10, UnitOfEnergy.THERM, 293.001111, UnitOfEnergy.KILO_WATT_HOUR),
     ],
     EnergyDistanceConverter: [
         (
@@ -1479,33 +1481,6 @@ def test_unit_conversion_factory_allow_none(
             f"{value} {from_unit} to {to_unit}"
         )
         assert convert(None) is None, f"None {from_unit} to {to_unit}"
-
-
-@pytest.mark.parametrize(
-    ("value", "from_unit", "expected", "to_unit"),
-    [
-        (100, UnitOfTemperature.CELSIUS, 180, UnitOfTemperature.FAHRENHEIT),
-        (100, UnitOfTemperature.CELSIUS, 100, UnitOfTemperature.KELVIN),
-        (100, UnitOfTemperature.FAHRENHEIT, 55.5556, UnitOfTemperature.CELSIUS),
-        (100, UnitOfTemperature.FAHRENHEIT, 55.5556, UnitOfTemperature.KELVIN),
-        (100, UnitOfTemperature.KELVIN, 100, UnitOfTemperature.CELSIUS),
-        (100, UnitOfTemperature.KELVIN, 180, UnitOfTemperature.FAHRENHEIT),
-    ],
-)
-def test_temperature_convert_with_interval(
-    value: float,
-    from_unit: str,
-    expected: float,
-    to_unit: str,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test conversion to other units."""
-    expected = pytest.approx(expected)
-    assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected
-    assert (
-        "The deprecated function convert_interval was called. It will be removed "
-        "in HA Core 2026.12.0. Use TemperatureDeltaConverter.convert instead"
-    ) in caplog.text
 
 
 @pytest.mark.parametrize(

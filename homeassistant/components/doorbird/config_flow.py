@@ -7,11 +7,10 @@ from typing import Any, override
 
 from aiohttp import ClientResponseError
 from doorbirdpy import DoorBird
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -32,6 +31,7 @@ from .const import (
     DOMAIN,
     DOORBIRD_OUI,
 )
+from .models import DoorBirdConfigEntry
 from .util import get_mac_address_from_door_station_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,22 +40,22 @@ DEFAULT_OPTIONS = {CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]}
 
 
 AUTH_VOL_DICT: VolDictType = {
-    vol.Required(CONF_USERNAME): str,
-    vol.Required(CONF_PASSWORD): str,
+    probatio.Required(CONF_USERNAME): str,
+    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
 }
-AUTH_SCHEMA = vol.Schema(AUTH_VOL_DICT)
+AUTH_SCHEMA = probatio.Schema(AUTH_VOL_DICT)
 
 
 def _schema_with_defaults(
     host: str | None = None, name: str | None = None
-) -> vol.Schema:
-    return vol.Schema(
+) -> probatio.Schema:
+    return probatio.Schema(
         {
-            vol.Required(CONF_HOST, default=host): str,
+            probatio.Required(CONF_HOST, default=host): str,
             **AUTH_VOL_DICT,
             # Name field is no longer allowed in config flow schemas
             # pylint: disable-next=home-assistant-config-flow-name-field
-            vol.Optional(CONF_NAME, default=name): str,
+            probatio.Optional(CONF_NAME, default=name): str,
         }
     )
 
@@ -100,15 +100,15 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    reauth_entry: ConfigEntry
+    reauth_entry: DoorBirdConfigEntry
 
     def __init__(self) -> None:
         """Initialize the DoorBird config flow."""
-        self.discovery_schema: vol.Schema | None = None
+        self.discovery_schema: probatio.Schema | None = None
 
     async def _async_verify_existing_device_for_discovery(
         self,
-        existing_entry: ConfigEntry,
+        existing_entry: DoorBirdConfigEntry,
         host: str,
         macaddress: str,
     ) -> None:
@@ -158,8 +158,8 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         existing_data = self.reauth_entry.data
         placeholders: dict[str, str] = {
-            CONF_NAME: existing_data[CONF_NAME],
-            CONF_HOST: existing_data[CONF_HOST],
+            "name": existing_data[CONF_NAME],
+            "host": existing_data[CONF_HOST],
         }
         self.context["title_placeholders"] = placeholders
         if user_input is not None:
@@ -244,8 +244,8 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         friendly_hostname = discovery_info.name.removesuffix(chop_ending)
 
         self.context["title_placeholders"] = {
-            CONF_NAME: friendly_hostname,
-            CONF_HOST: host,
+            "name": friendly_hostname,
+            "host": host,
         }
         self.discovery_schema = _schema_with_defaults(host=host, name=friendly_hostname)
 
@@ -272,7 +272,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: DoorBirdConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -286,15 +286,19 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
-            events = [event.strip() for event in user_input[CONF_EVENTS].split(",")]
+            events = [
+                event
+                for part in user_input[CONF_EVENTS].split(",")
+                if (event := part.strip())
+            ]
             return self.async_create_entry(title="", data={CONF_EVENTS: events})
 
         current_events = self.config_entry.options.get(CONF_EVENTS, [])
 
         # We convert to a comma separated list for the UI
         # since there really isn't anything better
-        options_schema = vol.Schema(
-            {vol.Optional(CONF_EVENTS, default=", ".join(current_events)): str}
+        options_schema = probatio.Schema(
+            {probatio.Optional(CONF_EVENTS, default=", ".join(current_events)): str}
         )
         return self.async_show_form(step_id="init", data_schema=options_schema)
 

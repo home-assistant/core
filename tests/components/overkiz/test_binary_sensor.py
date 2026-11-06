@@ -7,6 +7,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
@@ -19,8 +20,6 @@ from .helpers import (
     device_state_changed_event,
     device_unavailable_event,
 )
-
-from tests.common import snapshot_platform
 
 SMOKE_SENSOR = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
@@ -43,11 +42,17 @@ TILT_SENSOR = FixtureDevice(
     "io://1234-1234-6233/8059108#1",
     "binary_sensor.living_room_balcony_window_tilt",
 )
+OVEN_DOOR = FixtureDevice(
+    "setup/cloud_sauter_sop6615lb.json",
+    "ogp://1234-5678-9123/16000211",
+    "binary_sensor.oven_door",
+)
 
 SNAPSHOT_FIXTURES = [
     SMOKE_SENSOR,
     HEATING_STATUS,
     CONTACT_SENSOR,
+    OVEN_DOOR,
 ]
 
 

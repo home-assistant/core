@@ -1,9 +1,10 @@
 """File Service calls."""
 
 from collections.abc import Callable
+from enum import StrEnum
 import json
 
-import voluptuous as vol
+import probatio
 import yaml
 
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
@@ -11,7 +12,20 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import ATTR_FILE_ENCODING, ATTR_FILE_NAME, DOMAIN, SERVICE_READ_FILE
+from .const import DOMAIN
+
+
+class FileService(StrEnum):
+    """Store keys for File services."""
+
+    READ_FILE = "read_file"
+
+
+class FileServiceArgument(StrEnum):
+    """Store keys for File service arguments."""
+
+    FILE_NAME = "file_name"
+    FILE_ENCODING = "file_encoding"
 
 
 @callback
@@ -21,12 +35,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_READ_FILE,
+        FileService.READ_FILE,
         read_file,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_FILE_NAME): cv.string,
-                vol.Required(ATTR_FILE_ENCODING): cv.string,
+                probatio.Required(FileServiceArgument.FILE_NAME): cv.string,
+                probatio.Required(FileServiceArgument.FILE_ENCODING): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -41,8 +55,8 @@ ENCODING_LOADERS: dict[str, tuple[Callable, type[Exception]]] = {
 
 def read_file(call: ServiceCall) -> dict:
     """Handle read_file service call."""
-    file_name = call.data[ATTR_FILE_NAME]
-    file_encoding = call.data[ATTR_FILE_ENCODING].lower()
+    file_name = call.data[FileServiceArgument.FILE_NAME]
+    file_encoding = call.data[FileServiceArgument.FILE_ENCODING].lower()
 
     if not call.hass.config.is_allowed_path(file_name):
         raise ServiceValidationError(

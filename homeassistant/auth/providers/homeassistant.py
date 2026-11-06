@@ -6,15 +6,21 @@ from collections.abc import Mapping
 from typing import Any, cast, override
 
 import bcrypt
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.storage import Store
 
-from ..models import AuthFlowContext, AuthFlowResult, Credentials, UserMeta
-from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
+from ..models import AuthFlowContext, AuthFlowResult, Credentials, User, UserMeta
+from . import (
+    AUTH_PROVIDER_SCHEMA,
+    AUTH_PROVIDERS,
+    AuthProvider,
+    InvalidStepUpError,
+    MfaLoginFlow,
+)
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"
@@ -23,12 +29,12 @@ STORAGE_KEY = "auth_provider.homeassistant"
 def _disallow_id(conf: dict[str, Any]) -> dict[str, Any]:
     """Disallow ID in config."""
     if CONF_ID in conf:
-        raise vol.Invalid("ID is not allowed for the homeassistant auth provider.")
+        raise probatio.Invalid("ID is not allowed for the homeassistant auth provider.")
 
     return conf
 
 
-CONFIG_SCHEMA = vol.All(AUTH_PROVIDER_SCHEMA, _disallow_id)
+CONFIG_SCHEMA = probatio.All(AUTH_PROVIDER_SCHEMA, _disallow_id)
 
 
 @callback
@@ -259,6 +265,35 @@ class HassAuthProvider(AuthProvider):
         """Return a flow to login."""
         return HassLoginFlow(self)
 
+    @override
+    async def async_verify_step_up(
+        self, user: User, data: Mapping[str, Any], context: AuthFlowContext | None
+    ) -> None:
+        """Verify the current password of an already signed in user."""
+        if (username := self.async_get_username(user)) is None:
+            raise InvalidStepUpError("User has no credentials for this provider.")
+
+        # An empty password is valid when it is the one that is stored.
+        if not isinstance(password := data.get("password"), str):
+            raise InvalidStepUpError("No password provided.")
+
+        try:
+            await self.async_validate_login(username, password)
+        except InvalidAuth as err:
+            raise InvalidStepUpError("Invalid password.") from err
+
+    @callback
+    def async_get_username(self, user: User) -> str | None:
+        """Return the username the user is known by with this provider."""
+        for credential in user.credentials:
+            if (
+                credential.auth_provider_type == self.type
+                and credential.auth_provider_id == self.id
+            ):
+                return str(credential.data["username"])
+
+        return None
+
     async def async_validate_login(self, username: str, password: str) -> None:
         """Validate a username and password."""
         if self.data is None:
@@ -338,6 +373,7 @@ class HassAuthProvider(AuthProvider):
         """Get extra info for this credential."""
         return UserMeta(name=credentials.data["username"], is_active=True)
 
+    @override
     async def async_will_remove_credentials(self, credentials: Credentials) -> None:
         """When credentials get removed, also remove the auth."""
         if self.data is None:
@@ -352,7 +388,7 @@ class HassAuthProvider(AuthProvider):
             pass
 
 
-class HassLoginFlow(LoginFlow[HassAuthProvider]):
+class HassLoginFlow(MfaLoginFlow[HassAuthProvider]):
     """Handler for the login flow."""
 
     @override
@@ -376,10 +412,10 @@ class HassLoginFlow(LoginFlow[HassAuthProvider]):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("username"): str,
-                    vol.Required("password"): str,
+                    probatio.Required("username"): str,
+                    probatio.Required("password"): str,
                 }
             ),
             errors=errors,

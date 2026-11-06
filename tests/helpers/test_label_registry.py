@@ -7,6 +7,11 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    flush_store,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -15,8 +20,6 @@ from homeassistant.helpers import (
     label_registry as lr,
 )
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_capture_events, flush_store
 
 
 async def test_list_labels(label_registry: lr.LabelRegistry) -> None:

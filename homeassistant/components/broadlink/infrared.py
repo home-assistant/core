@@ -2,8 +2,8 @@
 
 from typing import TYPE_CHECKING, override
 
-from broadlink.exceptions import BroadlinkException
-from broadlink.remote import pulses_to_data as _bl_pulses_to_data
+from broadlink_async.exceptions import BroadlinkException
+from broadlink_async.remote import pulses_to_data as _bl_pulses_to_data
 
 from homeassistant.components.infrared import InfraredCommand, InfraredEmitterEntity
 from homeassistant.config_entries import ConfigEntry
@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import BROADLINK_DATA, DOMAIN
 from .entity import BroadlinkEntity
 
 if TYPE_CHECKING:
@@ -37,9 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Broadlink infrared entity."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    device = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
     async_add_entities([BroadlinkInfraredEntity(device)])
 
 

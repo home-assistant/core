@@ -456,11 +456,24 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
             self.media_content_type, self.media_content_id, None
         )
 
+    @property
+    def _ambilight_idle(self) -> bool:
+        """Return True if ambilight reports no active configuration.
+
+        Some TVs without a powerstate endpoint always report the screen as off,
+        but only return an ambilight configuration while the TV is on.
+        """
+        if not self._tv.json_feature_supported("ambilight", "Ambilight"):
+            return True
+        return self._tv.ambilight_current_configuration is None
+
     @callback
     def _update_from_coordinator(self):
         if self._tv.on:
             if self._tv.powerstate in ("Standby", "StandbyKeep") or (
-                self._tv.powerstate is None and self._tv.screenstate == TV_STATE_OFF
+                self._tv.powerstate is None
+                and self._tv.screenstate == TV_STATE_OFF
+                and self._ambilight_idle
             ):
                 self._attr_state = MediaPlayerState.OFF
             else:

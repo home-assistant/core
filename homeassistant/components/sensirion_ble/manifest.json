@@ -11,8 +11,10 @@
       "local_name": "MyCO2*"
     }
   ],
+  "categories": ["sensors.air_quality", "sensors.temperature_humidity"],
   "codeowners": ["@akx"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/sensirion_ble",
   "integration_type": "device",

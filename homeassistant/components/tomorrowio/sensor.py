@@ -19,9 +19,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LOCATION,
     UnitOfDensity,
     UnitOfIrradiance,
     UnitOfLength,
@@ -36,7 +37,7 @@ from homeassistant.util.unit_conversion import DistanceConverter, SpeedConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
-    DOMAIN,
+    SUBENTRY_TYPE_LOCATION,
     TMRW_ATTR_CARBON_MONOXIDE,
     TMRW_ATTR_CHINA_AQI,
     TMRW_ATTR_CHINA_HEALTH_CONCERN,
@@ -65,8 +66,8 @@ from .const import (
     TMRW_ATTR_UV_INDEX,
     TMRW_ATTR_WIND_GUST,
 )
-from .coordinator import TomorrowioDataUpdateCoordinator
-from .entity import TomorrowioEntity
+from .coordinator import TomorrowioConfigEntry, TomorrowioDataUpdateCoordinator
+from .entity import TomorrowioEntity, async_get_base_unique_id
 
 
 @dataclass(frozen=True)
@@ -324,18 +325,21 @@ SENSOR_TYPES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TomorrowioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
-    entities = [
-        TomorrowioSensorEntity(hass, config_entry, coordinator, 4, description)
-        for description in SENSOR_TYPES
-    ]
-    async_add_entities(entities)
+    coordinator = config_entry.runtime_data
+    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_LOCATION):
+        async_add_entities(
+            (
+                TomorrowioSensorEntity(
+                    hass, config_entry, subentry, coordinator, 4, description
+                )
+                for description in SENSOR_TYPES
+            ),
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 def handle_conversion(
@@ -357,15 +361,16 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: TomorrowioConfigEntry,
+        subentry: ConfigSubentry,
         coordinator: TomorrowioDataUpdateCoordinator,
         api_version: int,
         description: TomorrowioSensorEntityDescription,
     ) -> None:
         """Initialize Tomorrow.io Sensor Entity."""
-        super().__init__(config_entry, coordinator, api_version)
+        super().__init__(config_entry, subentry, coordinator, api_version)
         self.entity_description = description
-        self._attr_unique_id = f"{self._config_entry.unique_id}_{description.key}"
+        self._attr_unique_id = f"{async_get_base_unique_id(config_entry.data[CONF_API_KEY], subentry.data[CONF_LOCATION])}_{description.key}"
         if self.entity_description.native_unit_of_measurement is None:
             self._attr_native_unit_of_measurement = description.unit_metric
             if hass.config.units is US_CUSTOMARY_SYSTEM:

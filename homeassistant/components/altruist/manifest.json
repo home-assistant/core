@@ -1,8 +1,10 @@
 {
   "domain": "altruist",
   "name": "Altruist",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@airalab", "@LoSk-p"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/altruist",
   "integration_type": "device",
   "iot_class": "local_polling",

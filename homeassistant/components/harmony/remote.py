@@ -5,8 +5,6 @@ import json
 import logging
 from typing import Any, override
 
-import voluptuous as vol
-
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_DELAY_SECS,
@@ -18,11 +16,9 @@ from homeassistant.components.remote import (
     RemoteEntityFeature,
 )
 from homeassistant.core import HassJob, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ACTIVITY_POWER_OFF,
@@ -32,23 +28,16 @@ from .const import (
     DOMAIN,
     HARMONY_OPTIONS_UPDATE,
     PREVIOUS_ACTIVE_ACTIVITY,
-    SERVICE_CHANGE_CHANNEL,
-    SERVICE_SYNC,
 )
 from .data import HarmonyConfigEntry, HarmonyData
 from .entity import HarmonyEntity
 from .subscriber import HarmonyCallback
+from .util import config_file_path
 
 _LOGGER = logging.getLogger(__name__)
 
 # We want to fire remote commands right away
 PARALLEL_UPDATES = 0
-
-ATTR_CHANNEL = "channel"
-
-HARMONY_CHANGE_CHANNEL_SCHEMA: VolDictType = {
-    vol.Required(ATTR_CHANNEL): cv.positive_int,
-}
 
 
 async def async_setup_entry(
@@ -64,20 +53,10 @@ async def async_setup_entry(
     default_activity: str | None = entry.options.get(ATTR_ACTIVITY)
     delay_secs: float = entry.options.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
-    harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
-    device = HarmonyRemote(data, default_activity, delay_secs, harmony_conf_file)
+    device = HarmonyRemote(
+        data, default_activity, delay_secs, config_file_path(hass, entry.unique_id)
+    )
     async_add_entities([device])
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SYNC,
-        None,
-        "sync",
-    )
-    platform.async_register_entity_service(
-        SERVICE_CHANGE_CHANNEL, HARMONY_CHANGE_CHANNEL_SCHEMA, "change_channel"
-    )
 
 
 class HarmonyRemote(HarmonyEntity, RemoteEntity, RestoreEntity):

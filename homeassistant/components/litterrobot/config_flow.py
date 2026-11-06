@@ -4,22 +4,28 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pylitterbot import Account
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .coordinator import LitterRobotConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
-STEP_REAUTH_RECONFIGURE_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+STEP_REAUTH_RECONFIGURE_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 
 class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -54,7 +60,7 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_RECONFIGURE_SCHEMA,
-            description_placeholders={CONF_USERNAME: self.username},
+            description_placeholders={"username": self.username},
             errors=errors,
         )
 
@@ -103,7 +109,7 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_validate_and_update_entry(
-        self, entry: ConfigEntry, user_input: dict[str, Any]
+        self, entry: LitterRobotConfigEntry, user_input: dict[str, Any]
     ) -> tuple[ConfigFlowResult | None, dict[str, str]]:
         """Validate credentials and update an existing entry if valid."""
         errors: dict[str, str] = {}

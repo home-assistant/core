@@ -3,14 +3,13 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -21,6 +20,7 @@ from homeassistant.helpers import selector
 from homeassistant.util.network import is_ip_address
 
 from .const import CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
+from .coordinator import PingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,9 +45,9 @@ class PingConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): str,
+                        probatio.Required(CONF_HOST): str,
                     }
                 ),
             )
@@ -71,7 +71,7 @@ class PingConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: PingConfigEntry,
     ) -> OptionsFlowHandler:
         """Create the options flow."""
         return OptionsFlowHandler()
@@ -89,12 +89,12 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST, default=self.config_entry.options[CONF_HOST]
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PING_COUNT,
                         default=self.config_entry.options[CONF_PING_COUNT],
                     ): selector.NumberSelector(
@@ -102,7 +102,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                             min=1, max=100, mode=selector.NumberSelectorMode.BOX
                         )
                     ),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_CONSIDER_HOME,
                         default=self.config_entry.options.get(
                             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.seconds

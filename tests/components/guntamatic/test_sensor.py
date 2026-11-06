@@ -10,6 +10,11 @@ from guntamatic.heater import (
     NoSerialException,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 import requests
 from syrupy.assertion import SnapshotAssertion
 
@@ -24,8 +29,6 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import MOCK_PARSE_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_heater")
@@ -171,7 +174,7 @@ async def test_enum_sensor_unmapped_value(
     await setup_integration(hass, mock_config_entry)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.heating_circuit_1_pump")
+    state = hass.states.get("sensor.mock_title_heating_circuit_1_pump")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 

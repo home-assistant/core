@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from modbus_connection import ModbusTcpParams
+import probatio
 from pystiebeleltron import StiebelEltronModbusError, get_controller_model
-import voluptuous as vol
 
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -25,14 +25,14 @@ from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(min=1, max=65535, mode=NumberSelectorMode.BOX)
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
     }
 )
@@ -79,7 +79,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=error)
 
         self._discovered_host = discovery_info.ip
-        self.context["title_placeholders"] = {CONF_HOST: discovery_info.ip}
+        self.context["title_placeholders"] = {"host": discovery_info.ip}
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -92,10 +92,9 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self._discovered_host, CONF_PORT: DEFAULT_PORT},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
-            description_placeholders={CONF_HOST: self._discovered_host},
+            description_placeholders={"host": self._discovered_host},
         )
 
     @override

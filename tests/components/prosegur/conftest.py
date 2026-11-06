@@ -4,12 +4,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyprosegur.installation import Camera
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.prosegur.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 CONTRACT = "1234abcd"
 

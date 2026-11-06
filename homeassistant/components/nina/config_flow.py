@@ -2,11 +2,10 @@
 
 from typing import Any, override
 
+import probatio
 from pynina import ApiError, Nina
-import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -35,6 +34,7 @@ from .const import (
     NO_MATCH_REGEX,
     SENSOR_SUFFIXES,
 )
+from .coordinator import NinaConfigEntry
 
 
 def swap_key_value(dict_to_sort: dict[str, str]) -> dict[str, str]:
@@ -89,24 +89,24 @@ def prepare_user_input(
     return user_input
 
 
-def create_schema(regions: dict[str, dict[str, Any]]) -> vol.Schema:
+def create_schema(regions: dict[str, dict[str, Any]]) -> probatio.Schema:
     """Create the schema for the flows."""
     schema_dict: VolDictType = {
         **{
-            vol.Optional(region): cv.multi_select(regions[region])
+            probatio.Optional(region): cv.multi_select(regions[region])
             for region in CONST_REGIONS
         },
-        vol.Required(
+        probatio.Required(
             CONF_MESSAGE_SLOTS,
             default=5,
-        ): vol.All(int, vol.Range(min=1, max=20)),
-        vol.Required(CONF_FILTERS): section(
-            vol.Schema(
+        ): probatio.All(int, probatio.Range(min=1, max=20)),
+        probatio.Required(CONF_FILTERS): section(
+            probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_HEADLINE_FILTER,
                     ): cv.string,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_AREA_FILTER,
                     ): cv.string,
                 }
@@ -114,7 +114,7 @@ def create_schema(regions: dict[str, dict[str, Any]]) -> vol.Schema:
         ),
     }
 
-    return vol.Schema(schema_dict)
+    return probatio.Schema(schema_dict)
 
 
 class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -194,7 +194,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: NinaConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
@@ -203,7 +203,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle an option flow for NINA."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: NinaConfigEntry) -> None:
         """Initialize options flow."""
         self.data = dict(config_entry.data)
 

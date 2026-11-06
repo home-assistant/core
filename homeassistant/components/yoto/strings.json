@@ -80,9 +80,9 @@
     },
     "sensor": {
       "card_insertion_state": {
-        "name": "Card slot",
+        "name": "Content source",
         "state": {
-          "none": "Empty",
+          "none": "None",
           "physical": "Physical card",
           "remote": "Remote",
           "streaming": "Streaming"

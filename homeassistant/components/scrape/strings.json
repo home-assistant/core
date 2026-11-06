@@ -175,12 +175,5 @@
         }
       }
     }
-  },
-  "selector": {
-    "unit_of_measurement": {
-      "options": {
-        "none": "No unit of measurement"
-      }
-    }
   }
 }

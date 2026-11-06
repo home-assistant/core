@@ -8,7 +8,7 @@ from typing import Any, override
 from caldav.davclient import DAVClient
 from caldav.lib.error import DAVError
 from caldav.lib.http_sync import requests as caldav_requests
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
@@ -27,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -37,7 +37,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CalDavConfigEntry
-from .api import async_get_calendars
+from .api import async_get_calendar_color, async_get_calendars
 from .const import TIMEOUT
 from .coordinator import CalDavUpdateCoordinator
 
@@ -57,24 +57,26 @@ SUPPORTED_COMPONENT = "VEVENT"
 
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_URL): vol.Url(),
-        vol.Optional(CONF_CALENDARS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
-        vol.Optional(CONF_CUSTOM_CALENDARS, default=[]): vol.All(
-            cv.ensure_list,
+        probatio.Required(CONF_URL): probatio.Url(),
+        probatio.Optional(CONF_CALENDARS, default=[]): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "authentication"): cv.string,
+        probatio.Optional(CONF_CUSTOM_CALENDARS, default=[]): probatio.All(
+            probatio.EnsureList(),
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_CALENDAR): cv.string,
-                        vol.Required(CONF_NAME): cv.string,
-                        vol.Required(CONF_SEARCH): cv.string,
+                        probatio.Required(CONF_CALENDAR): cv.string,
+                        probatio.Required(CONF_NAME): cv.string,
+                        probatio.Required(CONF_SEARCH): cv.string,
                     }
                 )
             ],
         ),
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_DAYS, default=1): cv.positive_int,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Optional(CONF_DAYS, default=1): cv.positive_int,
     }
 )
 
@@ -207,6 +209,24 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         if unique_id is not None:
             self._attr_unique_id = unique_id
         self._supports_offset = supports_offset
+
+    @override
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Read the server color of a calendar that has no entity yet.
+
+        The color only applies when an entity is first registered.
+        """
+        await super().async_prepare_to_add_to_hass()
+        if self.unique_id is None or er.async_get(self.hass).async_get_entity_id(
+            self.platform.domain, self.platform.platform_name, self.unique_id
+        ):
+            return
+        try:
+            self._attr_initial_color = await async_get_calendar_color(
+                self.hass, self.coordinator.calendar
+            )
+        except (caldav_requests.exceptions.RequestException, DAVError) as err:
+            _LOGGER.debug("Cannot read the color of %s: %s", self.name, err)
 
     @property
     @override

@@ -6,6 +6,8 @@ from unittest.mock import call
 
 from denon_rs232 import InputSource
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.denon_rs232.media_player import (
@@ -43,9 +45,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import load_json
 
 from .conftest import MockReceiver, MockState, _default_state
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 type ZoneName = Literal["main", "zone_2", "zone_3"]
 

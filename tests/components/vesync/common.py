@@ -2,11 +2,11 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import load_json_object_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.vesync.const import DOMAIN
 from homeassistant.util.json import JsonObjectType
-
-from tests.common import load_json_object_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 ENTITY_HUMIDIFIER = "humidifier.humidifier_200s"
 ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"
@@ -55,6 +55,9 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
     ],
     "Air Purifier 600s": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "air-purifier-detail.json")
+    ],
+    "Air Purifier Vital 200S": [
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "air-purifier-detail-v2.json")
     ],
     "Dimmable Light": [
         ("post", "/cloud/v1/deviceManaged/deviceDetail", "dimmable-light-detail.json")
@@ -134,11 +137,15 @@ def mock_devices_response(
     for fixture in DEVICE_FIXTURES[device_name]:
         detail = load_json_object_fixture(fixture[2], DOMAIN)
         if details_override:
-            assert "result" in detail.get("result", {}), (
+            result = detail.get("result", {})
+            assert "result" in result or "returnStatus" in result, (
                 f"Fixture {fixture[2]} does not have the expected "
-                "result.result payload to apply details_override"
+                "device state payload to apply details_override"
             )
-            detail["result"]["result"].update(details_override)
+            if "result" in result:
+                result["result"].update(details_override)
+            else:
+                result["returnStatus"].update(details_override)
         getattr(aioclient_mock, fixture[0])(
             f"https://smartapi.vesync.com{fixture[1]}",
             json=detail,

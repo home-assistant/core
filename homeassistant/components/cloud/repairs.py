@@ -3,7 +3,7 @@
 import asyncio
 
 from hass_nabucasa.payments_api import SubscriptionInfo
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -63,7 +63,7 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
             return await self.async_step_change_plan()
 
         return self.async_show_form(
-            step_id="confirm_change_plan", data_schema=vol.Schema({})
+            step_id="confirm_change_plan", data_schema=probatio.Schema({})
         )
 
     async def async_step_change_plan(self, _: None = None) -> RepairsFlowResult:
@@ -73,8 +73,6 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
 
         async def _async_wait_for_plan_change() -> None:
             flow_manager = repairs_flow_manager(self.hass)
-            # We cannot get here without a flow manager
-            assert flow_manager is not None
 
             retries = 0
             while retries < MAX_RETRIES:

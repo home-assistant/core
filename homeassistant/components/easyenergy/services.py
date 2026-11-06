@@ -15,7 +15,7 @@ from easyenergy import (
     VatOption,
 )
 from easyenergy.const import MARKET_TIMEZONE
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     HomeAssistant,
@@ -58,41 +58,41 @@ PRICE_TYPE_OPTIONS: Final = tuple(
     electricity_price_type.value for electricity_price_type in ElectricityPriceType
 )
 
-BASE_SERVICE_SCHEMA: Final = vol.Schema(
+BASE_SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
-        vol.Optional(ATTR_START): str,
-        vol.Optional(ATTR_END): str,
+        probatio.Optional(ATTR_START): str,
+        probatio.Optional(ATTR_END): str,
     }
 )
 GAS_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
     {
-        vol.Required(ATTR_INCL_VAT): bool,
-        vol.Optional(
+        probatio.Required(ATTR_INCL_VAT): bool,
+        probatio.Optional(
             ATTR_PRICE_TYPE, default=ElectricityPriceType.MARKET.value
-        ): vol.In(PRICE_TYPE_OPTIONS),
+        ): probatio.In(PRICE_TYPE_OPTIONS),
     }
 )
 ENERGY_USAGE_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
     {
-        vol.Required(ATTR_INCL_VAT): bool,
-        vol.Optional(
+        probatio.Required(ATTR_INCL_VAT): bool,
+        probatio.Optional(
             ATTR_GRANULARITY, default=ElectricityGranularity.HOUR.value
-        ): vol.In(GRANULARITY_OPTIONS),
-        vol.Optional(
+        ): probatio.In(GRANULARITY_OPTIONS),
+        probatio.Optional(
             ATTR_PRICE_TYPE, default=ElectricityPriceType.MARKET.value
-        ): vol.In(PRICE_TYPE_OPTIONS),
+        ): probatio.In(PRICE_TYPE_OPTIONS),
     }
 )
 ENERGY_RETURN_SERVICE_SCHEMA: Final = BASE_SERVICE_SCHEMA.extend(
     {
-        vol.Optional(
+        probatio.Optional(
             ATTR_GRANULARITY, default=ElectricityGranularity.HOUR.value
-        ): vol.In(GRANULARITY_OPTIONS),
+        ): probatio.In(GRANULARITY_OPTIONS),
     }
 )
 

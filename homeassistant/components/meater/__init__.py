@@ -9,7 +9,7 @@ from .coordinator import MeaterConfigEntry, MeaterCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MeaterConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MeaterConfigEntry) -> None:
     """Set up Meater Temperature Probe from a config entry."""
 
     coordinator = MeaterCoordinator(hass, entry)
@@ -20,13 +20,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeaterConfigEntry) -> bo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MeaterConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MeaterConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[MEATER_DATA] = (
-            hass.data[MEATER_DATA] - entry.runtime_data.found_probes
-        )
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    hass.data[MEATER_DATA] = hass.data[MEATER_DATA] - entry.runtime_data.found_probes

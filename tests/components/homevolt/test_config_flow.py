@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from homevolt import HomevoltAuthenticationError, HomevoltConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homevolt.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=IPv4Address("192.168.1.123"),

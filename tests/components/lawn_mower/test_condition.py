@@ -3,12 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.lawn_mower.condition import CONDITIONS
-from homeassistant.components.lawn_mower.const import LawnMowerActivity
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -22,6 +17,10 @@ from tests.components.common import (
     target_entities,
 )
 
+from homeassistant.components.lawn_mower.condition import CONDITIONS
+from homeassistant.components.lawn_mower.const import LawnMowerActivity
+from homeassistant.core import HomeAssistant
+
 
 @pytest.fixture
 async def target_lawn_mowers(hass: HomeAssistant) -> dict[str, list[str]]:
@@ -32,6 +31,7 @@ async def target_lawn_mowers(hass: HomeAssistant) -> dict[str, list[str]]:
 _CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
     "is_docked": TargetSupport.STANDARD,
     "is_encountering_an_error": TargetSupport.STANDARD,
+    "is_idle": TargetSupport.STANDARD,
     "is_mowing": TargetSupport.STANDARD,
     "is_paused": TargetSupport.STANDARD,
     "is_returning": TargetSupport.STANDARD,
@@ -43,6 +43,7 @@ _CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
     [
         ("lawn_mower.is_docked", {}, True, True),
         ("lawn_mower.is_encountering_an_error", {}, True, True),
+        ("lawn_mower.is_idle", {}, True, True),
         ("lawn_mower.is_mowing", {}, True, True),
         ("lawn_mower.is_paused", {}, True, True),
         ("lawn_mower.is_returning", {}, True, True),
@@ -86,6 +87,11 @@ def test_condition_target_support() -> None:
             condition="lawn_mower.is_encountering_an_error",
             target_states=[LawnMowerActivity.ERROR],
             other_states=other_states(LawnMowerActivity.ERROR),
+        ),
+        *parametrize_condition_states_any(
+            condition="lawn_mower.is_idle",
+            target_states=[LawnMowerActivity.IDLE],
+            other_states=other_states(LawnMowerActivity.IDLE),
         ),
         *parametrize_condition_states_any(
             condition="lawn_mower.is_mowing",
@@ -143,6 +149,11 @@ async def test_lawn_mower_state_condition_behavior_any(
             condition="lawn_mower.is_encountering_an_error",
             target_states=[LawnMowerActivity.ERROR],
             other_states=other_states(LawnMowerActivity.ERROR),
+        ),
+        *parametrize_condition_states_all(
+            condition="lawn_mower.is_idle",
+            target_states=[LawnMowerActivity.IDLE],
+            other_states=other_states(LawnMowerActivity.IDLE),
         ),
         *parametrize_condition_states_all(
             condition="lawn_mower.is_mowing",

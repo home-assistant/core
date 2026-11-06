@@ -1,29 +1,49 @@
 """Services for the Everything but the Kitchen Sink integration."""
 
-import voluptuous as vol
+from enum import StrEnum
+
+import probatio
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-SCHEMA_SERVICE_TEST_SERVICE_1 = vol.Schema(
+
+class KitchenSinkService(StrEnum):
+    """Store keys for Everything but the Kitchen Sink services."""
+
+    TEST_SERVICE_1 = "test_service_1"
+    SET_TRACKER_LOCATION = "set_tracker_location"
+    SET_SCANNER_CONNECTED = "set_scanner_connected"
+
+
+class KitchenSinkServiceArgument(StrEnum):
+    """Store keys for Everything but the Kitchen Sink service arguments."""
+
+    FIELD_1 = "field_1"
+    FIELD_2 = "field_2"
+    FIELD_3 = "field_3"
+    FIELD_4 = "field_4"
+    LATITUDE = "latitude"
+    LONGITUDE = "longitude"
+    ACCURACY = "accuracy"
+    CONNECTED = "connected"
+
+
+SCHEMA_SERVICE_TEST_SERVICE_1 = probatio.Schema(
     {
-        vol.Required("field_1"): vol.Coerce(int),
-        vol.Required("field_2"): vol.In(["off", "auto", "cool"]),
-        vol.Optional("field_3"): vol.Coerce(int),
-        vol.Optional("field_4"): vol.In(["forward", "reverse"]),
+        probatio.Required(KitchenSinkServiceArgument.FIELD_1): probatio.Coerce(int),
+        probatio.Required(KitchenSinkServiceArgument.FIELD_2): probatio.In(
+            ["off", "auto", "cool"]
+        ),
+        probatio.Optional(KitchenSinkServiceArgument.FIELD_3): probatio.Coerce(int),
+        probatio.Optional(KitchenSinkServiceArgument.FIELD_4): probatio.In(
+            ["forward", "reverse"]
+        ),
     }
 )
-
-SERVICE_TEST_SERVICE_1 = "test_service_1"
-SERVICE_SET_TRACKER_LOCATION = "set_tracker_location"
-SERVICE_SET_SCANNER_CONNECTED = "set_scanner_connected"
-
-ATTR_ACCURACY = "accuracy"
-ATTR_CONNECTED = "connected"
 
 
 @callback
@@ -37,7 +57,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_TEST_SERVICE_1,
+        KitchenSinkService.TEST_SERVICE_1,
         service_handler,
         SCHEMA_SERVICE_TEST_SERVICE_1,
         description_placeholders={
@@ -52,12 +72,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_TRACKER_LOCATION,
+        KitchenSinkService.SET_TRACKER_LOCATION,
         entity_domain=DEVICE_TRACKER_DOMAIN,
         schema={
-            vol.Required(ATTR_LATITUDE): cv.latitude,
-            vol.Required(ATTR_LONGITUDE): cv.longitude,
-            vol.Required(ATTR_ACCURACY): vol.All(vol.Coerce(float), vol.Range(min=0)),
+            probatio.Required(KitchenSinkServiceArgument.LATITUDE): cv.latitude,
+            probatio.Required(KitchenSinkServiceArgument.LONGITUDE): cv.longitude,
+            probatio.Required(KitchenSinkServiceArgument.ACCURACY): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=0)
+            ),
         },
         func="async_set_tracker_location",
     )
@@ -65,8 +87,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SET_SCANNER_CONNECTED,
+        KitchenSinkService.SET_SCANNER_CONNECTED,
         entity_domain=DEVICE_TRACKER_DOMAIN,
-        schema={vol.Required(ATTR_CONNECTED): cv.boolean},
+        schema={probatio.Required(KitchenSinkServiceArgument.CONNECTED): cv.boolean},
         func="async_set_scanner_connected",
     )

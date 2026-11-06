@@ -21,6 +21,8 @@ from matter_server.common.models import (
     TopologyDirectionInfo,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.matter.api import (
     DEVICE_ID,
@@ -31,9 +33,6 @@ from homeassistant.components.matter.api import (
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_commission(
@@ -248,7 +247,7 @@ async def test_node_diagnostics(
 
     # repeat test with a device id that does not have a node attached
     new_entry = device_registry.async_get_or_create(
-        config_entry_id=list(entry.config_entries)[0],
+        config_entry_id=entry.config_entry_id,
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
     await ws_client.send_json(
@@ -302,7 +301,7 @@ async def test_ping_node(
 
     # repeat test with a device id that does not have a node attached
     new_entry = device_registry.async_get_or_create(
-        config_entry_id=list(entry.config_entries)[0],
+        config_entry_id=entry.config_entry_id,
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
     await ws_client.send_json(
@@ -362,7 +361,7 @@ async def test_open_commissioning_window(
 
     # repeat test with a device id that does not have a node attached
     new_entry = device_registry.async_get_or_create(
-        config_entry_id=list(entry.config_entries)[0],
+        config_entry_id=entry.config_entry_id,
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
     await ws_client.send_json(
@@ -411,7 +410,7 @@ async def test_remove_matter_fabric(
 
     # repeat test with a device id that does not have a node attached
     new_entry = device_registry.async_get_or_create(
-        config_entry_id=list(entry.config_entries)[0],
+        config_entry_id=entry.config_entry_id,
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
     await ws_client.send_json(
@@ -455,7 +454,7 @@ async def test_interview_node(
 
     # repeat test with a device id that does not have a node attached
     new_entry = device_registry.async_get_or_create(
-        config_entry_id=list(entry.config_entries)[0],
+        config_entry_id=entry.config_entry_id,
         identifiers={(DOMAIN, "MatterNodeDevice")},
     )
     await ws_client.send_json(

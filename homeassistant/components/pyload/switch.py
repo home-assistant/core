@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, override
 
-from pyloadapi import CannotConnect, InvalidAuth, PyLoadAPI
+from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -13,7 +13,7 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -96,14 +96,19 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
         try:
             await self.entity_description.turn_on_fn(self.coordinator.pyload)
         except CannotConnect as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
             ) from e
         except InvalidAuth as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_auth_exception",
+            ) from e
+        except ParserError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_parse_exception",
             ) from e
 
         await self.coordinator.async_refresh()
@@ -114,14 +119,19 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
         try:
             await self.entity_description.turn_off_fn(self.coordinator.pyload)
         except CannotConnect as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
             ) from e
         except InvalidAuth as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_auth_exception",
+            ) from e
+        except ParserError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_parse_exception",
             ) from e
 
         await self.coordinator.async_refresh()
@@ -132,14 +142,19 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
         try:
             await self.entity_description.toggle_fn(self.coordinator.pyload)
         except CannotConnect as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
             ) from e
         except InvalidAuth as e:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_auth_exception",
+            ) from e
+        except ParserError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_parse_exception",
             ) from e
 
         await self.coordinator.async_refresh()

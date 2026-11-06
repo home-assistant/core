@@ -74,27 +74,31 @@ rules:
     comment: |
       No discovery possible. Users can use the (local or public) hostname instead of an IP address,
       if static IP addresses cannot be configured.
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
-    comment: A minecraft server can only have one device.
+    comment: A Minecraft server can only have one device.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repair use-cases for this integration.
-  stale-devices: todo
+  stale-devices:
+    status: exempt
+    comment: |
+      Each Minecraft server represents a single, fixed device per config entry,
+      that lives and goes with the config entry.
 
   # Platinum
   async-dependency:

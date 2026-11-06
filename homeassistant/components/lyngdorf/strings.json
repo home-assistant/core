@@ -89,6 +89,9 @@
       "audio_input": {
         "name": "Audio input"
       },
+      "maximum_volume": {
+        "name": "Maximum volume"
+      },
       "streaming_source": {
         "name": "Streaming source"
       },
@@ -107,11 +110,20 @@
     }
   },
   "exceptions": {
+    "command_failed": {
+      "message": "The device did not accept the command"
+    },
+    "invalid_option": {
+      "message": "{option} is not available on this device. It offers: {options}"
+    },
     "setup_connection_error": {
       "message": "Failed to connect to {host}"
     },
     "setup_timeout": {
       "message": "Timeout connecting to {host}"
+    },
+    "unsupported_command": {
+      "message": "The current source does not support this command"
     },
     "unsupported_remote_key": {
       "message": "This device does not have that remote key. It supports: {keys}"

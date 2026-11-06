@@ -3,6 +3,12 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant import setup
 from homeassistant.const import Platform
@@ -11,8 +17,6 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
 
 
 @pytest.fixture

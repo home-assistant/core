@@ -1,88 +1,24 @@
 """Support for controlling projector via the PJLink protocol."""
 
+from collections.abc import Callable
 from typing import Any, override
 
 from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-from .const import CONF_ENCODING, DEFAULT_ENCODING, DEFAULT_PORT, DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 ERR_PROJECTOR_UNAVAILABLE = "projector unavailable"
-
-PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the PJLink platform."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-    )
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
-            breaks_in_ha_version="2026.11.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "PJLink",
-            },
-        )
-        return
-
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2026.11.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "PJLink",
-        },
-    )
 
 
 async def async_setup_entry(
@@ -102,6 +38,7 @@ def format_input_source(input_source_name, input_source_number):
 class PjLinkDevice(MediaPlayerEntity):
     """Representation of a PJLink device."""
 
+    _attr_device_class = MediaPlayerDeviceClass.PROJECTOR
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.TURN_ON
@@ -188,27 +125,32 @@ class PjLinkDevice(MediaPlayerEntity):
             else:
                 raise
 
+    def _run_command(self, command: Callable[[Projector], None]) -> None:
+        """Run a projector command and surface failures as HomeAssistantError."""
+        try:
+            with self.projector() as projector:
+                command(projector)
+        except (ProjectorError, TimeoutError, OSError) as err:
+            # script helpers honor continue_on_error only for HomeAssistantError
+            raise HomeAssistantError(f"PJLink command failed: {err}") from err
+
     @override
     def turn_off(self) -> None:
         """Turn projector off."""
-        with self.projector() as projector:
-            projector.set_power("off")
+        self._run_command(lambda projector: projector.set_power("off"))
 
     @override
     def turn_on(self) -> None:
         """Turn projector on."""
-        with self.projector() as projector:
-            projector.set_power("on")
+        self._run_command(lambda projector: projector.set_power("on"))
 
     @override
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) of unmute (false) media player."""
-        with self.projector() as projector:
-            projector.set_mute(MUTE_AUDIO, mute)
+        self._run_command(lambda projector: projector.set_mute(MUTE_AUDIO, mute))
 
     @override
     def select_source(self, source: str) -> None:
         """Set the input source."""
-        source = self._source_name_mapping[source]
-        with self.projector() as projector:
-            projector.set_input(*source)
+        selected = self._source_name_mapping[source]
+        self._run_command(lambda projector: projector.set_input(*selected))

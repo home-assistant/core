@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -47,8 +48,6 @@ from . import (
     modern_forms_breeze_active_call_mock,
     modern_forms_breeze_call_mock,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_fan_state(
@@ -180,7 +179,6 @@ async def test_set_percentage(
             speed=6,
         )
 
-    await init_integration(hass, aioclient_mock)
     with patch("aiomodernforms.ModernFormsDevice.fan") as fan_mock:
         await hass.services.async_call(
             FAN_DOMAIN,

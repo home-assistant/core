@@ -1,7 +1,6 @@
 """The base entity for the rest component."""
 
 from abc import abstractmethod
-import logging
 import ssl
 from typing import override
 
@@ -22,10 +21,12 @@ from homeassistant.helpers.trigger_template_entity import (
     CONF_PICTURE,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import async_get_config_and_coordinator, create_rest_data_from_config
+from . import async_get_config_and_coordinator
+from .const import DOMAIN
+from .coordinator import RestCoordinator
 from .data import RestData
+from .util import create_rest_data_from_config
 
 TRIGGER_ENTITY_OPTIONS = (
     CONF_AVAILABILITY,
@@ -37,15 +38,13 @@ TRIGGER_ENTITY_OPTIONS = (
     CONF_UNIT_OF_MEASUREMENT,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_get_config_rest_data_and_coordinator(
     hass: HomeAssistant,
     config: ConfigType,
     entity_domain: str,
     discovery_info: DiscoveryInfoType | None = None,
-) -> tuple[ConfigType, RestData, DataUpdateCoordinator[None] | None]:
+) -> tuple[ConfigType, RestData, RestCoordinator | None]:
     """Get the config, rest data +/- coordinator for sub entity."""
     # Must update the sensor now (including fetching the rest resource) to
     # ensure it's updating its state.
@@ -62,12 +61,11 @@ async def async_get_config_rest_data_and_coordinator(
     if rest.data is None:
         if rest.last_exception:
             if isinstance(rest.last_exception, ssl.SSLError):
-                _LOGGER.error(
-                    "Error connecting %s failed with %s",
-                    rest.url,
-                    rest.last_exception,
-                )
-                raise HomeAssistantError from rest.last_exception
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="ssl_error",
+                    translation_placeholders={"resource": rest.url},
+                ) from rest.last_exception
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
@@ -96,7 +94,7 @@ class RestEntity(Entity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[None] | None,
+        coordinator: RestCoordinator | None,
         rest: RestData,
         resource_template: Template | None,
         force_update: bool,

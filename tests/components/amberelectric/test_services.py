@@ -2,11 +2,15 @@
 
 import re
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.amberelectric.const import DOMAIN
-from homeassistant.components.amberelectric.services import ATTR_CHANNEL_TYPE
+from homeassistant.components.amberelectric.services import (
+    AmberElectricService,
+    AmberElectricServiceArgument,
+)
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -18,8 +22,6 @@ from .helpers import (
     GENERAL_ONLY_SITE_ID,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.usefixtures("mock_amber_client_forecasts")
 async def test_get_general_forecasts(
@@ -30,8 +32,11 @@ async def test_get_general_forecasts(
     await setup_integration(hass, general_channel_config_entry)
     result = await hass.services.async_call(
         DOMAIN,
-        "get_forecasts",
-        {ATTR_CONFIG_ENTRY_ID: GENERAL_ONLY_SITE_ID, ATTR_CHANNEL_TYPE: "general"},
+        AmberElectricService.GET_FORECASTS,
+        {
+            ATTR_CONFIG_ENTRY_ID: GENERAL_ONLY_SITE_ID,
+            AmberElectricServiceArgument.CHANNEL_TYPE: "general",
+        },
         blocking=True,
         return_response=True,
     )
@@ -59,10 +64,10 @@ async def test_get_controlled_load_forecasts(
     await setup_integration(hass, general_channel_and_controlled_load_config_entry)
     result = await hass.services.async_call(
         DOMAIN,
-        "get_forecasts",
+        AmberElectricService.GET_FORECASTS,
         {
             ATTR_CONFIG_ENTRY_ID: GENERAL_AND_CONTROLLED_SITE_ID,
-            ATTR_CHANNEL_TYPE: "controlled_load",
+            AmberElectricServiceArgument.CHANNEL_TYPE: "controlled_load",
         },
         blocking=True,
         return_response=True,
@@ -91,10 +96,10 @@ async def test_get_feed_in_forecasts(
     await setup_integration(hass, general_channel_and_feed_in_config_entry)
     result = await hass.services.async_call(
         DOMAIN,
-        "get_forecasts",
+        AmberElectricService.GET_FORECASTS,
         {
             ATTR_CONFIG_ENTRY_ID: GENERAL_AND_FEED_IN_SITE_ID,
-            ATTR_CHANNEL_TYPE: "feed_in",
+            AmberElectricServiceArgument.CHANNEL_TYPE: "feed_in",
         },
         blocking=True,
         return_response=True,
@@ -123,7 +128,7 @@ async def test_incorrect_channel_type(
     await setup_integration(hass, general_channel_config_entry)
 
     with pytest.raises(
-        vol.error.MultipleInvalid,
+        probatio.error.MultipleInvalid,
         match=re.escape(
             "value must be one of ['controlled_load', 'feed_in',"
             " 'general'] at 'channel_type'"
@@ -131,10 +136,10 @@ async def test_incorrect_channel_type(
     ):
         await hass.services.async_call(
             DOMAIN,
-            "get_forecasts",
+            AmberElectricService.GET_FORECASTS,
             {
                 ATTR_CONFIG_ENTRY_ID: GENERAL_ONLY_SITE_ID,
-                ATTR_CHANNEL_TYPE: "incorrect",
+                AmberElectricServiceArgument.CHANNEL_TYPE: "incorrect",
             },
             blocking=True,
             return_response=True,
@@ -154,10 +159,10 @@ async def test_unavailable_channel_type(
     ):
         await hass.services.async_call(
             DOMAIN,
-            "get_forecasts",
+            AmberElectricService.GET_FORECASTS,
             {
                 ATTR_CONFIG_ENTRY_ID: GENERAL_ONLY_SITE_ID,
-                ATTR_CHANNEL_TYPE: "controlled_load",
+                AmberElectricServiceArgument.CHANNEL_TYPE: "controlled_load",
             },
             blocking=True,
             return_response=True,
@@ -179,10 +184,10 @@ async def test_service_entry_availability(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            "get_forecasts",
+            AmberElectricService.GET_FORECASTS,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry2.entry_id,
-                ATTR_CHANNEL_TYPE: "general",
+                AmberElectricServiceArgument.CHANNEL_TYPE: "general",
             },
             blocking=True,
             return_response=True,
@@ -193,8 +198,11 @@ async def test_service_entry_availability(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            "get_forecasts",
-            {ATTR_CONFIG_ENTRY_ID: "bad-config_id", ATTR_CHANNEL_TYPE: "general"},
+            AmberElectricService.GET_FORECASTS,
+            {
+                ATTR_CONFIG_ENTRY_ID: "bad-config_id",
+                AmberElectricServiceArgument.CHANNEL_TYPE: "general",
+            },
             blocking=True,
             return_response=True,
         )

@@ -65,8 +65,8 @@ class SubaruDeviceTracker(SubaruCoordinatorEntity, TrackerEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return if available; not gated on last_update_success, only on the relevant status keys being present."""
-        if not (vehicle_data := (self.coordinator.data or {}).get(self.vin)):
+        """Return if available and the location is known."""
+        if not super().available:
             return False
-        status = vehicle_data.get(VEHICLE_STATUS) or {}
+        status = self.coordinator.data[self.vin].get(VEHICLE_STATUS) or {}
         return bool(status.keys() & {LATITUDE, LONGITUDE, TIMESTAMP})

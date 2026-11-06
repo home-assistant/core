@@ -3,8 +3,6 @@
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, override
 
-from universal_silabs_flasher.flasher import Zbt2Flasher
-
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import firmware_config_flow
 from homeassistant.components.homeassistant_hardware.helpers import (
@@ -13,10 +11,10 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
 )
 from homeassistant.components.usb import usb_service_info_from_device
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryBaseFlow,
     ConfigFlowContext,
     ConfigFlowResult,
@@ -25,6 +23,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
+from . import HomeAssistantConnectZBT2ConfigEntry
 from .const import (
     DEVICE,
     DOMAIN,
@@ -72,7 +71,7 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     context: ConfigFlowContext
 
     ZIGBEE_BAUDRATE = 460800
-    _flasher_cls = Zbt2Flasher
+    _flasher_type = FlasherType.ZBT2
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -121,7 +120,7 @@ class HomeAssistantConnectZBT2ConfigFlow(
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HomeAssistantConnectZBT2ConfigEntry,
     ) -> OptionsFlow:
         """Return the options flow."""
         return HomeAssistantConnectZBT2OptionsFlowHandler(config_entry)

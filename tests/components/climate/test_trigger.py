@@ -3,8 +3,23 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.components.common import (
+    TargetSupport,
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
+    other_states,
+    parametrize_numerical_attribute_changed_trigger_states,
+    parametrize_numerical_attribute_crossed_threshold_trigger_states,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
@@ -22,22 +37,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import async_validate_trigger_config
-
-from tests.components.common import (
-    TargetSupport,
-    TriggerStateDescription,
-    assert_trigger_behavior_all,
-    assert_trigger_behavior_each,
-    assert_trigger_behavior_first,
-    assert_trigger_options_supported,
-    assert_triggers_target_support,
-    other_states,
-    parametrize_numerical_attribute_changed_trigger_states,
-    parametrize_numerical_attribute_crossed_threshold_trigger_states,
-    parametrize_target_entities,
-    parametrize_trigger_states,
-    target_entities,
-)
 
 
 @pytest.fixture
@@ -137,18 +136,18 @@ def test_trigger_target_support() -> None:
             "climate.hvac_mode_changed",
             # Empty hvac_mode list
             {CONF_HVAC_MODE: []},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "climate.hvac_mode_changed",
             # Missing CONF_HVAC_MODE
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "climate.hvac_mode_changed",
             {CONF_HVAC_MODE: ["invalid_mode"]},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
