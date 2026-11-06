@@ -351,6 +351,67 @@ async def test_subentry_flow_location_already_configured(
     assert len(entry.subentries) == 1
 
 
+async def test_subentry_flow_location_in_other_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test adding a location that is only configured in another entry."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Google Weather",
+        data={
+            CONF_API_KEY: "other-api-key",
+        },
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={
+                    CONF_LATITUDE: 30.1,
+                    CONF_LONGITUDE: 40.1,
+                },
+                subentry_type="location",
+                title="Work",
+                subentry_id="other-entry-work-subentry-id",
+                unique_id=None,
+            )
+        ],
+    )
+    other_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "location"),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "location"
+
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Work",
+            CONF_LOCATION: {
+                CONF_LATITUDE: 30.1,
+                CONF_LONGITUDE: 40.1,
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Work"
+    assert result2["data"] == {
+        CONF_LATITUDE: 30.1,
+        CONF_LONGITUDE: 40.1,
+    }
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert len(entry.subentries) == 2
+
+
 async def test_reauth(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -641,6 +702,69 @@ async def test_subentry_reconfigure(
     assert result2["reason"] == "reconfigure_successful"
 
     # Reload the entry to see changes
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    updated_subentry = entry.subentries[subentry.subentry_id]
+
+    assert updated_subentry.title == "New Work"
+    assert updated_subentry.data == {
+        CONF_LATITUDE: 30.1,
+        CONF_LONGITUDE: 40.1,
+    }
+
+
+async def test_subentry_reconfigure_location_in_other_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_google_weather_api: AsyncMock,
+) -> None:
+    """Test reconfiguring a location to one that is only configured in another entry."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Google Weather",
+        data={
+            CONF_API_KEY: "other-api-key",
+        },
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={
+                    CONF_LATITUDE: 30.1,
+                    CONF_LONGITUDE: 40.1,
+                },
+                subentry_type="location",
+                title="Work",
+                subentry_id="other-entry-work-subentry-id",
+                unique_id=None,
+            )
+        ],
+    )
+    other_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "location"
+
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "New Work",
+            CONF_LOCATION: {
+                CONF_LATITUDE: 30.1,
+                CONF_LONGITUDE: 40.1,
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     updated_subentry = entry.subentries[subentry.subentry_id]
 
