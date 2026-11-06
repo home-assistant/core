@@ -14,7 +14,7 @@ from . import seed
 
 @pytest.fixture
 def platforms() -> list[Platform]:
-    """Set up only the sensor platform."""
+    """Fixture to specify platforms to test."""
     return [Platform.SENSOR]
 
 

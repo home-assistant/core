@@ -33,7 +33,7 @@ EMS_STATUS_ENTITY_IDS = [
 
 @pytest.fixture
 def platforms() -> list[Platform]:
-    """Set up only the binary_sensor platform."""
+    """Fixture to specify platforms to test."""
     return [Platform.BINARY_SENSOR]
 
 
