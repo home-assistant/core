@@ -22,7 +22,7 @@
           "city": "City"
         },
         "data_description": {
-          "city": "Postal code or name of the city to get the weather for. Postal codes only work for cities in France."
+          "city": "Postal code or name of the city to get the weather for."
         },
         "description": "Enter the postal code (only for France, recommended) or city name"
       }
