@@ -32,8 +32,9 @@ from homeassistant.components.mcp.coordinator import (
     create_mcp_httpx_client,
 )
 from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_API_TOKEN, CONF_URL
+from homeassistant.const import CONF_API_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
@@ -45,6 +46,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.helpers.httpx_client import SERVER_SOFTWARE
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .conftest import API_TOKEN, MCP_SERVER_URL, TEST_API_NAME
 
@@ -450,22 +452,41 @@ async def test_oauth_preferred_over_api_token(
     }
 
 
-@respx.mock
-async def test_api_token_authentication_failure(
-    hass: HomeAssistant, config_entry_with_api_token: MockConfigEntry
+async def test_api_token_rejected(
+    hass: HomeAssistant,
+    fake_mcp_server: FakeMcpServer,
+    config_entry_with_api_token: MockConfigEntry,
 ) -> None:
-    """Test a server rejecting the token from the app discovery starts reauth."""
-    post_route = respx.post(MCP_SERVER_URL).mock(return_value=httpx2.Response(401))
+    """Test a rejected app token starts reauth until the app announces a new one."""
+    fake_mcp_server.streamable_http_error = httpx2.Response(401)
 
     await hass.config_entries.async_setup(config_entry_with_api_token.entry_id)
     assert config_entry_with_api_token.state is ConfigEntryState.SETUP_ERROR
-    assert post_route.calls.last.request.headers["Authorization"] == (
-        f"Bearer {API_TOKEN}"
-    )
-
+    assert respx.calls.last.request.headers["Authorization"] == f"Bearer {API_TOKEN}"
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
+
+    fake_mcp_server.streamable_http_error = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config={CONF_URL: MCP_SERVER_URL, CONF_TOKEN: "new-api-token"},
+            name="Example MCP Server",
+            slug="example_mcp_server",
+            uuid="1234",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry_with_api_token.state is ConfigEntryState.LOADED
+    assert config_entry_with_api_token.data[CONF_API_TOKEN] == "new-api-token"
+    assert respx.calls.last.request.headers["Authorization"] == "Bearer new-api-token"
+    # The reload aborts the reauth flow
+    assert not hass.config_entries.flow.async_progress()
 
 
 @pytest.mark.parametrize(

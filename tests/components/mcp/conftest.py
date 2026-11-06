@@ -96,6 +96,7 @@ def mock_config_entry_with_api_token(hass: HomeAssistant) -> MockConfigEntry:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_HASSIO,
+        unique_id="1234",
         data={CONF_URL: MCP_SERVER_URL, CONF_API_TOKEN: API_TOKEN},
         title=TEST_API_NAME,
     )

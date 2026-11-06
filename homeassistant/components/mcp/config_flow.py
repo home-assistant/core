@@ -12,7 +12,11 @@ import probatio
 from yarl import URL
 
 from homeassistant.components.application_credentials import AuthorizationServer
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryState,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, UnknownImplementationError
@@ -219,7 +223,17 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if token := discovery_info.config.get(CONF_TOKEN):
             updates[CONF_API_TOKEN] = token
 
-        await self.async_set_unique_id(discovery_info.uuid)
+        entry = await self.async_set_unique_id(discovery_info.uuid)
+        # A rejected token leaves the entry in setup error, which the unique ID
+        # check below does not reload when the app announces a new token
+        if (
+            entry is not None
+            and entry.state is ConfigEntryState.SETUP_ERROR
+            and self.hass.config_entries.async_update_entry(
+                entry, data={**entry.data, **updates}
+            )
+        ):
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
         self._abort_if_unique_id_configured(updates=updates)
         self._async_abort_entries_match({CONF_URL: url})
         self.data.update(updates)
