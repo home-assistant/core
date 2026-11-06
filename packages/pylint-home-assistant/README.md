@@ -124,6 +124,7 @@ Every check has a code following the
 | `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
 | `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
 | `R7405` | [`home-assistant-tests-user-flow-no-data`](#r7405-home-assistant-tests-user-flow-no-data) | User config flow init in tests must not pass `data` |
+| `R7407` | [`home-assistant-explicit-parent-init`](#r7407-home-assistant-explicit-parent-init) | Use `super().__init__` instead of `Base.__init__(self, ...)` |
 | `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
@@ -354,6 +355,41 @@ Ensures methods call their parent implementation when required.
 
 Method must call its parent implementation via `super()`. Certain entity
 methods require calling the parent to maintain correct behavior.
+
+
+## `home_assistant_explicit_parent_init` checker
+
+Detects entity constructors that call a base class constructor by name
+where `super().__init__()` calls the very same constructor.
+
+### `R7407`: `home-assistant-explicit-parent-init`
+
+The `__init__` of a class inheriting from `Entity` calls
+`Base.__init__(self, ...)`, while `Base` owns the first `__init__` along the
+MRO after the class itself. That is exactly the constructor
+`super().__init__(...)` runs, so use that instead:
+
+```python
+class VeraLight(VeraEntity[veraApi.VeraDimmer], LightEntity):
+    def __init__(
+        self, vera_device: veraApi.VeraDimmer, controller_data: ControllerData
+    ) -> None:
+        """Initialize the light."""
+        # `LightEntity` has no constructor, use `super().__init__(...)`
+        VeraEntity.__init__(self, vera_device, controller_data)
+```
+
+Spelling out the base hides that nothing else needs initializing, and keeps
+`home-assistant-redundant-entity-init` from spotting constructors that only
+forward their arguments.
+
+Calling bases by name is still needed when a class has several of them
+with a constructor of their own, such as an integration base together with
+`ImageEntity` or `Camera`: one `super()` chain cannot pass each its own
+arguments. The checker therefore only flags a constructor that calls a
+single base constructor, by name, and no `super().__init__()`. Classes whose
+MRO astroid cannot fully resolve, for example because a generic base is
+subscripted with a type it cannot infer, are skipped.
 
 
 ## `home_assistant_enforce_sorted_platforms` checker
