@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "empty": "No result in city search: please check the city field"
     },
     "step": {
@@ -56,6 +57,11 @@
       "wind_gust": {
         "name": "Wind gust"
       }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "An error occurred while fetching data from Météo-France."
     }
   }
 }
