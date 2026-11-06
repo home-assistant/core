@@ -31,7 +31,6 @@ async def async_get_config_entry_diagnostics(
     number registers are left out.
     """
     coordinator = entry.runtime_data
-    last_exception = coordinator.last_exception
     device = coordinator.device
     identity = device.identity
     raw = read_error = None
@@ -44,6 +43,8 @@ async def async_get_config_entry_diagnostics(
     if raw is not None and (holding := raw.get("holding")) is not None:
         for address in _SERIAL_NUMBER_REGISTERS:
             holding.pop(address, None)
+    # Read after the await, so a poll that fails meanwhile matches last_update_success
+    last_exception = coordinator.last_exception
 
     return async_redact_data(
         {
