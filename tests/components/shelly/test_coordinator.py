@@ -1385,6 +1385,53 @@ async def test_xmod_model_lookup(
     assert device.model == xmod_model
 
 
+@pytest.mark.parametrize(
+    ("xmod_info", "manufacturer"),
+    [
+        pytest.param(
+            {"m": "Test XMOD manufacturer"}, "Test XMOD manufacturer", id="xmod"
+        ),
+        pytest.param(
+            {"n": "Test XMOD model name"}, "Shelly", id="xmod_no_manufacturer"
+        ),
+        pytest.param({}, "Shelly", id="no_xmod"),
+    ],
+)
+async def test_xmod_manufacturer_lookup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    xmod_info: dict[str, str],
+    manufacturer: str,
+) -> None:
+    """Test XMOD manufacturer look-up."""
+    monkeypatch.setattr(mock_rpc_device, "xmod_info", xmod_info)
+    entry = await init_integration(hass, 2)
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
+    )
+    assert device
+    assert device.manufacturer == manufacturer
+
+
+@pytest.mark.usefixtures("mock_sleepy_rpc_device")
+async def test_sleeping_device_manufacturer(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test not initialized sleeping device manufacturer falls back to Shelly."""
+    entry = await init_integration(hass, 2, sleep_period=1000)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id)), entry.entry_id
+    )
+    assert device
+    assert device.manufacturer == "Shelly"
+
+
 async def test_sub_device_area_from_main_device(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
