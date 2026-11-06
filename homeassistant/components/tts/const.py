@@ -37,6 +37,18 @@ SERVICE_CLEAR_CACHE = "clear_cache"
 type TtsAudioType = tuple[str | None, bytes | None]
 
 
+class TextToSpeechCommonOption(StrEnum):
+    """Store keys for the text-to-speech options common to all engines."""
+
+    AUDIO_OUTPUT = "audio_output"
+    PREFERRED_BITRATE = "preferred_bitrate"
+    PREFERRED_FORMAT = "preferred_format"
+    PREFERRED_SAMPLE_BYTES = "preferred_sample_bytes"
+    PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
+    PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
+    VOICE = "voice"
+
+
 class TextToSpeechService(StrEnum):
     """Store keys for text-to-speech services."""
 

@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@imicknl"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dependencies": ["application_credentials"],
   "dhcp": [
     {
