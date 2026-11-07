@@ -15,6 +15,7 @@ from pyenphase import (
     EnvoyTokenAuth,
 )
 from pyenphase.auth import EnvoyLegacyAuth
+from pyenphase.const import EnvoyOptions
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -26,6 +27,7 @@ import respx
 
 from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import (
+    CONF_NO_SOLAR,
     OPERATIONAL_RETRY_TIMEOUT,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DISABLE_KEEP_ALIVE,
@@ -56,7 +58,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import TOKEN_SIGNING_KEY, setup_integration
+from . import TOKEN_SIGNING_KEY, envoy_token, setup_integration
 
 
 async def test_with_pre_v7_firmware(
@@ -1149,3 +1151,56 @@ async def test_coordinator_background_task_start(
     assert "Config entry loaded, starting background task timers" not in caplog.text
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == "116"
+
+
+@respx.mock
+async def test_init_no_solar(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test envoy options used at load."""
+    caplog.set_level(logging.DEBUG)
+
+    token = envoy_token()
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: token,
+            CONF_NO_SOLAR: True,
+        },
+    )
+
+    await setup_integration(hass, entry)
+
+    assert (
+        f"Using options: {EnvoyOptions.V2_ACB_MODE.name} {EnvoyOptions.NO_SOLAR.name} for Envoy Envoy 1234"
+        in caplog.text
+    )
+
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: token,
+            CONF_NO_SOLAR: False,
+        },
+    )
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert (
+        f"Using options: {EnvoyOptions.V2_ACB_MODE.name}  for Envoy Envoy 1234"
+        in caplog.text
+    )
