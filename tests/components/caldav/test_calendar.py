@@ -1861,6 +1861,13 @@ END:VEVENT
 END:VCALENDAR
 """
 
+# Repeating every second, so its first two occurrences are in the same minute
+SECONDLY_ICS = (
+    INVITATION_ICS.replace("UID:invitation", "UID:secondly")
+    .replace("RECURRENCE-ID:20261102T150000Z", "RRULE:FREQ=SECONDLY;COUNT=2")
+    .replace("T150000Z", "T090000Z")
+)
+
 # Recurrence ids as the integration returns them for occurrences of SERIES_ICS
 FIRST_OCCURRENCE = "2026-10-26 09:00:00-04:00"
 SECOND_OCCURRENCE = "2026-11-02 09:00:00-05:00"
@@ -1979,6 +1986,19 @@ async def _ws_call(
                 "dtend": "2026-11-10T11:00:00",
             },
             id="single_with_seconds_kept",
+        ),
+        pytest.param(
+            AMERICA_NEW_YORK,
+            SINGLE_ICS,
+            "single",
+            "",
+            # Seconds, which only other clients than the frontend send
+            {
+                "summary": "Dentist",
+                "dtstart": "2026-11-10T10:00:30",
+                "dtend": "2026-11-10T11:00:30",
+            },
+            id="single_new_seconds",
         ),
         pytest.param(
             AMERICA_NEW_YORK,
@@ -2233,6 +2253,14 @@ DELETE = {"type": "calendar/event/delete"}
         pytest.param(
             SERIES_ICS, "series", "not a time", "THISANDFUTURE", id="invalid_id"
         ),
+        pytest.param(INVITATION_ICS, "invitation", "", "", id="invitation_no_id"),
+        pytest.param(
+            SECONDLY_ICS,
+            "secondly",
+            "2026-11-02 09:00:01+00:00",
+            "THISANDFUTURE",
+            id="second_occurrence_same_minute",
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_config_entry")
@@ -2420,3 +2448,22 @@ async def test_delete_event_weak_etag(
 
     assert response["success"]
     stored_event.client.delete.assert_called_once_with(str(stored_event.url))
+
+
+@pytest.mark.parametrize("ics", [SINGLE_ICS])
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_delete_event_weak_etag_schedule_tag(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    stored_event: Event,
+) -> None:
+    """Test a delete with a weak ETag still checks the Schedule-Tag."""
+    stored_event.props[dav.GetEtag.tag] = 'W/"read-version"'
+    stored_event.props[cdav.ScheduleTag.tag] = '"schedule-version"'
+
+    response = await _ws_call(hass, hass_ws_client, **DELETE_SINGLE)
+
+    assert response["success"]
+    stored_event.client.delete.assert_called_once_with(
+        str(stored_event.url), {"if-schedule-tag-match": '"schedule-version"'}
+    )

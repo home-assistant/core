@@ -380,7 +380,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         )
         # Only delete the version that was checked; If-Match can't use a weak ETag
         etag = item.etag
-        if_match = bool(etag and not etag.startswith("W/"))
+        if_match = bool(item.schedule_tag or (etag and not etag.startswith("W/")))
         item.delete(if_match=if_match, precondition="etag")
 
     def _get_event(self, uid: str) -> Event:
@@ -451,14 +451,20 @@ def _get_first_occurrence(
     from the first occurrence on is a change to the whole event. The recurrence
     id is the occurrence start as the coordinator formats it.
     """
-    if not recurrence_id:
-        return series
-    start = dt_util.parse_date(recurrence_id) or dt_util.parse_datetime(recurrence_id)
+    start: date | datetime | None
+    if recurrence_id:
+        start = dt_util.parse_date(recurrence_id) or dt_util.parse_datetime(
+            recurrence_id
+        )
+    else:
+        # A change without a recurrence id is a change to the whole event
+        start, recurrence_range = series.DTSTART, THIS_AND_FUTURE
+    # Only an occurrence is stored for an invitation to it
     if (
         start is None
         or recurrence_range != THIS_AND_FUTURE
         or "RECURRENCE-ID" in series
-        or not _same_time(start, series.DTSTART)
+        or not _same_instant(start, series.DTSTART)
     ):
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="occurrence_not_supported"
@@ -469,7 +475,7 @@ def _get_first_occurrence(
             component
             for component in components
             if "RECURRENCE-ID" in component
-            and _same_time(component["RECURRENCE-ID"].dt, series.DTSTART)
+            and _same_instant(component["RECURRENCE-ID"].dt, series.DTSTART)
         ),
         series,
     )
@@ -489,17 +495,37 @@ def _get_end(component: icalendar.Event) -> date | datetime:
     return end
 
 
-def _same_time(value: date | datetime, stored: date | datetime) -> bool:
-    """Return if a time is the stored one, as the frontend shows times.
-
-    The frontend shows times to the minute in Home Assistant's time zone, so it
-    can't tell apart the two hours that repeat when clocks go back.
-    """
+def _same_instant(value: date | datetime, stored: date | datetime) -> bool:
+    """Return if a time is the stored one, a floating one by its wall time."""
     if isinstance(value, datetime) != isinstance(stored, datetime):
         return False
-    if isinstance(value, datetime):
-        return _as_shown(value) == _as_shown(cast(datetime, stored))
-    return value == stored
+    if not isinstance(value, datetime):
+        return value == stored
+    stored = cast(datetime, stored)
+    value = dt_util.as_local(value)
+    if stored.tzinfo is None:
+        return value.replace(tzinfo=None) == stored
+    return value.astimezone(UTC) == stored.astimezone(UTC)
+
+
+def _same_time(value: date | datetime, stored: date | datetime) -> bool:
+    """Return if a time sent for an event is the stored one.
+
+    The frontend sends whole minutes in Home Assistant's time zone, so it
+    can't send seconds or the second of the two hours that repeat when clocks
+    go back. Such a time is the stored one if the frontend shows them the same.
+    """
+    if _same_instant(value, stored):
+        return True
+    if not isinstance(value, datetime) or not isinstance(stored, datetime):
+        return False
+    value = dt_util.as_local(value)
+    return (
+        not value.second
+        and not value.microsecond
+        and not value.fold
+        and _as_shown(value) == _as_shown(stored)
+    )
 
 
 def _as_shown(value: datetime) -> datetime:
