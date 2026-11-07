@@ -329,11 +329,17 @@
     "invalid_username": {
       "message": "The username {username} does not exist on the Music Assistant server."
     },
+    "no_active_queue": {
+      "message": "The player has no active queue."
+    },
+    "server_too_old": {
+      "message": "This action requires Music Assistant server version 2.11 or later."
+    },
     "tts_entity_not_available": {
       "message": "The text-to-speech entity {entity_id} is not available."
     },
     "username_not_supported": {
-      "message": "The Music Assistant server is too old to run this action as a given user. Update Music Assistant or remove the username."
+      "message": "Running this action as a given user requires Music Assistant server version 2.11 or later."
     }
   },
   "issues": {
@@ -460,7 +466,7 @@
           "name": "[%key:component::music_assistant::services::get_library::fields::offset::name%]"
         },
         "username": {
-          "description": "Music Assistant username used to request the queue items. They are only returned when this user may access the player.",
+          "description": "Music Assistant username used to request the queue items. The request fails when this user may not access the player. Defaults to the Music Assistant user linked to the Home Assistant user making the request.",
           "name": "[%key:component::music_assistant::services::get_library::fields::username::name%]"
         }
       },

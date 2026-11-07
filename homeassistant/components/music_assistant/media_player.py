@@ -701,7 +701,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     ) -> ServiceResponse:
         """Handle get_queue action."""
         if not self.active_queue:
-            raise HomeAssistantError("No active queue found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="no_active_queue"
+            )
         active_queue = self.active_queue
         details: dict[str, Any] = {}
         # the items are opt-in, so a call without a limit stays a cache-only read

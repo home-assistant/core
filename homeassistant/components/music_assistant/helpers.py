@@ -6,6 +6,7 @@ import functools
 from typing import TYPE_CHECKING, Any
 
 from music_assistant_client.constants import IMPERSONATION_SCHEMA_VERSION
+from music_assistant_client.exceptions import InvalidServerVersion
 from music_assistant_client.helpers import LinkedUser
 from music_assistant_models.auth import AuthProviderType
 from music_assistant_models.errors import MusicAssistantError, UserNotFoundError
@@ -37,6 +38,11 @@ def catch_musicassistant_error[**_P, _R](
         """Catch Music Assistant errors and convert to Home Assistant error."""
         try:
             return await func(*args, **kwargs)
+        except InvalidServerVersion as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="server_too_old",
+            ) from err
         except MusicAssistantError as err:
             error_msg = str(err) or err.__class__.__name__
             raise HomeAssistantError(error_msg) from err

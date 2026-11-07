@@ -1559,6 +1559,24 @@ async def test_media_player_get_queue_action_username_on_older_server(
     music_assistant_client.send_command.assert_not_called()
 
 
+async def test_media_player_get_queue_action_no_active_queue(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test get_queue raises a translated error when the player has no active queue."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.player_queues._queues.pop("test_group_player_1")
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_QUEUE,
+            {ATTR_ENTITY_ID: "media_player.test_group_player_1"},
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_key == "no_active_queue"
+
+
 async def test_media_player_select_source_action(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
