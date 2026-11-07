@@ -313,6 +313,7 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
             self.config_entry.runtime_data.basic_data_coordinator.data.firmware_release_date = firmware_data[
                 1
             ]
+            self.config_entry.runtime_data.basic_data_coordinator.async_update_listeners()
             device_registry = dr.async_get(self.hass)
             if device := device_registry.async_get_device_by_identifier(
                 identifier=(DOMAIN, self.config_entry.entry_id),
