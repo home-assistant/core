@@ -496,7 +496,7 @@ aiothreema==0.3.0
 aiotractive==2.0.0
 
 # homeassistant.components.truenas_ce
-aiotruenas==1.5.5
+aiotruenas==1.9.0
 
 # homeassistant.components.unifi
 aiounifi==98

@@ -1,40 +1,27 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This TrueNAS host is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "api_not_found": "Connection failed, API not found.",
-      "cannot_connect": "Failed to connect to host (TCP port closed or timeout).",
-      "certificate_verify_failed": "Certificate verification failed.",
-      "connection_refused": "Connection failed, connection refused.",
-      "handshake_timeout": "Connection failed, timed out while waiting for handshake response.",
-      "http_used": "The plain HTTP request was sent to HTTPS port. Reverse proxy?",
-      "invalid_hostname": "Invalid host. Enter only the hostname or IP address — without \"https://\", path or trailing slash.",
-      "invalid_key": "Login failed, invalid API key.",
-      "malformed_result": "API response is malformed.",
-      "proxy_intercepted": "Connection intercepted by a reverse proxy or SSO portal (e.g. Cloudflare Access). Point the integration at the TrueNAS host directly over your LAN/VPN, or exempt the WebSocket endpoint from the proxy's authentication.",
-      "timeout": "Connection failed, the API call timed out.",
-      "tlsv1_not_supported": "TLSv1 not supported. Reverse proxy?",
-      "unknown": "Unknown error occurred.",
-      "unknown_hostname": "Unknown hostname, check DNS.",
-      "websocket_not_supported": "WebSocket not supported. Reverse proxy?"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "permission_denied": "The API key's user lacks the permissions to read the system information.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "data": {
-          "api_key": "API key",
-          "data_unit": "Data size unit (GB or GiB)",
-          "host": "Host",
-          "verify_ssl": "Verify SSL certificate"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "api_key": "An API key generated in TrueNAS under Credentials > API Keys.",
-          "data_unit": "Choose whether data sizes are displayed using decimal (GB) or binary (GiB) units.",
-          "host": "The hostname or IP address of your TrueNAS instance, without \"https://\", path or trailing slash.",
-          "verify_ssl": "Verify the TrueNAS instance's SSL certificate. Disable only if you use a self-signed certificate you cannot otherwise validate."
-        },
-        "description": "Set up TrueNAS CE integration."
+          "api_key": "An API key generated in TrueNAS under Credentials > Users > API keys.",
+          "host": "The hostname or IP address of your TrueNAS system, without \"https://\" or a path.",
+          "verify_ssl": "Verify the TrueNAS system's SSL certificate. Disable it if TrueNAS uses its default self-signed certificate."
+        }
       }
     }
   },
@@ -42,9 +29,6 @@
     "sensor": {
       "system_cache_size_arc_value": {
         "name": "ARC size"
-      },
-      "system_cpu_temperature": {
-        "name": "Temperature"
       },
       "system_cpu_usage": {
         "name": "CPU usage"
@@ -67,32 +51,23 @@
       "system_memory_usage": {
         "name": "Memory usage"
       },
-      "system_uptime": {
-        "name": "Uptime"
-      },
       "traffic_rx": {
-        "name": "RX"
+        "name": "{interface} RX"
       },
       "traffic_tx": {
-        "name": "TX"
+        "name": "{interface} TX"
       }
     }
   },
   "exceptions": {
-    "connection_error": {
-      "message": "Error connecting to TrueNAS ({host}): {error}"
+    "invalid_auth": {
+      "message": "The TrueNAS API key was rejected."
     },
-    "disconnected": {
-      "message": "TrueNAS instance {host} disconnected"
+    "permission_denied": {
+      "message": "The TrueNAS API key's user lacks the permissions to read the system information."
     },
-    "interface_unavailable": {
-      "message": "Network interface information was not received from TrueNAS ({host})"
-    },
-    "invalid_api_key": {
-      "message": "Invalid TrueNAS API key for {host}"
-    },
-    "system_info_unavailable": {
-      "message": "Essential system information was not received from TrueNAS ({host})"
+    "update_failed": {
+      "message": "Error communicating with TrueNAS: {error}"
     }
   }
 }

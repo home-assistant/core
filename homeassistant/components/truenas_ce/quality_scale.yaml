@@ -2,7 +2,7 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: No custom actions/services in bronze scope; see the PR review guide's minimal-initial-submission guidance.
+    comment: This integration does not provide additional actions.
   appropriate-polling: done
   brands:
     status: todo
@@ -11,7 +11,9 @@ rules:
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide additional actions.
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
@@ -21,7 +23,9 @@ rules:
   docs-triggers:
     status: exempt
     comment: This integration does not have any triggers.
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities of this integration do not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -32,36 +36,24 @@ rules:
   # Silver
   action-exceptions:
     status: exempt
-    comment: No custom actions/services in bronze scope; see action-setup.
+    comment: This integration does not provide additional actions.
   config-entry-unloading: done
   docs-configuration-parameters:
-    status: todo
-    comment: Linked docs PR home-assistant/home-assistant.io#47351 still lists options (cron-skip toggle, poll interval) this Bronze scope does not expose; will be marked done once the docs PR is aligned.
+    status: exempt
+    comment: This integration does not have an options flow.
   docs-installation-parameters: done
-  entity-unavailable:
-    status: done
-    comment: Best-effort at ds-key (data_path) granularity, not per-entity -- see TrueNASCoordinator.is_data_path_failing. Covers a job that raises, tracked via _JOB_DATA_PATHS (get_systeminfo owns both "system_info" and "interface"; _query_interfaces is tracked separately under its own name so an interface.query failure doesn't also mark system_info unavailable). Deliberately does not cover best-effort enrichment on top of an otherwise-fresh result (the systemstats netdata graphs, TrueNAS version/virtualization detection) -- get_systemstats is intentionally omitted from _JOB_DATA_PATHS since folding it in would wrongly mark unrelated entities (hostname, version, uptime, ...) unavailable whenever only a netdata-graph fetch fails; it tracks its own graph failures via _record_failed_graphs (transition warning + cooldown) instead. system_info/interface are fetched via raw api.query(), raising directly on a non-dict/non-list response rather than silently keeping the previous snapshot.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: done
-    comment: Same job-outcome-transition tracking as entity-unavailable (_note_job_outcome) drives the logging -- one exception traceback per transition into failure, one info-level line on recovery, not a re-log per poll.
+  log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow:
-    status: todo
-    comment: Planned as a follow-up PR after the initial bronze PR merges.
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
-    comment: Planned as a follow-up PR after the initial bronze PR merges.
-  discovery:
-    status: todo
-    comment: Zeroconf discovery was implemented and then removed as part of the bronze-scope cut (not required for bronze); planned as a follow-up PR.
-  discovery-update-info:
-    status: todo
-    comment: Depends on discovery above.
+  diagnostics: todo
+  discovery: todo
+  discovery-update-info: todo
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -70,27 +62,27 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
-    status: todo
-    comment: Planned as a follow-up PR after the initial bronze PR merges.
+    status: exempt
+    comment: |
+      This integration has one device per config entry. Traffic sensors of
+      network interfaces that appear later are added without a reload.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: Planned as a follow-up PR after the initial bronze PR merges.
+  reconfiguration-flow: todo
   repair-issues:
-    status: todo
-    comment: Orphaned-statistics cleanup repair planned as a follow-up PR alongside stale-devices; the previous legacy-migration rollback repair was removed (Core integrations don't migrate from custom integrations).
+    status: exempt
+    comment: This integration does not raise any repair issues.
   stale-devices:
-    status: todo
-    comment: Planned as a follow-up PR after the initial bronze PR merges, alongside dynamic-devices and the orphaned-statistics cleanup repair.
+    status: exempt
+    comment: This integration has one device per config entry.
 
   # Platinum
   async-dependency: done
   inject-websession:
     status: exempt
-    comment: aiotruenas speaks JSON-RPC over its own websockets connection; no aiohttp/httpx session to inject.
+    comment: aiotruenas talks JSON-RPC over its own WebSocket connection; there is no aiohttp or httpx session to inject.
   strict-typing: done

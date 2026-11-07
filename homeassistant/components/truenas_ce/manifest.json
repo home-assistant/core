@@ -1,14 +1,13 @@
 {
   "domain": "truenas_ce",
   "name": "TrueNAS CE",
-  "after_dependencies": ["diagnostics"],
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@kayl-codes"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/truenas_ce",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["aiotruenas"],
   "quality_scale": "bronze",
-  "requirements": ["aiotruenas==1.5.5"]
+  "requirements": ["aiotruenas==1.9.0"]
 }
