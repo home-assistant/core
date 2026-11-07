@@ -7,6 +7,10 @@ from zoneinfo import ZoneInfo
 
 from pylondonair import Authority, LondonAirData, Pollutant, Site
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.components.london_air.const import CONF_LOCATIONS, DOMAIN
+from homeassistant.core import HomeAssistant
 
 UPDATED = datetime(2017, 8, 3, 3, 0, 0, tzinfo=ZoneInfo("Europe/London"))
 
@@ -113,8 +117,54 @@ def london_air_data() -> LondonAirData:
 @pytest.fixture
 def mock_london_air_client() -> Generator[AsyncMock]:
     """Mock the London Air client."""
-    with patch(
-        "homeassistant.components.london_air.sensor.LondonAirClient"
-    ) as mock_client_cls:
-        mock_client_cls.return_value.async_update = AsyncMock()
-        yield mock_client_cls.return_value
+    with (
+        patch(
+            "homeassistant.components.london_air.sensor.LondonAirClient"
+        ) as mock_sensor_client_cls,
+        patch(
+            "homeassistant.components.london_air.config_flow.LondonAirClient"
+        ) as mock_flow_client_cls,
+    ):
+        mock_client = mock_sensor_client_cls.return_value
+        mock_client.async_update = AsyncMock()
+        mock_client.async_test_connection = AsyncMock()
+        mock_flow_client_cls.return_value = mock_client
+        yield mock_client
+
+
+@pytest.fixture
+def locations() -> list[str]:
+    """Return the locations for the London Air config entry."""
+    return ["Merton"]
+
+
+@pytest.fixture
+def mock_config_entry(hass: HomeAssistant, locations: list[str]) -> MockConfigEntry:
+    """Mock an existing London Air config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_LOCATIONS: locations},
+        title="London Air",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+async def setup_entry(
+    hass: HomeAssistant,
+    locations: list[str],
+    mock_london_air_client: AsyncMock,
+    london_air_data: LondonAirData,
+) -> MockConfigEntry:
+    """Create and set up a London Air config entry."""
+    mock_london_air_client.async_update.return_value = london_air_data
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_LOCATIONS: locations},
+        title="London Air",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
