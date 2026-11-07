@@ -3,6 +3,11 @@
 from enum import StrEnum
 from typing import Any
 
+from regenmaschine import Client
+from regenmaschine.controller import Controller
+
+from homeassistant.core import callback
+
 
 class RunStates(StrEnum):
     """Define an enum for program/zone run states."""
@@ -27,3 +32,9 @@ def key_exists(data: dict[str, Any], search_key: str) -> bool:
         if isinstance(value, dict):
             return key_exists(value, search_key)
     return False
+
+
+@callback
+def get_client_controller(client: Client) -> Controller:
+    """Return the first local controller."""
+    return next(iter(client.controllers.values()))

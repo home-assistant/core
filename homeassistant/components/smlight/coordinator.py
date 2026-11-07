@@ -114,17 +114,22 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         self.unique_id = format_mac(info.MAC)
         self.legacy_api = info.legacy_api
 
+        issue_id = f"unsupported_firmware_{self.config_entry.entry_id}"
         if info.legacy_api == 2:
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                "unsupported_firmware",
+                issue_id,
                 is_fixable=False,
                 is_persistent=False,
                 learn_more_url="https://smlight.tech/flasher/#SLZB-06",
                 severity=IssueSeverity.ERROR,
                 translation_key="unsupported_firmware",
+                translation_placeholders={"name": self.config_entry.title},
+                config_entry_id=self.config_entry.entry_id,
             )
+        else:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
     @override
     async def _async_update_data(self) -> _DataT:
@@ -216,6 +221,10 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
     async def _internal_update_data(self) -> SmFwData:
         """Fetch data from the SMLIGHT device."""
         info = await self.client.get_info()
+        # Defer cloud discovery until the platforms have loaded.
+        if not self.data:
+            return SmFwData(info=info, esp_firmware=[], zb_firmware=[])
+
         if self.in_progress and self.data:
             return SmFwData(
                 info=info,

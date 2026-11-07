@@ -14,6 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     NOT_SNOOZ_SERVICE_INFO,
+    SNOOZ_SERVICE_INFO_CHARACTERISTIC_NAME,
     SNOOZ_SERVICE_INFO_NOT_PAIRING,
     SNOOZ_SERVICE_INFO_PAIRING,
     TEST_ADDRESS,
@@ -47,6 +48,18 @@ async def test_async_step_bluetooth_waits_to_pair(hass: HomeAssistant) -> None:
     assert result["step_id"] == "bluetooth_confirm"
 
     await _test_pairs(hass, result["flow_id"])
+
+
+async def test_async_step_bluetooth_characteristic_name(hass: HomeAssistant) -> None:
+    """Test discovery of a device advertising only the bare device name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=SNOOZ_SERVICE_INFO_CHARACTERISTIC_NAME,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    assert result["description_placeholders"] == {"name": TEST_SNOOZ_DISPLAY_NAME}
 
 
 async def test_async_step_bluetooth_retries_pairing(hass: HomeAssistant) -> None:

@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import override
 
 from aiovitesy.api import VitesyDevice
+from aiovitesy.const import PROGRAM_LEVELS
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -39,9 +40,6 @@ _FRIDGE_TEMPERATURE = "TMP01-SY"
 _DOOR_OPENINGS = "DOC-SY"
 _DOOR_OPEN_DURATION = "DOT-SY"
 _BATTERY = "battery"
-
-# Levels used by the fan and power fields of a program's metadata.
-PROGRAM_LEVELS = ["low", "mid", "high"]
 
 
 def _reading(device: VitesyDevice, group: str, reading_id: str) -> float | None:
@@ -171,7 +169,7 @@ SENSORS: tuple[VitesySensorEntityDescription, ...] = (
         translation_key="fan_speed",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=PROGRAM_LEVELS,
+        options=list(PROGRAM_LEVELS),
         value_fn=_program_level("fan"),
     ),
     VitesySensorEntityDescription(
@@ -179,7 +177,7 @@ SENSORS: tuple[VitesySensorEntityDescription, ...] = (
         translation_key="power_level",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=PROGRAM_LEVELS,
+        options=list(PROGRAM_LEVELS),
         value_fn=_program_level("power"),
     ),
     VitesySensorEntityDescription(
