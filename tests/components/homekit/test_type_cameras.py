@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, Generator
-from dataclasses import replace
 from datetime import timedelta
 import logging
 import struct
@@ -1880,12 +1879,11 @@ async def test_camera_secure_video_recording_ffmpeg_hangs(
 
 
 @pytest.mark.parametrize(
-    ("output", "seconds"),
+    "output",
     [
-        pytest.param(b"", 0.02, id="nothing"),
-        # The first fragment may wait for a camera keyframe.
-        pytest.param(INIT_SEGMENT, 0.02, id="init_only"),
-        pytest.param(INIT_SEGMENT + FRAGMENT, 0.004, id="after_video"),
+        pytest.param(b"", id="nothing"),
+        pytest.param(INIT_SEGMENT, id="init_only"),
+        pytest.param(INIT_SEGMENT + FRAGMENT, id="after_video"),
     ],
 )
 @pytest.mark.usefixtures("no_state_file", "recording_transport")
@@ -1895,7 +1893,6 @@ async def test_camera_secure_video_recording_stalls(
     recording_ffmpeg: MagicMock,
     caplog: pytest.LogCaptureFixture,
     output: bytes,
-    seconds: float,
 ) -> None:
     """Test a recording ends when ffmpeg stops delivering fragments."""
     stdout = asyncio.StreamReader()
@@ -1903,19 +1900,10 @@ async def test_camera_secure_video_recording_stalls(
     _ffmpeg_output(recording_ffmpeg, stdout, _closed_pipe(b""))
     acc = await _recording_camera(hass, run_driver)
 
-    with (
-        patch(
-            "homeassistant.components.homekit.type_cameras.RECORDING_STALL_FRAGMENTS",
-            0.001,
-        ),
-        patch(
-            "homeassistant.components.homekit.type_cameras.RECORDING_MIN_STALL_SECONDS",
-            0.02,
-        ),
-    ):
+    with patch("homeassistant.components.homekit.type_cameras.RECORDING_TIMEOUT", 0.01):
         packets = await _collect(acc)
     assert b"".join(packet.data for packet in packets) == output
-    assert f"ffmpeg delivered no video for {seconds} seconds" in caplog.text
+    assert "ffmpeg delivered no video for 0.01 seconds" in caplog.text
     recording_ffmpeg.kill.assert_called_once_with()
 
 
@@ -2227,28 +2215,17 @@ async def test_camera_secure_video_recording_permissions_change(
 
 
 @pytest.mark.parametrize(
-    ("config", "selection", "error"),
+    ("config", "error"),
     [
         pytest.param(
             {CONF_STREAM_SOURCE: "rtsp://user:pa'ss@cam"},
-            RECORDING_SELECTION,
             "No closing quotation",
             id="unbalanced_quote",
         ),
         pytest.param(
             {CONF_VIDEO_PROFILE_NAMES: ["baseline"]},
-            RECORDING_SELECTION,
             "list index out of range",
             id="unknown_profile",
-        ),
-        pytest.param(
-            {},
-            replace(
-                RECORDING_SELECTION,
-                recording=SupportedRecordingConfiguration(media_containers=[]),
-            ),
-            "list index out of range",
-            id="no_media_container",
         ),
     ],
 )
@@ -2259,12 +2236,10 @@ async def test_camera_secure_video_recording_cannot_build(
     recording_ffmpeg: MagicMock,
     caplog: pytest.LogCaptureFixture,
     config: dict[str, Any],
-    selection: SelectedRecordingConfiguration,
     error: str,
 ) -> None:
     """Test a recording that cannot be built is logged without starting ffmpeg."""
-    acc = await _secure_video_camera(hass, run_driver, **config)
-    acc.set_selected_recording_configuration(to_base64_str(selection.encode()))
+    acc = await _recording_camera(hass, run_driver, **config)
     assert await _collect(acc) == []
     assert f"Cannot build the recording: {error}" in caplog.text
     recording_ffmpeg.open.assert_not_called()

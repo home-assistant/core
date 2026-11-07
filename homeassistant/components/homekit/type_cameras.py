@@ -129,10 +129,9 @@ RECORDING_SAMPLE_RATES = {
     AudioSampleRate.KHZ_48: 48000,
 }
 
-# A recording ends when ffmpeg delivers no fragment for this many fragment lengths.
-RECORDING_STALL_FRAGMENTS = 3
-# Covers connecting to the camera, and a copied stream waiting for a keyframe.
-RECORDING_MIN_STALL_SECONDS = 30
+# A recording ends when ffmpeg delivers no fragment for this long. Covers
+# connecting to the camera and waiting for its next keyframe.
+RECORDING_TIMEOUT = 30
 RECORDING_STDERR_LINES = 10
 RECORDING_STDERR_CHUNK = 65536
 # ffmpeg exits right after its output ends, a hang must not block the recording.
@@ -165,14 +164,6 @@ def with_input_flag(input_source: str) -> str:
     if "-i " not in input_source:
         return "-i " + input_source
     return input_source
-
-
-def recording_frame_rate(max_fps: int) -> int:
-    """Return the highest recording frame rate within max_fps."""
-    return next(
-        (fps for fps in RECORDING_FRAME_RATES if fps <= max_fps),
-        RECORDING_FRAME_RATES[-1],
-    )
 
 
 def recording_ffmpeg_args(
@@ -346,7 +337,10 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             (height, width) if max_height > max_width else (width, height)
             for width, height in RECORDING_RESOLUTIONS
         ]
-        self._recording_fps = recording_frame_rate(max_fps)
+        self._recording_fps = next(
+            (fps for fps in RECORDING_FRAME_RATES if fps <= max_fps),
+            RECORDING_FRAME_RATES[-1],
+        )
         self._recording_problem_logged = False
 
         self.secure_video = False
@@ -797,9 +791,6 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             input_args, output = recording_ffmpeg_args(
                 self.config, selected, input_source, self._recording_with_audio
             )
-            fragment_seconds = (
-                selected.recording.media_containers[0].fragment_length_ms / 1000
-            )
         except (ValueError, LookupError) as err:
             # A stream source shlex cannot split or a format we did not advertise.
             self._log_recording_problem("[%s] Cannot build the recording: %s", err)
@@ -821,18 +812,12 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             self._async_collect_stderr(await stream.get_reader(FFMPEG_STDERR), stderr),
             f"homekit.camera-recording-stderr-{self.entity_id}",
         )
-        stall_timeout = fragment_seconds * RECORDING_STALL_FRAGMENTS
-        # Connecting to the camera, or waiting for a copied keyframe, takes longer.
-        first_timeout = max(stall_timeout, RECORDING_MIN_STALL_SECONDS)
-        if self.config[CONF_VIDEO_CODEC] == VIDEO_CODEC_COPY:
-            stall_timeout = first_timeout
-        timeout = first_timeout
         packets = fmp4_recording_packets(await stream.get_reader())
         sent_packets = 0
         try:
             while True:
                 try:
-                    async with asyncio.timeout(timeout):
+                    async with asyncio.timeout(RECORDING_TIMEOUT):
                         packet = await anext(packets)
                 except StopAsyncIteration:
                     if not await self._async_recording_failed(
@@ -844,7 +829,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                     self._log_recording_problem(
                         "[%s] Recording ended, ffmpeg delivered no video for %s"
                         " seconds: %s",
-                        timeout,
+                        RECORDING_TIMEOUT,
                         b" ".join(stderr).decode(errors="replace"),
                     )
                     return
@@ -858,8 +843,6 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 sent_packets += 1
                 if sent_packets == RECORDING_FIRST_VIDEO_PACKET:
                     self._recording_problem_logged = False
-                    # The first fragment waits for a camera keyframe, later ones not.
-                    timeout = stall_timeout
                 yield packet
                 if packet.is_last:
                     return
