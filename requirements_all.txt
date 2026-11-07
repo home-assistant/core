@@ -151,7 +151,7 @@ aerosmart-modbus==0.3.2
 afsapi==1.0.2
 
 # homeassistant.components.agent_dvr
-agent-py==0.0.24
+agent-py==0.0.25
 
 # homeassistant.components.geo_json_events
 aio-geojson-generic-client==0.5
