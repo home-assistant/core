@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
@@ -264,11 +265,13 @@ SOLARLOG_BASIC_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, .
         key="firmware_release_date",
         translation_key="firmware_release_date",
         device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.firmware_release_date,
     ),
     SolarLogCoordinatorSensorEntityDescription(
         key="firmware_version",
         translation_key="firmware_version",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.firmware_version,
     ),
 )
