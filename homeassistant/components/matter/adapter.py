@@ -38,6 +38,35 @@ def get_clean_name(name: str | None) -> str | None:
     return name.strip() or None
 
 
+def get_suggested_area(endpoint: MatterEndpoint) -> str | None:
+    """Return the Matter Actions cluster Room name for the endpoint's device.
+
+    A bridge (e.g. a Hue Bridge) advertises its rooms as EndpointListStruct entries of
+    type Room on the Actions cluster, wherever it exposes that cluster, each listing the
+    bridged endpoints in that room. Returns None rather than guessing when the endpoint
+    is in no room, or in more than one with conflicting names.
+    """
+    candidate_ids = {
+        endpoint.endpoint_id,
+        *endpoint.node.get_compose_child_ids(endpoint.endpoint_id),
+    }
+    room_names: set[str] = set()
+    for action_endpoint in endpoint.node.endpoints.values():
+        actions = action_endpoint.get_cluster(clusters.Actions)
+        if actions is None:
+            continue
+        for endpoint_list in actions.endpointLists:
+            if endpoint_list.type != clusters.Actions.Enums.EndpointListTypeEnum.kRoom:
+                continue
+            if not candidate_ids & set(endpoint_list.endpoints):
+                continue
+            if room_name := get_clean_name(endpoint_list.name):
+                room_names.add(room_name)
+    if len(room_names) == 1:
+        return room_names.pop()
+    return None
+
+
 class MatterAdapter:
     """Connect Matter into Home Assistant."""
 
@@ -279,6 +308,7 @@ class MatterAdapter:
             model=model_name,
             model_id=model_id,
             serial_number=serial_number,
+            suggested_area=get_suggested_area(endpoint),
             via_device_id=via_device_id,
         )
 

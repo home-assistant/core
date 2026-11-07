@@ -7,11 +7,15 @@ from matter_server.common.models import EventType
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.matter.adapter import get_clean_name
+from homeassistant.components.matter.adapter import get_clean_name, get_suggested_area
 from homeassistant.components.matter.const import DOMAIN, ID_TYPE_DEVICE_ID
 from homeassistant.components.matter.helpers import get_device_id
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from .common import create_node_from_fixture
 
@@ -484,6 +488,71 @@ async def test_get_clean_name() -> None:
     assert get_clean_name("") is None
     assert get_clean_name("Mock device") == "Mock device"
     assert get_clean_name("Mock device                    \x00") == "Mock device"
+
+
+@pytest.mark.parametrize(
+    ("endpoint_id", "area_name"),
+    [
+        (2, "Living Room"),
+        (3, "Living Room"),
+        (4, "Bedroom"),
+        (5, None),
+    ],
+    ids=[
+        "plug_in_room",
+        "other_vendor_in_same_room",
+        "device_in_other_room",
+        "device_without_room",
+    ],
+)
+async def test_get_suggested_area(endpoint_id: int, area_name: str | None) -> None:
+    """Test get_suggested_area resolves Room groups advertised on the Actions cluster.
+
+    Endpoints 2 and 3 (from different vendors) are grouped under the "Living Room" Room,
+    endpoint 4 under "Bedroom", and endpoint 5 is only listed under a Zone group
+    (type kZone, not kRoom), so it gets no suggestion.
+    """
+    node = create_node_from_fixture("mock_bridge_rooms")
+    assert get_suggested_area(node.endpoints[endpoint_id]) == area_name
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_bridge_rooms"])
+@pytest.mark.parametrize(
+    ("endpoint_id", "area_name"),
+    [
+        (2, "Living Room"),
+        (3, "Living Room"),
+        (4, "Bedroom"),
+        (5, None),
+    ],
+    ids=[
+        "plug_in_room",
+        "other_vendor_in_same_room",
+        "device_in_other_room",
+        "device_without_room",
+    ],
+)
+async def test_device_registry_suggested_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    endpoint_id: int,
+    area_name: str | None,
+) -> None:
+    """Test a bridged device is created with the area its bridge's Actions cluster suggests."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    device_entry = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, endpoint_id), entry_id
+    )
+    assert device_entry is not None
+    if area_name is None:
+        assert device_entry.area_id is None
+    else:
+        assert (
+            device_entry.area_id == area_registry.async_get_area_by_name(area_name).id
+        )
 
 
 async def test_bad_node_not_crash_integration(
