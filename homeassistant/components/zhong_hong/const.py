@@ -16,6 +16,8 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_GATEWAY_ADDRESS: Final = "gateway_address"
 
+CONF_FAN_MODES: Final = "fan_modes"
+
 FAN_MEDIUM_LOW: Final = "medium_low"
 FAN_MEDIUM_HIGH: Final = "medium_high"
 

@@ -6,12 +6,25 @@ from typing import Any, override
 import probatio
 from zhong_hong_hvac.hub import ZhongHongGateway
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import (
+    ALL_FAN_MODES,
+    CONF_FAN_MODES,
     CONF_GATEWAY_ADDRESS,
     DEFAULT_GATEWAY_ADDRESS,
     DEFAULT_PORT,
@@ -26,6 +39,19 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(
             CONF_GATEWAY_ADDRESS, default=DEFAULT_GATEWAY_ADDRESS
         ): cv.positive_int,
+    }
+)
+
+OPTIONS_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_FAN_MODES): SelectSelector(
+            SelectSelectorConfig(
+                options=ALL_FAN_MODES,
+                multiple=True,
+                mode=SelectSelectorMode.LIST,
+                translation_key="fan_modes",
+            )
+        )
     }
 )
 
@@ -65,6 +91,13 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ZhongHong."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Return the options flow."""
+        return ZhongHongOptionsFlow()
 
     @override
     async def async_step_user(
@@ -120,3 +153,41 @@ class ZhongHongConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=error)
 
         return self.async_create_entry(title=import_data[CONF_HOST], data=import_data)
+
+
+class ZhongHongOptionsFlow(OptionsFlowWithReload):
+    """Handle the ZhongHong options.
+
+    The fan speeds are chosen here because the protocol cannot report which of
+    its five speeds a unit has: one that lacks a speed looks the same as one
+    that never ran at it. Choosing them drops the speeds a unit does not have,
+    which would otherwise be offered and do nothing when picked.
+    """
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user choose the fan speeds their air conditioners have."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            # The selector cannot enforce a minimum on its own, so an empty
+            # choice is caught here to keep an air conditioner from being left
+            # with no speed to offer.
+            if user_input[CONF_FAN_MODES]:
+                return self.async_create_entry(data=user_input)
+            errors[CONF_FAN_MODES] = "no_fan_modes_selected"
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA,
+                user_input
+                or {
+                    CONF_FAN_MODES: self.config_entry.options.get(
+                        CONF_FAN_MODES, ALL_FAN_MODES
+                    )
+                },
+            ),
+            errors=errors,
+        )
