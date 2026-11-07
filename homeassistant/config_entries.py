@@ -3414,6 +3414,58 @@ class ConfigFlow(ConfigEntryBaseFlow):
             self.handler, unique_id
         )
 
+    async def async_set_unique_id_or_abort(
+        self,
+        unique_id: str | None,
+        *,
+        raise_on_progress: bool | None = None,
+        updates: dict[str, Any] | None = None,
+        reload_on_update: bool = True,
+        reason: str | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
+    ) -> None:
+        """Set the unique ID and abort the flow if it conflicts.
+
+        Reauth and reconfigure flows run `_abort_if_unique_id_mismatch`, other
+        flows run `_abort_if_unique_id_configured`. `updates` and
+        `reload_on_update` only apply to the latter. `reason` overrides the
+        default abort reason of either check.
+
+        `raise_on_progress` defaults to False for user flows, so they take
+        precedence over a discovery flow for the same device, and for reauth
+        and reconfigure flows, which can't create a duplicate entry. It
+        defaults to True otherwise.
+
+        Requires strings.json entries for the abort reasons in user visible
+        flows: `already_configured` and `unique_id_mismatch`, or `reason`.
+
+        Use `async_set_unique_id` with the separate checks instead when:
+        - a reauth or reconfigure flow may change the unique ID of the entry,
+        - a reauth or reconfigure flow runs on entries without a unique ID,
+          for example to backfill it,
+        - a step shared by several sources needs a different reason or
+          placeholders for each check.
+        """
+        if raise_on_progress is None:
+            raise_on_progress = self.source not in (
+                SOURCE_USER,
+                SOURCE_REAUTH,
+                SOURCE_RECONFIGURE,
+            )
+        await self.async_set_unique_id(unique_id, raise_on_progress=raise_on_progress)
+        if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            self._abort_if_unique_id_mismatch(
+                reason=reason or "unique_id_mismatch",
+                description_placeholders=description_placeholders,
+            )
+            return
+        self._abort_if_unique_id_configured(
+            updates,
+            reload_on_update,
+            error=reason or "already_configured",
+            description_placeholders=description_placeholders,
+        )
+
     @callback
     def _set_confirm_only(
         self,

@@ -1,7 +1,8 @@
 """Checker for config flow tests that do not assert the entry's unique ID.
 
 Only ``tests/components/<domain>/test_config_flow.py`` modules are checked,
-and only when the integration's config flow calls ``async_set_unique_id``.
+and only when the integration's config flow calls ``async_set_unique_id`` or
+``async_set_unique_id_or_abort``.
 
 A happy path config flow test should check the unique ID of the entry it
 creates, for example with ``assert result["result"].unique_id == "1234"``.
@@ -31,7 +32,7 @@ _OTHER_FLOW_MANAGERS = frozenset({"options", "subentries"})
 
 
 def _calls_set_unique_id(source: Path) -> bool:
-    """Return True if *source* calls ``async_set_unique_id``."""
+    """Return True if *source* sets a unique ID."""
     try:
         module = astroid.parse(source.read_text())
     except astroid.exceptions.AstroidSyntaxError:
@@ -39,8 +40,12 @@ def _calls_set_unique_id(source: Path) -> bool:
     for call in module.nodes_of_class(nodes.Call):
         match call.func:
             case (
-                nodes.Attribute(attrname="async_set_unique_id")
-                | nodes.Name(name="async_set_unique_id")
+                nodes.Attribute(
+                    attrname="async_set_unique_id" | "async_set_unique_id_or_abort"
+                )
+                | nodes.Name(
+                    name="async_set_unique_id" | "async_set_unique_id_or_abort"
+                )
             ):
                 return True
     return False
