@@ -283,13 +283,9 @@ class DashboardsCollection(collection.DictStorageCollection):
             storage.Store(hass, DASHBOARDS_STORAGE_VERSION, DASHBOARDS_STORAGE_KEY),
         )
 
-    @override
-    async def _process_create_data(self, data: dict) -> dict:
-        """Validate the config is valid."""
-        url_path = data[CONF_URL_PATH]
-
-        allow_single_word = data.pop(CONF_ALLOW_SINGLE_WORD, False)
-
+    @callback
+    def _validate_url_path(self, url_path: str, allow_single_word: bool) -> None:
+        """Validate a new url path."""
         if not allow_single_word and "-" not in url_path:
             raise probatio.Invalid("Url path needs to contain a hyphen (-)")
 
@@ -300,6 +296,11 @@ class DashboardsCollection(collection.DictStorageCollection):
                 translation_placeholders={"url": url_path},
             )
 
+    @override
+    async def _process_create_data(self, data: dict) -> dict:
+        """Validate the config is valid."""
+        allow_single_word = data.pop(CONF_ALLOW_SINGLE_WORD, False)
+        self._validate_url_path(data[CONF_URL_PATH], allow_single_word)
         return self.CREATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
@@ -312,6 +313,18 @@ class DashboardsCollection(collection.DictStorageCollection):
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
+        allow_single_word = update_data.pop(CONF_ALLOW_SINGLE_WORD, False)
+
+        url_path = update_data.get(CONF_URL_PATH, item[CONF_URL_PATH])
+        if url_path != item[CONF_URL_PATH]:
+            # The migrated default dashboard is looked up by this url path.
+            if item[CONF_URL_PATH] == DOMAIN:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="default_url_path_change",
+                )
+            self._validate_url_path(url_path, allow_single_word)
+
         updated = {**item, **update_data}
 
         if CONF_ICON in updated and updated[CONF_ICON] is None:

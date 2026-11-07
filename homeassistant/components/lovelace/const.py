@@ -95,7 +95,11 @@ STORAGE_DASHBOARD_CREATE_FIELDS: VolDictType = {
     probatio.Optional(CONF_ALLOW_SINGLE_WORD): bool,
 }
 
-STORAGE_DASHBOARD_UPDATE_FIELDS = DASHBOARD_BASE_UPDATE_FIELDS
+STORAGE_DASHBOARD_UPDATE_FIELDS: VolDictType = {
+    **DASHBOARD_BASE_UPDATE_FIELDS,
+    probatio.Optional(CONF_URL_PATH): cv.string,
+    probatio.Optional(CONF_ALLOW_SINGLE_WORD): bool,
+}
 
 
 class ConfigNotFound(HomeAssistantError):
