@@ -9,6 +9,7 @@
         'data': dict({
           'model': 'openai/gpt-3.5-turbo',
           'prompt': '**REDACTED**',
+          'reasoning': 'auto',
           'web_search': False,
         }),
         'subentry_type': 'conversation',
