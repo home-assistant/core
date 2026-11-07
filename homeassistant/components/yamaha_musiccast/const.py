@@ -18,6 +18,8 @@ ATTR_MC_LINK_SOURCES = [ATTR_MC_LINK, ATTR_MAIN_SYNC]
 
 CONF_UPNP_DESC = "upnp_description"
 CONF_SERIAL = "serial"
+CONF_HIDDEN_SOURCES = "hidden_sources"
+CONF_DISPLAYED_SOURCES = "displayed_sources"
 
 DEFAULT_ZONE = "main"
 HA_REPEAT_MODE_TO_MC_MAPPING = {
