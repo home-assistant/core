@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .const import QUEUE_SETTINGS_SCHEMA_VERSION
+from .const import PLAYER_SETTINGS_SCHEMA_VERSION
 from .entity import MusicAssistantEntity, MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
@@ -76,11 +76,9 @@ async def async_setup_entry(
             return
         entities: list[SwitchEntity] = []
         assert mass.server_info  # for type checking
-        # older servers lack the commands, so their players keep only the option switches
-        if (
-            mass.server_info.schema_version >= QUEUE_SETTINGS_SCHEMA_VERSION
-            and mass.player_queues.get(player_id) is not None
-        ):
+        # older servers lack the commands, so their players keep only the option switches;
+        # the queue itself may still be missing, the server adds it after the player
+        if mass.server_info.schema_version >= PLAYER_SETTINGS_SCHEMA_VERSION:
             entities.extend(
                 MusicAssistantQueueSwitch(mass, player_id, description)
                 for description in QUEUE_SWITCHES
@@ -163,6 +161,15 @@ class MusicAssistantQueueSwitch(MusicAssistantEntity, SwitchEntity):
         """Initialize MusicAssistantQueueSwitch."""
         super().__init__(mass, player_id)
         self.entity_description = entity_description
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the player and its queue are available."""
+        return (
+            super().available
+            and self.mass.player_queues.get(self.player_id) is not None
+        )
 
     @property
     @override

@@ -10,7 +10,7 @@
         "default": "mdi:playlist-play"
       },
       "queue_crossfade": {
-        "default": "mdi:shuffle-variant"
+        "default": "mdi:set-center"
       }
     }
   },
