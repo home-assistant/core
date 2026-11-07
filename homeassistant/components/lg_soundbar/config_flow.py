@@ -1,14 +1,20 @@
 """Config flow to configure the LG Soundbar integration."""
 
-import logging
-from queue import Empty, Full, Queue
-from typing import override
+from typing import Any, override
 
+from aiotemescal import (
+    MSG_MAC_INFO_DEV,
+    MSG_PRODUCT_INFO,
+    MSG_SPK_LIST_VIEW_INFO,
+    TemescalClient,
+    TemescalConnectionError,
+    TemescalTimeoutError,
+)
 import probatio
-import temescal
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -16,55 +22,31 @@ DATA_SCHEMA = {
     probatio.Required(CONF_HOST): str,
 }
 
-_LOGGER = logging.getLogger(__name__)
 
-QUEUE_TIMEOUT = 10
-
-
-def test_connect(host, port):
-    """LG Soundbar config flow test_connect."""
-    uuid_q = Queue(maxsize=1)
-    name_q = Queue(maxsize=1)
-
-    def check_msg_response(response, msgs, attr):
-        msg = response["msg"]
-        if msg == msgs or msg in msgs:
-            if "data" in response and attr in response["data"]:
-                return True
-            _LOGGER.debug(
-                "[%s] msg did not contain expected attr [%s]: %s", msg, attr, response
-            )
-        return False
-
-    def queue_add(attr_q, data):
-        try:
-            attr_q.put_nowait(data)
-        except Full:
-            _LOGGER.debug("attempted to add [%s] to full queue", data)
-
-    def msg_callback(response):
-        if check_msg_response(response, ["MAC_INFO_DEV", "PRODUCT_INFO"], "s_uuid"):
-            queue_add(uuid_q, response["data"]["s_uuid"])
-        if check_msg_response(response, "SPK_LIST_VIEW_INFO", "s_user_name"):
-            queue_add(name_q, response["data"]["s_user_name"])
-
-    details = {}
-
+async def _async_get_data(client: TemescalClient, msg: str) -> dict[str, Any]:
+    """Return the data the device answers with, empty if it does not answer."""
     try:
-        connection = temescal.temescal(host, port=port, callback=msg_callback)
-        connection.get_info()
-        connection.get_mac_info()
-        if uuid_q.empty():
-            connection.get_product_info()
-        details["name"] = name_q.get(timeout=QUEUE_TIMEOUT)
-        details["uuid"] = uuid_q.get(timeout=QUEUE_TIMEOUT)
-    except Empty:
-        pass
-    except TimeoutError as err:
-        raise ConnectionError(f"Connection timeout with server: {host}:{port}") from err
-    except OSError as err:
-        raise ConnectionError(f"Cannot resolve hostname: {host}") from err
+        response = await client.request(msg)
+    except TemescalTimeoutError:
+        return {}
+    return response.get("data") or {}
 
+
+async def async_get_details(host: str, port: int) -> dict[str, str]:
+    """Return the name and, if the device reports one, the uuid of a soundbar.
+
+    Nothing is returned when the device does not report its name.
+    """
+    async with TemescalClient(host, port) as client:
+        speaker = await _async_get_data(client, MSG_SPK_LIST_VIEW_INFO)
+        if "s_user_name" not in speaker:
+            return {}
+        details = {"name": speaker["s_user_name"]}
+        # Not every model reports its uuid in MAC_INFO_DEV
+        for msg in (MSG_MAC_INFO_DEV, MSG_PRODUCT_INFO):
+            if uuid := (await _async_get_data(client, msg)).get("s_uuid"):
+                details["uuid"] = uuid
+                break
     return details
 
 
@@ -73,28 +55,31 @@ class LGSoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _host: str
+    _port: int
+    _name: str
+
     @override
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_form()
 
         errors = {}
         try:
-            details = await self.hass.async_add_executor_job(
-                test_connect, user_input[CONF_HOST], DEFAULT_PORT
-            )
-        except ConnectionError:
+            details = await async_get_details(user_input[CONF_HOST], DEFAULT_PORT)
+        except TemescalConnectionError:
             errors["base"] = "cannot_connect"
         else:
-            if len(details) != 0:
+            if details:
                 info = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: DEFAULT_PORT,
                 }
                 if "uuid" in details:
-                    unique_id = details["uuid"]
-                    await self.async_set_unique_id(unique_id)
+                    await self.async_set_unique_id(details["uuid"])
                     self._abort_if_unique_id_configured()
                 else:
                     self._async_abort_entries_match(info)
@@ -103,7 +88,47 @@ class LGSoundbarConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._show_form(errors)
 
-    def _show_form(self, errors=None):
+    @override
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a soundbar announcing itself over mDNS."""
+        self._host = discovery_info.host
+        self._port = discovery_info.port or DEFAULT_PORT
+        self._async_abort_entries_match({CONF_HOST: self._host})
+
+        try:
+            details = await async_get_details(self._host, self._port)
+        except TemescalConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        if not details:
+            return self.async_abort(reason="no_data")
+        # The uuid of the announcement differs from the one the device reports,
+        # which identifies entries set up by hand
+        if "uuid" not in details:
+            return self.async_abort(reason="not_supported")
+
+        await self.async_set_unique_id(details["uuid"])
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+        self._name = details["name"]
+        self.context["title_placeholders"] = {"name": self._name}
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the setup of a discovered soundbar."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="zeroconf_confirm",
+                description_placeholders={"name": self._name},
+            )
+        return self.async_create_entry(
+            title=self._name,
+            data={CONF_HOST: self._host, CONF_PORT: self._port},
+        )
+
+    def _show_form(self, errors: dict[str, str] | None = None) -> ConfigFlowResult:
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
