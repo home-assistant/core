@@ -7,21 +7,28 @@ import logging
 from typing import Any, override
 
 import switchbot
+from switchbot import SwitchbotModel
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import STATE_ON
+from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import AIRPURIFIER_BASIC_MODELS, AIRPURIFIER_TABLE_MODELS, DOMAIN
+from .const import (
+    AIRPURIFIER_BASIC_MODELS,
+    AIRPURIFIER_TABLE_MODELS,
+    CONF_BOT_PRESS_BUTTON,
+    DEFAULT_BOT_PRESS_BUTTON,
+    DOMAIN,
+)
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotSwitchedEntity, exception_handler
+from .entity import SwitchbotSwitchedEntity, async_remove_entity, exception_handler
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -111,6 +118,11 @@ async def async_setup_entry(
             SwitchbotGenericSwitch(coordinator, desc)
             for desc in CIRCULATOR_FAN_PRO_SWITCHES
         )
+    elif coordinator.model is SwitchbotModel.BOT and entry.options.get(
+        CONF_BOT_PRESS_BUTTON, DEFAULT_BOT_PRESS_BUTTON
+    ):
+        # The Bot is exposed as a button by the button platform instead
+        async_remove_entity(hass, Platform.SWITCH, coordinator.base_unique_id)
     else:
         async_add_entities([SwitchBotSwitch(coordinator)])
 
