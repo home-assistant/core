@@ -83,8 +83,10 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the energy-price sensors for an offtake-only and a dual-direction EAN."""
+    freezer.move_to(datetime(2026, 11, 15, 12, 0, tzinfo=BRUSSELS_TIME_ZONE))
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
