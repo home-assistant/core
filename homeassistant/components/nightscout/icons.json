@@ -1,0 +1,23 @@
+{
+  "entity": {
+    "sensor": {
+      "glucose_change": {
+        "default": "mdi:delta"
+      },
+      "glucose_trend": {
+        "default": "mdi:help",
+        "state": {
+          "falling": "mdi:arrow-down",
+          "falling_quickly": "mdi:chevron-double-down",
+          "falling_slightly": "mdi:arrow-bottom-right",
+          "falling_very_quickly": "mdi:chevron-triple-down",
+          "rising": "mdi:arrow-up",
+          "rising_quickly": "mdi:chevron-double-up",
+          "rising_slightly": "mdi:arrow-top-right",
+          "rising_very_quickly": "mdi:chevron-triple-up",
+          "steady": "mdi:arrow-right"
+        }
+      }
+    }
+  }
+}
