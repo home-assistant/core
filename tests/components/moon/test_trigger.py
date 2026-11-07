@@ -6,13 +6,19 @@ from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from skyfield.units import Angle
 
 from homeassistant.components import automation
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-_PHASE = "homeassistant.components.moon.helpers.moon.phase"
+_PHASE = "homeassistant.components.moon.helpers.almanac.moon_phase"
+
+
+def _phase_angle(phase_value: float) -> Angle:
+    """Convert a phase value on the 28-day scale to a Skyfield angle."""
+    return Angle(degrees=phase_value * 360 / 28)
 
 
 @pytest.fixture(autouse=True)
@@ -56,11 +62,11 @@ async def test_phase_changed_fires_on_any_change(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test the trigger fires on every phase change when unfiltered."""
-    with patch(_PHASE, return_value=0.0):
+    with patch(_PHASE, return_value=_phase_angle(0.0)):
         await _arm(hass)
     assert len(service_calls) == 0
 
-    with patch(_PHASE, return_value=14.0):
+    with patch(_PHASE, return_value=_phase_angle(14.0)):
         async_fire_time_changed(hass, _next_local_midnight())
         await hass.async_block_till_done()
 
@@ -73,7 +79,7 @@ async def test_phase_changed_ignores_same_phase(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test the trigger does not fire when the phase is unchanged."""
-    with patch(_PHASE, return_value=14.0):
+    with patch(_PHASE, return_value=_phase_angle(14.0)):
         await _arm(hass)
         async_fire_time_changed(hass, _next_local_midnight())
         await hass.async_block_till_done()
@@ -92,10 +98,10 @@ async def test_phase_changed_with_phase_filter(
     expected_calls: int,
 ) -> None:
     """Test the trigger only fires for the configured phase."""
-    with patch(_PHASE, return_value=0.0):
+    with patch(_PHASE, return_value=_phase_angle(0.0)):
         await _arm(hass, options={"phase": "full_moon"})
 
-    with patch(_PHASE, return_value=new_value):
+    with patch(_PHASE, return_value=_phase_angle(new_value)):
         async_fire_time_changed(hass, _next_local_midnight())
         await hass.async_block_till_done()
 

@@ -14,7 +14,7 @@ from homeassistant.helpers.condition import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_PHASE
-from .helpers import MOON_PHASES, is_waxing, moon_phase
+from .helpers import MOON_PHASES, get_moon_data, is_waxing, moon_phase
 
 _STATE_CONDITION_SCHEMA = probatio.Schema(
     {probatio.Required(CONF_OPTIONS, default=dict): {}}
@@ -46,7 +46,7 @@ class _WaxingCondition(_MoonStateCondition):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
-        return is_waxing()
+        return is_waxing(get_moon_data(self._hass))
 
 
 class _WaningCondition(_MoonStateCondition):
@@ -55,7 +55,7 @@ class _WaningCondition(_MoonStateCondition):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
-        return not is_waxing()
+        return not is_waxing(get_moon_data(self._hass))
 
 
 class _IsPhaseCondition(Condition):
@@ -78,7 +78,7 @@ class _IsPhaseCondition(Condition):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
-        return moon_phase() == self._phase
+        return moon_phase(get_moon_data(self._hass)) == self._phase
 
 
 CONDITIONS: dict[str, type[Condition]] = {
