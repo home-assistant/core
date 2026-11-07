@@ -81,7 +81,7 @@ async def async_setup_entry(
 
     async def _create_device_sensor_entities(
         device: OmadaListDevice,
-    ) -> None:
+    ) -> bool:
         """Create sensor entities for a device."""
         async_add_entities(
             [
@@ -90,6 +90,7 @@ async def async_setup_entry(
                 if desc.exists_func(device)
             ]
         )
+        return True
 
     await controller.async_register_device_entities(
         lambda _: True,
@@ -98,11 +99,13 @@ async def async_setup_entry(
 
     async def _create_switch_port_sensor_entities(
         device: OmadaListDevice,
-    ) -> None:
+    ) -> bool:
         """Create sensor entities for a switch's ports."""
         switch = await controller.omada_client.get_switch(device)
         coordinator = controller.get_switch_port_coordinator(switch)
         await coordinator.async_refresh()
+        if not coordinator.last_update_success:
+            return False
 
         entities: list[Entity] = [
             OmadaSwitchPortSensor(
@@ -117,6 +120,7 @@ async def async_setup_entry(
             if desc.exists_func(switch, port)
         ]
         async_add_entities(entities)
+        return True
 
     await controller.async_register_device_entities(
         lambda d: (
