@@ -104,6 +104,7 @@ class BlinkBinarySensor(CoordinatorEntity[BlinkUpdateCoordinator], BinarySensorE
             self.entity_description.key,
             is_on,
         )
-        if self.entity_description.key == TYPE_BATTERY:
+        if self.entity_description.key == TYPE_BATTERY and is_on is not None:
+            # Wired cameras do not report a battery state
             is_on = is_on != "ok"
         self._attr_is_on = is_on
