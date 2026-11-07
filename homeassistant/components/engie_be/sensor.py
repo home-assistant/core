@@ -3,10 +3,19 @@
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-from datetime import timedelta
-from typing import TYPE_CHECKING, override
+from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, Any, Literal, override
 
-from aioengiebelgium import EpexGranularity, EpexSlot, bare_ean
+from aioengiebelgium import (
+    ActiveTouPrice,
+    EpexGranularity,
+    EpexSlot,
+    TouDirectionSchedule,
+    TouSchedule,
+    TouScheduleItem,
+    bare_ean,
+    canonicalise_slot_code,
+)
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -16,6 +25,7 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -25,27 +35,37 @@ from .coordinator import (
     EngieBeEpexCoordinator,
     EngieBePricesCoordinator,
     EngieBePricesData,
+    EngieBeTouCoordinator,
     epex_slot_covering,
     epex_slots_cover_day,
     epex_slots_for_day,
-    normalize_slot_code,
+    lookup_by_ean,
 )
 
 if TYPE_CHECKING:
-    from . import EngieBeConfigEntry
+    from . import EngieBeConfigEntry, EngieBeHouseholdCoordinators
 
 PARALLEL_UPDATES = 0
 
 _UNIT = "EUR/kWh"
 _SLOT_CODE_SUFFIXES = {
-    "TOTAL_HOURS": "",
-    "PEAK": "_peak",
-    "OFFPEAK": "_offpeak",
-    "SUPEROFFPEAK": "_superoffpeak",
+    "total_hours": "",
+    "peak": "_peak",
+    "offpeak": "_offpeak",
+    "superoffpeak": "_superoffpeak",
 }
 _FALLBACK_SLOT_SUFFIX = "_slot"
 _ENERGY_TYPE_KEYS = {"ELECTRICITY": "electricity", "GAS": "gas"}
 _FALLBACK_TYPE_KEY = "energy"
+_WEEKDAY_FIELDS = (
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+)
 
 
 def _energy_type_key(ean: str, ean_energy_types: Mapping[str, str | None]) -> str:
@@ -61,6 +81,89 @@ def _duplicate_type_eans(
     type_keys = {ean: _energy_type_key(ean, ean_energy_types) for ean in eans}
     counts = Counter(type_keys.values())
     return {ean for ean, type_key in type_keys.items() if counts[type_key] > 1}
+
+
+def _ean_aware_translation(
+    base_key: str, ean_suffix: str
+) -> tuple[str, dict[str, str]]:
+    """Return the translation key and placeholders for an entity name."""
+    if not ean_suffix:
+        return base_key, {}
+    return f"{base_key}_with_ean", {"ean_suffix": ean_suffix}
+
+
+def _build_tou_entities(
+    household: EngieBeHouseholdCoordinators,
+    ban: str,
+    known_unique_ids: set[str],
+) -> list[EngieBeTouEntity]:
+    """Build the time-of-use entities of one household that are not known yet."""
+    tou_data: dict[str, TouScheduleItem] | None = household.tou.data
+    if tou_data is None:
+        return []
+    prices_data = household.prices.data
+    eans = set(tou_data) | (set(prices_data.eans) if prices_data is not None else set())
+    duplicate_eans = _duplicate_type_eans(eans, household.prices.ean_energy_types)
+    entities: list[EngieBeTouEntity] = []
+    for ean, item in tou_data.items():
+        if (
+            _energy_type_key(ean, household.prices.ean_energy_types)
+            == _ENERGY_TYPE_KEYS["GAS"]
+        ):
+            continue
+        meter = item.primary_meter()
+        if meter is None:
+            continue
+        ean_suffix = bare_ean(ean)[-4:] if ean in duplicate_eans else ""
+        source_schedules: dict[Literal["supplier", "dgo_tgo"], TouSchedule | None] = {
+            "supplier": meter.supplier,
+            "dgo_tgo": meter.dgo_tgo,
+        }
+        for source, schedule in source_schedules.items():
+            if schedule is None:
+                continue
+            direction_schedules: dict[
+                Literal["offtake", "injection"], TouDirectionSchedule | None
+            ] = {
+                "offtake": schedule.offtake,
+                "injection": schedule.injection,
+            }
+            for direction, direction_schedule in direction_schedules.items():
+                if (
+                    direction_schedule is None
+                    or not direction_schedule.has_multiple_slot_codes()
+                ):
+                    continue
+                entity: EngieBeTouEntity = EngieBeTouSlotSensor(
+                    household.tou,
+                    ban=ban,
+                    ean=ean,
+                    source=source,
+                    direction=direction,
+                    device_info=household.prices.device_info,
+                    ean_suffix=ean_suffix,
+                )
+                if entity.unique_id not in known_unique_ids:
+                    entities.append(entity)
+        if (
+            household.is_dynamic is False
+            and prices_data is not None
+            and meter.supplier is not None
+            and meter.supplier.offtake is not None
+            and meter.supplier.offtake.has_multiple_slot_codes()
+            and lookup_by_ean(prices_data.prices_by_ean, ean) is not None
+        ):
+            active_entity = EngieBeActivePriceSensor(
+                household.tou,
+                prices=household.prices,
+                ban=ban,
+                ean=ean,
+                device_info=household.prices.device_info,
+                ean_suffix=ean_suffix,
+            )
+            if active_entity.unique_id not in known_unique_ids:
+                entities.append(active_entity)
+    return entities
 
 
 async def async_setup_entry(
@@ -110,6 +213,31 @@ async def async_setup_entry(
             household.prices.async_add_listener(_async_add_new_entities)
         )
     _async_add_new_entities()
+
+    known_tou_unique_ids: set[str] = set()
+
+    @callback
+    def _async_add_tou_entities() -> None:
+        """Add time-of-use entities for every switching schedule in the data."""
+        new_entities = [
+            entity
+            for ban, household in runtime_data.households.items()
+            for entity in _build_tou_entities(household, ban, known_tou_unique_ids)
+        ]
+        if new_entities:
+            known_tou_unique_ids.update(
+                unique_id
+                for entity in new_entities
+                if (unique_id := entity.unique_id) is not None
+            )
+            async_add_entities(new_entities)
+
+    for household in runtime_data.households.values():
+        entry.async_on_unload(household.tou.async_add_listener(_async_add_tou_entities))
+        entry.async_on_unload(
+            household.prices.async_add_listener(_async_add_tou_entities)
+        )
+    _async_add_tou_entities()
 
     known_epex_bans: set[str] = set()
 
@@ -173,7 +301,7 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         unique_id = f"{business_agreement_number}_{ean}_{direction}_{slot_code}"
         self._attr_unique_id = f"{unique_id}_excl_vat" if excl_vat else unique_id
 
-        normalized_slot_code = normalize_slot_code(slot_code)
+        normalized_slot_code = canonicalise_slot_code(slot_code)
         suffix = _SLOT_CODE_SUFFIXES.get(normalized_slot_code, _FALLBACK_SLOT_SUFFIX)
         translation_key = f"{type_key}_price_{direction}{suffix}"
         if excl_vat:
@@ -206,6 +334,263 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         """Return the current price."""
         slot = self.coordinator.data.slots[self._ean, self._direction, self._slot_code]
         return slot.price_value_excl_vat if self._excl_vat else slot.price_value
+
+
+class EngieBeTouEntity(CoordinatorEntity[EngieBeTouCoordinator], SensorEntity):
+    """Base class for time-of-use entities that write states on the slot boundary."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+
+    _unsub_transition: Callable[[], None] | None = None
+
+    def _next_transition(self) -> datetime | None:
+        """Return the next slot boundary of this entity."""
+        raise NotImplementedError
+
+    @callback
+    def _unschedule_transition(self) -> None:
+        """Cancel the pending boundary update."""
+        if self._unsub_transition is not None:
+            self._unsub_transition()
+            self._unsub_transition = None
+
+    @callback
+    def _schedule_transition(self) -> None:
+        """Write a state when the next slot boundary passes."""
+        self._unschedule_transition()
+        transition = self._next_transition()
+        if transition is None or transition <= dt_util.utcnow():
+            return
+        self._unsub_transition = async_track_point_in_utc_time(
+            self.hass, self._async_transition, transition
+        )
+
+    @callback
+    def _async_transition(self, _now: datetime) -> None:
+        """Write the new slot state and schedule the following boundary."""
+        self._unsub_transition = None
+        self.async_write_ha_state()
+        self._schedule_transition()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Start writing states on the slot boundary."""
+        await super().async_added_to_hass()
+        self._schedule_transition()
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop the boundary updates."""
+        self._unschedule_transition()
+        await super().async_will_remove_from_hass()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Reschedule the boundary update and write the new state."""
+        self._schedule_transition()
+        super()._handle_coordinator_update()
+
+
+class EngieBeTouSlotSensor(EngieBeTouEntity):
+    """Current time-of-use slot of one direction on one meter."""
+
+    def __init__(
+        self,
+        coordinator: EngieBeTouCoordinator,
+        *,
+        ban: str,
+        ean: str,
+        source: Literal["supplier", "dgo_tgo"],
+        direction: Literal["offtake", "injection"],
+        device_info: DeviceInfo,
+        ean_suffix: str = "",
+    ) -> None:
+        """Initialize the slot sensor."""
+        super().__init__(coordinator)
+        self._ean = ean
+        self._source = source
+        self._direction = direction
+        self._attr_device_info = device_info
+        prefix = "tou" if source == "supplier" else "grid"
+        translation_key, placeholders = _ean_aware_translation(
+            f"{prefix}_{direction}_slot", ean_suffix
+        )
+        self._attr_translation_key = translation_key
+        if placeholders:
+            self._attr_translation_placeholders = placeholders
+        self._attr_unique_id = f"{ban}_{ean}_{prefix}_{direction}_slot"
+
+    def _direction_schedule(self) -> TouDirectionSchedule | None:
+        """Return the schedule this sensor tracks."""
+        item = lookup_by_ean(self.coordinator.data, self._ean)
+        meter = item.primary_meter() if item is not None else None
+        if meter is None:
+            return None
+        schedule = meter.supplier if self._source == "supplier" else meter.dgo_tgo
+        if schedule is None:
+            return None
+        if self._direction == "offtake":
+            return schedule.offtake
+        return schedule.injection
+
+    def _current(self) -> tuple[str | None, datetime | None]:
+        """Return the current slot code and the next boundary."""
+        schedule = self._direction_schedule()
+        if schedule is None:
+            return None, None
+        return schedule.current_slot(
+            dt_util.now(BRUSSELS_TIME_ZONE), BRUSSELS_TIME_ZONE
+        )
+
+    @override
+    def _next_transition(self) -> datetime | None:
+        """Return the next slot boundary of this meter."""
+        return self._current()[1]
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True while the schedule data of this direction is present."""
+        return super().available and self._direction_schedule() is not None
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the current slot code."""
+        return self._current()[0]
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the weekly schedule of this direction."""
+        schedule = self._direction_schedule()
+        if schedule is None:
+            return {}
+        _, next_transition = self._current()
+        weekday_slots = {
+            day: [
+                {
+                    "start": slot.start_time,
+                    "end": slot.end_time,
+                    "code": slot.slot_code,
+                    "cost": slot.cost_indicator,
+                }
+                for slot in getattr(schedule, day)
+            ]
+            for day in _WEEKDAY_FIELDS
+        }
+        return {
+            "optimal_slot": schedule.optimal_timeslot_code,
+            "next_transition": next_transition,
+            "weekday_slots": weekday_slots,
+        }
+
+
+class EngieBeActivePriceSensor(EngieBeTouEntity):
+    """Electricity offtake price that applies right now on the supplier schedule."""
+
+    _attr_native_unit_of_measurement = _UNIT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 6
+
+    def __init__(
+        self,
+        coordinator: EngieBeTouCoordinator,
+        *,
+        prices: EngieBePricesCoordinator,
+        ban: str,
+        ean: str,
+        device_info: DeviceInfo,
+        ean_suffix: str = "",
+    ) -> None:
+        """Initialize the active price sensor."""
+        super().__init__(coordinator)
+        self._prices = prices
+        self._ean = ean
+        self._attr_device_info = device_info
+        translation_key, placeholders = _ean_aware_translation(
+            "electricity_current_price", ean_suffix
+        )
+        self._attr_translation_key = translation_key
+        if placeholders:
+            self._attr_translation_placeholders = placeholders
+        self._attr_unique_id = f"{ban}_{ean}_current_price"
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Track price updates next to schedule updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._prices.async_add_listener(self._handle_coordinator_update)
+        )
+
+    def _supplier_schedule(self) -> TouSchedule | None:
+        """Return the supplier schedule of this meter."""
+        item = lookup_by_ean(self.coordinator.data, self._ean)
+        meter = item.primary_meter() if item is not None else None
+        return meter.supplier if meter is not None else None
+
+    def _active(self) -> ActiveTouPrice | None:
+        """Return the joined price that applies right now."""
+        prices_data = self._prices.data
+        schedule = self._supplier_schedule()
+        if schedule is None or prices_data is None:
+            return None
+        ean_prices = lookup_by_ean(prices_data.prices_by_ean, self._ean)
+        if ean_prices is None:
+            return None
+        return ean_prices.active_tou_price(
+            schedule,
+            "offtake",
+            dt_util.now(BRUSSELS_TIME_ZONE),
+            BRUSSELS_TIME_ZONE,
+        )
+
+    @override
+    def _next_transition(self) -> datetime | None:
+        """Return the next slot boundary of the supplier schedule."""
+        active = self._active()
+        if active is not None and active.next_transition is not None:
+            return active.next_transition
+        schedule = self._supplier_schedule()
+        if schedule is None or schedule.offtake is None:
+            return None
+        return schedule.offtake.current_slot(
+            dt_util.now(BRUSSELS_TIME_ZONE), BRUSSELS_TIME_ZONE
+        )[1]
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True while schedule and price data are present."""
+        return (
+            super().available
+            and self._prices.last_update_success
+            and self._prices.data is not None
+        )
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the price that applies right now."""
+        active = self._active()
+        return active.price_value if active is not None else None
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the active slot and the next transition details."""
+        active = self._active()
+        if active is None:
+            return {}
+        return {
+            "slot_code": active.slot_code,
+            "next_transition": active.next_transition,
+            "next_slot_code": active.next_slot_code,
+            "next_price": active.next_price_value,
+        }
 
 
 _EPEX_PRECISION = 4

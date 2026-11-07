@@ -14,7 +14,12 @@ from syrupy.filters import props
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import build_epex_payload, setup_dynamic_entry, setup_entry
+from .conftest import (
+    build_epex_payload,
+    build_tou_schedules,
+    setup_dynamic_entry,
+    setup_entry,
+)
 
 
 def _build_payload_without_final_quarter(
@@ -117,6 +122,25 @@ async def test_diagnostics_epex_truncated_quarter_hour(
         _build_payload_without_final_quarter
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    ) == snapshot(exclude=props("entry_id", "created_at", "modified_at"))
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_diagnostics_with_tou_schedules(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the diagnostics of a household with time-of-use schedules."""
+    mock_engie_client.return_value.async_get_tou_schedules.return_value = (
+        build_tou_schedules()
+    )
+    await setup_entry(hass, mock_config_entry)
 
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry

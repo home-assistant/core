@@ -1,15 +1,16 @@
 """DataUpdateCoordinator for the ENGIE Belgium integration."""
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from itertools import pairwise
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, TypeVar, override
 from zoneinfo import ZoneInfo
 
 from aioengiebelgium import (
     BusinessAgreement,
+    EanPrices,
     EngieBeAuthenticationError,
     EngieBeClient,
     EngieBeError,
@@ -17,7 +18,11 @@ from aioengiebelgium import (
     EpexSlot,
     PricePeriod,
     PriceSlot,
+    TouScheduleItem,
+    TouSlotCode,
     bare_ean,
+    canonicalise_slot_code,
+    ean_with_delivery_point_suffix,
 )
 
 from homeassistant.core import HomeAssistant, callback
@@ -27,14 +32,10 @@ from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, EPEX_SCAN_INTERVAL, LOGGER, PRICES_SCAN_INTERVAL
+from .const import DIRECTIONS, DOMAIN, EPEX_SCAN_INTERVAL, LOGGER, PRICES_SCAN_INTERVAL
 
 if TYPE_CHECKING:
     from . import EngieBeConfigEntry
-
-_DIRECTIONS = ("offtake", "injection")
-_DIRECTION_PREFIXES = ("OFFTAKE_", "INJECTION_")
-_BLENDED_SLOT_CODE = "EN"
 
 BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
 
@@ -42,15 +43,6 @@ BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
 def mask_identifier(identifier: str) -> str:
     """Mask an account/meter identifier down to its last four characters."""
     return f"…{identifier[-4:]}"
-
-
-def normalize_slot_code(raw_code: str) -> str:
-    """Strip a redundant direction prefix from a raw time-of-use slot code."""
-    for prefix in _DIRECTION_PREFIXES:
-        idx = raw_code.rfind(prefix)
-        if idx != -1:
-            return raw_code[idx + len(prefix) :]
-    return raw_code
 
 
 def _current_period(
@@ -69,6 +61,17 @@ class EngieBePricesData:
 
     slots: dict[tuple[str, str, str], PriceSlot]
     eans: tuple[str, ...]
+    prices_by_ean: dict[str, EanPrices]
+
+
+_T = TypeVar("_T")
+
+
+def lookup_by_ean(data: Mapping[str, _T] | None, ean: str) -> _T | None:
+    """Return the value for an EAN, accepting bare and suffixed keys."""
+    if data is None:
+        return None
+    return data.get(ean) or data.get(ean_with_delivery_point_suffix(ean))
 
 
 class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreement]]):
@@ -200,20 +203,62 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
             period = _current_period(ean_prices.periods, today)
             if period is None:
                 continue
-            for direction in _DIRECTIONS:
+            for direction in DIRECTIONS:
                 direction_slots = (
                     period.offtake if direction == "offtake" else period.injection
                 )
                 for slot in direction_slots:
-                    normalized = normalize_slot_code(slot.time_of_use_slot_code)
-                    if normalized == _BLENDED_SLOT_CODE:
+                    if (
+                        canonicalise_slot_code(slot.time_of_use_slot_code)
+                        == TouSlotCode.EXCLUSIVE_NIGHT
+                    ):
                         continue
                     slots[ean_prices.ean, direction, slot.time_of_use_slot_code] = slot
 
         return EngieBePricesData(
             slots=slots,
             eans=tuple(ean_prices.ean for ean_prices in prices.items),
+            prices_by_ean={ean_prices.ean: ean_prices for ean_prices in prices.items},
         )
+
+
+class EngieBeTouCoordinator(DataUpdateCoordinator[dict[str, TouScheduleItem]]):
+    """Coordinator that fetches time-of-use tariff schedules for one business agreement."""
+
+    config_entry: EngieBeConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: EngieBeConfigEntry,
+        client: EngieBeClient,
+        ban: str,
+    ) -> None:
+        """Initialize the schedules coordinator for one business agreement."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_tou_{mask_identifier(ban)}",
+            update_interval=PRICES_SCAN_INTERVAL,
+        )
+        self.client = client
+        self.ban = ban
+
+    @override
+    async def _async_update_data(self) -> dict[str, TouScheduleItem]:
+        """Fetch the time-of-use tariff schedules of this household."""
+        try:
+            schedules = await self.client.async_get_tou_schedules(self.ban)
+        except EngieBeAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
+        except EngieBeError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
+        return {item.ean_with_suffix: item for item in schedules.items}
 
 
 @dataclass(frozen=True)
