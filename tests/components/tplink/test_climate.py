@@ -9,6 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
@@ -39,7 +40,13 @@ ENTITY_ID = "climate.thermostat"
 
 
 @pytest.fixture
-async def mocked_hub(hass: HomeAssistant) -> Device:
+def thermostat_modules() -> list[str]:
+    """Return the modules of the mocked thermostat."""
+    return [Module.Thermostat]
+
+
+@pytest.fixture
+async def mocked_hub(hass: HomeAssistant, thermostat_modules: list[str]) -> Device:
     """Return mocked tplink hub."""
 
     features = [
@@ -60,7 +67,7 @@ async def mocked_hub(hass: HomeAssistant) -> Device:
     thermostat = _mocked_device(
         alias="thermostat",
         features=features,
-        modules=[Module.Thermostat],
+        modules=thermostat_modules,
         device_type=Device.Type.Thermostat,
     )
 
@@ -126,6 +133,30 @@ async def test_device_does_not_link_via_self(
     assert devices
     for device in devices:
         assert device.via_device_id != device.id
+
+
+@pytest.mark.parametrize(
+    ("thermostat_modules", "expected_humidity"),
+    [
+        pytest.param([Module.Thermostat], None, id="without_humidity_sensor"),
+        pytest.param(
+            [Module.Thermostat, Module.HumiditySensor], 57, id="with_humidity_sensor"
+        ),
+    ],
+)
+async def test_current_humidity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_hub: Device,
+    expected_humidity: int | None,
+) -> None:
+    """Test current humidity is reported only for devices with a humidity sensor."""
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.CLIMATE, mocked_hub
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == expected_humidity
 
 
 async def test_set_temperature(
