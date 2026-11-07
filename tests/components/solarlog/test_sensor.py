@@ -1,6 +1,6 @@
 """Test the Home Assistant solarlog sensor module."""
 
-from datetime import timedelta
+from datetime import date, timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -80,6 +80,45 @@ async def test_add_remove_entities(
     assert hass.states.get("sensor.inv_1_consumption_year").state == "354.687"
     assert hass.states.get("sensor.inverter_2_consumption_year") is None
     assert hass.states.get("sensor.inverter_3_consumption_year").state == "0.454"
+
+
+async def test_firmware_update_updates_device_info(
+    hass: HomeAssistant,
+    mock_solarlog_connector: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that firmware updates update the coordinator device info."""
+    mock_solarlog_connector.update_firmware_information.return_value = (
+        "1.0",
+        date(2024, 1, 1),
+    )
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+
+    device = device_registry.async_get_device_by_identifier(
+        identifier=(DOMAIN, mock_config_entry.entry_id),
+        config_entry_id=mock_config_entry.entry_id,
+    )
+
+    assert device is not None
+    assert device.sw_version == "1.0"
+
+    mock_solarlog_connector.update_firmware_information.return_value = (
+        "2.0",
+        date(2025, 1, 1),
+    )
+
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        identifier=(DOMAIN, mock_config_entry.entry_id),
+        config_entry_id=mock_config_entry.entry_id,
+    )
+    assert device is not None
+    assert device.sw_version == "2.0"
 
 
 @pytest.mark.usefixtures("mock_solarlog_connector")
