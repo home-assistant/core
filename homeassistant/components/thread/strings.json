@@ -13,6 +13,9 @@
     "invalid_dataset": {
       "message": "Invalid dataset"
     },
+    "invalid_dataset_tlv": {
+      "message": "Invalid dataset: {error}"
+    },
     "preferred_extended_address_required": {
       "message": "Must set preferred extended address with preferred border agent ID"
     }

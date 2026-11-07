@@ -6,6 +6,9 @@
       }
     },
     "button": {
+      "import_thread_network": {
+        "default": "mdi:download-network"
+      },
       "pause": {
         "default": "mdi:pause"
       },
