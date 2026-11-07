@@ -78,6 +78,7 @@ class Event:
     value: Any = None
     entity_category: EntityCategory | None = None
     entity_enabled: bool = True
+    property_operation: str | None = None
 
 
 class PullPointManagerState(Enum):

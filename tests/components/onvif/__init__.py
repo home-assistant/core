@@ -251,6 +251,36 @@ def _setup_mock_events(mock_events: MagicMock, events: list[Event]) -> None:
     )
 
 
+async def async_parse_raw_events(
+    event_manager: EventManager,
+    raw_events: list[tuple[str, list[EventEntity]]],
+    property_operation: str | None = None,
+) -> None:
+    """Parse raw library events with a real EventManager."""
+    mock_messages = []
+    event_by_topic: collections.defaultdict[str, list[EventEntity]] = (
+        collections.defaultdict(list)
+    )
+    for topic, topic_events in raw_events:
+        mock_msg = MagicMock()
+        mock_msg.Topic._value_1 = topic
+        mock_msg.Message._value_1.PropertyOperation = property_operation
+        mock_messages.append(mock_msg)
+        event_by_topic[topic].extend(topic_events)
+
+    async def mock_parse(topic, unique_id, msg):
+        return event_by_topic.get(topic)
+
+    with patch(
+        "homeassistant.components.onvif.event_manager.onvif_parsers"
+    ) as mock_parsers:
+        mock_parsers.parse = mock_parse
+        mock_parsers.errors.UnknownTopicError = type(
+            "UnknownTopicError", (Exception,), {}
+        )
+        await event_manager.async_parse_messages(mock_messages)
+
+
 async def setup_onvif_integration(
     hass: HomeAssistant,
     config=None,
@@ -261,6 +291,8 @@ async def setup_onvif_integration(
     capabilities=None,
     events=None,
     raw_events: list[tuple[str, list[EventEntity]]] | None = None,
+    property_operation: str | None = None,
+    config_entry: MockConfigEntry | None = None,
 ) -> tuple[MockConfigEntry, MagicMock, MagicMock]:
     """Create an ONVIF config entry."""
     if not config:
@@ -273,15 +305,16 @@ async def setup_onvif_integration(
             CONF_SNAPSHOT_AUTH: HTTP_DIGEST_AUTHENTICATION,
         }
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=source,
-        data={**config},
-        options=options or {},
-        entry_id=entry_id,
-        unique_id=unique_id,
-    )
-    config_entry.add_to_hass(hass)
+    if config_entry is None:
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            source=source,
+            data={**config},
+            options=options or {},
+            entry_id=entry_id,
+            unique_id=unique_id,
+        )
+        config_entry.add_to_hass(hass)
 
     with (
         patch(
@@ -302,28 +335,7 @@ async def setup_onvif_integration(
             # Process raw library events through a real EventManager
             # to test the full parsing pipeline including conversions
             event_manager = EventManager(hass, mock_onvif_camera, config_entry, NAME)
-            mock_messages = []
-            event_by_topic: collections.defaultdict[str, list[EventEntity]] = (
-                collections.defaultdict(list)
-            )
-            for topic, topic_events in raw_events:
-                mock_msg = MagicMock()
-                mock_msg.Topic._value_1 = topic
-                mock_messages.append(mock_msg)
-                event_by_topic[topic].extend(topic_events)
-
-            async def mock_parse(topic, unique_id, msg):
-                return event_by_topic.get(topic)
-
-            with patch(
-                "homeassistant.components.onvif.event_manager.onvif_parsers"
-            ) as mock_parsers:
-                mock_parsers.parse = mock_parse
-                mock_parsers.errors.UnknownTopicError = type(
-                    "UnknownTopicError", (Exception,), {}
-                )
-                await event_manager.async_parse_messages(mock_messages)
-
+            await async_parse_raw_events(event_manager, raw_events, property_operation)
             mock_device.events = event_manager
 
         await hass.config_entries.async_setup(config_entry.entry_id)

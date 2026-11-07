@@ -224,6 +224,12 @@ class EventManager:
                 )
                 continue
 
+            # "Initialized" is resent on every subscribe and renew
+            property_operation = getattr(
+                msg.Message._value_1,  # noqa: SLF001
+                "PropertyOperation",
+                None,
+            )
             for event in events:
                 value = event.value
                 if event.device_class == "timestamp" and isinstance(value, str):
@@ -240,6 +246,7 @@ class EventManager:
                         event.entity_category or ""
                     ),
                     entity_enabled=event.entity_enabled,
+                    property_operation=property_operation,
                 )
                 self.get_uids_by_platform(ha_event.platform).add(ha_event.uid)
                 self._events[ha_event.uid] = ha_event
