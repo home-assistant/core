@@ -39,6 +39,7 @@ class NetatmoFlowHandler(
     """Config flow to handle Netatmo OAuth2 authentication."""
 
     DOMAIN = DOMAIN
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
