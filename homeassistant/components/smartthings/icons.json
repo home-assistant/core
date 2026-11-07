@@ -100,6 +100,12 @@
       "dishwasher_washing_course": {
         "default": "mdi:dishwasher"
       },
+      "dry_level": {
+        "default": "mdi:tumble-dryer"
+      },
+      "drying_time": {
+        "default": "mdi:timer-outline"
+      },
       "flexible_detergent_amount": {
         "default": "mdi:car-coolant-level"
       },
