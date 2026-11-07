@@ -604,7 +604,7 @@ class OptionsFlowHandler(OptionsFlow):
                 CONF_CAMERA_AUDIO, default=cameras_with_audio
             ): camera_selector,
         }
-        # Recordings need the camera as its own accessory.
+        # Recording is only offered for cameras in accessory mode.
         if hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
             schema[
                 probatio.Optional(
