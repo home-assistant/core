@@ -4,7 +4,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, Final, Protocol, Self, override
+from typing import Any, Final, Protocol, Self, cast, override
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -27,11 +27,13 @@ from sqlalchemy import (
     case,
     type_coerce,
 )
-from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
+from sqlalchemy.dialects import sqlite
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import DeclarativeBase, Mapped, aliased, mapped_column, relationship
-from sqlalchemy.types import TypeDecorator
+from sqlalchemy.schema import CreateIndex, CreateTable, Table
+from sqlalchemy.sql.operators import OperatorType
+from sqlalchemy.types import TypeDecorator, TypeEngine
 
 from homeassistant.components.sensor import SensorEntityCapabilityAttribute
 from homeassistant.const import (
@@ -128,7 +130,14 @@ MYSQL_COLLATE = "utf8mb4_bin"
 MYSQL_DEFAULT_CHARSET = "utf8mb4"
 MYSQL_ENGINE = "InnoDB"
 
-_DEFAULT_TABLE_ARGS = {
+_MYSQL_DIALECTS: Final = ("mysql", "mariadb")
+
+# MySQL and MariaDB only options for tables and indexes. They are kept in the
+# table or index info and only attached when DDL is compiled for MySQL or
+# MariaDB, because declaring mysql_* or mariadb_* keywords directly makes
+# SQLAlchemy import its MySQL dialect to validate them, even on SQLite.
+_MYSQL_OPTIONS: Final = "recorder_mysql_options"
+_MYSQL_TABLE_OPTIONS: Final = {
     "mysql_default_charset": MYSQL_DEFAULT_CHARSET,
     "mysql_collate": MYSQL_COLLATE,
     "mysql_engine": MYSQL_ENGINE,
@@ -136,6 +145,32 @@ _DEFAULT_TABLE_ARGS = {
     "mariadb_collate": MYSQL_COLLATE,
     "mariadb_engine": MYSQL_ENGINE,
 }
+_MYSQL_CONTEXT_ID_BIN_INDEX_OPTIONS: Final = {
+    "mysql_length": CONTEXT_ID_BIN_MAX_LENGTH,
+    "mariadb_length": CONTEXT_ID_BIN_MAX_LENGTH,
+}
+_DEFAULT_TABLE_ARGS: Final = {"info": {_MYSQL_OPTIONS: _MYSQL_TABLE_OPTIONS}}
+
+
+def _add_mysql_options(item: Table | Index) -> None:
+    """Attach the MySQL and MariaDB only options of a table or index."""
+    if options := item.info.get(_MYSQL_OPTIONS):
+        item.dialect_kwargs.update(options)
+
+
+@compiles(CreateTable, *_MYSQL_DIALECTS)
+def _compile_create_table_mysql(element: CreateTable, compiler: Any, **kw: Any) -> str:
+    """Add the MySQL and MariaDB table options before creating a table."""
+    _add_mysql_options(element.element)
+    return cast(str, compiler.visit_create_table(element, **kw))
+
+
+@compiles(CreateIndex, *_MYSQL_DIALECTS)
+def _compile_create_index_mysql(element: CreateIndex, compiler: Any, **kw: Any) -> str:
+    """Add the MySQL and MariaDB index options before creating an index."""
+    _add_mysql_options(element.element)
+    return cast(str, compiler.visit_create_index(element, **kw))
+
 
 _MATCH_ALL_KEEP: set[str] = {
     EntityStateAttribute.DEVICE_CLASS,
@@ -184,36 +219,141 @@ class NativeLargeBinary(LargeBinary):
         return None
 
 
+class _DialectVariant[_T](TypeDecorator[_T]):
+    """A type with variants for dialects that are only imported when used.
+
+    Unlike with_variant, the dialect specific types are created in
+    load_dialect_impl, so SQLAlchemy's MySQL, PostgreSQL and Oracle
+    dialects are not imported on databases that do not use them.
+    """
+
+    @override
+    def coerce_compared_value(
+        self, op: OperatorType | None, value: Any
+    ) -> TypeEngine[Any]:
+        """Coerce compared values the same way the default type does."""
+        coerced = self.impl_instance.coerce_compared_value(op, value)
+        return self if coerced is self.impl_instance else coerced
+
+
+class _Uint32(_DialectVariant[int]):
+    """BIGINT, or INTEGER UNSIGNED on MySQL and MariaDB."""
+
+    impl = BigInteger
+    cache_ok = True
+
+    @override
+    def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[Any]:
+        """Return the type for the dialect."""
+        if dialect.name in _MYSQL_DIALECTS:
+            from sqlalchemy.dialects import mysql  # noqa: PLC0415
+
+            return mysql.INTEGER(unsigned=True)
+        return self.impl_instance
+
+
+class _JSONCast(_DialectVariant[str]):
+    """TEXT, or JSON on PostgreSQL."""
+
+    impl = Text
+    cache_ok = True
+
+    @override
+    def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[Any]:
+        """Return the type for the dialect."""
+        if dialect.name == "postgresql":
+            from sqlalchemy.dialects import postgresql  # noqa: PLC0415
+
+            return postgresql.JSON(none_as_null=True)
+        return self.impl_instance
+
+
+class _JSONBCast(_DialectVariant[str]):
+    """TEXT, or JSONB on PostgreSQL."""
+
+    impl = Text
+    cache_ok = True
+
+    @override
+    def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[Any]:
+        """Return the type for the dialect."""
+        if dialect.name == "postgresql":
+            from sqlalchemy.dialects import postgresql  # noqa: PLC0415
+
+            return postgresql.JSONB(none_as_null=True)
+        return self.impl_instance
+
+
+class _DateTime(_DialectVariant[datetime]):
+    """DATETIME with microseconds on MySQL and MariaDB, ciso8601 on SQLite."""
+
+    impl = DateTime
+    cache_ok = True
+
+    @override
+    def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[Any]:
+        """Return the type for the dialect."""
+        if dialect.name in _MYSQL_DIALECTS:
+            from sqlalchemy.dialects import mysql  # noqa: PLC0415
+
+            return mysql.DATETIME(timezone=True, fsp=6)
+        if dialect.name == "sqlite":
+            return FAST_PYSQLITE_DATETIME()  # type: ignore[no-untyped-call]
+        return self.impl_instance
+
+
+class _Double(_DialectVariant[float]):
+    """FLOAT, or a double precision type where the dialect has one."""
+
+    impl = Float
+    cache_ok = True
+
+    @override
+    def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[Any]:
+        """Return the type for the dialect."""
+        if dialect.name in _MYSQL_DIALECTS:
+            from sqlalchemy.dialects import mysql  # noqa: PLC0415
+
+            return mysql.DOUBLE(asdecimal=False)
+        if dialect.name == "oracle":
+            from sqlalchemy.dialects import oracle  # noqa: PLC0415
+
+            return oracle.DOUBLE_PRECISION()
+        if dialect.name == "postgresql":
+            from sqlalchemy.dialects import postgresql  # noqa: PLC0415
+
+            return postgresql.DOUBLE_PRECISION()
+        return self.impl_instance
+
+
+class _LongText(_DialectVariant[str]):
+    """TEXT, or LONGTEXT on MySQL and MariaDB."""
+
+    impl = Text
+    cache_ok = True
+
+    @override
+    def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[Any]:
+        """Return the type for the dialect."""
+        if dialect.name in _MYSQL_DIALECTS:
+            from sqlalchemy.dialects import mysql  # noqa: PLC0415
+
+            return mysql.LONGTEXT()
+        return self.impl_instance
+
+
 # Although all integers are same in SQLite, it does not allow
 # an identity column to be BIGINT
 # https://sqlite.org/forum/info/2dfa968a702e1506e885cb06d92157d492108b22bf39459506ab9f7125bca7fd
 ID_TYPE = BigInteger().with_variant(sqlite.INTEGER, "sqlite")
 # For MariaDB and MySQL we can use an unsigned integer type since it will fit 2**32
 # for sqlite and postgresql we use a bigint
-UINT_32_TYPE = BigInteger().with_variant(
-    mysql.INTEGER(unsigned=True),
-    "mysql",
-    "mariadb",
-)
-JSON_VARIANT_CAST = Text().with_variant(
-    postgresql.JSON(none_as_null=True),
-    "postgresql",
-)
-JSONB_VARIANT_CAST = Text().with_variant(
-    postgresql.JSONB(none_as_null=True),
-    "postgresql",
-)
-DATETIME_TYPE = (
-    DateTime(timezone=True)
-    .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql", "mariadb")
-    .with_variant(FAST_PYSQLITE_DATETIME(), "sqlite")  # type: ignore[no-untyped-call]
-)
-DOUBLE_TYPE = (
-    Float()
-    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql", "mariadb")
-    .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
-    .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
-)
+UINT_32_TYPE = _Uint32()
+JSON_VARIANT_CAST = _JSONCast()
+JSONB_VARIANT_CAST = _JSONBCast()
+DATETIME_TYPE = _DateTime(timezone=True)
+DOUBLE_TYPE = _Double()
+LONGTEXT_TYPE = _LongText()
 UNUSED_LEGACY_COLUMN = Unused(0)
 UNUSED_LEGACY_DATETIME_COLUMN = UnusedDateTime(timezone=True)
 UNUSED_LEGACY_INTEGER_COLUMN = SmallInteger()
@@ -256,8 +396,7 @@ class Events(Base):
         Index(
             EVENTS_CONTEXT_ID_BIN_INDEX,
             "context_id_bin",
-            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
-            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            info={_MYSQL_OPTIONS: _MYSQL_CONTEXT_ID_BIN_INDEX_OPTIONS},
         ),
         _DEFAULT_TABLE_ARGS,
     )
@@ -344,9 +483,7 @@ class EventData(Base):
     data_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     hash: Mapped[int | None] = mapped_column(UINT_32_TYPE, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
-    shared_data: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
-    )
+    shared_data: Mapped[str | None] = mapped_column(LONGTEXT_TYPE)
 
     @override
     def __repr__(self) -> str:
@@ -411,8 +548,7 @@ class States(Base):
         Index(
             STATES_CONTEXT_ID_BIN_INDEX,
             "context_id_bin",
-            mysql_length=CONTEXT_ID_BIN_MAX_LENGTH,
-            mariadb_length=CONTEXT_ID_BIN_MAX_LENGTH,
+            info={_MYSQL_OPTIONS: _MYSQL_CONTEXT_ID_BIN_INDEX_OPTIONS},
         ),
         _DEFAULT_TABLE_ARGS,
     )
@@ -544,9 +680,7 @@ class StateAttributes(Base):
     attributes_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     hash: Mapped[int | None] = mapped_column(UINT_32_TYPE, index=True)
     # Note that this is not named attributes to avoid confusion with the states table
-    shared_attrs: Mapped[str | None] = mapped_column(
-        Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
-    )
+    shared_attrs: Mapped[str | None] = mapped_column(LONGTEXT_TYPE)
 
     @override
     def __repr__(self) -> str:
