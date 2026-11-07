@@ -3,6 +3,7 @@
 from typing import Final, override
 
 from music_assistant_client.client import MusicAssistantClient
+from music_assistant_models.enums import MediaType
 from music_assistant_models.player import PlayerOption, PlayerOptionType
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
@@ -138,6 +139,21 @@ class MusicAssistantQueuePlaybackSpeed(MusicAssistantEntity, NumberEntity):
         native_step=0.05,
         entity_registry_enabled_default=False,
     )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the current item is one whose speed can change."""
+        if not super().available:
+            return False
+        queue = self.mass.player_queues.get(self.player_id)
+        current_item = queue.current_item if queue else None
+        media_item = current_item.media_item if current_item else None
+        # the server only changes the speed of audiobooks and podcast episodes
+        return media_item is not None and media_item.media_type in (
+            MediaType.AUDIOBOOK,
+            MediaType.PODCAST_EPISODE,
+        )
 
     @property
     @override

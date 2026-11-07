@@ -3,6 +3,8 @@
 from unittest.mock import MagicMock, call
 
 from music_assistant_models.enums import EventType
+from music_assistant_models.media_items import Audiobook
+from music_assistant_models.queue_item import QueueItem
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,7 +15,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -160,6 +162,27 @@ async def test_queue_playback_speed(
     music_assistant_client.server_info.schema_version = 101
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "number.test_player_1_playback_speed"
+    # nothing whose speed can change is playing
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    queue = music_assistant_client.player_queues._queues["00:00:00:00:00:01"]
+    queue.current_item = QueueItem(
+        queue_id="00:00:00:00:00:01",
+        queue_item_id="queue_item_1",
+        name="Book 1",
+        duration=3600,
+        media_item=Audiobook(
+            item_id="book_1",
+            provider="library",
+            name="Book 1",
+            provider_mappings=set(),
+        ),
+    )
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.QUEUE_UPDATED, "00:00:00:00:00:01"
+    )
     state = hass.states.get(entity_id)
     assert state
     assert float(state.state) == 1.0
