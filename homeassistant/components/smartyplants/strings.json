@@ -42,12 +42,23 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "needs_attention": {
+        "name": "Needs attention"
+      },
+      "stale": {
+        "name": "Readings outdated"
+      }
+    },
     "sensor": {
       "fertilize": {
         "name": "Fertilize in"
       },
       "health_score": {
         "name": "Health score"
+      },
+      "last_reported": {
+        "name": "Last reported"
       },
       "light_quality": {
         "name": "Light quality"
