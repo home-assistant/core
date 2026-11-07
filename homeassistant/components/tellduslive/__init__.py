@@ -147,9 +147,10 @@ class TelldusLiveClient:
         """Discover the component."""
         device = self._client.device(device_id)
         component = self.identify_device(device)
-        self._device_infos.update(
-            {device_id: await self._hass.async_add_executor_job(device.info)}
-        )
+        device_info = dict(device.device or {})
+        if "client" not in device_info:
+            device_info["client"] = self._client.hub_id
+        self._device_infos[device_id] = device_info
         async with self._platforms_lock:
             if component not in self.platforms:
                 await self._hass.config_entries.async_forward_entry_setups(
