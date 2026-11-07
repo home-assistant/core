@@ -10,7 +10,6 @@ from async_upnp_client.event_handler import UpnpEventHandler
 from async_upnp_client.exceptions import UpnpConnectionError
 import pytest
 from pytest_homeassistant.common import async_load_json_object_fixture
-from samsungctl import Remote
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from samsungtvws.command import SamsungTVCommand
 from samsungtvws.encrypted.remote import SamsungTVEncryptedWSAsyncRemote
@@ -148,14 +147,12 @@ def upnp_notify_server_fixture(upnp_factory: Mock) -> Generator[Mock]:
 
 @pytest.fixture(name="remote_legacy")
 def remote_legacy_fixture() -> Generator[Mock]:
-    """Patch the samsungctl Remote."""
-    remote_legacy = Mock(Remote)
-    remote_legacy.__enter__ = Mock()
-    remote_legacy.__exit__ = Mock()
+    """Patch the samsungtvws SamsungTVLegacyAsyncRemote."""
     with patch(
-        "homeassistant.components.samsungtv.bridge.Remote", return_value=remote_legacy
-    ):
-        yield remote_legacy
+        "homeassistant.components.samsungtv.bridge.SamsungTVLegacyAsyncRemote",
+        autospec=True,
+    ) as remote_legacy_class:
+        yield remote_legacy_class.return_value
 
 
 @pytest.fixture(name="rest_api")

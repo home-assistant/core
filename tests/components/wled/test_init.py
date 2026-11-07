@@ -169,7 +169,7 @@ async def test_migrate_entry_v1_with_ignored_duplicates(
     ignored_2 = MockConfigEntry(
         domain=DOMAIN,
         title="Ignored 2",
-        unique_id="aabbccddeeff",
+        unique_id="aa:bb:cc:dd:ee:ff",
         source=SOURCE_IGNORE,
         version=1,
         minor_version=0,
@@ -190,6 +190,8 @@ async def test_migrate_entry_v1_with_ignored_duplicates(
 
     assert ignored_1.state is ConfigEntryState.NOT_LOADED
     assert ignored_2.state is ConfigEntryState.NOT_LOADED
+    assert hass.config_entries.async_get_entry(ignored_1.entry_id) is None
+    assert hass.config_entries.async_get_entry(ignored_2.entry_id) is None
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")

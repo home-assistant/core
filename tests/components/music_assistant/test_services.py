@@ -90,6 +90,8 @@ async def test_search_action_with_username(
         limit=5,
         library_only=False,
         user="user_user",
+        providers=None,
+        require_schema=None,
     )
 
 

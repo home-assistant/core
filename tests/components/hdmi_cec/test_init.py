@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import ANY, MagicMock, PropertyMock, call, patch
 
 import probatio
+from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
 import pytest
 from pytest_homeassistant.common import (
     MockEntity,
@@ -17,18 +18,17 @@ from pytest_homeassistant.common import (
 from homeassistant.components.hdmi_cec import (
     DOMAIN,
     EVENT_HDMI_CEC_UNAVAILABLE,
+    WATCHDOG_INTERVAL,
+    PhysicalAddress,
+    parse_mapping,
+)
+from homeassistant.components.hdmi_cec.services import (
     SERVICE_POWER_ON,
     SERVICE_SELECT_DEVICE,
     SERVICE_SEND_COMMAND,
     SERVICE_STANDBY,
     SERVICE_UPDATE_DEVICES,
     SERVICE_VOLUME,
-    WATCHDOG_INTERVAL,
-    CecCommand,
-    KeyPressCommand,
-    KeyReleaseCommand,
-    PhysicalAddress,
-    parse_mapping,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -125,6 +125,27 @@ async def test_setup_cec_adapter(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     mock_hdmi_network_instance.stop.assert_called_once_with()
+
+
+@pytest.mark.usefixtures("mock_hdmi_network")
+@pytest.mark.parametrize(
+    "service",
+    [
+        SERVICE_POWER_ON,
+        SERVICE_SELECT_DEVICE,
+        SERVICE_SEND_COMMAND,
+        SERVICE_STANDBY,
+        SERVICE_UPDATE_DEVICES,
+        SERVICE_VOLUME,
+    ],
+)
+async def test_services_registered_during_setup(
+    hass: HomeAssistant, service: str
+) -> None:
+    """Test the actions are available before Home Assistant has started."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    assert hass.services.has_service(DOMAIN, service)
 
 
 @pytest.mark.parametrize("osd_name", ["test", "test_a_long_name"])
