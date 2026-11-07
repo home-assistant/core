@@ -22,6 +22,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import HaseIQConfigEntry, HaseIQCoordinator
 
+# The coordinator does the polling, so entity updates need no limit.
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class HaseIQSensorEntityDescription(SensorEntityDescription):
