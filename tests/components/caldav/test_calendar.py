@@ -1982,12 +1982,13 @@ async def _ws_call(
             SECONDS_ICS,
             "single",
             "",
+            # A new start, with the end as the frontend shows it
             {
                 "summary": "Dentist",
                 "dtstart": "2026-11-10T09:00:00",
                 "dtend": "2026-11-10T11:00:00",
             },
-            id="single_new_start_keeps_end",
+            id="single_new_start",
         ),
         pytest.param(
             AMERICA_NEW_YORK,
@@ -1999,7 +2000,7 @@ async def _ws_call(
                 "dtstart": "2026-11-10T09:30:00",
                 "dtend": "2026-11-10T11:00:00",
             },
-            id="single_new_start_keeps_duration_end",
+            id="single_duration_new_start",
         ),
         pytest.param(
             AMERICA_NEW_YORK,
@@ -2306,6 +2307,13 @@ DELETE = {"type": "calendar/event/delete"}
         ),
         pytest.param(
             SERIES_ICS, "series", "not a time", "THISANDFUTURE", id="invalid_id"
+        ),
+        pytest.param(
+            SERIES_ICS,
+            "series",
+            "2026-99-99 09:00:00-04:00",
+            "THISANDFUTURE",
+            id="invalid_date",
         ),
         pytest.param(INVITATION_ICS, "invitation", "", "", id="invitation_no_id"),
         pytest.param(

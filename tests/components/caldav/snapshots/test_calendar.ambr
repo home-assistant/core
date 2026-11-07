@@ -143,6 +143,24 @@
   
   '''
 # ---
+# name: test_update_event[single_duration_new_start]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Dentist
+  DTSTART:20261110T143000Z
+  DTEND:20261110T160000Z
+  DTSTAMP:20261101T000000Z
+  UID:single
+  DESCRIPTION:Bring the card
+  LOCATION:Main street
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
 # name: test_update_event[single_in_repeated_hour]
   '''
   BEGIN:VCALENDAR
@@ -179,25 +197,7 @@
   
   '''
 # ---
-# name: test_update_event[single_new_start_keeps_duration_end]
-  '''
-  BEGIN:VCALENDAR
-  VERSION:2.0
-  PRODID:-//Test//CalDAV Client//EN
-  BEGIN:VEVENT
-  SUMMARY:Dentist
-  DTSTART:20261110T143000Z
-  DTEND:20261110T160000Z
-  DTSTAMP:20261101T000000Z
-  UID:single
-  DESCRIPTION:Bring the card
-  LOCATION:Main street
-  END:VEVENT
-  END:VCALENDAR
-  
-  '''
-# ---
-# name: test_update_event[single_new_start_keeps_end]
+# name: test_update_event[single_new_start]
   '''
   BEGIN:VCALENDAR
   VERSION:2.0
@@ -205,7 +205,7 @@
   BEGIN:VEVENT
   SUMMARY:Dentist
   DTSTART:20261110T140000Z
-  DTEND:20261110T160030Z
+  DTEND:20261110T160000Z
   DTSTAMP:20261101T000000Z
   UID:single
   DESCRIPTION:Bring the card

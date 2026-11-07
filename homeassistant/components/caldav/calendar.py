@@ -323,14 +323,12 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         shown = _get_first_occurrence(
             components, series, recurrence_id, recurrence_range
         )
-        end = _get_end(shown)
-        times = {
-            key: event[key]
-            for key, stored in ((EVENT_START, shown.DTSTART), (EVENT_END, end))
-            if not _same_time(event[key], stored)
-        }
+        # Both are checked, so an end in the repeated hour isn't missed
+        same_start = _same_time(event[EVENT_START], shown.DTSTART)
+        same_end = _same_time(event[EVENT_END], _get_end(shown))
+        same_times = same_start and same_end
         recurring = "RRULE" in series or "RDATE" in series
-        if EVENT_RRULE in event or (recurring and times):
+        if EVENT_RRULE in event or (recurring and not same_times):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="recurrence_change_not_supported",
@@ -346,17 +344,16 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                 component.pop(key)
                 if event[key]:
                     component.add(key, event[key])
-        if times and EVENT_END not in times and "DTEND" not in series:
-            # Otherwise the end would move with the start
-            times[EVENT_END] = end
-        for key, value in times.items():
-            if isinstance(value, datetime):
-                # A TZID time can't tell apart the two hours that repeat when
-                # clocks go back, UTC can
-                value = value.astimezone(UTC)
-            series.pop(key)
-            series.add(key, value)
-        if EVENT_END in times:
+        if not same_times:
+            # Start and end are saved together as sent, so they stay in order
+            for key in (EVENT_START, EVENT_END):
+                value = event[key]
+                if isinstance(value, datetime):
+                    # A TZID time can't tell apart the two hours that repeat
+                    # when clocks go back, UTC can
+                    value = value.astimezone(UTC)
+                series.pop(key)
+                series.add(key, value)
             # DTEND replaces a DURATION
             series.pop("DURATION")
         # Otherwise save() merges just the first component into the stored
@@ -458,13 +455,17 @@ def _get_first_occurrence(
     """
     start: date | datetime | None
     if recurrence_id:
-        start = dt_util.parse_date(recurrence_id) or dt_util.parse_datetime(
-            recurrence_id
-        )
+        try:
+            start = dt_util.parse_date(recurrence_id) or dt_util.parse_datetime(
+                recurrence_id, raise_on_error=True
+            )
+        except ValueError:
+            start = None
     else:
         # A change without a recurrence id is a change to the whole event
         start, recurrence_range = series.DTSTART, THIS_AND_FUTURE
-    # Only an occurrence is stored for an invitation to it
+    # An object holding just one occurrence, like an invitation to it, is
+    # refused as well
     if (
         start is None
         or recurrence_range != THIS_AND_FUTURE
