@@ -355,9 +355,11 @@ def frozen_afternoon(freezer: FrozenDateTimeFactory) -> None:
     freezer.move_to(datetime(2026, 10, 3, 14, 0, tzinfo=BRUSSELS_TIME_ZONE))
 
 
-def without_captar(entries: Iterable[er.RegistryEntry]) -> list[er.RegistryEntry]:
-    """Return the given registry entries excluding the captap peak sensors."""
-    return [entry for entry in entries if "_captar_" not in entry.unique_id]
+def without_capacity_tariff(
+    entries: Iterable[er.RegistryEntry],
+) -> list[er.RegistryEntry]:
+    """Return the given registry entries excluding the capacity tariff peak sensors."""
+    return [entry for entry in entries if "_capacity_tariff_" not in entry.unique_id]
 
 
 async def setup_entry(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:

@@ -34,8 +34,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'captar_daily_power_peak',
-    'unique_id': '000000000001_captar_daily_power_peak',
+    'translation_key': 'capacity_tariff_daily_power_peak',
+    'unique_id': '000000000001_capacity_tariff_daily_power_peak',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -98,8 +98,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'captar_monthly_energy_peak',
-    'unique_id': '000000000001_captar_monthly_energy_peak',
+    'translation_key': 'capacity_tariff_monthly_energy_peak',
+    'unique_id': '000000000001_capacity_tariff_monthly_energy_peak',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -151,8 +151,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'captar_monthly_peak_end',
-    'unique_id': '000000000001_captar_monthly_peak_end',
+    'translation_key': 'capacity_tariff_monthly_peak_end',
+    'unique_id': '000000000001_capacity_tariff_monthly_peak_end',
     'unit_of_measurement': None,
   })
 # ---
@@ -203,8 +203,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'captar_monthly_peak_start',
-    'unique_id': '000000000001_captar_monthly_peak_start',
+    'translation_key': 'capacity_tariff_monthly_peak_start',
+    'unique_id': '000000000001_capacity_tariff_monthly_peak_start',
     'unit_of_measurement': None,
   })
 # ---
@@ -258,8 +258,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'captar_monthly_power_peak',
-    'unique_id': '000000000001_captar_monthly_power_peak',
+    'translation_key': 'capacity_tariff_monthly_power_peak',
+    'unique_id': '000000000001_capacity_tariff_monthly_power_peak',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -1256,8 +1256,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'captar_daily_power_peak',
-    'unique_id': '000000000001_captar_daily_power_peak',
+    'translation_key': 'capacity_tariff_daily_power_peak',
+    'unique_id': '000000000001_capacity_tariff_daily_power_peak',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -1320,8 +1320,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'captar_monthly_energy_peak',
-    'unique_id': '000000000001_captar_monthly_energy_peak',
+    'translation_key': 'capacity_tariff_monthly_energy_peak',
+    'unique_id': '000000000001_capacity_tariff_monthly_energy_peak',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1373,8 +1373,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'captar_monthly_peak_end',
-    'unique_id': '000000000001_captar_monthly_peak_end',
+    'translation_key': 'capacity_tariff_monthly_peak_end',
+    'unique_id': '000000000001_capacity_tariff_monthly_peak_end',
     'unit_of_measurement': None,
   })
 # ---
@@ -1425,8 +1425,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'captar_monthly_peak_start',
-    'unique_id': '000000000001_captar_monthly_peak_start',
+    'translation_key': 'capacity_tariff_monthly_peak_start',
+    'unique_id': '000000000001_capacity_tariff_monthly_peak_start',
     'unit_of_measurement': None,
   })
 # ---
@@ -1480,8 +1480,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'captar_monthly_power_peak',
-    'unique_id': '000000000001_captar_monthly_power_peak',
+    'translation_key': 'capacity_tariff_monthly_power_peak',
+    'unique_id': '000000000001_capacity_tariff_monthly_power_peak',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---

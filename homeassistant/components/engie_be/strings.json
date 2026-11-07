@@ -52,19 +52,19 @@
       }
     },
     "sensor": {
-      "captar_daily_power_peak": {
+      "capacity_tariff_daily_power_peak": {
         "name": "Capacity tariff daily power peak"
       },
-      "captar_monthly_energy_peak": {
+      "capacity_tariff_monthly_energy_peak": {
         "name": "Capacity tariff monthly energy peak"
       },
-      "captar_monthly_peak_end": {
+      "capacity_tariff_monthly_peak_end": {
         "name": "Capacity tariff monthly peak end"
       },
-      "captar_monthly_peak_start": {
+      "capacity_tariff_monthly_peak_start": {
         "name": "Capacity tariff monthly peak start"
       },
-      "captar_monthly_power_peak": {
+      "capacity_tariff_monthly_power_peak": {
         "name": "Capacity tariff monthly power peak"
       },
       "electricity_price_injection": {

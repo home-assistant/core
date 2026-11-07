@@ -151,7 +151,7 @@ async def async_setup_entry(
             description=description,
         )
         for ban, household in runtime_data.households.items()
-        for description in _CAPTAR_SENSORS
+        for description in _CAPACITY_TARIFF_SENSORS
     )
 
 
@@ -386,45 +386,45 @@ def _daily_peak_power_kw(entity: EngieBePeaksSensor) -> float | None:
 
 @dataclass(frozen=True, kw_only=True)
 class EngieBePeaksSensorEntityDescription(SensorEntityDescription):
-    """Describes a capacity-tariff (captar) peak sensor entity."""
+    """Describes a capacity-tariff (capacity tariff) peak sensor entity."""
 
     value_fn: Callable[[EngieBePeaksSensor], float | datetime | None]
 
 
-_CAPTAR_SENSORS: tuple[EngieBePeaksSensorEntityDescription, ...] = (
+_CAPACITY_TARIFF_SENSORS: tuple[EngieBePeaksSensorEntityDescription, ...] = (
     EngieBePeaksSensorEntityDescription(
-        key="captar_monthly_power_peak",
-        translation_key="captar_monthly_power_peak",
+        key="capacity_tariff_monthly_power_peak",
+        translation_key="capacity_tariff_monthly_power_peak",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         value_fn=_peak_power_kw,
     ),
     EngieBePeaksSensorEntityDescription(
-        key="captar_monthly_energy_peak",
-        translation_key="captar_monthly_energy_peak",
+        key="capacity_tariff_monthly_energy_peak",
+        translation_key="capacity_tariff_monthly_energy_peak",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=_peak_energy_kwh,
     ),
     EngieBePeaksSensorEntityDescription(
-        key="captar_monthly_peak_start",
-        translation_key="captar_monthly_peak_start",
+        key="capacity_tariff_monthly_peak_start",
+        translation_key="capacity_tariff_monthly_peak_start",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_peak_start,
     ),
     EngieBePeaksSensorEntityDescription(
-        key="captar_monthly_peak_end",
-        translation_key="captar_monthly_peak_end",
+        key="capacity_tariff_monthly_peak_end",
+        translation_key="capacity_tariff_monthly_peak_end",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_peak_end,
     ),
     EngieBePeaksSensorEntityDescription(
-        key="captar_daily_power_peak",
-        translation_key="captar_daily_power_peak",
+        key="capacity_tariff_daily_power_peak",
+        translation_key="capacity_tariff_daily_power_peak",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
@@ -434,7 +434,7 @@ _CAPTAR_SENSORS: tuple[EngieBePeaksSensorEntityDescription, ...] = (
 
 
 class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntity):
-    """Capacity-tariff (captar) peak sensor on a business-agreement device."""
+    """Capacity-tariff (capacity tariff) peak sensor on a business-agreement device."""
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
@@ -449,7 +449,7 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
         device_info: DeviceInfo,
         description: EngieBePeaksSensorEntityDescription,
     ) -> None:
-        """Initialize the captar peak sensor."""
+        """Initialize the capacity tariff peak sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_device_info = device_info
@@ -467,7 +467,7 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return peak provenance and daily peak details."""
         data = self.coordinator.data
-        if self.entity_description.key == "captar_monthly_power_peak":
+        if self.entity_description.key == "capacity_tariff_monthly_power_peak":
             attributes: dict[str, Any] = {
                 "peak_month": data.peak_month,
                 "peak_is_fallback": data.is_fallback,
@@ -481,7 +481,7 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
                     "end": previous.end.isoformat(),
                 }
             return attributes
-        if self.entity_description.key == "captar_daily_power_peak":
+        if self.entity_description.key == "capacity_tariff_daily_power_peak":
             return {
                 "daily_peaks": [
                     {

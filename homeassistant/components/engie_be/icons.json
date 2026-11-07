@@ -6,19 +6,19 @@
       }
     },
     "sensor": {
-      "captar_daily_power_peak": {
+      "capacity_tariff_daily_power_peak": {
         "default": "mdi:flash"
       },
-      "captar_monthly_energy_peak": {
+      "capacity_tariff_monthly_energy_peak": {
         "default": "mdi:lightning-bolt"
       },
-      "captar_monthly_peak_end": {
+      "capacity_tariff_monthly_peak_end": {
         "default": "mdi:clock-end"
       },
-      "captar_monthly_peak_start": {
+      "capacity_tariff_monthly_peak_start": {
         "default": "mdi:clock-start"
       },
-      "captar_monthly_power_peak": {
+      "capacity_tariff_monthly_power_peak": {
         "default": "mdi:flash"
       },
       "electricity_price_injection": {

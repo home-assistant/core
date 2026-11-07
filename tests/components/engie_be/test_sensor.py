@@ -58,7 +58,7 @@ from .conftest import (
     build_prices,
     build_relations,
     setup_dynamic_entry,
-    without_captar,
+    without_capacity_tariff,
 )
 
 
@@ -159,7 +159,7 @@ async def test_excl_vat_disabled_by_default(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = without_captar(
+    entity_entries = without_capacity_tariff(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
     excl_vat_entries = [
@@ -345,7 +345,7 @@ async def test_period_window_creates_sensors(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = without_captar(
+    entity_entries = without_capacity_tariff(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
     enabled_entries = [
@@ -376,7 +376,7 @@ async def test_period_window_uses_brussels_date(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert without_captar(
+    assert without_capacity_tariff(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
@@ -407,10 +407,10 @@ async def test_period_window_skips_sensors(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = without_captar(
+    entity_entries = without_capacity_tariff(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
-    assert without_captar(entity_entries) == []
+    assert without_capacity_tariff(entity_entries) == []
 
 
 async def test_period_window_refresh_makes_existing_sensors_unavailable(
@@ -429,7 +429,7 @@ async def test_period_window_refresh_makes_existing_sensors_unavailable(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = without_captar(
+    entity_entries = without_capacity_tariff(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
     enabled_entity_entries = [
@@ -586,7 +586,7 @@ async def test_period_gap_heals(
     await hass.async_block_till_done()
 
     assert (
-        without_captar(
+        without_capacity_tariff(
             er.async_entries_for_config_entry(
                 entity_registry, mock_config_entry.entry_id
             )
@@ -598,7 +598,7 @@ async def test_period_gap_heals(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert without_captar(
+    assert without_capacity_tariff(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
