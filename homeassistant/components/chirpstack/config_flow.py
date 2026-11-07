@@ -8,7 +8,13 @@ from urllib.parse import urlsplit
 
 import grpc
 from lorawan_connection import ConnectionUnavailable
-from lorawan_connection.backend.chirpstack import ChirpStackConnection
+from lorawan_connection.backend.chirpstack import (
+    AuthenticationError,
+    ChirpStackConnection,
+    HTTP2Error,
+    TLSCertificateError,
+    connection_error,
+)
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -49,18 +55,18 @@ class ChirpStackConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             yield connection
-        except grpc.aio.AioRpcError as error:
-            errors["base"] = (
-                "invalid_auth"
-                if error.code()
-                in (
-                    grpc.StatusCode.UNAUTHENTICATED,
-                    grpc.StatusCode.PERMISSION_DENIED,
-                )
-                else "cannot_connect"
-            )
-        except ConnectionUnavailable:
-            errors["base"] = "cannot_connect"
+        except (grpc.RpcError, AuthenticationError, ConnectionUnavailable) as error:
+            failure = connection_error(error)
+            if isinstance(failure, AuthenticationError):
+                errors["base"] = "invalid_auth"
+            else:
+                _LOGGER.warning("Unable to connect to ChirpStack: %s", failure)
+                if isinstance(failure, HTTP2Error):
+                    errors["base"] = "http2_error"
+                elif isinstance(failure, TLSCertificateError):
+                    errors["base"] = "tls_certificate_error"
+                else:
+                    errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected error communicating with ChirpStack")
             errors["base"] = "unknown"

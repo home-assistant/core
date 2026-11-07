@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 import grpc
 from lorawan_connection import ConnectionUnavailable
+from lorawan_connection.backend.chirpstack import HTTP2Error, TLSCertificateError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -228,14 +229,19 @@ async def test_multiple_tenants(hass: HomeAssistant, mock_connection: Mock) -> N
 
 
 @pytest.mark.parametrize(
-    "error",
+    ("error", "error_key"),
     [
-        ConnectionUnavailable(),
-        grpc.aio.AioRpcError(grpc.StatusCode.UNAVAILABLE, (), (), "offline"),
+        (ConnectionUnavailable(), "cannot_connect"),
+        (
+            grpc.aio.AioRpcError(grpc.StatusCode.UNAVAILABLE, (), (), "offline"),
+            "cannot_connect",
+        ),
+        (HTTP2Error("HTTP/2 unavailable"), "http2_error"),
+        (TLSCertificateError("Certificate rejected"), "tls_certificate_error"),
     ],
 )
 async def test_application_listing_failure(
-    hass: HomeAssistant, mock_connection: Mock, error: Exception
+    hass: HomeAssistant, mock_connection: Mock, error: Exception, error_key: str
 ) -> None:
     """Keep the chosen tenant when application enumeration fails."""
     mock_connection.applications.side_effect = error
@@ -247,7 +253,7 @@ async def test_application_listing_failure(
         result["flow_id"], {"endpoint": "http://server:8080", "api_key": "secret"}
     )
     assert result["step_id"] == "tenant"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_key}
     assert mock_connection.close.await_count == 2
 
     mock_connection.applications.side_effect = None
@@ -304,14 +310,19 @@ async def test_empty_selection(hass: HomeAssistant, mock_connection: Mock) -> No
 
 
 @pytest.mark.parametrize(
-    "error",
+    ("error", "error_key"),
     [
-        ConnectionUnavailable("Application removed"),
-        grpc.aio.AioRpcError(grpc.StatusCode.UNAVAILABLE, (), (), "offline"),
+        (ConnectionUnavailable("Application removed"), "cannot_connect"),
+        (
+            grpc.aio.AioRpcError(grpc.StatusCode.UNAVAILABLE, (), (), "offline"),
+            "cannot_connect",
+        ),
+        (HTTP2Error("HTTP/2 unavailable"), "http2_error"),
+        (TLSCertificateError("Certificate rejected"), "tls_certificate_error"),
     ],
 )
 async def test_inventory_access_failure(
-    hass: HomeAssistant, mock_connection: Mock, error: Exception
+    hass: HomeAssistant, mock_connection: Mock, error: Exception, error_key: str
 ) -> None:
     """Retry inventory connection failures without losing the application selection."""
     mock_connection.inventory.side_effect = error
@@ -326,7 +337,7 @@ async def test_inventory_access_failure(
         result["flow_id"], {"application_ids": ["application"]}
     )
     assert result["step_id"] == "applications"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_key}
     mock_connection.inventory.assert_awaited_once()
     assert mock_connection.close.await_count == 3
     assert not hass.config_entries.async_entries("chirpstack")
@@ -517,4 +528,91 @@ async def test_unexpected_validation_error(
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "tenant"
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("error", "error_key"),
+    [
+        pytest.param(
+            grpc.aio.AioRpcError(
+                grpc.StatusCode.UNAVAILABLE,
+                (),
+                (),
+                "Cannot check peer: missing selected ALPN property.",
+            ),
+            "http2_error",
+            id="raw-http2-error",
+        ),
+        pytest.param(
+            grpc.aio.AioRpcError(
+                grpc.StatusCode.UNAVAILABLE, (), (), "CERTIFICATE_VERIFY_FAILED"
+            ),
+            "tls_certificate_error",
+            id="raw-certificate-error",
+        ),
+        pytest.param(
+            HTTP2Error("Failed parsing HTTP/2"), "http2_error", id="http2-error"
+        ),
+        pytest.param(
+            TLSCertificateError("Certificate rejected"),
+            "tls_certificate_error",
+            id="certificate-error",
+        ),
+    ],
+)
+async def test_transport_failure(
+    hass: HomeAssistant,
+    mock_connection: Mock,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+    error_key: str,
+) -> None:
+    """Explain transport failures and allow a corrected endpoint in the same flow."""
+    mock_connection.tenants.side_effect = error
+    result = await hass.config_entries.flow.async_init(
+        "chirpstack", context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "https://server", "api_key": "secret"}
+    )
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": error_key}
+    assert "Unable to connect to ChirpStack:" in caplog.text
+    assert "secret" not in caplog.text
+    mock_connection.close.assert_awaited_once()
+
+    mock_connection.tenants.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"endpoint": "https://fixed", "api_key": "secret"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"application_ids": ["application"]}
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+
+async def test_reauth_transport_failure(
+    hass: HomeAssistant,
+    connection_entry: MockConfigEntry,
+    mock_connection: Mock,
+) -> None:
+    """A certificate failure during reauthentication does not blame the new key."""
+    mock_connection.inventory.side_effect = TLSCertificateError("Certificate rejected")
+    result = await connection_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_key": "replacement"}
+    )
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "tls_certificate_error"}
+    assert connection_entry.data["api_key"] == "secret"
+
+    mock_connection.inventory.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_key": "replacement"}
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert connection_entry.data["api_key"] == "replacement"
     await hass.async_block_till_done()
