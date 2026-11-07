@@ -44,6 +44,7 @@ def create_mock_tracker() -> Tracker:
         name="Fluffy",
         battery=85,
         charging=False,
+        last_seen_timestamp="2024-01-15T12:30:00Z",
         position=Position(
             lat=52.520008,
             lng=13.404954,
