@@ -1,0 +1,71 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_serial": "[%key:component::victron_modbus::config::error::no_serial%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_device": "[%key:component::victron_modbus::config::error::unsupported_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_serial": "The device doesn't report a serial number, which is needed to recognize it.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_device": "The device at this address is not a supported Victron device."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up the {model} found at {host}?"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the device."
+        },
+        "description": "Enter the address of your Victron device. The model is detected automatically."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "phase_current": {
+        "name": "Current phase {phase}"
+      },
+      "phase_forward_energy": {
+        "name": "Imported energy phase {phase}"
+      },
+      "phase_power": {
+        "name": "Power phase {phase}"
+      },
+      "phase_reverse_energy": {
+        "name": "Exported energy phase {phase}"
+      },
+      "phase_voltage": {
+        "name": "Voltage phase {phase}"
+      },
+      "total_forward_energy": {
+        "name": "Total imported energy"
+      },
+      "total_power": {
+        "name": "Total power"
+      },
+      "total_reverse_energy": {
+        "name": "Total exported energy"
+      },
+      "voltage_pen": {
+        "name": "Voltage PE-N"
+      }
+    }
+  },
+  "exceptions": {
+    "device_mismatch": {
+      "message": "The device at this address is not the device that was set up here. Remove the integration and add the right device."
+    },
+    "no_readings": {
+      "message": "The device answered, but none of its readings could be read."
+    }
+  }
+}
