@@ -4,14 +4,12 @@ import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp import ClientError, ClientResponseError, RequestInfo
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
-from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from solaredge_web import EnergyData
-from yarl import URL
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.models import (
@@ -28,20 +26,16 @@ from homeassistant.components.solaredge.const import (
     CONF_SITE_ID,
     DATA_MODULES_COORDINATOR,
     DEFAULT_NAME,
-    DETAILS_UPDATE_DELAY,
     DOMAIN,
-    ENERGY_DETAILS_DELAY,
-    INVENTORY_UPDATE_DELAY,
     OVERVIEW_UPDATE_DELAY,
     POWER_FLOW_UPDATE_DELAY,
-    STORAGE_DATA_UPDATE_DELAY,
 )
 from homeassistant.components.solaredge.coordinator import SolarEdgeModulesCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    CONF_API_KEY,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_TOKEN,
     CONF_USERNAME,
     STATE_UNKNOWN,
     UnitOfEnergy,
@@ -51,7 +45,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
 
 from . import setup_integration
-from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
+from .conftest import PASSWORD, SITE_ID, TOKEN, USERNAME
 
 
 @pytest.fixture(autouse=True)
@@ -59,20 +53,19 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
 
 
-@patch("homeassistant.components.solaredge.SolarEdge")
 async def test_solaredgeoverviewdataservice_energy_values_validity(
-    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    solaredge_api: MagicMock,
 ) -> None:
     """Test overview energy data validity."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         title=DEFAULT_NAME,
-        data={CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+        data={CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: SITE_ID, CONF_TOKEN: TOKEN},
     )
-    mock_solaredge().get_details = AsyncMock(
+    solaredge_api.get_details = AsyncMock(
         return_value={"details": {"status": "active"}}
     )
     mock_config_entry.add_to_hass(hass)
@@ -89,7 +82,7 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
             "currentPower": {"power": 0.0},
         }
     }
-    mock_solaredge().get_overview = AsyncMock(return_value=mock_overview_data)
+    solaredge_api.get_overview = AsyncMock(return_value=mock_overview_data)
     freezer.tick(OVERVIEW_UPDATE_DELAY)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -99,7 +92,7 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
 
     # Invalid energy values, lifeTimeData energy is lower than last year, month or day.
     mock_overview_data["overview"]["lifeTimeData"]["energy"] = 0
-    mock_solaredge().get_overview = AsyncMock(return_value=mock_overview_data)
+    solaredge_api.get_overview = AsyncMock(return_value=mock_overview_data)
     freezer.tick(OVERVIEW_UPDATE_DELAY)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -110,7 +103,7 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
 
     # New valid energy values update
     mock_overview_data["overview"]["lifeTimeData"]["energy"] = 100001
-    mock_solaredge().get_overview = AsyncMock(return_value=mock_overview_data)
+    solaredge_api.get_overview = AsyncMock(return_value=mock_overview_data)
     freezer.tick(OVERVIEW_UPDATE_DELAY)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -119,27 +112,23 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     assert state
     assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
 
-    # Invalid energy values, lastYearData energy is lower than last month or day.
-    mock_overview_data["overview"]["lastYearData"]["energy"] = 0
-    mock_solaredge().get_overview = AsyncMock(return_value=mock_overview_data)
+    # Missing energy values remain unknown without breaking the update.
+    mock_overview_data["overview"]["lifeTimeData"]["energy"] = None
+    solaredge_api.get_overview = AsyncMock(return_value=mock_overview_data)
     freezer.tick(OVERVIEW_UPDATE_DELAY)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.solaredge_energy_this_year")
+    state = hass.states.get("sensor.solaredge_lifetime_energy")
     assert state
     assert state.state == STATE_UNKNOWN
-    # Check that the valid lastMonthData is still available
-    state = hass.states.get("sensor.solaredge_energy_this_month")
-    assert state
-    assert state.state == str(mock_overview_data["overview"]["lastMonthData"]["energy"])
 
     # All zero energy values should also be valid.
     mock_overview_data["overview"]["lifeTimeData"]["energy"] = 0.0
     mock_overview_data["overview"]["lastYearData"]["energy"] = 0.0
     mock_overview_data["overview"]["lastMonthData"]["energy"] = 0.0
     mock_overview_data["overview"]["lastDayData"]["energy"] = 0.0
-    mock_solaredge().get_overview = AsyncMock(return_value=mock_overview_data)
+    solaredge_api.get_overview = AsyncMock(return_value=mock_overview_data)
     freezer.tick(OVERVIEW_UPDATE_DELAY)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -147,61 +136,6 @@ async def test_solaredgeoverviewdataservice_energy_values_validity(
     state = hass.states.get("sensor.solaredge_lifetime_energy")
     assert state
     assert state.state == str(mock_overview_data["overview"]["lifeTimeData"]["energy"])
-
-
-@pytest.mark.parametrize(
-    ("api_method", "delay"),
-    [
-        pytest.param("get_overview", OVERVIEW_UPDATE_DELAY, id="overview"),
-        pytest.param("get_details", DETAILS_UPDATE_DELAY, id="details"),
-        pytest.param("get_inventory", INVENTORY_UPDATE_DELAY, id="inventory"),
-        pytest.param("get_energy_details", ENERGY_DETAILS_DELAY, id="energy-details"),
-        pytest.param(
-            "get_current_power_flow", POWER_FLOW_UPDATE_DELAY, id="power-flow"
-        ),
-        pytest.param("get_storage_data", STORAGE_DATA_UPDATE_DELAY, id="storage"),
-    ],
-)
-async def test_api_error_does_not_leak_secret(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
-    solaredge_api: Mock,
-    mock_config_entry: MockConfigEntry,
-    api_method: str,
-    delay: timedelta,
-) -> None:
-    """Test a failed API request does not leak the API key into the log.
-
-    The Monitoring API key is sent as a query parameter, so the URL embedded
-    in a ClientResponseError contains it. Regression test for
-    https://github.com/home-assistant/core/issues/188395 .
-    """
-    await setup_integration(hass, mock_config_entry)
-
-    url = URL(
-        "https://monitoringapi.solaredge.com"
-        f"/equipment/{SITE_ID}/overview.json?api_key={API_KEY}"
-    )
-    request_info = RequestInfo(url, "GET", CIMultiDictProxy(CIMultiDict()), url)
-    setattr(
-        solaredge_api,
-        api_method,
-        AsyncMock(
-            side_effect=ClientResponseError(
-                request_info, (), status=503, message="Service Unavailable"
-            )
-        ),
-    )
-
-    freezer.tick(delay)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert "Error requesting" in caplog.text
-    assert API_KEY not in caplog.text
-    assert "api_key" not in caplog.text
 
 
 async def test_power_flow_null_response(

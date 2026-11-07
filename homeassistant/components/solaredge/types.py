@@ -2,10 +2,9 @@
 
 from typing import TypedDict
 
-from aiosolaredge import SolarEdge
-
 from homeassistant.config_entries import ConfigEntry
 
+from .api import SolarEdgeV2
 from .coordinator import SolarEdgeDataService, SolarEdgeModulesCoordinator
 
 type SolarEdgeConfigEntry = ConfigEntry[SolarEdgeData]
@@ -14,6 +13,6 @@ type SolarEdgeConfigEntry = ConfigEntry[SolarEdgeData]
 class SolarEdgeData(TypedDict, total=False):
     """Data for the solaredge integration."""
 
-    api_client: SolarEdge
+    api_client: SolarEdgeV2
     modules_coordinator: SolarEdgeModulesCoordinator
     data_services: list[SolarEdgeDataService]
