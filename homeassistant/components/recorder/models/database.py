@@ -25,10 +25,9 @@ class DatabaseEngine:
 class DatabaseOptimizer:
     """Properties of the database optimizer for the configured database engine."""
 
-    # Some MariaDB versions have a bug that causes a slow query when using
-    # a range in a select statement with an IN clause.
-    #
-    # https://jira.mariadb.org/browse/MDEV-25020
+    # MariaDB can scan all matching rows for large IN lists with DISTINCT,
+    # even in versions where MDEV-25020 has been fixed.
+    # https://github.com/home-assistant/core/issues/188413
     #
     # PostgreSQL does not support a skip/loose index scan so its
     # also slow for large distinct queries:
