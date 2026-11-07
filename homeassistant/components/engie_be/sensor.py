@@ -386,7 +386,7 @@ def _daily_peak_power_kw(entity: EngieBePeaksSensor) -> float | None:
 
 @dataclass(frozen=True, kw_only=True)
 class EngieBePeaksSensorEntityDescription(SensorEntityDescription):
-    """Describes a capacity-tariff (capacity tariff) peak sensor entity."""
+    """Describes a capacity tariff peak sensor entity."""
 
     value_fn: Callable[[EngieBePeaksSensor], float | datetime | None]
 
@@ -434,7 +434,7 @@ _CAPACITY_TARIFF_SENSORS: tuple[EngieBePeaksSensorEntityDescription, ...] = (
 
 
 class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntity):
-    """Capacity-tariff (capacity tariff) peak sensor on a business-agreement device."""
+    """Capacity tariff peak sensor on a business-agreement device."""
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
@@ -454,7 +454,6 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
         self.entity_description = description
         self._attr_device_info = device_info
         self._attr_unique_id = f"{ban}_{description.key}"
-        self._attr_translation_key = description.key
 
     @property
     @override

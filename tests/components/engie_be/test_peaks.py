@@ -1,4 +1,4 @@
-"""Test the ENGIE Belgium capacity-tariff (capacity tariff) peak sensors."""
+"""Test the ENGIE Belgium capacity tariff peak sensors."""
 
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, call
@@ -9,6 +9,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.engie_be.const import DOMAIN, PEAKS_SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -396,6 +397,6 @@ async def test_capacity_tariff_auth_error_triggers_reauth(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state is not None
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     flows = hass.config_entries.flow.async_progress()
     assert any(flow["context"].get("source") == "reauth" for flow in flows)
