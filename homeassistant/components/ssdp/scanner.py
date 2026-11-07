@@ -465,8 +465,6 @@ class Scanner:
         Building this is a bit expensive so we only do it on demand.
         """
         location = headers["location"]
-        dst = headers.get_lower("st") or headers["nt"]
-        self._async_uncache_if_stale(ssdp_device, dst, location)
         info_desc = await self._async_get_description_dict(location)
         return discovery_info_from_headers_and_description(
             ssdp_device, headers, info_desc
@@ -501,6 +499,20 @@ class Scanner:
             if ssdp_device.udn == udn
         ]
 
+    async def _async_rediscover_with_lookup(
+        self, ssdp_device: SsdpDevice, dst: str
+    ) -> None:
+        """Fetch a replacement description and rediscover the service."""
+        info_desc = await self._async_get_description_dict(ssdp_device.location)
+        if info_desc:
+            self._ssdp_listener_process_callback(
+                ssdp_device,
+                dst,
+                SsdpSource.SEARCH,
+                info_desc,
+                True,  # Skip integration callbacks
+            )
+
     @core_callback
     def _handle_config_entry_removed(
         self,
@@ -520,7 +532,15 @@ class Scanner:
                 if ssdp_device.udn != udn:
                     continue
                 for dst in ssdp_device.all_combined_headers:
-                    self._async_uncache_if_stale(ssdp_device, dst, ssdp_device.location)
+                    if self._async_uncache_if_stale(
+                        ssdp_device, dst, ssdp_device.location
+                    ):
+                        self.hass.async_create_background_task(
+                            self._async_rediscover_with_lookup(ssdp_device, dst),
+                            name=f"ssdp_rediscover_lookup_{ssdp_device.location}",
+                            eager_start=True,
+                        )
+                        continue
                     has_cached_desc, info_desc = cache.peek_description_dict(
                         ssdp_device.location
                     )

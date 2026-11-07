@@ -1215,3 +1215,64 @@ async def test_description_kept_for_embedded_device(
     assert len(aioclient_mock.mock_calls) == 1
     assert callback.call_count == 1
     assert callback.call_args[0][0].upnp[ATTR_UPNP_UDN] == "uuid:device-a"
+
+
+@patch(
+    "homeassistant.components.ssdp.async_get_ssdp",
+    return_value={"mock-domain": [{"manufacturer": "Paulus"}]},
+)
+async def test_ssdp_rediscover_refetches_stale_description(
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_flow_init,
+) -> None:
+    """Test rediscovery fetches a fresh description when the cached one is stale."""
+    location = "http://1.1.1.1"
+    description = (
+        "<root><device><UDN>{udn}</UDN>"
+        "<manufacturer>Paulus</manufacturer></device></root>"
+    )
+    entry = MockConfigEntry(
+        domain="mock-domain",
+        discovery_keys={
+            "ssdp": (DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),)
+        },
+        unique_id="mock-unique-id",
+        state=config_entries.ConfigEntryState.LOADED,
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    aioclient_mock.get(location, text=description.format(udn="uuid:mock-udn"))
+    ssdp_listener = await init_ssdp_component(hass)
+    ssdp_listener._on_search(
+        _ssdp_headers(
+            {
+                "st": "upnp:rootdevice",
+                "location": location,
+                "usn": "uuid:mock-udn::upnp:rootdevice",
+                "_source": "search",
+            }
+        )
+    )
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    assert len(mock_flow_init.mock_calls) == 1
+
+    description_cache = hass.data[ssdp.DOMAIN][ssdp.SSDP_SCANNER]._description_cache
+    description_cache.uncache_description(location)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(location, text=description.format(udn="uuid:other-udn"))
+    await description_cache.async_get_description_dict(location)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(location, text=description.format(udn="uuid:mock-udn"))
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert len(mock_flow_init.mock_calls) == 2
+    mock_call_data: SsdpServiceInfo = mock_flow_init.mock_calls[1][2]["data"]
+    assert mock_call_data.upnp[ATTR_UPNP_UDN] == "uuid:mock-udn"
