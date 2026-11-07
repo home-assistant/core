@@ -1093,6 +1093,8 @@ AGENTS.md @home-assistant/core
 /tests/components/lg_infrared/ @abmantis
 /homeassistant/components/lg_netcast/ @Drafteed @splinter98
 /tests/components/lg_netcast/ @Drafteed @splinter98
+/homeassistant/components/lg_soundbar/ @fthiery
+/tests/components/lg_soundbar/ @fthiery
 /homeassistant/components/lg_thinq/ @LG-ThinQ-Integration
 /tests/components/lg_thinq/ @LG-ThinQ-Integration
 /homeassistant/components/lg_tv_rs232/ @balloob
