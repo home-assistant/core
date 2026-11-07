@@ -1,14 +1,17 @@
 """Base entity for Sofar devices."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import override
 
-from homeassistant.helpers import device_registry as dr
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import SofarDataUpdateCoordinator, SofarRuntimeData
+from .const import DOMAIN, SERVED_COMPONENTS
+from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 
 # A part of the inverter, as (device translation key, number).
 type SofarPart = tuple[str, int]
@@ -20,6 +23,29 @@ class SofarEntityDescription(EntityDescription):
 
     component: str  # attribute name on SofarInverter, e.g. 'grid', 'pv_1_2'
     part: SofarPart | None = None  # None keeps the entity on the inverter
+
+
+@callback
+def async_remove_unserved_entities(
+    hass: HomeAssistant,
+    entry: SofarConfigEntry,
+    platform: Platform,
+    descriptions: Iterable[SofarEntityDescription],
+) -> None:
+    """Drop entities the inverter does not serve, so they don't linger."""
+    # Without a stored set, served is only a guess from the type.
+    if SERVED_COMPONENTS not in entry.data:
+        return
+    registry = er.async_get(hass)
+    for description in descriptions:
+        if description.component in entry.runtime_data.served_components:
+            continue
+        if (
+            entity_id := registry.async_get_entity_id(
+                platform, DOMAIN, f"{entry.unique_id}_{description.key}"
+            )
+        ) is not None:
+            registry.async_remove(entity_id)
 
 
 class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
