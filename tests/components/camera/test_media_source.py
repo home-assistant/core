@@ -9,7 +9,10 @@ from homeassistant.components.camera import CameraCapabilities
 from homeassistant.components.camera.const import StreamType
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
+
+from .conftest import HISTORY_ID, LIVE_ID, PAST, HistoryCamera
 
 
 @pytest.fixture(autouse=True)
@@ -183,4 +186,62 @@ async def test_get_media_image_camera_off(hass: HomeAssistant) -> None:
     ):
         await media_source.async_get_media_image(
             hass, "media-source://camera/camera.demo_camera"
+        )
+
+
+async def test_get_media_image_past(
+    hass: HomeAssistant, history_camera: HistoryCamera
+) -> None:
+    """A timestamp after the entity id returns the recorded image."""
+    image = await media_source.async_get_media_image(
+        hass, f"media-source://camera/{HISTORY_ID}/2020-10-20T08:00:00+02:00"
+    )
+
+    assert image.content == b"past"
+    assert image.mime_type == "image/jpeg"
+    assert history_camera.past_calls == [PAST]
+
+
+@pytest.mark.usefixtures("history_camera")
+@pytest.mark.parametrize(
+    "suffix", ["", "yesterday", "2026-13-45T00:00:00Z"], ids=["empty", "text", "date"]
+)
+async def test_get_media_image_past_invalid(hass: HomeAssistant, suffix: str) -> None:
+    """A timestamp that does not parse is unresolvable, not the live image."""
+    with pytest.raises(media_source.Unresolvable, match="Invalid timestamp"):
+        await media_source.async_get_media_image(
+            hass, f"media-source://camera/{HISTORY_ID}/{suffix}"
+        )
+
+
+async def test_get_media_image_past_camera_off(
+    hass: HomeAssistant, history_camera: HistoryCamera
+) -> None:
+    """A camera that is off gives no past image."""
+    history_camera._attr_is_on = False
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await media_source.async_get_media_image(
+            hass, f"media-source://camera/{HISTORY_ID}/2020-10-20T06:00:00Z"
+        )
+    assert exc_info.value.translation_key == "camera_off"
+    assert history_camera.past_calls == []
+
+
+@pytest.mark.usefixtures("history_camera")
+async def test_get_media_image_past_not_supported(hass: HomeAssistant) -> None:
+    """A camera without history raises like the snapshot action."""
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await media_source.async_get_media_image(
+            hass, f"media-source://camera/{LIVE_ID}/2020-10-20T06:00:00Z"
+        )
+    assert exc_info.value.translation_key == "past_image_not_supported"
+
+
+@pytest.mark.usefixtures("history_camera")
+async def test_resolving_past_image(hass: HomeAssistant) -> None:
+    """A past image can't be played."""
+    with pytest.raises(media_source.Unresolvable):
+        await media_source.async_resolve_media(
+            hass, f"media-source://camera/{HISTORY_ID}/2020-10-20T06:00:00Z", None
         )

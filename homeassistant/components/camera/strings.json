@@ -35,6 +35,15 @@
     }
   },
   "exceptions": {
+    "camera_off": {
+      "message": "Camera {entity_id} is off."
+    },
+    "past_image_in_future": {
+      "message": "{timestamp} is in the future."
+    },
+    "past_image_not_supported": {
+      "message": "Camera {entity_id} does not support images from recorded history."
+    },
     "path_not_allowed": {
       "message": "Cannot write to {filename} because access to this path is not allowed. `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
     },
@@ -104,6 +113,10 @@
         "filename": {
           "description": "Full path to filename.",
           "name": "Filename"
+        },
+        "timestamp": {
+          "description": "Take the image from the recording at this time instead of the live image. A time without time zone is Home Assistant's local time.",
+          "name": "Timestamp"
         }
       },
       "name": "Take camera snapshot"

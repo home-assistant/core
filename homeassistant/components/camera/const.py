@@ -39,6 +39,8 @@ CONF_DURATION: Final = "duration"
 
 CAMERA_STREAM_SOURCE_TIMEOUT: Final = 10
 CAMERA_IMAGE_TIMEOUT: Final = 10
+# Recorded history can take longer, e.g. a frame grab from a recording.
+CAMERA_PAST_IMAGE_TIMEOUT: Final = 30
 
 PREVIEW_FEATURE_TWO_WAY_AUDIO: Final = "two_way_audio"
 
@@ -80,6 +82,7 @@ class CameraEntityFeature(IntFlag):
 
     ON_OFF = 1
     STREAM = 2
+    PAST_IMAGE = 4
 
 
 class CameraService(StrEnum):
@@ -102,3 +105,4 @@ class CameraServiceArgument(StrEnum):
     FORMAT = "format"
     LOOKBACK = "lookback"
     MEDIA_PLAYER = "media_player"
+    TIMESTAMP = "timestamp"
