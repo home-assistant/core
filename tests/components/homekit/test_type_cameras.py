@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, Generator
+from dataclasses import replace
 from datetime import timedelta
 import logging
 import struct
@@ -2212,17 +2213,28 @@ async def test_camera_secure_video_recording_permissions_change(
 
 
 @pytest.mark.parametrize(
-    ("config", "error"),
+    ("config", "selection", "error"),
     [
         pytest.param(
             {CONF_STREAM_SOURCE: "rtsp://user:pa'ss@cam"},
+            RECORDING_SELECTION,
             "No closing quotation",
             id="unbalanced_quote",
         ),
         pytest.param(
             {CONF_VIDEO_PROFILE_NAMES: ["baseline"]},
+            RECORDING_SELECTION,
             "list index out of range",
             id="unknown_profile",
+        ),
+        pytest.param(
+            {},
+            replace(
+                RECORDING_SELECTION,
+                recording=SupportedRecordingConfiguration(media_containers=[]),
+            ),
+            "list index out of range",
+            id="no_media_container",
         ),
     ],
 )
@@ -2233,10 +2245,12 @@ async def test_camera_secure_video_recording_cannot_build(
     recording_ffmpeg: MagicMock,
     caplog: pytest.LogCaptureFixture,
     config: dict[str, Any],
+    selection: SelectedRecordingConfiguration,
     error: str,
 ) -> None:
-    """Test a recording that ffmpeg arguments cannot be built for is logged."""
-    acc = await _recording_camera(hass, run_driver, **config)
+    """Test a recording that cannot be built is logged without starting ffmpeg."""
+    acc = await _secure_video_camera(hass, run_driver, **config)
+    acc.set_selected_recording_configuration(to_base64_str(selection.encode()))
     assert await _collect(acc) == []
     assert f"Cannot build the recording: {error}" in caplog.text
     recording_ffmpeg.open.assert_not_called()

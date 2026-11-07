@@ -796,6 +796,9 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             input_args, output = recording_ffmpeg_args(
                 self.config, selected, input_source, self._recording_with_audio
             )
+            fragment_seconds = (
+                selected.recording.media_containers[0].fragment_length_ms / 1000
+            )
         except (ValueError, LookupError) as err:
             # A stream source shlex cannot split or a format we did not advertise.
             self._log_recording_problem("[%s] Cannot build the recording: %s", err)
@@ -816,9 +819,6 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         stderr_task = self.hass.async_create_background_task(
             self._async_collect_stderr(await stream.get_reader(FFMPEG_STDERR), stderr),
             f"homekit.camera-recording-stderr-{self.entity_id}",
-        )
-        fragment_seconds = (
-            selected.recording.media_containers[0].fragment_length_ms / 1000
         )
         stall_timeout = fragment_seconds * RECORDING_STALL_FRAGMENTS
         # Connecting to the camera, or waiting for a copied keyframe, takes longer.
