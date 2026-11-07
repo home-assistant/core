@@ -71,7 +71,12 @@ def lookup_by_ean(data: Mapping[str, _T] | None, ean: str) -> _T | None:
     """Return the value for an EAN, accepting bare and suffixed keys."""
     if data is None:
         return None
-    return data.get(ean) or data.get(ean_with_delivery_point_suffix(ean))
+    if (value := data.get(ean)) is not None:
+        return value
+    bare = bare_ean(ean)
+    if (value := data.get(bare)) is not None:
+        return value
+    return data.get(ean_with_delivery_point_suffix(bare))
 
 
 class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreement]]):

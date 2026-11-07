@@ -102,7 +102,11 @@ def _build_tou_entities(
     if tou_data is None:
         return []
     prices_data = household.prices.data
-    eans = set(tou_data) | (set(prices_data.eans) if prices_data is not None else set())
+    eans = {bare_ean(ean) for ean in tou_data} | (
+        {bare_ean(ean) for ean in prices_data.eans}
+        if prices_data is not None
+        else set()
+    )
     duplicate_eans = _duplicate_type_eans(eans, household.prices.ean_energy_types)
     entities: list[EngieBeTouEntity] = []
     for ean, item in tou_data.items():
@@ -114,7 +118,7 @@ def _build_tou_entities(
         meter = item.primary_meter()
         if meter is None:
             continue
-        ean_suffix = bare_ean(ean)[-4:] if ean in duplicate_eans else ""
+        ean_suffix = bare_ean(ean)[-4:] if bare_ean(ean) in duplicate_eans else ""
         source_schedules: dict[Literal["supplier", "dgo_tgo"], TouSchedule | None] = {
             "supplier": meter.supplier,
             "dgo_tgo": meter.dgo_tgo,
@@ -552,7 +556,7 @@ class EngieBeActivePriceSensor(EngieBeTouEntity):
     def _next_transition(self) -> datetime | None:
         """Return the next slot boundary of the supplier schedule."""
         active = self._active()
-        if active is not None and active.next_transition is not None:
+        if active is not None:
             return active.next_transition
         schedule = self._supplier_schedule()
         if schedule is None or schedule.offtake is None:
@@ -564,11 +568,14 @@ class EngieBeActivePriceSensor(EngieBeTouEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return True while schedule and price data are present."""
+        """Return True while this meter still has schedule and price data."""
+        prices_data = self._prices.data
         return (
             super().available
             and self._prices.last_update_success
-            and self._prices.data is not None
+            and prices_data is not None
+            and self._supplier_schedule() is not None
+            and lookup_by_ean(prices_data.prices_by_ean, self._ean) is not None
         )
 
     @property
