@@ -85,11 +85,46 @@ async def test_camera(
 
 
 @pytest.mark.parametrize(
-    ("protocol", "two_way_audio_supported", "expected_two_way_audio"),
+    (
+        "protocol",
+        "two_way_audio_supported",
+        "stream_channels",
+        "entity_id",
+        "expected_two_way_audio",
+    ),
     [
-        pytest.param("rtsp", True, True, id="supported"),
-        pytest.param("rtsp", False, False, id="not_supported"),
-        pytest.param("rtmp", True, False, id="not_rtsp"),
+        pytest.param(
+            "rtsp",
+            True,
+            [0],
+            f"{Platform.CAMERA}.{TEST_NVR_NAME}_fluent",
+            True,
+            id="supported",
+        ),
+        pytest.param(
+            "rtsp",
+            False,
+            [0],
+            f"{Platform.CAMERA}.{TEST_NVR_NAME}_fluent",
+            False,
+            id="not_supported",
+        ),
+        pytest.param(
+            "rtmp",
+            True,
+            [0],
+            f"{Platform.CAMERA}.{TEST_NVR_NAME}_fluent",
+            False,
+            id="not_rtsp",
+        ),
+        pytest.param(
+            "rtsp",
+            True,
+            [0, 1],
+            f"{Platform.CAMERA}.{TEST_NVR_NAME}_fluent_lens_1",
+            True,
+            id="dual_lens",
+        ),
     ],
 )
 async def test_camera_two_way_audio(
@@ -99,13 +134,19 @@ async def test_camera_two_way_audio(
     reolink_host: MagicMock,
     protocol: str,
     two_way_audio_supported: bool,
+    stream_channels: list[int],
+    entity_id: str,
     expected_two_way_audio: bool,
 ) -> None:
     """Test two way audio capability of the camera entity."""
     reolink_host.protocol = protocol
+    reolink_host.is_nvr = False
+    reolink_host.stream_channels = stream_channels
+    reolink_host.is_dual_lens = len(stream_channels) > 1
+    # The capability is only reported on the first channel of a dual lens camera
     reolink_host.supported.side_effect = lambda ch, capability: {
         "ext_stream": False,
-        "two_way_audio": two_way_audio_supported,
+        "two_way_audio": two_way_audio_supported and ch == 0,
     }.get(capability, True)
 
     # Two way audio is only offered over WebRTC with the labs feature enabled
@@ -122,7 +163,7 @@ async def test_camera_two_way_audio(
     await client.send_json_auto_id(
         {
             "type": "camera/capabilities",
-            "entity_id": f"{Platform.CAMERA}.{TEST_CAM_NAME}_fluent",
+            "entity_id": entity_id,
         }
     )
     msg = await client.receive_json()
