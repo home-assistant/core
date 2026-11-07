@@ -17,7 +17,6 @@ from homeassistant.components.homekit.const import (
     DOMAIN,
     HOMEKIT_MODE_ACCESSORY,
 )
-from homeassistant.components.homekit.type_cameras import Camera
 from homeassistant.const import CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -661,7 +660,7 @@ async def test_config_entry_with_trigger_accessory(
         await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver", "recording_transport")
 async def test_config_entry_secure_video_camera(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
@@ -692,26 +691,22 @@ async def test_config_entry_secure_video_camera(
         },
     )
     entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+    assert diag["accessory"]["secure_video"] == {
+        "active": False,
+        "audio_active": False,
+        "homekit_camera_active": True,
+        "selected_configuration": None,
+        "transport_port": None,
+        "connections": 0,
+    }
     with (
-        patch.object(Camera, "start_recording_transport"),
-        patch.object(Camera, "stop_recording_transport"),
+        patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+        patch("homeassistant.components.homekit.HomeKit.async_stop"),
+        patch("homeassistant.components.homekit.async_port_is_available"),
     ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
-        diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
-        assert diag["accessory"]["secure_video"] == {
-            "active": False,
-            "audio_active": False,
-            "homekit_camera_active": True,
-            "selected_configuration": None,
-            "transport_port": None,
-            "connections": 0,
-        }
-        with (
-            patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
-            patch("homeassistant.components.homekit.HomeKit.async_stop"),
-            patch("homeassistant.components.homekit.async_port_is_available"),
-        ):
-            assert await hass.config_entries.async_unload(entry.entry_id)
-            await hass.async_block_till_done()

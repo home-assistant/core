@@ -332,15 +332,6 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
 
         stream_address = config.get(CONF_STREAM_ADDRESS, driver.state.address)
 
-        # Recordings are scaled to the selected size, streaming limits do not apply.
-        self._recording_resolutions = [
-            (height, width) if max_height > max_width else (width, height)
-            for width, height in RECORDING_RESOLUTIONS
-        ]
-        self._recording_fps = next(
-            (fps for fps in RECORDING_FRAME_RATES if fps <= max_fps),
-            RECORDING_FRAME_RATES[-1],
-        )
         self._recording_problem_logged = False
 
         self.secure_video = False
@@ -356,6 +347,18 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 )
             else:
                 self.secure_video = True
+                fps = next(
+                    (fps for fps in RECORDING_FRAME_RATES if fps <= max_fps),
+                    RECORDING_FRAME_RATES[-1],
+                )
+                # Recordings are scaled to the selected size, streaming limits do
+                # not apply.
+                self._recording_attributes = [
+                    VideoAttributes(height, width, fps)
+                    if max_height > max_width
+                    else VideoAttributes(width, height, fps)
+                    for width, height in RECORDING_RESOLUTIONS
+                ]
 
         options = {
             "video": video_options,
@@ -684,7 +687,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
 
     async def _async_stop_recording_transport(self) -> None:
         """Close the recording listener once it has started."""
-        # Cancelling a start that is binding could leave a socket open.
+        # Wait for a pending start so the listener is closed when stop() returns.
         if self._recording_transport_start:
             await asyncio.wait({self._recording_transport_start})
         await self.stop_recording_transport()
@@ -712,10 +715,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         general, video, audio = super()._default_recording_configs(options)
         # No prebuffer is kept, the recording starts when the hub asks for it.
         general.prebuffer_length_ms = 0
-        video[0].attributes = [
-            VideoAttributes(width, height, self._recording_fps)
-            for width, height in self._recording_resolutions
-        ]
+        video[0].attributes = self._recording_attributes
         return general, video, audio
 
     @override
@@ -807,7 +807,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         ):
             self._log_recording_problem("[%s] Failed to start recording ffmpeg")
             return
-        stderr: deque[bytes] = deque(maxlen=RECORDING_STDERR_LINES)
+        stderr: deque[str] = deque(maxlen=RECORDING_STDERR_LINES)
         stderr_task = self.hass.async_create_background_task(
             self._async_collect_stderr(await stream.get_reader(FFMPEG_STDERR), stderr),
             f"homekit.camera-recording-stderr-{self.entity_id}",
@@ -818,28 +818,24 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             while True:
                 try:
                     async with asyncio.timeout(RECORDING_TIMEOUT):
-                        packet = await anext(packets)
-                except StopAsyncIteration:
-                    if not await self._async_recording_failed(
-                        stream, stderr_task, stderr
-                    ):
-                        self._log_recording_without_video(stderr)
-                    return
+                        packet = await anext(packets, None)
                 except TimeoutError:
                     self._log_recording_problem(
                         "[%s] Recording ended, ffmpeg delivered no video for %s"
                         " seconds: %s",
                         RECORDING_TIMEOUT,
-                        b" ".join(stderr).decode(errors="replace"),
+                        " ".join(stderr),
                     )
                     return
-                if packet.is_last and await self._async_recording_failed(
-                    stream, stderr_task, stderr
-                ):
-                    return
-                if packet.is_last and sent_packets < RECORDING_FIRST_VIDEO_PACKET:
-                    self._log_recording_without_video(stderr)
-                    return
+                if packet is None or packet.is_last:
+                    if await self._async_recording_failed(stream, stderr_task, stderr):
+                        return
+                    if packet is None or sent_packets < RECORDING_FIRST_VIDEO_PACKET:
+                        self._log_recording_problem(
+                            "[%s] Recording ffmpeg ended without video: %s",
+                            " ".join(stderr),
+                        )
+                        return
                 sent_packets += 1
                 if sent_packets == RECORDING_FIRST_VIDEO_PACKET:
                     self._recording_problem_logged = False
@@ -856,17 +852,11 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 stream.kill()
                 await stream.process.wait()
 
-    def _log_recording_without_video(self, stderr: deque[bytes]) -> None:
-        self._log_recording_problem(
-            "[%s] Recording ffmpeg ended without video: %s",
-            b" ".join(stderr).decode(errors="replace"),
-        )
-
     async def _async_recording_failed(
         self,
         stream: HAFFmpeg,
         stderr_task: asyncio.Task[None],
-        stderr: deque[bytes],
+        stderr: deque[str],
     ) -> bool:
         """Log and return if the recording ffmpeg exited with an error."""
         try:
@@ -883,23 +873,20 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         self._log_recording_problem(
             "[%s] Recording ffmpeg exited with %s: %s",
             returncode,
-            b" ".join(stderr).decode(errors="replace"),
+            " ".join(stderr),
         )
         return True
 
     async def _async_collect_stderr(
-        self, reader: asyncio.StreamReader, lines: deque[bytes]
+        self, reader: asyncio.StreamReader, lines: deque[str]
     ) -> None:
         """Keep the last ffmpeg output lines of a recording."""
         try:
-            while line := await reader.readline():
-                line = RECORDING_STDERR_URL.sub(b"<url>", line.rstrip())
-                if _LOGGER.isEnabledFor(logging.DEBUG):
-                    _LOGGER.debug(
-                        "[%s] Recording ffmpeg: %s",
-                        self.entity_id,
-                        line.decode(errors="replace"),
-                    )
+            while raw := await reader.readline():
+                line = RECORDING_STDERR_URL.sub(b"<url>", raw.rstrip()).decode(
+                    errors="replace"
+                )
+                _LOGGER.debug("[%s] Recording ffmpeg: %s", self.entity_id, line)
                 lines.append(line)
         except ValueError:
             # A line over the reader limit, keep draining so ffmpeg never blocks.

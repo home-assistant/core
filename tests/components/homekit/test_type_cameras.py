@@ -1607,16 +1607,6 @@ async def _secure_video_camera(
 
 
 @pytest.fixture
-def recording_transport() -> Generator[tuple[AsyncMock, AsyncMock]]:
-    """Patch the HDS listener, sockets are blocked in tests."""
-    with (
-        patch.object(Camera, "start_recording_transport") as start,
-        patch.object(Camera, "stop_recording_transport") as stop,
-    ):
-        yield start, stop
-
-
-@pytest.fixture
 async def no_state_file(hass: HomeAssistant) -> AsyncGenerator[None]:
     """Keep recording state changes from writing the accessory state file."""
     with patch("pyhap.accessory_driver.AccessoryDriver.async_persist"):
@@ -2123,6 +2113,14 @@ async def _live_camera(hass: HomeAssistant, driver: HomeDriver) -> Camera:
     return acc
 
 
+def _streaming_status(acc: Camera) -> str:
+    return (
+        acc.get_service("CameraRTPStreamManagement")
+        .get_characteristic("StreamingStatus")
+        .get_value()
+    )
+
+
 def _set_camera_active(acc: Camera, active: int) -> None:
     acc.get_service("CameraOperatingMode").get_characteristic(
         "HomeKitCameraActive"
@@ -2146,12 +2144,7 @@ async def test_camera_secure_video_turned_off(
     _set_camera_active(acc, 0)
     await hass.async_block_till_done()
     live_ffmpeg.close.assert_awaited_once_with()
-    assert (
-        acc.get_service("CameraRTPStreamManagement")
-        .get_characteristic("StreamingStatus")
-        .get_value()
-        == STREAM_AVAILABLE
-    )
+    assert _streaming_status(acc) == STREAM_AVAILABLE
     session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
     assert not await acc.reconfigure_stream(session_info, {})
 
@@ -2277,12 +2270,7 @@ async def test_camera_secure_video_turned_off_new_session_keeps_slot(
     _set_camera_active(acc, 0)
     await hass.async_block_till_done()
 
-    assert (
-        acc.get_service("CameraRTPStreamManagement")
-        .get_characteristic("StreamingStatus")
-        .get_value()
-        == STREAM_STREAMING
-    )
+    assert _streaming_status(acc) == STREAM_STREAMING
 
 
 @pytest.mark.usefixtures("no_state_file", "recording_transport")

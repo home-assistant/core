@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Generator
 from contextlib import suppress
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import async_capture_events
@@ -13,6 +13,7 @@ from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import BRIDGE_NAME, EVENT_HOMEKIT_CHANGED
 from homeassistant.components.homekit.iidmanager import AccessoryIIDStorage
+from homeassistant.components.homekit.type_cameras import Camera
 from homeassistant.core import Event, HomeAssistant
 
 
@@ -133,3 +134,13 @@ def demo_cleanup(hass: HomeAssistant) -> Generator[None]:
     yield
     with suppress(FileNotFoundError):
         os.remove(hass.config.path(YAML_DEVICES))
+
+
+@pytest.fixture
+def recording_transport() -> Generator[tuple[AsyncMock, AsyncMock]]:
+    """Patch the HDS listener, sockets are blocked in tests."""
+    with (
+        patch.object(Camera, "start_recording_transport") as start,
+        patch.object(Camera, "stop_recording_transport") as stop,
+    ):
+        yield start, stop
