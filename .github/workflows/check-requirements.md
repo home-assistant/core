@@ -23,6 +23,7 @@ tools:
   github:
     toolsets: [repos, pull_requests]
     min-integrity: unapproved
+timeout-minutes: 30
 if: needs.prepare.outputs.skip != 'true'
 safe-outputs:
   add-comment:
