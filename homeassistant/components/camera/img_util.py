@@ -3,9 +3,11 @@
 import logging
 from typing import TYPE_CHECKING, Literal, cast
 
-from turbojpeg import TurboJPEG
-
 if TYPE_CHECKING:
+    from turbojpeg import TurboJPEG
+
+    from homeassistant.core import HomeAssistant
+
     from . import Image
 
 SUPPORTED_SCALING_FACTORS = [(7, 8), (3, 4), (5, 8), (1, 2), (3, 8), (1, 4), (1, 8)]
@@ -34,6 +36,12 @@ def find_supported_scaling_factor(
 
     # Giant image, the most we can reduce by is 1/8
     return SUPPORTED_SCALING_FACTORS[-1]
+
+
+async def async_ensure_turbojpeg(hass: HomeAssistant) -> None:
+    """Create TurboJPEG in the executor if it hasn't been created yet."""
+    if not TurboJPEGSingleton.created():
+        await hass.async_add_executor_job(TurboJPEGSingleton.instance)
 
 
 def scale_jpeg_camera_image(cam_image: Image, width: int, height: int) -> bytes:
@@ -85,9 +93,16 @@ class TurboJPEGSingleton:
             TurboJPEGSingleton()
         return TurboJPEGSingleton.__instance
 
+    @staticmethod
+    def created() -> bool:
+        """Return whether TurboJPEG creation has already been attempted."""
+        return TurboJPEGSingleton.__instance is not None
+
     def __init__(self) -> None:
         """Try to create TurboJPEG only once."""
         try:
+            from turbojpeg import TurboJPEG  # noqa: PLC0415
+
             TurboJPEGSingleton.__instance = TurboJPEG()
         except Exception:
             _LOGGER.exception(
@@ -97,7 +112,6 @@ class TurboJPEGSingleton:
             TurboJPEGSingleton.__instance = False
 
 
-# TurboJPEG loads libraries that do blocking I/O.
-# Initialize TurboJPEGSingleton in the executor to avoid
-# blocking the event loop.
-TurboJPEGSingleton.instance()
+# TurboJPEG loads libraries that do blocking I/O (and imports numpy), so it isn't
+# created at import. Async callers await async_ensure_turbojpeg before scaling;
+# the stream keyframe converter already runs in the executor.
