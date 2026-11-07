@@ -1569,7 +1569,7 @@ RECORDING_CONTAINER = (
             "-i rtsp://cam",
             RECORDING_TRANSCODE.replace(
                 RECORDING_SCALE,
-                "-vf 'drawtext=text='\"'\"'Front door'\"'\"',hflip,"
+                "-vf 'hflip,drawtext=text='\"'\"'Front door'\"'\"',"
                 f"{RECORDING_FILTER}'",
             )
             + f" -map 0:a:0 {RECORDING_AUDIO} {RECORDING_CONTAINER}",

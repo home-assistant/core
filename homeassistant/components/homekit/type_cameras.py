@@ -189,13 +189,17 @@ def recording_ffmpeg_args(
                 f"-level:v {RECORDING_LEVELS[int(video.level)]} "
                 "-preset veryfast -tune zerolatency "
             )
-        # A second -vf would replace source filters such as a flip, so they run first.
-        filters = []
-        for flag in ("-vf", "-filter:v"):
-            while flag in input_args:
-                index = input_args.index(flag)
-                filters.append(input_args[index + 1])
-                del input_args[index : index + 2]
+        # A second -vf would replace source filters such as a flip, so they run
+        # first, in the reverse order ha-ffmpeg also gives them in live streams.
+        filters: list[str] = []
+        source_args: list[str] = []
+        tokens = iter(input_args)
+        for token in tokens:
+            if token in ("-vf", "-filter:v"):
+                filters.insert(0, next(tokens))
+            else:
+                source_args.append(token)
+        input_args = source_args
         # The hub expects exactly the selected size, other aspect ratios are padded.
         filters.append(
             f"scale={attributes.width}:{attributes.height}:"
