@@ -1,8 +1,13 @@
 """Tests for the permissions module."""
 
+import pytest
 from pytest_homeassistant.common import MockUser
 
-from homeassistant.auth.permissions import filter_entity_ids_by_permission
+from homeassistant.auth.permissions import (
+    PolicyType,
+    entity_permission_filter,
+    filter_entity_ids_by_permission,
+)
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.core import HomeAssistant
 
@@ -47,3 +52,34 @@ async def test_filter_entity_ids_by_permission_empty(hass: HomeAssistant) -> Non
     assert not user.is_admin
 
     assert filter_entity_ids_by_permission(user, ["light.forbidden"], POLICY_READ) == []
+
+
+@pytest.mark.parametrize(
+    ("is_owner", "policy"),
+    [
+        pytest.param(
+            True, {"entities": {"entity_ids": {"light.allowed": True}}}, id="admin"
+        ),
+        pytest.param(False, {"entities": {"all": True}}, id="access_all"),
+    ],
+)
+def test_entity_permission_filter_full_access(
+    is_owner: bool, policy: PolicyType
+) -> None:
+    """Test users that can access every entity get no filter."""
+    user = MockUser(is_owner=is_owner)
+    user.mock_policy(policy)
+
+    assert entity_permission_filter(user, POLICY_READ) is None
+
+
+def test_entity_permission_filter_filtered() -> None:
+    """Test users without full access get a filter of the permitted entities."""
+    user = MockUser()
+    user.mock_policy({"entities": {"entity_ids": {"light.allowed": True}}})
+    assert not user.is_admin
+
+    entity_filter = entity_permission_filter(user, POLICY_READ)
+    assert entity_filter is not None
+    assert entity_filter("light.allowed")
+    assert not entity_filter("light.forbidden")
