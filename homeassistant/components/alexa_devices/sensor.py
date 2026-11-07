@@ -59,12 +59,19 @@ class AmazonSensorEntityDescription(AmazonBaseEntityDescription):
 class AmazonNotificationEntityDescription(AmazonBaseEntityDescription):
     """Amazon Devices notification entity description."""
 
-    is_available_fn: DescriptionFn[bool] = lambda device, key, _: (
+    is_available_fn: DescriptionFn[bool] = lambda device, key, coordinator: (
         device.online
-        and (notification := device.notifications.get(key)) is not None
+        and (
+            notification := coordinator.notifications.get(device.serial_number, {}).get(
+                key
+            )
+        )
+        is not None
         and notification.next_occurrence is not None
     )
-    value_fn: ValueFn = lambda device, key, _: device.notifications[key].next_occurrence
+    value_fn: ValueFn = lambda device, key, coordinator: (
+        coordinator.notifications[device.serial_number][key].next_occurrence
+    )
 
 
 SENSORS: Final = (

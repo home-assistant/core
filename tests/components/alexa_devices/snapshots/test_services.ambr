@@ -71,26 +71,6 @@
         'manufacturer': 'Test manufacturer',
         'media_player_supported': True,
         'model': 'Test model',
-        'notifications': dict({
-          'Alarm': dict({
-            'label': 'Morning Alarm',
-            'next_occurrence': datetime.datetime(2023, 10, 1, 7, 0, tzinfo=datetime.timezone.utc),
-            'status': 'ON',
-            'type': 'Alarm',
-          }),
-          'Reminder': dict({
-            'label': 'Take out the trash',
-            'next_occurrence': None,
-            'status': 'ON',
-            'type': 'Reminder',
-          }),
-          'Timer': dict({
-            'label': '',
-            'next_occurrence': None,
-            'status': 'OFF',
-            'type': 'Timer',
-          }),
-        }),
         'notifications_supported': True,
         'online': True,
         'parent_clusters': dict({
@@ -208,26 +188,6 @@
         'manufacturer': 'Test manufacturer',
         'media_player_supported': True,
         'model': 'Test model',
-        'notifications': dict({
-          'Alarm': dict({
-            'label': 'Morning Alarm',
-            'next_occurrence': datetime.datetime(2023, 10, 1, 7, 0, tzinfo=datetime.timezone.utc),
-            'status': 'ON',
-            'type': 'Alarm',
-          }),
-          'Reminder': dict({
-            'label': 'Take out the trash',
-            'next_occurrence': None,
-            'status': 'ON',
-            'type': 'Reminder',
-          }),
-          'Timer': dict({
-            'label': '',
-            'next_occurrence': None,
-            'status': 'OFF',
-            'type': 'Timer',
-          }),
-        }),
         'notifications_supported': True,
         'online': True,
         'parent_clusters': dict({
@@ -345,26 +305,6 @@
         'manufacturer': 'Test manufacturer',
         'media_player_supported': True,
         'model': 'Test model',
-        'notifications': dict({
-          'Alarm': dict({
-            'label': 'Morning Alarm',
-            'next_occurrence': datetime.datetime(2023, 10, 1, 7, 0, tzinfo=datetime.timezone.utc),
-            'status': 'ON',
-            'type': 'Alarm',
-          }),
-          'Reminder': dict({
-            'label': 'Take out the trash',
-            'next_occurrence': None,
-            'status': 'ON',
-            'type': 'Reminder',
-          }),
-          'Timer': dict({
-            'label': '',
-            'next_occurrence': None,
-            'status': 'OFF',
-            'type': 'Timer',
-          }),
-        }),
         'notifications_supported': True,
         'online': True,
         'parent_clusters': dict({
