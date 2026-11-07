@@ -21,10 +21,12 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.util import dt as dt_util
 
 from . import init_integration
 
 
+@pytest.mark.freeze_time("2025-02-21T12:00:00Z")
 async def test_global_services_with_config_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -46,7 +48,9 @@ async def test_global_services_with_config_entry(
         {CONF_CONFIG_ENTRY: config_entry.entry_id},
         blocking=True,
     )
-    config_entry.runtime_data.controller.sync_clock.assert_called_once_with()
+    config_entry.runtime_data.controller.sync_clock.assert_called_once_with(
+        dt_util.now()
+    )
 
     # Test invalid interface
     with pytest.raises(ServiceValidationError):

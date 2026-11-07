@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, selector, service
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from . import VelbusConfigEntry
@@ -50,7 +51,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             call.hass, DOMAIN, call.data[CONF_CONFIG_ENTRY]
         )
         try:
-            await entry.runtime_data.controller.sync_clock()
+            await entry.runtime_data.controller.sync_clock(dt_util.now())
         except OSError as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
