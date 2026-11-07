@@ -12,6 +12,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -28,6 +29,7 @@ from .const import (
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_ORIGIN,
+    CONF_REFERRER,
     CONF_TIME,
     CONF_TIME_TYPE,
     CONF_TRAFFIC_MODEL,
@@ -37,12 +39,14 @@ from .const import (
     DEFAULT_NAME,
     DEPARTURE_TIME,
     DOMAIN,
+    SECTION_API_KEY_OPTIONS,
     TRAVEL_MODES,
     UNITS_IMPERIAL,
     UNITS_METRIC,
 )
 from .helpers import (
     InvalidApiKeyException,
+    InvalidReferrerException,
     PermissionDeniedException,
     UnknownException,
     validate_config_entry,
@@ -57,11 +61,19 @@ from .schemas import (
     UNITS_SELECTOR,
 )
 
+DESCRIPTION_PLACEHOLDERS = {
+    "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
+}
+
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_DESTINATION): cv.string,
         probatio.Required(CONF_ORIGIN): cv.string,
+        probatio.Optional(SECTION_API_KEY_OPTIONS): section(
+            probatio.Schema({probatio.Optional(CONF_REFERRER): cv.string}),
+            {"collapsed": True},
+        ),
     }
 )
 
@@ -130,6 +142,18 @@ class GoogleOptionsFlow(OptionsFlow):
         )
 
 
+def _extract_entry_data(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Flatten the API key options section into the entry data."""
+    data = {
+        key: value
+        for key, value in user_input.items()
+        if key != SECTION_API_KEY_OPTIONS
+    }
+    if referrer := user_input.get(SECTION_API_KEY_OPTIONS, {}).get(CONF_REFERRER):
+        data[CONF_REFERRER] = referrer
+    return data
+
+
 async def validate_input(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> dict[str, str] | None:
@@ -140,11 +164,14 @@ async def validate_input(
             user_input[CONF_API_KEY],
             user_input[CONF_ORIGIN],
             user_input[CONF_DESTINATION],
+            user_input.get(SECTION_API_KEY_OPTIONS, {}).get(CONF_REFERRER),
         )
     except PermissionDeniedException:
         return {"base": "permission_denied"}
     except InvalidApiKeyException:
         return {"base": "invalid_auth"}
+    except InvalidReferrerException:
+        return {"base": "invalid_referrer"}
     except TimeoutError:
         return {"base": "timeout_connect"}
     except UnknownException:
@@ -177,7 +204,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
-                    data=user_input,
+                    data=_extract_entry_data(user_input),
                     options=default_options(self.hass),
                 )
 
@@ -185,6 +212,7 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
             errors=errors,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
 
     async def async_step_reconfigure(
@@ -196,13 +224,25 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await validate_input(self.hass, user_input)
             if not errors:
                 return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(), data=user_input
+                    self._get_reconfigure_entry(), data=_extract_entry_data(user_input)
                 )
 
+        suggested_values: dict[str, Any]
+        if user_input is not None:
+            # Keep what the user submitted so it can be corrected
+            suggested_values = user_input
+        else:
+            entry_data = self._get_reconfigure_entry().data
+            suggested_values = {
+                key: value for key, value in entry_data.items() if key != CONF_REFERRER
+            }
+            if referrer := entry_data.get(CONF_REFERRER):
+                suggested_values[SECTION_API_KEY_OPTIONS] = {CONF_REFERRER: referrer}
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                CONFIG_SCHEMA, self._get_reconfigure_entry().data
+                CONFIG_SCHEMA, suggested_values
             ),
             errors=errors,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
