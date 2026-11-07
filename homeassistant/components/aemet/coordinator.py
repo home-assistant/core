@@ -13,13 +13,14 @@ from aemet_opendata.const import (
     AOD_FORECAST_HOURLY,
     AOD_TOWN,
 )
-from aemet_opendata.exceptions import AemetError
+from aemet_opendata.exceptions import AemetError, AuthError
 from aemet_opendata.helpers import dict_nested_value
 from aemet_opendata.interface import AEMET
 
 from homeassistant.components.weather import Forecast
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONDITIONS_MAP, DOMAIN, FORECAST_MAP
@@ -66,6 +67,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         async with timeout(API_TIMEOUT):
             try:
                 await self.aemet.update()
+            except AuthError as error:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_api_key",
+                ) from error
             except AemetError as error:
                 raise UpdateFailed(error) from error
 
