@@ -13,7 +13,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '1.0',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -28,8 +28,8 @@
     'model_id': None,
     'name': 'Living Room',
     'name_by_user': None,
-    'serial_number': None,
-    'sw_version': None,
+    'serial_number': 'J4B60300391',
+    'sw_version': '611V4-C20',
     'via_device_id': None,
   })
 # ---
