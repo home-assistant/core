@@ -202,12 +202,6 @@ class EarnEP1Sensor(EarnEP1Entity, SensorEntity):
 
     @property
     @override
-    def available(self) -> bool:
-        """Return True if the sensor value is available."""
-        return super().available and self.coordinator.data is not None
-
-    @property
-    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.coordinator.data.get(self.entity_description.key)
