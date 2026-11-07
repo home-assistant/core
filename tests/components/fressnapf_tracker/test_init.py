@@ -230,3 +230,26 @@ async def test_remove_stale_device(
     )
     assert await _remove_device(ws_client, stale.id, mock_config_entry.entry_id)
     assert device_registry.async_get(stale.id) is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_remove_device_entry_not_loaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test no device can be removed while the config entry is not loaded."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    stale = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "STALE123")},
+    )
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    assert not await _remove_device(ws_client, stale.id, mock_config_entry.entry_id)
+    assert device_registry.async_get(stale.id) is not None
