@@ -1,7 +1,6 @@
 """Tests for the SMLIGHT update platform."""
 
 import asyncio
-from collections.abc import Callable
 from datetime import timedelta
 from unittest.mock import MagicMock, call, patch
 
@@ -724,14 +723,14 @@ async def test_zwave_update_naming_mr10(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "version", "installed_version", "latest_version", "set_installed"),
+    ("entity_id", "version", "installed_version", "latest_version", "updated_info"),
     [
         pytest.param(
             "update.mock_title_core_firmware",
             "0.9.9",
             "v2.3.6",
             "v2.7.5",
-            lambda info, version: setattr(info, "sw_version", version),
+            Info(sw_version="0.9.9"),
             id="core",
         ),
         pytest.param(
@@ -739,7 +738,7 @@ async def test_zwave_update_naming_mr10(
             "20240315",
             "20240314",
             "20250201",
-            lambda info, version: setattr(info.radios[0], "zb_version", version),
+            Info(radios=[Radio(chip_index=0, zb_type=0, zb_version="20240315")]),
             id="zigbee",
         ),
     ],
@@ -748,21 +747,15 @@ async def test_zwave_update_naming_mr10(
 async def test_update_firmware_specific_version(
     mock_sleep: MagicMock,
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
     entity_id: str,
     version: str,
     installed_version: str,
     latest_version: str,
-    set_installed: Callable[[Info, str], None],
+    updated_info: Info,
 ) -> None:
     """Test installing a specific firmware version, older than the latest."""
-    mock_info = Info.from_dict(
-        await async_load_json_object_fixture(hass, "info.json", DOMAIN)
-    )
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = mock_info
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_INSTALLED_VERSION] == installed_version
@@ -783,10 +776,8 @@ async def test_update_firmware_specific_version(
     event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
     event_function(MOCK_FIRMWARE_DONE)
 
-    set_installed(mock_info, version)
-
-    freezer.tick(SCAN_FIRMWARE_INTERVAL)
-    async_fire_time_changed(hass)
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = updated_info
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -809,6 +800,7 @@ async def test_update_firmware_specific_version(
 async def test_update_firmware_specific_version_invalid(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
     version: str,
     translation_key: str,
 ) -> None:
@@ -823,5 +815,6 @@ async def test_update_firmware_specific_version_invalid(
             blocking=True,
         )
 
+    mock_smlight_client.fw_update.assert_not_called()
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == translation_key
