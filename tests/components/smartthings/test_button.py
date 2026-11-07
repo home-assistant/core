@@ -162,3 +162,116 @@ async def test_turn_on_with_wrong_dishwasher_machine_state(
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
+
+
+DISHWASHER_START_LATER_ENTITY_ID = "button.dishwasher_1_start_later"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+async def test_press_dishwasher_start_later(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test starting the dishwasher later sends the delay in seconds."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    set_attribute_value(
+        devices,
+        Capability.CUSTOM_DISHWASHER_DELAY_START_TIME,
+        Attribute.DISHWASHER_DELAY_START_TIME,
+        "08:08:00",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: DISHWASHER_START_LATER_ENTITY_ID},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "7ff318f3-3772-524d-3c9f-72fcd26413ed",
+        Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
+        Command.START_LATER,
+        MAIN,
+        argument=29280,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+@pytest.mark.parametrize(
+    ("remote_control_enabled", "machine_state", "delay_start_time", "message"),
+    [
+        pytest.param(
+            "false",
+            "stop",
+            "08:08:00",
+            "Can only be changed when remote control is enabled",
+            id="remote_control_disabled",
+        ),
+        pytest.param(
+            "true",
+            "run",
+            "08:08:00",
+            "Can only be changed when the dishwasher machine state is stop",
+            id="machine_running",
+        ),
+        pytest.param(
+            "true",
+            "stop",
+            "00:00:00",
+            "Set a delay start time before starting the dishwasher later",
+            id="no_delay",
+        ),
+        pytest.param(
+            "true",
+            "stop",
+            None,
+            "Set a delay start time before starting the dishwasher later",
+            id="unknown_delay",
+        ),
+    ],
+)
+async def test_press_dishwasher_start_later_not_allowed(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    remote_control_enabled: str,
+    machine_state: str,
+    delay_start_time: str | None,
+    message: str,
+) -> None:
+    """Test starting the dishwasher later is validated."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        remote_control_enabled,
+    )
+    set_attribute_value(
+        devices,
+        Capability.DISHWASHER_OPERATING_STATE,
+        Attribute.MACHINE_STATE,
+        machine_state,
+    )
+    set_attribute_value(
+        devices,
+        Capability.CUSTOM_DISHWASHER_DELAY_START_TIME,
+        Attribute.DISHWASHER_DELAY_START_TIME,
+        delay_start_time,
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError, match=message):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: DISHWASHER_START_LATER_ENTITY_ID},
+            blocking=True,
+        )
+    devices.execute_device_command.assert_not_called()

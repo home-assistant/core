@@ -115,6 +115,9 @@
       "start": {
         "name": "[%key:common::action::start%]"
       },
+      "start_later": {
+        "name": "Start later"
+      },
       "stop": {
         "name": "[%key:common::action::stop%]"
       }
@@ -241,6 +244,9 @@
       },
       "cooler_temperature": {
         "name": "Fridge temperature"
+      },
+      "dishwasher_delay_start": {
+        "name": "Delay start"
       },
       "freezer_temperature": {
         "name": "Freezer temperature"
@@ -1183,6 +1189,9 @@
     },
     "delete_subscription_error": {
       "message": "Could not delete the old SmartThings subscription: {error}"
+    },
+    "dishwasher_delay_start_not_set": {
+      "message": "Set a delay start time before starting the dishwasher later"
     },
     "dishwasher_machine_state": {
       "message": "Can only be changed when the dishwasher machine state is {machine_state}"
