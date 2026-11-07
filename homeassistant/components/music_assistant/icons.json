@@ -4,6 +4,14 @@
       "favorite_now_playing": {
         "default": "mdi:heart-plus"
       }
+    },
+    "switch": {
+      "queue_autoplay": {
+        "default": "mdi:playlist-play"
+      },
+      "queue_crossfade": {
+        "default": "mdi:shuffle-variant"
+      }
     }
   },
   "services": {

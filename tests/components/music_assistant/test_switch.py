@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, call
 
 from music_assistant_models.enums import EventType
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.music_assistant.const import DOMAIN
@@ -129,3 +130,40 @@ async def test_name_translation_availability(
         assert translations.get(f"{prefix}{translation_key}.name") is not None, (
             f"{translation_key} is missing in strings.json for platform switch"
         )
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "command", "argument"),
+    [
+        (
+            "switch.test_player_1_crossfade",
+            "player_queues/crossfade",
+            "crossfade_enabled",
+        ),
+        (
+            "switch.test_player_1_don_t_stop_the_music",
+            "player_queues/autoplay",
+            "autoplay_enabled",
+        ),
+    ],
+)
+async def test_queue_switch_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    entity_id: str,
+    command: str,
+    argument: str,
+) -> None:
+    """Test a queue switch sets the setting of the player's own queue."""
+    music_assistant_client.server_info.schema_version = 101
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        command, queue_id="00:00:00:00:00:01", **{argument: True}, require_schema=101
+    )

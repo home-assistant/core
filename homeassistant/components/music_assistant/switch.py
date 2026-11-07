@@ -1,9 +1,12 @@
 """Music Assistant Switch platform."""
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from typing import Any, Final, override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import PlayerOption, PlayerOptionType
+from music_assistant_models.player_queue import PlayerQueue
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import Platform
@@ -11,8 +14,37 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .entity import MusicAssistantPlayerOptionEntity
+from .const import QUEUE_SETTINGS_SCHEMA_VERSION
+from .entity import MusicAssistantEntity, MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
+
+
+@dataclass(frozen=True, kw_only=True)
+class MusicAssistantQueueSwitchDescription(SwitchEntityDescription):
+    """Describes a switch for a setting of a player's queue."""
+
+    is_on_fn: Callable[[PlayerQueue], bool]
+    set_fn: Callable[[MusicAssistantClient, str, bool], Awaitable[None]]
+
+
+QUEUE_SWITCHES: Final = (
+    MusicAssistantQueueSwitchDescription(
+        key="queue_crossfade",
+        translation_key="queue_crossfade",
+        is_on_fn=lambda queue: queue.crossfade_enabled,
+        set_fn=lambda mass, queue_id, enabled: mass.player_queues.crossfade(
+            queue_id, enabled
+        ),
+    ),
+    MusicAssistantQueueSwitchDescription(
+        key="queue_autoplay",
+        translation_key="queue_autoplay",
+        is_on_fn=lambda queue: queue.autoplay_enabled,
+        set_fn=lambda mass, queue_id, enabled: mass.player_queues.autoplay(
+            queue_id, enabled
+        ),
+    ),
+)
 
 PLAYER_OPTIONS_SWITCH: Final[dict[str, bool]] = {
     # translation_key: enabled_by_default
@@ -42,7 +74,17 @@ async def async_setup_entry(
         player = mass.players.get(player_id)
         if player is None:
             return
-        entities: list[MusicAssistantPlayerConfigSwitch] = []
+        entities: list[SwitchEntity] = []
+        assert mass.server_info  # for type checking
+        # older servers lack the commands, so their players keep only the option switches
+        if (
+            mass.server_info.schema_version >= QUEUE_SETTINGS_SCHEMA_VERSION
+            and mass.player_queues.get(player_id) is not None
+        ):
+            entities.extend(
+                MusicAssistantQueueSwitch(mass, player_id, description)
+                for description in QUEUE_SWITCHES
+            )
         for player_option in player.options:
             if (
                 not player_option.read_only
@@ -105,3 +147,39 @@ class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchE
         self._attr_is_on = (
             player_option.value if isinstance(player_option.value, bool) else None
         )
+
+
+class MusicAssistantQueueSwitch(MusicAssistantEntity, SwitchEntity):
+    """Switch for a setting of the player's own queue."""
+
+    entity_description: MusicAssistantQueueSwitchDescription
+
+    def __init__(
+        self,
+        mass: MusicAssistantClient,
+        player_id: str,
+        entity_description: MusicAssistantQueueSwitchDescription,
+    ) -> None:
+        """Initialize MusicAssistantQueueSwitch."""
+        super().__init__(mass, player_id)
+        self.entity_description = entity_description
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return if the queue setting is on."""
+        if (queue := self.mass.player_queues.get(self.player_id)) is None:
+            return None
+        return self.entity_description.is_on_fn(queue)
+
+    @catch_musicassistant_error
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the queue setting on."""
+        await self.entity_description.set_fn(self.mass, self.player_id, True)
+
+    @catch_musicassistant_error
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the queue setting off."""
+        await self.entity_description.set_fn(self.mass, self.player_id, False)

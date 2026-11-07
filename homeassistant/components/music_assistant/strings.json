@@ -280,6 +280,12 @@
       "pure_direct": {
         "name": "Pure direct"
       },
+      "queue_autoplay": {
+        "name": "Don't stop the music"
+      },
+      "queue_crossfade": {
+        "name": "Crossfade"
+      },
       "speaker_a": {
         "name": "Speaker A"
       },
