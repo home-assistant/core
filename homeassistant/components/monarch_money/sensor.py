@@ -17,11 +17,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DEFAULT_CURRENCY
 from .coordinator import MonarchMoneyConfigEntry
 from .entity import (
     MonarchMoneyAccountEntity,
@@ -74,7 +75,7 @@ MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, .
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda account: account.balance,
         picture_fn=lambda account: account.logo_url,
-        native_unit_of_measurement=CURRENCY_DOLLAR,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
     ),
 )
 
@@ -87,7 +88,7 @@ MONARCH_MONEY_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, ...] = 
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda account: account.balance,
         picture_fn=lambda account: account.logo_url,
-        native_unit_of_measurement=CURRENCY_DOLLAR,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
     ),
 )
 
@@ -117,7 +118,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...
         summary_fn=lambda summary: summary.income,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=CURRENCY_DOLLAR,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
     ),
     MonarchMoneyCashflowSensorEntityDescription(
         key="sum_expense",
@@ -125,7 +126,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...
         summary_fn=lambda summary: summary.expenses,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=CURRENCY_DOLLAR,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
     ),
     MonarchMoneyCashflowSensorEntityDescription(
         key="savings",
@@ -133,7 +134,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...
         summary_fn=lambda summary: summary.savings,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=CURRENCY_DOLLAR,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
     ),
     MonarchMoneyCashflowSensorEntityDescription(
         key="savings_rate",
@@ -151,7 +152,7 @@ MONARCH_BUDGET_SENSORS: tuple[MonarchMoneyBudgetSensorEntityDescription, ...] = 
         translation_key="budget_actual",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=CURRENCY_DOLLAR,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
         value_fn=lambda month: month.actual_amount,
     ),
     MonarchMoneyBudgetSensorEntityDescription(
@@ -159,7 +160,7 @@ MONARCH_BUDGET_SENSORS: tuple[MonarchMoneyBudgetSensorEntityDescription, ...] = 
         translation_key="budget_planned",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=CURRENCY_DOLLAR,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
         value_fn=lambda month: month.planned_amount,
     ),
     MonarchMoneyBudgetSensorEntityDescription(
@@ -167,7 +168,7 @@ MONARCH_BUDGET_SENSORS: tuple[MonarchMoneyBudgetSensorEntityDescription, ...] = 
         translation_key="budget_remaining",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement=CURRENCY_DOLLAR,
+        native_unit_of_measurement=DEFAULT_CURRENCY,
         value_fn=lambda month: month.remaining_amount,
     ),
 )
