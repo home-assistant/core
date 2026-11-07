@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_client_1_blocked-entry]
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_client_1_network_access-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.block_client_1_blocked',
+    'entity_id': 'switch.block_client_1_network_access',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,29 +21,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Blocked',
+    'object_id_base': 'Network access',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Blocked',
+    'original_name': 'Network access',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'block_client',
+    'translation_key': 'network_access',
     'unique_id': 'block-00:00:00:00:01:01',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_client_1_blocked-state]
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_client_1_network_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Block Client 1 Blocked',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Block Client 1 Network access',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.block_client_1_blocked',
+    'entity_id': 'switch.block_client_1_network_access',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
