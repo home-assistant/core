@@ -555,7 +555,6 @@ async def test_update_target_temperature(
     assert state.attributes.get(ATTR_TEMPERATURE) == temperature
 
 
-@pytest.mark.usefixtures("discovery")
 async def test_fahrenheit_device_unit_applied_at_setup(
     hass: HomeAssistant, device: MagicMock
 ) -> None:
