@@ -1,0 +1,71 @@
+# serializer version: 1
+# name: test_stream_tts_audio[defaults]
+  list([
+    streaming_config {
+    voice {
+      language_code: "en-US"
+      name: "en-US-Chirp3-HD-Achernar"
+    }
+    streaming_audio_config {
+      audio_encoding: PCM
+      sample_rate_hertz: 24000
+    }
+  }
+  ,
+    input {
+    text: "Hello world. "
+  }
+  ,
+    input {
+    text: "How are you? "
+  }
+  ,
+  ])
+# ---
+# name: test_stream_tts_audio[language_from_voice]
+  list([
+    streaming_config {
+    voice {
+      language_code: "en-US"
+      name: "en-US-Chirp3-HD-Achernar"
+    }
+    streaming_audio_config {
+      audio_encoding: PCM
+      sample_rate_hertz: 24000
+    }
+  }
+  ,
+    input {
+    text: "Hello world. "
+  }
+  ,
+    input {
+    text: "How are you? "
+  }
+  ,
+  ])
+# ---
+# name: test_stream_tts_audio[speed]
+  list([
+    streaming_config {
+    voice {
+      language_code: "en-US"
+      name: "en-US-Chirp3-HD-Achernar"
+    }
+    streaming_audio_config {
+      audio_encoding: PCM
+      sample_rate_hertz: 24000
+      speaking_rate: 1.5
+    }
+  }
+  ,
+    input {
+    text: "Hello world. "
+  }
+  ,
+    input {
+    text: "How are you? "
+  }
+  ,
+  ])
+# ---
