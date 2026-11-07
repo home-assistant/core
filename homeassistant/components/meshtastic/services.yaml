@@ -1,0 +1,69 @@
+export_config:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+
+refresh_nodes:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+
+remove_node:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+    node:
+      required: true
+      example: "!aabbccdd"
+      selector:
+        text:
+    confirm:
+      required: true
+      selector:
+        boolean:
+
+request_traceroute:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+    node:
+      required: true
+      example: "!aabbccdd"
+      selector:
+        text:
+
+send_message:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: meshtastic
+    message:
+      required: true
+      example: The shed door is open
+      selector:
+        text:
+          multiline: true
+    node:
+      example: "!aabbccdd"
+      selector:
+        text:
+    channel:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 7
+          mode: box
+    want_ack:
+      default: true
+      selector:
+        boolean:

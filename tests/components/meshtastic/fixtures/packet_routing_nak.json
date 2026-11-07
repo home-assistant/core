@@ -1,0 +1,17 @@
+{
+  "from": 781534648,
+  "to": 781534648,
+  "fromId": "!2e9545b8",
+  "toId": "!2e9545b8",
+  "channel": 0,
+  "id": 987654322,
+  "rxTime": 1757300560,
+  "priority": "ACK",
+  "decoded": {
+    "portnum": "ROUTING_APP",
+    "requestId": 111222333,
+    "routing": {
+      "errorReason": "MAX_RETRANSMIT"
+    }
+  }
+}
