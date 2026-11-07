@@ -301,7 +301,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         item = await self._async_get_event(uid)
         series = _get_series(item.icalendar_instance)
         _check_whole_event(series, recurrence_id, recurrence_range)
-        _check_series_change(series, event)
+        _check_series_change(item.icalendar_instance, series, event)
         _set_fields(series, event)
         await self._async_save(item)
         await self.coordinator.async_request_refresh()
@@ -408,7 +408,9 @@ def _check_whole_event(
         )
 
 
-def _check_series_change(series: icalendar.Event, event: dict[str, Any]) -> None:
+def _check_series_change(
+    calendar: icalendar.Calendar, series: icalendar.Event, event: dict[str, Any]
+) -> None:
     """Refuse changes the recurrence of a series can't follow."""
     if "RRULE" not in series and "RDATE" not in series:
         return
@@ -417,6 +419,34 @@ def _check_series_change(series: icalendar.Event, event: dict[str, Any]) -> None
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="all_day_change_not_supported"
         )
+    # Changed and deleted occurrences are tied to the old start and rule
+    has_exceptions = (
+        "EXDATE" in series or "RDATE" in series or len(calendar.walk("VEVENT")) > 1
+    )
+    if has_exceptions and (
+        _in_time_basis(event[EVENT_START], series.DTSTART) != series.DTSTART
+        or (
+            (rrule := event.get(EVENT_RRULE))
+            and icalendar.vRecur.from_ical(rrule) != series.get("RRULE")
+        )
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="exceptions_change_not_supported"
+        )
+
+
+def _in_time_basis(
+    value: date | datetime, original_start: date | datetime
+) -> date | datetime:
+    """Return a time from Home Assistant in the time zone the event uses.
+
+    Times come in Home Assistant's time zone. A floating event keeps the wall time.
+    """
+    if not isinstance(value, datetime) or not isinstance(original_start, datetime):
+        return value
+    if original_start.tzinfo is None:
+        return value.replace(tzinfo=None)
+    return value.astimezone(original_start.tzinfo)
 
 
 def _set_fields(series: icalendar.Event, event: dict[str, Any]) -> None:
@@ -431,17 +461,8 @@ def _set_fields(series: icalendar.Event, event: dict[str, Any]) -> None:
     ):
         if key in event:
             value = event[key]
-            # Times come in Home Assistant's time zone, keep the event's own
-            if (
-                key in (EVENT_START, EVENT_END)
-                and isinstance(value, datetime)
-                and isinstance(original_start, datetime)
-            ):
-                value = (
-                    value.astimezone(original_start.tzinfo)
-                    if original_start.tzinfo is not None
-                    else value.replace(tzinfo=None)
-                )
+            if key in (EVENT_START, EVENT_END):
+                value = _in_time_basis(value, original_start)
             series.pop(key)
             if value:
                 series.add(key, value)

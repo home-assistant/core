@@ -30,6 +30,37 @@
   
   '''
 # ---
+# name: test_update_event[same_start_and_rrule_with_override-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Weekly renamed
+  DTSTART;TZID=America/New_York:20261026T090000
+  DTEND;TZID=America/New_York:20261026T100000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=WEEKLY;COUNT=8
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
+  END:VEVENT
+  BEGIN:VEVENT
+  SUMMARY:Weekly moved
+  DTSTART;TZID=America/New_York:20261116T100000
+  DTEND;TZID=America/New_York:20261116T103000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RECURRENCE-ID;TZID=America/New_York:20261116T090000
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
 # name: test_update_event[series_from_first_occurrence-America/New_York]
   '''
   BEGIN:VCALENDAR
@@ -48,14 +79,6 @@
   DESCRIPTION:Reminder
   TRIGGER:-PT15M
   END:VALARM
-  END:VEVENT
-  BEGIN:VEVENT
-  SUMMARY:Weekly moved
-  DTSTART;TZID=America/New_York:20261116T100000
-  DTEND;TZID=America/New_York:20261116T103000
-  DTSTAMP:20261001T000000Z
-  UID:series
-  RECURRENCE-ID;TZID=America/New_York:20261116T090000
   END:VEVENT
   END:VCALENDAR
   

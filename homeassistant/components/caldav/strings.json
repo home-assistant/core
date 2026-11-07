@@ -50,6 +50,9 @@
     "event_not_found": {
       "message": "The event was not found on the CalDAV server"
     },
+    "exceptions_change_not_supported": {
+      "message": "The start and repeat rule of a recurring event with changed or deleted occurrences can't be changed"
+    },
     "occurrence_not_supported": {
       "message": "A recurring event can only be changed or deleted as a whole, from its first occurrence"
     },

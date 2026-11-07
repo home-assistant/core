@@ -1748,6 +1748,12 @@ PRODID:-//Test//CalDAV Client//EN
 {SERIES_OVERRIDE}{SERIES_MAIN}END:VCALENDAR
 """
 
+NEW_YORK_SERIES_ICS = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+{SERIES_MAIN}END:VCALENDAR
+"""
+
 ALL_DAY_SERIES_ICS = """BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Test//CalDAV Client//EN
@@ -1837,7 +1843,7 @@ async def _ws_call(
             id="series_keeps_rrule",
         ),
         pytest.param(
-            SERIES_ICS,
+            NEW_YORK_SERIES_ICS,
             "series",
             FIRST_OCCURRENCE,
             {
@@ -1858,6 +1864,18 @@ async def _ws_call(
                 "dtend": "2026-10-26T09:30:00",
             },
             id="override_listed_first",
+        ),
+        pytest.param(
+            SERIES_ICS,
+            "series",
+            FIRST_OCCURRENCE,
+            {
+                "summary": "Weekly renamed",
+                "dtstart": "2026-10-26T09:00:00",
+                "dtend": "2026-10-26T10:00:00",
+                "rrule": "FREQ=WEEKLY;COUNT=8",
+            },
+            id="same_start_and_rrule_with_override",
         ),
     ],
 )
@@ -1887,12 +1905,6 @@ async def test_update_event(
     calendars[0].get_event_by_uid.assert_called_once_with(uid)
     assert stored_event.client.put.call_args.args[1] == snapshot
 
-
-NEW_YORK_SERIES_ICS = f"""BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Test//CalDAV Client//EN
-{SERIES_MAIN}END:VCALENDAR
-"""
 
 FLOATING_ICS = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -2108,6 +2120,64 @@ async def test_update_series_all_day_change(
     assert response["error"] == {
         "code": "failed",
         "message": "A recurring event can't be changed between all-day and timed",
+    }
+    stored_event.client.put.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("ics", "uid", "event"),
+    [
+        pytest.param(
+            SERIES_ICS,
+            "series",
+            {
+                "summary": "Weekly",
+                "dtstart": "2026-10-26T10:00:00",
+                "dtend": "2026-10-26T10:30:00",
+            },
+            id="override_new_start",
+        ),
+        pytest.param(
+            SERIES_ICS,
+            "series",
+            {
+                "summary": "Weekly",
+                "dtstart": "2026-10-26T09:00:00",
+                "dtend": "2026-10-26T09:30:00",
+                "rrule": "FREQ=DAILY;COUNT=8",
+            },
+            id="override_new_rrule",
+        ),
+        pytest.param(
+            ALL_DAY_SERIES_ICS.replace(
+                "RRULE:FREQ=DAILY;COUNT=5",
+                "RRULE:FREQ=DAILY;COUNT=5\nEXDATE;VALUE=DATE:20261122",
+            ),
+            "all-day-series",
+            {"summary": "Holiday", "dtstart": "2026-11-21", "dtend": "2026-11-22"},
+            id="exdate_new_start",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_update_series_with_exceptions(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    stored_event: Event,
+    uid: str,
+    event: dict[str, Any],
+) -> None:
+    """Test the start and rule of a series with exceptions can't be changed."""
+    response = await _ws_call(
+        hass, hass_ws_client, type="calendar/event/update", uid=uid, event=event
+    )
+
+    assert response["error"] == {
+        "code": "failed",
+        "message": (
+            "The start and repeat rule of a recurring event with changed or "
+            "deleted occurrences can't be changed"
+        ),
     }
     stored_event.client.put.assert_not_called()
 
