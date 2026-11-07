@@ -2173,6 +2173,9 @@ pyaussiebb==0.1.5
 # homeassistant.components.myneomitis
 pyaxencoapi==1.0.7.post1
 
+# homeassistant.components.baby_tracker
+pybabytracker==0.2.1
+
 # homeassistant.components.balboa
 pybalboa==1.1.3
 

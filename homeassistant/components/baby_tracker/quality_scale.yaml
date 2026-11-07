@@ -1,0 +1,94 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration has no actions yet.
+  appropriate-polling:
+    status: done
+    comment: Polls every 5 minutes, fixed (no option changes it).
+  brands:
+    status: done
+    comment: The icon and logo are in the brands repository, under core_integrations/baby_tracker.
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration has no actions yet.
+  docs-conditions:
+    status: exempt
+    comment: The integration registers no device conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration registers no device triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities only read the coordinator's data and subscribe to nothing.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration has no actions yet.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no options yet.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: A cloud account has no devices to discover on a network, so there is no address to update.
+  discovery:
+    status: exempt
+    comment: A cloud account has no devices to discover on a network.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: The integration connects to an account in the app's cloud service. The babies it shows as devices are records in that account, not physical devices.
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category:
+    status: exempt
+    comment: Every entity is a primary entity, for which the default category is right.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: done
+    comment: No entity starts disabled. Each is one of the integration's main readings or controls.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: The only settings in the config flow are the account's credentials. A different email is a different account, which gets its own entry.
+  repair-issues:
+    status: exempt
+    comment: The integration raises no repair issues yet.
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
