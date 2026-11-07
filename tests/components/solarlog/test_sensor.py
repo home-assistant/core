@@ -108,6 +108,7 @@ async def test_firmware_update_updates_device_info(
         "2.0",
         date(2025, 1, 1),
     )
+    mock_config_entry.runtime_data.basic_data_coordinator._update_counter = 99
 
     freezer.tick(delta=timedelta(minutes=1))
     async_fire_time_changed(hass)
