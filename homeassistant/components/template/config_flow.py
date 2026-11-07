@@ -671,7 +671,7 @@ def validate_user_input(
             _validate_unit(user_input)
             _validate_state_class(user_input)
         if template_type == Platform.SWITCH:
-            # Can be removed when Wake on LAN import is removed in 2027.2
+            # Can be removed when Wake on LAN import is removed in 2027.6
             match = {CONF_ON_ACTION: user_input.get(CONF_ON_ACTION)}
             if turn_off := user_input.get(CONF_OFF_ACTION):
                 match[CONF_OFF_ACTION] = turn_off
@@ -833,7 +833,7 @@ CONFIG_FLOW = {
         description_placeholders=_get_forecast_description_place_holders,
     ),
     "import": SchemaFlowFormStep(
-        # Can be removed when Wake on LAN import is removed in 2027.2
+        # Can be removed when Wake on LAN import is removed in 2027.6
         config_schema(Platform.SWITCH),
         validate_user_input=validate_user_input(Platform.SWITCH),
     ),

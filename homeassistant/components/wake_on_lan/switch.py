@@ -53,7 +53,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         f"migrate_to_template_{dr.format_mac(config[CONF_MAC])}",
-        breaks_in_ha_version="2026.12.0",
+        breaks_in_ha_version="2027.6.0",
         is_fixable=True,
         is_persistent=False,
         severity=IssueSeverity.WARNING,

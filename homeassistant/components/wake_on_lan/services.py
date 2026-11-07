@@ -34,7 +34,7 @@ async def _send_magic_packet(call: ServiceCall) -> None:
         hass,
         DOMAIN,
         "wol_service_deprecated",
-        breaks_in_ha_version="2027.2.0",
+        breaks_in_ha_version="2027.6.0",
         is_fixable=False,
         is_persistent=False,
         severity=IssueSeverity.WARNING,

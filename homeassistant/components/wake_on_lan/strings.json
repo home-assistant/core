@@ -37,7 +37,7 @@
         },
         "step": {
           "migrate": {
-            "description": "Using the Wake on LAN integration to create a switch entity for mac `{mac}` has been deprecated and will be removed in Home Assistant 2027.2.0.\n\nBy clicking submit, your configuration will be migrated. Depending on your configuration, it can:\n\n- Create a Wake on LAN button entity to send magic packets\n- Create a Ping binary sensor for your host\n- Create a Template switch to control on/off actions",
+            "description": "Using the Wake on LAN integration to create a switch entity for mac `{mac}` has been deprecated and will be removed in Home Assistant 2027.6.0.\n\nBy clicking submit, your configuration will be migrated. Depending on your configuration, it can:\n\n- Create a Wake on LAN button entity to send magic packets\n- Create a Ping binary sensor for your host\n- Create a Template switch to control on/off actions",
             "title": "[%key:component::wake_on_lan::issues::migrate_to_template::title%]"
           }
         }
@@ -45,7 +45,7 @@
       "title": "Wake on LAN switch has been deprecated"
     },
     "wol_service_deprecated": {
-      "description": "The Wake on LAN magic packet action has been deprecated and will be removed in Home Assistant 2027.2.0.\n\nPlease create a new Wake on LAN config entry for the device you want to send magic packets to and update any automation or script that reference this action to use a Wake on LAN button entity.",
+      "description": "The Wake on LAN magic packet action has been deprecated and will be removed in Home Assistant 2027.6.0.\n\nPlease create a new Wake on LAN config entry for the device you want to send magic packets to and update any automation or script that reference this action to use a Wake on LAN button entity.",
       "title": "Wake on LAN magic packet action has been deprecated"
     }
   },
