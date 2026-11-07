@@ -102,6 +102,7 @@ class TeslemetryPollingEntity(
         """Return if the value is a literal None."""
         return self.get(self.key, False) is None
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
