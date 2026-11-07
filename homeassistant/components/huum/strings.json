@@ -48,6 +48,11 @@
       "light": {
         "name": "[%key:component::light::title%]"
       }
+    },
+    "sensor": {
+      "measured_humidity": {
+        "name": "Measured humidity"
+      }
     }
   },
   "exceptions": {
