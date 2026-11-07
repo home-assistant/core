@@ -34,7 +34,10 @@ from homeassistant.components.recorder.db_schema import (
 )
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.purge import purge_old_data
-from homeassistant.components.recorder.queries import select_event_type_ids
+from homeassistant.components.recorder.queries import (
+    delete_states_meta_rows,
+    select_event_type_ids,
+)
 from homeassistant.components.recorder.services import (
     RecorderService,
     RecorderServiceArgument,
@@ -367,6 +370,31 @@ async def test_purge_old_events(hass: HomeAssistant, recorder_mock: Recorder) ->
             Events.event_type_id.in_(select_event_type_ids(TEST_EVENT_TYPES))
         )
         assert events.count() == 2
+
+
+async def test_purge_entity_ids_in_batches(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test unused entity ids are deleted in batches of max_bind_vars."""
+    with session_scope(hass=hass) as session:
+        session.add_all(
+            StatesMeta(entity_id=f"sensor.unused_{index}") for index in range(5)
+        )
+
+    with (
+        patch.object(recorder_mock, "max_bind_vars", 2),
+        patch.object(recorder_mock.database_engine, "max_bind_vars", 2),
+        patch(
+            "homeassistant.components.recorder.purge.delete_states_meta_rows",
+            wraps=delete_states_meta_rows,
+        ) as mock_delete,
+    ):
+        finished = purge_old_data(recorder_mock, dt_util.utcnow(), repack=False)
+
+    assert finished
+    assert sorted(len(call.args[0]) for call in mock_delete.call_args_list) == [1, 2, 2]
+    with session_scope(hass=hass) as session:
+        assert session.query(StatesMeta).count() == 0
 
 
 async def test_purge_old_recorder_runs(
