@@ -115,7 +115,7 @@
       "message": "Timed out while communicating with the Hot Spring API: {error}"
     },
     "wrong_device": {
-      "message": "The device at the configured host has MAC address {found}, not {expected}."
+      "message": "The device at the configured host has MAC address {found}, not {expected}"
     }
   }
 }

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from hotspring import (
+    HotSpringCommandError,
     HotSpringConnectionError,
     HotSpringConnectionTimeoutError,
     HotSpringError,
@@ -88,26 +89,42 @@ async def test_set_target_temperature(
     ("exception", "match"),
     [
         pytest.param(
-            HotSpringConnectionTimeoutError("No response"),
-            "^Timed out while communicating with the Hot Spring API: No response$",
+            HotSpringConnectionTimeoutError(
+                "Timeout occurred while connecting to Hot Spring HNA at 192.168.1.50: "
+                "no response within 10.0s"
+            ),
+            "^Timed out while communicating with the Hot Spring API: Timeout occurred "
+            r"while connecting to Hot Spring HNA at 192\.168\.1\.50: no response "
+            r"within 10\.0s$",
             id="timeout",
         ),
         pytest.param(
-            HotSpringConnectionError("Server disconnected"),
-            "^An error occurred while communicating with the Hot Spring API: "
-            "Server disconnected$",
+            HotSpringConnectionError(
+                "Error occurred while communicating with Hot Spring HNA at "
+                "192.168.1.50: ServerDisconnectedError: Server disconnected"
+            ),
+            "^An error occurred while communicating with the Hot Spring API: Error "
+            r"occurred while communicating with Hot Spring HNA at 192\.168\.1\.50: "
+            "ServerDisconnectedError: Server disconnected$",
             id="connection_error",
         ),
         pytest.param(
-            HotSpringNotReadyError("SNA bridge is not connected"),
-            "^The spa is not connected to its Hot Spring home network adapter: "
-            "SNA bridge is not connected$",
+            HotSpringNotReadyError(
+                "Cannot send commands: SNA bridge is not connected. "
+                "The LoRA link between the HNA and the spa is down."
+            ),
+            "^The spa is not connected to its Hot Spring home network adapter: Cannot "
+            r"send commands: SNA bridge is not connected\. The LoRA link between the "
+            r"HNA and the spa is down\.$",
             id="not_ready",
         ),
         pytest.param(
-            HotSpringError("Unexpected response"),
-            "^Invalid response received from the Hot Spring API: Unexpected response$",
-            id="invalid_response",
+            HotSpringCommandError(
+                "Command failed: {'heater': {'control': {'temperatureABS': '38'}}}: "
+                "Unexpected response type from /spaManager"
+            ),
+            "^Invalid response received from the Hot Spring API: Command failed: ",
+            id="command_failed",
         ),
     ],
 )
