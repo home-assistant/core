@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from PyTado.exceptions import TadoException
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from requests import RequestException
@@ -100,34 +101,102 @@ async def test_no_rate_limit_info_keeps_the_static_interval(
     assert coordinator.update_interval == SCAN_INTERVAL
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_rate_limited_update_does_not_poll_every_five_minutes(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+async def _tick(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, delta: timedelta
 ) -> None:
-    """A failed update with the quota at zero backs off instead of retrying soon."""
+    # One extra second: refreshes are scheduled with a sub-second offset
+    freezer.tick(delta + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("rate_limit", "retry"),
+    [
+        ({"remaining": "0"}, QUOTA_RETRY),
+        ({"remaining": "0", "reset-seconds": "1800"}, timedelta(minutes=31)),
+    ],
+)
+@pytest.mark.parametrize("error", [RequestException, TadoException])
+@pytest.mark.usefixtures("init_integration")
+async def test_rate_limited_update_waits_instead_of_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    rate_limit: dict[str, str],
+    retry: timedelta,
+    error: type[Exception],
+) -> None:
+    """A failed update with the quota at zero waits for the reset (or an hour)."""
     coordinator = _coordinator(hass)
     with (
-        patch.object(coordinator._tado, "get_me", side_effect=RequestException),
-        patch.object(
-            coordinator._tado, "rate_limit_info", return_value={"remaining": "0"}
-        ),
+        patch.object(coordinator._tado, "get_me", side_effect=error) as get_me,
+        patch.object(coordinator._tado, "rate_limit_info", return_value=rate_limit),
     ):
-        freezer.tick(coordinator.update_interval)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-    assert not coordinator.last_update_success
-    assert coordinator.update_interval == QUOTA_RETRY
+        await _tick(hass, freezer, coordinator.update_interval)
+        assert not coordinator.last_update_success
+        assert get_me.call_count == 1
 
-    with (
-        patch.object(coordinator._tado, "get_me", side_effect=RequestException),
-        patch.object(
-            coordinator._tado,
-            "rate_limit_info",
-            return_value={"remaining": "0", "reset-seconds": "1800"},
-        ),
-    ):
-        freezer.tick(coordinator.update_interval)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-    assert not coordinator.last_update_success
-    assert coordinator.update_interval == timedelta(minutes=31)
+        # No retry at the normal pace ...
+        await _tick(hass, freezer, SCAN_INTERVAL)
+        assert get_me.call_count == 1
+
+        # ... only once the wait is over
+        await _tick(hass, freezer, retry - SCAN_INTERVAL)
+        assert get_me.call_count == 2
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_empty_me_with_quota_nearly_used_waits(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """python-tado 0.18 returns {} for an empty 429 reply; treat it as a used-up quota."""
+    coordinator = _coordinator(hass)
+    coordinator._last_remaining = _calls_per_cycle(coordinator)
+    with patch.object(coordinator._tado, "get_me", return_value={}) as get_me:
+        await _tick(hass, freezer, coordinator.update_interval)
+        assert not coordinator.last_update_success
+        await _tick(hass, freezer, SCAN_INTERVAL)
+        assert get_me.call_count == 1
+        await _tick(hass, freezer, QUOTA_RETRY - SCAN_INTERVAL)
+        assert get_me.call_count == 2
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_cached_reset_seconds_are_not_applied_twice(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A rate-limit reading kept from an earlier 429 does not move the reset again."""
+    coordinator = _coordinator(hass)
+    reading = {"remaining": "0", "reset-seconds": "7200"}
+    start = dt_util.utcnow()
+    coordinator._learn_quota_reset(start, reading, 0)
+    assert coordinator._quota_reset == start + timedelta(hours=2)
+
+    # After the wait, a timeout leaves the same cached reading behind
+    later = start + timedelta(hours=2, minutes=1)
+    coordinator._learn_quota_reset(later, dict(reading), 0)
+    assert coordinator._quota_reset == start + timedelta(hours=2) + QUOTA_WINDOW
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_known_reset_is_kept_when_the_quota_refills(
+    hass: HomeAssistant,
+) -> None:
+    """A refill that matches the known reset time does not shift it."""
+    coordinator = _coordinator(hass)
+    start = dt_util.utcnow()
+    coordinator._learn_quota_reset(start, {"remaining": "5", "reset-seconds": "600"}, 5)
+    reset = start + timedelta(minutes=10)
+
+    # First poll after the reset, 30 minutes late: the reset time stays on time
+    after = reset + timedelta(minutes=30)
+    coordinator._learn_quota_reset(after, {"remaining": "990"}, 990)
+    assert coordinator._quota_reset == reset + QUOTA_WINDOW
+
+    # A refill that the known time cannot explain re-learns it
+    odd = reset + QUOTA_WINDOW / 2
+    coordinator._learn_quota_reset(odd, {"remaining": "200"}, 200)
+    coordinator._learn_quota_reset(
+        odd + timedelta(minutes=5), {"remaining": "995"}, 995
+    )
+    assert coordinator._quota_reset == odd + timedelta(minutes=5) + QUOTA_WINDOW

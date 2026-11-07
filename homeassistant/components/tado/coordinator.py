@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
+from PyTado.exceptions import TadoException
 from PyTado.interface import Tado
 from PyTado.zone import TadoZone
 from requests import RequestException
@@ -88,6 +89,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._time_until_reset: float = 0
         self._quota_reset: datetime | None = None
         self._last_remaining: int | None = None
+        self._last_rate_limit: dict[str, Any] | None = None
+        self._last_quota_check: datetime | None = None
 
     @property
     def fallback(self) -> str:
@@ -113,16 +116,27 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.zones,
                 self.devices,
             ) = await self.hass.async_add_executor_job(_load_tado_data)
-        except RequestException as err:
+        except (RequestException, TadoException) as err:
             _LOGGER.debug("Checking rate limit")
             ratelimit = self.get_rate_limit()
-            if ratelimit.get("remaining") == "0":
-                # Polling again before the quota resets only adds failed calls
-                now = dt_util.utcnow()
-                self._learn_quota_reset(now, ratelimit, 0)
-                self.update_interval = max(SCAN_INTERVAL, self._wait_for_quota(now))
-                raise UpdateFailed(f"Tado API rate limit reached: {err}") from err
+            if _as_int(ratelimit.get("remaining")) == 0:
+                raise UpdateFailed(
+                    f"Tado API rate limit reached: {err}",
+                    retry_after=self._quota_retry_after(ratelimit),
+                ) from err
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
+
+        if not tado_home_call.get("homes"):
+            # python-tado 0.18 turns the empty body of a 429 reply into {}
+            if (
+                self._last_remaining is not None
+                and self._last_remaining <= self._calls_per_cycle()
+            ):
+                raise UpdateFailed(
+                    "Tado returned no home data, the API quota is likely used up",
+                    retry_after=self._quota_retry_after({"remaining": "0"}),
+                )
+            raise UpdateFailed("Tado returned no home data")
 
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
@@ -179,21 +193,52 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         The reset time differs per account. It is taken from the seconds-to-reset
         value when the library provides one, or learned when the remaining count
-        goes up between two polls.
+        goes up between two polls. The library keeps the last rate-limit reading
+        after a failed call, so only a changed reading counts as new information.
         """
+        fresh = rate_limit != self._last_rate_limit
+        self._last_rate_limit = dict(rate_limit)
+
         reset_in = _as_int(rate_limit.get("reset-seconds"))
-        if reset_in is not None:
+        if fresh and reset_in is not None:
             self._quota_reset = now + timedelta(seconds=reset_in)
-        elif (
-            remaining is not None
+        while self._quota_reset is not None and self._quota_reset <= now:
+            self._quota_reset += QUOTA_WINDOW
+
+        if (
+            fresh
+            and reset_in is None
+            and remaining is not None
             and self._last_remaining is not None
             and remaining > self._last_remaining
         ):
-            self._quota_reset = now + QUOTA_WINDOW
-        while self._quota_reset is not None and self._quota_reset <= now:
-            self._quota_reset += QUOTA_WINDOW
+            # The quota was reset since the last check. Keep a known reset time
+            # if it explains the jump; otherwise this is the best estimate.
+            previous_reset = (
+                self._quota_reset - QUOTA_WINDOW if self._quota_reset else None
+            )
+            if (
+                previous_reset is None
+                or self._last_quota_check is None
+                or not self._last_quota_check <= previous_reset <= now
+            ):
+                self._quota_reset = now + QUOTA_WINDOW
+
         if remaining is not None:
             self._last_remaining = remaining
+        self._last_quota_check = now
+
+    def _calls_per_cycle(self) -> int:
+        """Return the API calls one update cycle makes."""
+        # me, zones, devices (twice), zone states, home state and weather, plus
+        # one call per device (temperature offset) and one per zone (default overlay)
+        return 7 + len(self.devices) + len(self.zones)
+
+    def _quota_retry_after(self, rate_limit: dict[str, Any]) -> float:
+        """Learn from a used-up quota reading and return the seconds to wait."""
+        now = dt_util.utcnow()
+        self._learn_quota_reset(now, rate_limit, 0)
+        return max(SCAN_INTERVAL, self._wait_for_quota(now)).total_seconds()
 
     def _time_until_quota_reset(self, now: datetime) -> timedelta:
         """Return the time to the next quota reset (a full window if not known yet)."""
@@ -226,10 +271,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Accept five minutes to "overshoot", else reset back to 30 minutes
             min_interval = timedelta(seconds=300 if self._is_any_zone_active else 1800)
 
-            # Each cycle: me, zones, devices (twice), zone states, home state and
-            # weather, plus one call per device (temperature offset) and one per
-            # zone (default overlay)
-            calls_per_cycle = 7 + len(self.devices) + len(self.zones)
+            calls_per_cycle = self._calls_per_cycle()
 
             if remaining_calls <= calls_per_cycle:
                 # Not enough left for a cycle: wait for the reset
