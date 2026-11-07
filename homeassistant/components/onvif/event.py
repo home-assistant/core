@@ -119,5 +119,5 @@ class ONVIFEvent(ONVIFBaseEntity, EventEntity):
         self.async_on_remove(
             self.device.events.async_add_listener(self._async_handle_update)
         )
-        # Messages may have arrived before this entity was added
-        self._async_handle_update()
+        # State writes are discarded until the entity is fully added
+        self.async_on_remove(self.hass.loop.call_soon(self._async_handle_update).cancel)

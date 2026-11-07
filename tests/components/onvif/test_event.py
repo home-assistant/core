@@ -191,20 +191,31 @@ async def test_event_triggered_for_each_message_in_batch(
 
 @pytest.mark.usefixtures("freezer")
 async def test_event_created_after_setup(hass: HomeAssistant) -> None:
-    """Test that an event entity is created and triggered by its first message."""
+    """Test that every message in the batch creating an entity triggers it."""
     _, _, mock_device = await setup_onvif_integration(
         hass, capabilities=CAPABILITIES, raw_events=MOTION_ALARM_EVENTS
     )
     assert hass.states.get(LINE_CROSSED_ENTITY_ID) is None
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
 
     event_manager = mock_device.events
-    await async_parse_raw_events(event_manager, LINE_CROSSED_EVENTS)
+    await async_parse_raw_events(event_manager, LINE_CROSSED_EVENTS * 3)
     event_manager.async_callback_listeners()
     await hass.async_block_till_done()
 
-    state = hass.states.get(LINE_CROSSED_ENTITY_ID)
-    assert state is not None
-    assert state.state == dt_util.utcnow().isoformat(timespec="milliseconds")
+    assert [
+        event.data["new_state"].state
+        for event in state_changes
+        if event.data["entity_id"] == LINE_CROSSED_ENTITY_ID
+    ] == [
+        STATE_UNKNOWN,
+        *(
+            (dt_util.utcnow() + timedelta(milliseconds=offset)).isoformat(
+                timespec="milliseconds"
+            )
+            for offset in range(3)
+        ),
+    ]
 
 
 @pytest.mark.usefixtures("freezer")
