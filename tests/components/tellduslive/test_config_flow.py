@@ -7,6 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import data_entry_flow
 from homeassistant.components.tellduslive import APPLICATION_NAME, DOMAIN, config_flow
+from homeassistant.components.tellduslive.const import KEY_SESSION
 from homeassistant.config_entries import SOURCE_DISCOVERY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -59,7 +60,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_user()
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured"
 
 
 async def test_full_flow_implementation(hass: HomeAssistant, mock_tellduslive) -> None:
@@ -189,3 +190,71 @@ async def test_discovery_already_configured(
 
     with pytest.raises(data_entry_flow.AbortFlow):
         await flow.async_step_discovery(["some-host", ""])
+
+
+@pytest.mark.parametrize(
+    ("user_input", "error"),
+    [
+        (
+            {
+                "scan_interval": 120,
+                "retry_initial_delay": 10,
+                "retry_max_delay": 600,
+                "request_delay": 2,
+            },
+            None,
+        ),
+        (
+            {
+                "scan_interval": 120,
+                "retry_initial_delay": 700,
+                "retry_max_delay": 600,
+                "request_delay": 2,
+            },
+            "retry_delay_order",
+        ),
+    ],
+)
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    user_input: dict[str, int],
+    error: str | None,
+) -> None:
+    """Test the options flow saves valid values and rejects invalid ones."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    with patch("homeassistant.components.tellduslive.async_setup_entry"):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result.get("errors", {}).get("base") == error
+    assert mock_config_entry.options.get("retry_max_delay") == (None if error else 600)
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: tuple[MagicMock, MagicMock],
+) -> None:
+    """Test reauthentication replaces the stored session."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+
+    with patch("homeassistant.components.tellduslive.async_setup_entry"):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[KEY_SESSION] == {
+        "token": "token",
+        "token_secret": "token_secret",
+    }

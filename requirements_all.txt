@@ -3057,6 +3057,9 @@ renson-endura-delta==1.7.2
 # homeassistant.components.reolink
 reolink-aio==0.22.0
 
+# homeassistant.components.tellduslive
+requests-oauthlib==2.0.0
+
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
 
@@ -3313,9 +3316,6 @@ tellcore-net==0.4
 
 # homeassistant.components.tellstick
 tellcore-py==1.1.3
-
-# homeassistant.components.tellduslive
-tellduslive==0.10.12
 
 # homeassistant.components.teltonika
 teltasync==0.4.1
