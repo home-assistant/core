@@ -60,11 +60,17 @@
       "fall": {
         "name": "Fall"
       },
+      "feed_blocked": {
+        "name": "Feed blocked"
+      },
       "feeding": {
         "name": "Feeding"
       },
       "filter_cleaning": {
         "name": "Filter cleaning"
+      },
+      "food_stuck": {
+        "name": "Food stuck"
       },
       "formaldehyde": {
         "name": "Formaldehyde"
@@ -789,6 +795,14 @@
       },
       "flow_temperature": {
         "name": "Flow temperature"
+      },
+      "food_level": {
+        "name": "Food level",
+        "state": {
+          "full": "Full",
+          "lack": "Empty",
+          "less": "Low"
+        }
       },
       "formaldehyde": {
         "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
