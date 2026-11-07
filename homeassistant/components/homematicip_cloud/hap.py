@@ -58,6 +58,7 @@ class HomematicipAuth:
     """Manages HomematicIP client registration."""
 
     auth: Auth
+    client_id: str | None = None
 
     def __init__(self, hass: HomeAssistant, config: dict[str, str]) -> None:
         """Initialize HomematicIP Cloud client registration."""
@@ -85,7 +86,7 @@ class HomematicipAuth:
         """Register client at HomematicIP."""
         try:
             authtoken = await self.auth.request_auth_token()
-            await self.auth.confirm_auth_token(authtoken)
+            self.client_id = await self.auth.confirm_auth_token(authtoken)
         except HmipConnectionError:
             return False
         return authtoken
