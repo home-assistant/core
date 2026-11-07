@@ -1921,3 +1921,92 @@ async def test_active_price_missing_slot_price_appears_at_period_rollover(
     assert float(hass.states.get(active_price_id).state) == pytest.approx(0.13)
     assert client.async_get_prices.call_count == 1
     assert client.async_get_tou_schedules.call_count == 1
+
+
+def _gap_prices_with_later_period() -> PricesResponse:
+    """Build prices whose first period ends before the frozen Saturday and whose second starts after it."""
+    return PricesResponse(
+        items=(
+            EanPrices(
+                ean=OFFTAKE_INJECTION_EAN,
+                periods=(
+                    PricePeriod(
+                        valid_from=date(2000, 1, 1),
+                        valid_to=date(2026, 10, 3),
+                        vat_tariff=6.0,
+                        offtake=(
+                            PriceSlot(
+                                time_of_use_slot_code="S_TOU1_OFFTAKE_PEAK",
+                                price_value=0.18,
+                                price_value_excl_vat=0.169811,
+                            ),
+                            PriceSlot(
+                                time_of_use_slot_code="EN",
+                                price_value=0.12,
+                                price_value_excl_vat=0.113208,
+                            ),
+                        ),
+                    ),
+                    PricePeriod(
+                        valid_from=date(2026, 10, 4),
+                        valid_to=date(2099, 12, 31),
+                        vat_tariff=6.0,
+                        offtake=(
+                            PriceSlot(
+                                time_of_use_slot_code="S_TOU1_OFFTAKE_PEAK",
+                                price_value=0.20,
+                                price_value_excl_vat=0.188679,
+                            ),
+                            PriceSlot(
+                                time_of_use_slot_code="EN",
+                                price_value=0.13,
+                                price_value_excl_vat=0.122642,
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_active_price_gap_wakes_at_next_period_start(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the night price appears at midnight when the next period starts after a gap."""
+    client = mock_engie_client.return_value
+    client.async_get_tou_schedules.return_value = build_tou_schedules()
+    client.async_get_prices.return_value = _gap_prices_with_later_period()
+    await setup_entry(hass, mock_config_entry)
+
+    active_price_id = _tou_entity_id(
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price"
+    )
+    active_price = hass.states.get(active_price_id)
+    assert active_price.state == STATE_UNKNOWN
+    assert active_price.attributes["next_transition"] == datetime(
+        2026, 10, 3, 22, 0, tzinfo=BRUSSELS_TIME_ZONE
+    )
+
+    with _no_coordinator_refresh():
+        freezer.tick(timedelta(hours=8))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        active_price = hass.states.get(active_price_id)
+        assert active_price.state == STATE_UNKNOWN
+        assert active_price.attributes["next_transition"] == datetime(
+            2026, 10, 4, 0, 0, tzinfo=BRUSSELS_TIME_ZONE
+        )
+        assert float(active_price.attributes["next_price"]) == pytest.approx(0.13)
+
+        freezer.tick(timedelta(hours=2, minutes=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+    assert float(hass.states.get(active_price_id).state) == pytest.approx(0.13)
+    assert client.async_get_prices.call_count == 1
+    assert client.async_get_tou_schedules.call_count == 1
