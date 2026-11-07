@@ -183,8 +183,8 @@ async def test_sensor_arrival_time(hass: HomeAssistant) -> None:
 async def test_sensor_travel_routing_preference(
     hass: HomeAssistant,
     routes_mock: AsyncMock,
-    travel_routing_preference: str,
-    expected_option: str,
+    travel_routing_preference: str | None,
+    expected_option: RoutingPreference,
 ) -> None:
     """Test that the travel_routing_preference option is provided to compute_routes."""
 

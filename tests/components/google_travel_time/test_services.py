@@ -200,6 +200,7 @@ async def test_service_get_travel_times_traffic_model_error(
     traffic_model: str,
 ) -> None:
     """Test service get_travel_times with invalid traffic model for the routing preference."""
+    routes_mock.async_compute_routes.reset_mock()
 
     with pytest.raises(
         HomeAssistantError,
@@ -223,6 +224,7 @@ async def test_service_get_travel_times_traffic_model_error(
             blocking=True,
             return_response=True,
         )
+    routes_mock.async_compute_routes.assert_not_called()
 
 
 @pytest.mark.parametrize(
