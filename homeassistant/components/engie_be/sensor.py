@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower
+from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -412,12 +412,14 @@ _CAPTAR_SENSORS: tuple[EngieBePeaksSensorEntityDescription, ...] = (
         key="captar_monthly_peak_start",
         translation_key="captar_monthly_peak_start",
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_peak_start,
     ),
     EngieBePeaksSensorEntityDescription(
         key="captar_monthly_peak_end",
         translation_key="captar_monthly_peak_end",
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_peak_end,
     ),
     EngieBePeaksSensorEntityDescription(
@@ -426,7 +428,6 @@ _CAPTAR_SENSORS: tuple[EngieBePeaksSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
-        entity_registry_enabled_default=False,
         value_fn=_daily_peak_power_kw,
     ),
 )

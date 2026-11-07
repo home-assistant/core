@@ -3,19 +3,22 @@
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, call
 
-from aioengiebelgium import EngieBeAuthenticationError
+from aioengiebelgium import EngieBeAuthenticationError, EngieBeCommunicationError, Peak
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.engie_be.const import DOMAIN, PEAKS_SCAN_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     BAN,
     BRUSSELS_TIME_ZONE,
+    OFFTAKE_ONLY_EAN,
     build_monthly_peaks,
+    build_monthly_peaks_for_request,
     build_peak,
     setup_entry,
 )
@@ -66,8 +69,18 @@ async def test_captar_sensors(
     assert daily_entity_id is not None
     daily_entry = entity_registry.async_get(daily_entity_id)
     assert daily_entry is not None
-    assert daily_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
-    assert hass.states.get(daily_entity_id) is None
+    assert daily_entry.disabled_by is None
+    assert daily_entry.entity_category is None
+    assert hass.states.get(daily_entity_id) is not None
+
+    for key in ("captar_monthly_peak_start", "captar_monthly_peak_end"):
+        timestamp_entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_{key}"
+        )
+        assert timestamp_entity_id is not None
+        timestamp_entry = entity_registry.async_get(timestamp_entity_id)
+        assert timestamp_entry is not None
+        assert timestamp_entry.entity_category == er.EntityCategory.DIAGNOSTIC
 
 
 @pytest.mark.usefixtures(
@@ -261,6 +274,110 @@ async def test_captar_scheduled_refresh_across_year_rollover(
     assert power_state.state == "5.1"
     assert power_state.attributes["peak_month"] == "2027-01"
     assert power_state.attributes["peak_is_fallback"] is False
+
+
+@pytest.mark.usefixtures("mock_engie_client", "frozen_afternoon")
+async def test_captar_peaks_failure_and_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test captap sensors go unavailable on peaks-endpoint failure and recover on the next poll."""
+    peaks_mock = mock_engie_client.return_value.async_get_monthly_peaks
+    peaks_mock.side_effect = EngieBeCommunicationError("boom")
+    await setup_entry(hass, mock_config_entry)
+
+    power_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_captar_monthly_power_peak"
+    )
+    assert power_entity_id is not None
+    power_state = hass.states.get(power_entity_id)
+    assert power_state is not None
+    assert power_state.state == STATE_UNAVAILABLE
+
+    price_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+    )
+    assert price_entity_id is not None
+    price_state = hass.states.get(price_entity_id)
+    assert price_state is not None
+    assert price_state.state == "0.123456"
+
+    peaks_mock.side_effect = None
+    peaks_mock.return_value = build_monthly_peaks_for_request(BAN, 2026, 10)
+    freezer.tick(PEAKS_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    power_state = hass.states.get(power_entity_id)
+    assert power_state is not None
+    assert power_state.state == "4.2"
+
+    peaks_mock.side_effect = EngieBeCommunicationError("boom")
+    freezer.tick(PEAKS_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    power_state = hass.states.get(power_entity_id)
+    assert power_state is not None
+    assert power_state.state == STATE_UNAVAILABLE
+
+    peaks_mock.side_effect = None
+    freezer.tick(PEAKS_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    power_state = hass.states.get(power_entity_id)
+    assert power_state is not None
+    assert power_state.state == "4.2"
+
+
+@pytest.mark.usefixtures("mock_engie_client", "frozen_afternoon")
+@pytest.mark.parametrize(
+    ("daily_peaks", "expected_state"),
+    [
+        pytest.param(
+            (
+                build_peak(
+                    datetime(2026, 10, 3, 12, 0, tzinfo=BRUSSELS_TIME_ZONE),
+                    power_kw=5.0,
+                ),
+                build_peak(
+                    datetime(2026, 10, 10, 18, 0, tzinfo=BRUSSELS_TIME_ZONE),
+                    power_kw=4.0,
+                ),
+            ),
+            "4.0",
+            id="latest-by-start-not-highest-power",
+        ),
+        pytest.param((), "unknown", id="empty-daily-peaks"),
+    ],
+)
+async def test_captar_daily_peak_selection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    daily_peaks: tuple[Peak, ...],
+    expected_state: str,
+) -> None:
+    """Test the daily peak sensor picks the latest peak by start and handles an empty list."""
+    month_peak = build_peak(
+        datetime(2026, 10, 15, 18, 0, tzinfo=BRUSSELS_TIME_ZONE), power_kw=4.2
+    )
+
+    def _peaks(ban: str, year: int, month: int, *, day: int | None = None):
+        return build_monthly_peaks(2026, 10, peak=month_peak, daily_peaks=daily_peaks)
+
+    mock_engie_client.return_value.async_get_monthly_peaks.side_effect = _peaks
+    await setup_entry(hass, mock_config_entry)
+
+    daily_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_captar_daily_power_peak"
+    )
+    assert daily_entity_id is not None
+    daily_state = hass.states.get(daily_entity_id)
+    assert daily_state is not None
+    assert daily_state.state == expected_state
 
 
 @pytest.mark.usefixtures("mock_engie_client", "frozen_afternoon")
