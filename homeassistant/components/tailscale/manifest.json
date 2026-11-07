@@ -1,10 +1,11 @@
 {
   "domain": "tailscale",
   "name": "Tailscale",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tailscale",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["tailscale==0.7.0"]
+  "requirements": ["tailscale==1.0.0"]
 }

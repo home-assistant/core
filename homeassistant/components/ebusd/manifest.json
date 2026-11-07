@@ -1,6 +1,7 @@
 {
   "domain": "ebusd",
   "name": "ebusd",
+  "categories": ["climate.thermostats_heating", "diy_makers.boards_hardware"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/ebusd",
   "iot_class": "local_polling",

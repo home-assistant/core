@@ -2,8 +2,8 @@
 
 from datetime import timedelta
 
+import probatio
 from pywaze.route_calculator import WazeRouteCalculator
-import voluptuous as vol
 
 from homeassistant.const import CONF_REGION
 from homeassistant.core import (
@@ -54,11 +54,11 @@ from .coordinator import async_get_travel_times
 from .helpers import base_coordinates_to_tuple
 
 SERVICE_GET_TRAVEL_TIMES = "get_travel_times"
-SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
+SERVICE_GET_TRAVEL_TIMES_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ORIGIN): TextSelector(),
-        vol.Required(CONF_DESTINATION): TextSelector(),
-        vol.Required(CONF_REGION): SelectSelector(
+        probatio.Required(CONF_ORIGIN): TextSelector(),
+        probatio.Required(CONF_DESTINATION): TextSelector(),
+        probatio.Required(CONF_REGION): SelectSelector(
             SelectSelectorConfig(
                 options=REGIONS,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -66,8 +66,10 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
                 sort=True,
             )
         ),
-        vol.Optional(CONF_REALTIME, default=False): BooleanSelector(),
-        vol.Optional(CONF_VEHICLE_TYPE, default=DEFAULT_VEHICLE_TYPE): SelectSelector(
+        probatio.Optional(CONF_REALTIME, default=False): BooleanSelector(),
+        probatio.Optional(
+            CONF_VEHICLE_TYPE, default=DEFAULT_VEHICLE_TYPE
+        ): SelectSelector(
             SelectSelectorConfig(
                 options=VEHICLE_TYPES,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -75,7 +77,7 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
                 sort=True,
             )
         ),
-        vol.Optional(CONF_UNITS, default=METRIC_UNITS): SelectSelector(
+        probatio.Optional(CONF_UNITS, default=METRIC_UNITS): SelectSelector(
             SelectSelectorConfig(
                 options=UNITS,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -83,25 +85,27 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
                 sort=True,
             )
         ),
-        vol.Optional(CONF_AVOID_TOLL_ROADS, default=False): BooleanSelector(),
-        vol.Optional(CONF_AVOID_SUBSCRIPTION_ROADS, default=False): BooleanSelector(),
-        vol.Optional(CONF_AVOID_FERRIES, default=False): BooleanSelector(),
-        vol.Optional(CONF_INCL_FILTER): TextSelector(
+        probatio.Optional(CONF_AVOID_TOLL_ROADS, default=False): BooleanSelector(),
+        probatio.Optional(
+            CONF_AVOID_SUBSCRIPTION_ROADS, default=False
+        ): BooleanSelector(),
+        probatio.Optional(CONF_AVOID_FERRIES, default=False): BooleanSelector(),
+        probatio.Optional(CONF_INCL_FILTER): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 multiple=True,
             ),
         ),
-        vol.Optional(CONF_EXCL_FILTER): TextSelector(
+        probatio.Optional(CONF_EXCL_FILTER): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.TEXT,
                 multiple=True,
             ),
         ),
-        vol.Optional(CONF_TIME_DELTA): DurationSelector(
+        probatio.Optional(CONF_TIME_DELTA): DurationSelector(
             DurationSelectorConfig(allow_negative=True, enable_second=False)
         ),
-        vol.Optional(CONF_BASE_COORDINATES): LocationSelector(),
+        probatio.Optional(CONF_BASE_COORDINATES): LocationSelector(),
     }
 )
 
@@ -109,9 +113,6 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
 async def async_get_travel_times_service(service: ServiceCall) -> ServiceResponse:
     """Get travel times."""
     httpx_client = get_async_client(service.hass)
-    client = WazeRouteCalculator(
-        region=service.data[CONF_REGION].upper(), client=httpx_client
-    )
 
     origin_coordinates = find_coordinates(service.hass, service.data[CONF_ORIGIN])
     destination_coordinates = find_coordinates(
@@ -131,21 +132,24 @@ async def async_get_travel_times_service(service: ServiceCall) -> ServiceRespons
         / 60
     )
 
-    response = await async_get_travel_times(
-        client=client,
-        origin=origin,
-        destination=destination,
-        vehicle_type=service.data[CONF_VEHICLE_TYPE],
-        avoid_toll_roads=service.data[CONF_AVOID_TOLL_ROADS],
-        avoid_subscription_roads=service.data[CONF_AVOID_SUBSCRIPTION_ROADS],
-        avoid_ferries=service.data[CONF_AVOID_FERRIES],
-        realtime=service.data[CONF_REALTIME],
-        units=service.data[CONF_UNITS],
-        incl_filters=service.data.get(CONF_INCL_FILTER, DEFAULT_FILTER),
-        excl_filters=service.data.get(CONF_EXCL_FILTER, DEFAULT_FILTER),
-        time_delta=time_delta,
-        base_coordinates=base_coordinates,
-    )
+    async with WazeRouteCalculator(
+        region=service.data[CONF_REGION].upper(), client=httpx_client
+    ) as client:
+        response = await async_get_travel_times(
+            client=client,
+            origin=origin,
+            destination=destination,
+            vehicle_type=service.data[CONF_VEHICLE_TYPE],
+            avoid_toll_roads=service.data[CONF_AVOID_TOLL_ROADS],
+            avoid_subscription_roads=service.data[CONF_AVOID_SUBSCRIPTION_ROADS],
+            avoid_ferries=service.data[CONF_AVOID_FERRIES],
+            realtime=service.data[CONF_REALTIME],
+            units=service.data[CONF_UNITS],
+            incl_filters=service.data.get(CONF_INCL_FILTER, DEFAULT_FILTER),
+            excl_filters=service.data.get(CONF_EXCL_FILTER, DEFAULT_FILTER),
+            time_delta=time_delta,
+            base_coordinates=base_coordinates,
+        )
     return {"routes": [vars(route) for route in response]}
 
 

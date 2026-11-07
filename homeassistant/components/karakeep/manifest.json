@@ -1,6 +1,7 @@
 {
   "domain": "karakeep",
   "name": "Karakeep",
+  "categories": ["productivity_information.documents_photos"],
   "codeowners": ["@sli-cka"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/karakeep",

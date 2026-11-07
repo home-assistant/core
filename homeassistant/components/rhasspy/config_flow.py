@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
@@ -20,6 +20,6 @@ class RhasspyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=vol.Schema({}))
+            return self.async_show_form(step_id="user", data_schema=probatio.Schema({}))
 
         return self.async_create_entry(title="Rhasspy", data={})

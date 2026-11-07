@@ -2,6 +2,7 @@
   "domain": "kodi",
   "name": "Kodi",
   "after_dependencies": ["media_source"],
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@OnFreund"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/kodi",

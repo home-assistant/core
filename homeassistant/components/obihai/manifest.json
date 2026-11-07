@@ -1,6 +1,7 @@
 {
   "domain": "obihai",
   "name": "Obihai",
+  "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": ["@dshokouhi", "@ejpenney"],
   "config_flow": true,
   "dhcp": [

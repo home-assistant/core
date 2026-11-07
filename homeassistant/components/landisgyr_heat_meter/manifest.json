@@ -1,6 +1,7 @@
 {
   "domain": "landisgyr_heat_meter",
   "name": "Landis+Gyr Heat Meter",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@vpathuis"],
   "config_flow": true,
   "dependencies": ["usb"],

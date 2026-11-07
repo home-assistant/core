@@ -7,10 +7,18 @@ import sqlite3
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from probatio.error import MultipleInvalid
 import pytest
+from pytest_homeassistant.components.recorder.common import (
+    async_recorder_block_till_done,
+    async_wait_purge_done,
+    async_wait_recording_done,
+    convert_pending_events_to_event_types,
+    convert_pending_states_to_meta,
+)
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.recorder import DOMAIN, Recorder
 from homeassistant.components.recorder.const import SupportedDialect
@@ -42,16 +50,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from .common import (
-    async_recorder_block_till_done,
-    async_wait_purge_done,
-    async_wait_recording_done,
-    convert_pending_events_to_event_types,
-    convert_pending_states_to_meta,
-)
-
-from tests.typing import RecorderInstanceContextManager
 
 TEST_EVENT_TYPES = (
     "EVENT_TEST_AUTOPURGE",
@@ -421,14 +419,69 @@ async def test_purge_old_statistics_runs(
 
     # run purge_old_data()
     finished = purge_old_data(recorder_mock, purge_before, repack=False)
-    assert not finished
-
-    finished = purge_old_data(recorder_mock, purge_before, repack=False)
     assert finished
 
     with session_scope(hass=hass) as session:
         statistics_runs = session.query(StatisticsRuns)
         assert statistics_runs.count() == 1
+
+
+async def test_purge_old_statistics_runs_full_batch(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test deleting old statistics runs with a full batch needs another cycle."""
+    await _add_test_statistics_runs(hass)
+
+    # make sure we start with 7 statistics runs
+    with session_scope(hass=hass) as session:
+        statistics_runs = session.query(StatisticsRuns)
+        assert statistics_runs.count() == 7
+
+    purge_before = dt_util.utcnow()
+
+    with (
+        patch.object(recorder_mock, "max_bind_vars", 6),
+        patch.object(recorder_mock.database_engine, "max_bind_vars", 6),
+    ):
+        # A full batch of statistics runs means purge may not be done yet
+        finished = purge_old_data(recorder_mock, purge_before, repack=False)
+        assert not finished
+
+        finished = purge_old_data(recorder_mock, purge_before, repack=False)
+        assert finished
+
+    with session_scope(hass=hass) as session:
+        statistics_runs = session.query(StatisticsRuns)
+        assert statistics_runs.count() == 1
+
+
+async def test_purge_old_short_term_statistics_full_batch(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test deleting old short term statistics with a full batch needs another cycle."""
+    await _add_test_statistics(hass)
+
+    # make sure we start with 6 short term statistics
+    with session_scope(hass=hass) as session:
+        statistics = session.query(StatisticsShortTerm)
+        assert statistics.count() == 6
+
+    purge_before = dt_util.utcnow()
+
+    with (
+        patch.object(recorder_mock, "max_bind_vars", 5),
+        patch.object(recorder_mock.database_engine, "max_bind_vars", 5),
+    ):
+        # A full batch of short term statistics means purge may not be done yet
+        finished = purge_old_data(recorder_mock, purge_before, repack=False)
+        assert not finished
+
+        finished = purge_old_data(recorder_mock, purge_before, repack=False)
+        assert finished
+
+    with session_scope(hass=hass) as session:
+        statistics = session.query(StatisticsShortTerm)
+        assert statistics.count() == 0
 
 
 @pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)

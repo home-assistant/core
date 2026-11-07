@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 from meteoalertapi import Meteoalert
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -30,10 +30,10 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_COUNTRY): cv.string,
-        vol.Required(CONF_PROVINCE): cv.string,
-        vol.Optional(CONF_LANGUAGE, default="en"): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_COUNTRY): cv.string,
+        probatio.Required(CONF_PROVINCE): cv.string,
+        probatio.Optional(CONF_LANGUAGE, default="en"): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from tesla_powerwall import MetersAggregatesResponse
 from tesla_powerwall.error import MissingAttributeError
 
@@ -28,11 +29,13 @@ from .mocks import (
     _mock_powerwall_with_fixtures,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -> None:
+async def test_sensors(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test creation of the sensors."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
@@ -113,7 +116,10 @@ async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) 
     assert float(hass.states.get("sensor.mysite_solar_import").state) == 28.2
 
     state = hass.states.get("sensor.mysite_charge")
-    assert state.state == "47"
+    assert state.state == "47.34587394586"
+    entity_entry = entity_registry.async_get("sensor.mysite_charge")
+    assert entity_entry is not None
+    assert entity_entry.options["sensor"]["suggested_display_precision"] == 0
     expected_attributes = {
         "unit_of_measurement": PERCENTAGE,
         "friendly_name": "MySite Charge",

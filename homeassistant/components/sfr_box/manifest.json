@@ -1,11 +1,12 @@
 {
   "domain": "sfr_box",
   "name": "SFR Box",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@epenet"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sfr_box",
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "silver",
-  "requirements": ["sfrbox-api==0.1.1"]
+  "requirements": ["sfrbox-api==0.2.1"]
 }

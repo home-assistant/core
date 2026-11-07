@@ -5,13 +5,12 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.wake_on_lan.const import CONF_SECUREON_PASSWORD, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 DEFAULT_MAC = "00:01:02:03:04:05"
 
@@ -42,7 +41,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Automatically path uuid generator."""
     with patch(
         "homeassistant.components.wake_on_lan.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

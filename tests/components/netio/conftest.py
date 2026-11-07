@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from Netio import Netio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.netio.const import DOMAIN
 from homeassistant.const import (
@@ -16,14 +17,12 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.netio.async_setup_entry", return_value=True
+        "homeassistant.components.netio.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

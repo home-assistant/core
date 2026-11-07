@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_load_json_array_fixture, snapshot_platform
 from switchbot_api import Device
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
-
-from tests.common import async_load_json_array_fixture, snapshot_platform
 
 
 async def test_unsupported_device_type(

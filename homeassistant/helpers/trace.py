@@ -1,10 +1,10 @@
 """Helpers for script and condition tracing."""
 
-from collections import deque
 from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
+import sys
 from typing import Any, Literal, overload, override
 
 from homeassistant.core import ServiceResponse
@@ -40,7 +40,7 @@ class TraceElement:
         self.reuse_by_child = False
         self._timestamp = dt_util.utcnow()
 
-        self._last_variables = variables_cv.get() or {}
+        self._last_variables: dict[str, Any] | None = variables_cv.get() or {}
         self.update_variables(variables)
 
     @override
@@ -87,7 +87,7 @@ class TraceElement:
         """Update variables."""
         if variables is None:
             variables = {}
-        last_variables = self._last_variables
+        last_variables = self._last_variables or {}
         # variables is often a ChainMap which is costly to iterate, so flatten
         # it once and reuse the snapshot for both the baseline and the diff.
         snapshot = dict(variables)
@@ -97,6 +97,12 @@ class TraceElement:
             for key, value in snapshot.items()
             if key not in last_variables or last_variables[key] != value
         }
+
+    def finish(self) -> None:
+        """Release data which is only needed while the trace is recorded."""
+        # The previous step's full variables snapshot is only needed to
+        # compute the changed variables of this step.
+        self._last_variables = None
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this TraceElement."""
@@ -121,7 +127,7 @@ class TraceElement:
 
 # Context variables for tracing
 # Current trace
-trace_cv: ContextVar[dict[str, deque[TraceElement]] | None] = ContextVar(
+trace_cv: ContextVar[dict[str, list[TraceElement]] | None] = ContextVar(
     "trace_cv", default=None
 )
 # Stack of TraceElements
@@ -218,7 +224,8 @@ def trace_path_get() -> str:
     """Return a string representing the current location in the config tree."""
     if not (path := trace_path_stack_cv.get()):
         return ""
-    return "/".join(path)
+    # The same paths are recorded on every run, share a single string
+    return sys.intern("/".join(path))
 
 
 def trace_append_element(
@@ -230,19 +237,23 @@ def trace_append_element(
         trace = {}
         trace_cv.set(trace)
     if (path := trace_element.path) not in trace:
-        trace[path] = deque(maxlen=maxlen)
-    trace[path].append(trace_element)
+        trace[path] = [trace_element]
+        return
+    elements = trace[path]
+    if maxlen is not None and len(elements) >= maxlen:
+        del elements[0]
+    elements.append(trace_element)
 
 
 @overload
-def trace_get(clear: Literal[True] = True) -> dict[str, deque[TraceElement]]: ...
+def trace_get(clear: Literal[True] = True) -> dict[str, list[TraceElement]]: ...
 
 
 @overload
-def trace_get(clear: Literal[False]) -> dict[str, deque[TraceElement]] | None: ...
+def trace_get(clear: Literal[False]) -> dict[str, list[TraceElement]] | None: ...
 
 
-def trace_get(clear: bool = True) -> dict[str, deque[TraceElement]] | None:
+def trace_get(clear: bool = True) -> dict[str, list[TraceElement]] | None:
     """Return the current trace.
 
     When clear is True the trace is reset and a fresh (empty) trace is

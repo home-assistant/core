@@ -4,8 +4,8 @@ from datetime import timedelta
 import time
 from typing import Any, override
 
+import probatio
 from pythinkingcleaner import Discovery, ThinkingCleaner
-import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.switch import (
@@ -40,7 +40,9 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     ),
 )
 
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend({vol.Optional(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
+    {probatio.Optional(CONF_HOST): cv.string}
+)
 
 
 def setup_platform(

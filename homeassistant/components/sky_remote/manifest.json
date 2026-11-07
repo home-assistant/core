@@ -1,6 +1,7 @@
 {
   "domain": "sky_remote",
   "name": "Sky Remote Control",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@dunnmj", "@saty9"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sky_remote",

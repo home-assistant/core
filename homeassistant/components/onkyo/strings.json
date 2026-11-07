@@ -3,7 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The serial number of the device does not match the previous serial number",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -52,6 +51,15 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to the receiver at {host}."
+    },
+    "interview_error": {
+      "message": "Unexpected error while interviewing the receiver at {host}."
+    },
+    "interview_timeout": {
+      "message": "Timed out while interviewing the receiver at {host}."
+    },
     "invalid_sound_mode": {
       "message": "Cannot select sound mode \"{invalid_sound_mode}\" for entity: {entity_id}."
     },

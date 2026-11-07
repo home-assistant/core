@@ -14,6 +14,7 @@ from unittest.mock import patch
 from modbus_connection import ModbusUnit
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.solaredge_modbus.const import (
     CONF_UNIT_ID,
@@ -23,12 +24,49 @@ from homeassistant.components.solaredge_modbus.const import (
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_json_object_fixture
-
 HOST = "1.2.3.4"
 PORT = 1502
 UNIT_ID = 1
 SERIAL_NUMBER = "7E123ABC"
+METER_SERIAL_NUMBER = "7E4A11C2"
+BATTERY_SERIAL_NUMBERS = ("7E7C33E4", "7E8D44F5")
+
+# Where a meter's block starts, how far the next one sits, and where in it the
+# serial number lives, as SunSpec lays them out.
+METER_BASE = 40121
+METER_STRIDE = 174
+METER_SERIAL_BASE = 40171
+
+# The same for the batteries, whose blocks sit at fixed offsets rather than a
+# stride, with the rated-energy register the probe counts them by.
+BATTERY_SERIAL_BASE = 57648
+BATTERY_RATED_ENERGY = 57666
+BATTERY_OFFSETS = (0, 256, 768)
+
+# The SunSpec marker sits at the start of the common block; the model chain
+# begins in the two registers after it.
+SUNSPEC_BASE = 40000
+
+# The captured dump records no SunSpec model chain, so a test that needs one
+# lays this over it. Each entry is a model's ID and the data length it declares,
+# which is what a chain walk steps on: two header registers, then that many
+# registers of data, then the next model. It describes what the dump holds and
+# ends with the DER storage block an inverter on an IEEE 1547-2018 grid profile
+# serves, which is the block model 713 is:
+#
+#   @40002   model 1    (65)   common block, the inverter's identity
+#   @40069   model 103  (50)   three-phase inverter measurements
+#   @40121   model 1    (65)   the meter's own identity block
+#   @40188   model 203  (105)  three-phase wye meter measurements
+#   @40295   model 713  (7)    DER storage capacity
+#
+# That puts model 713 where a second meter would go, so it cannot be combined
+# with add_second_meter.
+_CHAIN = ((1, 65), (103, 50), (1, 65), (203, 105), (713, 7))
+
+# Where the chain above lands model 713, rather than a number to keep in step
+# with it by hand.
+STORAGE_CAPACITY_BASE = SUNSPEC_BASE + 2 + sum(length + 2 for _, length in _CHAIN[:-1])
 
 
 def tcp_data(unit_id: int = UNIT_ID) -> dict[str, Any]:
@@ -49,7 +87,8 @@ async def async_seed_unit(
     The capture predates several of the points this integration reads, so those
     registers carry hand-picked values instead: distinct per point, and
     consistent with what the device did report (phase values sum to the
-    recorded totals, apparent power exceeds real power). Pass
+    recorded totals, apparent power exceeds real power). The meter's identity
+    block is hand-picked the same way, since the capture skips it. Pass
     ``serial_registers`` to override the inverter serial number ("7E123ABC" as
     captured).
     """
@@ -62,6 +101,57 @@ async def async_seed_unit(
         unit.holding.update(
             dict(zip(range(40052, 40056), serial_registers, strict=True))
         )
+
+
+def add_second_meter(unit: MockModbusUnit, serial_number: str) -> None:
+    """Wire a second meter onto a seeded unit.
+
+    Every address of a meter shifts by the SunSpec stride per meter, so the
+    first meter's block, copied one stride up, is a second meter that reports
+    the same measurements under its own serial number.
+    """
+    block = {
+        address + METER_STRIDE: value
+        for address, value in unit.holding.items()
+        if METER_BASE <= address < METER_BASE + METER_STRIDE
+    }
+    padded = serial_number.ljust(32, "\0").encode()
+    block.update(
+        {
+            METER_SERIAL_BASE + METER_STRIDE + index: (
+                (padded[index * 2] << 8) | padded[index * 2 + 1]
+            )
+            for index in range(16)
+        }
+    )
+    unit.holding.update(block)
+
+
+def add_storage_capacity(unit: MockModbusUnit, state_of_charge: int) -> None:
+    """Wire a DER storage block (SunSpec model 713) onto a seeded unit.
+
+    ``state_of_charge`` is the raw register value; the scale factor written
+    here is -2, so 5960 is 59.60%. The block sits where a second meter would,
+    so do not combine this with ``add_second_meter``.
+    """
+    address = SUNSPEC_BASE + 2
+    for model_id, length in _CHAIN:
+        unit.holding.update({address: model_id, address + 1: length})
+        address += length + 2
+
+    unit.holding[address] = 0xFFFF  # end of chain
+
+    unit.holding.update(
+        {
+            STORAGE_CAPACITY_BASE + 2: 0xFFFF,  # energy rating, not implemented
+            STORAGE_CAPACITY_BASE + 3: 0xFFFF,  # energy available, not implemented
+            STORAGE_CAPACITY_BASE + 4: state_of_charge,
+            STORAGE_CAPACITY_BASE + 5: 0xFFFF,  # state of health, not implemented
+            STORAGE_CAPACITY_BASE + 6: 0xFFFF,  # status, not implemented
+            STORAGE_CAPACITY_BASE + 7: 0xFFFE,  # both scale factors are -2
+            STORAGE_CAPACITY_BASE + 8: 0xFFFE,
+        }
+    )
 
 
 @pytest.fixture

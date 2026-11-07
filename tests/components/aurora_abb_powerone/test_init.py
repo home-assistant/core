@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.aurora_abb_powerone.const import ATTR_FIRMWARE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_MODEL, ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
@@ -9,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .test_sensor import _simulated_returns
-
-from tests.common import MockConfigEntry
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

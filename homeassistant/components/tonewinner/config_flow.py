@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from tonewinner_rs232 import ReceiverInfo, TonewinnerReceiver
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntryState,
@@ -18,9 +18,9 @@ from .const import CONF_SERIAL_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SERIAL_PORT): SerialPortSelector(),
+        probatio.Required(CONF_SERIAL_PORT): SerialPortSelector(),
     }
 )
 
@@ -29,11 +29,16 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
     """Handle the Tonewinner config flow."""
 
     async def _async_probe_receiver(self, port: str) -> str | None:
-        """Verify a receiver answers on the port and return its model."""
+        """Verify a receiver answers on the port and return its model.
+
+        A receiver in standby ignores info queries but answers power queries,
+        so the library's probe checks the power query, and wakes a standby
+        receiver briefly to read its model before returning it to standby.
+        """
         receiver = TonewinnerReceiver(port)
         try:
             await receiver.connect()
-            info: ReceiverInfo | None = await receiver.query_info()
+            info: ReceiverInfo | None = await receiver.probe()
         finally:
             await receiver.disconnect()
         return info.model if info else None

@@ -213,7 +213,8 @@ def validate_password_stream(
 
 def _get_expected_archives(backup: AgentBackup) -> set[str]:
     """Get the expected archives in the backup."""
-    expected_archives = set()
+    # Supervisor specific config, not in the metadata (since Supervisor 2026.03.3)
+    expected_archives = {"supervisor"}
     if backup.homeassistant_included:
         expected_archives.add("homeassistant")
     for addon in backup.addons:
@@ -480,11 +481,16 @@ class _CipherBackupStreamer:
         return writer
 
     async def wait(self) -> None:
-        """Wait for the worker threads to finish."""
+        """Stop the worker threads, wait for them to finish and close the streams.
+
+        This must be called also when the stream is not fully consumed, or a
+        worker thread may be blocked forever.
+        """
         for worker in self._workers:
             worker.reader.abort()
             worker.writer.abort()
         await asyncio.gather(*(worker.done.wait() for worker in self._workers))
+        await asyncio.gather(*(worker.reader.aclose() for worker in self._workers))
 
 
 class DecryptedBackupStreamer(_CipherBackupStreamer):
@@ -507,8 +513,18 @@ class EncryptedBackupStreamer(_CipherBackupStreamer):
         return replace(self._backup, protected=True, size=self.size())
 
 
+async def iter_upload_chunks(contents: aiohttp.BodyPartReader) -> AsyncIterator[bytes]:
+    """Yield chunks of an uploaded file.
+
+    Iterating a BodyPartReader reads the whole part into memory and enforces the
+    request's client_max_size limit; reading it in chunks does neither.
+    """
+    while chunk := await contents.read_chunk(BUF_SIZE):
+        yield chunk
+
+
 async def receive_file(
-    hass: HomeAssistant, contents: aiohttp.BodyPartReader, path: Path
+    hass: HomeAssistant, stream: AsyncIterator[bytes], path: Path
 ) -> None:
     """Receive a file from a stream and write it to a file."""
     queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = SimpleQueue()
@@ -526,10 +542,10 @@ async def receive_file(
     fut: asyncio.Future[None] | None = None
     try:
         fut = hass.async_add_executor_job(_sync_queue_consumer)
-        megabytes_sending = 0
-        while chunk := await contents.read_chunk(BUF_SIZE):
-            megabytes_sending += 1
-            if megabytes_sending % 5 != 0:
+        chunks_sent = 0
+        async for chunk in stream:
+            chunks_sent += 1
+            if chunks_sent % 5 != 0:
                 queue.put_nowait((chunk, None))
                 continue
 
@@ -542,8 +558,9 @@ async def receive_file(
             if fut.done():
                 # The executor job failed
                 break
-
-        queue.put_nowait(None)  # terminate queue consumer
     finally:
+        # Always terminate the queue consumer, also if the stream raised or the
+        # task was cancelled.
+        queue.put_nowait(None)
         if fut is not None:
             await fut

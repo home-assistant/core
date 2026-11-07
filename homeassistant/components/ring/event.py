@@ -15,8 +15,7 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RingConfigEntry
-from .coordinator import RingListenCoordinator
+from .coordinator import RingConfigEntry, RingListenCoordinator
 from .entity import RingBaseEntity, RingDeviceT
 
 # Event entity does not perform updates or actions.

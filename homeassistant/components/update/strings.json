@@ -87,6 +87,32 @@
       "name": "Firmware"
     }
   },
+  "exceptions": {
+    "backup_not_supported": {
+      "message": "Backup is not supported for {entity_id}."
+    },
+    "clear_skipped_not_supported": {
+      "message": "Clearing skipped update is not supported for {entity_id}."
+    },
+    "no_update_available": {
+      "message": "No update available for {entity_id}."
+    },
+    "no_update_available_to_skip": {
+      "message": "No update available to skip for {entity_id}."
+    },
+    "skip_not_supported": {
+      "message": "Skipping update is not supported for {entity_id}."
+    },
+    "specific_version_not_supported": {
+      "message": "Installing a specific version is not supported for {entity_id}."
+    },
+    "unknown_version_to_skip": {
+      "message": "Cannot skip an unknown version for {entity_id}."
+    },
+    "update_in_progress": {
+      "message": "Update installation already in progress for {entity_id}."
+    }
+  },
   "services": {
     "clear_skipped": {
       "description": "Removes the skipped version marker from an update.",

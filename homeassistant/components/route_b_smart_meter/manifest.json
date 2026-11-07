@@ -1,6 +1,7 @@
 {
   "domain": "route_b_smart_meter",
   "name": "Smart Meter B Route",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@SeraphicRav"],
   "config_flow": true,
   "dependencies": ["usb"],
@@ -13,5 +14,5 @@
     "momonga.sk_wrapper_logger"
   ],
   "quality_scale": "bronze",
-  "requirements": ["momonga==0.3.0"]
+  "requirements": ["momonga==0.7.0"]
 }

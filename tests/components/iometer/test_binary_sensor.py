@@ -5,6 +5,11 @@ from unittest.mock import MagicMock
 
 from iometer import Status
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.iometer.const import DOMAIN
@@ -13,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import get_status_callback, setup_platform
-
-from tests.common import MockConfigEntry, async_load_fixture, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -47,7 +50,7 @@ async def test_connection_status_sensors(
         == STATE_ON
     )
 
-    status_data = json.loads(await async_load_fixture(hass, "status.json", DOMAIN))
+    status_data = await async_load_json_object_fixture(hass, "status.json", DOMAIN)
     status_data["device"]["core"]["connectionStatus"] = "disconnected"
     get_status_callback(mock_iometer_client)(Status.from_json(json.dumps(status_data)))
     await hass.async_block_till_done()
@@ -76,7 +79,7 @@ async def test_attachment_status_sensors(
         == STATE_ON
     )
 
-    status_data = json.loads(await async_load_fixture(hass, "status.json", DOMAIN))
+    status_data = await async_load_json_object_fixture(hass, "status.json", DOMAIN)
     status_data["device"]["core"]["attachmentStatus"] = "detached"
     get_status_callback(mock_iometer_client)(Status.from_json(json.dumps(status_data)))
     await hass.async_block_till_done()
@@ -105,7 +108,7 @@ async def test_attachment_status_sensors_unknown(
         == STATE_ON
     )
 
-    status_data = json.loads(await async_load_fixture(hass, "status.json", DOMAIN))
+    status_data = await async_load_json_object_fixture(hass, "status.json", DOMAIN)
     del status_data["device"]["core"]["attachmentStatus"]
     get_status_callback(mock_iometer_client)(Status.from_json(json.dumps(status_data)))
     await hass.async_block_till_done()

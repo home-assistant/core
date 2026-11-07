@@ -1,6 +1,10 @@
 {
   "domain": "ios",
   "name": "Home Assistant iOS",
+  "categories": [
+    "presence_location.phones_companion_apps",
+    "messaging_notifications.push_notifications"
+  ],
   "codeowners": ["@robbiet480"],
   "config_flow": true,
   "dependencies": ["device_tracker", "http", "zeroconf"],

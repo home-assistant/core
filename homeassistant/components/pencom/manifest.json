@@ -1,6 +1,7 @@
 {
   "domain": "pencom",
   "name": "Pencom",
+  "categories": ["diy_makers.boards_hardware", "plugs_switches"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/pencom",
   "iot_class": "local_polling",

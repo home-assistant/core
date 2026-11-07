@@ -1,6 +1,7 @@
 {
   "domain": "rova",
   "name": "ROVA",
+  "categories": ["local_services"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rova",

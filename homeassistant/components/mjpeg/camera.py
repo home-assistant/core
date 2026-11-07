@@ -7,7 +7,7 @@ from typing import override
 
 import aiohttp
 from aiohttp import web
-import httpx
+import httpx2
 from yarl import URL
 
 from homeassistant.components.camera import Camera
@@ -21,6 +21,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
@@ -29,7 +30,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, LOGGER
+from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN
 
 TIMEOUT = 10
 BUFFER_SIZE = 102400
@@ -155,20 +156,25 @@ class MjpegCamera(Camera):
 
                 return await response.read()
 
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except TimeoutError:
-            LOGGER.error("Timeout getting camera image from %s", self.name)
+        except TimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_getting_image",
+                translation_placeholders={"name": str(self.name)},
+            ) from err
 
         except aiohttp.ClientError as err:
-            LOGGER.error("Error getting new camera image from %s: %s", self.name, err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_getting_image",
+                translation_placeholders={"name": str(self.name)},
+            ) from err
 
-        return None
-
-    def _get_httpx_auth(self) -> httpx.Auth:
+    def _get_httpx_auth(self) -> httpx2.Auth:
         """Return a httpx auth object."""
         username = "" if self._username is None else self._username
         digest_auth = self._authentication == HTTP_DIGEST_AUTHENTICATION
-        cls = httpx.DigestAuth if digest_auth else httpx.BasicAuth
+        cls = httpx2.DigestAuth if digest_auth else httpx2.BasicAuth
         return cls(username, self._password)
 
     async def _async_digest_or_fallback_camera_image(self) -> bytes | None:
@@ -178,7 +184,7 @@ class MjpegCamera(Camera):
         try:
             if self._still_image_url:
                 # Fallback to MJPEG stream if still image URL is not available
-                with suppress(TimeoutError, httpx.HTTPError):
+                with suppress(TimeoutError, httpx2.HTTPError):
                     return (
                         await client.get(
                             self._still_image_url, auth=auth, timeout=TIMEOUT
@@ -192,13 +198,19 @@ class MjpegCamera(Camera):
                     stream.aiter_bytes(BUFFER_SIZE)
                 )
 
-        except TimeoutError:
-            LOGGER.error("Timeout getting camera image from %s", self.name)
+        except (TimeoutError, httpx2.TimeoutException) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_getting_image",
+                translation_placeholders={"name": str(self.name)},
+            ) from err
 
-        except httpx.HTTPError as err:
-            LOGGER.error("Error getting new camera image from %s: %s", self.name, err)
-
-        return None
+        except httpx2.HTTPError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_getting_image",
+                translation_placeholders={"name": str(self.name)},
+            ) from err
 
     async def _handle_async_mjpeg_digest_stream(
         self, request: web.Request
@@ -210,7 +222,7 @@ class MjpegCamera(Camera):
             response = web.StreamResponse(headers=stream.headers)
             await response.prepare(request)
             # Stream until we are done or client disconnects
-            with suppress(TimeoutError, httpx.HTTPError):
+            with suppress(TimeoutError, httpx2.HTTPError):
                 async for chunk in stream.aiter_bytes(BUFFER_SIZE):
                     if not self.hass.is_running:
                         break

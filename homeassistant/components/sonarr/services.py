@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any, cast
 
 from aiopyarr import exceptions
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
@@ -51,9 +51,9 @@ DEFAULT_SPACE_UNIT = "bytes"
 # Default values - 0 means no limit
 DEFAULT_MAX_ITEMS = 0
 
-SERVICE_BASE_SCHEMA = vol.Schema(
+SERVICE_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTRY_ID): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_ENTRY_ID): selector.ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
     }
@@ -63,37 +63,43 @@ SERVICE_GET_SERIES_SCHEMA = SERVICE_BASE_SCHEMA
 
 SERVICE_GET_EPISODES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_SERIES_ID): vol.All(vol.Coerce(int), vol.Range(min=1)),
-        vol.Optional(CONF_SEASON_NUMBER): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        probatio.Required(CONF_SERIES_ID): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1)
+        ),
+        probatio.Optional(CONF_SEASON_NUMBER): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0)
+        ),
     }
 )
 
 SERVICE_GET_QUEUE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=500)
+        probatio.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=500)
         ),
     }
 )
 
 SERVICE_GET_DISKSPACE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_SPACE_UNIT, default=DEFAULT_SPACE_UNIT): vol.In(SPACE_UNITS),
+        probatio.Optional(CONF_SPACE_UNIT, default=DEFAULT_SPACE_UNIT): probatio.In(
+            SPACE_UNITS
+        ),
     }
 )
 
 SERVICE_GET_UPCOMING_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_DAYS, default=DEFAULT_UPCOMING_DAYS): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=30)
+        probatio.Optional(CONF_DAYS, default=DEFAULT_UPCOMING_DAYS): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=30)
         ),
     }
 )
 
 SERVICE_GET_WANTED_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=500)
+        probatio.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=500)
         ),
     }
 )

@@ -1,10 +1,10 @@
 """Mockup Nuki device."""
 
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+
 from homeassistant.components.nuki.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 NAME = "Nuki_Bridge_BC614E"
 HOST = "1.1.1.1"

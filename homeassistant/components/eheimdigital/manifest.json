@@ -1,6 +1,7 @@
 {
   "domain": "eheimdigital",
   "name": "EHEIM Digital",
+  "categories": ["pets"],
   "codeowners": ["@autinerd"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/eheimdigital",

@@ -3,13 +3,12 @@
 from datetime import tzinfo
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.worldclock.const import CONF_TIME_FORMAT
 from homeassistant.const import CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

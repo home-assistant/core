@@ -1,0 +1,143 @@
+# serializer version: 1
+# name: test_diagnostics[failed_update]
+  dict({
+    'data': dict({
+      'created_at': '2026-09-04T12:00:00+00:00',
+      'distance_units': 'miles',
+      'expires_at': '2026-10-05T12:00:00+00:00',
+      'id': '**REDACTED**',
+      'owner_name': '**REDACTED**',
+      'title': '**REDACTED**',
+      'token': '**REDACTED**',
+      'vehicles': list([
+        dict({
+          'id': '**REDACTED**',
+          'make': 'Volkswagen',
+          'model': 'Golf R',
+          'name': '**REDACTED**',
+          'position': dict({
+            'address': '**REDACTED**',
+            'bearing': 182.0,
+            'ignition': True,
+            'latitude': '**REDACTED**',
+            'longitude': '**REDACTED**',
+            'speed_kmh': 48.3,
+            'timestamp': '2026-09-05T12:00:00+00:00',
+          }),
+          'registration': '**REDACTED**',
+          'status': 'Moving',
+        }),
+        dict({
+          'id': '**REDACTED**',
+          'make': 'Volkswagen',
+          'model': 'Golf R',
+          'name': '**REDACTED**',
+          'position': dict({
+            'address': '**REDACTED**',
+            'bearing': 182.0,
+            'ignition': True,
+            'latitude': '**REDACTED**',
+            'longitude': '**REDACTED**',
+            'speed_kmh': 48.3,
+            'timestamp': '2026-09-05T12:00:00+00:00',
+          }),
+          'registration': '**REDACTED**',
+          'status': 'Moving',
+        }),
+      ]),
+    }),
+    'entry_data': dict({
+      'share_token': '**REDACTED**',
+    }),
+    'last_update_success': False,
+  })
+# ---
+# name: test_diagnostics[successful_update]
+  dict({
+    'data': dict({
+      'created_at': '2026-09-04T12:00:00+00:00',
+      'distance_units': 'miles',
+      'expires_at': '2026-10-05T12:00:00+00:00',
+      'id': '**REDACTED**',
+      'owner_name': '**REDACTED**',
+      'title': '**REDACTED**',
+      'token': '**REDACTED**',
+      'vehicles': list([
+        dict({
+          'id': '**REDACTED**',
+          'make': 'Volkswagen',
+          'model': 'Golf R',
+          'name': '**REDACTED**',
+          'position': dict({
+            'address': '**REDACTED**',
+            'bearing': 182.0,
+            'ignition': True,
+            'latitude': '**REDACTED**',
+            'longitude': '**REDACTED**',
+            'speed_kmh': 48.3,
+            'timestamp': '2026-09-05T12:00:00+00:00',
+          }),
+          'registration': '**REDACTED**',
+          'status': 'Moving',
+        }),
+        dict({
+          'id': '**REDACTED**',
+          'make': 'Volkswagen',
+          'model': 'Golf R',
+          'name': '**REDACTED**',
+          'position': dict({
+            'address': '**REDACTED**',
+            'bearing': 182.0,
+            'ignition': True,
+            'latitude': '**REDACTED**',
+            'longitude': '**REDACTED**',
+            'speed_kmh': 48.3,
+            'timestamp': '2026-09-05T12:00:00+00:00',
+          }),
+          'registration': '**REDACTED**',
+          'status': 'Moving',
+        }),
+      ]),
+    }),
+    'entry_data': dict({
+      'share_token': '**REDACTED**',
+    }),
+    'last_update_success': True,
+  })
+# ---
+# name: test_diagnostics_missing_position
+  dict({
+    'data': dict({
+      'created_at': '2026-09-04T12:00:00+00:00',
+      'distance_units': 'miles',
+      'expires_at': '2026-10-05T12:00:00+00:00',
+      'id': '**REDACTED**',
+      'owner_name': '**REDACTED**',
+      'title': '**REDACTED**',
+      'token': '**REDACTED**',
+      'vehicles': list([
+        dict({
+          'id': '**REDACTED**',
+          'make': 'Volkswagen',
+          'model': 'Golf R',
+          'name': '**REDACTED**',
+          'position': dict({
+            'address': None,
+            'bearing': None,
+            'ignition': None,
+            'latitude': None,
+            'longitude': None,
+            'speed_kmh': None,
+            'timestamp': None,
+          }),
+          'registration': '**REDACTED**',
+          'status': 'unknown',
+        }),
+      ]),
+    }),
+    'entry_data': dict({
+      'share_token': '**REDACTED**',
+    }),
+    'last_update_success': True,
+  })
+# ---

@@ -1,6 +1,7 @@
 {
   "domain": "stookwijzer",
   "name": "Stookwijzer",
+  "categories": ["weather_alerts.air_quality_pollen"],
   "codeowners": ["@fwestenberg"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/stookwijzer",

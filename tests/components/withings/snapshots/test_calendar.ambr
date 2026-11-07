@@ -20,6 +20,7 @@
       'start': dict({
         'dateTime': '2023-08-29T12:06:51-07:00',
       }),
+      'status': None,
       'summary': 'Walk',
       'uid': None,
     }),
@@ -34,6 +35,7 @@
       'start': dict({
         'dateTime': '2023-08-31T01:08:27-07:00',
       }),
+      'status': None,
       'summary': 'Walk',
       'uid': None,
     }),
@@ -48,6 +50,7 @@
       'start': dict({
         'dateTime': '2023-08-04T09:00:39-07:00',
       }),
+      'status': None,
       'summary': 'Walk',
       'uid': None,
     }),
@@ -62,6 +65,7 @@
       'start': dict({
         'dateTime': '2023-09-22T16:33:55-07:00',
       }),
+      'status': None,
       'summary': 'Walk',
       'uid': None,
     }),
@@ -76,6 +80,7 @@
       'start': dict({
         'dateTime': '2023-09-14T11:20:49-07:00',
       }),
+      'status': None,
       'summary': 'Walk',
       'uid': None,
     }),
@@ -90,6 +95,7 @@
       'start': dict({
         'dateTime': '2023-09-22T16:55:53-07:00',
       }),
+      'status': None,
       'summary': 'Walk',
       'uid': None,
     }),
@@ -104,6 +110,7 @@
       'start': dict({
         'dateTime': '2023-09-14T10:42:31-07:00',
       }),
+      'status': None,
       'summary': 'Walk',
       'uid': None,
     }),
@@ -118,6 +125,7 @@
       'start': dict({
         'dateTime': '2023-10-09T00:12:49-07:00',
       }),
+      'status': None,
       'summary': 'Walk',
       'uid': None,
     }),
@@ -132,6 +140,7 @@
       'start': dict({
         'dateTime': '2023-10-09T02:39:43-07:00',
       }),
+      'status': None,
       'summary': 'Walk',
       'uid': None,
     }),
@@ -146,6 +155,7 @@
       'start': dict({
         'dateTime': '2023-10-09T02:13:23-07:00',
       }),
+      'status': None,
       'summary': 'Walk',
       'uid': None,
     }),
@@ -160,6 +170,7 @@
       'start': dict({
         'dateTime': '2023-10-09T02:13:23-07:00',
       }),
+      'status': None,
       'summary': 'Walk',
       'uid': None,
     }),

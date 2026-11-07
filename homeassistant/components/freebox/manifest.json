@@ -1,7 +1,12 @@
 {
   "domain": "freebox",
   "name": "Freebox",
-  "codeowners": ["@hacf-fr/reviewers", "@Quentame"],
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence",
+    "security_safety.alarm_systems"
+  ],
+  "codeowners": ["@Quentame"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/freebox",

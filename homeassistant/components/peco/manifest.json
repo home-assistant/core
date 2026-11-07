@@ -1,6 +1,7 @@
 {
   "domain": "peco",
   "name": "PECO Outage Counter",
+  "categories": ["local_services"],
   "codeowners": ["@IceBotYT"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/peco",

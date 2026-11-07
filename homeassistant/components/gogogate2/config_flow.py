@@ -7,7 +7,7 @@ from typing import Any, Self, override
 
 from ismartgate.common import AbstractInfoResponse, ApiError
 from ismartgate.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -94,8 +94,6 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
                 title = data_dict.get(
                     "gogogatename", data_dict.get("ismartgatename", "Cover")
                 )
-                await self.async_set_unique_id(re.sub("\\..*$", "", data.remoteaccess))
-                return self.async_create_entry(title=title, data=user_input)
 
             except ApiError as api_error:
                 device_type = user_input[CONF_DEVICE]
@@ -124,6 +122,10 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
 
+            else:
+                await self.async_set_unique_id(re.sub("\\..*$", "", data.remoteaccess))
+                return self.async_create_entry(title=title, data=user_input)
+
         if self._ip_address and self._device_type:
             self.context["title_placeholders"] = {
                 CONF_DEVICE: DEVICE_NAMES[self._device_type],
@@ -131,22 +133,23 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
             }
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_DEVICE,
                         default=self._device_type
                         or user_input.get(CONF_DEVICE, DEVICE_TYPE_GOGOGATE2),
-                    ): vol.In((DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE)),
-                    vol.Required(
+                    ): probatio.In((DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE)),
+                    probatio.Required(
                         CONF_IP_ADDRESS,
                         default=user_input.get(CONF_IP_ADDRESS, self._ip_address),
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                     ): str,
-                    vol.Required(
-                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                    probatio.Required(
+                        probatio.Secret(CONF_PASSWORD),
+                        default=user_input.get(CONF_PASSWORD, ""),
                     ): str,
                 }
             ),

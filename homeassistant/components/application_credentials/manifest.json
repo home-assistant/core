@@ -1,6 +1,6 @@
 {
   "domain": "application_credentials",
-  "name": "Application Credentials",
+  "name": "Application credentials",
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
   "dependencies": ["auth", "websocket_api"],

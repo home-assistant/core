@@ -1,12 +1,13 @@
 {
   "domain": "solarman",
   "name": "Solarman",
+  "categories": ["energy.meters_monitoring", "plugs_switches"],
   "codeowners": ["@solarmanpv"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/solarman",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["solarman-opendata==0.0.3"],
   "zeroconf": ["_solarman._tcp.local."]
 }

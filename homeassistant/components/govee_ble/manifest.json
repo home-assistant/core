@@ -142,6 +142,7 @@
       "manufacturer_id": 34819
     }
   ],
+  "categories": ["sensors", "appliances_cleaning.cooking", "buttons_remotes"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

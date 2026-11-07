@@ -1,6 +1,7 @@
 {
   "domain": "habitica",
   "name": "Habitica",
+  "categories": ["productivity_information.calendars_todos"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/habitica",

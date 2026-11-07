@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "suspended": {
+        "default": "mdi:pause"
+      }
+    },
     "button": {
       "force_stop_server": {
         "default": "mdi:flash-alert"

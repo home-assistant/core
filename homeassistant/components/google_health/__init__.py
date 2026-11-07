@@ -10,10 +10,9 @@ from google_health_api.const import HealthApiScope
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -48,15 +47,9 @@ type GoogleHealthConfigEntry = ConfigEntry[GoogleHealthData]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleHealthConfigEntry
-) -> bool:
+) -> None:
     """Set up Google Health from a config entry."""
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth_error",
-        ) from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
     session = OAuth2Session(hass, entry, implementation)
 
@@ -128,11 +121,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleHealthConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

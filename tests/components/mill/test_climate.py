@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, call, patch
 from mill import Heater
 from mill_local import OperationMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import mill
 from homeassistant.components.climate import (
@@ -21,8 +22,6 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 HEATER_ID = "dev_id"
 HEATER_NAME = "heater_name"

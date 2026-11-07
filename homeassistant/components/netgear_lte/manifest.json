@@ -1,6 +1,10 @@
 {
   "domain": "netgear_lte",
   "name": "NETGEAR LTE",
+  "categories": [
+    "computers_network.routers_network",
+    "messaging_notifications.email_sms_calls"
+  ],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/netgear_lte",

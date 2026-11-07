@@ -1,6 +1,7 @@
 {
   "domain": "airvisual",
   "name": "AirVisual Cloud",
+  "categories": ["weather_alerts.air_quality_pollen"],
   "codeowners": ["@bachya"],
   "config_flow": true,
   "dependencies": ["airvisual_pro"],

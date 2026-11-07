@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -21,13 +21,13 @@ from .entity import SWITCHES_SCHEMA, PilightBaseDevice
 
 LIGHTS_SCHEMA = SWITCHES_SCHEMA.extend(
     {
-        vol.Optional(CONF_DIMLEVEL_MIN, default=0): cv.positive_int,
-        vol.Optional(CONF_DIMLEVEL_MAX, default=15): cv.positive_int,
+        probatio.Optional(CONF_DIMLEVEL_MIN, default=0): cv.positive_int,
+        probatio.Optional(CONF_DIMLEVEL_MAX, default=15): cv.positive_int,
     }
 )
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_LIGHTS): vol.Schema({cv.string: LIGHTS_SCHEMA})}
+    {probatio.Required(CONF_LIGHTS): probatio.Schema({cv.string: LIGHTS_SCHEMA})}
 )
 
 

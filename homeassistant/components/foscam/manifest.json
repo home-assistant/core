@@ -1,6 +1,7 @@
 {
   "domain": "foscam",
   "name": "Foscam",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@Foscam-wangzhengyu"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/foscam",

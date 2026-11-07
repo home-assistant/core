@@ -1,6 +1,7 @@
 {
   "domain": "twilio",
   "name": "Twilio",
+  "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["webhook"],

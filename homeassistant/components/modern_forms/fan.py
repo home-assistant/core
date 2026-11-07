@@ -3,11 +3,10 @@
 from typing import Any, override
 
 from aiomodernforms.const import FAN_POWER_OFF, FAN_POWER_ON
-import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -16,15 +15,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from . import modernforms_exception_handler
-from .const import (
-    ATTR_SLEEP_TIME,
-    CLEAR_TIMER,
-    OPT_ON,
-    OPT_SPEED,
-    OPT_WIND,
-    SERVICE_CLEAR_FAN_SLEEP_TIMER,
-    SERVICE_SET_FAN_SLEEP_TIMER,
-)
+from .const import CLEAR_TIMER, DOMAIN, OPT_ON, OPT_SPEED, OPT_WIND
 from .coordinator import ModernFormsConfigEntry, ModernFormsDataUpdateCoordinator
 from .entity import ModernFormsDeviceEntity
 
@@ -40,24 +31,6 @@ async def async_setup_entry(
     """Set up a Modern Forms platform from config entry."""
 
     coordinator = config_entry.runtime_data
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_FAN_SLEEP_TIMER,
-        {
-            vol.Required(ATTR_SLEEP_TIME): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=1440)
-            ),
-        },
-        "async_set_fan_sleep_timer",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_CLEAR_FAN_SLEEP_TIMER,
-        None,
-        "async_clear_fan_sleep_timer",
-    )
 
     async_add_entities(
         [ModernFormsFanEntity(entry_id=config_entry.entry_id, coordinator=coordinator)]
@@ -186,6 +159,11 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         sleep_time: int,
     ) -> None:
         """Set a Modern Forms light sleep timer."""
+        if not self.coordinator.data.has_sleep_timer():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sleep_timer_not_supported",
+            )
         await self.coordinator.modern_forms.fan(sleep=sleep_time * 60)
 
     @modernforms_exception_handler
@@ -193,4 +171,9 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         self,
     ) -> None:
         """Clear a Modern Forms fan sleep timer."""
+        if not self.coordinator.data.has_sleep_timer():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sleep_timer_not_supported",
+            )
         await self.coordinator.modern_forms.fan(sleep=CLEAR_TIMER)

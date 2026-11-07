@@ -5,14 +5,10 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_TIMEOUT,
-)
-from homeassistant.components.rest.schema import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_METHOD,
-    DEFAULT_VERIFY_SSL,
-)
+from homeassistant.components.rest.data import DEFAULT_TIMEOUT  # pylint: disable=home-assistant-component-root-import
+from homeassistant.components.rest.schema import DEFAULT_METHOD, DEFAULT_VERIFY_SSL  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.scrape.const import (
     CONF_ENCODING,
     CONF_INDEX,
@@ -31,15 +27,13 @@ from homeassistant.core import HomeAssistant
 
 from . import MockRestData
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Automatically path uuid generator."""
     with patch(
         "homeassistant.components.scrape.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -115,7 +109,7 @@ async def load_integration(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.rest.RestData",
+        "homeassistant.components.rest.util.RestData",
         return_value=get_data,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

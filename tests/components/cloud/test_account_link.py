@@ -6,8 +6,13 @@ import logging
 from time import time
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp import ClientResponseError, RequestInfo
+from aiohttp import ClientError, ClientResponseError, RequestInfo
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_platform,
+)
 from yarl import URL
 
 from homeassistant import config_entries
@@ -16,14 +21,13 @@ from homeassistant.components.cloud.const import DATA_CLOUD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
 
@@ -287,7 +291,7 @@ async def test_refresh_token_error(
     status: int,
     expected_exception: type[OAuth2TokenRequestError],
 ) -> None:
-    """Test that _async_refresh_token wraps ClientResponseError."""
+    """Test a failing token request reports the service, not the cloud domain."""
     hass.data[DATA_CLOUD] = None
     impl = account_link.CloudOAuth2Implementation(hass, "test")
 
@@ -298,9 +302,30 @@ async def test_refresh_token_error(
         ),
         pytest.raises(expected_exception) as exc_info,
     ):
-        await impl._async_refresh_token(
+        await impl.async_refresh_token(
             {"refresh_token": "mock-refresh", "access_token": "mock-access"}
         )
 
     assert exc_info.value.status == status
     assert exc_info.value.domain == "test"
+
+
+async def test_refresh_token_connection_error(hass: HomeAssistant) -> None:
+    """Test a failure without a response reports the service, not the cloud domain."""
+    hass.data[DATA_CLOUD] = None
+    impl = account_link.CloudOAuth2Implementation(hass, "test")
+
+    with (
+        patch(
+            "hass_nabucasa.account_link.async_fetch_access_token",
+            side_effect=ClientError("Cannot connect"),
+        ),
+        pytest.raises(OAuth2TokenRequestConnectionError) as exc_info,
+    ):
+        await impl.async_refresh_token(
+            {"refresh_token": "mock-refresh", "access_token": "mock-access"}
+        )
+
+    assert impl.domain == "cloud"
+    assert exc_info.value.domain == "test"
+    assert exc_info.value.translation_placeholders == {"domain": "test"}

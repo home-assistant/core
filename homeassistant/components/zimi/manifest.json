@@ -1,6 +1,7 @@
 {
   "domain": "zimi",
   "name": "zimi",
+  "categories": ["plugs_switches", "hubs_protocols.smart_home_hubs"],
   "codeowners": ["@markhannon"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zimi",

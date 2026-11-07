@@ -1,6 +1,7 @@
 {
   "domain": "rainmachine",
   "name": "RainMachine",
+  "categories": ["garden_plants"],
   "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rainmachine",

@@ -3,9 +3,15 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import IllegalDataAddressError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusUnit
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.solaredge_modbus.const import SCAN_INTERVAL
@@ -13,14 +19,15 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
+from .conftest import (
+    BATTERY_RATED_ENERGY,
+    STORAGE_CAPACITY_BASE,
+    add_second_meter,
+    add_storage_capacity,
 )
 
 LIFETIME_ENERGY_ENTITY = "sensor.solaredge_se10000h_energy"
+DER_STORAGE_ENTITY = "sensor.solaredge_se10000h_storage_state_of_charge"
 
 
 async def _setup_sensor_platform(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -35,7 +42,7 @@ async def _setup_sensor_platform(hass: HomeAssistant, entry: MockConfigEntry) ->
 async def _tick(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -132,6 +139,115 @@ async def test_phase_currents_on_three_phase(
     assert hass.states.get("sensor.solaredge_se10000h_current_phase_c") is not None
 
 
+async def test_two_meters_are_told_apart(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A second meter reads its own block and goes unavailable on its own.
+
+    Both meters report the same measurements here, so what is worth proving is
+    that each entity reaches the meter it belongs to: the values move apart
+    when one block does, and only that meter's entities go unavailable when it
+    stops answering.
+    """
+    add_second_meter(mock_modbus_unit, "7E5B22D3")
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    first = hass.states.get("sensor.meter_1_power")
+    second = hass.states.get("sensor.meter_2_power")
+    assert first is not None
+    assert second is not None
+    assert first.state == second.state
+
+    # Only the second meter's power register moves.
+    mock_modbus_unit.holding[40206 + 174] = 1000
+
+    await _tick(hass, freezer)
+
+    assert hass.states.get("sensor.meter_1_power") == first
+    second = hass.states.get("sensor.meter_2_power")
+    assert second is not None
+    assert second.state != first.state
+
+    # Only the second meter falls silent.
+    mock_modbus_unit.fail_read(40297, ModbusTimeoutError("timed out"))
+
+    await _tick(hass, freezer)
+    await _tick(hass, freezer)
+
+    assert hass.states.get("sensor.meter_2_power").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.meter_1_power").state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_delta_meter_measures_nothing_against_a_neutral(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A delta meter has no neutral, so no voltage is measured against one."""
+    mock_modbus_unit.holding[40188] = 204  # SunSpec three-phase delta meter
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    # Line-to-line is all a delta meter has.
+    assert hass.states.get("sensor.meter_1_voltage_phase_a_b") is not None
+    assert hass.states.get("sensor.meter_1_voltage_phase_b_c") is not None
+
+    assert hass.states.get("sensor.meter_1_voltage") is None
+    assert hass.states.get("sensor.meter_1_voltage_phase_a_n") is None
+    assert hass.states.get("sensor.meter_1_voltage_phase_b_n") is None
+    assert hass.states.get("sensor.meter_1_voltage_phase_c_n") is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_split_phase_meter_has_two_phases(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A split-phase meter measures two phases, so the third is not offered."""
+    mock_modbus_unit.holding[40188] = 202  # SunSpec split-phase meter
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.meter_1_power_phase_a") is not None
+    assert hass.states.get("sensor.meter_1_power_phase_b") is not None
+    assert hass.states.get("sensor.meter_1_voltage_phase_a_n") is not None
+
+    assert hass.states.get("sensor.meter_1_power_phase_c") is None
+    assert hass.states.get("sensor.meter_1_voltage_phase_c_n") is None
+    assert hass.states.get("sensor.meter_1_voltage_phase_b_c") is None
+
+
+async def test_meter_energy_ignores_transient_zero(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A meter accumulator transiently reporting zero is held at the last maximum."""
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.meter_1_energy_exported")
+    assert state is not None
+    initial = float(state.state)
+    assert initial > 0
+
+    # The meter block transiently reports "not accumulated" (zero).
+    mock_modbus_unit.holding[40226] = 0
+    mock_modbus_unit.holding[40227] = 0
+
+    await _tick(hass, freezer)
+
+    state = hass.states.get("sensor.meter_1_energy_exported")
+    assert state is not None
+    assert float(state.state) == initial
+
+
 async def test_lifetime_energy_never_goes_backwards(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -202,3 +318,75 @@ async def test_lifetime_energy_restored_after_restart(
     state = hass.states.get(LIFETIME_ENERGY_ENTITY)
     assert state is not None
     assert float(state.state) == 99999.999  # kWh, from the restored maximum
+
+
+async def test_der_storage_state_of_charge(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """An inverter reporting storage as a DER gets a state-of-charge sensor.
+
+    Only where the battery block gave nothing: some inverters expose no battery
+    over Modbus but do serve model 713.
+    """
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, IllegalDataAddressError())
+    add_storage_capacity(mock_modbus_unit, state_of_charge=5960)
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    state = hass.states.get(DER_STORAGE_ENTITY)
+    assert state is not None
+    assert state.state == "59.6"
+
+
+@pytest.mark.parametrize(
+    ("state_of_charge", "absent_blocks", "reason"),
+    [
+        pytest.param(
+            0, (BATTERY_RATED_ENERGY,), "no storage attached", id="charge-zero"
+        ),
+        pytest.param(5960, (), "the battery block reports it", id="has-batteries"),
+    ],
+)
+async def test_no_der_storage_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    state_of_charge: int,
+    absent_blocks: tuple[int, ...],
+    reason: str,
+) -> None:
+    """The block is served in cases that are not worth an entity.
+
+    An inverter on an IEEE 1547-2018 grid profile serves model 713 whether or
+    not a battery is attached, reporting the 0% the spec fixes it at.
+    """
+    for address in absent_blocks:
+        mock_modbus_unit.fail_read(address, IllegalDataAddressError())
+
+    add_storage_capacity(mock_modbus_unit, state_of_charge=state_of_charge)
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    assert hass.states.get(DER_STORAGE_ENTITY) is None, reason
+
+
+async def test_der_storage_unavailable_when_its_block_fails(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """The sensor follows its own sub-system, not the whole poll."""
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, IllegalDataAddressError())
+    add_storage_capacity(mock_modbus_unit, state_of_charge=5960)
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+    assert hass.states.get(DER_STORAGE_ENTITY).state == "59.6"
+
+    mock_modbus_unit.fail_read(STORAGE_CAPACITY_BASE, ModbusTimeoutError("timed out"))
+    await _tick(hass, freezer)
+
+    assert hass.states.get(DER_STORAGE_ENTITY).state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.solaredge_se10000h_power").state != STATE_UNAVAILABLE

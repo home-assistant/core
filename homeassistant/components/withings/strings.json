@@ -6,7 +6,7 @@
     "abort": {
       "already_configured": "Configuration updated for profile.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "Authenticated account does not match the account of this entry. Please log in with the correct account.",
       "wrong_account": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account."
     },
     "create_entry": {
@@ -81,6 +81,9 @@
       },
       "average_respiratory_rate": {
         "name": "Average respiratory rate"
+      },
+      "basal_metabolic_rate": {
+        "name": "Basal metabolic rate"
       },
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]",
@@ -176,6 +179,9 @@
       },
       "maximum_respiratory_rate": {
         "name": "Maximum respiratory rate"
+      },
+      "metabolic_age": {
+        "name": "Metabolic age"
       },
       "minimum_heart_rate": {
         "name": "Minimum heart rate"
@@ -330,8 +336,8 @@
     }
   },
   "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    "authentication_failed": {
+      "message": "Authentication with Withings failed. Please reauthenticate."
     }
   }
 }

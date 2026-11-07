@@ -1,6 +1,7 @@
 {
   "domain": "kmtronic",
   "name": "KMtronic",
+  "categories": ["plugs_switches"],
   "codeowners": ["@dgomes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/kmtronic",

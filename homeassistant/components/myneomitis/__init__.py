@@ -34,7 +34,7 @@ class MyNeomitisRuntimeData:
 type MyNeomitisConfigEntry = ConfigEntry[MyNeomitisRuntimeData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -> None:
     """Set up MyNeomitis from a config entry."""
     session = async_get_clientsession(hass)
 
@@ -109,8 +109,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -
     # Load platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 def process_connection_update(new_state: dict[str, Any]) -> bool | None:
     """Return availability from a connection update."""
@@ -120,17 +118,14 @@ def process_connection_update(new_state: dict[str, Any]) -> bool | None:
     return bool(new_state.get("connected"))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        try:
-            await entry.runtime_data.api.disconnect_websocket()
-        except (TimeoutError, ConnectionError) as err:
-            _LOGGER.error(
-                "Error while disconnecting WebSocket for %s: %s",
-                entry.entry_id,
-                err,
-            )
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    try:
+        await entry.runtime_data.api.disconnect_websocket()
+    except (TimeoutError, ConnectionError) as err:
+        _LOGGER.error(
+            "Error while disconnecting WebSocket for %s: %s",
+            entry.entry_id,
+            err,
+        )

@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -90,6 +90,7 @@ class ProxmoxStorageEntity(ProxmoxCoordinatorEntity):
                 ),
                 config_entry_id=coordinator.config_entry.entry_id,
             ),
+            entry_type=DeviceEntryType.SERVICE,
         )
 
         self._attr_unique_id = (
@@ -149,6 +150,7 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
                 ),
                 config_entry_id=coordinator.config_entry.entry_id,
             ),
+            entry_type=DeviceEntryType.SERVICE,
         )
 
         self._attr_unique_id = (
@@ -211,6 +213,7 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
                 ),
                 config_entry_id=coordinator.config_entry.entry_id,
             ),
+            entry_type=DeviceEntryType.SERVICE,
         )
 
         self._attr_unique_id = (

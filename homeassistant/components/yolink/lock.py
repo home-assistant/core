@@ -41,6 +41,7 @@ class YoLinkLockEntity(YoLinkEntity, LockEntity):
     ) -> None:
         """Init YoLink Lock."""
         super().__init__(config_entry, coordinator)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{coordinator.device.device_id}_lock_state"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @callback

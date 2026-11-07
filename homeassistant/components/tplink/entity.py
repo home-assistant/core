@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_device_name, legacy_device_id
@@ -236,15 +236,13 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             and parent.device_id != registry_device.device_id
             and parent.device_type is not Device.Type.WallSwitch
         ):
-            self._attr_device_info["via_device_id"] = (
-                dr.async_get_device_id_by_identifier(
-                    self.coordinator.hass,
-                    (DOMAIN, parent.device_id),
-                    config_entry_id=self.coordinator.config_entry.entry_id,
-                )
+            self._attr_device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, parent.device_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
             )
         else:
-            self._attr_device_info["connections"] = {
+            self._attr_device_info.connections = {
                 (dr.CONNECTION_NETWORK_MAC, device.mac)
             }
 
@@ -386,7 +384,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             # HA logic is to name entities based on the following logic:
             # _attr_name > translation.name > description.name
             # > device_class (if base platform supports).
-            name: str | UndefinedType | None = UNDEFINED
+            name: str | Undefined | None = Undefined
 
             # The state feature gets the device name or the child device
             # name if it's a child device

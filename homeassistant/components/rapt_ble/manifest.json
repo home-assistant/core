@@ -11,11 +11,12 @@
       "manufacturer_id": 17739
     }
   ],
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@sairon"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/rapt_ble",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["rapt-ble==0.1.2"]
+  "requirements": ["rapt-ble==2.0.0"]
 }

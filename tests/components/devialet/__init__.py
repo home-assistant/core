@@ -4,14 +4,13 @@ from ipaddress import ip_address
 
 from aiohttp import ClientError as ServerTimeoutError
 from devialet.const import UrlSuffix
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.devialet.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 NAME = "Livingroom"
 SERIAL = "L00P00000AB11"

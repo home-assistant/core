@@ -4,20 +4,20 @@ import http
 import time
 from unittest.mock import AsyncMock, patch
 
-from aiohttp.client_exceptions import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from twitchAPI.object.api import TwitchUser
 
 from homeassistant.components.twitch.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestConnectionError
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
-from . import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
+from . import get_generator, setup_integration
 
 
 async def test_setup_success(
@@ -113,7 +113,7 @@ async def test_expired_token_refresh_client_error(
 
     with patch(
         "homeassistant.components.twitch.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientError,
+        side_effect=OAuth2TokenRequestConnectionError(domain=DOMAIN),
     ):
         config_entry.add_to_hass(hass)
 
@@ -140,3 +140,19 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_logged_in_user_not_found(
+    hass: HomeAssistant, config_entry: MockConfigEntry, twitch_mock: AsyncMock
+) -> None:
+    """Test setup is retried when the logged-in user is not found."""
+    twitch_mock.return_value.get_users = lambda *args, **kwargs: get_generator(
+        hass, "empty_response.json", TwitchUser
+    )
+    config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "user_not_found"

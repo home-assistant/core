@@ -1,6 +1,7 @@
 {
   "domain": "snoo",
   "name": "Happiest Baby Snoo",
+  "categories": ["health_wellbeing"],
   "codeowners": ["@Lash-L"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/snoo",

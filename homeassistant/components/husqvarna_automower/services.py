@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.lawn_mower import DOMAIN as LAWN_MOWER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -23,11 +23,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "override_schedule",
         entity_domain=LAWN_MOWER_DOMAIN,
         schema={
-            vol.Required("override_mode"): vol.In(OVERRIDE_MODES),
-            vol.Required("duration"): vol.All(
+            probatio.Required("override_mode"): probatio.In(OVERRIDE_MODES),
+            probatio.Required("duration"): probatio.All(
                 cv.time_period,
                 cv.positive_timedelta,
-                vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
+                probatio.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
             ),
         },
         func="async_override_schedule",
@@ -38,11 +38,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "override_schedule_work_area",
         entity_domain=LAWN_MOWER_DOMAIN,
         schema={
-            vol.Required("work_area_id"): vol.Coerce(int),
-            vol.Required("duration"): vol.All(
+            probatio.Required("work_area_id"): probatio.Coerce(int),
+            probatio.Required("duration"): probatio.All(
                 cv.time_period,
                 cv.positive_timedelta,
-                vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
+                probatio.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
             ),
         },
         func="async_override_schedule_work_area",

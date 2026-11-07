@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -43,11 +44,10 @@ from homeassistant.helpers import entity_registry as er
 
 from . import (
     init_integration,
+    init_integration_gen4,
     modern_forms_breeze_active_call_mock,
     modern_forms_breeze_call_mock,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_fan_state(
@@ -395,3 +395,41 @@ async def test_turn_off_does_not_touch_wind(
         )
         await hass.async_block_till_done()
         fan_mock.assert_called_once_with(on=False)
+
+
+async def test_fan_sleep_timer_not_supported_gen4(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test setting a sleep timer on a Gen4 fan raises an error."""
+    await init_integration_gen4(hass, aioclient_mock)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_FAN_SLEEP_TIMER,
+            {ATTR_ENTITY_ID: "fan.modernformsfan_fan", ATTR_SLEEP_TIME: 1},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "sleep_timer_not_supported"
+
+
+async def test_clear_fan_sleep_timer_not_supported_gen4(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test clearing a sleep timer on a Gen4 fan raises an error."""
+    await init_integration_gen4(hass, aioclient_mock)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAR_FAN_SLEEP_TIMER,
+            {ATTR_ENTITY_ID: "fan.modernformsfan_fan"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "sleep_timer_not_supported"

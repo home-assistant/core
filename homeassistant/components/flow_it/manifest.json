@@ -1,7 +1,8 @@
 {
   "domain": "flow_it",
-  "name": "Flow-it",
+  "name": "AriaQ",
   "after_dependencies": ["zeroconf"],
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@albertogeniola"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flow_it",

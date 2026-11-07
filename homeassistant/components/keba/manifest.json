@@ -1,6 +1,7 @@
 {
   "domain": "keba",
   "name": "Keba Charging Station",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@dannerph"],
   "documentation": "https://www.home-assistant.io/integrations/keba",
   "iot_class": "local_polling",

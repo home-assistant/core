@@ -1,6 +1,7 @@
 {
   "domain": "bryant_evolution",
   "name": "Bryant Evolution",
+  "categories": ["climate"],
   "codeowners": ["@danielsmyers"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bryant_evolution",

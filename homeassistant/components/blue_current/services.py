@@ -1,6 +1,6 @@
 """The Blue Current integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -8,12 +8,12 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import BCU_APP, CHARGING_CARD_ID, DOMAIN, SERVICE_START_CHARGE_SESSION
 
-SERVICE_START_CHARGE_SESSION_SCHEMA = vol.Schema(
+SERVICE_START_CHARGE_SESSION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE_ID): cv.string,
+        probatio.Required(CONF_DEVICE_ID): cv.string,
         # When no charging card is provided, use no charging card
         # (BCU_APP = no charging card).
-        vol.Optional(CHARGING_CARD_ID, default=BCU_APP): cv.string,
+        probatio.Optional(CHARGING_CARD_ID, default=BCU_APP): cv.string,
     }
 )
 
