@@ -3231,7 +3231,7 @@ solyx-energy-api-client==0.2.0
 sonos-websocket==0.2.0
 
 # homeassistant.components.sony_tv_rs232
-sony-tv-rs232==0.3.3
+sony-tv-rs232==0.3.4
 
 # homeassistant.components.marytts
 speak2mary==1.4.0
