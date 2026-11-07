@@ -1,15 +1,21 @@
 """Support for WebDav Calendar."""
 
 from collections.abc import Callable
-from datetime import date, datetime
+from datetime import UTC, date, datetime, time
 from functools import partial
 import logging
 from typing import Any, cast, override
 
 from caldav.calendarobjectresource import Event
 from caldav.davclient import DAVClient
-from caldav.lib.error import DAVError, NotFoundError
+from caldav.lib.error import (
+    DAVError,
+    ETagMismatchError,
+    NotFoundError,
+    ScheduleTagMismatchError,
+)
 from caldav.lib.http_sync import requests as caldav_requests
+from dateutil.rrule import rrulebase, rrulestr
 import icalendar
 import probatio
 
@@ -44,6 +50,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
 from .api import async_get_calendar_color, async_get_calendars
@@ -65,9 +72,6 @@ CONFIG_ENTRY_DEFAULT_DAYS = 7
 SUPPORTED_COMPONENT = "VEVENT"
 
 THIS_AND_FUTURE = "THISANDFUTURE"
-
-# Parts of a repeat rule that tie the occurrences to particular days
-DAY_RULE_PARTS = ("BYDAY", "BYMONTHDAY", "BYMONTH", "BYYEARDAY", "BYWEEKNO", "BYSETPOS")
 
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
@@ -301,13 +305,41 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         recurrence_range: str | None = None,
     ) -> None:
         """Update an event, a recurring one as a whole."""
-        item = await self._async_get_event(uid)
-        series = _get_series(item.icalendar_instance)
-        _check_whole_event(series, recurrence_id, recurrence_range)
-        _check_series_change(item.icalendar_instance, series, event)
-        _set_fields(series, event)
-        await self._async_save(item)
+        # Checking a repeat rule can take a while, so it runs in the executor
+        await self._async_call(
+            self._update_event, uid, event, recurrence_id, recurrence_range
+        )
         await self.coordinator.async_request_refresh()
+
+    def _update_event(
+        self,
+        uid: str,
+        event: dict[str, Any],
+        recurrence_id: str | None,
+        recurrence_range: str | None,
+    ) -> None:
+        """Check and save an update."""
+        item = self._get_event(uid)
+        calendar = item.icalendar_instance
+        series = _get_series(calendar)
+        first = _check_whole_event(calendar, series, recurrence_id, recurrence_range)
+        if _shows_first(calendar, series, first, event):
+            # Unchanged, or the times of a moved first occurrence
+            event = {
+                key: value
+                for key, value in event.items()
+                if key not in (EVENT_START, EVENT_END)
+            }
+        _check_series_change(calendar, series, event)
+        original_start = series.DTSTART
+        _set_fields(series, event)
+        if "RRULE" in series and (
+            EVENT_RRULE in event or original_start != series.DTSTART
+        ):
+            _check_rule_start(series)
+        # Otherwise save() merges just the first component into the stored
+        # event when that one is an override
+        item.save(only_this_recurrence=False)
 
     @override
     async def async_delete_event(
@@ -317,28 +349,26 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         recurrence_range: str | None = None,
     ) -> None:
         """Delete an event, a recurring one as a whole."""
-        item = await self._async_get_event(uid)
+        await self._async_call(self._delete_event, uid, recurrence_id, recurrence_range)
+        await self.coordinator.async_request_refresh()
+
+    def _delete_event(
+        self, uid: str, recurrence_id: str | None, recurrence_range: str | None
+    ) -> None:
+        """Check and delete an event."""
+        item = self._get_event(uid)
+        calendar = item.icalendar_instance
         _check_whole_event(
-            _get_series(item.icalendar_instance), recurrence_id, recurrence_range
+            calendar, _get_series(calendar), recurrence_id, recurrence_range
         )
         # Only delete the version that was checked; If-Match can't use a weak ETag
         etag = item.etag
         if_match = bool(etag and not etag.startswith("W/"))
-        await self._async_call(partial(item.delete, if_match=if_match))
-        await self.coordinator.async_request_refresh()
+        item.delete(if_match=if_match, precondition="etag")
 
-    async def _async_save(self, item: Event) -> None:
-        """Save a changed event with all its components."""
-        # Otherwise save() merges just the first component into the stored
-        # event when that one is an override
-        await self._async_call(partial(item.save, only_this_recurrence=False))
-
-    async def _async_get_event(self, uid: str) -> Event:
+    def _get_event(self, uid: str) -> Event:
         """Fetch the CalDAV object holding an event and its overrides."""
-        return cast(
-            Event,
-            await self._async_call(self.coordinator.calendar.get_event_by_uid, uid),
-        )
+        return cast(Event, self.coordinator.calendar.get_event_by_uid(uid))
 
     async def _async_call[_T](self, target: Callable[..., _T], *args: Any) -> _T:
         """Run a CalDAV request in the executor."""
@@ -347,6 +377,10 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         except NotFoundError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="event_not_found"
+            ) from err
+        except (ETagMismatchError, ScheduleTagMismatchError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="event_changed"
             ) from err
         except (
             caldav_requests.exceptions.ConnectionError,
@@ -390,28 +424,104 @@ def _get_series(calendar: icalendar.Calendar) -> icalendar.Event:
 
 
 def _check_whole_event(
-    series: icalendar.Event, recurrence_id: str | None, recurrence_range: str | None
-) -> None:
+    calendar: icalendar.Calendar,
+    series: icalendar.Event,
+    recurrence_id: str | None,
+    recurrence_range: str | None,
+) -> date | datetime:
     """Refuse changes to single occurrences of a recurring event.
 
     A change from the first occurrence on is a change to the whole event. The
-    recurrence id is the occurrence start as the coordinator formats it.
+    recurrence id is the occurrence start as the coordinator formats it. Returns
+    the start of the first occurrence.
     """
-    if not recurrence_id:
-        return
-    start: date | datetime
+    first = _first_start(calendar, series)
+    if recurrence_id:
+        start: date | datetime
+        try:
+            start = date.fromisoformat(recurrence_id)
+        except ValueError:
+            start = datetime.fromisoformat(recurrence_id)
+        if (
+            recurrence_range != THIS_AND_FUTURE
+            or "RECURRENCE-ID" in series
+            or not _same_time(start, first)
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="occurrence_not_supported"
+            )
+    return first
+
+
+def _first_start(
+    calendar: icalendar.Calendar, series: icalendar.Event
+) -> date | datetime:
+    """Return the start of the first occurrence that wasn't deleted or cancelled."""
+    exdates = series.get("EXDATE", [])
+    deleted = {
+        _instant(value.dt)
+        for prop in (exdates if isinstance(exdates, list) else [exdates])
+        for value in prop.dts
+    } | {
+        _instant(component["RECURRENCE-ID"].dt)
+        for component in calendar.walk("VEVENT")
+        if "RECURRENCE-ID" in component
+        and str(component.get("STATUS", "")).upper() == "CANCELLED"
+    }
+    if "RRULE" not in series or not deleted:
+        return series.DTSTART
     try:
-        start = date.fromisoformat(recurrence_id)
+        occurrences = _occurrences(series)
     except ValueError:
-        start = datetime.fromisoformat(recurrence_id)
-    if (
-        recurrence_range != THIS_AND_FUTURE
-        or "RECURRENCE-ID" in series
-        or start > series.DTSTART
-    ):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="occurrence_not_supported"
-        )
+        return series.DTSTART
+    all_day = not isinstance(series.DTSTART, datetime)
+    starts = (
+        occurrence.date() if all_day else occurrence for occurrence in occurrences
+    )
+    return next(
+        (start for start in starts if _instant(start) not in deleted),
+        series.DTSTART,
+    )
+
+
+def _shows_first(
+    calendar: icalendar.Calendar,
+    series: icalendar.Event,
+    first: date | datetime,
+    event: dict[str, Any],
+) -> bool:
+    """Return if an update has the times calendars show for the first occurrence.
+
+    That is the occurrence an update of the whole event is made from, and an
+    override can have moved it.
+    """
+    moved = [
+        component
+        for component in calendar.walk("VEVENT")
+        if "RECURRENCE-ID" in component
+        and _same_time(component["RECURRENCE-ID"].dt, first)
+    ]
+    try:
+        if moved:
+            start, end = moved[0].DTSTART, moved[0].end
+        else:
+            start, end = first, first + series.duration
+    except ValueError:
+        # The event has no consistent end, so the update sets one
+        return False
+    return _same_time(event[EVENT_START], start) and _same_time(event[EVENT_END], end)
+
+
+def _same_time(value: date | datetime, other: date | datetime) -> bool:
+    """Return if two starts or ends are the same, whatever their time zones."""
+    return _instant(value) == _instant(other)
+
+
+def _instant(value: date | datetime) -> date | datetime:
+    """Return a value that compares by instant, taking floating times as local."""
+    if isinstance(value, datetime) and value.tzinfo is None:
+        return value.replace(tzinfo=dt_util.get_default_time_zone())
+    return value
 
 
 def _check_series_change(
@@ -420,40 +530,89 @@ def _check_series_change(
     """Refuse changes the recurrence of a series can't follow."""
     if "RRULE" not in series and "RDATE" not in series:
         return
+    rrule = event.get(EVENT_RRULE)
+    if EVENT_START not in event and not rrule:
+        return
+    start = event.get(EVENT_START, series.DTSTART)
     # UNTIL, EXDATE and RECURRENCE-ID keep the type of the old start
-    if isinstance(event[EVENT_START], datetime) != isinstance(series.DTSTART, datetime):
+    if isinstance(start, datetime) != isinstance(series.DTSTART, datetime):
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="all_day_change_not_supported"
         )
-    start = _in_time_basis(event[EVENT_START], series.DTSTART)
+    start = _in_time_basis(start, series.DTSTART)
     # Changed and deleted occurrences are tied to the old start and rule
     has_exceptions = (
         "EXDATE" in series or "RDATE" in series or len(calendar.walk("VEVENT")) > 1
     )
     if has_exceptions and (
-        start != series.DTSTART
-        or (
-            (rrule := event.get(EVENT_RRULE))
-            and icalendar.vRecur.from_ical(rrule) != series.get("RRULE")
-        )
+        start != series.DTSTART or (rrule and not _same_rule(series, rrule, start))
     ):
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="exceptions_change_not_supported"
         )
-    rule = series.get("RRULE", {})
-    if (
-        not event.get(EVENT_RRULE)
-        and any(part in rule for part in DAY_RULE_PARTS)
-        and _day_of(start) != _day_of(series.DTSTART)
-    ):
+
+
+def _same_rule(series: icalendar.Event, rrule: str, start: date | datetime) -> bool:
+    """Return if a rule gives the same occurrences as the rule of the series."""
+    if "RRULE" not in series:
+        return False
+    new = series.copy()
+    new["RRULE"] = _parse_rule(rrule, start)
+    try:
+        return str(_occurrences(new)) == str(_occurrences(series))
+    except ValueError:
+        return False
+
+
+def _occurrences(series: icalendar.Event) -> rrulebase:
+    """Return the occurrences the rule of a series produces, as datetimes."""
+    start = series.DTSTART
+    rule = _parse_rule(series["RRULE"].to_ical().decode(), start)
+    if not isinstance(start, datetime):
+        start = datetime.combine(start, time())
+    return rrulestr(rule.to_ical().decode(), dtstart=start)
+
+
+def _check_rule_start(series: icalendar.Event) -> None:
+    """Refuse a series whose start isn't one of the times its rule produces."""
+    start = series.DTSTART
+    if not isinstance(start, datetime):
+        start = datetime.combine(start, time())
+    try:
+        first = _occurrences(series).after(start, inc=True)
+    except ValueError:
+        first = None
+    if first != start:
         raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="day_change_not_supported"
+            translation_domain=DOMAIN, translation_key="start_not_in_rule"
         )
 
 
-def _day_of(value: date | datetime) -> date:
-    """Return the day of a start, which may be a date or a datetime."""
-    return value.date() if isinstance(value, datetime) else value
+def _parse_rule(rrule: str, start: date | datetime) -> icalendar.vRecur:
+    """Parse a repeat rule, with UNTIL in the form the start needs.
+
+    UNTIL is a date for all-day events, floating for floating events and UTC
+    otherwise. Without a time zone it is in Home Assistant's, as the frontend
+    sends it.
+    """
+    rule = icalendar.vRecur.from_ical(rrule)
+    if not (until := rule.get("UNTIL")):
+        return rule
+    value = until[0]
+    if not isinstance(start, datetime):
+        if isinstance(value, datetime):
+            value = dt_util.as_local(value).date() if value.tzinfo else value.date()
+    else:
+        if not isinstance(value, datetime):
+            value = datetime.combine(value, time(23, 59, 59))
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=dt_util.get_default_time_zone())
+        if start.tzinfo is None:
+            value = dt_util.as_local(value).replace(tzinfo=None)
+        else:
+            value = value.astimezone(UTC)
+    rule["UNTIL"] = [value]
+    return rule
 
 
 def _in_time_basis(
@@ -463,15 +622,27 @@ def _in_time_basis(
 
     Times come in Home Assistant's time zone. A floating event keeps the wall time.
     """
-    if not isinstance(value, datetime) or not isinstance(original_start, datetime):
+    if not isinstance(value, datetime):
         return value
-    if original_start.tzinfo is None:
+    if isinstance(original_start, datetime) and original_start.tzinfo is None:
         return value.replace(tzinfo=None)
-    converted = value.astimezone(original_start.tzinfo)
-    # A TZID time can't say which of the two repeated hours it means
-    if converted.replace(fold=1 - converted.fold).utcoffset() != converted.utcoffset():
+    # A time skipped when daylight saving time starts doesn't exist
+    if value.astimezone(UTC).astimezone(value.tzinfo).replace(
+        tzinfo=None
+    ) != value.replace(tzinfo=None):
         raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="ambiguous_time"
+            translation_domain=DOMAIN, translation_key="daylight_saving_time"
+        )
+    if not isinstance(original_start, datetime):
+        return value
+    converted = value.astimezone(original_start.tzinfo)
+    # A TZID time in the hour that repeats always means the first one
+    if (
+        converted.fold
+        and converted.replace(fold=0).utcoffset() != converted.utcoffset()
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="daylight_saving_time"
         )
     return converted
 
@@ -479,6 +650,8 @@ def _in_time_basis(
 def _set_fields(series: icalendar.Event, event: dict[str, Any]) -> None:
     """Set the fields of an update, keeping any field it leaves out."""
     original_start = series.DTSTART
+    # Keep the name of the time zone, which may not be an IANA one
+    tzid = series["DTSTART"].params.get("TZID")
     for key in (
         EVENT_SUMMARY,
         EVENT_START,
@@ -492,9 +665,20 @@ def _set_fields(series: icalendar.Event, event: dict[str, Any]) -> None:
                 value = _in_time_basis(value, original_start)
             series.pop(key)
             if value:
-                series.add(key, value)
-    # DTEND is always set, so the event must not keep a DURATION
-    series.pop("DURATION")
+                keep_tzid = (
+                    tzid
+                    and isinstance(value, datetime)
+                    and value.tzinfo == original_start.tzinfo
+                )
+                series.add(key, value, parameters={"TZID": tzid} if keep_tzid else None)
+    if EVENT_END in event:
+        # DTEND replaces a DURATION
+        series.pop("DURATION")
     if rrule := event.get(EVENT_RRULE):
         series.pop("RRULE")
-        series.add("RRULE", icalendar.vRecur.from_ical(rrule))
+        series.add("RRULE", _parse_rule(rrule, series.DTSTART))
+    elif "UNTIL" in series.get("RRULE", {}) and original_start != series.DTSTART:
+        # Move the end of the rule along, so no occurrence is lost
+        rule = _parse_rule(series["RRULE"].to_ical().decode(), original_start)
+        rule["UNTIL"] = [rule["UNTIL"][0] + (series.DTSTART - original_start)]
+        series["RRULE"] = rule

@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, Mock, patch
 import zoneinfo
 
 from caldav.calendarobjectresource import Event
-from caldav.elements import dav, ical
+from caldav.elements import cdav, dav, ical
 from caldav.elements.base import BaseElement
 from caldav.lib.error import DAVError, NotFoundError
 from caldav.lib.http_sync import requests as caldav_requests
@@ -1768,6 +1768,76 @@ END:VEVENT
 END:VCALENDAR
 """
 
+FLOATING_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+BEGIN:VEVENT
+UID:floating
+DTSTAMP:20261101T000000Z
+DTSTART:20261110T070000
+DTEND:20261110T073000
+SUMMARY:Run
+END:VEVENT
+END:VCALENDAR
+"""
+
+# SERIES_ICS with its first occurrence moved from 09:00 to 11:00
+FIRST_MOVED_ICS = SERIES_ICS.replace(
+    "RECURRENCE-ID;TZID=America/New_York:20261116T090000\n"
+    "DTSTART;TZID=America/New_York:20261116T100000\n"
+    "DTEND;TZID=America/New_York:20261116T103000",
+    "RECURRENCE-ID;TZID=America/New_York:20261026T090000\n"
+    "DTSTART;TZID=America/New_York:20261026T110000\n"
+    "DTEND;TZID=America/New_York:20261026T113000",
+)
+
+# NEW_YORK_SERIES_ICS with its first occurrence deleted
+FIRST_DELETED_ICS = NEW_YORK_SERIES_ICS.replace(
+    "RRULE:FREQ=WEEKLY;COUNT=8",
+    "RRULE:FREQ=WEEKLY;COUNT=8\nEXDATE;TZID=America/New_York:20261026T090000",
+)
+
+WINDOWS_TIME_ZONE_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+BEGIN:VTIMEZONE
+TZID:Eastern Standard Time
+BEGIN:STANDARD
+DTSTART:16010101T020000
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0500
+RRULE:FREQ=YEARLY;BYDAY=1SU;BYMONTH=11
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:16010101T020000
+TZOFFSETFROM:-0500
+TZOFFSETTO:-0400
+RRULE:FREQ=YEARLY;BYDAY=2SU;BYMONTH=3
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:windows
+DTSTAMP:20261101T000000Z
+DTSTART;TZID=Eastern Standard Time:20261110T090000
+DTEND;TZID=Eastern Standard Time:20261110T100000
+SUMMARY:Review
+END:VEVENT
+END:VCALENDAR
+"""
+
+# SERIES_ICS with its first occurrence cancelled
+FIRST_CANCELLED_ICS = FIRST_MOVED_ICS.replace(
+    "SUMMARY:Weekly moved", "SUMMARY:Weekly moved\nSTATUS:CANCELLED"
+)
+
+# BYSETPOS has to be between 1 and 366, or -366 and -1
+BROKEN_RULE = "RRULE:FREQ=WEEKLY;COUNT=8;BYSETPOS=0"
+
+# SERIES_ICS ending on a date instead of after a number of occurrences
+SERIES_UNTIL_ICS = SERIES_ICS.replace(
+    "RRULE:FREQ=WEEKLY;COUNT=8", "RRULE:FREQ=WEEKLY;UNTIL=20261214T140000Z"
+)
+
 ALL_DAY_SERIES_ICS = """BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Test//CalDAV Client//EN
@@ -1781,6 +1851,11 @@ SUMMARY:Holiday
 END:VEVENT
 END:VCALENDAR
 """
+
+# An all-day event lasting an hour, which RFC 5545 doesn't allow
+ALL_DAY_HOUR_ICS = ALL_DAY_SERIES_ICS.replace(
+    "DURATION:P1D\nRRULE:FREQ=DAILY;COUNT=5", "DURATION:PT1H"
+)
 
 # An invitation to one occurrence of a series that is held by someone else
 INVITATION_ICS = """BEGIN:VCALENDAR
@@ -1908,6 +1983,17 @@ async def _ws_call(
             "",
             {
                 "summary": "Planning",
+                "dtstart": "2026-11-09T09:00:00",
+                "dtend": "2026-11-09T09:30:00",
+            },
+            id="pinned_days_next_week",
+        ),
+        pytest.param(
+            MONDAYS_ICS,
+            "mondays",
+            "",
+            {
+                "summary": "Planning",
                 "dtstart": "2026-11-03T09:00:00",
                 "dtend": "2026-11-03T09:30:00",
                 "rrule": "FREQ=WEEKLY;BYDAY=TU;COUNT=4",
@@ -1920,6 +2006,184 @@ async def _ws_call(
             "",
             {"summary": "Rent", "dtstart": "2026-11-20", "dtend": "2026-11-21"},
             id="pinned_days_all_day_same_day",
+        ),
+        pytest.param(
+            NEW_YORK_SERIES_ICS,
+            "series",
+            "",
+            {
+                "summary": "Weekly",
+                "dtstart": "2026-10-26T09:00:00",
+                "dtend": "2026-10-26T09:30:00",
+                "rrule": "FREQ=WEEKLY;UNTIL=20261116T090000",
+            },
+            id="until_utc_for_time_zone",
+        ),
+        pytest.param(
+            FLOATING_ICS,
+            "floating",
+            "",
+            {
+                "summary": "Run",
+                "dtstart": "2026-11-10T07:00:00",
+                "dtend": "2026-11-10T07:30:00",
+                "rrule": "FREQ=DAILY;UNTIL=20261201T155959Z",
+            },
+            id="until_floating",
+        ),
+        pytest.param(
+            ALL_DAY_SERIES_ICS,
+            "all-day-series",
+            "",
+            {
+                "summary": "Holiday",
+                "dtstart": "2026-11-20",
+                "dtend": "2026-11-21",
+                "rrule": "FREQ=DAILY;UNTIL=20261124T050000Z",
+            },
+            id="until_date_for_all_day",
+        ),
+        pytest.param(
+            ALL_DAY_SERIES_ICS,
+            "all-day-series",
+            "",
+            {
+                "summary": "Holiday",
+                "dtstart": "2026-11-20",
+                "dtend": "2026-11-21",
+                "rrule": "FREQ=DAILY;UNTIL=20261124",
+            },
+            id="until_date_kept_for_all_day",
+        ),
+        pytest.param(
+            ALL_DAY_SERIES_ICS.replace("RRULE:FREQ=DAILY;COUNT=5\n", ""),
+            "all-day-series",
+            "",
+            {
+                "summary": "Holiday",
+                "dtstart": "2026-11-20T09:00:00",
+                "dtend": "2026-11-20T10:00:00",
+            },
+            id="all_day_to_timed",
+        ),
+        pytest.param(
+            SERIES_UNTIL_ICS,
+            "series",
+            FIRST_OCCURRENCE,
+            {
+                "summary": "Weekly renamed",
+                "dtstart": "2026-10-26T09:00:00",
+                "dtend": "2026-10-26T09:30:00",
+                "rrule": "FREQ=WEEKLY;UNTIL=20261214T090000",
+            },
+            id="same_until_with_override",
+        ),
+        pytest.param(
+            SERIES_ICS,
+            "series",
+            FIRST_OCCURRENCE,
+            {
+                "summary": "Weekly renamed",
+                "dtstart": "2026-10-26T09:00:00",
+                "dtend": "2026-10-26T09:30:00",
+                "rrule": "FREQ=WEEKLY;INTERVAL=1;COUNT=8",
+            },
+            id="same_rule_written_differently_with_override",
+        ),
+        pytest.param(
+            FIRST_MOVED_ICS,
+            "series",
+            FIRST_OCCURRENCE,
+            {
+                "summary": "Weekly renamed",
+                "dtstart": "2026-10-26T11:00:00",
+                "dtend": "2026-10-26T11:30:00",
+            },
+            id="first_occurrence_moved",
+        ),
+        pytest.param(
+            FIRST_DELETED_ICS,
+            "series",
+            SECOND_OCCURRENCE,
+            {
+                "summary": "Weekly renamed",
+                "dtstart": "2026-11-02T09:00:00",
+                "dtend": "2026-11-02T09:30:00",
+            },
+            id="first_occurrence_deleted",
+        ),
+        pytest.param(
+            MONDAYS_ICS.replace("COUNT=4", "UNTIL=20261123T090000"),
+            "mondays",
+            "",
+            {
+                "summary": "Planning",
+                "dtstart": "2026-11-09T10:00:00",
+                "dtend": "2026-11-09T10:30:00",
+            },
+            id="stored_until_without_time_zone",
+        ),
+        pytest.param(
+            WINDOWS_TIME_ZONE_ICS,
+            "windows",
+            "",
+            {
+                "summary": "Review",
+                "dtstart": "2026-11-10T10:00:00",
+                "dtend": "2026-11-10T11:00:00",
+            },
+            id="windows_time_zone_name",
+        ),
+        pytest.param(
+            FLOATING_ICS,
+            "floating",
+            "",
+            {
+                "summary": "Run",
+                "dtstart": "2026-03-08T02:30:00",
+                "dtend": "2026-03-08T03:00:00",
+            },
+            id="floating_in_skipped_hour",
+        ),
+        pytest.param(
+            FIRST_DELETED_ICS.replace("RRULE:FREQ=WEEKLY;COUNT=8", BROKEN_RULE),
+            "series",
+            FIRST_OCCURRENCE,
+            {
+                "summary": "Weekly renamed",
+                "dtstart": "2026-10-26T09:00:00",
+                "dtend": "2026-10-26T09:30:00",
+            },
+            id="broken_rule_title_only",
+        ),
+        pytest.param(
+            SERIES_UNTIL_ICS.replace(SERIES_OVERRIDE, ""),
+            "series",
+            FIRST_OCCURRENCE,
+            {
+                "summary": "Weekly",
+                "dtstart": "2026-10-26T10:00:00",
+                "dtend": "2026-10-26T10:30:00",
+            },
+            id="until_moves_with_start",
+        ),
+        pytest.param(
+            FIRST_CANCELLED_ICS,
+            "series",
+            SECOND_OCCURRENCE,
+            {
+                "summary": "Weekly renamed",
+                "dtstart": "2026-11-02T09:00:00",
+                "dtend": "2026-11-02T09:30:00",
+            },
+            id="first_occurrence_cancelled",
+        ),
+        pytest.param(
+            ALL_DAY_HOUR_ICS,
+            "all-day-series",
+            "",
+            {"summary": "Holiday", "dtstart": "2026-11-20", "dtend": "2026-11-21"},
+            id="all_day_lasting_an_hour",
         ),
     ],
 )
@@ -1950,20 +2214,6 @@ async def test_update_event(
     assert stored_event.client.put.call_args.args[1] == snapshot
 
 
-FLOATING_ICS = """BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Test//CalDAV Client//EN
-BEGIN:VEVENT
-UID:floating
-DTSTAMP:20261101T000000Z
-DTSTART:20261110T070000
-DTEND:20261110T073000
-SUMMARY:Run
-END:VEVENT
-END:VCALENDAR
-"""
-
-
 @pytest.mark.parametrize("tz", [UTC])
 @pytest.mark.parametrize(
     ("ics", "uid", "event"),
@@ -1988,6 +2238,17 @@ END:VCALENDAR
                 "dtend": "2026-10-26T15:00:00",
             },
             id="series_new_time",
+        ),
+        pytest.param(
+            NEW_YORK_SERIES_ICS,
+            "series",
+            # 01:30 to 01:45 EDT, the first time of the hour that repeats
+            {
+                "summary": "Weekly",
+                "dtstart": "2026-11-01T05:30:00",
+                "dtend": "2026-11-01T05:45:00",
+            },
+            id="series_first_of_repeated_hour",
         ),
         pytest.param(
             FLOATING_ICS,
@@ -2019,33 +2280,53 @@ async def test_update_event_keeps_time_zone(
     assert stored_event.client.put.call_args.args[1] == snapshot
 
 
-@pytest.mark.parametrize("tz", [UTC])
-@pytest.mark.parametrize("ics", [NEW_YORK_SERIES_ICS])
+@pytest.mark.parametrize(
+    ("tz", "ics", "uid", "event"),
+    [
+        pytest.param(
+            UTC,
+            NEW_YORK_SERIES_ICS,
+            "series",
+            # 01:30 EDT to 01:00 EST in New York, a TZID can only mean the first
+            {
+                "summary": "Weekly",
+                "dtstart": "2026-11-01T05:30:00",
+                "dtend": "2026-11-01T06:00:00",
+            },
+            id="second_of_repeated_hour",
+        ),
+        pytest.param(
+            AMERICA_NEW_YORK,
+            SINGLE_ICS,
+            "single",
+            # 02:30 doesn't exist in New York on that day
+            {
+                "summary": "Dentist",
+                "dtstart": "2026-03-08T02:30:00",
+                "dtend": "2026-03-08T03:00:00",
+            },
+            id="skipped_hour",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("setup_config_entry")
-async def test_update_event_repeated_hour(
+async def test_update_event_daylight_saving_time(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     stored_event: Event,
+    uid: str,
+    event: dict[str, Any],
 ) -> None:
-    """Test a time in the hour repeated when daylight saving time ends is refused."""
+    """Test a time skipped or repeated by daylight saving time is refused."""
     response = await _ws_call(
-        hass,
-        hass_ws_client,
-        type="calendar/event/update",
-        uid="series",
-        event={
-            "summary": "Weekly",
-            # 01:30 EDT to 01:00 EST in New York, which a TZID can't tell apart
-            "dtstart": "2026-11-01T05:30:00",
-            "dtend": "2026-11-01T06:00:00",
-        },
+        hass, hass_ws_client, type="calendar/event/update", uid=uid, event=event
     )
 
     assert response["error"] == {
         "code": "failed",
         "message": (
-            "The time falls in the hour that repeats when daylight saving time "
-            "ends in the event's time zone"
+            "The time is skipped or happens twice because of a daylight saving "
+            "time change"
         ),
     }
     stored_event.client.put.assert_not_called()
@@ -2056,6 +2337,21 @@ async def test_update_event_repeated_hour(
     [
         pytest.param(SINGLE_ICS, "single", "", id="single"),
         pytest.param(SERIES_ICS, "series", FIRST_OCCURRENCE, id="series"),
+        pytest.param(
+            FIRST_DELETED_ICS,
+            "series",
+            SECOND_OCCURRENCE,
+            id="series_first_occurrence_deleted",
+        ),
+        pytest.param(
+            FIRST_CANCELLED_ICS,
+            "series",
+            SECOND_OCCURRENCE,
+            id="series_first_occurrence_cancelled",
+        ),
+        pytest.param(
+            ALL_DAY_HOUR_ICS, "all-day-series", "", id="all_day_lasting_an_hour"
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_config_entry")
@@ -2233,6 +2529,30 @@ async def test_update_series_all_day_change(
             {"summary": "Holiday", "dtstart": "2026-11-21", "dtend": "2026-11-22"},
             id="exdate_new_start",
         ),
+        pytest.param(
+            SINGLE_ICS.replace(
+                "SUMMARY:Dentist", "RDATE:20261117T150000Z\nSUMMARY:Dentist"
+            ),
+            "single",
+            {
+                "summary": "Dentist",
+                "dtstart": "2026-11-10T07:00:00",
+                "dtend": "2026-11-10T08:00:00",
+                "rrule": "FREQ=WEEKLY;COUNT=2",
+            },
+            id="rdate_new_rrule",
+        ),
+        pytest.param(
+            SERIES_ICS.replace("RRULE:FREQ=WEEKLY;COUNT=8", BROKEN_RULE),
+            "series",
+            {
+                "summary": "Weekly",
+                "dtstart": "2026-10-26T06:00:00",
+                "dtend": "2026-10-26T06:30:00",
+                "rrule": "FREQ=WEEKLY;COUNT=8",
+            },
+            id="broken_rule_echoed",
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_config_entry")
@@ -2258,31 +2578,92 @@ async def test_update_series_with_exceptions(
     stored_event.client.put.assert_not_called()
 
 
-@pytest.mark.parametrize("ics", [MONDAYS_ICS])
+@pytest.mark.parametrize(
+    ("ics", "uid", "event"),
+    [
+        pytest.param(
+            MONDAYS_ICS,
+            "mondays",
+            {
+                "summary": "Planning",
+                "dtstart": "2026-11-03T06:00:00",
+                "dtend": "2026-11-03T06:30:00",
+            },
+            id="pinned_days_other_day",
+        ),
+        pytest.param(
+            MONDAYS_ICS,
+            "mondays",
+            {
+                "summary": "Planning",
+                "dtstart": "2026-11-03T06:00:00",
+                "dtend": "2026-11-03T06:30:00",
+                "rrule": "FREQ=WEEKLY;BYDAY=MO;COUNT=4",
+            },
+            id="pinned_days_other_day_same_rule",
+        ),
+        pytest.param(
+            MONDAYS_ICS.replace("FREQ=WEEKLY;BYDAY=MO", "FREQ=DAILY;BYHOUR=9"),
+            "mondays",
+            {
+                "summary": "Planning",
+                "dtstart": "2026-11-02T07:00:00",
+                "dtend": "2026-11-02T07:30:00",
+            },
+            id="pinned_hour_other_time",
+        ),
+        pytest.param(
+            SINGLE_ICS,
+            "single",
+            {
+                "summary": "Dentist",
+                "dtstart": "2026-11-10T07:00:00",
+                "dtend": "2026-11-10T08:00:00",
+                "rrule": "FREQ=WEEKLY;BYDAY=MO",
+            },
+            id="new_rule_other_day",
+        ),
+        pytest.param(
+            SINGLE_ICS,
+            "single",
+            {
+                "summary": "Dentist",
+                "dtstart": "2026-11-10T07:00:00",
+                "dtend": "2026-11-10T08:00:00",
+                "rrule": "FREQ=DAILY;UNTIL=20261101",
+            },
+            id="new_rule_ends_before_start",
+        ),
+        pytest.param(
+            NEW_YORK_SERIES_ICS.replace("RRULE:FREQ=WEEKLY;COUNT=8", BROKEN_RULE),
+            "series",
+            {
+                "summary": "Weekly",
+                "dtstart": "2026-10-26T10:00:00",
+                "dtend": "2026-10-26T10:30:00",
+            },
+            id="broken_rule",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("setup_config_entry")
-async def test_update_series_pinned_days(
+async def test_update_series_start_not_in_rule(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     stored_event: Event,
+    uid: str,
+    event: dict[str, Any],
 ) -> None:
-    """Test a series whose rule sets its days can't move to another day."""
+    """Test the start of a series has to be a time its rule produces."""
     response = await _ws_call(
-        hass,
-        hass_ws_client,
-        type="calendar/event/update",
-        uid="mondays",
-        event={
-            "summary": "Planning",
-            "dtstart": "2026-11-03T09:00:00",
-            "dtend": "2026-11-03T09:30:00",
-        },
+        hass, hass_ws_client, type="calendar/event/update", uid=uid, event=event
     )
 
     assert response["error"] == {
         "code": "failed",
         "message": (
-            "The repeat rule of this event sets its days, so its start can only "
-            "move to another time on the same day"
+            "The start of a recurring event has to be one of the times its repeat "
+            "rule produces"
         ),
     }
     stored_event.client.put.assert_not_called()
@@ -2381,7 +2762,7 @@ async def test_update_event_changed_elsewhere(
 
     assert response["error"] == {
         "code": "failed",
-        "message": "Error talking to the CalDAV server",
+        "message": "The event was changed on the CalDAV server in the meantime",
     }
     stored_event.client.put.assert_called_once()
     assert stored_event.client.put.call_args.args[2]["if-match"] == '"read-version"'
@@ -2396,6 +2777,8 @@ async def test_delete_event_sends_etag(
 ) -> None:
     """Test a delete only removes the version that was read."""
     stored_event.props[dav.GetEtag.tag] = '"read-version"'
+    # A Schedule-Tag doesn't change for every edit, the ETag does
+    stored_event.props[cdav.ScheduleTag.tag] = '"schedule-version"'
 
     response = await _ws_call(hass, hass_ws_client, **DELETE_SINGLE)
 
@@ -2420,7 +2803,7 @@ async def test_delete_event_changed_elsewhere(
 
     assert response["error"] == {
         "code": "failed",
-        "message": "Error talking to the CalDAV server",
+        "message": "The event was changed on the CalDAV server in the meantime",
     }
     stored_event.client.delete.assert_called_once()
 

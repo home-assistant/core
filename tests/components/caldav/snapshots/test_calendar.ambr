@@ -1,4 +1,163 @@
 # serializer version: 1
+# name: test_update_event[all_day_lasting_an_hour-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Holiday
+  DTSTART;VALUE=DATE:20261120
+  DTEND;VALUE=DATE:20261121
+  DTSTAMP:20261101T000000Z
+  UID:all-day-series
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[all_day_to_timed-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Holiday
+  DTSTART;TZID=America/New_York:20261120T090000
+  DTEND;TZID=America/New_York:20261120T100000
+  DTSTAMP:20261101T000000Z
+  UID:all-day-series
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[broken_rule_title_only-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Weekly renamed
+  DTSTART;TZID=America/New_York:20261026T090000
+  DTEND;TZID=America/New_York:20261026T093000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=WEEKLY;COUNT=8;BYSETPOS=0
+  EXDATE;TZID=America/New_York:20261026T090000
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[first_occurrence_cancelled-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Weekly renamed
+  DTSTART;TZID=America/New_York:20261026T090000
+  DTEND;TZID=America/New_York:20261026T093000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=WEEKLY;COUNT=8
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
+  END:VEVENT
+  BEGIN:VEVENT
+  SUMMARY:Weekly moved
+  DTSTART;TZID=America/New_York:20261026T110000
+  DTEND;TZID=America/New_York:20261026T113000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RECURRENCE-ID;TZID=America/New_York:20261026T090000
+  STATUS:CANCELLED
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[first_occurrence_deleted-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Weekly renamed
+  DTSTART;TZID=America/New_York:20261026T090000
+  DTEND;TZID=America/New_York:20261026T093000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=WEEKLY;COUNT=8
+  EXDATE;TZID=America/New_York:20261026T090000
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[first_occurrence_moved-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Weekly renamed
+  DTSTART;TZID=America/New_York:20261026T090000
+  DTEND;TZID=America/New_York:20261026T093000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=WEEKLY;COUNT=8
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
+  END:VEVENT
+  BEGIN:VEVENT
+  SUMMARY:Weekly moved
+  DTSTART;TZID=America/New_York:20261026T110000
+  DTEND;TZID=America/New_York:20261026T113000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RECURRENCE-ID;TZID=America/New_York:20261026T090000
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[floating_in_skipped_hour-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Run
+  DTSTART:20260308T023000
+  DTEND:20260308T030000
+  DTSTAMP:20261101T000000Z
+  UID:floating
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
 # name: test_update_event[override_listed_first-America/New_York]
   '''
   BEGIN:VCALENDAR
@@ -38,7 +197,7 @@
   BEGIN:VEVENT
   SUMMARY:Rent
   DTSTART;VALUE=DATE:20261120
-  DTEND;VALUE=DATE:20261121
+  DURATION:P1D
   DTSTAMP:20261101T000000Z
   UID:all-day-series
   RRULE:FREQ=MONTHLY;COUNT=5;BYMONTHDAY=20
@@ -81,6 +240,54 @@
   
   '''
 # ---
+# name: test_update_event[pinned_days_next_week-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Planning
+  DTSTART;TZID=America/New_York:20261109T090000
+  DTEND;TZID=America/New_York:20261109T093000
+  DTSTAMP:20261101T000000Z
+  UID:mondays
+  RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=MO
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[same_rule_written_differently_with_override-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Weekly renamed
+  DTSTART;TZID=America/New_York:20261026T090000
+  DTEND;TZID=America/New_York:20261026T093000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=WEEKLY;COUNT=8;INTERVAL=1
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
+  END:VEVENT
+  BEGIN:VEVENT
+  SUMMARY:Weekly moved
+  DTSTART;TZID=America/New_York:20261116T100000
+  DTEND;TZID=America/New_York:20261116T103000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RECURRENCE-ID;TZID=America/New_York:20261116T090000
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
 # name: test_update_event[same_start_and_rrule_with_override-America/New_York]
   '''
   BEGIN:VCALENDAR
@@ -93,6 +300,37 @@
   DTSTAMP:20261001T000000Z
   UID:series
   RRULE:FREQ=WEEKLY;COUNT=8
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
+  END:VEVENT
+  BEGIN:VEVENT
+  SUMMARY:Weekly moved
+  DTSTART;TZID=America/New_York:20261116T100000
+  DTEND;TZID=America/New_York:20261116T103000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RECURRENCE-ID;TZID=America/New_York:20261116T090000
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[same_until_with_override-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Weekly renamed
+  DTSTART;TZID=America/New_York:20261026T090000
+  DTEND;TZID=America/New_York:20261026T093000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=WEEKLY;UNTIL=20261214T140000Z
   DESCRIPTION:Team sync
   BEGIN:VALARM
   ACTION:DISPLAY
@@ -169,6 +407,151 @@
   
   '''
 # ---
+# name: test_update_event[stored_until_without_time_zone-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Planning
+  DTSTART;TZID=America/New_York:20261109T100000
+  DTEND;TZID=America/New_York:20261109T103000
+  DTSTAMP:20261101T000000Z
+  UID:mondays
+  RRULE:FREQ=WEEKLY;UNTIL=20261130T150000Z;BYDAY=MO
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[until_date_for_all_day-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Holiday
+  DTSTART;VALUE=DATE:20261120
+  DURATION:P1D
+  DTSTAMP:20261101T000000Z
+  UID:all-day-series
+  RRULE:FREQ=DAILY;UNTIL=20261124
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[until_date_kept_for_all_day-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Holiday
+  DTSTART;VALUE=DATE:20261120
+  DURATION:P1D
+  DTSTAMP:20261101T000000Z
+  UID:all-day-series
+  RRULE:FREQ=DAILY;UNTIL=20261124
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[until_floating-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Run
+  DTSTART:20261110T070000
+  DTEND:20261110T073000
+  DTSTAMP:20261101T000000Z
+  UID:floating
+  RRULE:FREQ=DAILY;UNTIL=20261201T105959
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[until_moves_with_start-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Weekly
+  DTSTART;TZID=America/New_York:20261026T100000
+  DTEND;TZID=America/New_York:20261026T103000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=WEEKLY;UNTIL=20261214T150000Z
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[until_utc_for_time_zone-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Weekly
+  DTSTART;TZID=America/New_York:20261026T090000
+  DTEND;TZID=America/New_York:20261026T093000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=WEEKLY;UNTIL=20261116T140000Z
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[windows_time_zone_name-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VTIMEZONE
+  TZID:Eastern Standard Time
+  BEGIN:STANDARD
+  DTSTART:16010101T020000
+  RRULE:FREQ=YEARLY;BYDAY=1SU;BYMONTH=11
+  TZOFFSETFROM:-0400
+  TZOFFSETTO:-0500
+  END:STANDARD
+  BEGIN:DAYLIGHT
+  DTSTART:16010101T020000
+  RRULE:FREQ=YEARLY;BYDAY=2SU;BYMONTH=3
+  TZOFFSETFROM:-0500
+  TZOFFSETTO:-0400
+  END:DAYLIGHT
+  END:VTIMEZONE
+  BEGIN:VEVENT
+  SUMMARY:Review
+  DTSTART;TZID=Eastern Standard Time:20261110T100000
+  DTEND;TZID=Eastern Standard Time:20261110T110000
+  DTSTAMP:20261101T000000Z
+  UID:windows
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
 # name: test_update_event_keeps_time_zone[floating-UTC]
   '''
   BEGIN:VCALENDAR
@@ -180,6 +563,29 @@
   DTEND:20261110T083000
   DTSTAMP:20261101T000000Z
   UID:floating
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event_keeps_time_zone[series_first_of_repeated_hour-UTC]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Weekly
+  DTSTART;TZID=America/New_York:20261101T013000
+  DTEND;TZID=America/New_York:20261101T014500
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=WEEKLY;COUNT=8
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
   END:VEVENT
   END:VCALENDAR
   
