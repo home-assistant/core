@@ -9,12 +9,14 @@ from fressnapftracker import (
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fressnapf_tracker.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_SERIAL_NUMBER
 
@@ -187,3 +189,42 @@ async def test_invalid_tracker_shared_between_entries(
         DOMAIN,
         f"invalid_fressnapf_tracker_{mock_email_config_entry.entry_id}_{MOCK_SERIAL_NUMBER}",
     )
+
+
+async def _remove_device(ws_client, device_id: str, config_entry_id: str) -> bool:
+    """Try to remove a device via the websocket API and return the success."""
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    return response["success"]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_remove_stale_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test only devices of trackers that left the account can be removed."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    active = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    )
+    assert active is not None
+    assert not await _remove_device(ws_client, active.id, mock_config_entry.entry_id)
+    assert device_registry.async_get(active.id) is not None
+
+    stale = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "STALE123")},
+    )
+    assert await _remove_device(ws_client, stale.id, mock_config_entry.entry_id)
+    assert device_registry.async_get(stale.id) is None
