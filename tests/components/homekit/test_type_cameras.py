@@ -2278,15 +2278,18 @@ async def test_camera_secure_video_recording_long_stderr_line(
     hass: HomeAssistant,
     run_driver: HomeDriver,
     recording_ffmpeg: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test an overlong ffmpeg output line does not stop draining stderr."""
+    """Test an overlong ffmpeg output line does not stop reading stderr."""
     stderr = _closed_pipe(b"x" * 2**17 + b"\nmore output\n")
     _ffmpeg_output(recording_ffmpeg, _closed_pipe(INIT_SEGMENT + FRAGMENT), stderr)
     acc = await _recording_camera(hass, run_driver)
 
-    assert [packet.data for packet in await _collect(acc)] == [
-        INIT_SEGMENT,
-        FRAGMENT,
-        b"",
-    ]
+    with caplog.at_level(logging.DEBUG):
+        assert [packet.data for packet in await _collect(acc)] == [
+            INIT_SEGMENT,
+            FRAGMENT,
+            b"",
+        ]
     assert stderr.at_eof()
+    assert "Recording ffmpeg: more output" in caplog.text

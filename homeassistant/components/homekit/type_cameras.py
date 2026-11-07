@@ -133,7 +133,6 @@ RECORDING_SAMPLE_RATES = {
 # connecting to the camera and waiting for its next keyframe.
 RECORDING_TIMEOUT = 30
 RECORDING_STDERR_LINES = 10
-RECORDING_STDERR_CHUNK = 65536
 # ffmpeg exits right after its output ends, a hang must not block the recording.
 RECORDING_EXIT_TIMEOUT = 5
 # ffmpeg errors can quote the input URL, which may carry credentials or tokens.
@@ -335,6 +334,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         self._recording_problem_logged = False
 
         self.secure_video = False
+        self._recording_attributes: list[VideoAttributes] = []
         if config[CONF_SECURE_VIDEO]:
             if not config.get(CONF_LINKED_MOTION_SENSOR):
                 _LOGGER.warning(
@@ -348,7 +348,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             else:
                 self.secure_video = True
                 fps = next(
-                    (fps for fps in RECORDING_FRAME_RATES if fps <= max_fps),
+                    (rate for rate in RECORDING_FRAME_RATES if rate <= max_fps),
                     RECORDING_FRAME_RATES[-1],
                 )
                 # Recordings are scaled to the selected size, streaming limits do
@@ -881,18 +881,20 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         self, reader: asyncio.StreamReader, lines: deque[str]
     ) -> None:
         """Keep the last ffmpeg output lines of a recording."""
-        try:
-            while raw := await reader.readline():
-                line = RECORDING_STDERR_URL.sub(b"<url>", raw.rstrip()).decode(
-                    errors="replace"
-                )
-                _LOGGER.debug("[%s] Recording ffmpeg: %s", self.entity_id, line)
-                lines.append(line)
-        except ValueError:
-            # A line over the reader limit, keep draining so ffmpeg never blocks.
-            _LOGGER.debug("[%s] Recording ffmpeg output line too long", self.entity_id)
-            while await reader.read(RECORDING_STDERR_CHUNK):
+        while True:
+            try:
+                raw = await reader.readline()
+            except ValueError:
+                # The reader dropped a line over its limit, the next one is intact.
+                lines.append("<line too long>")
                 continue
+            if not raw:
+                return
+            line = RECORDING_STDERR_URL.sub(b"<url>", raw.rstrip()).decode(
+                errors="replace"
+            )
+            _LOGGER.debug("[%s] Recording ffmpeg: %s", self.entity_id, line)
+            lines.append(line)
 
     async def stop_stream(self, session_info: dict[str, Any]) -> None:
         """Stop the stream for the given ``session_id``."""
