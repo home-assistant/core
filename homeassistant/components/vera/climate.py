@@ -5,7 +5,6 @@ from typing import Any, override
 import pyvera as veraApi
 
 from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT,
     FAN_AUTO,
     FAN_ON,
     ClimateEntity,
@@ -58,7 +57,6 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
     ) -> None:
         """Initialize the Vera device."""
         VeraEntity.__init__(self, vera_device, controller_data)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
     @override

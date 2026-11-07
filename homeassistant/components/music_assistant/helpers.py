@@ -9,9 +9,9 @@ from music_assistant_client.helpers import LinkedUser
 from music_assistant_models.auth import AuthProviderType
 from music_assistant_models.errors import MusicAssistantError, UserNotFoundError
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import service
 
 from .const import DASHBOARD_ID_PREFIX, DOMAIN
 
@@ -76,9 +76,7 @@ def get_music_assistant_client(
     hass: HomeAssistant, config_entry_id: str
 ) -> MusicAssistantClient:
     """Get the Music Assistant client for the given config entry."""
-    entry: MusicAssistantConfigEntry | None
-    if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
-        raise ServiceValidationError("Entry not found")
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError("Entry not loaded")
+    entry: MusicAssistantConfigEntry = service.async_get_config_entry(
+        hass, DOMAIN, config_entry_id
+    )
     return entry.runtime_data.mass

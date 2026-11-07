@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from hassfest.model import Config, Integration, IntegrationType
 import orjson
 import probatio
 from probatio.humanize import humanize_error
@@ -9,7 +10,6 @@ from probatio.humanize import humanize_error
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import convert_shorthand_service_icon
 
-from .model import Config, Integration, IntegrationType
 from .translations import translation_key_validator
 
 

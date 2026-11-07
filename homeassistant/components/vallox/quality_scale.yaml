@@ -15,8 +15,8 @@ rules:
   config-flow-test-coverage:
     status: todo
     comment: >-
-      config_flow.py branch coverage is missing for async_step_reconfigure with
-      the unchanged host, where the duplicate check is skipped.
+      Tests that create an entry must also check its unique ID. Blocked on the
+      config entry unique ID from unique-config-entry.
   config-flow:
     status: todo
     comment: >-
@@ -72,9 +72,7 @@ rules:
       (1) The number, switch and date entities let ValloxApiException through,
       for example when the unit is unreachable, instead of raising
       HomeAssistantError.
-      (2) The fan raises a plain ValueError when the profile does not support
-      setting the fan speed, which should be a ServiceValidationError.
-      (3) The custom actions raise a plain ValueError unless exactly one entry
+      (2) The custom actions raise a plain ValueError unless exactly one entry
       is loaded, which is covered by action-setup.
   config-entry-unloading: done
   docs-configuration-parameters:
@@ -105,14 +103,10 @@ rules:
   test-coverage:
     status: todo
     comment: >-
-      (1) coordinator.py is at 90%: the UpdateFailed path is not tested, and no
-      test expects SETUP_RETRY when the unit is offline.
-      (2) The fan's power-setting failure and unsupported-profile fan speed
-      error paths are not tested.
-      (3) No test explicitly unloads the entry.
-      (4) The config flow tests patch the library inline instead of using
-      shared mock_client and mock_setup_entry fixtures, and the user-step
-      error tests could be one parametrized test.
+      Missing for 100%:
+      (1) sensor.py lines 60 and 67 cannot be reached with data from a real
+      unit and need an integration cleanup.
+      (2) services.py line 55 goes away with action-setup.
 
   # Gold
   devices:
