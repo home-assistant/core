@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, Generator
-from dataclasses import asdict
 from datetime import timedelta
 import logging
 import struct
@@ -21,8 +20,9 @@ from pyhap.hksv_recording import (
     VideoAttributes,
     VideoCodecConfiguration,
     VideoCodecType,
+    decode_supported_video,
 )
-from pyhap.util import to_base64_str
+from pyhap.util import base64_to_bytes, to_base64_str
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
@@ -38,6 +38,9 @@ from homeassistant.components.homekit.const import (
     CONF_AUDIO_CODEC,
     CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
+    CONF_MAX_FPS,
+    CONF_MAX_HEIGHT,
+    CONF_MAX_WIDTH,
     CONF_SECURE_VIDEO,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
@@ -54,6 +57,7 @@ from homeassistant.components.homekit.type_cameras import (
     CONFIG_DEFAULTS,
     MOTION_EVENT_RESET_SECONDS,
     Camera,
+    async_probe_video_codec,
     recording_ffmpeg_args,
 )
 from homeassistant.components.homekit.type_switches import Switch
@@ -1562,8 +1566,9 @@ def test_recording_ffmpeg_args(
     expected_output: str,
 ) -> None:
     """Test the ffmpeg arguments for a HomeKit Secure Video recording."""
+    config = {**CONFIG_DEFAULTS, **config}
     assert recording_ffmpeg_args(
-        {**CONFIG_DEFAULTS, **config}, RECORDING_SELECTION, source, audio_active
+        config, RECORDING_SELECTION, source, audio_active, config[CONF_VIDEO_CODEC]
     ) == (expected_input, expected_output)
 
 
@@ -1616,20 +1621,37 @@ async def no_state_file(hass: HomeAssistant) -> AsyncGenerator[None]:
         await hass.async_block_till_done()
 
 
+async def _recording_camera(
+    hass: HomeAssistant, driver: HomeDriver, **config: Any
+) -> Camera:
+    """Return a camera the home hub has selected a recording format for."""
+    acc = await _secure_video_camera(hass, driver, **config)
+    acc.set_selected_recording_configuration(
+        to_base64_str(RECORDING_SELECTION.encode())
+    )
+    return acc
+
+
+def _ffmpeg_output(
+    stream: MagicMock, stdout: bytes | None, stderr: bytes | None
+) -> asyncio.StreamReader:
+    """Set the recording ffmpeg output, None keeps a pipe open."""
+    readers: dict[str, asyncio.StreamReader] = {}
+    for name, data in (("stdout", stdout), ("stderr", stderr)):
+        reader = readers[name] = asyncio.StreamReader()
+        if data is not None:
+            reader.feed_data(data)
+            reader.feed_eof()
+    stream.get_reader = AsyncMock(side_effect=lambda source="stdout": readers[source])
+    return readers["stderr"]
+
+
 @pytest.fixture
 def recording_ffmpeg() -> Generator[MagicMock]:
     """Patch the recording ffmpeg with one that streams a fragmented MP4."""
-    stdout = asyncio.StreamReader()
-    stdout.feed_data(INIT_SEGMENT + FRAGMENT)
-    stdout.feed_eof()
-    stderr = asyncio.StreamReader()
-    stderr.feed_data(b"Connection refused\n")
-    stderr.feed_eof()
     stream = MagicMock(is_running=True)
     stream.open = AsyncMock(return_value=True)
-    stream.get_reader = AsyncMock(
-        side_effect=lambda source="stdout": stderr if source == "stderr" else stdout
-    )
+    _ffmpeg_output(stream, INIT_SEGMENT + FRAGMENT, b"Connection refused\n")
     stream.process.wait = AsyncMock(return_value=0)
     with patch(
         "homeassistant.components.homekit.type_cameras.HAFFmpeg", return_value=stream
@@ -1710,6 +1732,7 @@ async def test_camera_secure_video_not_possible(
     with caplog.at_level(logging.WARNING):
         acc = await _secure_video_camera(hass, run_driver, aid, **config)
     assert acc.get_service("CameraRecordingManagement") is None
+    assert acc.diagnostics() == {}
     assert message in caplog.text
 
 
@@ -1738,18 +1761,13 @@ async def test_camera_secure_video_recording(
     run_driver: HomeDriver,
     recording_transport: tuple[AsyncMock, AsyncMock],
     recording_ffmpeg: MagicMock,
+    caplog: pytest.LogCaptureFixture,
     audio_active: int,
     expected_audio_map: str,
 ) -> None:
     """Test a recording streams the ffmpeg fragments and kills ffmpeg after."""
-    stdout = asyncio.StreamReader()
-    stdout.feed_data(INIT_SEGMENT + FRAGMENT)
-    stdout.feed_eof()
     # A stderr that stays open until ffmpeg is killed, like a real one.
-    stderr = asyncio.StreamReader()
-    recording_ffmpeg.get_reader = AsyncMock(
-        side_effect=lambda source="stdout": stderr if source == "stderr" else stdout
-    )
+    stderr = _ffmpeg_output(recording_ffmpeg, INIT_SEGMENT + FRAGMENT, None)
     kill_reads: list[asyncio.Task[bytes]] = []
 
     def kill() -> None:
@@ -1758,10 +1776,7 @@ async def test_camera_secure_video_recording(
         stderr.feed_eof()
 
     recording_ffmpeg.kill.side_effect = kill
-    acc = await _secure_video_camera(hass, run_driver, **{CONF_SUPPORT_AUDIO: True})
-    acc.set_selected_recording_configuration(
-        to_base64_str(RECORDING_SELECTION.encode())
-    )
+    acc = await _recording_camera(hass, run_driver, **{CONF_SUPPORT_AUDIO: True})
     acc.get_service("CameraRecordingManagement").get_characteristic(
         "RecordingAudioActive"
     ).set_value(audio_active)
@@ -1770,6 +1785,7 @@ async def test_camera_secure_video_recording(
 
     assert [packet.data for packet in packets] == [INIT_SEGMENT, FRAGMENT, b""]
     assert packets[-1].is_last
+    assert "without video" not in caplog.text
     open_kwargs = recording_ffmpeg.open.await_args.kwargs
     assert open_kwargs["input_source"].startswith("-i rtsp://cam")
     assert expected_audio_map in open_kwargs["output"]
@@ -1796,20 +1812,13 @@ async def test_camera_secure_video_recording_ffmpeg_fails(
     expected_last: list[bool],
 ) -> None:
     """Test a failed ffmpeg is logged and does not end the recording as complete."""
-    stdout = asyncio.StreamReader()
-    stdout.feed_data(output)
-    stdout.feed_eof()
-    stderr = asyncio.StreamReader()
-    stderr.feed_data(b"rtsps://user:secret@cam:7441/token: Connection refused\n")
-    stderr.feed_eof()
-    recording_ffmpeg.get_reader = AsyncMock(
-        side_effect=lambda source="stdout": stderr if source == "stderr" else stdout
+    _ffmpeg_output(
+        recording_ffmpeg,
+        output,
+        b"rtsps://user:secret@cam:7441/token: Connection refused\n",
     )
     recording_ffmpeg.process.wait.return_value = 1
-    acc = await _secure_video_camera(hass, run_driver)
-    acc.set_selected_recording_configuration(
-        to_base64_str(RECORDING_SELECTION.encode())
-    )
+    acc = await _recording_camera(hass, run_driver)
 
     packets = await _collect(acc)
 
@@ -1833,18 +1842,8 @@ async def test_camera_secure_video_recording_without_video(
     output: bytes,
 ) -> None:
     """Test a recording without video is logged and not ended as complete."""
-    stdout = asyncio.StreamReader()
-    stdout.feed_data(output)
-    stdout.feed_eof()
-    stderr = asyncio.StreamReader()
-    stderr.feed_eof()
-    recording_ffmpeg.get_reader = AsyncMock(
-        side_effect=lambda source="stdout": stderr if source == "stderr" else stdout
-    )
-    acc = await _secure_video_camera(hass, run_driver)
-    acc.set_selected_recording_configuration(
-        to_base64_str(RECORDING_SELECTION.encode())
-    )
+    _ffmpeg_output(recording_ffmpeg, output, b"")
+    acc = await _recording_camera(hass, run_driver)
 
     packets = await _collect(acc)
 
@@ -1861,20 +1860,10 @@ async def test_camera_secure_video_recording_ffmpeg_hangs(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test ffmpeg that does not exit after its output ends is killed."""
-    waits: list[bool] = []
-
-    async def wait() -> int:
-        # Hang until killed, the second wait is the one after the kill.
-        if not waits:
-            waits.append(True)
-            await asyncio.Event().wait()
-        return 0
-
-    recording_ffmpeg.process.wait = wait
-    acc = await _secure_video_camera(hass, run_driver)
-    acc.set_selected_recording_configuration(
-        to_base64_str(RECORDING_SELECTION.encode())
-    )
+    # The first wait hangs, the second is the one after the kill.
+    waits = iter([asyncio.Event().wait(), asyncio.sleep(0, 0)])
+    recording_ffmpeg.process.wait = lambda: next(waits)
+    acc = await _recording_camera(hass, run_driver)
 
     with patch(
         "homeassistant.components.homekit.type_cameras.RECORDING_EXIT_TIMEOUT", 0.01
@@ -1895,16 +1884,8 @@ async def test_camera_secure_video_recording_stalls(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a recording ends when ffmpeg stops delivering fragments."""
-    stdout = asyncio.StreamReader()
-    stderr = asyncio.StreamReader()
-    stderr.feed_eof()
-    recording_ffmpeg.get_reader = AsyncMock(
-        side_effect=lambda source="stdout": stderr if source == "stderr" else stdout
-    )
-    acc = await _secure_video_camera(hass, run_driver)
-    acc.set_selected_recording_configuration(
-        to_base64_str(RECORDING_SELECTION.encode())
-    )
+    _ffmpeg_output(recording_ffmpeg, None, b"")
+    acc = await _recording_camera(hass, run_driver)
 
     with (
         patch(
@@ -1922,10 +1903,10 @@ async def test_camera_secure_video_recording_stalls(
 
 
 @pytest.mark.parametrize(
-    ("config", "ffmpeg_opens"),
+    ("config", "open_calls"),
     [
-        pytest.param({CONF_STREAM_SOURCE: None}, True, id="no_stream_source"),
-        pytest.param({}, False, id="ffmpeg_fails_to_start"),
+        pytest.param({CONF_STREAM_SOURCE: None}, 0, id="no_stream_source"),
+        pytest.param({}, 1, id="ffmpeg_fails_to_start"),
     ],
 )
 @pytest.mark.usefixtures("no_state_file")
@@ -1935,18 +1916,16 @@ async def test_camera_secure_video_recording_cannot_start(
     recording_transport: tuple[AsyncMock, AsyncMock],
     recording_ffmpeg: MagicMock,
     config: dict[str, Any],
-    ffmpeg_opens: bool,
+    open_calls: int,
 ) -> None:
     """Test a recording that cannot start yields nothing."""
-    recording_ffmpeg.open.return_value = ffmpeg_opens
-    acc = await _secure_video_camera(hass, run_driver, **config)
-    acc.set_selected_recording_configuration(
-        to_base64_str(RECORDING_SELECTION.encode())
-    )
+    recording_ffmpeg.open.return_value = False
+    acc = await _recording_camera(hass, run_driver, **config)
     with patch(
         "homeassistant.components.camera.async_get_stream_source", return_value=None
     ):
         assert await _collect(acc) == []
+    assert recording_ffmpeg.open.await_count == open_calls
     recording_ffmpeg.kill.assert_not_called()
 
 
@@ -1964,17 +1943,186 @@ async def test_camera_secure_video_transport_fails(
     assert "cannot listen for recordings: Address in use" in caplog.text
 
 
+def _recording_char(acc: Camera, name: str) -> bytes:
+    return base64_to_bytes(
+        acc.get_service("CameraRecordingManagement").get_characteristic(name).value
+    )
+
+
+@pytest.mark.parametrize(
+    ("config", "expected"),
+    [
+        pytest.param(
+            {},
+            [
+                (1920, 1080, 30),
+                (1280, 720, 30),
+                (1600, 1200, 30),
+                (1440, 1080, 30),
+                (1280, 960, 30),
+                (1024, 768, 30),
+            ],
+            id="default",
+        ),
+        pytest.param(
+            {CONF_MAX_FPS: 25, CONF_MAX_WIDTH: 640, CONF_MAX_HEIGHT: 480},
+            [
+                (1920, 1080, 24),
+                (1280, 720, 24),
+                (1600, 1200, 24),
+                (1440, 1080, 24),
+                (1280, 960, 24),
+                (1024, 768, 24),
+            ],
+            id="streaming_limits_ignored",
+        ),
+        pytest.param(
+            {CONF_MAX_FPS: 10, CONF_MAX_WIDTH: 1440, CONF_MAX_HEIGHT: 1920},
+            [
+                (1080, 1920, 15),
+                (720, 1280, 15),
+                (1200, 1600, 15),
+                (1080, 1440, 15),
+                (960, 1280, 15),
+                (768, 1024, 15),
+            ],
+            id="portrait",
+        ),
+    ],
+)
+async def test_camera_secure_video_recording_formats(
+    hass: HomeAssistant,
+    run_driver: HomeDriver,
+    config: dict[str, Any],
+    expected: list[tuple[int, int, int]],
+) -> None:
+    """Test recording advertises formats a home hub can select and no prebuffer."""
+    acc = await _secure_video_camera(hass, run_driver, **config)
+
+    video = decode_supported_video(
+        _recording_char(acc, "SupportedVideoRecordingConfiguration")
+    )
+    assert [(a.width, a.height, a.frame_rate) for a in video[0].attributes] == expected
+    general = SupportedRecordingConfiguration.decode(
+        _recording_char(acc, "SupportedCameraRecordingConfiguration")
+    )
+    assert general.prebuffer_length_ms == 0
+
+
+@pytest.mark.parametrize(
+    ("source_codec", "expected_video"),
+    [
+        pytest.param("h264", "-c:v copy", id="h264_copied"),
+        pytest.param("hevc", "-c:v libx264", id="hevc_encoded"),
+        pytest.param(None, "-c:v libx264", id="unknown_encoded"),
+    ],
+)
 @pytest.mark.usefixtures("no_state_file")
-async def test_camera_secure_video_diagnostics(
+async def test_camera_secure_video_recording_copy_camera(
     hass: HomeAssistant,
     run_driver: HomeDriver,
     recording_transport: tuple[AsyncMock, AsyncMock],
+    recording_ffmpeg: MagicMock,
+    source_codec: str | None,
+    expected_video: str,
 ) -> None:
-    """Test the diagnostics show the selected recording configuration."""
-    acc = await _secure_video_camera(hass, run_driver)
-    acc.set_selected_recording_configuration(
-        to_base64_str(RECORDING_SELECTION.encode())
+    """Test a copy camera is only copied when it sends H.264."""
+    acc = await _recording_camera(
+        hass, run_driver, **{CONF_VIDEO_CODEC: VIDEO_CODEC_COPY}
     )
-    assert acc.recording_diagnostics()["selected_configuration"] == asdict(
-        RECORDING_SELECTION
+    with (
+        patch(
+            "homeassistant.components.homekit.type_cameras.async_probe_video_codec",
+            return_value=source_codec,
+        ) as probe,
+    ):
+        await _collect(acc)
+        _ffmpeg_output(recording_ffmpeg, INIT_SEGMENT + FRAGMENT, b"")
+        await _collect(acc)
+
+    assert expected_video in recording_ffmpeg.open.await_args.kwargs["output"]
+    # A known source codec is only probed once.
+    assert probe.await_count == (2 if source_codec is None else 1)
+
+
+def _ffmpeg_process(returncode: int, stderr: bytes = b"") -> MagicMock:
+    process = MagicMock(returncode=returncode)
+    process.communicate = AsyncMock(return_value=(b"", stderr))
+    process.wait = AsyncMock(return_value=returncode)
+    return process
+
+
+async def test_probe_video_codec() -> None:
+    """Test the video codec is read from ffmpeg's stream information."""
+    process = _ffmpeg_process(
+        1, b"  Stream #0:0: Video: hevc (Main), yuv420p, 1920x1080, 20 fps\n"
     )
+    with patch("asyncio.create_subprocess_exec", return_value=process) as exec_:
+        assert await async_probe_video_codec("ffmpeg", "-i rtsp://cam") == "hevc"
+    assert exec_.call_args.args[:4] == ("ffmpeg", "-hide_banner", "-i", "rtsp://cam")
+
+    with patch(
+        "asyncio.create_subprocess_exec",
+        return_value=_ffmpeg_process(1, b"Connection refused\n"),
+    ):
+        assert await async_probe_video_codec("ffmpeg", "-i rtsp://cam") is None
+
+
+async def test_probe_video_codec_timeout() -> None:
+    """Test a camera that does not answer is killed and has no codec."""
+    process = _ffmpeg_process(1)
+    process.communicate = AsyncMock(side_effect=TimeoutError)
+    with patch("asyncio.create_subprocess_exec", return_value=process):
+        assert await async_probe_video_codec("ffmpeg", "-i rtsp://cam") is None
+    process.kill.assert_called_once_with()
+    process.wait.assert_awaited_once_with()
+
+
+@pytest.mark.usefixtures("no_state_file")
+async def test_camera_secure_video_recording_problem_logged_once(
+    hass: HomeAssistant,
+    run_driver: HomeDriver,
+    recording_transport: tuple[AsyncMock, AsyncMock],
+    recording_ffmpeg: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failing camera warns once until a recording succeeds."""
+    acc = await _recording_camera(hass, run_driver)
+    message = "Failed to start recording ffmpeg"
+
+    def warnings() -> int:
+        return sum(
+            r.levelno == logging.WARNING and message in r.getMessage()
+            for r in caplog.records
+        )
+
+    recording_ffmpeg.open.return_value = False
+    with caplog.at_level(logging.DEBUG):
+        await _collect(acc)
+        await _collect(acc)
+        assert warnings() == 1
+
+        recording_ffmpeg.open.return_value = True
+        await _collect(acc)
+        recording_ffmpeg.open.return_value = False
+        await _collect(acc)
+    assert warnings() == 2
+
+
+@pytest.mark.usefixtures("no_state_file")
+async def test_camera_secure_video_recording_closed_by_hub(
+    hass: HomeAssistant,
+    run_driver: HomeDriver,
+    recording_transport: tuple[AsyncMock, AsyncMock],
+    recording_ffmpeg: MagicMock,
+) -> None:
+    """Test ffmpeg is killed when the hub ends the recording."""
+    _ffmpeg_output(recording_ffmpeg, INIT_SEGMENT, b"")
+    acc = await _recording_camera(hass, run_driver)
+
+    recording = acc.handle_recording_stream(1)
+    assert (await anext(recording)).data == INIT_SEGMENT
+    await recording.aclose()
+
+    recording_ffmpeg.kill.assert_called_once_with()
+    recording_ffmpeg.process.wait.assert_awaited_once_with()

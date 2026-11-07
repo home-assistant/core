@@ -844,6 +844,10 @@ async def test_options_flow_include_mode_with_cameras(hass: HomeAssistant) -> No
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "cameras"
+    # Bridged cameras cannot record to HomeKit Secure Video.
+    assert "camera_secure_video" not in {
+        str(key) for key in result2["data_schema"].schema
+    }
 
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
