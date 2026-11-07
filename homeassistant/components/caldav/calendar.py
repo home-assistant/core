@@ -1,7 +1,7 @@
 """Support for WebDav Calendar."""
 
 from collections.abc import Callable
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from functools import partial
 import logging
 from typing import Any, cast, override
@@ -49,6 +49,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
 from .api import async_get_calendar_color, async_get_calendars
@@ -317,37 +318,40 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     ) -> None:
         """Change the fields of an event and save it."""
         item = self._get_event(uid)
-        series = _get_series(item.icalendar_instance)
-        _check_whole_event(series, recurrence_id, recurrence_range)
-        if _same_times(series, event):
-            # Leave the stored times and their time zone as they are
-            event = {
-                key: value
-                for key, value in event.items()
-                if key not in (EVENT_START, EVENT_END)
-            }
+        components = item.icalendar_instance.walk("VEVENT")
+        series = _get_series(components)
+        shown = _get_first_occurrence(
+            components, series, recurrence_id, recurrence_range
+        )
+        same_times = _same_time(event[EVENT_START], shown.DTSTART) and _same_time(
+            event[EVENT_END], _get_end(shown)
+        )
         recurring = "RRULE" in series or "RDATE" in series
-        if EVENT_RRULE in event or (recurring and EVENT_START in event):
+        if EVENT_RRULE in event or (recurring and not same_times):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="recurrence_change_not_supported",
             )
-        for key in (
-            EVENT_SUMMARY,
-            EVENT_START,
-            EVENT_END,
-            EVENT_DESCRIPTION,
-            EVENT_LOCATION,
-        ):
-            if key in event:
+        changed = [
+            key
+            for key in (EVENT_SUMMARY, EVENT_DESCRIPTION, EVENT_LOCATION)
+            if key in event and event[key] != shown.get(key, "")
+        ]
+        # A change to a whole recurring event also applies to its overrides
+        for component in components if recurring else [series]:
+            for key in changed:
+                component.pop(key)
+                if event[key]:
+                    component.add(key, event[key])
+        if not same_times:
+            for key in (EVENT_START, EVENT_END):
+                value = event[key]
+                if isinstance(value, datetime):
+                    # A TZID time can't tell apart the two hours that repeat
+                    # when clocks go back, UTC can
+                    value = value.astimezone(UTC)
                 series.pop(key)
-                if value := event[key]:
-                    if isinstance(value, datetime):
-                        # A TZID time can't tell the two hours apart that
-                        # repeat when clocks go back, UTC can
-                        value = value.astimezone(UTC)
-                    series.add(key, value)
-        if EVENT_END in event:
+                series.add(key, value)
             # DTEND replaces a DURATION
             series.pop("DURATION")
         # Otherwise save() merges just the first component into the stored
@@ -370,8 +374,10 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     ) -> None:
         """Check and delete an event."""
         item = self._get_event(uid)
-        series = _get_series(item.icalendar_instance)
-        _check_whole_event(series, recurrence_id, recurrence_range)
+        components = item.icalendar_instance.walk("VEVENT")
+        _get_first_occurrence(
+            components, _get_series(components), recurrence_id, recurrence_range
+        )
         # Only delete the version that was checked; If-Match can't use a weak ETag
         etag = item.etag
         if_match = bool(etag and not etag.startswith("W/"))
@@ -425,58 +431,77 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         self._handle_coordinator_update()
 
 
-def _get_series(calendar: icalendar.Calendar) -> icalendar.Event:
+def _get_series(components: list[icalendar.Event]) -> icalendar.Event:
     """Return the main component of an event, which may follow its overrides."""
-    components = calendar.walk("VEVENT")
     return next(
         (component for component in components if "RECURRENCE-ID" not in component),
         components[0],
     )
 
 
-def _check_whole_event(
-    series: icalendar.Event, recurrence_id: str | None, recurrence_range: str | None
-) -> None:
-    """Refuse changes to single occurrences of a recurring event.
+def _get_first_occurrence(
+    components: list[icalendar.Event],
+    series: icalendar.Event,
+    recurrence_id: str | None,
+    recurrence_range: str | None,
+) -> icalendar.Event:
+    """Return the component shown for the first occurrence of an event.
 
-    A change from the first occurrence on is a change to the whole event. The
-    recurrence id is the occurrence start as the coordinator formats it.
+    Changes to other occurrences of a recurring event are refused, a change
+    from the first occurrence on is a change to the whole event. The recurrence
+    id is the occurrence start as the coordinator formats it.
     """
     if not recurrence_id:
-        return
-    start: date | datetime
-    try:
-        start = date.fromisoformat(recurrence_id)
-    except ValueError:
-        start = datetime.fromisoformat(recurrence_id)
+        return series
+    start = dt_util.parse_date(recurrence_id) or dt_util.parse_datetime(recurrence_id)
     if (
-        recurrence_range != THIS_AND_FUTURE
+        start is None
+        or recurrence_range != THIS_AND_FUTURE
         or "RECURRENCE-ID" in series
         or not _same_time(start, series.DTSTART)
     ):
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="occurrence_not_supported"
         )
-
-
-def _same_times(series: icalendar.Event, event: dict[str, Any]) -> bool:
-    """Return if an update keeps the start and end of the event."""
-    try:
-        end = series.end
-    except ValueError:
-        # The event has no valid end, so the update sets one
-        return False
-    return _same_time(event[EVENT_START], series.DTSTART) and _same_time(
-        event[EVENT_END], end
+    # The first occurrence may have been moved
+    return next(
+        (
+            component
+            for component in components
+            if "RECURRENCE-ID" in component
+            and _same_time(component["RECURRENCE-ID"].dt, series.DTSTART)
+        ),
+        series,
     )
 
 
+def _get_end(component: icalendar.Event) -> date | datetime:
+    """Return the end of an event the way the coordinator shows it."""
+    start = component.DTSTART
+    if "DTEND" in component:
+        end = component["DTEND"].dt
+    elif "DURATION" in component:
+        end = start + component["DURATION"].dt
+    else:
+        end = start + timedelta(days=1)
+    if not isinstance(end, datetime) and end == start:
+        end += timedelta(days=1)
+    return end
+
+
 def _same_time(value: date | datetime, stored: date | datetime) -> bool:
-    """Return if a time from Home Assistant is the stored one."""
-    if not isinstance(value, datetime) or not isinstance(stored, datetime):
-        return value == stored
-    if stored.tzinfo is None:
-        # Floating times are shown with the same wall time
-        return value.replace(tzinfo=None) == stored
-    # Within one time zone, times compare by wall time, which repeats once a year
-    return value.astimezone(UTC) == stored.astimezone(UTC)
+    """Return if a time is the stored one, as the frontend shows times.
+
+    The frontend shows times to the minute in Home Assistant's time zone, so it
+    can't tell apart the two hours that repeat when clocks go back.
+    """
+    if isinstance(value, datetime) != isinstance(stored, datetime):
+        return False
+    if isinstance(value, datetime):
+        return _as_shown(value) == _as_shown(cast(datetime, stored))
+    return value == stored
+
+
+def _as_shown(value: datetime) -> datetime:
+    """Return a time as the frontend shows it, floating times as local."""
+    return dt_util.as_local(value).replace(tzinfo=None, second=0, microsecond=0)

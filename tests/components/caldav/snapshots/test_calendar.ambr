@@ -7,7 +7,7 @@
   BEGIN:VEVENT
   SUMMARY:Holiday
   DTSTART;VALUE=DATE:20261120
-  DTEND;VALUE=DATE:20261121
+  DURATION:PT1H
   DTSTAMP:20261101T000000Z
   UID:all-day-series
   END:VEVENT
@@ -37,7 +37,7 @@
   VERSION:2.0
   PRODID:-//Test//CalDAV Client//EN
   BEGIN:VEVENT
-  SUMMARY:Weekly renamed
+  SUMMARY:Weekly
   DTSTART;TZID=America/New_York:20261026T090000
   DTEND;TZID=America/New_York:20261026T093000
   DTSTAMP:20261001T000000Z
@@ -58,6 +58,38 @@
   DTSTAMP:20261001T000000Z
   UID:series
   RECURRENCE-ID;TZID=America/New_York:20261116T090000
+  LOCATION:Room 2
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[series_first_occurrence_moved]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Weekly renamed
+  DTSTART;TZID=America/New_York:20261026T090000
+  DTEND;TZID=America/New_York:20261026T093000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=WEEKLY;COUNT=8
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
+  END:VEVENT
+  BEGIN:VEVENT
+  SUMMARY:Weekly renamed
+  DTSTART;TZID=America/New_York:20261026T110000
+  DTEND;TZID=America/New_York:20261026T113000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RECURRENCE-ID;TZID=America/New_York:20261026T090000
   END:VEVENT
   END:VCALENDAR
   
@@ -69,7 +101,7 @@
   VERSION:2.0
   PRODID:-//Test//CalDAV Client//EN
   BEGIN:VEVENT
-  SUMMARY:Weekly moved
+  SUMMARY:Weekly renamed
   DTSTART;TZID=America/New_York:20261116T100000
   DTEND;TZID=America/New_York:20261116T103000
   DTSTAMP:20261001T000000Z
@@ -129,6 +161,24 @@
   
   '''
 # ---
+# name: test_update_event[single_in_repeated_hour_kept]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Dentist renamed
+  DTSTART:20261101T063000Z
+  DTEND:20261101T064500Z
+  DTSTAMP:20261101T000000Z
+  UID:single
+  DESCRIPTION:Bring the card
+  LOCATION:Main street
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
 # name: test_update_event[single_to_all_day]
   '''
   BEGIN:VCALENDAR
@@ -138,6 +188,41 @@
   SUMMARY:Dentist
   DTSTART;VALUE=DATE:20261111
   DTEND;VALUE=DATE:20261112
+  DTSTAMP:20261101T000000Z
+  UID:single
+  DESCRIPTION:Bring the card
+  LOCATION:Main street
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[single_with_seconds_kept]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Dentist renamed
+  DTSTART:20261110T150030Z
+  DTEND:20261110T160030Z
+  DTSTAMP:20261101T000000Z
+  UID:single
+  DESCRIPTION:Bring the card
+  LOCATION:Main street
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[single_without_end_kept]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Dentist renamed
+  DTSTART:20261110T150000Z
   DTSTAMP:20261101T000000Z
   UID:single
   DESCRIPTION:Bring the card

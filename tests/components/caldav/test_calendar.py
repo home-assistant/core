@@ -1748,16 +1748,19 @@ PRODID:-//Test//CalDAV Client//EN
 {SERIES_OVERRIDE}{SERIES_MAIN}END:VCALENDAR
 """
 
-# SERIES_ICS with its first occurrence moved from 09:00 to 11:00, then cancelled
-FIRST_CANCELLED_ICS = SERIES_ICS.replace(
+# SERIES_ICS with its first occurrence moved from 09:00 to 11:00
+FIRST_MOVED_ICS = SERIES_ICS.replace(
     "RECURRENCE-ID;TZID=America/New_York:20261116T090000\n"
     "DTSTART;TZID=America/New_York:20261116T100000\n"
-    "DTEND;TZID=America/New_York:20261116T103000\n"
-    "SUMMARY:Weekly moved",
+    "DTEND;TZID=America/New_York:20261116T103000",
     "RECURRENCE-ID;TZID=America/New_York:20261026T090000\n"
     "DTSTART;TZID=America/New_York:20261026T110000\n"
-    "DTEND;TZID=America/New_York:20261026T113000\n"
-    "SUMMARY:Weekly moved\nSTATUS:CANCELLED",
+    "DTEND;TZID=America/New_York:20261026T113000",
+)
+
+# SERIES_ICS with its first occurrence moved, then cancelled
+FIRST_CANCELLED_ICS = FIRST_MOVED_ICS.replace(
+    "SUMMARY:Weekly moved", "SUMMARY:Weekly moved\nSTATUS:CANCELLED"
 )
 
 # SERIES_ICS with its first occurrence deleted
@@ -1770,6 +1773,17 @@ FIRST_DELETED_ICS = SERIES_ICS.replace(
 REPEATED_HOUR_SERIES_ICS = SERIES_ICS.replace(
     "20261026T090000", "20261101T013000"
 ).replace("20261026T093000", "20261101T014500")
+
+# SINGLE_ICS without an end, which makes it last a day
+NO_END_ICS = SINGLE_ICS.replace("DTEND:20261110T160000Z\n", "")
+
+# SINGLE_ICS starting and ending with seconds, which the frontend doesn't show
+SECONDS_ICS = SINGLE_ICS.replace("T150000Z", "T150030Z").replace("T160000Z", "T160030Z")
+
+# SINGLE_ICS in the second 01:30 to 01:45 in New York, after clocks went back
+SECOND_REPEATED_HOUR_ICS = SINGLE_ICS.replace(
+    "20261110T150000Z", "20261101T063000Z"
+).replace("20261110T160000Z", "20261101T064500Z")
 
 # Floating, in the night daylight saving time starts
 FLOATING_ICS = """BEGIN:VCALENDAR
@@ -1942,13 +1956,50 @@ async def _ws_call(
             id="single_in_repeated_hour",
         ),
         pytest.param(
+            AMERICA_NEW_YORK,
+            SECOND_REPEATED_HOUR_ICS,
+            "single",
+            "",
+            # The frontend can only send the first 01:30
+            {
+                "summary": "Dentist renamed",
+                "dtstart": "2026-11-01T01:30:00",
+                "dtend": "2026-11-01T01:45:00",
+            },
+            id="single_in_repeated_hour_kept",
+        ),
+        pytest.param(
+            AMERICA_NEW_YORK,
+            SECONDS_ICS,
+            "single",
+            "",
+            {
+                "summary": "Dentist renamed",
+                "dtstart": "2026-11-10T10:00:00",
+                "dtend": "2026-11-10T11:00:00",
+            },
+            id="single_with_seconds_kept",
+        ),
+        pytest.param(
+            AMERICA_NEW_YORK,
+            NO_END_ICS,
+            "single",
+            "",
+            {
+                "summary": "Dentist renamed",
+                "dtstart": "2026-11-10T10:00:00",
+                "dtend": "2026-11-11T10:00:00",
+            },
+            id="single_without_end_kept",
+        ),
+        pytest.param(
             UTC,
             SERIES_ICS,
             "series",
             FIRST_OCCURRENCE,
             # 09:00 in New York, sent in Home Assistant's time zone
             {
-                "summary": "Weekly renamed",
+                "summary": "Weekly",
                 "dtstart": "2026-10-26T13:00:00",
                 "dtend": "2026-10-26T13:30:00",
                 "location": "Room 2",
@@ -1966,6 +2017,19 @@ async def _ws_call(
                 "dtend": "2026-10-26T09:30:00",
             },
             id="series_override_listed_first",
+        ),
+        pytest.param(
+            AMERICA_NEW_YORK,
+            FIRST_MOVED_ICS,
+            "series",
+            FIRST_OCCURRENCE,
+            # The times of the moved first occurrence, as the frontend shows it
+            {
+                "summary": "Weekly renamed",
+                "dtstart": "2026-10-26T11:00:00",
+                "dtend": "2026-10-26T11:30:00",
+            },
+            id="series_first_occurrence_moved",
         ),
         pytest.param(
             AMERICA_NEW_YORK,
@@ -2165,6 +2229,9 @@ DELETE = {"type": "calendar/event/delete"}
             SECOND_OCCURRENCE,
             "THISANDFUTURE",
             id="first_occurrence_cancelled",
+        ),
+        pytest.param(
+            SERIES_ICS, "series", "not a time", "THISANDFUTURE", id="invalid_id"
         ),
     ],
 )
