@@ -1,0 +1,5 @@
+get_directive_schedule:
+  target:
+    entity:
+      domain: sensor
+      integration: energyid
