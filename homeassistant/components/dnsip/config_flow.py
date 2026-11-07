@@ -9,7 +9,6 @@ from aiodns.error import DNSError
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -19,6 +18,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 
+from . import DnsIPConfigEntry
 from .const import (
     CONF_ADDITIONAL_OPTIONS,
     CONF_HOSTNAME,
@@ -101,7 +101,7 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: DnsIPConfigEntry,
     ) -> DnsIPOptionsFlowHandler:
         """Return Option handler."""
         return DnsIPOptionsFlowHandler()

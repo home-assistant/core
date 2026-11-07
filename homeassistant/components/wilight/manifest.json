@@ -4,6 +4,7 @@
   "categories": ["plugs_switches", "lighting", "blinds_curtains"],
   "codeowners": ["@leofig-rj"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/wilight",
   "integration_type": "hub",
   "iot_class": "local_polling",

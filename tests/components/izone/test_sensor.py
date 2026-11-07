@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock
 
+from pizone import Zone
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -20,6 +21,8 @@ RETURN_ENTITY = "sensor.izone_controller_000000001_return_temperature"
 
 SENSOR_ENTITIES = (SUPPLY_ENTITY, RETURN_ENTITY)
 LIVING_ROOM_DAMPER_ENTITY = "sensor.living_room_damper_position"
+LIVING_ROOM_RF_SIGNAL_ENTITY = "sensor.living_room_rf_signal"
+LIVING_ROOM_BATTERY_ENTITY = "sensor.living_room_battery"
 
 
 @pytest.fixture
@@ -116,3 +119,79 @@ async def test_damper_position_enabled_when_any_zone_reports_feedback(
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
         assert entry.disabled_by is disabled_by
+
+
+@pytest.mark.parametrize(
+    ("rf_signal", "battery_level", "rf_percent", "battery_percent"),
+    [
+        pytest.param(
+            Zone.RfSignal.FULL, Zone.BatteryLevel.FULL, "100", "100", id="full"
+        ),
+        pytest.param(Zone.RfSignal.HALF, Zone.BatteryLevel.HALF, "50", "50", id="half"),
+        pytest.param(
+            Zone.RfSignal.QUARTER, Zone.BatteryLevel.EMPTY, "25", "0", id="low"
+        ),
+        pytest.param(Zone.RfSignal.NONE, Zone.BatteryLevel.EMPTY, "0", "0", id="none"),
+    ],
+)
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_wireless_sensor_levels(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zones: list[Mock],
+    rf_signal: Zone.RfSignal,
+    battery_level: Zone.BatteryLevel,
+    rf_percent: str,
+    battery_percent: str,
+) -> None:
+    """RF signal and battery enum levels map to percentages."""
+    mock_zones[0].rf_signal = rf_signal
+    mock_zones[0].battery_level = battery_level
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(LIVING_ROOM_RF_SIGNAL_ENTITY).state == rf_percent
+    assert hass.states.get(LIVING_ROOM_BATTERY_ENTITY).state == battery_percent
+
+
+@pytest.mark.parametrize(
+    "sensor_type",
+    [
+        pytest.param(Zone.SensorType.CCTS, id="ccts"),
+        pytest.param(Zone.SensorType.WIRED, id="wired"),
+        pytest.param(Zone.SensorType.NONE, id="no_sensor"),
+        pytest.param(None, id="v1"),
+    ],
+)
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_wireless_sensors_not_created_for_wired_zones(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zones: list[Mock],
+    entity_registry: er.EntityRegistry,
+    sensor_type: Zone.SensorType | None,
+) -> None:
+    """Zones without a wireless sensor get no RF signal or battery sensors."""
+    mock_zones[0].sensor_type = sensor_type
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert entity_registry.async_get(LIVING_ROOM_RF_SIGNAL_ENTITY) is None
+    assert entity_registry.async_get(LIVING_ROOM_BATTERY_ENTITY) is None
+
+
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_wireless_sensors_not_created_without_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zones: list[Mock],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A wireless zone missing RF signal or battery data gets no sensor for it."""
+    mock_zones[0].rf_signal = None
+    mock_zones[0].battery_level = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert entity_registry.async_get(LIVING_ROOM_RF_SIGNAL_ENTITY) is None
+    assert entity_registry.async_get(LIVING_ROOM_BATTERY_ENTITY) is None
