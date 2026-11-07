@@ -37,7 +37,11 @@ class DelugeDataUpdateCoordinator(
     config_entry: DelugeConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, api: DelugeRPCClient, entry: DelugeConfigEntry
+        self,
+        hass: HomeAssistant,
+        api: DelugeRPCClient,
+        entry: DelugeConfigEntry,
+        daemon_version: str | None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -48,6 +52,7 @@ class DelugeDataUpdateCoordinator(
             update_interval=timedelta(seconds=30),
         )
         self.api = api
+        self.daemon_version = daemon_version
 
     def _get_deluge_data(self):
         """Get the latest data from Deluge."""
