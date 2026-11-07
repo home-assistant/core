@@ -1,0 +1,58 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "admin_account": "Home Assistant needs a standard Ampio user account. Create a user in the Ampio app and give it access to the objects you want in Home Assistant.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the Ampio server (M-SERV).",
+          "password": "Your Ampio account password.",
+          "username": "The name of a standard Ampio user account from the Ampio app."
+        },
+        "description": "Enter the address of your Ampio server and the credentials of a standard Ampio user account. Home Assistant sees only the objects that this account can access.",
+        "title": "Connect to Ampio"
+      }
+    }
+  },
+  "device": {
+    "module": {
+      "name": "Ampio module {mac}"
+    },
+    "object": {
+      "name": "Object {id}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pressure_abs": {
+        "name": "Absolute pressure"
+      },
+      "pressure_rel": {
+        "name": "Relative pressure"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to the Ampio server."
+    },
+    "discovery_timeout": {
+      "message": "Connected to the Ampio server, but it did not finish reporting its configuration."
+    },
+    "invalid_auth": {
+      "message": "The Ampio server rejected the stored credentials."
+    }
+  }
+}
