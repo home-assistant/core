@@ -7,11 +7,8 @@ from propcache.api import cached_property
 
 from homeassistant.components import zone
 from homeassistant.components.zone import ZoneEntityStateAttribute
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
-    ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     STATE_HOME,
     STATE_NOT_HOME,
     EntityCategory,
@@ -34,17 +31,13 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.loader import async_suggest_report_issue
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_HOST_NAME,
-    ATTR_IN_ZONES,
     ATTR_IP,
     ATTR_MAC,
-    ATTR_SOURCE_TYPE,
-    ATTR_TRACKING_TYPE,
     CONF_ASSOCIATED_ZONE,
     CONNECTED_DEVICE_REGISTERED,
     DOMAIN,
-    LOGGER,
     DeviceTrackerEntityCapabilityAttribute,
     DeviceTrackerEntityStateAttribute,
     ScannerEntityStateAttribute,

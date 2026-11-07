@@ -514,8 +514,6 @@ filterwarnings = [
   # Locale changes might take some time to resolve upstream
   # https://github.com/Squachen/micloud/blob/v_0.6/micloud/micloud.py#L35 - v0.6 - 2022-12-08
   "ignore:'locale.getdefaultlocale' is deprecated and slated for removal in Python 3.15:DeprecationWarning:micloud.micloud",
-  # https://pypi.org/project/agent-py/ - v0.0.24 - 2024-11-07
-  "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:agent.a",
   # https://github.com/MatsNl/pyatag/issues/11 - v0.3.7.1 - 2023-10-09
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pyatag.gateway",
   # https://github.com/lidatong/dataclasses-json/issues/328
