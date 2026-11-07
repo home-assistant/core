@@ -35,6 +35,7 @@ from .const import (
     SAMPLES_PER_CHUNK,
 )
 from .error import (
+    DuplicateWakeUpDetectedError,
     IntentRecognitionError,
     PipelineRunValidationError,
     SpeechToTextError,
@@ -65,6 +66,19 @@ KEY_PIPELINE_CONVERSATION_DATA: HassKey[dict[str, PipelineConversationData]] = H
     "pipeline_conversation_data"
 )
 STREAM_RESPONSE_CHARS = 60
+
+
+async def _skip_audio(
+    audio_stream: AsyncIterable[bytes], num_bytes: int
+) -> AsyncGenerator[bytes]:
+    """Yield the audio after the first num_bytes."""
+    async for chunk in audio_stream:
+        if num_bytes > 0:
+            skipped = min(num_bytes, len(chunk))
+            chunk = chunk[skipped:]
+            num_bytes -= skipped
+        if chunk:
+            yield chunk
 
 
 @callback
@@ -543,6 +557,33 @@ class _DefaultPipelineProcessor:
 
             self._stt_last_timestamp_ms = chunk.timestamp_ms
             yield chunk.audio
+
+    @callback
+    def _accept_wake_word_audio(
+        self, wake_word_phrase: str, wake_word_audio_ms: int
+    ) -> bool:
+        """Accept the wake word at the start of the stream, unless a duplicate."""
+        try:
+            self.host.accept_wake_word(wake_word_phrase)
+        except DuplicateWakeUpDetectedError:
+            accepted = False
+        else:
+            accepted = True
+
+        self.host.process_event(
+            PipelineEvent(
+                PipelineEventType.WAKE_WORD_END
+                if accepted
+                else PipelineEventType.WAKE_WORD_REJECTED,
+                {
+                    "wake_word_output": {
+                        "wake_word_phrase": wake_word_phrase,
+                        "wake_word_audio_ms": wake_word_audio_ms,
+                    }
+                },
+            )
+        )
+        return accepted
 
     async def prepare_recognize_intent(self, session: chat_session.ChatSession) -> None:
         """Prepare recognizing an intent."""
@@ -1106,14 +1147,26 @@ class _DefaultPipelineProcessor:
         current_stage: PipelineStage | None = self.host.start_stage
         stt_audio_buffer: list[EnhancedAudioChunk] = []
         stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
+        stt_stream = request.stt_stream
 
-        if request.stt_stream is not None:
+        if (
+            (stt_stream is not None)
+            and (request.wake_word_audio_ms is not None)
+            and (current_stage == PipelineStage.STT)
+        ):
+            # Whole chunks only, since the partial chunk at the end is dropped
+            stt_stream = _skip_audio(
+                stt_stream,
+                (request.wake_word_audio_ms // MS_PER_CHUNK) * BYTES_PER_CHUNK,
+            )
+
+        if stt_stream is not None:
             if self.host.audio_settings.needs_processor:
                 # VAD/noise suppression/auto gain/volume
-                stt_processed_stream = self.process_enhance_audio(request.stt_stream)
+                stt_processed_stream = self.process_enhance_audio(stt_stream)
             else:
                 # Volume multiplier only
-                stt_processed_stream = self.process_volume_only(request.stt_stream)
+                stt_processed_stream = self.process_volume_only(stt_stream)
 
         if current_stage == PipelineStage.WAKE_WORD:
             # wake-word-detection
@@ -1133,8 +1186,18 @@ class _DefaultPipelineProcessor:
             assert request.stt_metadata is not None
             assert stt_processed_stream is not None
 
-            if request.wake_word_phrase is not None:
-                self.host.accept_wake_word(request.wake_word_phrase)
+            # Wake word detection accepts the wake word it detects
+            if (self.host.start_stage == PipelineStage.STT) and (
+                request.wake_word_phrase is not None
+            ):
+                if request.wake_word_audio_ms is not None:
+                    if not self._accept_wake_word_audio(
+                        request.wake_word_phrase, request.wake_word_audio_ms
+                    ):
+                        self.cleanup()
+                        return
+                else:
+                    self.host.accept_wake_word(request.wake_word_phrase)
 
             stt_input_stream = stt_processed_stream
 
@@ -1209,6 +1272,12 @@ class _DefaultPipelineProcessor:
             if request.stt_stream is None:
                 raise PipelineRunValidationError(
                     "stt_stream is required for speech-to-text"
+                )
+            if (request.wake_word_audio_ms is not None) and (
+                request.wake_word_phrase is None
+            ):
+                raise PipelineRunValidationError(
+                    "wake_word_phrase is required with wake_word_audio_ms"
                 )
         elif self.host.start_stage == PipelineStage.INTENT:
             if request.intent_input is None:
