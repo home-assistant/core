@@ -5,7 +5,13 @@ from unittest.mock import patch
 
 import probatio
 import pytest
-from pytest_homeassistant.common import MockUser, async_mock_service
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockUser,
+    async_mock_service,
+    mock_integration,
+)
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
@@ -149,6 +155,24 @@ async def test_custom_agent(
     conversation.async_unset_agent(
         hass, hass.config_entries.async_get_entry(mock_conversation_agent.agent_id)
     )
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_set_agent_not_entity_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that setting an agent that is not an entity is deprecated."""
+    mock_integration(hass, MockModule("legacy_agent"))
+    entry = MockConfigEntry(domain="legacy_agent")
+    entry.add_to_hass(hass)
+
+    conversation.async_set_agent(hass, entry, MockAgent(entry.entry_id, ["en"]))
+
+    assert (
+        "Detected that integration 'legacy_agent' sets a conversation agent that "
+        "is not a conversation entity. This will stop working in Home Assistant "
+        "2027.5.0"
+    ) in caplog.text
 
 
 @pytest.mark.usefixtures("init_components")
