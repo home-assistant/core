@@ -44,29 +44,20 @@
     }
   },
   "exceptions": {
-    "all_day_change_not_supported": {
-      "message": "A recurring event can't be changed between all-day and timed"
-    },
-    "daylight_saving_time": {
-      "message": "The time is skipped or happens twice because of a daylight saving time change"
-    },
     "event_changed": {
       "message": "The event was changed on the CalDAV server in the meantime"
     },
     "event_not_found": {
       "message": "The event was not found on the CalDAV server"
     },
-    "exceptions_change_not_supported": {
-      "message": "The start and repeat rule of a recurring event with changed or deleted occurrences can't be changed"
-    },
     "occurrence_not_supported": {
       "message": "A recurring event can only be changed or deleted as a whole, from its first occurrence"
     },
+    "recurrence_change_not_supported": {
+      "message": "The repeat rule and the times of a recurring event can't be changed"
+    },
     "request_error": {
       "message": "Error talking to the CalDAV server"
-    },
-    "start_not_in_rule": {
-      "message": "The start of a recurring event has to be one of the times its repeat rule produces"
     },
     "unexpected_response": {
       "message": "Unexpected response from the CalDAV server"

@@ -1,7 +1,7 @@
 """Support for WebDav Calendar."""
 
 from collections.abc import Callable
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import UTC, date, datetime
 from functools import partial
 import logging
 from typing import Any, cast, override
@@ -15,7 +15,6 @@ from caldav.lib.error import (
     ScheduleTagMismatchError,
 )
 from caldav.lib.http_sync import requests as caldav_requests
-from dateutil.rrule import rrulebase, rrulestr
 import icalendar
 import probatio
 
@@ -50,7 +49,6 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
 from .api import async_get_calendar_color, async_get_calendars
@@ -305,7 +303,6 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         recurrence_range: str | None = None,
     ) -> None:
         """Update an event, a recurring one as a whole."""
-        # Checking a repeat rule can take a while, so it runs in the executor
         await self._async_call(
             self._update_event, uid, event, recurrence_id, recurrence_range
         )
@@ -318,25 +315,39 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         recurrence_id: str | None,
         recurrence_range: str | None,
     ) -> None:
-        """Check and save an update."""
+        """Change the fields of an event and save it."""
         item = self._get_event(uid)
         calendar = item.icalendar_instance
         series = _get_series(calendar)
         _check_whole_event(series, recurrence_id, recurrence_range)
         if _same_times(series, event):
-            # Leave the stored times as they are
+            # Leave the stored times and their time zone as they are
             event = {
                 key: value
                 for key, value in event.items()
                 if key not in (EVENT_START, EVENT_END)
             }
-        _check_series_change(calendar, series, event)
-        original_start = series.DTSTART
-        _set_fields(series, event)
-        if "RRULE" in series and (
-            EVENT_RRULE in event or original_start != series.DTSTART
+        recurring = "RRULE" in series or "RDATE" in series
+        if EVENT_RRULE in event or (recurring and EVENT_START in event):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="recurrence_change_not_supported",
+            )
+        for key in (
+            EVENT_SUMMARY,
+            EVENT_START,
+            EVENT_END,
+            EVENT_DESCRIPTION,
+            EVENT_LOCATION,
         ):
-            _check_rule_start(series)
+            if key in event:
+                series.pop(key)
+                if event[key]:
+                    series.add(key, event[key])
+        if EVENT_START in event:
+            # DTEND replaces a DURATION
+            series.pop("DURATION")
+            calendar.add_missing_timezones()
         # Otherwise save() merges just the first component into the stored
         # event when that one is an override
         item.save(only_this_recurrence=False)
@@ -357,8 +368,8 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     ) -> None:
         """Check and delete an event."""
         item = self._get_event(uid)
-        calendar = item.icalendar_instance
-        _check_whole_event(_get_series(calendar), recurrence_id, recurrence_range)
+        series = _get_series(item.icalendar_instance)
+        _check_whole_event(series, recurrence_id, recurrence_range)
         # Only delete the version that was checked; If-Match can't use a weak ETag
         etag = item.etag
         if_match = bool(etag and not etag.startswith("W/"))
@@ -368,10 +379,10 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """Fetch the CalDAV object holding an event and its overrides."""
         return cast(Event, self.coordinator.calendar.get_event_by_uid(uid))
 
-    async def _async_call[_T](self, target: Callable[..., _T], *args: Any) -> _T:
+    async def _async_call(self, target: Callable[..., None], *args: Any) -> None:
         """Run a CalDAV request in the executor."""
         try:
-            return await self.hass.async_add_executor_job(target, *args)
+            await self.hass.async_add_executor_job(target, *args)
         except NotFoundError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="event_not_found"
@@ -451,191 +462,19 @@ def _same_times(series: icalendar.Event, event: dict[str, Any]) -> bool:
     try:
         end = series.end
     except ValueError:
-        # The event has no consistent end, so the update sets one
+        # The event has no valid end, so the update sets one
         return False
     return _same_time(event[EVENT_START], series.DTSTART) and _same_time(
         event[EVENT_END], end
     )
 
 
-def _same_time(value: date | datetime, other: date | datetime) -> bool:
-    """Return if two starts or ends are the same, whatever their time zones."""
-    return _instant(value) == _instant(other)
-
-
-def _instant(value: date | datetime) -> date | datetime:
-    """Return a value that compares by instant, taking floating times as local."""
-    if not isinstance(value, datetime):
-        return value
-    if value.tzinfo is None:
-        value = value.replace(tzinfo=dt_util.get_default_time_zone())
-    # Times in a repeated hour only compare by instant within one time zone
-    return value.astimezone(UTC)
-
-
-def _check_series_change(
-    calendar: icalendar.Calendar, series: icalendar.Event, event: dict[str, Any]
-) -> None:
-    """Refuse changes the recurrence of a series can't follow."""
-    if "RRULE" not in series and "RDATE" not in series:
-        return
-    rrule = event.get(EVENT_RRULE)
-    if EVENT_START not in event and not rrule:
-        return
-    start = event.get(EVENT_START, series.DTSTART)
-    # UNTIL, EXDATE and RECURRENCE-ID keep the type of the old start
-    if isinstance(start, datetime) != isinstance(series.DTSTART, datetime):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="all_day_change_not_supported"
-        )
-    start = _in_time_basis(start, series.DTSTART)
-    # Changed and deleted occurrences are tied to the old start and rule
-    has_exceptions = (
-        "EXDATE" in series or "RDATE" in series or len(calendar.walk("VEVENT")) > 1
-    )
-    if has_exceptions and (
-        start != series.DTSTART
-        or (
-            rrule
-            and ("RRULE" not in series or _parse_rule(rrule, start) != series["RRULE"])
-        )
-    ):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="exceptions_change_not_supported"
-        )
-
-
-def _occurrences(series: icalendar.Event) -> rrulebase:
-    """Return the occurrences the rule of a series produces, as datetimes."""
-    start = series.DTSTART
-    rule = _parse_rule(series["RRULE"].to_ical().decode(), start)
-    if not isinstance(start, datetime):
-        start = datetime.combine(start, time())
-    return rrulestr(rule.to_ical().decode(), dtstart=start)
-
-
-def _check_rule_start(series: icalendar.Event) -> None:
-    """Refuse a series whose start isn't one of the times its rule produces."""
-    start = series.DTSTART
-    if not isinstance(start, datetime):
-        start = datetime.combine(start, time())
-    try:
-        first = _occurrences(series).after(start, inc=True)
-    except ValueError:
-        first = None
-    if first != start:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="start_not_in_rule"
-        )
-
-
-def _parse_rule(rrule: str, start: date | datetime) -> icalendar.vRecur:
-    """Parse a repeat rule, with UNTIL in the form the start needs.
-
-    UNTIL is a date for all-day events, floating for floating events and UTC
-    otherwise. Without a time zone it is in Home Assistant's, as the frontend
-    sends it.
-    """
-    rule = icalendar.vRecur.from_ical(rrule)
-    if not (until := rule.get("UNTIL")):
-        return rule
-    value = until[0]
-    if not isinstance(start, datetime):
-        if isinstance(value, datetime):
-            value = dt_util.as_local(value).date() if value.tzinfo else value.date()
-    else:
-        if not isinstance(value, datetime):
-            value = datetime.combine(value, time(23, 59, 59))
-        if value.tzinfo is None:
-            value = value.replace(tzinfo=dt_util.get_default_time_zone())
-        if start.tzinfo is None:
-            value = dt_util.as_local(value).replace(tzinfo=None)
-        else:
-            value = value.astimezone(UTC)
-    rule["UNTIL"] = [value]
-    return rule
-
-
-def _in_time_basis(
-    value: date | datetime, original_start: date | datetime
-) -> date | datetime:
-    """Return a time from Home Assistant in the time zone the event uses.
-
-    Times come in Home Assistant's time zone. A floating event keeps the wall time.
-    """
-    if not isinstance(value, datetime):
-        return value
-    if isinstance(original_start, datetime) and original_start.tzinfo is None:
-        return value.replace(tzinfo=None)
-    # A time skipped when daylight saving time starts doesn't exist
-    if value.astimezone(UTC).astimezone(value.tzinfo).replace(
-        tzinfo=None
-    ) != value.replace(tzinfo=None):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="daylight_saving_time"
-        )
-    if not isinstance(original_start, datetime):
-        return value
-    converted = value.astimezone(original_start.tzinfo)
-    # A TZID time in the hour that repeats always means the first one
-    if (
-        converted.fold
-        and converted.replace(fold=0).utcoffset() != converted.utcoffset()
-    ):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="daylight_saving_time"
-        )
-    return converted
-
-
-def _set_fields(series: icalendar.Event, event: dict[str, Any]) -> None:
-    """Set the fields of an update, keeping any field it leaves out."""
-    original_start = series.DTSTART
-    # Keep the name of the time zone, which may not be an IANA one
-    tzid = series["DTSTART"].params.get("TZID")
-    for key in (
-        EVENT_SUMMARY,
-        EVENT_START,
-        EVENT_END,
-        EVENT_DESCRIPTION,
-        EVENT_LOCATION,
-    ):
-        if key in event:
-            value = event[key]
-            if key in (EVENT_START, EVENT_END):
-                value = _in_time_basis(value, original_start)
-            series.pop(key)
-            if value:
-                keep_tzid = (
-                    tzid
-                    and isinstance(value, datetime)
-                    and value.tzinfo == original_start.tzinfo
-                )
-                series.add(key, value, parameters={"TZID": tzid} if keep_tzid else None)
-    if EVENT_END in event:
-        # DTEND replaces a DURATION
-        series.pop("DURATION")
-    if rrule := event.get(EVENT_RRULE):
-        series.pop("RRULE")
-        series.add("RRULE", _parse_rule(rrule, series.DTSTART))
-    elif "UNTIL" in series.get("RRULE", {}) and original_start != series.DTSTART:
-        # Move the end of the rule along, so no occurrence is lost
-        rule = _parse_rule(series["RRULE"].to_ical().decode(), original_start)
-        rule["UNTIL"] = [_shift(rule["UNTIL"][0], original_start, series.DTSTART)]
-        series["RRULE"] = rule
-
-
-def _shift(
-    value: date | datetime, start: date | datetime, new_start: date | datetime
-) -> date | datetime:
-    """Move a time by as much wall time as the start moved, in its time zone."""
-    if not isinstance(start, datetime):
-        # All-day, so UNTIL is a date too
-        return value + timedelta(days=new_start.toordinal() - start.toordinal())
-    new_start = cast(datetime, new_start)
-    zone = start.tzinfo
-    wall = cast(datetime, value)
-    if zone:
-        wall = wall.astimezone(zone).replace(tzinfo=None)
-    wall += new_start.replace(tzinfo=None) - start.replace(tzinfo=None)
-    return wall.replace(tzinfo=zone).astimezone(UTC) if zone else wall
+def _same_time(value: date | datetime, stored: date | datetime) -> bool:
+    """Return if a time from Home Assistant is the stored one."""
+    if not isinstance(value, datetime) or not isinstance(stored, datetime):
+        return value == stored
+    if stored.tzinfo is None:
+        # Floating times are shown with the same wall time
+        return value.replace(tzinfo=None) == stored
+    # Within one time zone, times compare by wall time, which repeats once a year
+    return value.astimezone(UTC) == stored.astimezone(UTC)
