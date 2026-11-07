@@ -1219,9 +1219,7 @@ async def test_description_kept_for_embedded_device(
 
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
-    return_value={
-        "mock-domain": [{"st": "urn:schemas-upnp-org:device:ZonePlayer:1"}]
-    },
+    return_value={"mock-domain": [{"st": "urn:schemas-upnp-org:device:ZonePlayer:1"}]},
 )
 @pytest.mark.parametrize(
     "search_targets",
@@ -1291,5 +1289,3 @@ async def test_ssdp_rediscover_refetches_stale_description(
     mock_call_data: SsdpServiceInfo = mock_flow_init.mock_calls[1][2]["data"]
     assert mock_call_data.ssdp_st == "urn:schemas-upnp-org:device:ZonePlayer:1"
     assert mock_call_data.upnp[ATTR_UPNP_UDN] == "uuid:mock-udn"
-
-

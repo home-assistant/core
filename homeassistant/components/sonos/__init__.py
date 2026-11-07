@@ -629,7 +629,7 @@ class SonosDiscoveryManager:
                 timeout=ClientTimeout(total=5),
             ) as response:
                 description = await response.text()
-        except (ClientError, TimeoutError):
+        except ClientError, TimeoutError:
             return True
         if not (match := _ROOT_UDN_RE.search(description)):
             return True
