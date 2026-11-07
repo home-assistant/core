@@ -57,6 +57,13 @@ HASS_TO_HOMEKIT_TARGET = {
     AlarmControlPanelState.DISARMED: HK_ALARM_DISARMED,
 }
 
+HASS_TO_HOMEKIT_FEATURES = {
+    AlarmControlPanelEntityFeature.ARM_HOME: HK_ALARM_STAY_ARMED,
+    AlarmControlPanelEntityFeature.ARM_AWAY: HK_ALARM_AWAY_ARMED,
+    AlarmControlPanelEntityFeature.ARM_VACATION: HK_ALARM_AWAY_ARMED,
+    AlarmControlPanelEntityFeature.ARM_NIGHT: HK_ALARM_NIGHT_ARMED,
+}
+
 HASS_TO_HOMEKIT_SERVICES = {
     AlarmControlPanelService.ARM_HOME: HK_ALARM_STAY_ARMED,
     AlarmControlPanelService.ARM_AWAY: HK_ALARM_AWAY_ARMED,
@@ -72,6 +79,13 @@ HK_TO_SERVICE = {
 }
 
 
+def _armed_states(features: int) -> set[int]:
+    """Return the HomeKit armed states the alarm panel features allow."""
+    return {
+        hk for feature, hk in HASS_TO_HOMEKIT_FEATURES.items() if features & feature
+    }
+
+
 @TYPES.register("SecuritySystem")
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
@@ -83,6 +97,7 @@ class SecuritySystem(HomeAccessory):
         assert state
         self._alarm_code = self.config.get(ATTR_CODE)
         self._skipped: set[tuple[str, int]] = set()
+        self._unannounced: set[Characteristic] = set()
 
         supported_states = state.attributes.get(
             EntityStateAttribute.SUPPORTED_FEATURES,
@@ -94,12 +109,15 @@ class SecuritySystem(HomeAccessory):
                 | AlarmControlPanelEntityFeature.TRIGGER
             ),
         )
+        self._armed = _armed_states(supported_states)
+        # Feature changes update the valid values in place instead
+        self._reload_on_change_attrs.remove(EntityStateAttribute.SUPPORTED_FEATURES)
 
         serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
         current_char = serv_alarm.get_characteristic(CHAR_CURRENT_SECURITY_STATE)
         target_char = serv_alarm.get_characteristic(CHAR_TARGET_SECURITY_STATE)
-        default_current_states = current_char.properties.get(PROP_VALID_VALUES)
-        default_target_services = target_char.properties.get(PROP_VALID_VALUES)
+        self._all_current_states = current_char.properties[PROP_VALID_VALUES]
+        self._all_target_states = target_char.properties[PROP_VALID_VALUES]
 
         # Both characteristics start at 0 (stay armed). Panels without
         # ARM_HOME drop 0 from the valid values below, and HAP-python logs an
@@ -108,41 +126,16 @@ class SecuritySystem(HomeAccessory):
         current_char.set_value(HK_ALARM_DISARMED, should_notify=False)
         target_char.set_value(HK_ALARM_DISARMED, should_notify=False)
 
-        current_supported_states = [HK_ALARM_DISARMED, HK_ALARM_TRIGGERED]
-        target_supported_services = [HK_ALARM_DISARMED]
-
-        if supported_states & AlarmControlPanelEntityFeature.ARM_HOME:
-            current_supported_states.append(HK_ALARM_STAY_ARMED)
-            target_supported_services.append(HK_ALARM_STAY_ARMED)
-
-        if supported_states & (
-            AlarmControlPanelEntityFeature.ARM_AWAY
-            | AlarmControlPanelEntityFeature.ARM_VACATION
-        ):
-            current_supported_states.append(HK_ALARM_AWAY_ARMED)
-            target_supported_services.append(HK_ALARM_AWAY_ARMED)
-
-        if supported_states & AlarmControlPanelEntityFeature.ARM_NIGHT:
-            current_supported_states.append(HK_ALARM_NIGHT_ARMED)
-            target_supported_services.append(HK_ALARM_NIGHT_ARMED)
-
+        current_valid_values, target_valid_values = self._valid_values()
         self.char_current_state = serv_alarm.configure_char(
             CHAR_CURRENT_SECURITY_STATE,
             value=HASS_TO_HOMEKIT_CURRENT[AlarmControlPanelState.DISARMED],
-            valid_values={
-                key: val
-                for key, val in default_current_states.items()
-                if val in current_supported_states
-            },
+            valid_values=current_valid_values,
         )
         self.char_target_state = serv_alarm.configure_char(
             CHAR_TARGET_SECURITY_STATE,
             value=HASS_TO_HOMEKIT_SERVICES[AlarmControlPanelService.DISARM],
-            valid_values={
-                key: val
-                for key, val in default_target_services.items()
-                if val in target_supported_services
-            },
+            valid_values=target_valid_values,
             setter_callback=self.set_security_state,
         )
 
@@ -159,16 +152,45 @@ class SecuritySystem(HomeAccessory):
             params[AlarmControlPanelServiceArgument.CODE] = self._alarm_code
         self.async_call_service(ALARM_CONTROL_PANEL_DOMAIN, service, params)
 
+    def _valid_values(self) -> tuple[dict[str, int], dict[str, int]]:
+        """Return the current and target valid values for the armed states."""
+        current = self._armed | {HK_ALARM_DISARMED, HK_ALARM_TRIGGERED}
+        target = self._armed | {HK_ALARM_DISARMED}
+        return (
+            {k: v for k, v in self._all_current_states.items() if v in current},
+            {k: v for k, v in self._all_target_states.items() if v in target},
+        )
+
+    @callback
+    def _async_update_armed_states(self, armed: set[int]) -> None:
+        """Advertise new armed states in place, bumping the config number."""
+        self._armed = armed
+        for char, valid_values in zip(
+            (self.char_current_state, self.char_target_state),
+            self._valid_values(),
+            strict=True,
+        ):
+            if char.value not in valid_values.values():
+                # Valid before override_properties; announced once a real state lands
+                char.set_value(HK_ALARM_DISARMED, should_notify=False)
+                self._unannounced.add(char)
+            char.override_properties(valid_values=valid_values)
+        self._skipped.clear()
+        self.driver.async_update_accessories_hash()
+
     def _set_if_valid(self, char: Characteristic, value: int) -> bool:
         """Push value to char, or skip (returning False) if not advertised.
 
-        The characteristic's valid values are frozen at build time; pushing a
-        value outside that set would raise ValueError in pyhap. A skip is
-        logged once per value, as only a rebuild can change the outcome.
+        Pushing a value outside the valid values would raise ValueError in
+        pyhap. A skip is logged once per value until the valid values change.
         """
         name = char.display_name
         if value in char.properties[PROP_VALID_VALUES].values():
+            if char in self._unannounced and char.value == value:
+                # set_value only notifies changes, and the fallback was silent
+                char.notify()
             char.set_value(value)
+            self._unannounced.discard(char)
             return True
         if (name, value) not in self._skipped:
             self._skipped.add((name, value))
@@ -185,6 +207,9 @@ class SecuritySystem(HomeAccessory):
         if hass_state in {"None", STATE_UNKNOWN, STATE_UNAVAILABLE}:
             # Bail out early for no state, unknown or unavailable
             return
+        features = new_state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES)
+        if features is not None and (armed := _armed_states(features)) != self._armed:
+            self._async_update_armed_states(armed)
         hass_state = AlarmControlPanelState(hass_state)
         current_state = HASS_TO_HOMEKIT_CURRENT.get(hass_state)
         target_state = HASS_TO_HOMEKIT_TARGET.get(hass_state)
