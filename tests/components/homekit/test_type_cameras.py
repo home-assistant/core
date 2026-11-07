@@ -1879,15 +1879,28 @@ async def test_camera_secure_video_recording_ffmpeg_hangs(
     recording_ffmpeg.kill.assert_called_once_with()
 
 
+@pytest.mark.parametrize(
+    ("output", "seconds"),
+    [
+        pytest.param(b"", 0.02, id="nothing"),
+        # The first fragment may wait for a camera keyframe.
+        pytest.param(INIT_SEGMENT, 0.02, id="init_only"),
+        pytest.param(INIT_SEGMENT + FRAGMENT, 0.004, id="after_video"),
+    ],
+)
 @pytest.mark.usefixtures("no_state_file", "recording_transport")
 async def test_camera_secure_video_recording_stalls(
     hass: HomeAssistant,
     run_driver: HomeDriver,
     recording_ffmpeg: MagicMock,
     caplog: pytest.LogCaptureFixture,
+    output: bytes,
+    seconds: float,
 ) -> None:
     """Test a recording ends when ffmpeg stops delivering fragments."""
-    _ffmpeg_output(recording_ffmpeg, asyncio.StreamReader(), _closed_pipe(b""))
+    stdout = asyncio.StreamReader()
+    stdout.feed_data(output)
+    _ffmpeg_output(recording_ffmpeg, stdout, _closed_pipe(b""))
     acc = await _recording_camera(hass, run_driver)
 
     with (
@@ -1897,11 +1910,12 @@ async def test_camera_secure_video_recording_stalls(
         ),
         patch(
             "homeassistant.components.homekit.type_cameras.RECORDING_MIN_STALL_SECONDS",
-            0.01,
+            0.02,
         ),
     ):
-        assert await _collect(acc) == []
-    assert "ffmpeg delivered no video for 0.01 seconds" in caplog.text
+        packets = await _collect(acc)
+    assert b"".join(packet.data for packet in packets) == output
+    assert f"ffmpeg delivered no video for {seconds} seconds" in caplog.text
     recording_ffmpeg.kill.assert_called_once_with()
 
 

@@ -848,7 +848,6 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                         b" ".join(stderr).decode(errors="replace"),
                     )
                     return
-                timeout = stall_timeout
                 if packet.is_last and await self._async_recording_failed(
                     stream, stderr_task, stderr
                 ):
@@ -859,6 +858,8 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 sent_packets += 1
                 if sent_packets == RECORDING_FIRST_VIDEO_PACKET:
                     self._recording_problem_logged = False
+                    # The first fragment waits for a camera keyframe, later ones not.
+                    timeout = stall_timeout
                 yield packet
                 if packet.is_last:
                     return
