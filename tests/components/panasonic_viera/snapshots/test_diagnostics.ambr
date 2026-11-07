@@ -13,7 +13,7 @@
         'host': '**REDACTED**',
         'name': 'Panasonic Viera TV',
         'port': 55000,
-        'turn_on_action': None,
+        'turn_on_action': '**REDACTED**',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -43,6 +43,70 @@
       ]),
       'state': 'on',
       'volume': 1.0,
+    }),
+  })
+# ---
+# name: test_diagnostics[tv_off_at_setup]
+  dict({
+    'device_info': dict({
+      'UDN': '**REDACTED**',
+      'deviceType': 'urn:panasonic-com:device:p00RemoteController:1',
+      'friendlyName': 'VIERA ST50 Series',
+      'manufacturer': 'Panasonic',
+      'modelName': 'Panasonic VIErA',
+      'serviceList': dict({
+        'service': dict({
+          'SCPDURL': '/nrc/sdd_0.xml',
+          'controlURL': '/nrc/control_0',
+          'eventSubURL': '/nrc/event_0',
+          'serviceId': 'urn:upnp-org:serviceId:p00NetworkControl',
+          'serviceType': 'urn:panasonic-com:service:p00NetworkControl:1',
+        }),
+      }),
+      'viera:X_DEVICE_TYPE': 'DTV',
+      'viera:X_DMRUDN': '**REDACTED**',
+      'viera:X_KEY_TYPE': 'PAL-6,PAL-1',
+      'viera:X_NRCCAP': 'VR_DMR,VR_GPAD,VR_VECTOR,VR_BROWSER',
+      'viera:X_NRCUDN': '**REDACTED**',
+      'viera:X_VERSION': 'NRC-2.00',
+    }),
+    'entry': dict({
+      'data': dict({
+        'device_info': dict({
+          'UDN': '**REDACTED**',
+          'friendlyName': 'Panasonic Viera TV',
+          'manufacturer': 'Panasonic',
+          'modelNumber': 'Panasonic Viera',
+        }),
+        'host': '**REDACTED**',
+        'name': 'Panasonic Viera TV',
+        'port': 55000,
+        'turn_on_action': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'panasonic_viera',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'remote': dict({
+      'available': True,
+      'muted': False,
+      'playing': True,
+      'source': None,
+      'source_list': None,
+      'state': 'off',
+      'volume': 0,
     }),
   })
 # ---
@@ -81,7 +145,7 @@
         'host': '**REDACTED**',
         'name': 'Panasonic Viera TV',
         'port': 55000,
-        'turn_on_action': None,
+        'turn_on_action': '**REDACTED**',
       }),
       'disabled_by': None,
       'discovery_keys': dict({

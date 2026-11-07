@@ -1,6 +1,6 @@
 """Tests for the diagnostics data provided by Panasonic Viera."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from urllib.error import URLError
 
 import pytest
@@ -13,11 +13,20 @@ from syrupy.filters import props
 from homeassistant.components.panasonic_viera.const import (
     ATTR_DEVICE_INFO,
     ATTR_UDN,
+    CONF_ON_ACTION,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_CONFIG_DATA, MOCK_DEVICE_INFO
+from .conftest import MOCK_CONFIG_DATA, MOCK_DEVICE_INFO, MOCK_MAC
+
+# A turn-on action as imported from YAML, which may carry a SecureOn password
+MOCK_ON_ACTION = [
+    {
+        "action": "wake_on_lan.send_magic_packet",
+        "data": {"mac": MOCK_MAC, "secureon_password": "00:11:22:33:44:55"},
+    }
+]
 
 # The description of a 2012 TV as served on nrc/ddd.xml
 MOCK_NRC_DEVICE_INFO = {
@@ -45,32 +54,56 @@ MOCK_NRC_DEVICE_INFO = {
 
 
 @pytest.mark.parametrize(
-    "get_device_info",
+    ("setup_error", "get_device_info"),
     [
-        pytest.param(Mock(return_value=MOCK_NRC_DEVICE_INFO), id="tv_reachable"),
-        pytest.param(Mock(side_effect=URLError("Host is unreachable")), id="tv_off"),
+        pytest.param(None, Mock(return_value=MOCK_NRC_DEVICE_INFO), id="tv_reachable"),
+        pytest.param(
+            None, Mock(side_effect=URLError("Host is unreachable")), id="tv_off"
+        ),
+        pytest.param(
+            URLError("Host is unreachable"),
+            Mock(return_value=MOCK_NRC_DEVICE_INFO),
+            id="tv_off_at_setup",
+        ),
     ],
 )
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_remote: Mock,
+    setup_error: URLError | None,
     get_device_info: Mock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the diagnostics of a config entry."""
+    """Test the diagnostics of a config entry.
+
+    The description is fetched from the TV, reconnecting when it was
+    unreachable at setup, and the state the entities report is left alone.
+    """
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
-        data={**MOCK_CONFIG_DATA, ATTR_DEVICE_INFO: MOCK_DEVICE_INFO},
+        data={
+            **MOCK_CONFIG_DATA,
+            CONF_ON_ACTION: MOCK_ON_ACTION,
+            ATTR_DEVICE_INFO: MOCK_DEVICE_INFO,
+        },
     )
     mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.panasonic_viera.RemoteControl",
+        side_effect=setup_error,
+        return_value=mock_remote,
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
 
     # The setup is done, the diagnostics fetch the description served now
     mock_remote.get_device_info = get_device_info
+    remote = mock_entry.runtime_data
+    state_before = remote.state
 
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, mock_entry
     ) == snapshot(exclude=props("created_at", "modified_at", "entry_id"))
+    assert remote.state == state_before
