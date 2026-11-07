@@ -65,6 +65,7 @@ from .const import (
     AutomationEntityStateAttribute,
     AutomationServiceArgument,
 )
+from .dry_run import DryRunInput
 from .trace import trace_automation
 
 
@@ -461,6 +462,25 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         else:
             await self._async_disable()
         self.async_write_ha_state()
+
+    def dry_run_input(self) -> DryRunInput:
+        """Return what a dry run of this automation needs."""
+        this = None
+        if state := self.hass.states.get(self.entity_id):
+            this = state.as_dict()
+        return DryRunInput(
+            enabled=self.is_on,
+            mode=self.action_script.script_mode,
+            current_runs=self.action_script.runs,
+            max_runs=(
+                self.action_script.max_runs if self.action_script.supports_max else None
+            ),
+            trigger_config=self._trigger_config,
+            condition_config=self._condition.config if self._condition else [],
+            this=this,
+            trigger_variables=self._trigger_variables,
+            variables=self._variables,
+        )
 
     @override
     async def async_trigger(
