@@ -100,6 +100,9 @@
       "air_quality": {
         "name": "Air quality"
       },
+      "carbon_filter_life": {
+        "name": "Carbon filter lifetime"
+      },
       "cook_set_temp": {
         "name": "Cooking set temperature"
       },
@@ -145,6 +148,12 @@
       },
       "filter_life": {
         "name": "Filter lifetime"
+      },
+      "filter_remaining_days": {
+        "name": "Filter remaining days"
+      },
+      "pre_filter_life": {
+        "name": "Pre-filter lifetime"
       },
       "preheat_set_time": {
         "name": "Preheating set time"
