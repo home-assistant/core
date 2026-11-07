@@ -1,5 +1,6 @@
 """Tests for the Velbus component initialisation."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -7,12 +8,18 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from velbusaio.exceptions import VelbusConnectionFailed
 
+from homeassistant.components.frontend import DATA_PANELS
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.velbus import (
     VelbusConfigEntry,
     async_remove_config_entry_device,
 )
-from homeassistant.components.velbus.const import DOMAIN
+from homeassistant.components.velbus.const import CONF_ADVANCED_MODE, DOMAIN
+from homeassistant.components.velbus.websocket_api import (
+    DATA_PANEL,
+    DATA_STATIC_REGISTERED,
+    async_update_panel,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
@@ -130,9 +137,12 @@ async def test_migrate_config_entry(
         patch("shutil.rmtree") as mock_rmtree,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        assert dict(entry.data) == legacy_config
+        assert dict(entry.data) == {
+            **legacy_config,
+            CONF_ADVANCED_MODE: False,
+        }
         assert entry.version == 3
-        assert entry.minor_version == 2
+        assert entry.minor_version == 3
         mock_rmtree.assert_called_once()
 
 
@@ -160,9 +170,12 @@ async def test_migrate_config_entry_32(
         patch("shutil.rmtree") as mock_rmtree,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        assert dict(entry.data) == legacy_config
+        assert dict(entry.data) == {
+            **legacy_config,
+            CONF_ADVANCED_MODE: False,
+        }
         assert entry.version == 3
-        assert entry.minor_version == 2
+        assert entry.minor_version == 3
         mock_rmtree.assert_called_once()
 
 
@@ -187,7 +200,138 @@ async def test_migrate_config_entry_unique_id(
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.unique_id == expected
     assert entry.version == 3
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
+    assert entry.data.get(CONF_ADVANCED_MODE) is False
+
+
+async def test_config_panel_requires_advanced_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the Velbus config panel is only available with advanced mode."""
+    await init_integration(hass, config_entry)
+    assert DOMAIN not in hass.data.get(DATA_PANELS, {})
+
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, CONF_ADVANCED_MODE: True}
+    )
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert DOMAIN in hass.data.get(DATA_PANELS, {})
+
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, CONF_ADVANCED_MODE: False}
+    )
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert DOMAIN not in hass.data.get(DATA_PANELS, {})
+
+
+async def test_other_entry_setup_in_progress_does_not_register_panel(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: AsyncMock,
+) -> None:
+    """Test a different in-progress advanced entry does not enable the panel."""
+    await init_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert DOMAIN not in hass.data.get(DATA_PANELS, {})
+
+    other = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_PORT: "10.0.0.2:27015",
+            CONF_NAME: "other velbus",
+            CONF_ADVANCED_MODE: True,
+        },
+    )
+    other.add_to_hass(hass)
+
+    connect_started = asyncio.Event()
+    release_connect = asyncio.Event()
+
+    async def hanging_connect() -> None:
+        connect_started.set()
+        await release_connect.wait()
+
+    controller.return_value.connect = hanging_connect
+
+    setup_task = hass.async_create_task(hass.config_entries.async_setup(other.entry_id))
+    await connect_started.wait()
+    assert other.state is ConfigEntryState.SETUP_IN_PROGRESS
+
+    await async_update_panel(hass)
+    assert DOMAIN not in hass.data.get(DATA_PANELS, {})
+
+    release_connect.set()
+    assert await setup_task
+    await hass.async_block_till_done()
+    assert other.state is ConfigEntryState.LOADED
+    assert DOMAIN in hass.data.get(DATA_PANELS, {})
+
+
+async def test_static_path_registered_once(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test concurrent panel updates register the static path once."""
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={**config_entry.data, CONF_ADVANCED_MODE: True},
+    )
+    other = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_PORT: "10.0.0.8:27015",
+            CONF_NAME: "other velbus",
+            CONF_ADVANCED_MODE: True,
+        },
+    )
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    other.add_to_hass(hass)
+    await hass.config_entries.async_setup(other.entry_id)
+    await hass.async_block_till_done()
+
+    hass.data[DATA_PANEL][DATA_STATIC_REGISTERED] = False
+    calls = 0
+
+    async def slow_register(_configs: list[object]) -> None:
+        nonlocal calls
+        calls += 1
+        await asyncio.sleep(0.05)
+
+    with patch.object(hass.http, "async_register_static_paths", slow_register):
+        await asyncio.gather(async_update_panel(hass), async_update_panel(hass))
+
+    assert calls == 1
+
+
+async def test_panel_refreshes_when_frontend_version_changes(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a new frontend package version replaces the registered panel."""
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={**config_entry.data, CONF_ADVANCED_MODE: True},
+    )
+    await init_integration(hass, config_entry)
+    panel = hass.data[DATA_PANELS][DOMAIN]
+    assert panel.config is not None
+    original_url = panel.config["_panel_custom"]["module_url"]
+
+    with patch(
+        "homeassistant.components.velbus.websocket_api.version",
+        return_value="2026.10.0",
+    ):
+        await async_update_panel(hass)
+
+    panel = hass.data[DATA_PANELS][DOMAIN]
+    assert panel.config is not None
+    module_url = panel.config["_panel_custom"]["module_url"]
+    assert module_url != original_url
+    assert module_url.endswith("?v=2026.10.0")
 
 
 async def test_api_call(
