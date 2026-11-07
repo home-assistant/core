@@ -10,7 +10,7 @@
   "iot_class": "local_polling",
   "loggers": ["e3dc_ess_modbus", "modbus_connection", "tmodbus"],
   "quality_scale": "bronze",
-  "requirements": ["e3dc-ess-modbus==0.1.0"],
+  "requirements": ["e3dc-ess-modbus==0.2.0"],
   "zeroconf": [
     {
       "properties": {
