@@ -4,6 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from ipaddress import ip_address
 from operator import attrgetter
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -214,11 +215,38 @@ def mock_controller_service_failed():
         yield dsm
 
 
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        pytest.param(
+            {
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_VERIFY_SSL: VERIFY_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+            id="all_provided",
+        ),
+        pytest.param(
+            {
+                CONF_HOST: HOST,
+                CONF_SSL: False,
+                CONF_VERIFY_SSL: VERIFY_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+            id="no_port_no_ssl",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user(
     hass: HomeAssistant,
     service: MagicMock,
     snapshot: SnapshotAssertion,
+    user_input: dict[str, Any],
 ) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
@@ -232,48 +260,11 @@ async def test_user(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
         return_value=service,
     ):
-        # test with all provided
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_HOST: HOST,
-                CONF_PORT: PORT,
-                CONF_SSL: USE_SSL,
-                CONF_VERIFY_SSL: VERIFY_SSL,
-                CONF_USERNAME: USERNAME,
-                CONF_PASSWORD: PASSWORD,
-            },
+            result["flow_id"], user_input=user_input
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
-    assert result["title"] == HOST
-    assert result["data"] == snapshot
-
-    service.information.serial = SERIAL_2
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
-        return_value=service,
-    ):
-        # test without port + False SSL
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_HOST: HOST,
-                CONF_SSL: False,
-                CONF_VERIFY_SSL: VERIFY_SSL,
-                CONF_USERNAME: USERNAME,
-                CONF_PASSWORD: PASSWORD,
-            },
-        )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == SERIAL_2
     assert result["title"] == HOST
     assert result["data"] == snapshot
 
