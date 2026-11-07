@@ -670,7 +670,7 @@ async def test_matching_filter(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
-        "supported_features": SUPPORTED_FEATURES,
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -712,7 +712,7 @@ async def test_matching_filter_real_regexp(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
-        "supported_features": SUPPORTED_FEATURES,
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -745,7 +745,7 @@ async def test_filter_matching_past_event(
     assert dict(state.attributes) == {
         "friendly_name": CALENDAR_NAME,
         "offset_reached": False,
-        "supported_features": SUPPORTED_FEATURES,
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -777,7 +777,7 @@ async def test_no_result_with_filtering(
     assert dict(state.attributes) == {
         "friendly_name": CALENDAR_NAME,
         "offset_reached": False,
-        "supported_features": SUPPORTED_FEATURES,
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -835,7 +835,7 @@ async def test_all_day_event(
         "end_time": "2017-11-28 00:00:00",
         "location": "Hamburg",
         "description": "What a beautiful day",
-        "supported_features": SUPPORTED_FEATURES,
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -1020,7 +1020,7 @@ async def test_event_rrule_all_day_early(
         "end_time": "2016-12-02 00:00:00",
         "location": "Hamburg",
         "description": "Groundhog Day",
-        "supported_features": SUPPORTED_FEATURES,
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 

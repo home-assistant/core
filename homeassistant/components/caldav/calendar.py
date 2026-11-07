@@ -223,6 +223,9 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         self._attr_name = name
         if unique_id is not None:
             self._attr_unique_id = unique_id
+        if coordinator.search is not None:
+            # Changes would not be checked against the filter
+            self._attr_supported_features = CalendarEntityFeature.CREATE_EVENT
         self._supports_offset = supports_offset
 
     @override
