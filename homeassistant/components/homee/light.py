@@ -33,6 +33,11 @@ LIGHT_ATTRIBUTES = [
     AttributeType.DIMMING_LEVEL,
 ]
 
+# The COLOR_MODE attribute follows Zigbee color mode semantics (0/1 = color,
+# 2 = color temperature).
+HOMEE_COLOR_MODES_COLOR = (0, 1)
+HOMEE_COLOR_MODE_COLOR_TEMPERATURE = 2
+
 PARALLEL_UPDATES = 0
 
 
@@ -136,8 +141,8 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         )
         self._mode_attr: HomeeAttribute | None = light.get(AttributeType.COLOR_MODE)
 
-        self._attr_supported_color_modes = self._get_supported_color_modes()
-        self._attr_color_mode = get_color_mode(self._attr_supported_color_modes)
+        self._supported_color_modes = self._get_supported_color_modes()
+        self._default_color_mode = get_color_mode(self._supported_color_modes)
 
         if self._temp_attr is not None:
             self._attr_min_color_temp_kelvin = int(self._temp_attr.minimum)
@@ -179,6 +184,29 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         """Return the color temperature of the light."""
         assert self._temp_attr is not None
         return int(self._temp_attr.current_value)
+
+    @property
+    @override
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Return the supported color modes."""
+        return self._supported_color_modes
+
+    @property
+    @override
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self._mode_attr is not None:
+            if (
+                self._mode_attr.current_value == HOMEE_COLOR_MODE_COLOR_TEMPERATURE
+                and ColorMode.COLOR_TEMP in self._supported_color_modes
+            ):
+                return ColorMode.COLOR_TEMP
+            if (
+                self._mode_attr.current_value in HOMEE_COLOR_MODES_COLOR
+                and ColorMode.HS in self._supported_color_modes
+            ):
+                return ColorMode.HS
+        return self._default_color_mode
 
     @property
     @override
