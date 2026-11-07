@@ -1,11 +1,11 @@
 """ONVIF util."""
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Any
 
 from zeep.exceptions import Fault
 
-from .models import Event
+from .models import Event, Profile
 
 
 def build_event_entity_names(events: list[Event]) -> dict[str, str]:
@@ -40,6 +40,22 @@ def build_event_entity_names(events: list[Event]) -> dict[str, str]:
             entity_names[event.uid] = f"{name} {index}"
 
     return entity_names
+
+
+def build_profile_unique_keys(profiles: list[Profile]) -> dict[str, str]:
+    """Build the unique id keys for profiles, mapped by profile token.
+
+    Cameras may hand out new profile tokens after a reconnect or reboot, while
+    the profile name stays the same. The key is the profile name plus the
+    position among the profiles sharing that name, so it neither depends on
+    the token nor on which other profiles are currently present.
+    """
+    name_counts: Counter[str] = Counter()
+    keys: dict[str, str] = {}
+    for profile in profiles:
+        keys[profile.token] = f"{profile.name}#{name_counts[profile.name]}"
+        name_counts[profile.name] += 1
+    return keys
 
 
 def extract_subcodes_as_strings(subcodes: Any) -> list[str]:
