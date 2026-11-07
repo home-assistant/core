@@ -6,8 +6,12 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from pytest_homeassistant.common import assert_setup_component, async_capture_events
-from pytest_homeassistant.typing import WebSocketGenerator
+from pytest_homeassistant.common import (
+    MockUser,
+    assert_setup_component,
+    async_capture_events,
+)
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import DOMAIN, const, dashboard
@@ -847,3 +851,301 @@ async def test_lovelace_info_yaml_mode_fallback(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {"resource_mode": "yaml"}
+
+
+async def _create_dashboard(
+    client: MockHAClientWebSocket, url_path: str = "created-url-path", msg_id: int = 1
+) -> str:
+    """Create a storage dashboard and return its id."""
+    await client.send_json(
+        {
+            "id": msg_id,
+            "type": "lovelace/dashboards/create",
+            "url_path": url_path,
+            "title": "Dashboard",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    return response["result"]["id"]
+
+
+async def test_storage_dashboard_change_url_path(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    hass_admin_user: MockUser,
+) -> None:
+    """Test changing the url path of a storage dashboard."""
+    storage_key = f"{frontend.DOMAIN}.system_data"
+    hass_storage[storage_key] = {
+        "version": 1,
+        "key": storage_key,
+        "data": {"core": {"default_panel": "created-url-path"}},
+    }
+    user_key = f"{frontend.DOMAIN}.user_data_{hass_admin_user.id}"
+    hass_storage[user_key] = {
+        "version": 1,
+        "key": user_key,
+        "data": {"core": {"default_panel": "created-url-path"}},
+    }
+    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+    dashboard_id = await _create_dashboard(client)
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "lovelace/config/save",
+            "url_path": "created-url-path",
+            "config": {"yo": "hello"},
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "lovelace/dashboards/update",
+            "dashboard_id": dashboard_id,
+            "url_path": "renamed-url-path",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["url_path"] == "renamed-url-path"
+    assert "created-url-path" not in hass.data[frontend.DATA_PANELS]
+    assert "renamed-url-path" in hass.data[frontend.DATA_PANELS]
+    # The config is stored by dashboard id, so it moves along.
+    await client.send_json(
+        {"id": 4, "type": "lovelace/config", "url_path": "renamed-url-path"}
+    )
+    response = await client.receive_json()
+    assert response["result"] == {"yo": "hello"}
+    await client.send_json(
+        {"id": 5, "type": "lovelace/config", "url_path": "created-url-path"}
+    )
+    assert not (await client.receive_json())["success"]
+    await client.send_json({"id": 6, "type": "frontend/get_system_data", "key": "core"})
+    response = await client.receive_json()
+    assert response["result"]["value"]["default_panel"] == "renamed-url-path"
+    await client.send_json({"id": 7, "type": "frontend/get_user_data", "key": "core"})
+    response = await client.receive_json()
+    assert response["result"]["value"]["default_panel"] == "renamed-url-path"
+
+
+@pytest.mark.parametrize(
+    ("update", "error"),
+    [
+        pytest.param({"url_path": "path"}, "invalid_format", id="no_hyphen"),
+        pytest.param(
+            {"url_path": "other-url-path"}, "home_assistant_error", id="in_use"
+        ),
+    ],
+)
+async def test_storage_dashboard_change_url_path_invalid(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    update: dict[str, Any],
+    error: str,
+) -> None:
+    """Test a dashboard can't be moved to an invalid or used url path."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+    dashboard_id = await _create_dashboard(client)
+    await _create_dashboard(client, "other-url-path", msg_id=2)
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "lovelace/dashboards/update",
+            "dashboard_id": dashboard_id,
+            **update,
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == error
+    assert "created-url-path" in hass.data[frontend.DATA_PANELS]
+
+
+async def test_storage_dashboard_change_url_path_single_word(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a dashboard can move to a single word url path when allowed."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+    dashboard_id = await _create_dashboard(client)
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "lovelace/dashboards/update",
+            "dashboard_id": dashboard_id,
+            "url_path": "garden",
+            "allow_single_word": True,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["url_path"] == "garden"
+    assert "allow_single_word" not in response["result"]
+    assert "garden" in hass.data[frontend.DATA_PANELS]
+
+
+async def test_default_dashboard_url_path_cannot_change(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the migrated default dashboard keeps its url path."""
+    hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
+        "version": 1,
+        "key": dashboard.CONFIG_STORAGE_KEY_DEFAULT,
+        "data": {"config": {"views": [{"title": "Home"}]}},
+    }
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 1, "type": "lovelace/dashboards/list"})
+    dashboard_id = (await client.receive_json())["result"][0]["id"]
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "lovelace/dashboards/update",
+            "dashboard_id": dashboard_id,
+            "url_path": "home-dashboard",
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["translation_key"] == "default_url_path_change"
+    assert "lovelace" in hass.data[frontend.DATA_PANELS]
+
+
+async def test_storage_dashboard_change_url_path_keeps_other_defaults(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a rename leaves default panels of other dashboards alone."""
+    for key in (
+        f"{frontend.DOMAIN}.system_data",
+        f"{frontend.DOMAIN}.user_data_{hass_admin_user.id}",
+    ):
+        hass_storage[key] = {
+            "version": 1,
+            "key": key,
+            "data": {"core": {"default_panel": "other-url-path"}},
+        }
+    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+    dashboard_id = await _create_dashboard(client)
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "lovelace/dashboards/update",
+            "dashboard_id": dashboard_id,
+            "url_path": "renamed-url-path",
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    await client.send_json({"id": 3, "type": "frontend/get_system_data", "key": "core"})
+    response = await client.receive_json()
+    assert response["result"]["value"]["default_panel"] == "other-url-path"
+    await client.send_json({"id": 4, "type": "frontend/get_user_data", "key": "core"})
+    response = await client.receive_json()
+    assert response["result"]["value"]["default_panel"] == "other-url-path"
+
+
+async def test_storage_dashboard_update_same_url_path(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test an update with the current url path keeps the panel."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+    dashboard_id = await _create_dashboard(client)
+
+    with patch.object(frontend, "async_remove_panel") as mock_remove_panel:
+        await client.send_json(
+            {
+                "id": 2,
+                "type": "lovelace/dashboards/update",
+                "dashboard_id": dashboard_id,
+                "url_path": "created-url-path",
+                "title": "Renamed",
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    mock_remove_panel.assert_not_called()
+    assert hass.data[frontend.DATA_PANELS]["created-url-path"].sidebar_title == (
+        "Renamed"
+    )
+
+
+async def test_storage_dashboard_change_url_path_after_conflict(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a dashboard blocked by a YAML dashboard registers after a rename."""
+    hass_storage[dashboard.DASHBOARDS_STORAGE_KEY] = {
+        "version": 1,
+        "key": dashboard.DASHBOARDS_STORAGE_KEY,
+        "data": {
+            "items": [
+                {
+                    "id": "created_url_path",
+                    "url_path": "created-url-path",
+                    "title": "Storage",
+                    "mode": "storage",
+                    "require_admin": False,
+                    "show_in_sidebar": True,
+                }
+            ]
+        },
+    }
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "dashboards": {
+                    "created-url-path": {
+                        "mode": "yaml",
+                        "filename": "bla.yaml",
+                        "title": "YAML",
+                    }
+                }
+            }
+        },
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "lovelace/dashboards/update",
+            "dashboard_id": "created_url_path",
+            "url_path": "renamed-url-path",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert hass.data[frontend.DATA_PANELS]["renamed-url-path"].config == {
+        "mode": "storage"
+    }
+    assert hass.data[frontend.DATA_PANELS]["created-url-path"].config == {
+        "mode": "yaml"
+    }

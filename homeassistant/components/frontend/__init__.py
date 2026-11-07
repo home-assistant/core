@@ -46,6 +46,7 @@ from .services import async_setup_services
 from .storage import (
     async_setup_frontend_storage,
     async_system_store as async_system_store,
+    async_user_store as async_user_store,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -129,6 +130,7 @@ __all__ = [
     "async_register_built_in_panel",
     "async_remove_panel",
     "async_system_store",
+    "async_user_store",
     "remove_extra_js_url",
 ]
 

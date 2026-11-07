@@ -214,6 +214,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if hass.config.recovery_mode:
         return True
 
+    # A renamed dashboard is still registered under its previous url path.
+    storage_url_paths: dict[str, str] = {}
+
     async def storage_dashboard_changed(
         change_type: str, item_id: str, item: dict
     ) -> None:
@@ -221,6 +224,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         url_path = item[CONF_URL_PATH]
 
         if change_type == collection.CHANGE_REMOVED:
+            storage_url_paths.pop(item_id, None)
             frontend.async_remove_panel(hass, url_path)
             await hass.data[LOVELACE_DATA].dashboards.pop(url_path).async_delete()
             # Re-register default lovelace panel if the "lovelace" dashboard was deleted
@@ -244,9 +248,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
             update = False
+        elif item_id not in storage_url_paths:
+            # Not registered at startup because its url path was taken; a new
+            # url path is free, so register it there now.
+            if url_path in hass.data[LOVELACE_DATA].dashboards:
+                return
+            hass.data[LOVELACE_DATA].dashboards[url_path] = dashboard.LovelaceStorage(
+                hass, item
+            )
+            update = False
         else:
-            hass.data[LOVELACE_DATA].dashboards[url_path].config = item
-            update = True
+            dashboards = hass.data[LOVELACE_DATA].dashboards
+            old_url_path = storage_url_paths[item_id]
+            update = old_url_path == url_path
+            if not update:
+                frontend.async_remove_panel(hass, old_url_path)
+                dashboards[url_path] = dashboards.pop(old_url_path)
+                await _async_update_default_panel(hass, old_url_path, url_path)
+            dashboards[url_path].config = item
+
+        storage_url_paths[item_id] = url_path
 
         try:
             _register_panel(hass, url_path, MODE_STORAGE, item, update)
@@ -300,6 +321,29 @@ def _async_ensure_default_panel(hass: HomeAssistant) -> None:
     """Ensure a default lovelace panel is registered for backward compatibility."""
     if not frontend.async_panel_exists(hass, DOMAIN):
         frontend.async_register_built_in_panel(hass, DOMAIN)
+
+
+async def _async_update_default_panel(
+    hass: HomeAssistant, old_url_path: str, url_path: str
+) -> None:
+    """Point default panels to the new url path of a renamed dashboard."""
+
+    def moved(data: dict[str, Any]) -> dict[str, Any] | None:
+        core_data = data.get("core")
+        if core_data and core_data.get("default_panel") == old_url_path:
+            return {**core_data, "default_panel": url_path}
+        return None
+
+    system_store = await frontend.async_system_store(hass)
+    if core_data := moved(system_store.data):
+        await system_store.async_set_item("core", core_data)
+    # A user's own default panel goes before the system one.
+    for user in await hass.auth.async_get_users():
+        if user.system_generated:
+            continue
+        user_store = await frontend.async_user_store(hass, user.id)
+        if core_data := moved(user_store.data):
+            await user_store.async_set_item("core", core_data)
 
 
 @callback
