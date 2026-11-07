@@ -40,8 +40,17 @@
   },
   "entity": {
     "binary_sensor": {
+      "air_conditioning": {
+        "name": "Air conditioning"
+      },
+      "auxiliary_heating": {
+        "name": "Auxiliary heating"
+      },
       "bonnet": {
         "name": "Hood"
+      },
+      "charging_cable": {
+        "name": "Charging cable"
       },
       "doors": {
         "name": "Doors"

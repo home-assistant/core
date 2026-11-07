@@ -15,6 +15,7 @@
         "chargingRateInKilometersPerHour": 0.0,
         "chargePowerInKw": 0.0,
         "state": "CONSERVING",
+        "plugConnectionState": "CONNECTED",
         "chargeType": "OFF",
         "battery": {
           "remainingCruisingRangeInMeters": 61000,
