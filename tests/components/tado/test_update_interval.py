@@ -149,15 +149,22 @@ async def test_rate_limited_update_waits_instead_of_polling(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_empty_me_with_quota_nearly_used_waits(
+async def test_empty_reply_waits_and_keeps_zones_and_devices(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """python-tado 0.18 returns {} for an empty 429 reply; treat it as a used-up quota."""
+    """python-tado 0.18 returns {} for an empty 429 reply; wait, keep the lists."""
     coordinator = _coordinator(hass)
-    coordinator._last_remaining = _calls_per_cycle(coordinator)
-    with patch.object(coordinator._tado, "get_me", return_value={}) as get_me:
+    zones, devices = coordinator.zones, coordinator.devices
+    with (
+        patch.object(coordinator._tado, "get_me", return_value={}) as get_me,
+        patch.object(coordinator._tado, "get_zones", return_value={}),
+        patch.object(coordinator._tado, "get_devices", return_value={}),
+    ):
         await _tick(hass, freezer, coordinator.update_interval)
         assert not coordinator.last_update_success
+        assert coordinator.zones == zones
+        assert coordinator.devices == devices
+
         await _tick(hass, freezer, SCAN_INTERVAL)
         assert get_me.call_count == 1
         await _tick(hass, freezer, QUOTA_RETRY - SCAN_INTERVAL)
@@ -165,20 +172,53 @@ async def test_empty_me_with_quota_nearly_used_waits(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_cached_reset_seconds_are_not_applied_twice(
+async def test_rate_limit_in_a_later_stage_waits(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """A rate-limit reading kept from an earlier 429 does not move the reset again."""
+    """A 429 after the preload (zone states) gets the same quota back-off."""
     coordinator = _coordinator(hass)
-    reading = {"remaining": "0", "reset-seconds": "7200"}
-    start = dt_util.utcnow()
-    coordinator._learn_quota_reset(start, reading, 0)
-    assert coordinator._quota_reset == start + timedelta(hours=2)
+    with (
+        patch.object(
+            coordinator._tado, "get_zone_states", side_effect=TadoException
+        ) as get_zone_states,
+        patch.object(
+            coordinator._tado,
+            "rate_limit_info",
+            return_value={"remaining": "0", "reset-seconds": "1800"},
+        ),
+    ):
+        await _tick(hass, freezer, coordinator.update_interval)
+        assert not coordinator.last_update_success
+        assert get_zone_states.call_count == 1
 
-    # After the wait, a timeout leaves the same cached reading behind
-    later = start + timedelta(hours=2, minutes=1)
-    coordinator._learn_quota_reset(later, dict(reading), 0)
-    assert coordinator._quota_reset == start + timedelta(hours=2) + QUOTA_WINDOW
+        await _tick(hass, freezer, SCAN_INTERVAL)
+        assert get_zone_states.call_count == 1
+        await _tick(hass, freezer, timedelta(minutes=31) - SCAN_INTERVAL)
+        assert get_zone_states.call_count == 2
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_timeout_after_the_reset_does_not_add_a_day(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A cached zero-quota reading after the reset must not push the next try a day out."""
+    coordinator = _coordinator(hass)
+    reading = {"remaining": "0", "reset-seconds": "1800"}
+    with (
+        patch.object(
+            coordinator._tado, "get_me", side_effect=RequestException
+        ) as get_me,
+        patch.object(coordinator._tado, "rate_limit_info", return_value=reading),
+    ):
+        # The 429: wait for the reset
+        await _tick(hass, freezer, coordinator.update_interval)
+        assert get_me.call_count == 1
+        # After the reset a timeout leaves the same cached reading behind
+        await _tick(hass, freezer, timedelta(minutes=31))
+        assert get_me.call_count == 2
+        # ... which is a normal failure: the next try comes at the usual pace
+        await _tick(hass, freezer, coordinator.update_interval)
+        assert get_me.call_count == 3
 
 
 @pytest.mark.usefixtures("init_integration")

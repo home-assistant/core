@@ -111,32 +111,22 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
         try:
-            (
-                tado_home_call,
-                self.zones,
-                self.devices,
-            ) = await self.hass.async_add_executor_job(_load_tado_data)
+            tado_home_call, zones, devices = await self.hass.async_add_executor_job(
+                _load_tado_data
+            )
         except (RequestException, TadoException) as err:
-            _LOGGER.debug("Checking rate limit")
-            ratelimit = self.get_rate_limit()
-            if _as_int(ratelimit.get("remaining")) == 0:
-                raise UpdateFailed(
-                    f"Tado API rate limit reached: {err}",
-                    retry_after=self._quota_retry_after(ratelimit),
-                ) from err
-            raise UpdateFailed(f"Error during Tado setup: {err}") from err
+            raise self._update_failed("Error during Tado setup", err) from err
 
-        if not tado_home_call.get("homes"):
+        if not tado_home_call:
             # python-tado 0.18 turns the empty body of a 429 reply into {}
-            if (
-                self._last_remaining is not None
-                and self._last_remaining <= self._calls_per_cycle()
-            ):
-                raise UpdateFailed(
-                    "Tado returned no home data, the API quota is likely used up",
-                    retry_after=self._quota_retry_after({"remaining": "0"}),
-                )
+            raise UpdateFailed(
+                "Tado returned no data, the API quota is likely used up",
+                retry_after=self._quota_retry_seconds(dt_util.utcnow()),
+            )
+        if not tado_home_call.get("homes"):
             raise UpdateFailed("Tado returned no home data")
+        self.zones = zones
+        self.devices = devices
 
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
@@ -187,14 +177,21 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     def _learn_quota_reset(
-        self, now: datetime, rate_limit: dict[str, Any], remaining: int | None
-    ) -> None:
+        self,
+        now: datetime,
+        rate_limit: dict[str, Any],
+        remaining: int | None,
+        *,
+        roll: bool = True,
+    ) -> bool:
         """Track when this account's daily quota resets.
 
         The reset time differs per account. It is taken from the seconds-to-reset
         value when the library provides one, or learned when the remaining count
         goes up between two polls. The library keeps the last rate-limit reading
         after a failed call, so only a changed reading counts as new information.
+        A passed reset is only rolled forward (roll) after a successful update.
+        Return whether the reading was new.
         """
         fresh = rate_limit != self._last_rate_limit
         self._last_rate_limit = dict(rate_limit)
@@ -203,7 +200,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if fresh and reset_in is not None:
             # An explicit countdown is the next reset, even when it is due now
             self._quota_reset = now + timedelta(seconds=max(reset_in, 0))
-        else:
+        elif roll:
             while self._quota_reset is not None and self._quota_reset <= now:
                 self._quota_reset += QUOTA_WINDOW
 
@@ -229,6 +226,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if remaining is not None:
             self._last_remaining = remaining
         self._last_quota_check = now
+        return fresh
 
     def _calls_per_cycle(self) -> int:
         """Return the API calls one update cycle makes."""
@@ -236,11 +234,32 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # one call per device (temperature offset) and one per zone (default overlay)
         return 7 + len(self.devices) + len(self.zones)
 
-    def _quota_retry_after(self, rate_limit: dict[str, Any]) -> float:
-        """Learn from a used-up quota reading and return the seconds to wait."""
+    def _quota_retry_seconds(self, now: datetime) -> float:
+        """Return the seconds to wait after a failed update with no quota left."""
+        if self._quota_reset is not None and self._quota_reset > now:
+            wait = self._quota_reset - now + timedelta(minutes=1)
+        else:
+            # Reset unknown, or passed and the quota not seen refilled yet
+            wait = QUOTA_RETRY
+        return max(SCAN_INTERVAL, wait).total_seconds()
+
+    def _update_failed(self, message: str, err: Exception) -> UpdateFailed:
+        """Return the UpdateFailed for err, delaying the retry if the quota ran out.
+
+        Only a new reading with no calls left counts: the library keeps the last
+        reading after a failed call, so a timeout must not look like a 429.
+        """
         now = dt_util.utcnow()
-        self._learn_quota_reset(now, rate_limit, 0)
-        return max(SCAN_INTERVAL, self._wait_for_quota(now)).total_seconds()
+        rate_limit = self.get_rate_limit()
+        remaining = _as_int(rate_limit.get("remaining"))
+        if self._learn_quota_reset(now, rate_limit, remaining, roll=False) and (
+            remaining == 0
+        ):
+            return UpdateFailed(
+                f"Tado API rate limit reached: {err}",
+                retry_after=self._quota_retry_seconds(now),
+            )
+        return UpdateFailed(f"{message}: {err}")
 
     def _time_until_quota_reset(self, now: datetime) -> timedelta:
         """Return the time to the next quota reset (a full window if not known yet)."""
@@ -300,8 +319,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             devices = await self.hass.async_add_executor_job(self._tado.get_devices)
-        except RequestException as err:
-            raise UpdateFailed(f"Error updating Tado devices: {err}") from err
+        except (RequestException, TadoException) as err:
+            raise self._update_failed("Error updating Tado devices", err) from err
 
         if not devices:
             raise UpdateFailed(f"No linked devices found for home ID {self.home_id}")
@@ -346,8 +365,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._tado.get_zone_states
             )
             zone_states = zone_states_call["zoneStates"]
-        except RequestException as err:
-            raise UpdateFailed(f"Error updating Tado zones: {err}") from err
+        except (RequestException, TadoException) as err:
+            raise self._update_failed("Error updating Tado zones", err) from err
 
         mapped_zones: dict[int, TadoZone] = {}
         for zone_id_str, raw_state in zone_states.items():
@@ -363,8 +382,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             overlay_default = await self.hass.async_add_executor_job(
                 self._tado.get_zone_overlay_default, zone_id
             )
-        except RequestException as err:
-            raise UpdateFailed(f"Error updating Tado zone {zone_id}: {err}") from err
+        except (RequestException, TadoException) as err:
+            raise self._update_failed(
+                f"Error updating Tado zone {zone_id}", err
+            ) from err
 
         data = TadoZone.from_data(zone_id, {**raw_state, **overlay_default})
         _LOGGER.debug("Zone %s updated, with data: %s", zone_id, data)
@@ -377,8 +398,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data = await self.hass.async_add_executor_job(
                 self._tado.get_zone_state, zone_id
             )
-        except RequestException as err:
-            raise UpdateFailed(f"Error updating Tado zone {zone_id}: {err}") from err
+        except (RequestException, TadoException) as err:
+            raise self._update_failed(
+                f"Error updating Tado zone {zone_id}", err
+            ) from err
 
         _LOGGER.debug("Zone %s updated, with data: %s", zone_id, data)
         return data
@@ -392,8 +415,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             weather, geofence = await self.hass.async_add_executor_job(_get_home_data)
-        except RequestException as err:
-            raise UpdateFailed(f"Error updating Tado home: {err}") from err
+        except (RequestException, TadoException) as err:
+            raise self._update_failed("Error updating Tado home", err) from err
 
         _LOGGER.debug(
             "Home data updated, with weather and geofence data: %s, %s",
@@ -567,8 +590,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             circuits, controls = await self.hass.async_add_executor_job(_load_circuits)
-        except RequestException as err:
-            raise UpdateFailed(f"Error updating Tado heating circuits: {err}") from err
+        except (RequestException, TadoException) as err:
+            raise self._update_failed(
+                "Error updating Tado heating circuits", err
+            ) from err
 
         self.heating_circuits = {
             circuit["driverShortSerialNo"]: circuit for circuit in circuits
