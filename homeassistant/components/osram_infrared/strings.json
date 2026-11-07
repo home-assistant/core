@@ -21,5 +21,81 @@
         "title": "Set up OSRAM infrared light"
       }
     }
+  },
+  "entity": {
+    "button": {
+      "brightness_down": {
+        "name": "Brightness down"
+      },
+      "brightness_up": {
+        "name": "Brightness up"
+      },
+      "flash": {
+        "name": "Flash"
+      },
+      "hue_000": {
+        "name": "Red"
+      },
+      "hue_015": {
+        "name": "Red orange"
+      },
+      "hue_030": {
+        "name": "Orange"
+      },
+      "hue_045": {
+        "name": "Amber"
+      },
+      "hue_060": {
+        "name": "Yellow"
+      },
+      "hue_120": {
+        "name": "Green"
+      },
+      "hue_135": {
+        "name": "Emerald"
+      },
+      "hue_150": {
+        "name": "Spring green"
+      },
+      "hue_165": {
+        "name": "Turquoise"
+      },
+      "hue_180": {
+        "name": "Cyan"
+      },
+      "hue_240": {
+        "name": "Blue"
+      },
+      "hue_255": {
+        "name": "Indigo"
+      },
+      "hue_270": {
+        "name": "Violet"
+      },
+      "hue_285": {
+        "name": "Purple"
+      },
+      "hue_300": {
+        "name": "Magenta"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "off": {
+        "name": "Off"
+      },
+      "on": {
+        "name": "On"
+      },
+      "smooth": {
+        "name": "Smooth"
+      },
+      "strobe": {
+        "name": "Strobe"
+      },
+      "white": {
+        "name": "White"
+      }
+    }
   }
 }
