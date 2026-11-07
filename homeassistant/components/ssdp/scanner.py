@@ -56,6 +56,7 @@ PRIMARY_MATCH_KEYS = [
 
 _LOGGER = logging.getLogger(__name__)
 
+_ROOT_DEVICE = "upnp:rootdevice"
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
 type SsdpHassJobCallback = HassJob[
@@ -591,9 +592,6 @@ def discovery_info_from_headers_and_description(
         upnp=upnp_info,
         ssdp_all_locations=set(ssdp_device.locations),
     )
-
-
-_ROOT_DEVICE = "upnp:rootdevice"
 
 
 def _description_is_stale(

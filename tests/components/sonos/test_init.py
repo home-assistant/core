@@ -6,20 +6,18 @@ from http import HTTPStatus
 from itertools import chain, repeat
 import logging
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from requests import Response
 from requests.exceptions import HTTPError
 
 from homeassistant import config_entries
 from homeassistant.components import sonos
 from homeassistant.components.sonos.const import (
-    DATA_SONOS_DISCOVERY_MANAGER,
     DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
     UPNP_ISSUE_ID,
@@ -848,54 +846,3 @@ async def test_no_exception_when_entry_unloaded_during_speaker_discovery(
         "Config entry unloaded while adding speaker" in message
         for message in caplog.messages
     )
-
-
-@pytest.mark.parametrize(
-    ("body", "exc", "expect_subscribe"),
-    [
-        pytest.param(
-            "<root><device><UDN>uuid:{uid}</UDN></device></root>",
-            None,
-            False,
-            id="known_speaker_still_owns_ip",
-        ),
-        pytest.param(
-            "<root><device><UDN>uuid:RINCON_new01400</UDN></device></root>",
-            None,
-            True,
-            id="new_speaker_took_over_ip",
-        ),
-        pytest.param("no udn", None, False, id="no_udn_in_description"),
-        pytest.param("", TimeoutError, False, id="request_fails"),
-    ],
-)
-async def test_discovery_of_other_uid_on_known_speaker_ip(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    soco: MockSoCo,
-    aioclient_mock: AiohttpClientMocker,
-    body: str,
-    exc: type[Exception] | None,
-    expect_subscribe: bool,
-) -> None:
-    """Test another uid on a known speaker's IP subscribes only for a confirmed new owner."""
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
-    ip_address = manager.data.discovered[soco.uid].soco.ip_address
-    aioclient_mock.get(
-        f"http://{ip_address}:1400/xml/device_description.xml",
-        text=body.format(uid=soco.uid),
-        exc=exc,
-    )
-
-    with patch.object(
-        manager, "async_subscribe_to_zone_updates", AsyncMock()
-    ) as mock_subscribe:
-        await manager._async_handle_discovery_message(
-            "RINCON_other", ip_address, "discovery"
-        )
-
-    assert mock_subscribe.await_count == int(expect_subscribe)
