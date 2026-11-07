@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "The host now belongs to a different TrueNAS system than the configured one."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -11,6 +12,15 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::truenas_ce::config::step::user::data_description::api_key%]"
+        },
+        "description": "TrueNAS rejected the API key of {name}. Enter a new API key."
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",

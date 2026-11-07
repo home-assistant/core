@@ -19,7 +19,7 @@ from aiotruenas import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, ERRNAME_PERMISSION_DENIED
@@ -75,7 +75,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[TrueNASData]):
             interfaces = await self.system.get_network_interfaces()
             stats = await self.system.get_system_stats(info)
         except TrueNASAuthenticationError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except TrueNASError as err:

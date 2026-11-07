@@ -172,3 +172,89 @@ async def test_flow_already_configured_system(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_truenas_system")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_truenas_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entering a new API key."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+    assert result["description_placeholders"] == {"name": "truenas"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "2-new"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {**USER_INPUT, CONF_API_KEY: "2-new"}
+    mock_truenas_client.assert_called_with("192.168.1.10", "2-new", verify_ssl=False)
+    mock_truenas_client.return_value.close.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_truenas_client")
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (TrueNASAuthenticationError("rejected"), "invalid_auth"),
+        (TrueNASCallError("denied", errname="EACCES"), "permission_denied"),
+        (TrueNASConnectionRefusedError("refused"), "cannot_connect"),
+        (RuntimeError("boom"), "unknown"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_truenas_system: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test errors while entering a new API key and the recovery from them."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_truenas_system.get_system_id.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "2-new"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_truenas_system.get_system_id.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "2-new"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "2-new"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_other_system(
+    hass: HomeAssistant,
+    mock_truenas_client: MagicMock,
+    mock_truenas_system: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a host that now belongs to another system is aborted."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_truenas_system.get_system_id.return_value = "another-system-id"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "2-new"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_API_KEY] == "1-abcdef"
+    mock_truenas_client.return_value.close.assert_awaited_once()

@@ -181,33 +181,43 @@ async def async_setup_entry(
 ) -> None:
     """Set up TrueNAS sensors."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        TrueNASSensor(coordinator, description)
-        for description in SYSTEM_SENSORS
-        if description.exists_fn(coordinator.data)
-    )
-
+    known_system_sensors: set[str] = set()
     known_interfaces: set[str] = set()
 
     @callback
-    def _async_add_new_interfaces() -> None:
-        """Add traffic sensors for interfaces that are new or whose link came up."""
+    def _async_add_new_sensors() -> None:
+        """Add system sensors whose data appeared and traffic sensors for new links.
+
+        A traffic sensor is added for an interface that is new or whose link
+        came up, a system sensor once its data exists (e.g. a temperature).
+        """
+        new_descriptions = [
+            description
+            for description in SYSTEM_SENSORS
+            if description.key not in known_system_sensors
+            and description.exists_fn(coordinator.data)
+        ]
+        known_system_sensors.update(description.key for description in new_descriptions)
         new_interfaces = {
             interface_id
             for interface_id, interface in coordinator.data.interfaces.items()
             if interface.link_up is not False
         } - known_interfaces
-        if not new_interfaces:
-            return
         known_interfaces.update(new_interfaces)
-        async_add_entities(
+
+        entities = [
+            TrueNASSensor(coordinator, description) for description in new_descriptions
+        ]
+        entities.extend(
             TrueNASSensor(coordinator, description, interface_id)
             for interface_id in sorted(new_interfaces)
             for description in INTERFACE_SENSORS
         )
+        if entities:
+            async_add_entities(entities)
 
-    _async_add_new_interfaces()
-    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_interfaces))
+    _async_add_new_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_sensors))
 
 
 class TrueNASSensor(TrueNASEntity, SensorEntity):
