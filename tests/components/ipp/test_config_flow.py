@@ -179,7 +179,9 @@ async def test_user_parse_error(
     mock_ipp_config_flow: MagicMock,
 ) -> None:
     """Test we abort user flow on IPP parse error."""
-    mock_ipp_config_flow.printer.side_effect = IPPParseError
+    mock_ipp_config_flow.printer.side_effect = IPPParseError(
+        "TypeError: unhashable type: 'list'"
+    )
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
@@ -192,6 +194,9 @@ async def test_user_parse_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "parse_error"
+    assert result["description_placeholders"] == {
+        "error": "TypeError: unhashable type: 'list'"
+    }
 
 
 async def test_zeroconf_parse_error(
@@ -199,7 +204,9 @@ async def test_zeroconf_parse_error(
     mock_ipp_config_flow: MagicMock,
 ) -> None:
     """Test we abort zeroconf flow on IPP parse error."""
-    mock_ipp_config_flow.printer.side_effect = IPPParseError
+    mock_ipp_config_flow.printer.side_effect = IPPParseError(
+        "TypeError: unhashable type: 'list'"
+    )
 
     discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     result = await hass.config_entries.flow.async_init(
@@ -210,6 +217,9 @@ async def test_zeroconf_parse_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "parse_error"
+    assert result["description_placeholders"] == {
+        "error": "TypeError: unhashable type: 'list'"
+    }
 
 
 async def test_user_ipp_error(
