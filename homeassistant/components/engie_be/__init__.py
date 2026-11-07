@@ -9,7 +9,7 @@ from aioengiebelgium import EngieBeAuthenticationError, EngieBeClient, EngieBeEr
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, async_noop, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -124,6 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
     epex: EngieBeEpexCoordinator | None = None
     if any(household.is_dynamic is not False for household in households.values()):
         epex = EngieBeEpexCoordinator(hass, entry, client)
+        entry.async_on_unload(epex.async_add_listener(async_noop))
 
     await asyncio.gather(
         *(household.prices.async_refresh() for household in households.values())

@@ -36,7 +36,8 @@ from homeassistant.components.engie_be.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
@@ -249,20 +250,60 @@ def build_epex_payload_with_partial_tomorrow(
     return build_epex_payload(start, end, granularity)
 
 
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return a mock config entry."""
+def build_epex_payload_with_negative_current(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Build a payload whose slot covering the frozen afternoon is negative."""
+    payload = build_epex_payload(start, end, granularity)
+    afternoon = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
+    return EpexPayload(
+        slots=tuple(
+            EpexSlot(
+                start=slot.start,
+                end=slot.end,
+                value_eur_per_kwh=-0.05
+                if slot.start <= afternoon < slot.end
+                else slot.value_eur_per_kwh,
+            )
+            for slot in payload.slots
+        ),
+        slot_duration=payload.slot_duration,
+    )
+
+
+def build_config_entry(
+    unique_id: str = SUBJECT, access_token: str = "access-token"
+) -> MockConfigEntry:
+    """Build a mock config entry for one ENGIE Belgium account."""
     return MockConfigEntry(
         domain=DOMAIN,
         title=EMAIL,
-        unique_id=SUBJECT,
+        unique_id=unique_id,
         data={
             CONF_EMAIL: EMAIL,
             CONF_MFA_METHOD: "sms",
-            CONF_ACCESS_TOKEN: "access-token",
+            CONF_ACCESS_TOKEN: access_token,
             CONF_REFRESH_TOKEN: "refresh-token",
         },
     )
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mock config entry."""
+    return build_config_entry()
+
+
+def configure_client(client: MagicMock, auth_flow: MagicMock) -> None:
+    """Give a mocked ENGIE Belgium client the default responses."""
+    client.async_get_customer_account_relations.return_value = build_relations()
+    client.async_get_prices.return_value = build_prices()
+    client.async_get_service_point.side_effect = build_service_point
+    client.async_get_energy_contracts.return_value = build_contracts()
+    client.async_get_epex_prices.side_effect = build_epex_payload
+    client.async_start_authentication.return_value = auth_flow
 
 
 @pytest.fixture
@@ -277,13 +318,7 @@ def mock_engie_client(mock_auth_flow: MagicMock) -> Generator[MagicMock]:
             new=mock_client_class,
         ),
     ):
-        client = mock_client_class.return_value
-        client.async_get_customer_account_relations.return_value = build_relations()
-        client.async_get_prices.return_value = build_prices()
-        client.async_get_service_point.side_effect = build_service_point
-        client.async_get_energy_contracts.return_value = build_contracts()
-        client.async_get_epex_prices.side_effect = build_epex_payload
-        client.async_start_authentication.return_value = mock_auth_flow
+        configure_client(mock_client_class.return_value, mock_auth_flow)
         yield mock_client_class
 
 
@@ -329,3 +364,21 @@ async def setup_dynamic_entry(
         build_contracts(dynamic=True)
     )
     await setup_entry(hass, mock_config_entry)
+
+
+def automation_calls(service_calls: list[ServiceCall]) -> list[ServiceCall]:
+    """Return the recorded calls of the test automation action."""
+    return [call for call in service_calls if call.domain == "test"]
+
+
+def household_device_id(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    ban: str = BAN,
+) -> str:
+    """Return the device id of the household of the BAN."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ban), mock_config_entry.entry_id
+    )
+    assert device is not None
+    return device.id
