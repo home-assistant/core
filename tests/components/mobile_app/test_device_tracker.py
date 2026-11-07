@@ -102,10 +102,10 @@ async def setup_zone(hass: HomeAssistant) -> None:
             "School",
         ),
         # Send location_name only
-        ({"location_name": "home"}, {"in_zones": []}, "home"),
-        ({"location_name": "office"}, {"in_zones": []}, "Office"),
-        ({"location_name": "school"}, {"in_zones": []}, "School"),
-        ({"location_name": "no_such_zone"}, {"in_zones": []}, "no_such_zone"),
+        ({"location_name": "home"}, {}, "home"),
+        ({"location_name": "office"}, {}, "Office"),
+        ({"location_name": "school"}, {}, "School"),
+        ({"location_name": "no_such_zone"}, {}, "no_such_zone"),
         # Send coordinates only - location is determined by coordinates
         (
             {"gps": [10, 20]},
@@ -428,7 +428,6 @@ async def test_restoring_location(
                 "course": 60,
                 "speed": 70,
                 "vertical_accuracy": 80,
-                "in_zones": [],
                 "tracking_type": "position",
             },
             {
@@ -601,7 +600,6 @@ async def test_saving_state(
                 "course": 60,
                 "speed": 70,
                 "vertical_accuracy": 80,
-                "in_zones": [],
                 "tracking_type": "position",
             },
         ),
@@ -759,7 +757,6 @@ async def test_restoring_state(
                 "course": 60,
                 "speed": 70,
                 "vertical_accuracy": 80,
-                "in_zones": [],
                 "tracking_type": "position",
             },
         ),
@@ -860,6 +857,5 @@ async def test_restoring_state_invalid_extra_data(
     assert state.attributes == {
         "friendly_name": "Test 1",
         "source_type": "gps",
-        "in_zones": [],
         "tracking_type": "position",
     }
