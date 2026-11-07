@@ -1,7 +1,8 @@
 """Support for Hass.io."""
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import AsyncIterator, Coroutine
+from contextlib import aclosing
 from functools import partial
 import logging
 import os
@@ -12,6 +13,7 @@ from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import (
     GreenOptions,
     HomeAssistantOptions,
+    LogsOptions,
     SupervisorOptions,
     YellowOptions,
 )
@@ -107,11 +109,9 @@ from .coordinator import (
 from .discovery import async_setup_discovery_view
 from .exceptions import HassioNotReadyError
 from .handler import (
-    HassioAPIError,
     async_update_diagnostics,
     get_supervisor_client,
     get_supervisor_connection,
-    get_supervisor_passthrough_client,
 )
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
@@ -159,10 +159,6 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 NETWORK_RELOAD_COOLDOWN = 10
-
-# Journal lines read for the log stream, on slow system reading can be as slow as ~1 s per 1,000
-CORE_LOG_LINES = 5000
-CORE_LOG_TIMEOUT = 30
 
 
 DEPRECATION_URL = (
@@ -357,21 +353,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         return False
 
-    async def _async_read_core_log() -> list[str]:
-        """Return the end of the log of Home Assistant since it started."""
-        supervisor = get_supervisor_passthrough_client(hass)
+    async def _async_read_core_log(lines: int) -> AsyncIterator[str]:
+        """Stream the last lines of the log of Home Assistant since it started."""
+        client = get_supervisor_client(hass)
         try:
-            text: str = await supervisor.send_command(
-                "/core/logs/latest",
-                method="get",
-                return_text=True,
-                timeout=CORE_LOG_TIMEOUT,
-                params={"lines": CORE_LOG_LINES},
+            stream = await client.homeassistant.logs(
+                LogsOptions(lines=lines), latest=True
             )
-        except HassioAPIError as err:
+            async with aclosing(stream):
+                async for line in stream:
+                    yield line
+        except SupervisorError as err:
             _LOGGER.debug("Could not read the Home Assistant log: %s", err)
-            return []
-        return text.splitlines()
 
     # Without a log file, Home Assistant only logs to the Supervisor journal
     async_register_log_reader(hass, _async_read_core_log)
