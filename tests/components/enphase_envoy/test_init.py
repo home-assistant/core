@@ -1154,12 +1154,13 @@ async def test_coordinator_background_task_start(
 
 
 @respx.mock
+@patch("homeassistant.components.enphase_envoy.Envoy", autospec=True)
 async def test_init_no_solar(
+    mocked_envoy: Envoy,
     hass: HomeAssistant,
-    mock_envoy: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test envoy options used at load."""
+    """Test envoy options are passed to class at load."""
     caplog.set_level(logging.DEBUG)
 
     token = envoy_token()
@@ -1177,13 +1178,22 @@ async def test_init_no_solar(
             CONF_NO_SOLAR: True,
         },
     )
+    entry.add_to_hass(hass)
 
-    await setup_integration(hass, entry)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # load will fail as mock is incomplete
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
+    # verify class instantatiation was called with expected parameters
+    args, kwargs = mocked_envoy.call_args
+    assert args[0] == "1.1.1.1"
+    assert kwargs["envoy_options"] == EnvoyOptions.NO_SOLAR | EnvoyOptions.V2_ACB_MODE
     assert (
         f"Using options: {EnvoyOptions.V2_ACB_MODE.name} {EnvoyOptions.NO_SOLAR.name} for Envoy Envoy 1234"
         in caplog.text
     )
+    caplog.clear()
 
     hass.config_entries.async_update_entry(
         entry,
@@ -1198,8 +1208,13 @@ async def test_init_no_solar(
     )
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert entry.state is ConfigEntryState.LOADED
+    # load will fail as mock is incomplete
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
+    # verify class instantatiation was called with expected parameters
+    args, kwargs = mocked_envoy.call_args
+    assert args[0] == "1.1.1.1"
+    assert kwargs["envoy_options"] == EnvoyOptions.V2_ACB_MODE
     assert (
         f"Using options: {EnvoyOptions.V2_ACB_MODE.name}  for Envoy Envoy 1234"
         in caplog.text
