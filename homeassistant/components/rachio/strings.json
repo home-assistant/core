@@ -57,6 +57,9 @@
     },
     "no_devices_found": {
       "message": "No Rachio devices found in the account"
+    },
+    "polling_paused": {
+      "message": "Only {remaining} Rachio API calls are left for today, so polling is paused until {resume}. Choose a longer polling interval in the integration options to avoid this."
     }
   },
   "options": {
@@ -64,6 +67,20 @@
       "init": {
         "data": {
           "manual_run_mins": "Duration in minutes to run when activating a zone switch"
+        },
+        "sections": {
+          "polling": {
+            "data": {
+              "poll_enabled": "Poll the controller for changes",
+              "poll_interval": "Polling interval"
+            },
+            "data_description": {
+              "poll_enabled": "Rachio normally pushes changes to Home Assistant using webhooks, which requires Home Assistant to be reachable from the internet. Turn this on if your Home Assistant installation is not reachable from the internet, or you do not see zones or schedules start and stop that were run outside of Home Assistant, for example from the Rachio mobile app.",
+              "poll_interval": "How often to ask Rachio what is running, in minutes. The shortest allowed interval is {min_interval} minutes for the {controller_count} controller(s) on your account."
+            },
+            "description": "Polling every {interval} minutes uses about {controller_calls} API calls per day. Together with any smart hose timers on your account, about {total_calls} of the {daily_limit} API calls Rachio allows each day would be used.\n\nThe limit is shared by Home Assistant, the Rachio app and anything else using your API key, and commands you send from Home Assistant also count, so the shortest interval keeps polling to 90% of the limit.",
+            "name": "Polling"
+          }
         }
       }
     }

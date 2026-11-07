@@ -248,6 +248,17 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     hass.config_entries.options.async_abort(result["flow_id"])
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_options_flow_without_controllers(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test polling is not offered when the account has no controllers."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert [str(key) for key in result["data_schema"].schema] == [CONF_MANUAL_RUN_MINS]
+
+
 async def test_reauth(hass: HomeAssistant) -> None:
     """Test reauth updates the API key and unique ID."""
     entry = MockConfigEntry(

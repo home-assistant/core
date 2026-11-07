@@ -17,7 +17,16 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_CLOUDHOOK_URL, CONF_MANUAL_RUN_MINS, DOMAIN
+from .const import (
+    CONF_CLOUDHOOK_URL,
+    CONF_MANUAL_RUN_MINS,
+    CONF_POLL_ENABLED,
+    CONF_POLL_INTERVAL,
+    CONF_POLLING,
+    DEFAULT_POLL_INTERVAL,
+    DOMAIN,
+)
+from .coordinator import RachioControllerUpdateCoordinator, min_poll_interval
 from .device import RachioConfigEntry, RachioPerson
 from .services import async_setup_services
 from .webhooks import (
@@ -112,6 +121,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> No
     for base in person.base_stations:
         await base.status_coordinator.async_config_entry_first_refresh()
         await base.schedule_coordinator.async_config_entry_first_refresh()
+
+    # Webhooks need Home Assistant to be reachable from the internet
+    polling = options.get(CONF_POLLING, {})
+    if polling.get(CONF_POLL_ENABLED):
+        interval = max(
+            polling.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL),
+            min_poll_interval(
+                len(person.controllers), len(person.base_stations), person.rate_limit
+            ),
+        )
+        for controller in person.controllers:
+            controller.poll_coordinator = RachioControllerUpdateCoordinator(
+                hass, rachio, entry, controller.controller_id, interval
+            )
+            await controller.poll_coordinator.async_config_entry_first_refresh()
 
     # Enable platform
     entry.runtime_data = person
