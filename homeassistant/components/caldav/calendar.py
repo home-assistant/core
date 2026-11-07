@@ -1,17 +1,26 @@
 """Support for WebDav Calendar."""
 
-from datetime import datetime
+from collections.abc import Callable
+from datetime import date, datetime
 from functools import partial
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
+from caldav.calendarobjectresource import Event
 from caldav.davclient import DAVClient
-from caldav.lib.error import DAVError
+from caldav.lib.error import DAVError, NotFoundError
 from caldav.lib.http_sync import requests as caldav_requests
+import icalendar
 import probatio
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
+    EVENT_DESCRIPTION,
+    EVENT_END,
+    EVENT_LOCATION,
+    EVENT_RRULE,
+    EVENT_START,
+    EVENT_SUMMARY,
     PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
     CalendarEntity,
     CalendarEntityFeature,
@@ -26,7 +35,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import (
@@ -38,7 +47,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CalDavConfigEntry
 from .api import async_get_calendar_color, async_get_calendars
-from .const import TIMEOUT
+from .const import DOMAIN, TIMEOUT
 from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +63,8 @@ CONFIG_ENTRY_DEFAULT_DAYS = 7
 
 # Only allow VCALENDARs that support this component type
 SUPPORTED_COMPONENT = "VEVENT"
+
+THIS_AND_FUTURE = "THISANDFUTURE"
 
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
@@ -191,7 +202,11 @@ async def async_setup_entry(
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    _attr_supported_features = CalendarEntityFeature.CREATE_EVENT
+    _attr_supported_features = (
+        CalendarEntityFeature.CREATE_EVENT
+        | CalendarEntityFeature.DELETE_EVENT
+        | CalendarEntityFeature.UPDATE_EVENT
+    )
 
     def __init__(
         self,
@@ -271,6 +286,67 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         ) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
+    @override
+    async def async_update_event(
+        self,
+        uid: str,
+        event: dict[str, Any],
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Update an event, a recurring one as a whole."""
+        item = await self._async_get_event(uid)
+        series = _get_series(item.icalendar_instance)
+        _check_whole_event(series, recurrence_id, recurrence_range)
+        _set_fields(series, event)
+        await self._async_save(item)
+        await self.coordinator.async_request_refresh()
+
+    @override
+    async def async_delete_event(
+        self,
+        uid: str,
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Delete an event, a recurring one as a whole."""
+        item = await self._async_get_event(uid)
+        _check_whole_event(
+            _get_series(item.icalendar_instance), recurrence_id, recurrence_range
+        )
+        await self._async_call(item.delete)
+        await self.coordinator.async_request_refresh()
+
+    async def _async_save(self, item: Event) -> None:
+        """Save a changed event with all its components."""
+        # Otherwise save() merges just the first component into the stored
+        # event when that one is an override
+        await self._async_call(partial(item.save, only_this_recurrence=False))
+
+    async def _async_get_event(self, uid: str) -> Event:
+        """Fetch the CalDAV object holding an event and its overrides."""
+        return cast(
+            Event,
+            await self._async_call(self.coordinator.calendar.get_event_by_uid, uid),
+        )
+
+    async def _async_call[_T](self, target: Callable[..., _T], *args: Any) -> _T:
+        """Run a CalDAV request in the executor."""
+        try:
+            return await self.hass.async_add_executor_job(target, *args)
+        except NotFoundError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="event_not_found"
+            ) from err
+        except (
+            caldav_requests.exceptions.ConnectionError,
+            caldav_requests.exceptions.Timeout,
+            DAVError,
+        ) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="request_error"
+            ) from err
+
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
@@ -292,3 +368,57 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
+
+
+def _get_series(calendar: icalendar.Calendar) -> icalendar.Event:
+    """Return the main component of an event, which may follow its overrides."""
+    components = calendar.walk("VEVENT")
+    return next(
+        (component for component in components if "RECURRENCE-ID" not in component),
+        components[0],
+    )
+
+
+def _check_whole_event(
+    series: icalendar.Event, recurrence_id: str | None, recurrence_range: str | None
+) -> None:
+    """Refuse changes to single occurrences of a recurring event.
+
+    A change from the first occurrence on is a change to the whole event. The
+    recurrence id is the occurrence start as the coordinator formats it.
+    """
+    if not recurrence_id:
+        return
+    start: date | datetime
+    try:
+        start = date.fromisoformat(recurrence_id)
+    except ValueError:
+        start = datetime.fromisoformat(recurrence_id)
+    if (
+        recurrence_range != THIS_AND_FUTURE
+        or "RECURRENCE-ID" in series
+        or start > series.DTSTART
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="occurrence_not_supported"
+        )
+
+
+def _set_fields(series: icalendar.Event, event: dict[str, Any]) -> None:
+    """Set the fields of an update, keeping any field it leaves out."""
+    for key in (
+        EVENT_SUMMARY,
+        EVENT_START,
+        EVENT_END,
+        EVENT_DESCRIPTION,
+        EVENT_LOCATION,
+    ):
+        if key in event:
+            series.pop(key)
+            if value := event[key]:
+                series.add(key, value)
+    # DTEND is always set, so the event must not keep a DURATION
+    series.pop("DURATION")
+    if rrule := event.get(EVENT_RRULE):
+        series.pop("RRULE")
+        series.add("RRULE", icalendar.vRecur.from_ical(rrule))

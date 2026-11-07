@@ -1,0 +1,97 @@
+# serializer version: 1
+# name: test_update_event[override_listed_first-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Weekly moved
+  DTSTART;TZID=America/New_York:20261116T100000
+  DTEND;TZID=America/New_York:20261116T103000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RECURRENCE-ID;TZID=America/New_York:20261116T090000
+  END:VEVENT
+  BEGIN:VEVENT
+  SUMMARY:Weekly renamed
+  DTSTART;TZID=America/New_York:20261026T090000
+  DTEND;TZID=America/New_York:20261026T093000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=WEEKLY;COUNT=8
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[series_from_first_occurrence-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Daily
+  DTSTART;TZID=America/New_York:20261026T080000
+  DTEND;TZID=America/New_York:20261026T083000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RRULE:FREQ=DAILY;COUNT=3
+  DESCRIPTION:Team sync
+  BEGIN:VALARM
+  ACTION:DISPLAY
+  DESCRIPTION:Reminder
+  TRIGGER:-PT15M
+  END:VALARM
+  END:VEVENT
+  BEGIN:VEVENT
+  SUMMARY:Weekly moved
+  DTSTART;TZID=America/New_York:20261116T100000
+  DTEND;TZID=America/New_York:20261116T103000
+  DTSTAMP:20261001T000000Z
+  UID:series
+  RECURRENCE-ID;TZID=America/New_York:20261116T090000
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[series_keeps_rrule-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Long holiday
+  DTSTART;VALUE=DATE:20261120
+  DTEND;VALUE=DATE:20261122
+  DTSTAMP:20261101T000000Z
+  UID:all-day-series
+  RRULE:FREQ=DAILY;COUNT=5
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[single-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Dentist moved
+  DTSTART;TZID=America/New_York:20261111T090000
+  DTEND;TZID=America/New_York:20261111T100000
+  DTSTAMP:20261101T000000Z
+  UID:single
+  LOCATION:Second street
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---

@@ -11,13 +11,14 @@ import zoneinfo
 from caldav.calendarobjectresource import Event
 from caldav.elements import ical
 from caldav.elements.base import BaseElement
-from caldav.lib.error import DAVError
+from caldav.lib.error import DAVError, NotFoundError
 from caldav.lib.http_sync import requests as caldav_requests
 from caldav.lib.url import URL
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.typing import ClientSessionGenerator
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.caldav.api import async_get_calendars
 from homeassistant.components.caldav.const import DOMAIN
@@ -312,6 +313,11 @@ ASIA_BAGHDAD = "Asia/Baghdad"
 
 TEST_ENTITY = "calendar.example"
 CALENDAR_NAME = "Example"
+SUPPORTED_FEATURES = (
+    CalendarEntityFeature.CREATE_EVENT
+    | CalendarEntityFeature.DELETE_EVENT
+    | CalendarEntityFeature.UPDATE_EVENT
+)
 
 
 @pytest.fixture
@@ -523,7 +529,7 @@ async def test_ongoing_event(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -548,7 +554,7 @@ async def test_just_ended_event(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -573,7 +579,7 @@ async def test_ongoing_event_different_tz(
         "description": "Sunny day",
         "end_time": "2017-11-27 17:30:00",
         "location": "San Francisco",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -598,7 +604,7 @@ async def test_ongoing_floating_event_returned(
         "end_time": "2017-11-27 20:00:00",
         "location": "Hamburg",
         "description": "What a day",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -623,7 +629,7 @@ async def test_ongoing_event_with_offset(
         "end_time": "2017-11-27 11:00:00",
         "location": "Hamburg",
         "description": "Surprisingly shiny",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -664,7 +670,7 @@ async def test_matching_filter(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -706,7 +712,7 @@ async def test_matching_filter_real_regexp(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -739,7 +745,7 @@ async def test_filter_matching_past_event(
     assert dict(state.attributes) == {
         "friendly_name": CALENDAR_NAME,
         "offset_reached": False,
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -771,7 +777,7 @@ async def test_no_result_with_filtering(
     assert dict(state.attributes) == {
         "friendly_name": CALENDAR_NAME,
         "offset_reached": False,
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -829,7 +835,7 @@ async def test_all_day_event(
         "end_time": "2017-11-28 00:00:00",
         "location": "Hamburg",
         "description": "What a beautiful day",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -854,7 +860,7 @@ async def test_event_rrule(
         "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
         "description": "Every day for a while",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -879,7 +885,7 @@ async def test_event_rrule_ongoing(
         "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
         "description": "Every day for a while",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -904,7 +910,7 @@ async def test_event_rrule_duration(
         "end_time": "2017-11-27 23:30:00",
         "location": "Hamburg",
         "description": "Every day for a while as well",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -929,7 +935,7 @@ async def test_event_rrule_duration_ongoing(
         "end_time": "2017-11-27 23:30:00",
         "location": "Hamburg",
         "description": "Every day for a while as well",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -954,7 +960,7 @@ async def test_event_rrule_endless(
         "end_time": "2017-11-27 23:59:59",
         "location": "Hamburg",
         "description": "Every day forever",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -1014,7 +1020,7 @@ async def test_event_rrule_all_day_early(
         "end_time": "2016-12-02 00:00:00",
         "location": "Hamburg",
         "description": "Groundhog Day",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -1039,7 +1045,7 @@ async def test_event_rrule_hourly_on_first(
         "end_time": "2015-11-27 00:30:00",
         "location": "Hamburg",
         "description": "The bell tolls for thee",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -1064,7 +1070,7 @@ async def test_event_rrule_hourly_on_last(
         "end_time": "2015-11-27 11:30:00",
         "location": "Hamburg",
         "description": "The bell tolls for thee",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -1334,7 +1340,7 @@ async def test_setup_config_entry(
         "end_time": "2017-11-28 00:00:00",
         "location": "Hamburg",
         "description": "What a beautiful day",
-        "supported_features": CalendarEntityFeature.CREATE_EVENT,
+        "supported_features": SUPPORTED_FEATURES,
     }
 
 
@@ -1689,3 +1695,355 @@ async def test_add_vevent(
     calendars[0].add_event.assert_called_once()
     assert calendars[0].add_event.call_args
     assert calendars[0].add_event.call_args[1] == expected_ics_fields
+
+
+SINGLE_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+BEGIN:VEVENT
+UID:single
+DTSTAMP:20261101T000000Z
+DTSTART:20261110T150000Z
+DTEND:20261110T160000Z
+SUMMARY:Dentist
+DESCRIPTION:Bring the card
+LOCATION:Main street
+END:VEVENT
+END:VCALENDAR
+"""
+
+SERIES_MAIN = """BEGIN:VEVENT
+UID:series
+DTSTAMP:20261001T000000Z
+DTSTART;TZID=America/New_York:20261026T090000
+DTEND;TZID=America/New_York:20261026T093000
+RRULE:FREQ=WEEKLY;COUNT=8
+SUMMARY:Weekly
+DESCRIPTION:Team sync
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT15M
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+"""
+SERIES_OVERRIDE = """BEGIN:VEVENT
+UID:series
+DTSTAMP:20261001T000000Z
+RECURRENCE-ID;TZID=America/New_York:20261116T090000
+DTSTART;TZID=America/New_York:20261116T100000
+DTEND;TZID=America/New_York:20261116T103000
+SUMMARY:Weekly moved
+END:VEVENT
+"""
+# Weekly from before the end of daylight saving time, with one occurrence moved
+SERIES_ICS = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+{SERIES_MAIN}{SERIES_OVERRIDE}END:VCALENDAR
+"""
+SERIES_OVERRIDE_FIRST_ICS = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+{SERIES_OVERRIDE}{SERIES_MAIN}END:VCALENDAR
+"""
+
+ALL_DAY_SERIES_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+BEGIN:VEVENT
+UID:all-day-series
+DTSTAMP:20261101T000000Z
+DTSTART;VALUE=DATE:20261120
+DURATION:P1D
+RRULE:FREQ=DAILY;COUNT=5
+SUMMARY:Holiday
+END:VEVENT
+END:VCALENDAR
+"""
+
+# An invitation to one occurrence of a series that is held by someone else
+INVITATION_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+BEGIN:VEVENT
+UID:invitation
+DTSTAMP:20261101T000000Z
+RECURRENCE-ID:20261102T150000Z
+DTSTART:20261102T150000Z
+DTEND:20261102T160000Z
+SUMMARY:Review
+END:VEVENT
+END:VCALENDAR
+"""
+
+# Recurrence ids as the integration returns them for occurrences of SERIES_ICS
+FIRST_OCCURRENCE = "2026-10-26 09:00:00-04:00"
+SECOND_OCCURRENCE = "2026-11-02 09:00:00-05:00"
+
+
+@pytest.fixture(name="stored_event")
+def mock_stored_event(calendars: list[Mock], ics: str) -> Event:
+    """Fixture to return a CalDAV object the calendar finds by UID."""
+    client = MagicMock()
+    client.url = URL("http://test.local/")
+    client.put.return_value.status = 204
+    client.delete.return_value.status = 204
+    stored_event = Event(client, "event.ics", ics, calendars[0])
+    calendars[0].get_event_by_uid = MagicMock(return_value=stored_event)
+    return stored_event
+
+
+@pytest.fixture(name="setup_config_entry")
+async def mock_setup_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Fixture to set up the calendar from a config entry."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+
+async def _ws_call(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, **msg: Any
+) -> dict[str, Any]:
+    """Send a websocket command for the test entity and return the response."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"entity_id": TEST_ENTITY, **msg})
+    return await client.receive_json()
+
+
+@pytest.mark.parametrize("tz", [AMERICA_NEW_YORK])
+@pytest.mark.parametrize(
+    ("ics", "uid", "recurrence_id", "event"),
+    [
+        pytest.param(
+            SINGLE_ICS,
+            "single",
+            "",
+            {
+                "summary": "Dentist moved",
+                "dtstart": "2026-11-11T09:00:00",
+                "dtend": "2026-11-11T10:00:00",
+                "description": "",
+                "location": "Second street",
+            },
+            id="single",
+        ),
+        pytest.param(
+            ALL_DAY_SERIES_ICS,
+            "all-day-series",
+            "",
+            {"summary": "Long holiday", "dtstart": "2026-11-20", "dtend": "2026-11-22"},
+            id="series_keeps_rrule",
+        ),
+        pytest.param(
+            SERIES_ICS,
+            "series",
+            FIRST_OCCURRENCE,
+            {
+                "summary": "Daily",
+                "dtstart": "2026-10-26T08:00:00",
+                "dtend": "2026-10-26T08:30:00",
+                "rrule": "FREQ=DAILY;COUNT=3",
+            },
+            id="series_from_first_occurrence",
+        ),
+        pytest.param(
+            SERIES_OVERRIDE_FIRST_ICS,
+            "series",
+            FIRST_OCCURRENCE,
+            {
+                "summary": "Weekly renamed",
+                "dtstart": "2026-10-26T09:00:00",
+                "dtend": "2026-10-26T09:30:00",
+            },
+            id="override_listed_first",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_update_event(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    calendars: list[Mock],
+    stored_event: Event,
+    snapshot: SnapshotAssertion,
+    uid: str,
+    recurrence_id: str,
+    event: dict[str, Any],
+) -> None:
+    """Test updating an event or a whole series."""
+    response = await _ws_call(
+        hass,
+        hass_ws_client,
+        type="calendar/event/update",
+        uid=uid,
+        recurrence_id=recurrence_id,
+        recurrence_range="THISANDFUTURE",
+        event=event,
+    )
+
+    assert response["success"]
+    calendars[0].get_event_by_uid.assert_called_once_with(uid)
+    assert stored_event.client.put.call_args.args[1] == snapshot
+
+
+@pytest.mark.parametrize(
+    ("ics", "uid", "recurrence_id"),
+    [
+        pytest.param(SINGLE_ICS, "single", "", id="single"),
+        pytest.param(SERIES_ICS, "series", FIRST_OCCURRENCE, id="series"),
+    ],
+)
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_delete_event(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    calendars: list[Mock],
+    stored_event: Event,
+    uid: str,
+    recurrence_id: str,
+) -> None:
+    """Test deleting an event or a whole series."""
+    response = await _ws_call(
+        hass,
+        hass_ws_client,
+        type="calendar/event/delete",
+        uid=uid,
+        recurrence_id=recurrence_id,
+        recurrence_range="THISANDFUTURE",
+    )
+
+    assert response["success"]
+    calendars[0].get_event_by_uid.assert_called_once_with(uid)
+    stored_event.client.delete.assert_called_once_with(str(stored_event.url))
+    stored_event.client.put.assert_not_called()
+
+
+UPDATE = {
+    "type": "calendar/event/update",
+    "event": {
+        "summary": "Changed",
+        "dtstart": "2026-11-02T10:00:00",
+        "dtend": "2026-11-02T10:30:00",
+    },
+}
+DELETE = {"type": "calendar/event/delete"}
+
+
+@pytest.mark.parametrize("msg", [UPDATE, DELETE], ids=["update", "delete"])
+@pytest.mark.parametrize(
+    ("ics", "uid", "recurrence_id", "recurrence_range"),
+    [
+        pytest.param(SERIES_ICS, "series", SECOND_OCCURRENCE, "", id="occurrence"),
+        pytest.param(
+            SERIES_ICS,
+            "series",
+            SECOND_OCCURRENCE,
+            "THISANDFUTURE",
+            id="this_and_future",
+        ),
+        pytest.param(
+            ALL_DAY_SERIES_ICS, "all-day-series", "2026-11-20", "", id="all_day"
+        ),
+        pytest.param(
+            INVITATION_ICS,
+            "invitation",
+            "2026-11-02 15:00:00+00:00",
+            "THISANDFUTURE",
+            id="invitation",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_occurrence_not_supported(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    stored_event: Event,
+    msg: dict[str, Any],
+    uid: str,
+    recurrence_id: str,
+    recurrence_range: str,
+) -> None:
+    """Test single occurrences of a recurring event cannot be changed yet."""
+    response = await _ws_call(
+        hass,
+        hass_ws_client,
+        uid=uid,
+        recurrence_id=recurrence_id,
+        recurrence_range=recurrence_range,
+        **msg,
+    )
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "failed",
+        "message": (
+            "A recurring event can only be changed or deleted as a whole, "
+            "from its first occurrence"
+        ),
+    }
+    stored_event.client.put.assert_not_called()
+    stored_event.client.delete.assert_not_called()
+
+
+UPDATE_SINGLE = {**UPDATE, "uid": "single"}
+DELETE_SINGLE = {**DELETE, "uid": "single"}
+
+
+@pytest.mark.parametrize("ics", [SINGLE_ICS])
+@pytest.mark.parametrize(
+    "msg", [UPDATE_SINGLE, DELETE_SINGLE], ids=["update", "delete"]
+)
+@pytest.mark.parametrize(
+    ("side_effect", "message"),
+    [
+        (NotFoundError(), "The event was not found on the CalDAV server"),
+        (DAVError(), "Error talking to the CalDAV server"),
+        (
+            caldav_requests.exceptions.ConnectionError(),
+            "Error talking to the CalDAV server",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_event_lookup_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    calendars: list[Mock],
+    stored_event: Event,
+    msg: dict[str, Any],
+    side_effect: Exception,
+    message: str,
+) -> None:
+    """Test errors while looking up the event to change."""
+    calendars[0].get_event_by_uid.side_effect = side_effect
+
+    response = await _ws_call(hass, hass_ws_client, **msg)
+
+    assert not response["success"]
+    assert response["error"] == {"code": "failed", "message": message}
+
+
+@pytest.mark.parametrize("ics", [SINGLE_ICS])
+@pytest.mark.parametrize(
+    "msg", [UPDATE_SINGLE, DELETE_SINGLE], ids=["update", "delete"]
+)
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_event_write_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    stored_event: Event,
+    msg: dict[str, Any],
+) -> None:
+    """Test the server refusing a change."""
+    stored_event.client.put.return_value.status = 500
+    stored_event.client.delete.return_value.status = 500
+
+    response = await _ws_call(hass, hass_ws_client, **msg)
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "failed",
+        "message": "Error talking to the CalDAV server",
+    }

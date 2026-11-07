@@ -44,6 +44,15 @@
     }
   },
   "exceptions": {
+    "event_not_found": {
+      "message": "The event was not found on the CalDAV server"
+    },
+    "occurrence_not_supported": {
+      "message": "A recurring event can only be changed or deleted as a whole, from its first occurrence"
+    },
+    "request_error": {
+      "message": "Error talking to the CalDAV server"
+    },
     "unexpected_response": {
       "message": "Unexpected response from the CalDAV server"
     }
