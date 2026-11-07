@@ -1832,7 +1832,11 @@ URL_ERROR = b"rtsps://user:secret@cam:7441/token: Connection refused\n"
             id="fails_before_output",
         ),
         pytest.param(
-            b"", b"", 0, "Recording ffmpeg ended without video", id="no_output"
+            b"",
+            b"End of file\n",
+            0,
+            "Recording ffmpeg ended without video: End of file",
+            id="no_output",
         ),
         pytest.param(
             INIT_SEGMENT, b"", 0, "Recording ffmpeg ended without video", id="init_only"
@@ -2301,24 +2305,40 @@ async def test_camera_secure_video_turned_off_new_session_keeps_slot(
     assert _streaming_status(acc) == STREAM_STREAMING
 
 
+@pytest.mark.parametrize(
+    ("first", "rest"),
+    [
+        pytest.param(
+            b"rtsps://user:secret@cam" + b"x" * 2**17,
+            b"ret@cam:7441/token\nmore output\n",
+            id="newline_arrives_later",
+        ),
+        pytest.param(
+            b"rtsps://user:secret@cam/token" + b"x" * 2**17 + b"\nmore output\n",
+            b"",
+            id="newline_in_buffer",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("no_state_file", "recording_transport")
 async def test_camera_secure_video_recording_long_stderr_line(
     hass: HomeAssistant,
     run_driver: HomeDriver,
     recording_ffmpeg: MagicMock,
     caplog: pytest.LogCaptureFixture,
+    first: bytes,
+    rest: bytes,
 ) -> None:
-    """Test the tail of an overlong ffmpeg line is dropped, later lines are read."""
+    """Test an overlong ffmpeg line is dropped and the next line is still read."""
     stderr = asyncio.StreamReader()
-    # The line arrives in chunks, so the reader drops it before its newline.
-    stderr.feed_data(b"rtsps://user:secret@cam" + b"x" * 2**17)
+    stderr.feed_data(first)
     _ffmpeg_output(recording_ffmpeg, _closed_pipe(INIT_SEGMENT + FRAGMENT), stderr)
     acc = await _recording_camera(hass, run_driver)
 
     with caplog.at_level(logging.DEBUG):
         recording = acc.handle_recording_stream(1)
         assert (await anext(recording)).data == INIT_SEGMENT
-        stderr.feed_data(b"ret@cam:7441/token\nmore output\n")
+        stderr.feed_data(rest)
         stderr.feed_eof()
         # Let the stderr reader catch up before the recording ends.
         await asyncio.sleep(0)

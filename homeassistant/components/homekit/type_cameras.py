@@ -883,9 +883,10 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 "[%s] Recording ffmpeg did not exit after its output ended"
             )
             return True
+        # Both a failure and a recording without video report the last lines.
+        await asyncio.wait({stderr_task}, timeout=RECORDING_STDERR_DRAIN_SECONDS)
         if not returncode:
             return False
-        await asyncio.wait({stderr_task}, timeout=RECORDING_STDERR_DRAIN_SECONDS)
         self._log_recording_problem(
             "[%s] Recording ffmpeg exited with %s: %s",
             returncode,
@@ -900,10 +901,13 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         skip_line = False
         while True:
             try:
-                raw = await reader.readline()
-            except ValueError:
-                # The reader dropped a line over its limit, the next read can be its
-                # tail, where a URL would no longer match the redaction.
+                raw = await reader.readuntil(b"\n")
+            except asyncio.IncompleteReadError as err:
+                raw = err.partial
+            except asyncio.LimitOverrunError as err:
+                # Drop the part over the limit and skip the rest of its line, where
+                # a URL would no longer match the redaction.
+                await reader.readexactly(err.consumed)
                 lines.append("<line too long>")
                 skip_line = True
                 continue
