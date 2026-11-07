@@ -139,7 +139,7 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
 }
 
-# Energy log parameters (S-series) that report the energy of a rolling one hour
+# Energy measurement parameters (S-series) that report the energy of a rolling one hour
 # window. Their value can go down, so they must not use total_increasing.
 PAST_HOUR_ENERGY_PARAMETER_IDS = frozenset(
     {
@@ -219,7 +219,7 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
 
     Priorities:
     1. Category specific prefix e.g "NIBEF"
-    2. Rolling one hour energy parameters in the energy log
+    2. Rolling one hour energy parameters in the energy measurement category
     3. Global parameter_unit e.g. "°C"
     4. Default to None
     """
@@ -229,9 +229,10 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
     description = CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(
         device_point.parameter_id
     )
+    # The API returns this category with a soft hyphen (U+00AD) inside the word.
     if (
         description is None
-        and device_point.category.lower() == "energy log"
+        and device_point.category.replace("\u00ad", "").lower() == "energy measurement"
         and device_point.parameter_id in PAST_HOUR_ENERGY_PARAMETER_IDS
         and device_point.parameter_unit == "kWh"
     ):

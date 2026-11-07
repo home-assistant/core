@@ -17,7 +17,7 @@ from . import setup_integration
 def _energy_point(
     parameter_id: str,
     name: str,
-    category: str = "Energy Log",
+    category: str = "Energy measure\u00adment",
 ) -> DevicePoint:
     """Return an energy device point."""
     return DevicePoint(
