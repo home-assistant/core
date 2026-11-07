@@ -1701,6 +1701,73 @@ async def test_coordinator_rate_periods_survive_deleted_account_total(
     ]
 
 
+async def test_coordinator_rate_periods_start_at_window_when_backfill_is_empty(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test a period starts at the incremental reads when the backfill is empty.
+
+    The full history can have a read that does not add up where the recent
+    window does not, so the backfill writes nothing for a new period. The
+    period must then start from zero at the recent reads, now and on later
+    refreshes, instead of staying empty until Home Assistant restarts.
+    """
+    hour = [dt_util.as_utc(datetime(2023, 1, 1, 8 + i)) for i in range(4)]
+
+    def read(index: int, adds_up: bool = True, components: bool = True) -> CostRead:
+        return CostRead(
+            start_time=hour[index],
+            end_time=hour[index] + timedelta(hours=1),
+            consumption=1.0,
+            provided_cost=0.25 if adds_up else 0.5,
+            read_components=[_read_component("ON_PEAK", 1.0, 0.25)]
+            if components
+            else [],
+        )
+
+    def mock_get_cost_reads(account, aggregate_type, start, end):
+        if start is None:
+            # Full history: an old read does not add up, so no hourly read feeds
+            # the periods from it
+            return [read(0, adds_up=False), read(1), read(2), read(3)]
+        return [read(1), read(2), read(3)]
+
+    account = mock_opower_api.async_get_accounts.return_value[0]
+    account.read_resolution = ReadResolution.BILLING
+    mock_opower_api.async_get_accounts.return_value = [account]
+    # First run without components, so only the totals exist
+    mock_opower_api.async_get_cost_reads.return_value = [
+        read(0, components=False),
+        read(1, components=False),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    mock_opower_api.async_get_cost_reads.side_effect = mock_get_cost_reads
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    on_peak_id = "opower:pge_elec_111111_on_peak_energy_consumption"
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {on_peak_id},
+        "hour",
+        None,
+        {"sum"},
+    )
+    assert [(s["start"], s["sum"]) for s in stats[on_peak_id]] == [
+        (hour[1].timestamp(), 1.0),
+        (hour[2].timestamp(), 2.0),
+        (hour[3].timestamp(), 3.0),
+    ]
+
+
 async def test_coordinator_rate_periods_skip_empty_periods(
     recorder_mock: Recorder,
     hass: HomeAssistant,

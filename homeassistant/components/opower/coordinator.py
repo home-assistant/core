@@ -615,6 +615,16 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                         if rate_period.last_stats_time[kind] is None
                         and not rate_period.statistics[kind]
                     )
+                # A statistic the full history could not fill, now or on an
+                # earlier refresh, starts from zero at the incremental reads
+                # instead, which may add up where the longer history did not.
+                for rate_period in rate_periods.values():
+                    for kind, metadata in rate_period.metadata.items():
+                        if (
+                            rate_period.last_stats_time[kind] is None
+                            and metadata["statistic_id"] in self._rate_period_backfills
+                        ):
+                            rate_period.last_stats_time[kind] = 0.0
                 self._add_rate_period_statistics(period_reads, rate_periods, False)
 
             cost_statistics = []
