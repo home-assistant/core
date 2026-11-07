@@ -175,6 +175,7 @@ def recording_ffmpeg_args(
     video = selected.video
     attributes = video.attributes[0]
     video_codec = config[CONF_VIDEO_CODEC]
+    input_args = shlex.split(with_input_flag(input_source))
     if video_codec == VIDEO_CODEC_COPY:
         # Fragments follow the camera GOP, the camera sets the keyframe interval.
         video_args = f"-map {config[CONF_VIDEO_MAP]} -c:v copy"
@@ -188,14 +189,24 @@ def recording_ffmpeg_args(
                 f"-level:v {RECORDING_LEVELS[int(video.level)]} "
                 "-preset veryfast -tune zerolatency "
             )
+        # A second -vf would replace source filters such as a flip, so they run first.
+        filters = []
+        for flag in ("-vf", "-filter:v"):
+            while flag in input_args:
+                index = input_args.index(flag)
+                filters.append(input_args[index + 1])
+                del input_args[index : index + 2]
+        # The hub expects exactly the selected size, other aspect ratios are padded.
+        filters.append(
+            f"scale={attributes.width}:{attributes.height}:"
+            "force_original_aspect_ratio=decrease:force_divisible_by=2,"
+            f"pad={attributes.width}:{attributes.height}:(ow-iw)/2:(oh-ih)/2,setsar=1"
+        )
         video_args = (
             f"-map {config[CONF_VIDEO_MAP]} -c:v {video_codec} "
             f"-profile:v {config[CONF_VIDEO_PROFILE_NAMES][int(video.profile)]} "
             f"{encoder_args}-pix_fmt yuv420p "
-            # The hub expects exactly the selected size, other aspect ratios are padded.
-            f'-vf "scale={attributes.width}:{attributes.height}:'
-            "force_original_aspect_ratio=decrease:force_divisible_by=2,"
-            f'pad={attributes.width}:{attributes.height}:(ow-iw)/2:(oh-ih)/2,setsar=1" '
+            f'-vf "{",".join(filters)}" '
             f"-r {fps} -b:v {video.bitrate_kbps}k -maxrate {video.bitrate_kbps}k "
             f"-bufsize {video.bitrate_kbps * 2}k -bf 0 "
             f"-g {math.ceil(fps * iframe_seconds)} "
@@ -205,7 +216,6 @@ def recording_ffmpeg_args(
         )
     audio = selected.audio
     sample_rate = RECORDING_SAMPLE_RATES[audio.sample_rate]
-    input_source = with_input_flag(input_source)
     if audio_active and config[CONF_SUPPORT_AUDIO]:
         audio_input = ""
         audio_map = config[CONF_AUDIO_MAP]
@@ -215,13 +225,13 @@ def recording_ffmpeg_args(
             f" -f lavfi -i anullsrc=channel_layout=mono:sample_rate={sample_rate}"
         )
         # The silent input comes after all inputs of the stream source.
-        audio_map = f"{shlex.split(input_source).count('-i')}:a:0"
+        audio_map = f"{input_args.count('-i')}:a:0"
     audio_args = (
         f"-map {audio_map} -c:a aac -profile:a aac_low -ac {audio.channels} "
         f"-ar {sample_rate} -b:a {audio.max_audio_bitrate_kbps}k"
     )
     return (
-        input_source + audio_input,
+        shlex.join(input_args) + audio_input,
         f"{video_args} {audio_args} -shortest {RECORDING_OUTPUT}",
     )
 

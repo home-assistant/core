@@ -1561,6 +1561,15 @@ RECORDING_CONTAINER = (
             f"{RECORDING_TRANSCODE} -map 2:a:0 {RECORDING_AUDIO} {RECORDING_CONTAINER}",
             id="silent_audio_after_configured_inputs",
         ),
+        pytest.param(
+            {CONF_SUPPORT_AUDIO: True},
+            "-i rtsp://cam -vf hflip -filter:v crop=1920:800",
+            True,
+            "-i rtsp://cam",
+            RECORDING_TRANSCODE.replace('-vf "', '-vf "hflip,crop=1920:800,')
+            + f" -map 0:a:0 {RECORDING_AUDIO} {RECORDING_CONTAINER}",
+            id="source_filters_before_scaling",
+        ),
     ],
 )
 def test_recording_ffmpeg_args(
