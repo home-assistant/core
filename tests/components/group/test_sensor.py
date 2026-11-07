@@ -236,6 +236,63 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     assert state.attributes.get("max_entity_id") is None
 
 
+async def test_stdev_not_enough_sensor_values(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the standard deviation is unknown with a single numeric value."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": DOMAIN,
+            "name": "test_stdev",
+            "type": "stdev",
+            "ignore_non_numeric": True,
+            "entities": ["sensor.test_1", "sensor.test_2"],
+            "state_class": SensorStateClass.MEASUREMENT,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entities"]
+
+    hass.states.async_set(entity_ids[0], str(VALUES[0]))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_stdev").state == STATE_UNKNOWN
+
+    hass.states.async_set(entity_ids[1], str(VALUES[1]))
+    await hass.async_block_till_done()
+
+    assert float(hass.states.get("sensor.test_stdev").state) == pytest.approx(
+        statistics.stdev(VALUES[:2])
+    )
+
+    hass.states.async_set(entity_ids[1], STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_stdev").state == STATE_UNKNOWN
+    assert "Error while dispatching event" not in caplog.text
+
+
+async def test_stdev_single_member(hass: HomeAssistant) -> None:
+    """Test a standard deviation group with a single member sets up as unknown."""
+    hass.states.async_set("sensor.test_1", str(VALUES[0]))
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": DOMAIN,
+            "name": "test_stdev",
+            "type": "stdev",
+            "entities": ["sensor.test_1"],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_stdev").state == STATE_UNKNOWN
+
+
 @pytest.mark.parametrize(
     "sensor_type",
     ["min", "max", "mean", "median", "last", "range", "stdev", "sum", "product"],
