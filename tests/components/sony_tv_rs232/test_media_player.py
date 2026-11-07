@@ -1,9 +1,10 @@
 """Tests for the Sony TV RS-232 media player platform."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from pathlib import Path
-from unittest.mock import call
+from unittest.mock import call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -120,18 +121,20 @@ async def test_standby_poll_queries_power_only(
     mock_sony_tv.query_input_source.assert_not_awaited()
     mock_sony_tv.query_volume.assert_not_awaited()
     mock_sony_tv.query_mute.assert_not_awaited()
+    mock_sony_tv.query_sound_mode.assert_not_awaited()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
 async def test_on_poll_queries_everything(
     hass: HomeAssistant, mock_sony_tv: MockSonyTV, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test a TV that is on is polled for power, input, volume and mute.
+    """Test a TV that is on is polled for every attribute the entity shows.
 
     A query the model does not answer times out and keeps its last value.
     """
     mock_sony_tv.query_mute.side_effect = CommandTimeoutError("no answer")
     mock_sony_tv.state.volume = 35
+    mock_sony_tv.state.sound_mode = SoundMode.CUSTOM
 
     await _tick(hass, freezer, SCAN_INTERVAL)
 
@@ -139,10 +142,12 @@ async def test_on_poll_queries_everything(
     mock_sony_tv.query_input_source.assert_awaited_once()
     mock_sony_tv.query_volume.assert_awaited_once()
     mock_sony_tv.query_mute.assert_awaited_once()
+    mock_sony_tv.query_sound_mode.assert_awaited_once()
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.35
     assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is False
+    assert state.attributes[ATTR_SOUND_MODE] == "custom"
 
 
 async def test_poll_reflects_remote_changes(
@@ -266,6 +271,59 @@ async def test_push_during_poll_is_ignored(
 
     assert seen == [STATE_ON]
     assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_deferred_notification_from_poll_is_not_published(
+    hass: HomeAssistant,
+    mock_sony_tv: MockSonyTV,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the library's deferred notify from a poll query stays inside the poll.
+
+    A query reply notifies via call_soon; landing after the poll it would be
+    taken for a push, which cancels any refresh queued behind the poll.
+    """
+
+    async def remote_mute() -> bool:
+        mock_sony_tv._apply("audio_mute", True)
+        return True
+
+    mock_sony_tv.query_mute.side_effect = remote_mute
+    coordinator = mock_config_entry.runtime_data
+
+    with patch.object(
+        coordinator,
+        "async_set_updated_data",
+        wraps=coordinator.async_set_updated_data,
+    ) as pushed:
+        await _tick(hass, freezer, SCAN_INTERVAL)
+        # A deferred notify lands one loop turn after the poll task finishes.
+        await asyncio.sleep(0)
+        await hass.async_block_till_done()
+
+    pushed.assert_not_called()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_MEDIA_VOLUME_MUTED] is True
+
+
+@pytest.mark.parametrize(
+    "error", [ConnectionLostError("link lost"), OSError("write failed")]
+)
+async def test_link_drop_during_poll_marks_unavailable(
+    hass: HomeAssistant,
+    mock_sony_tv: MockSonyTV,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+) -> None:
+    """Test a link failure mid-round is an update failure, not an unexpected error."""
+    mock_sony_tv.query_volume.side_effect = error
+
+    await _tick(hass, freezer, SCAN_INTERVAL)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert _records(caplog, logging.ERROR, "Not connected to the TV") == 1
+    assert "Unexpected error" not in caplog.text
 
 
 async def test_pushed_state_updates_entity(

@@ -94,27 +94,46 @@ class SonyTVCoordinator(DataUpdateCoordinator[TVState]):
             return tv.state.copy()
         self._polling = True
         try:
-            try:
-                power = await tv.query_power()
-            except SerialKitError as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="update_failed",
-                ) from err
-            if power is PowerState.ON:
-                if self.data.power is PowerState.OFF:
-                    # Turned on with its remote: the queries below may land
-                    # while the set is still booting, so look again shortly.
-                    self._schedule_power_on_refresh()
-                for query in (tv.query_input_source, tv.query_volume, tv.query_mute):
-                    try:
-                        await query()
-                    except CommandTimeoutError, ProtocolError:
-                        # This model does not answer that one; keep the last value.
-                        continue
+            # The library defers notifications; batching delivers the round's
+            # one notification while the guard is still up.
+            with tv.batch():
+                await self._async_poll(tv)
+        except (SerialKitError, OSError) as err:
+            # The link dropped mid-round; the library reconnects on its own.
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="not_connected",
+            ) from err
         finally:
             self._polling = False
         return tv.state.copy()
+
+    async def _async_poll(self, tv: SonyTV) -> None:
+        """Query power, and the exposed attributes when the TV is on."""
+        try:
+            power = await tv.query_power()
+        except SerialKitError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from err
+        if power is not PowerState.ON:
+            return
+        if self.data.power is PowerState.OFF:
+            # Turned on with its remote: the queries below may land while the
+            # set is still booting, so look again shortly.
+            self._schedule_power_on_refresh()
+        for query in (
+            tv.query_input_source,
+            tv.query_volume,
+            tv.query_mute,
+            tv.query_sound_mode,
+        ):
+            try:
+                await query()
+            except CommandTimeoutError, ProtocolError:
+                # This model does not answer that one; keep the last value.
+                continue
 
     @callback
     def _sync_interval(self) -> None:

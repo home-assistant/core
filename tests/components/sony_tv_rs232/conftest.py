@@ -33,6 +33,7 @@ class MockSonyTV(SonyTV):
         self.query_input_source = AsyncMock(side_effect=lambda: self.state.input_source)
         self.query_volume = AsyncMock(side_effect=lambda: self.state.volume)
         self.query_mute = AsyncMock(side_effect=lambda: self.state.audio_mute)
+        self.query_sound_mode = AsyncMock(side_effect=lambda: self.state.sound_mode)
         self.power_on = AsyncMock()
         self.power_off = AsyncMock()
         self.set_volume = AsyncMock()
