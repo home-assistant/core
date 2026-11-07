@@ -10,10 +10,11 @@ from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 from renault_api.exceptions import NotAuthenticatedException, RenaultException
 from renault_api.kamereon import models
+from renault_api.kamereon.exceptions import InsufficientBatteryLevelException
 from renault_api.renault_vehicle import RenaultVehicle
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 
 if TYPE_CHECKING:
@@ -196,7 +197,28 @@ class RenaultVehicleProxy:
         self, temperature: float, when: datetime | None = None
     ) -> models.KamereonVehicleHvacStartActionData:
         """Start vehicle ac."""
-        return await self._vehicle.set_ac_start(temperature, when)
+        try:
+            return await self._vehicle.set_ac_start(temperature, when)
+        except InsufficientBatteryLevelException as err:
+            hvac_status = cast(
+                RenaultDataUpdateCoordinator[models.KamereonVehicleHvacStatusData]
+                | None,
+                self.coordinators.get("hvac_status"),
+            )
+            if (
+                hvac_status is not None
+                and hvac_status.data is not None
+                and (soc_threshold := hvac_status.data.socThreshold)
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="insufficient_battery_level_threshold",
+                    translation_placeholders={"soc_threshold": f"{soc_threshold:g}"},
+                ) from err
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="insufficient_battery_level",
+            ) from err
 
     @with_error_wrapping
     async def get_hvac_settings(self) -> models.KamereonVehicleHvacSettingsData:

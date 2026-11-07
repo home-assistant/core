@@ -8,6 +8,7 @@ import pytest
 from pytest_homeassistant.common import async_load_fixture
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import schemas
+from renault_api.kamereon.exceptions import InsufficientBatteryLevelException
 from renault_api.kamereon.models import ChargeSchedule, HvacSchedule
 from syrupy.assertion import SnapshotAssertion
 
@@ -128,6 +129,35 @@ async def test_service_set_ac_start_with_date(
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (temperature, when)
+
+
+async def test_service_set_ac_start_insufficient_battery(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test that a low battery is reported as a validation error."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = {
+        RenaultServiceArgument.VEHICLE: get_device_id(hass),
+        RenaultServiceArgument.TEMPERATURE: 13.5,
+    }
+
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.set_ac_start",
+            side_effect=InsufficientBatteryLevelException(
+                "err.func.wired.low.battery.level",
+                "Insufficient Battery Level, the minimum required is 30%",
+            ),
+        ) as mock_action,
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN, RenaultService.AC_START, service_data=data, blocking=True
+        )
+    assert err.value.translation_key == "insufficient_battery_level"
+    assert len(mock_action.mock_calls) == 1
 
 
 async def test_service_charge_start_simple(
