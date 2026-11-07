@@ -321,7 +321,10 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         _check_whole_event(
             _get_series(item.icalendar_instance), recurrence_id, recurrence_range
         )
-        await self._async_call(item.delete)
+        # Only delete the version that was checked; If-Match can't use a weak ETag
+        etag = item.etag
+        if_match = bool(etag and not etag.startswith("W/"))
+        await self._async_call(partial(item.delete, if_match=if_match))
         await self.coordinator.async_request_refresh()
 
     async def _async_save(self, item: Event) -> None:

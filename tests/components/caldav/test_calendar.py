@@ -2385,3 +2385,57 @@ async def test_update_event_changed_elsewhere(
     }
     stored_event.client.put.assert_called_once()
     assert stored_event.client.put.call_args.args[2]["if-match"] == '"read-version"'
+
+
+@pytest.mark.parametrize("ics", [SINGLE_ICS])
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_delete_event_sends_etag(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    stored_event: Event,
+) -> None:
+    """Test a delete only removes the version that was read."""
+    stored_event.props[dav.GetEtag.tag] = '"read-version"'
+
+    response = await _ws_call(hass, hass_ws_client, **DELETE_SINGLE)
+
+    assert response["success"]
+    stored_event.client.delete.assert_called_once_with(
+        str(stored_event.url), {"if-match": '"read-version"'}
+    )
+
+
+@pytest.mark.parametrize("ics", [SINGLE_ICS])
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_delete_event_changed_elsewhere(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    stored_event: Event,
+) -> None:
+    """Test a delete fails without retrying when the event changed elsewhere."""
+    stored_event.props[dav.GetEtag.tag] = '"read-version"'
+    stored_event.client.delete.return_value.status = 412
+
+    response = await _ws_call(hass, hass_ws_client, **DELETE_SINGLE)
+
+    assert response["error"] == {
+        "code": "failed",
+        "message": "Error talking to the CalDAV server",
+    }
+    stored_event.client.delete.assert_called_once()
+
+
+@pytest.mark.parametrize("ics", [SINGLE_ICS])
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_delete_event_weak_etag(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    stored_event: Event,
+) -> None:
+    """Test a weak ETag, which If-Match can't match, gives a plain delete."""
+    stored_event.props[dav.GetEtag.tag] = 'W/"read-version"'
+
+    response = await _ws_call(hass, hass_ws_client, **DELETE_SINGLE)
+
+    assert response["success"]
+    stored_event.client.delete.assert_called_once_with(str(stored_event.url))
