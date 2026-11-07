@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from typing import override
 
 from simplipy.device import Device, DeviceTypes
+from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3
 from simplipy.websocket import (
     EVENT_CONNECTION_LOST,
@@ -135,15 +136,20 @@ class SimpliSafeEntity(CoordinatorEntity[SimpliSafeDataUpdateCoordinator]):
         # the entity as available if:
         #   1. We can verify that the system is online (assuming True if we can't)
         #   2. We can verify that the entity is online
+        #   3. We can verify that the V3 sensor is online (assuming True if we can't)
         if isinstance(self._system, SystemV3):
             system_offline = self._system.offline
         else:
             system_offline = False
 
+        # Sensors only: cameras are missing from the sensor data this flag reads
+        device_offline = isinstance(self._device, SensorV3) and self._device.offline
+
         return (
             self._error_count < DEFAULT_ERROR_THRESHOLD
             and self._online
             and not system_offline
+            and not device_offline
         )
 
     @callback

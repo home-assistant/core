@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@Cereal2nd", "@brefra"],
   "config_flow": true,
+  "connectivity": ["network", "serial"],
   "dependencies": ["usb", "file_upload"],
   "documentation": "https://www.home-assistant.io/integrations/velbus",
   "integration_type": "hub",

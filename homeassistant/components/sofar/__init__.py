@@ -28,8 +28,9 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from .const import (
     CONF_UNIT_ID,
     DOMAIN,
-    METER_ENERGY,
+    FAULT_LOG,
     SCAN_INTERVAL,
+    SERVED_COMPONENTS,
     SETTINGS_SCAN_INTERVAL,
     TYPE_TCP,
 )
@@ -43,6 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -60,24 +62,6 @@ def _async_remove_stale_sensors(hass: HomeAssistant, serial: str) -> None:
     for key in _REMOVED_SENSOR_KEYS:
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{key}"
-        )
-        if entity_id is not None:
-            registry.async_remove(entity_id)
-
-
-@callback
-def _async_remove_denied_meter_energy(
-    hass: HomeAssistant, serial: str, served: frozenset[str]
-) -> None:
-    """Drop meter sensors a model denies, so they don't linger unavailable."""
-    if METER_ENERGY in served:
-        return
-    registry = er.async_get(hass)
-    for description in TOTAL_SENSOR_DESCRIPTIONS:
-        if description.component != METER_ENERGY:
-            continue
-        entity_id = registry.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
         )
         if entity_id is not None:
             registry.async_remove(entity_id)
@@ -106,6 +90,26 @@ def _async_seed_high_water_marks(
         description.total_fn(device).seed(float(extra.native_value))
 
 
+@callback
+def _async_store_served(
+    hass: HomeAssistant, entry: SofarConfigEntry, served: frozenset[str]
+) -> None:
+    """Remember what the inverter serves for a setup it sleeps through."""
+    if (stored := sorted(served)) != entry.data.get(SERVED_COMPONENTS):
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, SERVED_COMPONENTS: stored}
+        )
+
+
+async def _async_refresh_versions(hass: HomeAssistant, entry: SofarConfigEntry) -> None:
+    """Read the firmware versions a setup without the inverter missed."""
+    readings = entry.runtime_data.readings
+    await readings.device.async_read_identity()
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=readings.device_info
+    )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sofar integration."""
     async_setup_services(hass)
@@ -125,7 +129,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         entry.data[CONF_UNIT_ID],
     )
 
-    device = SofarInverter(unit, serial_number=serial)
+    device = SofarInverter(
+        unit,
+        serial_number=serial,
+        has_fault_log=FAULT_LOG in entry.data.get(SERVED_COMPONENTS, ()),
+    )
     _async_seed_high_water_marks(hass, serial, device)
 
     readings = SofarDataUpdateCoordinator(
@@ -158,28 +166,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
             err,
         )
 
-        @callback
-        def _async_reload_once_answered() -> None:
-            """Set up again in full once the inverter answers."""
-            if readings.last_update_success:
-                hass.config_entries.async_schedule_reload(entry.entry_id)
+        served = frozenset(
+            entry.data.get(SERVED_COMPONENTS, device.expected_components)
+        )
 
-        entry.async_on_unload(readings.async_add_listener(_async_reload_once_answered))
+        @callback
+        def _async_settle_on_first_answer() -> None:
+            """Take in what the inverter serves once it answers."""
+            remove_listener()
+            _async_store_served(hass, entry, device.expected_components)
+            if device.expected_components != served:
+                hass.config_entries.async_schedule_reload(entry.entry_id)
+                return
+            entry.async_create_background_task(
+                hass, _async_refresh_versions(hass, entry), "sofar_refresh_versions"
+            )
+
+        remove_listener = readings.async_add_listener(_async_settle_on_first_answer)
     else:
         await settings.async_refresh()
         # Not tied to a coordinator: identity never changes once read.
         await device.async_read_identity()
+        served = device.expected_components
+        _async_store_served(hass, entry, served)
 
     # Up front: a part's device must name an inverter that has an id.
     inverter = dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id, device_info=readings.device_info
     )
-    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
-    # Until the masks settle the type, nothing is served or denied.
-    if device.inverter_type:
-        _async_remove_denied_meter_energy(
-            hass, serial, entry.runtime_data.served_components
-        )
+    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, served)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -1,5 +1,9 @@
 """Satel Integra client."""
 
+from collections.abc import Callable
+import logging
+from typing import TYPE_CHECKING
+
 from satel_integra import AsyncSatel
 from satel_integra.exceptions import (
     SatelConnectFailedError,
@@ -8,7 +12,6 @@ from satel_integra.exceptions import (
     SatelPanelBusyError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
@@ -26,16 +29,22 @@ from .const import (
     SUBENTRY_TYPE_ZONE,
 )
 
+if TYPE_CHECKING:
+    from .coordinator import SatelConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
+
 
 class SatelClient:
     """Client to connect to Satel Integra."""
 
     controller: AsyncSatel
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: SatelConfigEntry) -> None:
         """Initialize the client wrapper."""
         self.hass = hass
         self.config_entry = entry
+        self._connection_status_unsubscribe: Callable[[], None] | None = None
 
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
@@ -103,7 +112,32 @@ class SatelClient:
                 translation_key="monitoring_start_failed",
             ) from ex
 
+        self._connection_status_unsubscribe = (
+            self.controller.add_connection_status_callback(
+                self._on_connection_state_change
+            )
+        )
+        self.config_entry.async_on_unload(self._unsubscribe_connection_status)
+
     async def async_close(self) -> None:
         """Close the connection."""
 
+        self._unsubscribe_connection_status()
         await self.controller.close()
+
+    def _unsubscribe_connection_status(self) -> None:
+        """Unsubscribe from connection status updates."""
+        if self._connection_status_unsubscribe is not None:
+            self._connection_status_unsubscribe()
+            self._connection_status_unsubscribe = None
+
+    def _on_connection_state_change(self) -> None:
+        """Handle connection state changes."""
+        if self.controller.connected:
+            _LOGGER.info(
+                "Satel Integra device is back online: %s", self.config_entry.title
+            )
+        else:
+            _LOGGER.info(
+                "Satel Integra device is unavailable: %s", self.config_entry.title
+            )

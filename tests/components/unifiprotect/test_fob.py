@@ -657,15 +657,11 @@ def _readopt_with_add_frame(ufp: MockUFPFixture, fob: Mock, readopted: Mock) -> 
 
 def _readopt_during_outage(ufp: MockUFPFixture, fob: Mock, readopted: Mock) -> None:
     """Re-adopt the fob while the devices websocket is down."""
-
-    async def resync_public_bootstrap() -> Mock:
-        ufp.api.public_bootstrap.fobs = {readopted.id: readopted}
-        return ufp.api.public_bootstrap
-
-    ufp.api.update_public.side_effect = resync_public_bootstrap
     assert ufp.devices_ws_state_subscription is not None
     ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    ufp.api.public_bootstrap.fobs = {readopted.id: readopted}
+    ufp.public_resync(added=[readopted], removed=[fob])
 
 
 @pytest.mark.parametrize(

@@ -4,6 +4,7 @@
   "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@mettolen"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/liebherr",
   "integration_type": "hub",
   "iot_class": "cloud_push",

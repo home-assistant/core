@@ -200,9 +200,9 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
             # on = open
             # off = close
             if service == SERVICE_TURN_ON:
-                service_name: str = CoverService.OPEN_COVER
+                service_name: str = CoverService.OPEN
             else:
-                service_name = CoverService.CLOSE_COVER
+                service_name = CoverService.CLOSE
 
             await self._run_then_background(
                 hass.async_create_task(
@@ -242,9 +242,9 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
             # on = opened
             # off = closed
             if service == SERVICE_TURN_ON:
-                service_name = ValveService.OPEN_VALVE
+                service_name = ValveService.OPEN
             else:
-                service_name = ValveService.CLOSE_VALVE
+                service_name = ValveService.CLOSE
 
             await self._run_then_background(
                 hass.async_create_task(
@@ -438,10 +438,10 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
     ) -> tuple[str, str]:
         """Get the domain and service name to call."""
         if state.domain == COVER_DOMAIN:
-            return (COVER_DOMAIN, CoverService.SET_COVER_POSITION)
+            return (COVER_DOMAIN, CoverService.SET_POSITION)
 
         if state.domain == VALVE_DOMAIN:
-            return (VALVE_DOMAIN, ValveService.SET_VALVE_POSITION)
+            return (VALVE_DOMAIN, ValveService.SET_POSITION)
 
         raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
 
@@ -464,10 +464,10 @@ class StopMovingIntentHandler(intent.DynamicServiceIntentHandler):
     ) -> tuple[str, str]:
         """Get the domain and service name to call."""
         if state.domain == COVER_DOMAIN:
-            return (COVER_DOMAIN, CoverService.STOP_COVER)
+            return (COVER_DOMAIN, CoverService.STOP)
 
         if state.domain == VALVE_DOMAIN:
-            return (VALVE_DOMAIN, ValveService.STOP_VALVE)
+            return (VALVE_DOMAIN, ValveService.STOP)
 
         raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
 

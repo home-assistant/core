@@ -5,6 +5,7 @@
   "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@bdr99"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/dropbox",
   "integration_type": "service",

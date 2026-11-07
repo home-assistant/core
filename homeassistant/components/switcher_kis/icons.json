@@ -21,6 +21,20 @@
       "remaining_time": {
         "default": "mdi:av-timer"
       }
+    },
+    "switch": {
+      "child_lock": {
+        "default": "mdi:lock-open",
+        "state": {
+          "on": "mdi:lock"
+        }
+      },
+      "multi_child_lock": {
+        "default": "mdi:lock-open",
+        "state": {
+          "on": "mdi:lock"
+        }
+      }
     }
   },
   "services": {

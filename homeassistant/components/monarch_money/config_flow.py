@@ -46,7 +46,12 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 STEP_MFA_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_MFA_CODE): str,
+        probatio.Required(CONF_MFA_CODE): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="one-time-code",
+            ),
+        ),
     }
 )
 

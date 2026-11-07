@@ -3,6 +3,7 @@
 import asyncio
 from contextlib import asynccontextmanager, suppress
 from email.message import Message
+from enum import StrEnum
 import logging
 from typing import Any
 
@@ -26,11 +27,25 @@ from .errors import InvalidAuth, InvalidFolder
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ENTRY = "entry"
-CONF_SEEN = "seen"
-CONF_PART = "part"
-CONF_UID = "uid"
-CONF_TARGET_FOLDER = "target_folder"
+
+class ImapService(StrEnum):
+    """Store keys for IMAP services."""
+
+    SEEN = "seen"
+    MOVE = "move"
+    DELETE = "delete"
+    FETCH = "fetch"
+    FETCH_PART = "fetch_part"
+
+
+class ImapServiceArgument(StrEnum):
+    """Store keys for IMAP service arguments."""
+
+    ENTRY = "entry"
+    UID = "uid"
+    SEEN = "seen"
+    TARGET_FOLDER = "target_folder"
+    PART = "part"
 
 
 def _command_argument(value: Any) -> str:
@@ -43,23 +58,23 @@ def _command_argument(value: Any) -> str:
 
 _SERVICE_UID_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_ENTRY): cv.string,
-        probatio.Required(CONF_UID): _command_argument,
+        probatio.Required(ImapServiceArgument.ENTRY): cv.string,
+        probatio.Required(ImapServiceArgument.UID): _command_argument,
     }
 )
 
 SERVICE_SEEN_SCHEMA = _SERVICE_UID_SCHEMA
 SERVICE_MOVE_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     {
-        probatio.Optional(CONF_SEEN): cv.boolean,
-        probatio.Required(CONF_TARGET_FOLDER): _command_argument,
+        probatio.Optional(ImapServiceArgument.SEEN): cv.boolean,
+        probatio.Required(ImapServiceArgument.TARGET_FOLDER): _command_argument,
     }
 )
 SERVICE_DELETE_SCHEMA = _SERVICE_UID_SCHEMA
 SERVICE_FETCH_TEXT_SCHEMA = _SERVICE_UID_SCHEMA
 SERVICE_FETCH_PART_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     {
-        probatio.Required(CONF_PART): cv.string,
+        probatio.Required(ImapServiceArgument.PART): cv.string,
     }
 )
 
@@ -132,8 +147,8 @@ def _get_message_part(message: Message, part_key: str) -> Message:
 
 async def _async_seen(call: ServiceCall) -> None:
     """Process mark as seen service call."""
-    entry_id: str = call.data[CONF_ENTRY]
-    uid: str = call.data[CONF_UID]
+    entry_id: str = call.data[ImapServiceArgument.ENTRY]
+    uid: str = call.data[ImapServiceArgument.UID]
     _LOGGER.debug(
         "Mark message %s as seen. Entry: %s",
         uid,
@@ -153,10 +168,10 @@ async def _async_seen(call: ServiceCall) -> None:
 
 async def _async_move(call: ServiceCall) -> None:
     """Process move email service call."""
-    entry_id: str = call.data[CONF_ENTRY]
-    uid: str = call.data[CONF_UID]
-    seen = bool(call.data.get(CONF_SEEN))
-    target_folder: str = call.data[CONF_TARGET_FOLDER]
+    entry_id: str = call.data[ImapServiceArgument.ENTRY]
+    uid: str = call.data[ImapServiceArgument.UID]
+    seen = bool(call.data.get(ImapServiceArgument.SEEN))
+    target_folder: str = call.data[ImapServiceArgument.TARGET_FOLDER]
     _LOGGER.debug(
         "Move message %s to folder %s. Mark as seen: %s. Entry: %s",
         uid,
@@ -187,8 +202,8 @@ async def _async_move(call: ServiceCall) -> None:
 
 async def _async_delete(call: ServiceCall) -> None:
     """Process deleting email service call."""
-    entry_id: str = call.data[CONF_ENTRY]
-    uid: str = call.data[CONF_UID]
+    entry_id: str = call.data[ImapServiceArgument.ENTRY]
+    uid: str = call.data[ImapServiceArgument.UID]
     _LOGGER.debug(
         "Delete message %s. Entry: %s",
         uid,
@@ -212,8 +227,8 @@ async def _async_delete(call: ServiceCall) -> None:
 
 async def _async_fetch(call: ServiceCall) -> ServiceResponse:
     """Process fetch email service and return content."""
-    entry_id: str = call.data[CONF_ENTRY]
-    uid: str = call.data[CONF_UID]
+    entry_id: str = call.data[ImapServiceArgument.ENTRY]
+    uid: str = call.data[ImapServiceArgument.UID]
     _LOGGER.debug(
         "Fetch text for message %s. Entry: %s",
         uid,
@@ -243,9 +258,9 @@ async def _async_fetch(call: ServiceCall) -> ServiceResponse:
 
 async def _async_fetch_part(call: ServiceCall) -> ServiceResponse:
     """Process fetch email part service and return content."""
-    entry_id: str = call.data[CONF_ENTRY]
-    uid: str = call.data[CONF_UID]
-    part_key: str = call.data[CONF_PART]
+    entry_id: str = call.data[ImapServiceArgument.ENTRY]
+    uid: str = call.data[ImapServiceArgument.UID]
+    part_key: str = call.data[ImapServiceArgument.PART]
     _LOGGER.debug(
         "Fetch part %s for message %s. Entry: %s",
         part_key,
@@ -286,19 +301,25 @@ async def _async_fetch_part(call: ServiceCall) -> ServiceResponse:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the imap services."""
-    hass.services.async_register(DOMAIN, "seen", _async_seen, SERVICE_SEEN_SCHEMA)
-    hass.services.async_register(DOMAIN, "move", _async_move, SERVICE_MOVE_SCHEMA)
-    hass.services.async_register(DOMAIN, "delete", _async_delete, SERVICE_DELETE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, ImapService.SEEN, _async_seen, SERVICE_SEEN_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, ImapService.MOVE, _async_move, SERVICE_MOVE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, ImapService.DELETE, _async_delete, SERVICE_DELETE_SCHEMA
+    )
     hass.services.async_register(
         DOMAIN,
-        "fetch",
+        ImapService.FETCH,
         _async_fetch,
         SERVICE_FETCH_TEXT_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
-        "fetch_part",
+        ImapService.FETCH_PART,
         _async_fetch_part,
         SERVICE_FETCH_PART_SCHEMA,
         supports_response=SupportsResponse.ONLY,
