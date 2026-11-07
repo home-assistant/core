@@ -28,7 +28,8 @@
           "could_not_get_wol_entity": "Wake on LAN button could not be retrieved after the import",
           "could_not_import_host": "Failed to import the configuration into a Ping sensor",
           "could_not_import_template": "Failed to import the configuration into a Template switch",
-          "could_not_import_wol": "Failed to import the configuration into a Wake on LAN button"
+          "could_not_import_wol": "Failed to import the configuration into a Wake on LAN button",
+          "could_not_read_configuration": "Failed to read the YAML configuration"
         },
         "create_entry": {
           "no_ping": "Your configuration has been migrated to a new Wake on LAN config entry.\n\n-A Wake on LAN config entry has been created with a button for sending magic packets to {mac}.\n- A Template switch has been created that will use the newly created Wake on LAN button.\n\nYou can now remove the old Wake on LAN switch from your YAML configuration and restart Home Assistant to fix this issue.",

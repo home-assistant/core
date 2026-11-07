@@ -3,13 +3,15 @@
 import asyncio
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
+from homeassistant import config as conf_util
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
     RepairsFlowResult,
 )
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
@@ -21,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import CONF_OFF_ACTION, CONF_ON_ACTION, DOMAIN
@@ -48,15 +51,20 @@ class MigrateSwitchFlow(RepairsFlow):
         mac: str = self._data[CONF_MAC]
         broadcast_address: str | None = self._data.get(CONF_BROADCAST_ADDRESS)
         broadcast_port: int | None = self._data.get(CONF_BROADCAST_PORT)
-        turn_off_action: list[dict[str, Any]] | None = self._data.get(CONF_OFF_ACTION)
         name: str = self._data[CONF_NAME]
 
         if user_input is None:
             return self.async_show_form(
                 step_id="migrate",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
                 description_placeholders={"mac": mac},
             )
+
+        # The validated off action holds objects that can't be stored as JSON
+        try:
+            turn_off_action = await self._async_get_raw_turn_off_action(mac)
+        except HomeAssistantError:
+            return self.async_abort(reason="could_not_read_configuration")
 
         entity_reg = er.async_get(self.hass)
         ping_entry_id: str | None = None
@@ -185,6 +193,18 @@ class MigrateSwitchFlow(RepairsFlow):
             description="with_ping" if ping_host else "no_ping",
             description_placeholders={"mac": mac, "host": ping_host or ""},
         )
+
+    async def _async_get_raw_turn_off_action(self, mac: str) -> Any | None:
+        """Return the unvalidated off action of the YAML switch for this MAC."""
+        config = await conf_util.async_hass_config_yaml(self.hass)
+        for platform, platform_config in conf_util.config_per_platform(
+            config, SWITCH_DOMAIN
+        ):
+            if platform == DOMAIN and dr.format_mac(
+                str(platform_config.get(CONF_MAC))
+            ) == dr.format_mac(mac):
+                return platform_config.get(CONF_OFF_ACTION)
+        return None
 
 
 async def async_create_fix_flow(

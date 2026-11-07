@@ -1,8 +1,11 @@
 """Test repairs for Wake on LAN."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 from icmplib import Host
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.repairs import (
     process_repair_fix_flow,
@@ -14,6 +17,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.wake_on_lan.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -46,6 +50,19 @@ NO_HOST_CONFIG = {
         }
     ],
 }
+DELAY_CONFIG = {
+    "platform": "wake_on_lan",
+    "name": "Test",
+    "mac": "00-01-02-03-04-05",
+    "turn_off": [
+        {"delay": "00:00:05"},
+        {
+            "action": "input_number.set_value",
+            "target": {"entity_id": "input_number.number"},
+            "data": {"value": "{{ states('input_number.other') }}"},
+        },
+    ],
+}
 NO_TURN_OFF_CONFIG = {
     "platform": "wake_on_lan",
     "name": "Test",
@@ -56,11 +73,19 @@ NO_TURN_OFF_CONFIG = {
 }
 
 
+@pytest.fixture
+def mock_yaml_config() -> Generator[MagicMock]:
+    """Mock the YAML configuration read by the repair flow."""
+    with patch("homeassistant.config.load_yaml_config_file") as mock_load:
+        yield mock_load
+
+
 async def test_full_config(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    mock_yaml_config: MagicMock,
 ) -> None:
     """Test fixing with a full config."""
     assert await async_setup_component(hass, "repairs", {})
@@ -69,6 +94,7 @@ async def test_full_config(
         SWITCH_DOMAIN,
         {SWITCH_DOMAIN: FULL_CONFIG},
     )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: FULL_CONFIG}
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
@@ -172,7 +198,7 @@ async def test_full_config(
         "turn_off": [
             {
                 "action": "input_number.increment",
-                "target": {"entity_id": ["input_number.number"]},
+                "target": {"entity_id": "input_number.number"},
             }
         ],
     }
@@ -183,6 +209,7 @@ async def test_minimal_config(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    mock_yaml_config: MagicMock,
 ) -> None:
     """Test fixing with minimal configuration."""
     assert await async_setup_component(hass, "repairs", {})
@@ -191,6 +218,7 @@ async def test_minimal_config(
         SWITCH_DOMAIN,
         {SWITCH_DOMAIN: MINIMAL_CONFIG},
     )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: MINIMAL_CONFIG}
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.wake_on_lan")
@@ -280,6 +308,7 @@ async def test_no_host_config(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    mock_yaml_config: MagicMock,
 ) -> None:
     """Test fixing with a no host configured."""
     assert await async_setup_component(hass, "repairs", {})
@@ -288,6 +317,7 @@ async def test_no_host_config(
         SWITCH_DOMAIN,
         {SWITCH_DOMAIN: NO_HOST_CONFIG},
     )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: NO_HOST_CONFIG}
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
@@ -372,7 +402,7 @@ async def test_no_host_config(
         "turn_off": [
             {
                 "action": "input_number.increment",
-                "target": {"entity_id": ["input_number.number"]},
+                "target": {"entity_id": "input_number.number"},
             }
         ],
     }
@@ -383,6 +413,7 @@ async def test_no_turn_off_config(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    mock_yaml_config: MagicMock,
 ) -> None:
     """Test fixing with no turn off action in config."""
     assert await async_setup_component(hass, "repairs", {})
@@ -391,6 +422,7 @@ async def test_no_turn_off_config(
         SWITCH_DOMAIN,
         {SWITCH_DOMAIN: NO_TURN_OFF_CONFIG},
     )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: NO_TURN_OFF_CONFIG}
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.test")
@@ -499,6 +531,7 @@ async def test_input_entities_already_exist(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    mock_yaml_config: MagicMock,
 ) -> None:
     """Test fixing when matching ping and WOL entity already exist.
 
@@ -510,6 +543,7 @@ async def test_input_entities_already_exist(
         SWITCH_DOMAIN,
         {SWITCH_DOMAIN: FULL_CONFIG},
     )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: FULL_CONFIG}
     await hass.async_block_till_done()
 
     ping_entry = MockConfigEntry(
@@ -624,6 +658,7 @@ async def test_template_switch_already_exist(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    mock_yaml_config: MagicMock,
 ) -> None:
     """Test fixing when also template switch already exist."""
     assert await async_setup_component(hass, "repairs", {})
@@ -632,6 +667,7 @@ async def test_template_switch_already_exist(
         SWITCH_DOMAIN,
         {SWITCH_DOMAIN: FULL_CONFIG},
     )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: FULL_CONFIG}
     await hass.async_block_till_done()
 
     ping_entry = MockConfigEntry(
@@ -673,7 +709,7 @@ async def test_template_switch_already_exist(
             "turn_off": [
                 {
                     "action": "input_number.increment",
-                    "target": {"entity_id": ["input_number.number"]},
+                    "target": {"entity_id": "input_number.number"},
                 }
             ],
             "value_template": "{{ is_state('binary_sensor.somehostname_local', 'on') }}",
@@ -764,3 +800,112 @@ async def test_template_switch_already_exist(
     # button.wake_on_lan_00_01_02_03_04_05 - WOL config entry
     # switch.test_2 - Template switch
     assert len(states) == 5
+
+
+async def test_turn_off_action_not_json_serializable_when_validated(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    mock_yaml_config: MagicMock,
+) -> None:
+    """Test the template switch gets the off action from the YAML configuration."""
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {SWITCH_DOMAIN: DELAY_CONFIG},
+    )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: DELAY_CONFIG}
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test")
+
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+    issue_ids = {i["issue_id"] for i in msg["result"]["issues"]}
+    # Issue is identified by the MAC so it does not depend on the validated config
+    assert "migrate_to_template_00:01:02:03:04:05" in issue_ids
+
+    data = await start_repair_fix_flow(
+        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
+    )
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+
+    template_config_entries = hass.config_entries.async_entries("template")
+    assert len(template_config_entries) == 1
+    assert template_config_entries[0].options["turn_off"] == DELAY_CONFIG["turn_off"]
+
+
+@pytest.mark.parametrize(
+    ("yaml_config", "expected_turn_off"),
+    [
+        pytest.param(
+            {"switch other": [{"platform": "template"}, NO_HOST_CONFIG]},
+            NO_HOST_CONFIG["turn_off"],
+            id="named_switch_key",
+        ),
+        pytest.param(
+            {SWITCH_DOMAIN: [{**NO_HOST_CONFIG, "mac": "aa:bb:cc:dd:ee:ff"}]},
+            None,
+            id="removed_from_yaml",
+        ),
+    ],
+)
+async def test_turn_off_action_lookup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_yaml_config: MagicMock,
+    yaml_config: dict[str, Any],
+    expected_turn_off: list[dict[str, Any]] | None,
+) -> None:
+    """Test the off action is looked up for the matching MAC."""
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {SWITCH_DOMAIN: NO_HOST_CONFIG},
+    )
+    mock_yaml_config.return_value = yaml_config
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
+    )
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+    template_config_entries = hass.config_entries.async_entries("template")
+    assert len(template_config_entries) == 1
+    assert template_config_entries[0].options.get("turn_off") == expected_turn_off
+
+
+async def test_read_configuration_fails(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_yaml_config: MagicMock,
+) -> None:
+    """Test the repair aborts when the YAML configuration can't be read."""
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {SWITCH_DOMAIN: NO_HOST_CONFIG},
+    )
+    mock_yaml_config.side_effect = HomeAssistantError
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
+    )
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+
+    assert data["type"] == FlowResultType.ABORT
+    assert data["reason"] == "could_not_read_configuration"
+    assert not hass.config_entries.async_entries("template")
