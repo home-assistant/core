@@ -122,6 +122,64 @@ async def test_firmware_update_updates_device_info(
     assert device.sw_version == "2.0"
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [SolarLogConnectionError, SolarLogUpdateError],
+)
+async def test_firmware_read_error_does_not_fail_initial_refresh(
+    hass: HomeAssistant,
+    exception: type[Exception],
+    mock_solarlog_connector: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test firmware read failures do not prevent the initial data refresh."""
+    mock_solarlog_connector.update_firmware_information.side_effect = exception
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+
+    coordinator = mock_config_entry.runtime_data.basic_data_coordinator
+    assert coordinator.data is not None
+    assert coordinator.data.power_ac == 100
+    assert coordinator.data.firmware_version is None
+    assert coordinator.data.firmware_release_date is None
+    assert coordinator._update_counter == 0
+    state = hass.states.get("sensor.solarlog_power_ac")
+    assert state is not None
+    assert state.state == "100.0"
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [SolarLogConnectionError, SolarLogUpdateError],
+)
+async def test_firmware_read_error_retains_previous_firmware_data(
+    hass: HomeAssistant,
+    exception: type[Exception],
+    mock_solarlog_connector: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test firmware read failures retain previously fetched firmware data."""
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    coordinator = mock_config_entry.runtime_data.basic_data_coordinator
+
+    mock_solarlog_connector.update_firmware_information.side_effect = exception
+    coordinator._update_counter = 99
+
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.data is not None
+    assert coordinator.data.power_ac == 100
+    assert coordinator.data.firmware_version == "1.0"
+    assert coordinator.data.firmware_release_date == date(2024, 1, 1)
+    assert coordinator._update_counter == 0
+    state = hass.states.get("sensor.solarlog_power_ac")
+    assert state is not None
+    assert state.state == "100.0"
+
+
 @pytest.mark.usefixtures("mock_solarlog_connector")
 async def test_inverter_via_device_id(
     hass: HomeAssistant,

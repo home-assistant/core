@@ -76,9 +76,6 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
 
         try:
             data = await self.solarlog.update_basic_data()
-            if self.solarlog.extended_data and self._update_counter >= 100:
-                firmware_data = await self.solarlog.update_firmware_information()
-                self._update_counter = 0
         except SolarLogConnectionError as ex:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -103,20 +100,45 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
                 translation_key="update_failed",
             ) from ex
 
-        if (firmware_data is not None) and (
-            self.data is None or firmware_data[0] != self.data.firmware_version
-        ):
+        previous_firmware_version = None
+        if self.data is not None:
+            previous_firmware_version = self.data.firmware_version
+            data.firmware_version = self.data.firmware_version
+            data.firmware_release_date = self.data.firmware_release_date
+
+        if self.solarlog.extended_data and self._update_counter >= 100:
+            self._update_counter = 0
+            try:
+                firmware_data = await self.solarlog.update_firmware_information()
+            except SolarLogAuthenticationError as ex:
+                if await self.renew_authentication():
+                    # login was successful, update availability
+                    # of extended data, retry data update
+                    await self.solarlog.test_extended_data_available()
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN,
+                        translation_key="config_entry_not_ready",
+                    ) from ex
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed",
+                ) from ex
+            except (SolarLogConnectionError, SolarLogUpdateError) as ex:
+                _LOGGER.debug("Failed to update firmware information: %s", ex)
+
+        if firmware_data is not None:
             data.firmware_version = firmware_data[0]
             data.firmware_release_date = firmware_data[1]
 
-            device_registry = dr.async_get(self.hass)
-            if device := device_registry.async_get_device_by_identifier(
-                identifier=(DOMAIN, self.config_entry.entry_id),
-                config_entry_id=self.config_entry.entry_id,
-            ):
-                device_registry.async_update_device(
-                    device_id=device.id, sw_version=str(firmware_data[0])
-                )
+            if firmware_data[0] != previous_firmware_version:
+                device_registry = dr.async_get(self.hass)
+                if device := device_registry.async_get_device_by_identifier(
+                    identifier=(DOMAIN, self.config_entry.entry_id),
+                    config_entry_id=self.config_entry.entry_id,
+                ):
+                    device_registry.async_update_device(
+                        device_id=device.id, sw_version=firmware_data[0]
+                    )
 
         _LOGGER.debug("Basic data successfully updated: %s", data)
 
