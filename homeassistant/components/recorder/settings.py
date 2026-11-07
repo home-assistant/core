@@ -5,8 +5,10 @@ from typing import Any, Final, TypedDict, cast
 import probatio
 
 from homeassistant.components import websocket_api
+from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER
 from homeassistant.helpers.recorder import get_instance
 from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
@@ -17,6 +19,7 @@ from .const import (
     CONF_COMMIT_INTERVAL,
     CONF_DB_MAX_RETRIES,
     CONF_DB_RETRY_WAIT,
+    CONF_EVENT_TYPES,
     CONF_PURGE_KEEP_DAYS,
     DEFAULT_COMMIT_INTERVAL,
     DEFAULT_DB_MAX_RETRIES,
@@ -41,6 +44,8 @@ class RecorderSettings(TypedDict):
     commit_interval: int
     db_max_retries: int
     db_retry_wait: int
+    include: dict[str, list[str]]
+    exclude: dict[str, list[str]]
 
 
 class _RecorderSettingsStoreData(TypedDict):
@@ -50,6 +55,14 @@ class _RecorderSettingsStoreData(TypedDict):
     yaml_migration_done: bool
 
 
+EXCLUDE_SCHEMA: Final = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
+    {
+        probatio.Optional(CONF_EVENT_TYPES, default=[]): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        )
+    }
+)
+
 DEFAULT_SETTINGS: Final = RecorderSettings(
     auto_purge=True,
     auto_repack=True,
@@ -57,7 +70,12 @@ DEFAULT_SETTINGS: Final = RecorderSettings(
     commit_interval=DEFAULT_COMMIT_INTERVAL,
     db_max_retries=DEFAULT_DB_MAX_RETRIES,
     db_retry_wait=DEFAULT_DB_RETRY_WAIT,
+    include=INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER({}),
+    exclude=EXCLUDE_SCHEMA({}),
 )
+
+# The settings the recorder only reads when it starts
+RESTART_REQUIRED_SETTINGS: Final = (CONF_COMMIT_INTERVAL, CONF_INCLUDE, CONF_EXCLUDE)
 
 SETTINGS_SCHEMA_DICT: Final[dict[Any, Any]] = {
     probatio.Optional(CONF_AUTO_PURGE): cv.boolean,
@@ -68,7 +86,18 @@ SETTINGS_SCHEMA_DICT: Final[dict[Any, Any]] = {
     probatio.Optional(CONF_COMMIT_INTERVAL): cv.positive_int,
     probatio.Optional(CONF_DB_MAX_RETRIES): cv.positive_int,
     probatio.Optional(CONF_DB_RETRY_WAIT): cv.positive_int,
+    probatio.Optional(CONF_INCLUDE): INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
+    probatio.Optional(CONF_EXCLUDE): EXCLUDE_SCHEMA,
 }
+
+
+def _validate_exclude(exclude: dict[str, list[str]]) -> dict[str, list[str]]:
+    """Reject excluding state changed events, which the entity filters handle."""
+    if EVENT_STATE_CHANGED in exclude[CONF_EVENT_TYPES]:
+        raise probatio.Invalid(
+            "State change events cannot be excluded", path=[CONF_EVENT_TYPES]
+        )
+    return exclude
 
 
 class RecorderSettingsStore:
@@ -80,6 +109,8 @@ class RecorderSettingsStore:
             hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
         )
         self.settings = DEFAULT_SETTINGS.copy()
+        # The settings the running recorder was started with
+        self.started_settings = self.settings
         self.yaml_migration_done = False
 
     async def async_load(self) -> None:
@@ -95,6 +126,14 @@ class RecorderSettingsStore:
         self.settings = cast(RecorderSettings, self.settings | changes)
         await self._store.async_save(
             {"settings": self.settings, "yaml_migration_done": self.yaml_migration_done}
+        )
+
+    @property
+    def restart_required(self) -> bool:
+        """Return whether settings the recorder reads at start have changed."""
+        return any(
+            self.settings[key] != self.started_settings[key]
+            for key in RESTART_REQUIRED_SETTINGS
         )
 
 
@@ -123,7 +162,15 @@ async def async_get_settings(
         ir.async_delete_issue(hass, DOMAIN, "deprecated_yaml")
         ir.async_delete_issue(hass, DOMAIN, "yaml_still_present_after_migration")
 
+    store.started_settings = store.settings
     return store.settings
+
+
+@callback
+def async_get_entity_filter_conf(hass: HomeAssistant) -> dict[str, Any]:
+    """Return the include and exclude filters the running recorder uses."""
+    settings = hass.data[DATA_SETTINGS_STORE].started_settings
+    return {CONF_INCLUDE: settings[CONF_INCLUDE], CONF_EXCLUDE: settings[CONF_EXCLUDE]}
 
 
 @callback
@@ -159,13 +206,13 @@ def ws_get_settings(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return the recorder settings."""
-    settings = hass.data[DATA_SETTINGS_STORE].settings
+    store = hass.data[DATA_SETTINGS_STORE]
     connection.send_result(
         msg["id"],
         {
-            "settings": settings,
+            "settings": store.settings,
             "default": DEFAULT_SETTINGS,
-            "restart_required": _restart_required(hass, settings),
+            "restart_required": store.restart_required,
         },
     )
 
@@ -175,6 +222,9 @@ def ws_get_settings(
     {
         probatio.Required("type"): "recorder/settings/update",
         **SETTINGS_SCHEMA_DICT,
+        probatio.Optional(CONF_EXCLUDE): probatio.All(
+            EXCLUDE_SCHEMA, _validate_exclude
+        ),
     }
 )
 @websocket_api.async_response
@@ -183,8 +233,9 @@ async def ws_update_settings(
 ) -> None:
     """Update the recorder settings.
 
-    The commit interval is only read when the recorder starts, so a change to
-    it is applied on the next restart, which ``restart_required`` reports.
+    The commit interval and the include and exclude filters are only read
+    when the recorder starts, so a change to them is applied on the next
+    restart, which ``restart_required`` reports.
     """
     msg_id = msg.pop("id")
     msg.pop("type")
@@ -200,15 +251,5 @@ async def ws_update_settings(
     instance.db_retry_wait = settings[CONF_DB_RETRY_WAIT]
 
     connection.send_result(
-        msg_id,
-        {
-            "settings": settings,
-            "restart_required": _restart_required(hass, settings),
-        },
+        msg_id, {"settings": settings, "restart_required": store.restart_required}
     )
-
-
-@callback
-def _restart_required(hass: HomeAssistant, settings: RecorderSettings) -> bool:
-    """Return whether the running recorder uses a stale commit interval."""
-    return get_instance(hass).commit_interval != settings[CONF_COMMIT_INTERVAL]

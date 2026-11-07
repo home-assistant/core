@@ -14,6 +14,8 @@ from homeassistant.components.recorder import (
     Recorder,
     get_instance,
 )
+from homeassistant.components.recorder.settings import DATA_SETTINGS_STORE
+from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir, recorder as recorder_helper
 from homeassistant.setup import async_setup_component
@@ -25,6 +27,8 @@ DEFAULT_SETTINGS = {
     "commit_interval": 5,
     "db_max_retries": 10,
     "db_retry_wait": 3,
+    "include": {"domains": [], "entity_globs": [], "entities": []},
+    "exclude": {"domains": [], "entity_globs": [], "entities": [], "event_types": []},
 }
 
 
@@ -62,22 +66,64 @@ async def test_yaml_migration(
 ) -> None:
     """Test the YAML settings are imported once with a deprecation issue."""
     await _async_setup_recorder(
-        hass, recorder_db_url, {"purge_keep_days": 30, "auto_repack": False}
+        hass,
+        recorder_db_url,
+        {
+            "purge_keep_days": 30,
+            "auto_repack": False,
+            "include": {"domains": "light"},
+            "exclude": {"entities": "light.excluded", "event_types": "my_event"},
+        },
     )
 
     instance = get_instance(hass)
     assert instance.keep_days == 30
     assert instance.auto_repack is False
+    assert instance.entity_filter is not None
+    assert instance.entity_filter("light.kitchen")
+    assert not instance.entity_filter("light.excluded")
+    assert not instance.entity_filter("switch.kitchen")
+    assert instance.exclude_event_types == {"my_event"}
     assert hass_storage[DOMAIN] == _stored_settings(
-        {"purge_keep_days": 30, "auto_repack": False}
+        {
+            "purge_keep_days": 30,
+            "auto_repack": False,
+            "include": {"domains": ["light"], "entity_globs": [], "entities": []},
+            "exclude": {
+                "domains": [],
+                "entity_globs": [],
+                "entities": ["light.excluded"],
+                "event_types": ["my_event"],
+            },
+        }
     )
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
     assert issue is not None
     assert issue.breaks_in_ha_version == "2027.6.0"
     assert issue.translation_placeholders == {
-        "options": "`auto_repack`, `purge_keep_days`"
+        "options": "`auto_repack`, `exclude`, `include`, `purge_keep_days`"
     }
+
+
+async def test_yaml_migration_drops_excluded_state_changed(
+    recorder_db_url: str,
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test excluding state changed events in YAML is logged and not imported."""
+    await _async_setup_recorder(
+        hass,
+        recorder_db_url,
+        {"exclude": {"event_types": ["state_changed", "my_event"]}},
+    )
+
+    assert "State change events cannot be excluded" in caplog.text
+    assert get_instance(hass).exclude_event_types == {"my_event"}
+    assert hass_storage[DOMAIN]["data"]["settings"]["exclude"]["event_types"] == [
+        "my_event"
+    ]
 
 
 async def test_no_yaml_settings_stores_nothing(
@@ -193,7 +239,7 @@ async def test_ws_update_settings(
     )
     response = await client.receive_json()
 
-    expected = {
+    expected = DEFAULT_SETTINGS | {
         "auto_purge": False,
         "auto_repack": False,
         "purge_keep_days": 30,
@@ -211,21 +257,42 @@ async def test_ws_update_settings(
     assert hass_storage[DOMAIN] == _stored_settings(expected)
 
 
-async def test_ws_update_commit_interval_requires_restart(
+@pytest.mark.parametrize(
+    ("key", "value", "running_value"),
+    [
+        pytest.param(CONF_COMMIT_INTERVAL, 10, 0, id="commit_interval"),
+        pytest.param(
+            CONF_INCLUDE,
+            {"domains": ["light"]},
+            DEFAULT_SETTINGS["include"],
+            id="include",
+        ),
+        pytest.param(
+            CONF_EXCLUDE,
+            {"event_types": ["my_event"]},
+            DEFAULT_SETTINGS["exclude"],
+            id="exclude",
+        ),
+    ],
+)
+async def test_ws_update_requires_restart(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    key: str,
+    value: Any,
+    running_value: Any,
 ) -> None:
-    """Test the commit interval is stored and applied on the next restart."""
+    """Test settings read at start are stored and applied on the next restart."""
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id(
-        {"type": "recorder/settings/update", CONF_COMMIT_INTERVAL: 10}
-    )
+    await client.send_json_auto_id({"type": "recorder/settings/update", key: value})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"]["restart_required"] is True
     assert recorder_mock.commit_interval == 0
+    assert recorder_mock.entity_filter is None
+    assert recorder_mock.exclude_event_types == set()
 
     await client.send_json_auto_id({"type": "recorder/settings/get"})
     response = await client.receive_json()
@@ -233,27 +300,36 @@ async def test_ws_update_commit_interval_requires_restart(
 
     # Changing it back to the running value means no restart is needed
     await client.send_json_auto_id(
-        {"type": "recorder/settings/update", CONF_COMMIT_INTERVAL: 0}
+        {"type": "recorder/settings/update", key: running_value}
     )
     response = await client.receive_json()
     assert response["result"]["restart_required"] is False
 
 
 @pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    "changes",
+    [
+        pytest.param({CONF_PURGE_KEEP_DAYS: 0}, id="purge_keep_days"),
+        pytest.param(
+            {CONF_EXCLUDE: {"event_types": ["state_changed"]}}, id="state_changed"
+        ),
+    ],
+)
 async def test_ws_update_settings_invalid(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, changes: dict[str, Any]
 ) -> None:
     """Test invalid settings are rejected."""
     client = await hass_ws_client(hass)
 
-    await client.send_json_auto_id(
-        {"type": "recorder/settings/update", CONF_PURGE_KEEP_DAYS: 0}
-    )
+    await client.send_json_auto_id({"type": "recorder/settings/update", **changes})
     response = await client.receive_json()
 
     assert not response["success"]
     assert response["error"]["code"] == "invalid_format"
-    assert get_instance(hass).keep_days == 10
+    assert hass.data[DATA_SETTINGS_STORE].settings == DEFAULT_SETTINGS | {
+        "commit_interval": 0
+    }
 
 
 @pytest.mark.usefixtures("recorder_mock")

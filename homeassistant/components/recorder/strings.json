@@ -13,7 +13,7 @@
       "title": "Update {database_engine} to {min_version} or later to continue using the recorder"
     },
     "deprecated_yaml": {
-      "description": "Your recorder options {options} from `configuration.yaml` have been imported. These options are now configured from the UI.\n\nRemove these options from the `recorder:` block in your `configuration.yaml` and restart Home Assistant. The `db_url` option and the `include` and `exclude` filters stay in `configuration.yaml`.",
+      "description": "Your recorder options {options} from `configuration.yaml` have been imported. These options are now configured from the UI.\n\nRemove these options from the `recorder:` block in your `configuration.yaml` and restart Home Assistant. Only the `db_url` option stays in `configuration.yaml`.",
       "title": "Recorder YAML options have moved to the UI"
     },
     "maria_db_range_index_regression": {
@@ -21,7 +21,7 @@
       "title": "Update MariaDB to {min_version} or later resolve a significant performance issue"
     },
     "yaml_still_present_after_migration": {
-      "description": "Your recorder options {options} in `configuration.yaml` have already been imported and are now ignored. Change these options from the UI instead.\n\nRemove these options from the `recorder:` block in your `configuration.yaml` and restart Home Assistant. The `db_url` option and the `include` and `exclude` filters stay in `configuration.yaml`.",
+      "description": "Your recorder options {options} in `configuration.yaml` have already been imported and are now ignored. Change these options from the UI instead.\n\nRemove these options from the `recorder:` block in your `configuration.yaml` and restart Home Assistant. Only the `db_url` option stays in `configuration.yaml`.",
       "title": "Recorder YAML options are ignored"
     }
   },

@@ -22,6 +22,7 @@ CONF_COMMIT_INTERVAL: Final = "commit_interval"
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
 CONF_DB_MAX_RETRIES: Final = "db_max_retries"
 CONF_DB_RETRY_WAIT: Final = "db_retry_wait"
+CONF_EVENT_TYPES: Final = "event_types"
 CONF_PURGE_KEEP_DAYS: Final = "purge_keep_days"
 
 DEFAULT_COMMIT_INTERVAL = 5
