@@ -303,12 +303,17 @@ class EngieBePeaksData:
         return self.monthly.peak_of_the_month is None and self.peak is not None
 
     @property
-    def peak_month(self) -> str:
+    def peak_month(self) -> str | None:
         """Return the YYYY-MM month the displayed peak belongs to."""
-        if self.monthly.peak_of_the_month is not None or self.previous_month is None:
+        if self.monthly.peak_of_the_month is not None:
             source = self.monthly
-        else:
+        elif (
+            self.previous_month is not None
+            and self.previous_month.peak_of_the_month is not None
+        ):
             source = self.previous_month
+        else:
+            return None
         return f"{source.year}-{source.month:02d}"
 
 
