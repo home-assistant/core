@@ -1964,19 +1964,6 @@ async def _ws_call(
         ),
         pytest.param(
             AMERICA_NEW_YORK,
-            SECOND_REPEATED_HOUR_ICS,
-            "single",
-            "",
-            # The frontend can only send the first 01:30
-            {
-                "summary": "Dentist renamed",
-                "dtstart": "2026-11-01T01:30:00",
-                "dtend": "2026-11-01T01:45:00",
-            },
-            id="single_in_repeated_hour_kept",
-        ),
-        pytest.param(
-            AMERICA_NEW_YORK,
             SECONDS_ICS,
             "single",
             "",
@@ -2200,6 +2187,44 @@ async def test_delete_event(
     assert response["success"]
     calendars[0].get_event_by_uid.assert_called_once_with(uid)
     stored_event.client.delete.assert_called_once_with(str(stored_event.url))
+    stored_event.client.put.assert_not_called()
+
+
+@pytest.mark.parametrize(("tz", "ics"), [(AMERICA_NEW_YORK, SECOND_REPEATED_HOUR_ICS)])
+@pytest.mark.parametrize(
+    ("start", "end"),
+    [
+        # As the frontend sends the time it shows
+        ("2026-11-01T01:30:00", "2026-11-01T01:45:00"),
+        # The first of the repeated hours, from another client
+        ("2026-11-01T05:30:00+00:00", "2026-11-01T05:45:00+00:00"),
+    ],
+    ids=["frontend", "first_hour"],
+)
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_update_event_in_repeated_hour(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    stored_event: Event,
+    start: str,
+    end: str,
+) -> None:
+    """Test an event in the second repeated hour can't be updated ambiguously."""
+    response = await _ws_call(
+        hass,
+        hass_ws_client,
+        type="calendar/event/update",
+        uid="single",
+        event={"summary": "Dentist renamed", "dtstart": start, "dtend": end},
+    )
+
+    assert response["error"] == {
+        "code": "failed",
+        "message": (
+            "The event is in the second of the two hours that repeat when clocks "
+            "go back, which Home Assistant can't tell apart from the first"
+        ),
+    }
     stored_event.client.put.assert_not_called()
 
 

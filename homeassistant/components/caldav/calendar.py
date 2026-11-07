@@ -520,12 +520,19 @@ def _same_time(value: date | datetime, stored: date | datetime) -> bool:
     if not isinstance(value, datetime) or not isinstance(stored, datetime):
         return False
     value = dt_util.as_local(value)
-    return (
-        not value.second
-        and not value.microsecond
-        and not value.fold
-        and _as_shown(value) == _as_shown(stored)
-    )
+    if (
+        value.second
+        or value.microsecond
+        or value.fold
+        or _as_shown(value) != _as_shown(stored)
+    ):
+        return False
+    if stored.tzinfo is not None and dt_util.as_local(stored).fold:
+        # Whether the first of the repeated hours is meant can't be told
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="repeated_hour"
+        )
+    return True
 
 
 def _as_shown(value: datetime) -> datetime:

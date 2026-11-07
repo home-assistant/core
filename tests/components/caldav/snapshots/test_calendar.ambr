@@ -161,24 +161,6 @@
   
   '''
 # ---
-# name: test_update_event[single_in_repeated_hour_kept]
-  '''
-  BEGIN:VCALENDAR
-  VERSION:2.0
-  PRODID:-//Test//CalDAV Client//EN
-  BEGIN:VEVENT
-  SUMMARY:Dentist renamed
-  DTSTART:20261101T063000Z
-  DTEND:20261101T064500Z
-  DTSTAMP:20261101T000000Z
-  UID:single
-  DESCRIPTION:Bring the card
-  LOCATION:Main street
-  END:VEVENT
-  END:VCALENDAR
-  
-  '''
-# ---
 # name: test_update_event[single_new_seconds]
   '''
   BEGIN:VCALENDAR
