@@ -24,13 +24,12 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import section
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import CONF_REFERRER, DOMAIN, SECTION_API_KEY_OPTIONS
-from .coordinator import GoogleWeatherConfigEntry
+from .coordinator import GoogleWeatherConfigEntry, create_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,6 +88,31 @@ def _is_location_already_configured(
     return False
 
 
+def _location_schema(hass: HomeAssistant) -> probatio.Schema:
+    """Return the schema for a location with the home location as default."""
+    return probatio.Schema(
+        {
+            probatio.Required(
+                CONF_LOCATION,
+                default={
+                    CONF_LATITUDE: hass.config.latitude,
+                    CONF_LONGITUDE: hass.config.longitude,
+                },
+            ): LocationSelector(LocationSelectorConfig(radius=False)),
+        }
+    )
+
+
+def _location_title(hass: HomeAssistant, location: dict[str, float]) -> str:
+    """Return the title for a location, using the home name when it matches home."""
+    if (
+        abs(location[CONF_LATITUDE] - hass.config.latitude) <= 1e-4
+        and abs(location[CONF_LONGITUDE] - hass.config.longitude) <= 1e-4
+    ):
+        return hass.config.location_name
+    return f"{location[CONF_LATITUDE]:.5f}, {location[CONF_LONGITUDE]:.5f}"
+
+
 class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Weather."""
 
@@ -126,18 +150,10 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_LONGITUDE: self.hass.config.longitude,
                     }
             else:
-                location = {
-                    CONF_LATITUDE: self.hass.config.latitude,
-                    CONF_LONGITUDE: self.hass.config.longitude,
-                }
+                location = user_input[CONF_LOCATION]
             validation_input = {CONF_LOCATION: location}
 
-            api = GoogleWeatherApi(
-                session=async_get_clientsession(self.hass),
-                api_key=api_key,
-                referrer=referrer,
-                language_code=self.hass.config.language,
-            )
+            api = create_api(self.hass, api_key, referrer)
             if await _validate_input(
                 validation_input, api, errors, description_placeholders
             ):
@@ -152,7 +168,7 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                         {
                             "subentry_type": "location",
                             "data": location,
-                            "title": self.hass.config.location_name,
+                            "title": _location_title(self.hass, location),
                             "unique_id": None,
                         },
                     ],
@@ -171,14 +187,15 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_REFERRER: entry.data.get(CONF_REFERRER)
                     },
                 }
-        elif user_input is None:
-            user_input = {}
+            data_schema = STEP_USER_DATA_SCHEMA
+        else:
+            if user_input is None:
+                user_input = {}
+            data_schema = STEP_USER_DATA_SCHEMA.extend(_location_schema(self.hass))
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
-            ),
+            data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -235,8 +252,9 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         user_input: dict[str, Any] | None = None,
     ) -> SubentryFlowResult:
         """Handle the location step."""
-        if self._get_entry().state is not ConfigEntryState.LOADED:
-            return self.async_abort(reason="entry_not_loaded")
+        entry = self._get_entry()
+        if entry.disabled_by:
+            return self.async_abort(reason="entry_disabled")
 
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -245,12 +263,19 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                 None if self._is_new else self._get_reconfigure_subentry().subentry_id
             )
             if _is_location_already_configured(
-                self._get_entry(),
+                entry,
                 user_input[CONF_LOCATION],
                 exclude_subentry_id=exclude_id,
             ):
                 return self.async_abort(reason="already_configured")
-            api: GoogleWeatherApi = self._get_entry().runtime_data.api
+            if entry.state is ConfigEntryState.LOADED:
+                api = entry.runtime_data.api
+            else:
+                api = create_api(
+                    self.hass,
+                    entry.data[CONF_API_KEY],
+                    entry.data.get(CONF_REFERRER),
+                )
             if await _validate_input(user_input, api, errors, description_placeholders):
                 if self._is_new:
                     return self.async_create_entry(
@@ -258,7 +283,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                         data=user_input[CONF_LOCATION],
                     )
                 return self.async_update_and_abort(
-                    self._get_entry(),
+                    entry,
                     self._get_reconfigure_subentry(),
                     title=user_input[CONF_NAME],
                     data=user_input[CONF_LOCATION],

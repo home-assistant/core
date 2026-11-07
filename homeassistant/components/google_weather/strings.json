@@ -10,12 +10,14 @@
     "step": {
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "api_key": "A unique alphanumeric string that associates your Google billing account with Google Weather API"
+          "api_key": "A unique alphanumeric string that associates your Google billing account with Google Weather API",
+          "location": "Select the location for which to fetch the weather."
         },
-        "description": "Get your API key from [here]({api_key_url}). Your home location will be used as the first location. You can change it or add more locations after setup.",
+        "description": "Get your API key from [here]({api_key_url}). Your home location is suggested as the first location, but you can select a different one. You can add more locations after setup.",
         "sections": {
           "api_key_options": {
             "data": {
@@ -34,7 +36,7 @@
     "location": {
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-        "entry_not_loaded": "Cannot add things while the configuration is disabled."
+        "entry_disabled": "Cannot add things while the configuration is disabled."
       },
       "entry_type": "Location",
       "error": {
