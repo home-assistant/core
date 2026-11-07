@@ -1,5 +1,6 @@
 """Roborock Coordinator."""
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
@@ -37,6 +38,7 @@ from .const import (
     A01_UPDATE_INTERVAL,
     DOMAIN,
     IMAGE_CACHE_INTERVAL,
+    MAP_SLEEP,
     Q10_UPDATE_INTERVAL,
     V1_CLOUD_IN_CLEANING_INTERVAL,
     V1_CLOUD_NOT_CLEANING_INTERVAL,
@@ -244,6 +246,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         """Update the currently selected map."""
         try:
             await self.properties_api.home.discover_home()
+            # Some devices lose the active map while retaining its selected map flag.
+            if (
+                self.properties_api.status.map_present == 0
+                and not self.properties_api.status.in_cleaning
+                and (current_map := self.properties_api.maps.current_map) is not None
+            ):
+                await self.properties_api.maps.set_current_map(current_map)
+                await asyncio.sleep(MAP_SLEEP)
             await self.properties_api.home.refresh()
         except RoborockException as ex:
             raise HomeAssistantError(
