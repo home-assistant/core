@@ -163,6 +163,26 @@
       }
     }
   },
+  "exceptions": {
+    "install_failed": {
+      "message": "Failed to install update: {error}"
+    },
+    "no_release_available": {
+      "message": "No release is currently available to install."
+    },
+    "play_store_install_unsupported": {
+      "message": "Installing updates remotely is not supported on Google Play editions of Fully Kiosk."
+    },
+    "update_feed_communication_error": {
+      "message": "Error communicating with Fully Kiosk update feed: {error}"
+    },
+    "update_feed_parse_error": {
+      "message": "Failed to parse Fully Kiosk update feed: {error}"
+    },
+    "version_not_found": {
+      "message": "Version {version} was not found in available releases."
+    }
+  },
   "services": {
     "load_url": {
       "description": "Loads a URL on Fully Kiosk Browser.",
