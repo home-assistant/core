@@ -17,13 +17,19 @@ from homeassistant.components.homematicip_cloud.const import (
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+    translation,
+)
 from homeassistant.setup import async_setup_component
 
 
+@pytest.mark.usefixtures("mock_connection", "simple_mock_home")
 async def test_config_with_accesspoint_passed_to_config_entry(
-    hass: HomeAssistant, mock_connection, simple_mock_home
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test that config for a accesspoint are loaded via config entry."""
 
@@ -39,6 +45,7 @@ async def test_config_with_accesspoint_passed_to_config_entry(
         "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.async_connect",
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: entry_config})
+        await hass.async_block_till_done()
 
     # config_entry created for access point
     config_entries = hass.config_entries.async_entries(DOMAIN)
@@ -51,9 +58,21 @@ async def test_config_with_accesspoint_passed_to_config_entry(
     # defined access_point created for config_entry
     assert isinstance(config_entries[0].runtime_data, HomematicipHAP)
 
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_key == "deprecated_yaml"
+    assert issue.translation_placeholders == {
+        "domain": DOMAIN,
+        "integration_title": "HomematicIP Cloud",
+    }
 
+
+@pytest.mark.usefixtures("simple_mock_home")
 async def test_config_already_registered_not_passed_to_config_entry(
-    hass: HomeAssistant, simple_mock_home
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test that an already registered accesspoint does not get imported."""
 
@@ -81,6 +100,7 @@ async def test_config_already_registered_not_passed_to_config_entry(
         "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.async_connect",
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: entry_config})
+        await hass.async_block_till_done()
 
     # no new config_entry created / still one config_entry
     config_entries = hass.config_entries.async_entries(DOMAIN)
@@ -92,6 +112,21 @@ async def test_config_already_registered_not_passed_to_config_entry(
     }
     # config_enty updated with unique_id
     assert config_entries[0].unique_id == "ABC123"
+
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+async def test_no_yaml_config_no_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test that no deprecation issue is created without YAML config."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert len(issue_registry.issues) == 0
 
 
 async def test_load_entry_fails_due_to_connection_error(
@@ -532,3 +567,19 @@ async def test_migrate_unique_id_three_way_collision(
     # The shorter and multi-channel legacy entries were removed.
     assert entity_registry.async_get(short.entity_id) is None
     assert entity_registry.async_get(multi_channel.entity_id) is None
+
+
+async def test_import_finishes_before_setup_returns(hass: HomeAssistant) -> None:
+    """Test all YAML access points are imported before the integration setup returns."""
+    await translation.async_load_integrations(hass, {DOMAIN})
+    config = [
+        {CONF_ACCESSPOINT: accesspoint, CONF_AUTHTOKEN: "123", CONF_NAME: "name"}
+        for accesspoint in ("ABC123", "DEF456")
+    ]
+
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.async_connect",
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 2
