@@ -1833,6 +1833,18 @@ FIRST_CANCELLED_ICS = FIRST_MOVED_ICS.replace(
 # BYSETPOS has to be between 1 and 366, or -366 and -1
 BROKEN_RULE = "RRULE:FREQ=WEEKLY;COUNT=8;BYSETPOS=0"
 
+# Starting at the first 01:30 of the night daylight saving time ends
+REPEATED_HOUR_SERIES_ICS = NEW_YORK_SERIES_ICS.replace(
+    "20261026T090000", "20261101T013000"
+).replace("20261026T093000", "20261101T014500")
+
+# Two weeks from before daylight saving time ends
+UNTIL_BEFORE_DST_END_ICS = (
+    NEW_YORK_SERIES_ICS.replace("20261026T090000", "20261019T090000")
+    .replace("20261026T093000", "20261019T093000")
+    .replace("FREQ=WEEKLY;COUNT=8", "FREQ=WEEKLY;UNTIL=20261026T130000Z")
+)
+
 # SERIES_ICS ending on a date instead of after a number of occurrences
 SERIES_UNTIL_ICS = SERIES_ICS.replace(
     "RRULE:FREQ=WEEKLY;COUNT=8", "RRULE:FREQ=WEEKLY;UNTIL=20261214T140000Z"
@@ -2079,40 +2091,6 @@ async def _ws_call(
             id="same_until_with_override",
         ),
         pytest.param(
-            SERIES_ICS,
-            "series",
-            FIRST_OCCURRENCE,
-            {
-                "summary": "Weekly renamed",
-                "dtstart": "2026-10-26T09:00:00",
-                "dtend": "2026-10-26T09:30:00",
-                "rrule": "FREQ=WEEKLY;INTERVAL=1;COUNT=8",
-            },
-            id="same_rule_written_differently_with_override",
-        ),
-        pytest.param(
-            FIRST_MOVED_ICS,
-            "series",
-            FIRST_OCCURRENCE,
-            {
-                "summary": "Weekly renamed",
-                "dtstart": "2026-10-26T11:00:00",
-                "dtend": "2026-10-26T11:30:00",
-            },
-            id="first_occurrence_moved",
-        ),
-        pytest.param(
-            FIRST_DELETED_ICS,
-            "series",
-            SECOND_OCCURRENCE,
-            {
-                "summary": "Weekly renamed",
-                "dtstart": "2026-11-02T09:00:00",
-                "dtend": "2026-11-02T09:30:00",
-            },
-            id="first_occurrence_deleted",
-        ),
-        pytest.param(
             MONDAYS_ICS.replace("COUNT=4", "UNTIL=20261123T090000"),
             "mondays",
             "",
@@ -2146,17 +2124,6 @@ async def _ws_call(
             id="floating_in_skipped_hour",
         ),
         pytest.param(
-            FIRST_DELETED_ICS.replace("RRULE:FREQ=WEEKLY;COUNT=8", BROKEN_RULE),
-            "series",
-            FIRST_OCCURRENCE,
-            {
-                "summary": "Weekly renamed",
-                "dtstart": "2026-10-26T09:00:00",
-                "dtend": "2026-10-26T09:30:00",
-            },
-            id="broken_rule_title_only",
-        ),
-        pytest.param(
             SERIES_UNTIL_ICS.replace(SERIES_OVERRIDE, ""),
             "series",
             FIRST_OCCURRENCE,
@@ -2168,15 +2135,35 @@ async def _ws_call(
             id="until_moves_with_start",
         ),
         pytest.param(
-            FIRST_CANCELLED_ICS,
+            UNTIL_BEFORE_DST_END_ICS,
             "series",
-            SECOND_OCCURRENCE,
+            "",
             {
-                "summary": "Weekly renamed",
-                "dtstart": "2026-11-02T09:00:00",
-                "dtend": "2026-11-02T09:30:00",
+                "summary": "Weekly",
+                "dtstart": "2026-10-26T09:00:00",
+                "dtend": "2026-10-26T09:30:00",
             },
-            id="first_occurrence_cancelled",
+            id="until_moves_across_daylight_saving_time",
+        ),
+        pytest.param(
+            ALL_DAY_SERIES_ICS.replace("COUNT=5", "UNTIL=20261124"),
+            "all-day-series",
+            "",
+            {"summary": "Holiday", "dtstart": "2026-11-21", "dtend": "2026-11-22"},
+            id="until_moves_with_all_day_start",
+        ),
+        pytest.param(
+            FLOATING_ICS.replace(
+                "SUMMARY:Run", "RRULE:FREQ=DAILY;UNTIL=20261112T070000\nSUMMARY:Run"
+            ),
+            "floating",
+            "",
+            {
+                "summary": "Run",
+                "dtstart": "2026-11-10T08:00:00",
+                "dtend": "2026-11-10T08:30:00",
+            },
+            id="until_moves_with_floating_start",
         ),
         pytest.param(
             ALL_DAY_HOUR_ICS,
@@ -2338,19 +2325,13 @@ async def test_update_event_daylight_saving_time(
         pytest.param(SINGLE_ICS, "single", "", id="single"),
         pytest.param(SERIES_ICS, "series", FIRST_OCCURRENCE, id="series"),
         pytest.param(
-            FIRST_DELETED_ICS,
-            "series",
-            SECOND_OCCURRENCE,
-            id="series_first_occurrence_deleted",
-        ),
-        pytest.param(
-            FIRST_CANCELLED_ICS,
-            "series",
-            SECOND_OCCURRENCE,
-            id="series_first_occurrence_cancelled",
-        ),
-        pytest.param(
             ALL_DAY_HOUR_ICS, "all-day-series", "", id="all_day_lasting_an_hour"
+        ),
+        pytest.param(
+            REPEATED_HOUR_SERIES_ICS,
+            "series",
+            "2026-11-01 01:30:00-04:00",
+            id="series_in_repeated_hour",
         ),
     ],
 )
@@ -2411,6 +2392,20 @@ DELETE = {"type": "calendar/event/delete"}
             "2026-11-02 15:00:00+00:00",
             "THISANDFUTURE",
             id="invitation",
+        ),
+        pytest.param(
+            FIRST_DELETED_ICS,
+            "series",
+            SECOND_OCCURRENCE,
+            "THISANDFUTURE",
+            id="first_occurrence_deleted",
+        ),
+        pytest.param(
+            FIRST_CANCELLED_ICS,
+            "series",
+            SECOND_OCCURRENCE,
+            "THISANDFUTURE",
+            id="first_occurrence_cancelled",
         ),
     ],
 )
@@ -2543,15 +2538,14 @@ async def test_update_series_all_day_change(
             id="rdate_new_rrule",
         ),
         pytest.param(
-            SERIES_ICS.replace("RRULE:FREQ=WEEKLY;COUNT=8", BROKEN_RULE),
+            FIRST_MOVED_ICS,
             "series",
             {
-                "summary": "Weekly",
-                "dtstart": "2026-10-26T06:00:00",
-                "dtend": "2026-10-26T06:30:00",
-                "rrule": "FREQ=WEEKLY;COUNT=8",
+                "summary": "Weekly renamed",
+                "dtstart": "2026-10-26T08:00:00",
+                "dtend": "2026-10-26T08:30:00",
             },
-            id="broken_rule_echoed",
+            id="first_occurrence_moved",
         ),
     ],
 )

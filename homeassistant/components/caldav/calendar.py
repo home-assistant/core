@@ -1,7 +1,7 @@
 """Support for WebDav Calendar."""
 
 from collections.abc import Callable
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from functools import partial
 import logging
 from typing import Any, cast, override
@@ -322,9 +322,9 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         item = self._get_event(uid)
         calendar = item.icalendar_instance
         series = _get_series(calendar)
-        first = _check_whole_event(calendar, series, recurrence_id, recurrence_range)
-        if _shows_first(calendar, series, first, event):
-            # Unchanged, or the times of a moved first occurrence
+        _check_whole_event(series, recurrence_id, recurrence_range)
+        if _same_times(series, event):
+            # Leave the stored times as they are
             event = {
                 key: value
                 for key, value in event.items()
@@ -358,9 +358,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """Check and delete an event."""
         item = self._get_event(uid)
         calendar = item.icalendar_instance
-        _check_whole_event(
-            calendar, _get_series(calendar), recurrence_id, recurrence_range
-        )
+        _check_whole_event(_get_series(calendar), recurrence_id, recurrence_range)
         # Only delete the version that was checked; If-Match can't use a weak ETag
         etag = item.etag
         if_match = bool(etag and not etag.startswith("W/"))
@@ -424,92 +422,40 @@ def _get_series(calendar: icalendar.Calendar) -> icalendar.Event:
 
 
 def _check_whole_event(
-    calendar: icalendar.Calendar,
-    series: icalendar.Event,
-    recurrence_id: str | None,
-    recurrence_range: str | None,
-) -> date | datetime:
+    series: icalendar.Event, recurrence_id: str | None, recurrence_range: str | None
+) -> None:
     """Refuse changes to single occurrences of a recurring event.
 
     A change from the first occurrence on is a change to the whole event. The
-    recurrence id is the occurrence start as the coordinator formats it. Returns
-    the start of the first occurrence.
+    recurrence id is the occurrence start as the coordinator formats it.
     """
-    first = _first_start(calendar, series)
-    if recurrence_id:
-        start: date | datetime
-        try:
-            start = date.fromisoformat(recurrence_id)
-        except ValueError:
-            start = datetime.fromisoformat(recurrence_id)
-        if (
-            recurrence_range != THIS_AND_FUTURE
-            or "RECURRENCE-ID" in series
-            or not _same_time(start, first)
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="occurrence_not_supported"
-            )
-    return first
-
-
-def _first_start(
-    calendar: icalendar.Calendar, series: icalendar.Event
-) -> date | datetime:
-    """Return the start of the first occurrence that wasn't deleted or cancelled."""
-    exdates = series.get("EXDATE", [])
-    deleted = {
-        _instant(value.dt)
-        for prop in (exdates if isinstance(exdates, list) else [exdates])
-        for value in prop.dts
-    } | {
-        _instant(component["RECURRENCE-ID"].dt)
-        for component in calendar.walk("VEVENT")
-        if "RECURRENCE-ID" in component
-        and str(component.get("STATUS", "")).upper() == "CANCELLED"
-    }
-    if "RRULE" not in series or not deleted:
-        return series.DTSTART
+    if not recurrence_id:
+        return
+    start: date | datetime
     try:
-        occurrences = _occurrences(series)
+        start = date.fromisoformat(recurrence_id)
     except ValueError:
-        return series.DTSTART
-    all_day = not isinstance(series.DTSTART, datetime)
-    starts = (
-        occurrence.date() if all_day else occurrence for occurrence in occurrences
-    )
-    return next(
-        (start for start in starts if _instant(start) not in deleted),
-        series.DTSTART,
-    )
+        start = datetime.fromisoformat(recurrence_id)
+    if (
+        recurrence_range != THIS_AND_FUTURE
+        or "RECURRENCE-ID" in series
+        or not _same_time(start, series.DTSTART)
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="occurrence_not_supported"
+        )
 
 
-def _shows_first(
-    calendar: icalendar.Calendar,
-    series: icalendar.Event,
-    first: date | datetime,
-    event: dict[str, Any],
-) -> bool:
-    """Return if an update has the times calendars show for the first occurrence.
-
-    That is the occurrence an update of the whole event is made from, and an
-    override can have moved it.
-    """
-    moved = [
-        component
-        for component in calendar.walk("VEVENT")
-        if "RECURRENCE-ID" in component
-        and _same_time(component["RECURRENCE-ID"].dt, first)
-    ]
+def _same_times(series: icalendar.Event, event: dict[str, Any]) -> bool:
+    """Return if an update keeps the start and end of the event."""
     try:
-        if moved:
-            start, end = moved[0].DTSTART, moved[0].end
-        else:
-            start, end = first, first + series.duration
+        end = series.end
     except ValueError:
         # The event has no consistent end, so the update sets one
         return False
-    return _same_time(event[EVENT_START], start) and _same_time(event[EVENT_END], end)
+    return _same_time(event[EVENT_START], series.DTSTART) and _same_time(
+        event[EVENT_END], end
+    )
 
 
 def _same_time(value: date | datetime, other: date | datetime) -> bool:
@@ -519,9 +465,12 @@ def _same_time(value: date | datetime, other: date | datetime) -> bool:
 
 def _instant(value: date | datetime) -> date | datetime:
     """Return a value that compares by instant, taking floating times as local."""
-    if isinstance(value, datetime) and value.tzinfo is None:
-        return value.replace(tzinfo=dt_util.get_default_time_zone())
-    return value
+    if not isinstance(value, datetime):
+        return value
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=dt_util.get_default_time_zone())
+    # Times in a repeated hour only compare by instant within one time zone
+    return value.astimezone(UTC)
 
 
 def _check_series_change(
@@ -545,23 +494,15 @@ def _check_series_change(
         "EXDATE" in series or "RDATE" in series or len(calendar.walk("VEVENT")) > 1
     )
     if has_exceptions and (
-        start != series.DTSTART or (rrule and not _same_rule(series, rrule, start))
+        start != series.DTSTART
+        or (
+            rrule
+            and ("RRULE" not in series or _parse_rule(rrule, start) != series["RRULE"])
+        )
     ):
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="exceptions_change_not_supported"
         )
-
-
-def _same_rule(series: icalendar.Event, rrule: str, start: date | datetime) -> bool:
-    """Return if a rule gives the same occurrences as the rule of the series."""
-    if "RRULE" not in series:
-        return False
-    new = series.copy()
-    new["RRULE"] = _parse_rule(rrule, start)
-    try:
-        return str(_occurrences(new)) == str(_occurrences(series))
-    except ValueError:
-        return False
 
 
 def _occurrences(series: icalendar.Event) -> rrulebase:
@@ -680,5 +621,21 @@ def _set_fields(series: icalendar.Event, event: dict[str, Any]) -> None:
     elif "UNTIL" in series.get("RRULE", {}) and original_start != series.DTSTART:
         # Move the end of the rule along, so no occurrence is lost
         rule = _parse_rule(series["RRULE"].to_ical().decode(), original_start)
-        rule["UNTIL"] = [rule["UNTIL"][0] + (series.DTSTART - original_start)]
+        rule["UNTIL"] = [_shift(rule["UNTIL"][0], original_start, series.DTSTART)]
         series["RRULE"] = rule
+
+
+def _shift(
+    value: date | datetime, start: date | datetime, new_start: date | datetime
+) -> date | datetime:
+    """Move a time by as much wall time as the start moved, in its time zone."""
+    if not isinstance(start, datetime):
+        # All-day, so UNTIL is a date too
+        return value + timedelta(days=new_start.toordinal() - start.toordinal())
+    new_start = cast(datetime, new_start)
+    zone = start.tzinfo
+    wall = cast(datetime, value)
+    if zone:
+        wall = wall.astimezone(zone).replace(tzinfo=None)
+    wall += new_start.replace(tzinfo=None) - start.replace(tzinfo=None)
+    return wall.replace(tzinfo=zone).astimezone(UTC) if zone else wall
