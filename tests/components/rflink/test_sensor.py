@@ -5,6 +5,8 @@ automatic sensor creation.
 
 """
 
+from unittest.mock import MagicMock
+
 import pytest
 
 from homeassistant.components.rflink import (
@@ -104,6 +106,44 @@ async def test_default_setup(
     assert bat_sensor.state == "ok"
     assert ATTR_UNIT_OF_MEASUREMENT not in bat_sensor.attributes
     assert bat_sensor.attributes[ATTR_ICON] == "mdi:battery"
+
+
+async def test_deprecated_config(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    mock_create_issue: MagicMock,
+) -> None:
+    """Test that deprecated config creates an issue."""
+
+    CONFIG_DEPRECATED = {
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            "ignore_devices": ["ignore_wildcard_*", "ignore_sensor"],
+        },
+        DOMAIN: {
+            "platform": "rflink",
+            "devices": {"test": {"name": "test", "sensor_type": "temperature"}},
+        },
+    }
+
+    _, _, _, disconnect_callback = await mock_rflink(
+        hass, CONFIG_DEPRECATED, DOMAIN, monkeypatch, old_yaml=True
+    )
+
+    mock_create_issue.assert_called_once_with(
+        hass,
+        "rflink",
+        DOMAIN,
+        yaml_config_under_integration_supported=True,
+        learn_more_url="https://www.home-assistant.io/integrations/rflink/#migrating-from-legacy-configuration-format",
+    )
+
+    disconnect_callback()  # disconnect to prevent failure from second 'mock_rflink'
+    mock_create_issue.reset_mock()
+
+    _, _, _, _ = await mock_rflink(hass, CONFIG, DOMAIN, monkeypatch)
+
+    mock_create_issue.assert_not_called()
 
 
 async def test_disable_automatic_add(

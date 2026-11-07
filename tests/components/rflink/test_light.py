@@ -5,6 +5,8 @@ control of RFLink switch devices.
 
 """
 
+from unittest.mock import MagicMock
+
 import pytest
 from pytest_homeassistant.common import mock_restore_cache
 
@@ -147,6 +149,48 @@ async def test_default_setup(
     await hass.async_block_till_done()
 
     assert protocol.send_command_ack.call_args_list[5][0][1] == "7"
+
+
+async def test_deprecated_config(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    mock_create_issue: MagicMock,
+) -> None:
+    """Test that deprecated config creates an issue."""
+
+    CONFIG_DEPRECATED = {
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            "ignore_devices": ["ignore_wildcard_*", "ignore_light"],
+        },
+        DOMAIN: {
+            "platform": "rflink",
+            "devices": {
+                "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]},
+                "dimmable_0_0": {"name": "dim_test", "type": "dimmable"},
+                "switchable_0_0": {"name": "switch_test", "type": "switchable"},
+            },
+        },
+    }
+
+    _, _, _, disconnect_callback = await mock_rflink(
+        hass, CONFIG_DEPRECATED, DOMAIN, monkeypatch, old_yaml=True
+    )
+
+    mock_create_issue.assert_called_once_with(
+        hass,
+        "rflink",
+        DOMAIN,
+        yaml_config_under_integration_supported=True,
+        learn_more_url="https://www.home-assistant.io/integrations/rflink/#migrating-from-legacy-configuration-format",
+    )
+
+    disconnect_callback()  # disconnect to prevent failure from second 'mock_rflink'
+    mock_create_issue.reset_mock()
+
+    _, _, _, _ = await mock_rflink(hass, CONFIG, DOMAIN, monkeypatch)
+
+    mock_create_issue.assert_not_called()
 
 
 async def test_firing_bus_event(
