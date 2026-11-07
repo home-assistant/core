@@ -44,6 +44,16 @@ FILTER_DESCRIPTIONS: tuple[EheimDigitalSensorDescription[EheimDigitalFilter], ..
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
     EheimDigitalSensorDescription[EheimDigitalFilter](
+        key="operating_time",
+        translation_key="operating_time",
+        value_fn=lambda device: device.operating_time,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=2,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    EheimDigitalSensorDescription[EheimDigitalFilter](
         key="service_hours",
         translation_key="service_hours",
         value_fn=lambda device: device.service_hours,
