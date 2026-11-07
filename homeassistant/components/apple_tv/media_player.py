@@ -221,6 +221,9 @@ class AppleTvMediaPlayer(
         if (
             self._is_feature_available(FeatureName.PowerState)
             and self.atv.power.power_state is PowerState.Off
+            and not (
+                self._playing and self._playing.device_state is DeviceState.Playing
+            )
         ):
             return MediaPlayerState.OFF
         if self._playing:
