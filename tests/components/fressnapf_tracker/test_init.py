@@ -1,20 +1,23 @@
 """Test the Fressnapf Tracker integration init."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from fressnapftracker import (
     FressnapfTrackerError,
     FressnapfTrackerInvalidTrackerResponseError,
 )
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fressnapf_tracker.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import MOCK_SERIAL_NUMBER
 
@@ -83,6 +86,10 @@ async def test_setup_entry_tracker_is_valid_api_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "api_error"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "error_message": "API Error"
+    }
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -187,3 +194,28 @@ async def test_invalid_tracker_shared_between_entries(
         DOMAIN,
         f"invalid_fressnapf_tracker_{mock_email_config_entry.entry_id}_{MOCK_SERIAL_NUMBER}",
     )
+
+
+@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
+async def test_update_failed_has_translated_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client_coordinator: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failing update raises a translatable error."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_api_client_coordinator.get_tracker.side_effect = FressnapfTrackerError(
+        "API Error"
+    )
+    freezer.tick(timedelta(minutes=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    error = mock_config_entry.runtime_data[0].last_exception
+    assert isinstance(error, UpdateFailed)
+    assert error.translation_key == "api_error"
+    assert error.translation_placeholders == {"error_message": "API Error"}
