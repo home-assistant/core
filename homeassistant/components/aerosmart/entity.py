@@ -7,6 +7,10 @@ integration does not split ventilation/heat-pump into separate devices.
 from dataclasses import dataclass
 from typing import override
 
+from aerosmart_modbus import WriteVerificationError
+from modbus_connection import ModbusError
+
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -59,3 +63,21 @@ class AerosmartEntity(CoordinatorEntity[AerosmartCoordinator]):
             super().available
             and self.entity_description.component in self.coordinator.data.updated
         )
+
+    async def _async_write_verified(self, value: object) -> None:
+        """Write and confirm a manufacturer-verified control value."""
+        description = self.entity_description
+        try:
+            await self.coordinator.device.async_write_verified(
+                description.component, description.attribute, value
+            )
+        except (ModbusError, WriteVerificationError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_failed",
+                translation_placeholders={
+                    "field": description.key,
+                    "error": str(err),
+                },
+            ) from err
+        self.coordinator.async_update_listeners()
