@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -193,13 +193,33 @@ class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity
         super().__init__(coordinator, device)
         self.entity_description = entity_description
         self._attr_unique_id = f"{device.mac}_{entity_description.key}"
+        if (
+            coordinator.data is not None
+            and (current := coordinator.data.get(device.mac)) is not None
+        ):
+            self._attr_native_value = self.entity_description.update_func(current)
+        else:
+            self._attr_native_value = None
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data."""
+        # The device may no longer be reported (e.g. it was removed from the
+        # controller) — the entity becomes unavailable instead of raising
+        # KeyError. The stale value is kept only for when it reappears.
+        if (current := self.coordinator.data.get(self.device.mac)) is not None:
+            self._attr_native_value = self.entity_description.update_func(current)
+        super()._handle_coordinator_update()
 
     @property
     @override
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return self.entity_description.update_func(
-            self.coordinator.data[self.device.mac]
+    def available(self) -> bool:
+        """Return availability based on the device still being reported."""
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self.device.mac in self.coordinator.data
         )
 
 
@@ -254,9 +274,31 @@ class OmadaSwitchPortSensor(
         self._port_id = port.port_id
         self._attr_unique_id = f"{device.mac}_{port.port_id}_{entity_description.key}"
         self._attr_translation_placeholders = {"port_name": port_name}
+        if (
+            coordinator.data is not None
+            and (current := coordinator.data.get(port.port_id)) is not None
+        ):
+            self._attr_native_value = self.entity_description.update_func(current)
+        else:
+            self._attr_native_value = None
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data."""
+        # The port may no longer be reported (e.g. after a firmware update or
+        # a port reconfiguration) — the entity becomes unavailable instead of
+        # raising KeyError. The stale value is kept for when it reappears.
+        if (current := self.coordinator.data.get(self._port_id)) is not None:
+            self._attr_native_value = self.entity_description.update_func(current)
+        super()._handle_coordinator_update()
 
     @property
     @override
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return self.entity_description.update_func(self.coordinator.data[self._port_id])
+    def available(self) -> bool:
+        """Return availability based on the port still being reported."""
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self._port_id in self.coordinator.data
+        )
