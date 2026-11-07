@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from fressnapftracker import (
     FressnapfTrackerError,
     FressnapfTrackerInvalidTokenError,
@@ -11,7 +12,6 @@ from fressnapftracker import (
     TrackerFeatures,
     TrackerSettings,
 )
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
