@@ -2,8 +2,10 @@
 
 from datetime import timedelta
 import ssl
+from typing import Any
 from unittest.mock import patch
 
+from aiohttp import ClientError
 import pytest
 from pytest_homeassistant.common import (
     assert_setup_component,
@@ -14,9 +16,12 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config as hass_config
 from homeassistant.components.rest.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PACKAGES,
+    CONF_PAYLOAD,
+    CONF_RESOURCE,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     UnitOfInformation,
@@ -24,6 +29,8 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
+
+from .conftest import async_setup_entry
 
 
 async def test_setup_with_endpoint_timeout_with_recovery(
@@ -544,3 +551,52 @@ async def test_setup_minimum_payload_template(
     assert hass.states.get("sensor.sensor2").state == "2"
     assert hass.states.get("binary_sensor.binary_sensor1").state == "on"
     assert hass.states.get("binary_sensor.binary_sensor2").state == "off"
+
+
+async def test_setup_entry_bad_resource(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test setup entry with resource error."""
+    aioclient_mock.get("http://localhost", exc=ClientError("client error"))
+
+    entry = await async_setup_entry(hass, get_config_entry_data)
+
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "endpoint_error"
+    assert "client error" in entry.reason
+
+
+async def test_setup_entry_template_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test setup entry handles TemplateError."""
+    entry = await async_setup_entry(
+        hass,
+        get_config_entry_data | {CONF_PAYLOAD: '{"bad_template": "{{ 1 / 0}}"}'},
+    )
+
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "template_error"
+
+
+async def test_setup_entry_resource_renders_empty(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    get_config_entry_data: dict[str, Any],
+) -> None:
+    """Test setup entry when resource template renders empty result."""
+    entry = await async_setup_entry(
+        hass,
+        get_config_entry_data | {CONF_RESOURCE: "{{ '' }}"},
+    )
+
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "template_error"
+    assert "The resource is not set" in entry.reason
