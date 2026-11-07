@@ -9,12 +9,13 @@ from pyvesync.base_devices import VeSyncBaseDevice
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import is_humidifier, is_outlet, is_purifier
+from .common import is_humidifier, is_outlet, is_purifier, rgetattr
 from .const import (
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
@@ -67,6 +68,13 @@ def _toggle_outlet_nightlight(device: VeSyncBaseDevice, *args) -> Awaitable[bool
     raise HomeAssistantError("Device does not support toggling nightlight.")
 
 
+def _set_purifier_auto_preference(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
+    """Set the auto mode preference of a purifier."""
+    if hasattr(device, "set_auto_preference"):
+        return device.set_auto_preference(*args)
+    raise HomeAssistantError("Device does not support auto mode preferences.")
+
+
 @dataclass(frozen=True, kw_only=True)
 class VeSyncSelectEntityDescription(SelectEntityDescription):
     """Class to describe a Vesync select entity."""
@@ -108,6 +116,22 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         exists_fn=lambda device: is_purifier(device) and device.supports_nightlight,
         select_option_fn=_toggle_purifier_nightlight,
         current_option_fn=lambda device: device.state.nightlight_status,
+    ),
+    # auto_preference for air purifiers
+    VeSyncSelectEntityDescription(
+        key="auto_preference",
+        translation_key="auto_preference",
+        options=["default", "efficient", "quiet"],
+        entity_category=EntityCategory.CONFIG,
+        exists_fn=(
+            lambda device: (
+                is_purifier(device)
+                and bool(getattr(device, "auto_preferences", None))
+                and rgetattr(device, "state.auto_preference_type") is not None
+            )
+        ),
+        select_option_fn=_set_purifier_auto_preference,
+        current_option_fn=lambda device: device.state.auto_preference_type,
     ),
     # night_light for outlets
     VeSyncSelectEntityDescription(
