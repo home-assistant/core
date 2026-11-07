@@ -45,6 +45,7 @@ PIPE_FUNCTION_MAP = {
 SIGNAL_ADD_ZONES = "forked-daapd_add_zones {}"
 SIGNAL_CONFIG_OPTIONS_UPDATE = "forked-daapd_config_options_update {}"
 SIGNAL_UPDATE_DATABASE = "forked-daapd_update_database {}"
+SIGNAL_UPDATE_GROUP = "forked-daapd_update_group {}"
 SIGNAL_UPDATE_MASTER = "forked-daapd_update_master {}"
 SIGNAL_UPDATE_OUTPUTS = "forked-daapd_update_outputs {}"
 SIGNAL_UPDATE_PLAYER = "forked-daapd_update_player {}"
@@ -90,6 +91,7 @@ SUPPORTED_FEATURES_ZONE = (
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.GROUPING
 )
 TTS_TIMEOUT = 20  # max time to wait between TTS getting sent and starting to play
 URI_SCHEMA = "owntone"
