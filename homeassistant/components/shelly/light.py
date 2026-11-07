@@ -594,6 +594,75 @@ class RpcShellyRgbwLight(RpcShellyLightBase):
     _attr_supported_features = LightEntityFeature.TRANSITION
 
 
+class RpcShellyRgbwWhiteLight(ShellyRpcAttributeEntity, LightEntity):
+    """Entity that controls the white channel of a RGBW light on RPC devices."""
+
+    entity_description: RpcLightDescription
+
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_supported_features = LightEntityFeature.TRANSITION
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+    ) -> None:
+        """Initialize light."""
+        super().__init__(coordinator, key, attribute, description)
+        self._last_white = 255
+        self.configure_translation_attributes()
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """If the white channel is lit."""
+        return bool(self.status["output"] and self.status["white"])
+
+    @property
+    @override
+    def brightness(self) -> int:
+        """Return the white level between 0..255."""
+        return cast(int, self.status["white"])
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the white channel."""
+        params: dict[str, Any] = {
+            "id": self._id,
+            "on": True,
+            "white": kwargs.get(
+                ATTR_BRIGHTNESS, self.status["white"] or self._last_white
+            ),
+        }
+
+        if ATTR_TRANSITION in kwargs:
+            params["transition_duration"] = max(
+                kwargs[ATTR_TRANSITION], RPC_MIN_TRANSITION_TIME_SEC
+            )
+
+        await self.call_rpc("RGBW.Set", params)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the white channel."""
+        self._last_white = self.status["white"] or self._last_white
+        params: dict[str, Any] = {"id": self._id, "white": 0}
+
+        # Color and white share one output, so it stays on while color is lit.
+        if not self.status["brightness"] or not any(self.status["rgb"]):
+            params["on"] = False
+
+        if ATTR_TRANSITION in kwargs:
+            params["transition_duration"] = max(
+                kwargs[ATTR_TRANSITION], RPC_MIN_TRANSITION_TIME_SEC
+            )
+
+        await self.call_rpc("RGBW.Set", params)
+
+
 LIGHTS: Final = {
     "switch": RpcEntityDescription(
         key="switch",
@@ -627,6 +696,13 @@ LIGHTS: Final = {
         key="rgbw",
         sub_key="output",
         entity_class=RpcShellyRgbwLight,
+    ),
+    "rgbw_white": RpcEntityDescription(
+        key="rgbw",
+        sub_key="white",
+        translation_key="rgbw_white",
+        entity_registry_enabled_default=False,
+        entity_class=RpcShellyRgbwWhiteLight,
     ),
     "ledstrip": RpcEntityDescription(
         key="ledstrip",
