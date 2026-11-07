@@ -107,7 +107,8 @@ async def _tick(
     # One extra second: refreshes are scheduled with a sub-second offset
     freezer.tick(delta + timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    # Scheduled coordinator refreshes run as background tasks
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.parametrize(
