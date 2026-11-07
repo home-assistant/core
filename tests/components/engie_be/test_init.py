@@ -121,7 +121,10 @@ async def test_setup_relations_auth_error_starts_reauth(
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
-@pytest.mark.parametrize("method", ["async_get_prices", "async_get_service_point"])
+@pytest.mark.parametrize(
+    "method",
+    ["async_get_prices", "async_get_service_point", "async_get_tou_schedules"],
+)
 async def test_setup_prices_auth_error_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

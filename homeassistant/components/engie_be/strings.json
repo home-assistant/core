@@ -52,6 +52,12 @@
       }
     },
     "sensor": {
+      "electricity_current_price": {
+        "name": "Current electricity price"
+      },
+      "electricity_current_price_with_ean": {
+        "name": "Current electricity price ({ean_suffix})"
+      },
       "electricity_price_injection": {
         "name": "Electricity injection price"
       },
@@ -375,6 +381,30 @@
       },
       "gas_price_offtake_with_ean": {
         "name": "Gas offtake price ({ean_suffix})"
+      },
+      "grid_injection_slot": {
+        "name": "Grid operator injection slot"
+      },
+      "grid_injection_slot_with_ean": {
+        "name": "Grid operator injection slot ({ean_suffix})"
+      },
+      "grid_offtake_slot": {
+        "name": "Grid operator offtake slot"
+      },
+      "grid_offtake_slot_with_ean": {
+        "name": "Grid operator offtake slot ({ean_suffix})"
+      },
+      "tou_injection_slot": {
+        "name": "Supplier injection slot"
+      },
+      "tou_injection_slot_with_ean": {
+        "name": "Supplier injection slot ({ean_suffix})"
+      },
+      "tou_offtake_slot": {
+        "name": "Supplier offtake slot"
+      },
+      "tou_offtake_slot_with_ean": {
+        "name": "Supplier offtake slot ({ean_suffix})"
       }
     }
   },

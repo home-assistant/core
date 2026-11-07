@@ -24,6 +24,12 @@ from aioengiebelgium import (
     PricesResponse,
     ProductConfiguration,
     ServicePoint,
+    TouDirectionSchedule,
+    TouGridMeterSchedule,
+    TouSchedule,
+    TouScheduleItem,
+    TouSchedulesResponse,
+    TouSlot,
     bare_ean,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -47,9 +53,11 @@ BAN = "000000000001"
 BAN_2 = "000000000002"
 OFFTAKE_ONLY_EAN = "541448820000000001_ID1"
 OFFTAKE_INJECTION_EAN = "541448820000000002_ID1"
+ELECTRICITY_EAN_2 = "541448820000000003_ID1"
 _SERVICE_POINT_ENERGY_TYPES = {
     bare_ean(OFFTAKE_ONLY_EAN): "GAS",
     bare_ean(OFFTAKE_INJECTION_EAN): "ELECTRICITY",
+    bare_ean(ELECTRICITY_EAN_2): "ELECTRICITY",
 }
 
 
@@ -175,6 +183,81 @@ def build_contracts(*, dynamic: bool = False) -> EnergyContractsResponse:
     )
 
 
+_WEEKDAYS = (
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+)
+
+
+def _every_day(slots: tuple[TouSlot, ...], optimal: str | None) -> TouDirectionSchedule:
+    """Build a direction schedule that repeats one slot pattern every weekday."""
+    return TouDirectionSchedule(
+        optimal_timeslot_code=optimal,
+        **dict.fromkeys(_WEEKDAYS, slots),
+    )
+
+
+def build_tou_schedules(
+    *,
+    supplier_tou: bool = True,
+    network_tou: bool = True,
+    with_second_meter: bool = False,
+) -> TouSchedulesResponse:
+    """Build a tou-schedules response for the electricity EAN of the fixtures.
+
+    The supplier offtake schedule switches between peak and exclusive night so
+    the joined active price alternates between the peak and EN price slots.
+    """
+    peak = TouSlot(start_time="07:00", end_time="22:00", slot_code="peak")
+    night = TouSlot(start_time="22:00", end_time="07:00", slot_code="exclusive_night")
+    offpeak = TouSlot(start_time="22:00", end_time="07:00", slot_code="offpeak")
+    flat = TouSlot(start_time="00:00", end_time="00:00", slot_code="total_hours")
+    supplier_offtake = _every_day(
+        (peak, night) if supplier_tou else (flat,),
+        "exclusive_night" if supplier_tou else None,
+    )
+    supplier_injection = _every_day(
+        (peak, offpeak) if supplier_tou else (flat,),
+        "peak" if supplier_tou else None,
+    )
+    dgo_offtake = _every_day(
+        (peak, offpeak) if network_tou else (flat,),
+        "offpeak" if network_tou else None,
+    )
+    dgo_injection = _every_day((flat,), None)
+
+    def _meter(grid_meter_number: str) -> TouGridMeterSchedule:
+        return TouGridMeterSchedule(
+            grid_meter_number=grid_meter_number,
+            exclusive_night_meter=False,
+            supplier=TouSchedule(
+                offtake=supplier_offtake,
+                injection=supplier_injection,
+            ),
+            dgo_tgo=TouSchedule(offtake=dgo_offtake, injection=dgo_injection),
+        )
+
+    items = [
+        TouScheduleItem(
+            ean_with_suffix=OFFTAKE_INJECTION_EAN,
+            grid_meter_schedules=(_meter("1SAG120000000001"),),
+        )
+    ]
+    if with_second_meter:
+        items.append(
+            TouScheduleItem(
+                ean_with_suffix=ELECTRICITY_EAN_2,
+                grid_meter_schedules=(_meter("1SAG120000000002"),),
+            )
+        )
+    return TouSchedulesResponse(items=tuple(items))
+
+
 def _api_timestamp(moment: datetime) -> datetime:
     """Return a timestamp carrying the fixed Brussels offset the API would send."""
     wall = BRUSSELS_TIME_ZONE.fromutc(moment.replace(tzinfo=BRUSSELS_TIME_ZONE))
@@ -282,6 +365,7 @@ def mock_engie_client(mock_auth_flow: MagicMock) -> Generator[MagicMock]:
         client.async_get_prices.return_value = build_prices()
         client.async_get_service_point.side_effect = build_service_point
         client.async_get_energy_contracts.return_value = build_contracts()
+        client.async_get_tou_schedules.return_value = TouSchedulesResponse()
         client.async_get_epex_prices.side_effect = build_epex_payload
         client.async_start_authentication.return_value = mock_auth_flow
         yield mock_client_class

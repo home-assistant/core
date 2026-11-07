@@ -20,6 +20,7 @@ from .coordinator import (
     EngieBeEpexCoordinator,
     EngieBePricesCoordinator,
     EngieBeRelationsCoordinator,
+    EngieBeTouCoordinator,
     mask_identifier,
 )
 
@@ -31,6 +32,7 @@ class EngieBeHouseholdCoordinators:
     """Per-household coordinators and tariff state."""
 
     prices: EngieBePricesCoordinator
+    tou: EngieBeTouCoordinator
     is_dynamic: bool | None
 
 
@@ -106,6 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
             prices=EngieBePricesCoordinator(
                 hass, entry, client, ban, relations.data[ban]
             ),
+            tou=EngieBeTouCoordinator(hass, entry, client, ban),
             is_dynamic=is_dynamic,
         )
         device_registry.async_get_or_create_from_info(
@@ -126,7 +129,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
         epex = EngieBeEpexCoordinator(hass, entry, client)
 
     await asyncio.gather(
-        *(household.prices.async_refresh() for household in households.values())
+        *(
+            coordinator.async_refresh()
+            for household in households.values()
+            for coordinator in (household.prices, household.tou)
+        )
     )
     if epex is not None:
         try:
@@ -175,6 +182,8 @@ def _async_start_tariff_retry(
             return
         for ban, is_dynamic in zip(pending, results, strict=True):
             households[ban].is_dynamic = is_dynamic
+            if is_dynamic is False:
+                households[ban].tou.async_update_listeners()
         if any(results):
             await epex.async_request_refresh()
             if entry.state is not ConfigEntryState.LOADED:

@@ -15,6 +15,7 @@ from .const import CONF_REFRESH_TOKEN
 from .coordinator import (
     BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
+    EngieBeTouCoordinator,
     epex_day_available,
     epex_slots_for_day,
 )
@@ -34,6 +35,29 @@ TO_REDACT = {
 def _hashed_identifier(identifier: str) -> str:
     """Return a stable fingerprint that keeps households and meters apart."""
     return f"**REDACTED_{hashlib.sha256(identifier.encode()).hexdigest()[:16]}"
+
+
+def _tou_diagnostics(tou: EngieBeTouCoordinator) -> dict[str, Any]:
+    """Return the diagnostics of the time-of-use schedules."""
+    items: dict[str, dict[str, Any]] = {}
+    for ean_with_suffix, item in tou.data.items() if tou.data is not None else {}:
+        meter = item.primary_meter()
+        supplier = meter.supplier if meter is not None else None
+        current_slot: str | None = None
+        if supplier is not None and supplier.offtake is not None:
+            current_slot = supplier.offtake.current_slot(
+                dt_util.now(BRUSSELS_TIME_ZONE), BRUSSELS_TIME_ZONE
+            )[0]
+        items[_hashed_identifier(bare_ean(ean_with_suffix))] = {
+            "supplier_tou": item.has_supplier_tou(),
+            "network_tou": item.has_network_tou(),
+            "current_supplier_offtake_slot": current_slot,
+        }
+    return {
+        "last_update_success": tou.last_update_success,
+        "update_interval": str(tou.update_interval),
+        "items": items,
+    }
 
 
 def _household_diagnostics(
@@ -61,6 +85,7 @@ def _household_diagnostics(
             for ean, energy_type in prices.ean_energy_types.items()
         },
         "slots": slots,
+        "tou": _tou_diagnostics(household.tou),
     }
 
 
