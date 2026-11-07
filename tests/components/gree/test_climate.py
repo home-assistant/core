@@ -1,7 +1,7 @@
 """Tests for gree component."""
 
 from datetime import timedelta
-from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, patch
+from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from greeclimate.device import (
@@ -13,6 +13,7 @@ from greeclimate.device import (
     VerticalSwing,
 )
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
+from greeclimate.network import Response
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
@@ -266,7 +267,7 @@ async def test_update_connection_failure(
 
 
 async def test_update_connection_send_failure_recovery(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, device: Mock
 ) -> None:
     """Testing update hvac connection failure recovery."""
     device().update_state.side_effect = [
@@ -277,9 +278,10 @@ async def test_update_connection_send_failure_recovery(
 
     await async_setup_gree(hass)  # Update 1
 
-    async def run_update():
+    async def run_update() -> None:
         freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
         async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
     await hass.async_block_till_done()
 
@@ -287,6 +289,11 @@ async def test_update_connection_send_failure_recovery(
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
     assert state.state == STATE_UNAVAILABLE
+
+    handlers = {
+        call.args[0]: call.args[1] for call in device().add_handler.call_args_list
+    }
+    handlers[Response.DATA]({"Pow": 0})
 
     await run_update()  # Update 3
     state = hass.states.get(ENTITY_ID)
@@ -345,12 +352,12 @@ async def test_send_command_device_timeout(
 
 
 async def test_unresponsive_device(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, device: Mock
 ) -> None:
     """Test for unresponsive device."""
     await async_setup_gree(hass)
 
-    async def run_update():
+    async def run_update() -> None:
         freezer.tick(timedelta(seconds=MAX_EXPECTED_RESPONSE_TIME_INTERVAL))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
@@ -370,7 +377,10 @@ async def test_unresponsive_device(
     assert state.state == STATE_UNAVAILABLE
 
     # Receiving update from device will reset the state to available again
-    device().device_state_updated("test")
+    handlers = {
+        call.args[0]: call.args[1] for call in device().add_handler.call_args_list
+    }
+    handlers[Response.RESULT]({"Pow": 0})
     await run_update()
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
