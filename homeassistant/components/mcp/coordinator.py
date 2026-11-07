@@ -30,13 +30,13 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import llm
+from homeassistant.helpers import issue_registry as ir, llm
 from homeassistant.helpers.httpx_client import SERVER_SOFTWARE, USER_AGENT
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_context
 
 from .auth import AuthenticateHeader
-from .const import DOMAIN
+from .const import DOMAIN, ISSUE_DEPRECATED_SSE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,11 +90,12 @@ async def mcp_client(
     hass: HomeAssistant,
     url: str,
     token_manager: TokenManager | None = None,
-) -> AsyncGenerator[tuple[ClientSession, InitializeResult]]:
+) -> AsyncGenerator[tuple[ClientSession, InitializeResult, bool]]:
     """Create an MCP client.
 
     This is an asynccontext manager that exists to wrap other async context managers
-    so that the coordinator has a single object to manage.
+    so that the coordinator has a single object to manage. The last value it yields
+    is True when the server only supports the deprecated SSE transport.
     """
     headers: dict[str, str] = {}
     if token_manager is not None:
@@ -113,7 +114,7 @@ async def mcp_client(
         ):
             result = await session.initialize()
             yielded = True
-            yield session, result
+            yield session, result, False
     except ExceptionGroup as streamable_err:
         main_error = _first_exception(streamable_err)
         # Method not Allowed or Not Found on the initial POST indicates this is
@@ -138,7 +139,7 @@ async def mcp_client(
                     ClientSession(*streams) as session,
                 ):
                     result = await session.initialize()
-                    yield session, result
+                    yield session, result, True
             except ExceptionGroup as sse_err:
                 _LOGGER.debug("Error creating SSE MCP client: %s", sse_err)
                 raise _first_exception(sse_err) from sse_err
@@ -205,6 +206,7 @@ class ModelContextProtocolTool(llm.Tool):
             async with asyncio.timeout(TIMEOUT):
                 async with mcp_client(hass, self.server_url, self.token_manager) as (
                     session,
+                    _,
                     _,
                 ):
                     result = await session.call_tool(
@@ -280,7 +282,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             async with asyncio.timeout(TIMEOUT):
                 async with mcp_client(
                     self.hass, self.config_entry.data[CONF_URL], self.token_manager
-                ) as (session, server_info):
+                ) as (session, server_info, uses_sse):
                     result = await session.list_tools()
         except (TimeoutError, httpx2.TimeoutException) as error:
             _LOGGER.debug("Timeout when listing tools: %s", error)
@@ -307,6 +309,23 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
 
         _LOGGER.debug("Received tools: %s", result.tools)
         self.server_info = server_info
+        issue_id = f"{ISSUE_DEPRECATED_SSE}_{self.config_entry.entry_id}"
+        if uses_sse:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                issue_id,
+                breaks_in_ha_version="2027.6.0",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=ISSUE_DEPRECATED_SSE,
+                translation_placeholders={
+                    "name": self.config_entry.title,
+                    "url": self.config_entry.data[CONF_URL],
+                },
+            )
+        else:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
         tools: list[llm.Tool] = []
         for tool in result.tools:
             try:

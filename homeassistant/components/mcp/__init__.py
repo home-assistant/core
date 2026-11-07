@@ -6,10 +6,16 @@ from typing import cast, override
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, llm
+from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir, llm
 
 from .application_credentials import authorization_server_context
-from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
+from .const import (
+    CONF_AUTHORIZATION_URL,
+    CONF_SLUG,
+    CONF_TOKEN_URL,
+    DOMAIN,
+    ISSUE_DEPRECATED_SSE,
+)
 from .coordinator import (
     ModelContextProtocolConfigEntry,
     ModelContextProtocolCoordinator,
@@ -99,6 +105,13 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
 ) -> None:
     """Unload a config entry."""
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
+) -> None:
+    """Remove the repair issue of a config entry."""
+    ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_DEPRECATED_SSE}_{entry.entry_id}")
 
 
 @dataclass(kw_only=True)

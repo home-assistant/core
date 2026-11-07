@@ -122,6 +122,7 @@ async def validate_input(
         async with mcp_client(hass, url, token_manager=token_manager) as (
             _session,
             response,
+            _uses_sse,
         ):
             if not response.capabilities.tools:
                 raise MissingCapabilities(

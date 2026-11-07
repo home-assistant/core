@@ -48,9 +48,15 @@
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "url": "The remote MCP server URL for the SSE endpoint, for example {example_url}"
+          "url": "The URL of the remote MCP server, for example {example_url}"
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_sse": {
+      "description": "The MCP server {name} ({url}) only supports the SSE transport. Home Assistant will stop supporting this transport. Update the MCP server to a version that supports the Streamable HTTP transport. If its URL changes, remove this server from Home Assistant and add it again with the new URL.",
+      "title": "MCP server {name} uses the deprecated SSE transport"
     }
   }
 }

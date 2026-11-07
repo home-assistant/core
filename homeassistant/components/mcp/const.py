@@ -6,3 +6,5 @@ CONF_AUTHORIZATION_URL = "authorization_url"
 CONF_TOKEN_URL = "token_url"
 CONF_SCOPE = "scope"
 CONF_SLUG = "slug"
+
+ISSUE_DEPRECATED_SSE = "deprecated_sse"

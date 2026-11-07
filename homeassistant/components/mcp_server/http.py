@@ -55,7 +55,7 @@ from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import llm
+from homeassistant.helpers import issue_registry as ir, llm
 
 from .const import CONF_ALL_LLM_APIS, CONF_READ_ONLY, CONF_REQUIRE_ADMIN, DOMAIN
 from .server import create_server
@@ -212,6 +212,16 @@ class ModelContextProtocolSSEView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         entry = async_get_config_entry(hass)
         _validate_admin(request, entry)
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_sse",
+            breaks_in_ha_version="2027.6.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_sse",
+            translation_placeholders={"streamable_url": STREAMABLE_API},
+        )
         session_manager = entry.runtime_data
 
         server, options = await create_mcp_server(

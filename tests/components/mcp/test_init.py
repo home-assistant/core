@@ -37,7 +37,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import llm
+from homeassistant.helpers import issue_registry as ir, llm
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -382,6 +382,43 @@ async def test_mcp_client_fallback_to_sse_success(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_sse_deprecation_issue_removed_after_server_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fake_sse_mcp_server: FakeMcpServer,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the SSE deprecation issue is removed when the server drops SSE."""
+    issue_id = f"deprecated_sse_{config_entry.entry_id}"
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+
+    fake_sse_mcp_server.streamable_http_error = None
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_sse_deprecation_issue_removed_with_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fake_sse_mcp_server: FakeMcpServer,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the SSE deprecation issue is removed with its config entry."""
+    issue_id = f"deprecated_sse_{config_entry.entry_id}"
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 @respx.mock

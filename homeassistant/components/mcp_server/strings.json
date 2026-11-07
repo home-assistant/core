@@ -17,6 +17,12 @@
       "message": "An error occurred while reading the Assist context snapshot"
     }
   },
+  "issues": {
+    "deprecated_sse": {
+      "description": "An MCP client connected to Home Assistant through the SSE endpoint (`/mcp_server/sse`). This endpoint is deprecated. Change the MCP client to use the Streamable HTTP endpoint (`{streamable_url}`). Then restart Home Assistant to remove this message.",
+      "title": "The SSE endpoint of the MCP server is deprecated"
+    }
+  },
   "options": {
     "error": {
       "llm_api_required": "Select at least one set of tools or expose all AI tools."

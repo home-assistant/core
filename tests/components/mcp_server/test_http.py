@@ -43,6 +43,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
     llm,
 )
 from homeassistant.helpers.httpx_client import create_async_httpx_client
@@ -166,14 +167,19 @@ async def test_http_sse(
     hass: HomeAssistant,
     setup_integration: None,
     hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test SSE endpoint can be used to receive MCP messages."""
 
     client = await hass_client()
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_sse") is None
 
     # Start an SSE session
     response = await client.get(SSE_API)
     assert response.status == HTTPStatus.OK
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_sse")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
 
     # Decode a single SSE response that sends the messages endpoint
     reader = sse_response_reader(response)
