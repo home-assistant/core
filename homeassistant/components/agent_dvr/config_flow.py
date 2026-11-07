@@ -57,7 +57,11 @@ class AgentFlowHandler(ConfigFlow, domain=DOMAIN):
             port = user_input[CONF_PORT]
 
             if (agent_client := await self._async_get_agent(host, port)) is not None:
-                await self.async_set_unique_id(agent_client.unique)
+                # Don't refuse when the app's discovery of this server is still
+                # waiting; creating the entry removes it.
+                await self.async_set_unique_id(
+                    agent_client.unique, raise_on_progress=False
+                )
 
                 entry_data = _entry_data(host, port)
                 self._abort_if_unique_id_configured(updates=entry_data)

@@ -196,6 +196,29 @@ async def test_hassio_discovery_already_configured(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_agent_app")
+async def test_user_flow_with_hassio_discovery_in_progress(
+    hass: HomeAssistant,
+) -> None:
+    """Test adding the server by hand while its discovery waits replaces it."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_HASSIO}, data=HASSIO_DISCOVERY
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 8090}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "c0715bba-c2d0-48ef-9e3e-bc81c9ea4447"
+    assert not hass.config_entries.flow.async_progress()
+
+
 async def test_hassio_discovery_cannot_connect(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
