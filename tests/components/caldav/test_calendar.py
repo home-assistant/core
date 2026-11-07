@@ -1777,6 +1777,9 @@ REPEATED_HOUR_SERIES_ICS = SERIES_ICS.replace(
 # SINGLE_ICS without an end, which makes it last a day
 NO_END_ICS = SINGLE_ICS.replace("DTEND:20261110T160000Z\n", "")
 
+# SINGLE_ICS lasting an hour by its duration
+DURATION_ICS = SINGLE_ICS.replace("DTEND:20261110T160000Z", "DURATION:PT1H")
+
 # SINGLE_ICS starting and ending with seconds, which the frontend doesn't show
 SECONDS_ICS = SINGLE_ICS.replace("T150000Z", "T150030Z").replace("T160000Z", "T160030Z")
 
@@ -1973,6 +1976,30 @@ async def _ws_call(
                 "dtend": "2026-11-10T11:00:00",
             },
             id="single_with_seconds_kept",
+        ),
+        pytest.param(
+            AMERICA_NEW_YORK,
+            SECONDS_ICS,
+            "single",
+            "",
+            {
+                "summary": "Dentist",
+                "dtstart": "2026-11-10T09:00:00",
+                "dtend": "2026-11-10T11:00:00",
+            },
+            id="single_new_start_keeps_end",
+        ),
+        pytest.param(
+            AMERICA_NEW_YORK,
+            DURATION_ICS,
+            "single",
+            "",
+            {
+                "summary": "Dentist",
+                "dtstart": "2026-11-10T09:30:00",
+                "dtend": "2026-11-10T11:00:00",
+            },
+            id="single_new_start_keeps_duration_end",
         ),
         pytest.param(
             AMERICA_NEW_YORK,
@@ -2198,8 +2225,10 @@ async def test_delete_event(
         ("2026-11-01T01:30:00", "2026-11-01T01:45:00"),
         # The first of the repeated hours, from another client
         ("2026-11-01T05:30:00+00:00", "2026-11-01T05:45:00+00:00"),
+        # A new start, with the end as the frontend shows it
+        ("2026-11-01T00:30:00", "2026-11-01T01:45:00"),
     ],
-    ids=["frontend", "first_hour"],
+    ids=["frontend", "first_hour", "start_moved"],
 )
 @pytest.mark.usefixtures("setup_config_entry")
 async def test_update_event_in_repeated_hour(

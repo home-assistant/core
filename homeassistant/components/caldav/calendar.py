@@ -323,11 +323,14 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         shown = _get_first_occurrence(
             components, series, recurrence_id, recurrence_range
         )
-        same_times = _same_time(event[EVENT_START], shown.DTSTART) and _same_time(
-            event[EVENT_END], _get_end(shown)
-        )
+        end = _get_end(shown)
+        times = {
+            key: event[key]
+            for key, stored in ((EVENT_START, shown.DTSTART), (EVENT_END, end))
+            if not _same_time(event[key], stored)
+        }
         recurring = "RRULE" in series or "RDATE" in series
-        if EVENT_RRULE in event or (recurring and not same_times):
+        if EVENT_RRULE in event or (recurring and times):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="recurrence_change_not_supported",
@@ -343,15 +346,17 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                 component.pop(key)
                 if event[key]:
                     component.add(key, event[key])
-        if not same_times:
-            for key in (EVENT_START, EVENT_END):
-                value = event[key]
-                if isinstance(value, datetime):
-                    # A TZID time can't tell apart the two hours that repeat
-                    # when clocks go back, UTC can
-                    value = value.astimezone(UTC)
-                series.pop(key)
-                series.add(key, value)
+        if times and EVENT_END not in times and "DTEND" not in series:
+            # Otherwise the end would move with the start
+            times[EVENT_END] = end
+        for key, value in times.items():
+            if isinstance(value, datetime):
+                # A TZID time can't tell apart the two hours that repeat when
+                # clocks go back, UTC can
+                value = value.astimezone(UTC)
+            series.pop(key)
+            series.add(key, value)
+        if EVENT_END in times:
             # DTEND replaces a DURATION
             series.pop("DURATION")
         # Otherwise save() merges just the first component into the stored
