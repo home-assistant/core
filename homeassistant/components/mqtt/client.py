@@ -1282,6 +1282,11 @@ class MQTT:
             queue_only=True,
         )
 
+    @callback
+    def async_count_matching_subscriptions(self, topic: str) -> int:
+        """Return how many subscriptions receive messages on a topic."""
+        return len(self._matching_subscriptions(topic, None))
+
     @lru_cache(None)  # pylint: disable=method-cache-max-size-none
     def _matching_subscriptions(
         self, topic: str, identifiers: tuple[int, ...] | None
@@ -1345,7 +1350,7 @@ class MQTT:
                 identifiers,
                 msg.payload[0:8192],
             )
-        msg_cache_by_subscription_topic: dict[str, ReceiveMessage] = {}
+        msg_cache_by_subscription: dict[tuple[str, str | None], ReceiveMessage] = {}
 
         for subscription in self._matching_subscriptions(topic, identifiers):
             if msg.retain:
@@ -1370,9 +1375,10 @@ class MQTT:
                     )
                     continue
             subscription_topic = subscription.topic
-            if subscription_topic not in msg_cache_by_subscription_topic:
+            cache_key = (subscription_topic, subscription.encoding)
+            if cache_key not in msg_cache_by_subscription:
                 # Only make one copy of the message
-                # per topic so we avoid storing a separate
+                # per topic and encoding so we avoid storing a separate
                 # dataclass in memory for each subscriber
                 # to the same topic for retained messages
                 receive_msg = ReceiveMessage(
@@ -1383,9 +1389,9 @@ class MQTT:
                     subscription_topic,
                     msg.timestamp,
                 )
-                msg_cache_by_subscription_topic[subscription_topic] = receive_msg
+                msg_cache_by_subscription[cache_key] = receive_msg
             else:
-                receive_msg = msg_cache_by_subscription_topic[subscription_topic]
+                receive_msg = msg_cache_by_subscription[cache_key]
             job = subscription.job
             if job.job_type is HassJobType.Callback:
                 # We do not wrap Callback jobs in catch_log_exception since
