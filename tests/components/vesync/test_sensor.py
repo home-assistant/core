@@ -69,9 +69,9 @@ async def test_humidity(
 @pytest.mark.parametrize(
     ("key", "attribute", "value", "device_class", "unit", "category"),
     [
-        ("eleva-aqi", "aqi", 20, SensorDeviceClass.AQI, None, None),
+        ("aqi", "aqi", 20, SensorDeviceClass.AQI, None, None),
         (
-            "eleva-carbon-filter-life",
+            "carbon-filter-life",
             "carbon_filter_life",
             95,
             None,
@@ -79,7 +79,7 @@ async def test_humidity(
             EntityCategory.DIAGNOSTIC,
         ),
         (
-            "eleva-pre-filter-life",
+            "pre-filter-life",
             "pre_filter_life",
             90,
             None,
@@ -87,7 +87,7 @@ async def test_humidity(
             EntityCategory.DIAGNOSTIC,
         ),
         (
-            "eleva-filter-remaining-days",
+            "filter-remaining-days",
             "filter_remain_day",
             720,
             None,
@@ -113,7 +113,7 @@ def test_eleva_300x_sensor_descriptions(
 
     assert description.exists_fn(eleva)
     assert description.value_fn(eleva) == value
-    assert not description.exists_fn(other)
+    assert description.exists_fn(other)
     assert description.device_class == device_class
     assert description.native_unit_of_measurement == unit
     assert description.entity_category == category
@@ -161,10 +161,10 @@ async def test_eleva_300x_entity_registration(
     await hass.async_block_till_done()
 
     expected = {
-        "eleva-aqi": ("20", None),
-        "eleva-carbon-filter-life": ("95", "%"),
-        "eleva-pre-filter-life": ("90", "%"),
-        "eleva-filter-remaining-days": ("720", "d"),
+        "aqi": ("20", None),
+        "carbon-filter-life": ("95", "%"),
+        "pre-filter-life": ("90", "%"),
+        "filter-remaining-days": ("720", "d"),
     }
 
     for key, (value, unit) in expected.items():
@@ -180,14 +180,14 @@ async def test_eleva_300x_entity_registration(
             assert state.attributes["unit_of_measurement"] == unit
 
 
-async def test_eleva_300x_sensors_not_registered_for_other_models(
+async def test_air_quality_sensors_registered_for_other_models(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     manager,
     fan,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test Eleva 300X sensors are not registered for another purifier model."""
+    """Test air quality sensors are registered for any device providing values."""
     fan.cid = "otherpurifier"
     fan.sub_device_no = 0
     fan.device_name = "Other Levoit Purifier"
@@ -215,14 +215,14 @@ async def test_eleva_300x_sensors_not_registered_for_other_models(
     await hass.async_block_till_done()
 
     for key in (
-        "eleva-aqi",
-        "eleva-carbon-filter-life",
-        "eleva-pre-filter-life",
-        "eleva-filter-remaining-days",
+        "aqi",
+        "carbon-filter-life",
+        "pre-filter-life",
+        "filter-remaining-days",
     ):
         assert (
             entity_registry.async_get_entity_id(
                 SENSOR_DOMAIN, "vesync", f"otherpurifier0-{key}"
             )
-            is None
-        ), f"Eleva-only sensor incorrectly registered: {key}"
+            is not None
+        ), f"Sensor not registered for device with supported attributes: {key}"
