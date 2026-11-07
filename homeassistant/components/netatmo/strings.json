@@ -110,6 +110,9 @@
           "unhealthy": "Unhealthy"
         }
       },
+      "heating_power_request": {
+        "name": "Heating power request"
+      },
       "noise": {
         "name": "Noise"
       },
