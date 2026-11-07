@@ -1,14 +1,11 @@
 """The iBeacon tracker integration."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import DOMAIN, PLATFORMS
-from .coordinator import IBeaconCoordinator
-
-type IBeaconConfigEntry = ConfigEntry[IBeaconCoordinator]
+from .coordinator import IBeaconConfigEntry, IBeaconCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IBeaconConfigEntry) -> None:
@@ -20,7 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IBeaconConfigEntry) -> N
     await coordinator.async_start()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: IBeaconConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 

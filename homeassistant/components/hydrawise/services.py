@@ -1,5 +1,7 @@
 """Services for the Hunter Hydrawise integration."""
 
+from enum import StrEnum
+
 import probatio
 
 from homeassistant.components.binary_sensor import (
@@ -10,15 +12,31 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.typing import VolDictType
 
-from .const import DOMAIN, SERVICE_RESUME, SERVICE_START_WATERING, SERVICE_SUSPEND
+from .const import DOMAIN
+
+
+class HydrawiseService(StrEnum):
+    """Store keys for Hunter Hydrawise services."""
+
+    START_WATERING = "start_watering"
+    SUSPEND = "suspend"
+    RESUME = "resume"
+
+
+class HydrawiseServiceArgument(StrEnum):
+    """Store keys for Hunter Hydrawise service arguments."""
+
+    DURATION = "duration"
+    UNTIL = "until"
+
 
 SCHEMA_START_WATERING: VolDictType = {
-    probatio.Optional("duration"): probatio.All(
+    probatio.Optional(HydrawiseServiceArgument.DURATION): probatio.All(
         probatio.Coerce(int), probatio.Range(min=0, max=1440)
     ),
 }
 SCHEMA_SUSPEND: VolDictType = {
-    probatio.Required("until"): cv.datetime,
+    probatio.Required(HydrawiseServiceArgument.UNTIL): cv.datetime,
 }
 
 
@@ -29,7 +47,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_RESUME,
+        HydrawiseService.RESUME,
         entity_domain=BINARY_SENSOR_DOMAIN,
         schema=None,
         func="resume",
@@ -39,7 +57,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_START_WATERING,
+        HydrawiseService.START_WATERING,
         entity_domain=BINARY_SENSOR_DOMAIN,
         schema=SCHEMA_START_WATERING,
         func="start_watering",
@@ -49,7 +67,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SUSPEND,
+        HydrawiseService.SUSPEND,
         entity_domain=BINARY_SENSOR_DOMAIN,
         schema=SCHEMA_SUSPEND,
         func="suspend",

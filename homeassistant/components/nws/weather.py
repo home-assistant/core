@@ -22,7 +22,6 @@ from homeassistant.components.weather import (
     Forecast,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LOCATION,
     UnitOfLength,
@@ -116,7 +115,6 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
     """Representation of a weather condition."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_should_poll = False
     _attr_supported_features = (
         WeatherEntityFeature.FORECAST_HOURLY | WeatherEntityFeature.FORECAST_TWICE_DAILY
     )
@@ -127,7 +125,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: NWSConfigEntry,
         nws_data: NWSData,
     ) -> None:
         """Initialise the platform with a data instance and station name."""

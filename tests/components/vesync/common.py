@@ -137,11 +137,15 @@ def mock_devices_response(
     for fixture in DEVICE_FIXTURES[device_name]:
         detail = load_json_object_fixture(fixture[2], DOMAIN)
         if details_override:
-            assert "result" in detail.get("result", {}), (
+            result = detail.get("result", {})
+            assert "result" in result or "returnStatus" in result, (
                 f"Fixture {fixture[2]} does not have the expected "
-                "result.result payload to apply details_override"
+                "device state payload to apply details_override"
             )
-            detail["result"]["result"].update(details_override)
+            if "result" in result:
+                result["result"].update(details_override)
+            else:
+                result["returnStatus"].update(details_override)
         getattr(aioclient_mock, fixture[0])(
             f"https://smartapi.vesync.com{fixture[1]}",
             json=detail,

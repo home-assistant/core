@@ -54,13 +54,15 @@ rules:
   entity-unavailable:
     status: done
     comment: |
-      Availability is provided by the passive bluetooth coordinator. These are
-      sleepy devices, so once seen the entities use assumed_state rather than
-      becoming unavailable.
+      Entities take the passive Bluetooth coordinator's availability and become
+      unavailable once the probe has stopped broadcasting for the stale
+      advertisement window, for example while it is docked.
   integration-owner: done
   log-when-unavailable:
     status: done
-    comment: Handled by the passive bluetooth coordinator.
+    comment: |
+      The coordinator logs once when the probe stops broadcasting and once when
+      it is seen again.
   parallel-updates: done
   reauthentication-flow:
     status: exempt

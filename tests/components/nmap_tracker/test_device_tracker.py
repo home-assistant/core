@@ -34,14 +34,19 @@ ENTITY_ID = "device_tracker.phone"
 RESTORED_ENTITY_ID = "device_tracker.restored"
 
 
-def _scan_result(hostname: str) -> dict[str, Any]:
-    """Return an nmap scan result with the client up."""
+def _scan_result(hostname: str | None) -> dict[str, Any]:
+    """Return an nmap scan result with the client up.
+
+    Without a hostname, nmap reports no hostnames at all.
+    """
     return {
         "scan": {
             CLIENT_IP: {
                 "status": {"state": "up", "reason": "arp-response"},
                 "addresses": {"mac": CLIENT_MAC.upper()},
-                "hostnames": [{"name": hostname, "type": "PTR"}],
+                "hostnames": []
+                if hostname is None
+                else [{"name": hostname, "type": "PTR"}],
                 "vendor": {CLIENT_MAC.upper(): "Vendor"},
             }
         }
@@ -96,6 +101,14 @@ async def _async_setup_at_startup(hass: HomeAssistant, entry: MockConfigEntry) -
     await hass.async_block_till_done()
 
 
+NO_HOSTNAME = [
+    pytest.param("", id="empty_hostname"),
+    # The scanner then reports the IP address as hostname
+    pytest.param(None, id="no_hostnames"),
+]
+
+
+@pytest.mark.parametrize("no_hostname", NO_HOSTNAME)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_hostname_change_renames_device(
     hass: HomeAssistant,
@@ -104,6 +117,7 @@ async def test_hostname_change_renames_device(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    no_hostname: str | None,
 ) -> None:
     """Test the hostname names the device, and a hostname change renames it."""
     await _async_setup_at_startup(hass, mock_config_entry)
@@ -114,6 +128,7 @@ async def test_hostname_change_renames_device(
     device = device_registry.async_get(entity_entry.device_id)
     assert device is not None
     assert device.name == "phone"
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, CLIENT_MAC)}
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FRIENDLY_NAME] == "phone"
 
     mock_port_scanner.scan.return_value = _scan_result("laptop.lan")
@@ -128,9 +143,8 @@ async def test_hostname_change_renames_device(
     assert device is not None
     assert device.name == "laptop"
 
-    # A missing hostname names the client by vendor, which does not replace the
-    # name of its device
-    mock_port_scanner.scan.return_value = _scan_result("")
+    # A missing hostname does not replace the name of the device
+    mock_port_scanner.scan.return_value = _scan_result(no_hostname)
     freezer.tick(timedelta(seconds=TRACKER_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -141,6 +155,7 @@ async def test_hostname_change_renames_device(
     assert device.name == "laptop"
 
 
+@pytest.mark.parametrize("no_hostname", NO_HOSTNAME)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_client_without_hostname(
     hass: HomeAssistant,
@@ -148,9 +163,10 @@ async def test_client_without_hostname(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    no_hostname: str | None,
 ) -> None:
     """Test a client without a hostname names its device by vendor."""
-    mock_port_scanner.scan.return_value = _scan_result("")
+    mock_port_scanner.scan.return_value = _scan_result(no_hostname)
     await _async_setup_at_startup(hass, mock_config_entry)
 
     entity_id = "device_tracker.vendor_dd_ee_ff"
@@ -159,9 +175,46 @@ async def test_client_without_hostname(
     device = device_registry.async_get(entity_entry.device_id)
     assert device is not None
     assert device.name == "Vendor DD:EE:FF"
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, CLIENT_MAC)}
     assert (
         hass.states.get(entity_id).attributes[ATTR_FRIENDLY_NAME] == "Vendor DD:EE:FF"
     )
+
+
+@pytest.mark.parametrize("no_hostname", NO_HOSTNAME)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_startup_without_hostname_keeps_device_name(
+    hass: HomeAssistant,
+    mock_port_scanner: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    no_hostname: str | None,
+) -> None:
+    """Test a scan without a hostname at startup keeps the name of the device."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, CLIENT_MAC)},
+        name="laptop",
+    )
+    entity_registry.async_get_or_create(
+        "device_tracker",
+        DOMAIN,
+        CLIENT_MAC,
+        suggested_object_id="laptop",
+        config_entry=mock_config_entry,
+        device_id=device.id,
+    )
+    mock_port_scanner.scan.return_value = _scan_result(no_hostname)
+
+    await _async_setup_at_startup(hass, mock_config_entry)
+
+    state = hass.states.get("device_tracker.laptop")
+    assert state.state == STATE_HOME
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "laptop"
+    device = device_registry.async_get(device.id)
+    assert device is not None
+    assert device.name == "laptop"
 
 
 @pytest.mark.parametrize(
@@ -237,3 +290,4 @@ async def test_restoring_client_name_without_device(
     device = device_registry.async_get(entity_entry.device_id)
     assert device is not None
     assert device.name == "Old name"
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "11:22:33:44:55:66")}

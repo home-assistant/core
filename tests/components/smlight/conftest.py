@@ -152,13 +152,14 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
 MOCK_ULTIMA = Info(
     MAC="AA:BB:CC:DD:EE:FF",
     model="SLZB-Ultima3",
+    sw_version="v2.3.6",
     addons={"zwave": True},
     ble=BleFeatures(ble_enabled=True, proxy_enabled=True),
     u_device=True,
     radios=[
-        Radio(zb_type=0, chip_index=0),
-        Radio(zb_type=1, chip_index=1),
-        Radio(zb_type=5, chip_index=2),
+        Radio(zb_type=0, chip_index=0, zb_hw="EFR32MG21", zb_version="20240716"),
+        Radio(zb_type=1, chip_index=1, zb_hw="CC2652P7", zb_version="20240314"),
+        Radio(zb_type=5, chip_index=2, zb_version="7.23"),
     ],
 )
 
@@ -173,11 +174,13 @@ def mock_ultima_client(mock_smlight_client: MagicMock) -> MagicMock:
 async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    *,
+    wait_for_background: bool = True,
 ) -> MockConfigEntry:
     """Set up the integration."""
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=wait_for_background)
 
     return mock_config_entry

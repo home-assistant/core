@@ -15,6 +15,47 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import magic_client
 
 TRACKER_ENTITY_ID = "device_tracker.testdevice2"
+TRACKER_MAC = "11:22:33:44:55:66"
+
+
+@pytest.mark.parametrize(
+    ("hostname", "entity_id", "expected_device_name"),
+    [
+        pytest.param("TestDevice2", TRACKER_ENTITY_ID, "TestDevice2", id="hostname"),
+        pytest.param(
+            None, "device_tracker.11_22_33_44_55_66", TRACKER_MAC, id="no_hostname"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_tracker_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    hostname: str | None,
+    entity_id: str,
+    expected_device_name: str,
+) -> None:
+    """Test the tracker device is named by the hostname, else the MAC address."""
+    huawei_lte = MockConfigEntry(domain=DOMAIN, data={CONF_URL: "http://huawei-lte"})
+    huawei_lte.add_to_hass(hass)
+    client = magic_client()
+    client.lan.host_info.return_value["Hosts"]["Host"][1]["HostName"] = hostname
+    with (
+        patch("homeassistant.components.huawei_lte.Connection", MagicMock()),
+        patch("homeassistant.components.huawei_lte.Client", return_value=client),
+    ):
+        await hass.config_entries.async_setup(huawei_lte.entry_id)
+        await hass.async_block_till_done()
+
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+    device = device_registry.async_get(registry_entry.device_id)
+    assert device is not None
+    assert device.name == expected_device_name
+    assert device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(TRACKER_MAC))
+    }
 
 
 @pytest.mark.parametrize(

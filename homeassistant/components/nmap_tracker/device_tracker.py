@@ -1,7 +1,7 @@
 """Support for scanning a network with nmap."""
 
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
@@ -14,6 +14,7 @@ from . import (
     NmapDevice,
     NmapDeviceScanner,
     NmapTrackerConfigEntry,
+    human_readable_name,
     short_hostname,
     signal_device_update,
 )
@@ -63,15 +64,43 @@ class NmapTrackerEntity(ScannerEntity):
         self._nmap_tracker = nmap_tracker
         self._tracked = self._nmap_tracker.devices.tracked
         self._active = active
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
-            name=self._device.name or mac_address,
-        )
 
     @property
     def _device(self) -> NmapDevice:
         """Get latest device state."""
         return self._tracked[self._mac_address]
+
+    @property
+    def _known_device_name(self) -> str | None:
+        """Return the name of the tracked device, unless it is a fallback."""
+        device = self._device
+        # A device restored from the registry has no address, its name was restored
+        if device.ipv4 is None:
+            return device.name
+        # A scan without a hostname reports the IP address as hostname
+        if device.hostname and device.hostname != device.ipv4:
+            return device.name
+        return None
+
+    @override
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Describe the device before it is created or updated."""
+        if TYPE_CHECKING:
+            assert self.platform.config_entry is not None
+        connections = {(dr.CONNECTION_NETWORK_MAC, self._mac_address)}
+        if (name := self._known_device_name) is None and (
+            devices := dr.async_get(self.hass).async_get_devices(
+                connections=connections,
+                config_entry_id=self.platform.config_entry.entry_id,
+            )
+        ):
+            name = devices[0].name
+        if name is None:
+            name = human_readable_name(
+                "", self._device.manufacturer, self._mac_address.upper()
+            )
+        self._attr_device_info = DeviceInfo(connections=connections, name=name)
+        await super().async_prepare_to_add_to_hass()
 
     @property
     @override
@@ -125,15 +154,14 @@ class NmapTrackerEntity(ScannerEntity):
     def async_on_demand_update(self, online: bool) -> None:
         """Update state."""
         self.async_process_update(online)
+        # Hostname lookups may fail transiently, so a fallback name is not applied
         if (
             online
-            and self._device.hostname
+            and (name := self._known_device_name)
             and (device_entry := self.device_entry)
-            and device_entry.name != self._device.name
+            and device_entry.name != name
         ):
-            dr.async_get(self.hass).async_update_device(
-                device_entry.id, name=self._device.name
-            )
+            dr.async_get(self.hass).async_update_device(device_entry.id, name=name)
         self.async_write_ha_state()
 
     @override

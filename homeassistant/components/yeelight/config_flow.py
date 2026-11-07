@@ -214,6 +214,39 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the bulb host."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                await self._async_try_connect(
+                    user_input[CONF_HOST], raise_on_progress=False
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            else:
+                # The ID is unknown for bulbs that don't answer discovery, such
+                # as when given a hostname, and for entries created that way
+                if self.unique_id and reconfigure_entry.unique_id:
+                    self._abort_if_unique_id_mismatch()
+                elif self.unique_id:
+                    self._abort_if_unique_id_configured()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates={CONF_HOST: user_input[CONF_HOST]}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or reconfigure_entry.data,
+            ),
+            errors=errors,
+        )
+
     async def async_step_pick_device(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

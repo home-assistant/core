@@ -143,7 +143,6 @@ def _install(args: list[str], env: dict[str, str]) -> str | None:
 def install_package(
     package: str,
     upgrade: bool = True,
-    target: str | None = None,
     constraints: str | None = None,
     timeout: int | None = None,
 ) -> bool:
@@ -173,10 +172,7 @@ def install_package(
         args.append("--upgrade")
     if constraints is not None:
         args += ["--constraint", constraints]
-    if target:
-        abs_target = os.path.abspath(target)
-        args += ["--target", abs_target]
-    elif (
+    if (
         not is_virtual_env()
         and not (any(var in env for var in _UV_ENV_PYTHON_VARS))
         and (abs_target := site.getusersitepackages())
