@@ -1758,10 +1758,11 @@ async def test_camera_secure_video_reload_stops_transport(
 
 
 @pytest.mark.parametrize(
-    ("audio_active", "expected_audio_map"),
+    ("config", "audio_active", "expected_output"),
     [
-        pytest.param(1, "-map 0:a:0", id="audio"),
-        pytest.param(0, "-map 1:a:0", id="silent"),
+        pytest.param({}, 1, "-map 0:a:0", id="audio"),
+        pytest.param({}, 0, "-map 1:a:0", id="silent"),
+        pytest.param({CONF_VIDEO_CODEC: VIDEO_CODEC_COPY}, 1, "-c:v copy", id="copy"),
     ],
 )
 @pytest.mark.usefixtures("no_state_file", "recording_transport")
@@ -1770,8 +1771,9 @@ async def test_camera_secure_video_recording(
     run_driver: HomeDriver,
     recording_ffmpeg: MagicMock,
     caplog: pytest.LogCaptureFixture,
+    config: dict[str, Any],
     audio_active: int,
-    expected_audio_map: str,
+    expected_output: str,
 ) -> None:
     """Test a recording streams the ffmpeg fragments and kills ffmpeg after."""
     # A stderr that stays open until ffmpeg is killed, like a real one.
@@ -1785,7 +1787,9 @@ async def test_camera_secure_video_recording(
         stderr.feed_eof()
 
     recording_ffmpeg.kill.side_effect = kill
-    acc = await _recording_camera(hass, run_driver, **{CONF_SUPPORT_AUDIO: True})
+    acc = await _recording_camera(
+        hass, run_driver, **{CONF_SUPPORT_AUDIO: True, **config}
+    )
     acc.get_service("CameraRecordingManagement").get_characteristic(
         "RecordingAudioActive"
     ).set_value(audio_active)
@@ -1797,7 +1801,7 @@ async def test_camera_secure_video_recording(
     assert "without video" not in caplog.text
     open_kwargs = recording_ffmpeg.open.await_args.kwargs
     assert open_kwargs["input_source"].startswith("-i rtsp://cam")
-    assert expected_audio_map in open_kwargs["output"]
+    assert expected_output in open_kwargs["output"]
     recording_ffmpeg.kill.assert_called_once_with()
     # A second reader on stderr would fail.
     assert await kill_reads[0] == b""
@@ -1908,10 +1912,27 @@ async def test_camera_secure_video_recording_stalls(
 
 
 @pytest.mark.parametrize(
-    ("config", "open_calls"),
+    ("config", "open_calls", "message"),
     [
-        pytest.param({CONF_STREAM_SOURCE: None}, 0, id="no_stream_source"),
-        pytest.param({}, 1, id="ffmpeg_fails_to_start"),
+        pytest.param(
+            {CONF_STREAM_SOURCE: None},
+            0,
+            "Camera has no stream source",
+            id="no_stream_source",
+        ),
+        pytest.param(
+            {CONF_STREAM_SOURCE: "rtsp://user:pa'ss@cam"},
+            0,
+            "Cannot build the recording: No closing quotation",
+            id="unbalanced_quote",
+        ),
+        pytest.param(
+            {CONF_VIDEO_PROFILE_NAMES: ["baseline"]},
+            0,
+            "Cannot build the recording: list index out of range",
+            id="unknown_profile",
+        ),
+        pytest.param({}, 1, "Failed to start recording ffmpeg", id="ffmpeg_fails"),
     ],
 )
 @pytest.mark.usefixtures("no_state_file", "recording_transport")
@@ -1919,10 +1940,12 @@ async def test_camera_secure_video_recording_cannot_start(
     hass: HomeAssistant,
     run_driver: HomeDriver,
     recording_ffmpeg: MagicMock,
+    caplog: pytest.LogCaptureFixture,
     config: dict[str, Any],
     open_calls: int,
+    message: str,
 ) -> None:
-    """Test a recording that cannot start yields nothing."""
+    """Test a recording that cannot start is logged and yields nothing."""
     recording_ffmpeg.open.return_value = False
     acc = await _recording_camera(hass, run_driver, **config)
     with patch(
@@ -1930,6 +1953,7 @@ async def test_camera_secure_video_recording_cannot_start(
     ):
         assert await _collect(acc) == []
     assert recording_ffmpeg.open.await_count == open_calls
+    assert message in caplog.text
     recording_ffmpeg.kill.assert_not_called()
 
 
@@ -2075,6 +2099,30 @@ STOP_STREAM_TLV = tlv.encode(
 )
 
 
+@pytest.fixture
+def live_ffmpeg() -> Generator[MagicMock]:
+    """Patch the live stream ffmpeg with one that keeps running."""
+    ffmpeg = _get_working_mock_ffmpeg()
+    with (
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=ffmpeg,
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.pid_is_alive",
+            return_value=True,
+        ),
+    ):
+        yield ffmpeg
+
+
+async def _live_camera(hass: HomeAssistant, driver: HomeDriver) -> Camera:
+    """Return a recording camera with stream endpoints set up."""
+    acc = await _secure_video_camera(hass, driver)
+    await _async_setup_endpoints(hass, acc)
+    return acc
+
+
 def _set_camera_active(acc: Camera, active: int) -> None:
     acc.get_service("CameraOperatingMode").get_characteristic(
         "HomeKitCameraActive"
@@ -2085,43 +2133,33 @@ def _set_camera_active(acc: Camera, active: int) -> None:
 async def test_camera_secure_video_turned_off(
     hass: HomeAssistant,
     run_driver: HomeDriver,
+    live_ffmpeg: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test turning the camera off in the Home app ends live streams."""
-    acc = await _secure_video_camera(hass, run_driver)
-    await _async_setup_endpoints(hass, acc)
-    ffmpeg = _get_working_mock_ffmpeg()
-    with (
-        patch(
-            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-            return_value=ffmpeg,
-        ),
-        patch(
-            "homeassistant.components.homekit.type_cameras.pid_is_alive",
-            return_value=True,
-        ),
-    ):
-        await _async_start_streaming(hass, acc)
-        _set_camera_active(acc, 1)
-        await hass.async_block_till_done()
-        ffmpeg.close.assert_not_awaited()
-        _set_camera_active(acc, 0)
-        await hass.async_block_till_done()
-        ffmpeg.close.assert_awaited_once_with()
-        assert (
-            acc.get_service("CameraRTPStreamManagement")
-            .get_characteristic("StreamingStatus")
-            .get_value()
-            == STREAM_AVAILABLE
-        )
-        session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
-        assert not await acc.reconfigure_stream(session_info, {})
-        # The controller still sends its stop for the ended stream.
-        acc.set_selected_stream_configuration(STOP_STREAM_TLV)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+    acc = await _live_camera(hass, run_driver)
+    await _async_start_streaming(hass, acc)
+    _set_camera_active(acc, 1)
+    await hass.async_block_till_done()
+    live_ffmpeg.close.assert_not_awaited()
 
-    ffmpeg.close.assert_awaited_once_with()
+    _set_camera_active(acc, 0)
+    await hass.async_block_till_done()
+    live_ffmpeg.close.assert_awaited_once_with()
+    assert (
+        acc.get_service("CameraRTPStreamManagement")
+        .get_characteristic("StreamingStatus")
+        .get_value()
+        == STREAM_AVAILABLE
+    )
+    session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
+    assert not await acc.reconfigure_stream(session_info, {})
+
+    # The controller still sends its stop for the ended stream.
+    acc.set_selected_stream_configuration(STOP_STREAM_TLV)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    live_ffmpeg.close.assert_awaited_once_with()
     assert acc.sessions == {}
     assert "no such session" not in caplog.text
     assert not await acc.start_stream({"id": "new"}, {})
@@ -2131,32 +2169,19 @@ async def test_camera_secure_video_turned_off(
 
 @pytest.mark.usefixtures("no_state_file", "recording_transport")
 async def test_camera_secure_video_turned_off_while_starting(
-    hass: HomeAssistant,
-    run_driver: HomeDriver,
+    hass: HomeAssistant, run_driver: HomeDriver, live_ffmpeg: MagicMock
 ) -> None:
     """Test a stream that started while the camera was turned off is stopped."""
-    acc = await _secure_video_camera(hass, run_driver)
-    await _async_setup_endpoints(hass, acc)
-    ffmpeg = _get_working_mock_ffmpeg()
+    acc = await _live_camera(hass, run_driver)
 
     async def open_and_turn_off(**kwargs: Any) -> bool:
         _set_camera_active(acc, 0)
         return True
 
-    ffmpeg.open.side_effect = open_and_turn_off
-    with (
-        patch(
-            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-            return_value=ffmpeg,
-        ),
-        patch(
-            "homeassistant.components.homekit.type_cameras.pid_is_alive",
-            return_value=True,
-        ),
-    ):
-        await _async_start_streaming(hass, acc)
+    live_ffmpeg.open.side_effect = open_and_turn_off
+    await _async_start_streaming(hass, acc)
 
-    ffmpeg.close.assert_awaited_once_with()
+    live_ffmpeg.close.assert_awaited_once_with()
     assert acc.sessions == {}
 
 
@@ -2214,37 +2239,6 @@ async def test_camera_secure_video_recording_permissions_change(
     await recording.aclose()
 
 
-@pytest.mark.parametrize(
-    ("config", "error"),
-    [
-        pytest.param(
-            {CONF_STREAM_SOURCE: "rtsp://user:pa'ss@cam"},
-            "No closing quotation",
-            id="unbalanced_quote",
-        ),
-        pytest.param(
-            {CONF_VIDEO_PROFILE_NAMES: ["baseline"]},
-            "list index out of range",
-            id="unknown_profile",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("no_state_file", "recording_transport")
-async def test_camera_secure_video_recording_cannot_build(
-    hass: HomeAssistant,
-    run_driver: HomeDriver,
-    recording_ffmpeg: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-    config: dict[str, Any],
-    error: str,
-) -> None:
-    """Test a recording that cannot be built is logged without starting ffmpeg."""
-    acc = await _recording_camera(hass, run_driver, **config)
-    assert await _collect(acc) == []
-    assert f"Cannot build the recording: {error}" in caplog.text
-    recording_ffmpeg.open.assert_not_called()
-
-
 async def test_camera_secure_video_stop_waits_for_transport_start(
     hass: HomeAssistant,
     run_driver: HomeDriver,
@@ -2266,31 +2260,11 @@ async def test_camera_secure_video_stop_waits_for_transport_start(
 
 
 @pytest.mark.usefixtures("no_state_file", "recording_transport")
-async def test_camera_secure_video_recording_copy(
-    hass: HomeAssistant,
-    run_driver: HomeDriver,
-    recording_ffmpeg: MagicMock,
-) -> None:
-    """Test a camera with native H.264 is recorded without transcoding."""
-    acc = await _recording_camera(
-        hass, run_driver, **{CONF_VIDEO_CODEC: VIDEO_CODEC_COPY}
-    )
-    assert [packet.data for packet in await _collect(acc)] == [
-        INIT_SEGMENT,
-        FRAGMENT,
-        b"",
-    ]
-    assert "-c:v copy" in recording_ffmpeg.open.await_args.kwargs["output"]
-
-
-@pytest.mark.usefixtures("no_state_file", "recording_transport")
 async def test_camera_secure_video_turned_off_new_session_keeps_slot(
-    hass: HomeAssistant, run_driver: HomeDriver
+    hass: HomeAssistant, run_driver: HomeDriver, live_ffmpeg: MagicMock
 ) -> None:
     """Test ending a stream does not free a slot a new session took meanwhile."""
-    acc = await _secure_video_camera(hass, run_driver)
-    await _async_setup_endpoints(hass, acc)
-    ffmpeg = _get_working_mock_ffmpeg()
+    acc = await _live_camera(hass, run_driver)
 
     async def close_while_new_session_starts() -> None:
         # The controller stops the old session and starts a new one on the slot.
@@ -2298,20 +2272,10 @@ async def test_camera_secure_video_turned_off_new_session_keeps_slot(
         new_id = UUID(int=1)
         acc.sessions[new_id] = {**old_session, "id": new_id}
 
-    ffmpeg.close.side_effect = close_while_new_session_starts
-    with (
-        patch(
-            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-            return_value=ffmpeg,
-        ),
-        patch(
-            "homeassistant.components.homekit.type_cameras.pid_is_alive",
-            return_value=True,
-        ),
-    ):
-        await _async_start_streaming(hass, acc)
-        _set_camera_active(acc, 0)
-        await hass.async_block_till_done()
+    live_ffmpeg.close.side_effect = close_while_new_session_starts
+    await _async_start_streaming(hass, acc)
+    _set_camera_active(acc, 0)
+    await hass.async_block_till_done()
 
     assert (
         acc.get_service("CameraRTPStreamManagement")
