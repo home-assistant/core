@@ -1,5 +1,6 @@
 """Media Source models."""
 
+import asyncio
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -117,7 +118,10 @@ class MediaSourceItem:
                 can_expand=True,
                 children_media_class=MediaClass.APP,
             )
-            sources = await _async_get_media_sources(self.hass)
+            sources = list((await _async_get_media_sources(self.hass)).values())
+            available = await asyncio.gather(
+                *(source.async_is_available() for source in sources)
+            )
             base.children = sorted(
                 (
                     BrowseMediaSource(
@@ -130,7 +134,8 @@ class MediaSourceItem:
                         can_play=False,
                         can_expand=True,
                     )
-                    for source in sources.values()
+                    for source, is_available in zip(sources, available, strict=True)
+                    if is_available
                 ),
                 key=lambda item: item.title,
             )
@@ -193,6 +198,10 @@ class MediaSource:
         self.domain = domain
         if not self.name:
             self.name = domain
+
+    async def async_is_available(self) -> bool:
+        """Return if the source should be listed in the media source root."""
+        return True
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve a media item to a playable item."""
