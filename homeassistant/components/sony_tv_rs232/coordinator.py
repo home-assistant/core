@@ -75,7 +75,6 @@ class SonyTVCoordinator(DataUpdateCoordinator[TVState]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": str(err)},
             ) from err
         self._tv_unsub = self.tv.subscribe(self._handle_state)
         self._sync_interval()
@@ -101,9 +100,12 @@ class SonyTVCoordinator(DataUpdateCoordinator[TVState]):
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="update_failed",
-                    translation_placeholders={"error": str(err)},
                 ) from err
             if power is PowerState.ON:
+                if self.data.power is PowerState.OFF:
+                    # Turned on with its remote: the queries below may land
+                    # while the set is still booting, so look again shortly.
+                    self._schedule_power_on_refresh()
                 for query in (tv.query_input_source, tv.query_volume, tv.query_mute):
                     try:
                         await query()

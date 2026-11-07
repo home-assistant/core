@@ -1,7 +1,8 @@
 """Tests for the Sony TV RS-232 config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+import logging
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -28,18 +29,19 @@ def mock_async_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_config_flow_tv(mock_sony_tv: MockSonyTV) -> Generator[None]:
+def mock_config_flow_tv(mock_sony_tv: MockSonyTV) -> Generator[MagicMock]:
     """Hand the config flow the mock TV."""
     with patch(
         "homeassistant.components.sony_tv_rs232.config_flow.SonyTV",
         return_value=mock_sony_tv,
-    ):
-        yield
+    ) as mock_tv_class:
+        yield mock_tv_class
 
 
 async def test_user_form_creates_entry(
     hass: HomeAssistant,
     mock_sony_tv: MockSonyTV,
+    mock_config_flow_tv: MagicMock,
     mock_async_setup_entry: AsyncMock,
 ) -> None:
     """Test successful config flow creates an entry."""
@@ -57,6 +59,8 @@ async def test_user_form_creates_entry(
     assert result["title"] == "Sony TV"
     assert result["data"] == {CONF_PORT: MOCK_PORT}
     mock_async_setup_entry.assert_awaited_once()
+    # Only the port is checked: the full attribute round is skipped.
+    assert mock_config_flow_tv.call_args == call(MOCK_PORT, refresh_on_connect=False)
     mock_sony_tv.connect.assert_awaited_once()
     mock_sony_tv.disconnect.assert_awaited_once()
 
@@ -126,6 +130,7 @@ async def test_esphome_api_key_not_logged(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a failed ESPHome proxy port is logged without its query string."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.sony_tv_rs232")
     port = "esphome://tv-proxy.local/?port_name=TTL&key=secret-api-key"
     mock_sony_tv.connect.side_effect = OSError("Connection refused")
 

@@ -57,7 +57,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import load_json
 
@@ -330,6 +330,30 @@ async def test_power_on_push_schedules_refresh(
 
 
 @pytest.mark.parametrize("initial_tv_state", [_standby_state()])
+async def test_power_on_poll_schedules_refresh(
+    hass: HomeAssistant, mock_sony_tv: MockSonyTV, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a power-on found by a poll (the TV's own remote) re-queries it.
+
+    The poll's own attribute queries may land while the set is still booting.
+    """
+    mock_sony_tv.state.power = PowerState.ON
+
+    await _tick(hass, freezer, SCAN_INTERVAL)
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    mock_sony_tv.query_power.assert_awaited_once()
+    mock_sony_tv.query_volume.assert_awaited_once()
+
+    await _tick(hass, freezer, timedelta(seconds=3))
+    assert mock_sony_tv.query_power.await_count == 2
+    assert mock_sony_tv.query_volume.await_count == 2
+
+    # Already on: the follow-up poll does not arm another.
+    await _tick(hass, freezer, timedelta(seconds=3))
+    assert mock_sony_tv.query_power.await_count == 2
+
+
+@pytest.mark.parametrize("initial_tv_state", [_standby_state()])
 async def test_power_on_refresh_cancelled_on_unload(
     hass: HomeAssistant,
     mock_sony_tv: MockSonyTV,
@@ -442,6 +466,34 @@ async def test_source_and_sound_mode_controls(
         blocking=True,
     )
     assert mock_sony_tv.set_sound_mode.await_args == call(SoundMode.CUSTOM)
+
+
+@pytest.mark.parametrize(
+    ("service", "data", "translation_key"),
+    [
+        (SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "hdmi9"}, "invalid_source"),
+        (
+            SERVICE_SELECT_SOUND_MODE,
+            {ATTR_SOUND_MODE: "cinema"},
+            "invalid_sound_mode",
+        ),
+    ],
+)
+async def test_invalid_source_or_sound_mode_raises(
+    hass: HomeAssistant,
+    mock_sony_tv: MockSonyTV,
+    service: str,
+    data: dict[str, str],
+    translation_key: str,
+) -> None:
+    """Test an unknown source or sound mode is rejected before reaching the TV."""
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            MP_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID, **data}, blocking=True
+        )
+    assert excinfo.value.translation_key == translation_key
+    mock_sony_tv.select_input_source.assert_not_awaited()
+    mock_sony_tv.set_sound_mode.assert_not_awaited()
 
 
 @pytest.mark.parametrize(

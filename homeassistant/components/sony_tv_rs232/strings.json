@@ -51,19 +51,25 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Failed to open the serial port: {error}"
+      "message": "Failed to open the serial port"
     },
     "command_failed": {
-      "message": "Failed to send the command to the TV: {error}"
+      "message": "Failed to send the command to the TV"
     },
     "command_rejected": {
-      "message": "The TV rejected the command: {error}"
+      "message": "The TV rejected the command"
+    },
+    "invalid_sound_mode": {
+      "message": "{invalid_sound_mode} is not a valid sound mode. Valid sound modes are: {valid_sound_modes}"
+    },
+    "invalid_source": {
+      "message": "{invalid_source} is not a valid source. Valid sources are: {valid_sources}"
     },
     "not_connected": {
       "message": "Not connected to the TV"
     },
     "update_failed": {
-      "message": "The TV did not answer the power query: {error}"
+      "message": "The TV did not answer the power query"
     }
   }
 }

@@ -26,7 +26,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -78,7 +78,6 @@ def catch_command_errors[**_P](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_rejected",
-                translation_placeholders={"error": str(err)},
             ) from err
         except (SerialKitError, OSError) as err:
             # SerialKitError covers CommandTimeoutError, ConnectionLostError
@@ -86,7 +85,6 @@ def catch_command_errors[**_P](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
 
     return wrapper
@@ -210,10 +208,28 @@ class SonyTVRS232MediaPlayer(CoordinatorEntity[SonyTVCoordinator], MediaPlayerEn
     @override
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""
-        await self.coordinator.tv.select_input_source(INPUT_SOURCE_HA_TO_SONY[source])
+        if (input_source := INPUT_SOURCE_HA_TO_SONY.get(source)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={
+                    "invalid_source": source,
+                    "valid_sources": ", ".join(INPUT_SOURCE_HA_TO_SONY),
+                },
+            )
+        await self.coordinator.tv.select_input_source(input_source)
 
     @catch_command_errors
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
-        await self.coordinator.tv.set_sound_mode(SOUND_MODE_HA_TO_SONY[sound_mode])
+        if (mode := SOUND_MODE_HA_TO_SONY.get(sound_mode)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sound_mode",
+                translation_placeholders={
+                    "invalid_sound_mode": sound_mode,
+                    "valid_sound_modes": ", ".join(SOUND_MODE_HA_TO_SONY),
+                },
+            )
+        await self.coordinator.tv.set_sound_mode(mode)
