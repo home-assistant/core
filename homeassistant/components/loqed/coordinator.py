@@ -98,6 +98,9 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         self._api = api
         self.lock = lock
         self.device_name = config_entry.data[CONF_NAME]
+        self._lock_online = lock.online
+        if not self._lock_online:
+            _LOGGER.info("LOQED lock %s is unavailable", self.device_name)
 
     @override
     async def _async_update_data(self) -> StatusMessage:
@@ -130,6 +133,13 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         if "error" in event_data:
             _LOGGER.warning("Incorrect callback received:: %s", event_data)
             return None
+
+        if self.lock.online != self._lock_online:
+            self._lock_online = self.lock.online
+            if self._lock_online:
+                _LOGGER.info("LOQED lock %s is back online", self.device_name)
+            else:
+                _LOGGER.info("LOQED lock %s is unavailable", self.device_name)
 
         self.async_update_listeners()
         return None
