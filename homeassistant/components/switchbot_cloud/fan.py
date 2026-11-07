@@ -96,6 +96,8 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
+        if percentage and preset_mode is None:
+            preset_mode = BatteryCirculatorFanMode.DIRECT.value
         preset_mode = (
             preset_mode or self.preset_mode or BatteryCirculatorFanMode.DIRECT.value
         )
