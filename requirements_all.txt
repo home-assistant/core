@@ -917,6 +917,9 @@ dropmqttapi==1.0.3
 # homeassistant.components.dsmr
 dsmr-parser==1.11.1
 
+# homeassistant.components.duosida_ev
+duosida-ev==0.2.2
+
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.1.0
 

@@ -1,0 +1,81 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "host": "The IP address of your Duosida charger."
+        }
+      },
+      "search": {
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "device": "The charger to set up."
+        }
+      },
+      "user": {
+        "menu_options": {
+          "manual": "Enter the IP address",
+          "search": "Search the network"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cp_voltage": {
+        "name": "Control pilot voltage"
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "session_time": {
+        "name": "Session time"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "available": "Available",
+          "charging": "[%key:common::state::charging%]",
+          "faulted": "[%key:common::state::fault%]",
+          "finishing": "Finishing",
+          "inoperative": "Inoperative",
+          "preparing": "Preparing",
+          "reserved": "Reserved",
+          "suspended_ev": "Suspended by the vehicle",
+          "suspended_evse": "Suspended by the charger"
+        }
+      },
+      "total_energy": {
+        "name": "Total energy"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to the charger."
+    },
+    "connection_lost": {
+      "message": "The connection to the charger was lost."
+    },
+    "no_status": {
+      "message": "The charger did not send its status."
+    },
+    "unexpected_device": {
+      "message": "Another charger answered at this address."
+    }
+  }
+}
