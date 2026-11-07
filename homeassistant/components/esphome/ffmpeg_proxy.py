@@ -41,11 +41,12 @@ def async_create_proxy_url(
     rate: int | None = None,
     channels: int | None = None,
     width: int | None = None,
+    bitrate: int | None = None,
 ) -> str:
     """Create a use proxy URL that automatically converts the media."""
     data = hass.data[DATA_FFMPEG_PROXY]
     return data.async_create_proxy_url(
-        device_id, media_url, media_format, rate, channels, width
+        device_id, media_url, media_format, rate, channels, width, bitrate
     )
 
 
@@ -71,6 +72,9 @@ class FFmpegConversionInfo:
     width: int | None
     """Target sample width in bytes (None to keep source width)."""
 
+    bitrate: int | None = None
+    """Target constant bitrate in kbps (None for the encoder's default)."""
+
     proc: asyncio.subprocess.Process | None = None
     """Subprocess doing ffmpeg conversion."""
 
@@ -95,6 +99,7 @@ class FFmpegProxyData:
         rate: int | None,
         channels: int | None,
         width: int | None,
+        bitrate: int | None = None,
     ) -> str:
         """Create a one-time use proxy URL that automatically converts the media."""
 
@@ -119,7 +124,7 @@ class FFmpegProxyData:
         convert_id = secrets.token_urlsafe(16)
         device_conversions.append(
             FFmpegConversionInfo(
-                convert_id, media_url, media_format, rate, channels, width
+                convert_id, media_url, media_format, rate, channels, width, bitrate
             )
         )
         _LOGGER.debug("Media URL allowed by proxy: %s", media_url)
@@ -182,6 +187,11 @@ class FFmpegConvertResponse(web.StreamResponse):
         if self.convert_info.channels is not None:
             # Number of channels
             command_args.extend(["-ac", str(self.convert_info.channels)])
+
+        if self.convert_info.bitrate is not None:
+            # Constant bitrate. Some hardware decoders cannot handle the
+            # variable bitrate that the encoder defaults to.
+            command_args.extend(["-b:a", f"{self.convert_info.bitrate}k"])
 
         if self.convert_info.width == 2:
             # 16-bit samples
