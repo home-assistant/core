@@ -2,7 +2,10 @@
 
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from thinqconnect import ThinQAPIException
 
 from homeassistant.components.lg_thinq.const import CONF_CONNECT_CLIENT_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -13,8 +16,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import MOCK_CONNECT_CLIENT_ID, MOCK_COUNTRY, MOCK_PAT
-
-from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="1.1.1.1",
@@ -44,10 +45,12 @@ async def test_config_flow(
         CONF_COUNTRY: MOCK_COUNTRY,
         CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID,
     }
+    assert result["result"].unique_id == MOCK_PAT
 
     mock_config_thinq_api.async_get_device_list.assert_called_once()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_invalid_pat(
     hass: HomeAssistant, mock_invalid_thinq_api: AsyncMock
 ) -> None:
@@ -55,11 +58,25 @@ async def test_config_flow_invalid_pat(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]
     mock_invalid_thinq_api.async_get_device_list.assert_called_once()
+
+    mock_invalid_thinq_api.async_get_device_list.side_effect = None
+    mock_invalid_thinq_api.async_get_device_list.return_value = ["air_conditioner"]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_already_configured(
@@ -73,7 +90,13 @@ async def test_config_flow_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -100,6 +123,7 @@ async def test_dhcp_config_flow(
         CONF_COUNTRY: MOCK_COUNTRY,
         CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID,
     }
+    assert result["result"].unique_id == MOCK_PAT
 
     mock_config_thinq_api.async_get_device_list.assert_called_once()
 
@@ -117,3 +141,80 @@ async def test_dhcp_config_flow_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_config_thinq_api: AsyncMock,
+) -> None:
+    """Test reconfiguring the country."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_COUNTRY: "US"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_ACCESS_TOKEN: MOCK_PAT,
+        CONF_COUNTRY: "US",
+        CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID,
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(
+            ThinQAPIException(code="1307", message="Error", headers=None),
+            "not_supported_country",
+            id="not_supported_country",
+        ),
+        pytest.param(
+            ThinQAPIException(code="1103", message="Error", headers=None),
+            "invalid_token",
+            id="invalid_token",
+        ),
+        pytest.param(
+            ThinQAPIException(code="9999", message="Error", headers=None),
+            "token_unauthorized",
+            id="unknown_code",
+        ),
+        pytest.param(ClientError, "cannot_connect", id="client_error"),
+        pytest.param(TimeoutError, "cannot_connect", id="timeout"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_config_thinq_api: AsyncMock,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test reconfiguring recovers from errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_config_thinq_api.async_get_device_list.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_COUNTRY: "US"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    mock_config_thinq_api.async_get_device_list.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_COUNTRY: "US"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_COUNTRY] == "US"

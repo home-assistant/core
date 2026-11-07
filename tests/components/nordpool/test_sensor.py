@@ -7,15 +7,14 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 from pynordpool import API
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_fire_time_changed, snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
@@ -199,8 +198,8 @@ async def test_sensor_empty_response(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Current and last price should be known, next price should be unknown
-    # as api responds with empty data (204)
+    # Current and last price should be known
+    # Next price is also know as we have it in cache from previous fetch
 
     current_price = hass.states.get("sensor.nord_pool_se3_current_price")
     last_price = hass.states.get("sensor.nord_pool_se3_previous_price")
@@ -210,4 +209,4 @@ async def test_sensor_empty_response(
     assert next_price is not None
     assert current_price.state == "0.78568"
     assert last_price.state == "0.82005"
-    assert next_price.state == STATE_UNKNOWN
+    assert next_price.state == "0.93322"

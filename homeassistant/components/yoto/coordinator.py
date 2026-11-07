@@ -3,25 +3,18 @@
 from datetime import datetime
 from typing import override
 
-import aiohttp
-from yoto_api import AuthenticationError, Token, YotoClient, YotoError, YotoPlayer
+from yoto_api import AuthenticationError, YotoClient, YotoError, YotoPlayer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
+from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL, STATUS_PUSH_INTERVAL
 
 type YotoConfigEntry = ConfigEntry[YotoDataUpdateCoordinator]
@@ -46,20 +39,11 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-        self._session = session
-        self.client = YotoClient(session=async_get_clientsession(hass))
-        self._subscribed_players: set[str] = set()
-        self._sync_token()
-
-    def _sync_token(self) -> None:
-        """Sync the OAuth2 access token to the Yoto client."""
-        token = self._session.token
-        self.client.token = Token(
-            access_token=token[CONF_ACCESS_TOKEN],
-            refresh_token=token.get("refresh_token", ""),
-            token_type=token.get("token_type", "Bearer"),
-            valid_until=dt_util.utc_from_timestamp(token["expires_at"]),
+        self.client = YotoClient(
+            session=async_get_clientsession(hass),
+            auth=AsyncConfigEntryAuth(session),
         )
+        self._subscribed_players: set[str] = set()
 
     @override
     async def _async_setup(self) -> None:
@@ -104,22 +88,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
     @override
     async def _async_update_data(self) -> dict[str, YotoPlayer]:
         """Fetch fresh data from the Yoto cloud."""
-        try:
-            await self._session.async_ensure_token_valid()
-        except OAuth2TokenRequestReauthError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="authentication_failed",
-            ) from err
-        except (aiohttp.ClientError, OAuth2TokenRequestError) as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
-        self._sync_token()
-
         try:
             await self.client.refresh()
         except AuthenticationError as err:
@@ -179,7 +147,10 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         if not self.client.is_mqtt_connected:
             return
         for device_id in list(self.client.players):
-            await self.client.request_player_status(device_id)
+            try:
+                await self.client.request_player_status(device_id)
+            except YotoError as err:
+                LOGGER.debug("Status request for %s failed: %s", device_id, err)
 
     def _mqtt_event(self, _player: YotoPlayer) -> None:
         """Handle a real-time update pushed by the Yoto MQTT broker."""

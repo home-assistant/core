@@ -5,9 +5,9 @@ import logging
 from typing import Any, override
 
 from aionut import NUTError, NUTLoginError
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_BASE,
@@ -21,10 +21,14 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import PyNUTData, _unique_id_from_status
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+from .coordinator import NutConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-REAUTH_SCHEMA = {vol.Optional(CONF_USERNAME): str, vol.Optional(CONF_PASSWORD): str}
+REAUTH_SCHEMA = {
+    probatio.Optional(CONF_USERNAME): str,
+    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+}
 
 PASSWORD_NOT_CHANGED = "__**password_not_changed**__"
 
@@ -32,26 +36,32 @@ PASSWORD_NOT_CHANGED = "__**password_not_changed**__"
 def _base_schema(
     nut_config: Mapping[str, Any],
     use_password_not_changed: bool = False,
-) -> vol.Schema:
+) -> probatio.Schema:
     """Generate base schema."""
     base_schema = {
-        vol.Optional(CONF_HOST, default=nut_config.get(CONF_HOST) or DEFAULT_HOST): str,
-        vol.Optional(CONF_PORT, default=nut_config.get(CONF_PORT) or DEFAULT_PORT): int,
-        vol.Optional(
-            CONF_USERNAME, default=nut_config.get(CONF_USERNAME, vol.UNDEFINED)
+        probatio.Optional(
+            CONF_HOST, default=nut_config.get(CONF_HOST) or DEFAULT_HOST
         ): str,
-        vol.Optional(
-            CONF_PASSWORD,
-            default=PASSWORD_NOT_CHANGED if use_password_not_changed else vol.UNDEFINED,
+        probatio.Optional(
+            CONF_PORT, default=nut_config.get(CONF_PORT) or DEFAULT_PORT
+        ): int,
+        probatio.Optional(
+            CONF_USERNAME, default=nut_config.get(CONF_USERNAME, probatio.UNDEFINED)
+        ): str,
+        probatio.Optional(
+            probatio.Secret(CONF_PASSWORD),
+            default=PASSWORD_NOT_CHANGED
+            if use_password_not_changed
+            else probatio.UNDEFINED,
         ): str,
     }
 
-    return vol.Schema(base_schema)
+    return probatio.Schema(base_schema)
 
 
-def _ups_schema(ups_list: dict[str, str]) -> vol.Schema:
+def _ups_schema(ups_list: dict[str, str]) -> probatio.Schema:
     """UPS selection schema."""
-    return vol.Schema({vol.Required(CONF_ALIAS): vol.In(ups_list)})
+    return probatio.Schema({probatio.Required(CONF_ALIAS): probatio.In(ups_list)})
 
 
 async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
@@ -115,7 +125,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         self.nut_config: dict[str, Any] = {}
         self.ups_list: dict[str, str] | None = None
         self.title: str | None = None
-        self.reauth_entry: ConfigEntry | None = None
+        self.reauth_entry: NutConfigEntry | None = None
 
     @override
     async def async_step_zeroconf(
@@ -331,8 +341,8 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         reauth_data = reauth_entry.data
         description_placeholders: dict[str, str] = {
-            CONF_HOST: reauth_data[CONF_HOST],
-            CONF_PORT: reauth_data[CONF_PORT],
+            "host": reauth_data[CONF_HOST],
+            "port": reauth_data[CONF_PORT],
         }
 
         if user_input is not None:
@@ -351,7 +361,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(REAUTH_SCHEMA),
+            data_schema=probatio.Schema(REAUTH_SCHEMA),
             errors=errors,
             description_placeholders=description_placeholders,
         )

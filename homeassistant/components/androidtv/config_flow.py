@@ -5,18 +5,12 @@ import os
 from typing import Any, override
 
 from androidtv import state_detection_rules_validator
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import SectionConfig, section
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     ObjectSelector,
     SelectOptionDict,
@@ -25,7 +19,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from . import async_connect_androidtv, get_androidtv_mac
+from . import AndroidTVConfigEntry, async_connect_androidtv, get_androidtv_mac
 from .const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
@@ -63,6 +57,8 @@ CONF_RULE_VALUES = "rule_values"
 RESULT_CONN_ERROR = "cannot_connect"
 RESULT_UNKNOWN = "unknown"
 
+_ADB_OPTION_KEYS = (CONF_ADBKEY, CONF_ADB_SERVER_IP, CONF_ADB_SERVER_PORT)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -86,10 +82,12 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         host = user_input.get(CONF_HOST, "") if user_input else ""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=host): str,
-                vol.Required(CONF_DEVICE_CLASS, default=DEVICE_AUTO): SelectSelector(
+                probatio.Required(CONF_HOST, default=host): str,
+                probatio.Required(
+                    CONF_DEVICE_CLASS, default=DEVICE_AUTO
+                ): SelectSelector(
                     SelectSelectorConfig(
                         options=[
                             SelectOptionDict(value=k, label=v)
@@ -98,16 +96,16 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
                         translation_key="device_class",
                     )
                 ),
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Required(CONF_MORE_OPTIONS): section(
-                    vol.Schema(
+                probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+                probatio.Required(CONF_MORE_OPTIONS): section(
+                    probatio.Schema(
                         {
-                            vol.Optional(CONF_ADBKEY): str,
-                            vol.Optional(CONF_ADB_SERVER_IP): str,
-                            vol.Optional(
+                            probatio.Optional(CONF_ADBKEY): str,
+                            probatio.Optional(CONF_ADB_SERVER_IP): str,
+                            probatio.Optional(
                                 CONF_ADB_SERVER_PORT,
                                 default=DEFAULT_ADB_SERVER_PORT,
-                            ): cv.port,
+                            ): probatio.Port(),
                         }
                     ),
                     SectionConfig(collapsed=True),
@@ -120,6 +118,27 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors={"base": error} if error else None,
         )
+
+    async def _async_validate_adb_options(
+        self, user_input: dict[str, Any]
+    ) -> tuple[dict[str, Any], str | None]:
+        """Flatten the more options section and validate the ADB options."""
+        user_input = user_input.copy()
+        more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+        user_input.update(more_options)
+
+        adb_key = user_input.get(CONF_ADBKEY)
+        if CONF_ADB_SERVER_IP in user_input:
+            if adb_key:
+                return user_input, "key_and_server"
+        else:
+            user_input.pop(CONF_ADB_SERVER_PORT, None)
+
+        if adb_key:
+            if not await self.hass.async_add_executor_job(_is_file, adb_key):
+                return user_input, "adbkey_not_file"
+
+        return user_input, None
 
     async def _async_check_connection(
         self, user_input: dict[str, Any]
@@ -160,22 +179,11 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
         error = None
 
         if user_input is not None:
-            user_input = user_input.copy()
-            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
-            user_input.update(more_options)
+            user_input, error = await self._async_validate_adb_options(user_input)
+            if error:
+                return self._show_setup_form(user_input, error)
 
             host = user_input[CONF_HOST]
-            adb_key = user_input.get(CONF_ADBKEY)
-            if CONF_ADB_SERVER_IP in user_input:
-                if adb_key:
-                    return self._show_setup_form(user_input, "key_and_server")
-            else:
-                user_input.pop(CONF_ADB_SERVER_PORT, None)
-
-            if adb_key:
-                if not await self.hass.async_add_executor_job(_is_file, adb_key):
-                    return self._show_setup_form(user_input, "adbkey_not_file")
-
             self._async_abort_entries_match({CONF_HOST: host})
             error, unique_id = await self._async_check_connection(user_input)
             if error is None:
@@ -192,10 +200,82 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._show_setup_form(user_input, error)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection settings."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            data, error = await self._async_validate_adb_options(
+                {**user_input, CONF_DEVICE_CLASS: entry.data[CONF_DEVICE_CLASS]}
+            )
+            if error is None:
+                error, unique_id = await self._async_check_connection(data)
+            if error is None:
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch()
+                # Drop the old ADB settings so cleared optional ones are removed
+                result = self.async_update_and_abort(
+                    entry,
+                    data={
+                        **{
+                            key: value
+                            for key, value in entry.data.items()
+                            if key not in _ADB_OPTION_KEYS
+                        },
+                        **data,
+                    },
+                )
+                # The update listener only handles options, so reload explicitly
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return result
+            errors["base"] = error
+        else:
+            user_input = {
+                CONF_HOST: entry.data[CONF_HOST],
+                CONF_PORT: entry.data[CONF_PORT],
+                CONF_MORE_OPTIONS: {
+                    key: entry.data[key]
+                    for key in _ADB_OPTION_KEYS
+                    if key in entry.data
+                },
+            }
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): probatio.Port(),
+                        probatio.Required(CONF_MORE_OPTIONS): section(
+                            probatio.Schema(
+                                {
+                                    probatio.Optional(CONF_ADBKEY): str,
+                                    probatio.Optional(CONF_ADB_SERVER_IP): str,
+                                    probatio.Optional(
+                                        CONF_ADB_SERVER_PORT,
+                                        default=DEFAULT_ADB_SERVER_PORT,
+                                    ): probatio.Port(),
+                                }
+                            ),
+                            SectionConfig(collapsed=True),
+                        ),
+                    }
+                ),
+                user_input,
+            ),
+            errors=errors,
+        )
+
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: AndroidTVConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -203,7 +283,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlow):
     """Handle an option flow for Android Debug Bridge."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: AndroidTVConfigEntry) -> None:
         """Initialize options flow."""
         self._apps: dict[str, Any] = dict(config_entry.options.get(CONF_APPS, {}))
         self._state_det_rules: dict[str, Any] = dict(
@@ -251,40 +331,40 @@ class OptionsFlowHandler(OptionsFlow):
         rules = [RULES_NEW_ID, *self._state_det_rules]
         options = self.config_entry.options
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(CONF_APPS): SelectSelector(
+                probatio.Optional(CONF_APPS): SelectSelector(
                     SelectSelectorConfig(options=apps, mode=SelectSelectorMode.DROPDOWN)
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_GET_SOURCES,
                     default=options.get(CONF_GET_SOURCES, DEFAULT_GET_SOURCES),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_EXCLUDE_UNNAMED_APPS,
                     default=options.get(
                         CONF_EXCLUDE_UNNAMED_APPS, DEFAULT_EXCLUDE_UNNAMED_APPS
                     ),
                 ): bool,
-                vol.Required(
+                probatio.Required(
                     CONF_SCREENCAP_INTERVAL,
                     default=options.get(
                         CONF_SCREENCAP_INTERVAL, DEFAULT_SCREENCAP_INTERVAL
                     ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=15)),
-                vol.Optional(
+                ): probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=15)),
+                probatio.Optional(
                     CONF_TURN_OFF_COMMAND,
                     description={
                         "suggested_value": options.get(CONF_TURN_OFF_COMMAND, "")
                     },
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_TURN_ON_COMMAND,
                     description={
                         "suggested_value": options.get(CONF_TURN_ON_COMMAND, "")
                     },
                 ): str,
-                vol.Optional(CONF_STATE_DETECTION_RULES): SelectSelector(
+                probatio.Optional(CONF_STATE_DETECTION_RULES): SelectSelector(
                     SelectSelectorConfig(
                         options=rules, mode=SelectSelectorMode.DROPDOWN
                     )
@@ -316,16 +396,18 @@ class OptionsFlowHandler(OptionsFlow):
     def _async_apps_form(self, app_id: str) -> ConfigFlowResult:
         """Return configuration form for apps."""
         app_schema = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_APP_NAME,
                 description={"suggested_value": self._apps.get(app_id, "")},
             ): str,
         }
         if app_id == APPS_NEW_ID:
-            data_schema = vol.Schema({**app_schema, vol.Optional(CONF_APP_ID): str})
+            data_schema = probatio.Schema(
+                {**app_schema, probatio.Optional(CONF_APP_ID): str}
+            )
         else:
-            data_schema = vol.Schema(
-                {**app_schema, vol.Optional(CONF_APP_DELETE, default=False): bool}
+            data_schema = probatio.Schema(
+                {**app_schema, probatio.Optional(CONF_APP_DELETE, default=False): bool}
             )
 
         return self.async_show_form(
@@ -367,17 +449,23 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Return configuration form for detection rules."""
         rule_schema = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_RULE_VALUES, default=self._state_det_rules.get(rule_id)
             ): ObjectSelector()
         }
         if rule_id == RULES_NEW_ID:
-            data_schema = vol.Schema(
-                {vol.Optional(CONF_RULE_ID, default=default_id): str, **rule_schema}
+            data_schema = probatio.Schema(
+                {
+                    probatio.Optional(CONF_RULE_ID, default=default_id): str,
+                    **rule_schema,
+                }
             )
         else:
-            data_schema = vol.Schema(
-                {**rule_schema, vol.Optional(CONF_RULE_DELETE, default=False): bool}
+            data_schema = probatio.Schema(
+                {
+                    **rule_schema,
+                    probatio.Optional(CONF_RULE_DELETE, default=False): bool,
+                }
             )
 
         return self.async_show_form(

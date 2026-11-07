@@ -1,12 +1,15 @@
 """Test Litter-Robot setup process."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pylitterbot import LitterRobot4
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.litterrobot.coordinator import UPDATE_INTERVAL
 from homeassistant.components.vacuum import (
@@ -15,16 +18,17 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN, VACUUM_ENTITY_ID
 from .conftest import ROBOT_4_DATA, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> None:
@@ -44,6 +48,34 @@ async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> Non
     mock_account.robots[0].start_cleaning.assert_called_once()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_shutdown_disconnects_account(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test the account is disconnected when Home Assistant stops."""
+    await setup_integration(hass, mock_account, VACUUM_DOMAIN)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_account.disconnect.assert_awaited_once()
+
+
+async def test_shutdown_during_first_refresh_disconnects_account(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test a stop during the first refresh still disconnects the account."""
+
+    async def _stop_during_refresh(**kwargs: Any) -> None:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+
+    mock_account.load_robots.side_effect = _stop_during_refresh
+
+    await setup_integration(hass, mock_account, VACUUM_DOMAIN)
+    await hass.async_block_till_done()
+
+    mock_account.disconnect.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -164,8 +196,29 @@ async def test_unique_id_migration_conflict(
     assert entry.minor_version == 2
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "state", "reason"),
+    [
+        pytest.param(
+            LitterRobotLoginException,
+            ConfigEntryState.MIGRATION_ERROR,
+            "Invalid credentials. Please check your username and password, then"
+            " try again",
+            id="invalid_credentials",
+        ),
+        pytest.param(
+            LitterRobotException,
+            ConfigEntryState.SETUP_RETRY,
+            "Unable to connect to the Whisker API to migrate the configuration",
+            id="cannot_connect",
+        ),
+    ],
+)
 async def test_unique_id_migration_connection_failure(
     hass: HomeAssistant,
+    side_effect: type[Exception],
+    state: ConfigEntryState,
+    reason: str,
 ) -> None:
     """Test migration fails when API is unreachable for unique_id."""
     entry = MockConfigEntry(
@@ -178,14 +231,15 @@ async def test_unique_id_migration_connection_failure(
 
     with patch(
         "homeassistant.components.litterrobot.Account.connect",
-        side_effect=LitterRobotException,
+        side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.unique_id is None
     assert entry.minor_version == 1
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is state
+    assert entry.reason == reason
 
 
 async def test_device_remove_devices(

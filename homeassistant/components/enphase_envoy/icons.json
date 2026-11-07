@@ -76,6 +76,12 @@
       "available_energy": {
         "default": "mdi:battery-50"
       },
+      "comm_level_2_4_ghz": {
+        "default": "mdi:signal"
+      },
+      "comm_level_sub_ghz": {
+        "default": "mdi:signal"
+      },
       "current_power_production": {
         "default": "mdi:solar-power"
       },

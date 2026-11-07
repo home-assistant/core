@@ -19,7 +19,7 @@ import pizone
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EXCLUDE, CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, async_noop, callback
 from homeassistant.helpers import aiohttp_client, discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -172,7 +172,7 @@ async def async_ensure_discovery(hass: HomeAssistant) -> pizone.DiscoveryService
         # listen_once removes itself before this runs; avoid a second unsub.
         if slot := hass.data.get(DATA_DISCOVERY_SERVICE):
             if slot.runtime is not None:
-                slot.runtime.unsub_stop = lambda: None
+                slot.runtime.unsub_stop = async_noop
         await async_stop_discovery(hass)
 
     unsub_stop = hass.bus.async_listen_once(
@@ -232,6 +232,22 @@ async def async_discover_endpoint(
     """
     service = await async_ensure_discovery(hass)
     return await service.discover_by_uid(uid)
+
+
+async def async_discover_by_host(
+    hass: HomeAssistant, host: str
+) -> pizone.ControllerEndpoint | None:
+    """HTTP-probe a controller at *host* for config-flow validation.
+
+    Starts shared discovery if needed.
+
+    Raises:
+        OSError: Discovery UDP socket could not be bound.
+        UnpairedBridgeError: Probed UID is the unpaired placeholder.
+        ControllerAlreadyClaimedError: Host or UID is already claimed on the service.
+    """
+    service = await async_ensure_discovery(hass)
+    return await service.discover_by_host(host)
 
 
 async def async_maybe_stop_discovery(hass: HomeAssistant) -> None:

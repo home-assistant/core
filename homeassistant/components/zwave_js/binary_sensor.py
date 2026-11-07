@@ -29,7 +29,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -39,10 +39,12 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
 from .helpers import (
+    get_device_id,
     get_opening_state_notification_value,
     is_opening_state_notification_value,
 )
@@ -299,7 +301,7 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         # NotificationType 7: Home Security - State Id's 5, 6 (glass breakage)
         key=NOTIFICATION_HOME_SECURITY,
         states={5, 6},
-        device_class=BinarySensorDeviceClass.SAFETY,
+        device_class=BinarySensorDeviceClass.GLASS_BREAK,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 7: Home Security - State Id's 7, 8 (motion)
@@ -490,6 +492,7 @@ def _async_check_legacy_entity_repair(
             hass,
             DOMAIN,
             f"{repair_description.issue_translation_key}.{entity_id}",
+            config_entry_id=entity_entry.config_entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=IssueSeverity.WARNING,
@@ -684,10 +687,16 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         if description:
             self.entity_description = description
 
-        # Entity class attributes
-        self._attr_name = self.generate_name(
-            alternate_value_name=self.info.primary_value.metadata.states[self.state_key]
-        )
+        # Notification sensors are named after their notification state. A
+        # description may set its own name to override that.
+        if not hasattr(self, "entity_description") or (
+            self.entity_description.name is Undefined
+        ):
+            self._attr_name = self.generate_name(
+                alternate_value_name=self.info.primary_value.metadata.states[
+                    self.state_key
+                ]
+            )
         self._attr_unique_id = f"{self._attr_unique_id}.{self.state_key}"
 
     @property
@@ -791,9 +800,13 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
         # Unlike the base implementation, keep this entity in place so its
         # registry entry and user customizations survive metadata rediscovery.
-        controller_events.discovered_value_ids[self.device_entry.id].discard(
-            value.value_id
+        # discovered_value_ids is keyed by the node device id, not the child device id.
+        node_device_id = dr.async_get_device_id_by_identifier(
+            self.hass,
+            get_device_id(self.driver, self.info.node),
+            config_entry_id=self.config_entry.entry_id,
         )
+        controller_events.discovered_value_ids[node_device_id].discard(value.value_id)
         node_events = controller_events.node_events
         value_updates_disc_info = node_events.value_updates_disc_info[
             value.node.node_id
@@ -870,6 +883,33 @@ OPENING_STATE_NOTIFICATION_SCHEMA = ZWaveValueDiscoverySchema(
 
 
 DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
+    # Zooz ZSE43 Tilt/Shock Sensor. Its vibration sensor is reported
+    # through the Home Security "Cover status" notification, so expose
+    # that notification as a vibration sensor.
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        manufacturer_id={0x027A},
+        product_id={0xE003},
+        product_type={0x7000},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Home Security"},
+            property_key={"Cover status"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={3},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.HOME_SECURITY)
+            },
+        ),
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 7: Home Security - State Id 3 (product cover removed)
+            key=NOTIFICATION_HOME_SECURITY,
+            name="Vibration",
+            states={3},
+            device_class=BinarySensorDeviceClass.VIBRATION,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
     NewZWaveDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         primary_value=ZWaveValueDiscoverySchema(

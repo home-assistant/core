@@ -1,8 +1,10 @@
 {
   "domain": "incomfort",
   "name": "Intergas gateway",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@jbouwh"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     { "hostname": "rfgateway", "macaddress": "0004A3*" },
     { "registered_devices": true }

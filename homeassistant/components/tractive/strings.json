@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_failed_existing": "Could not update the config entry, please remove the integration and set it up again.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "unique_id_mismatch": "The login details correspond to a different account. Please use the credentials of the previously configured account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -16,12 +15,31 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::tractive::config::step::user::data_description::email%]",
+          "password": "[%key:component::tractive::config::step::user::data_description::password%]"
         }
+      },
+      "reconfigure": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::tractive::config::step::user::data_description::email%]",
+          "password": "[%key:component::tractive::config::step::user::data_description::password%]"
+        },
+        "description": "Update the credentials of your Tractive account."
       },
       "user": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address of your Tractive account.",
+          "password": "The password of your Tractive account."
         }
       }
     }
@@ -77,6 +95,12 @@
     }
   },
   "exceptions": {
+    "authentication_error": {
+      "message": "Authentication failed while communicating with the Tractive API."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with the Tractive API: {error}"
+    },
     "failed_to_turn_off": {
       "message": "An error occurred while trying to turn off {entity}"
     },

@@ -2,11 +2,10 @@
 
 from typing import Any, override
 
+import probatio
 from pyemoncms import EmoncmsClient
-import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -33,6 +32,7 @@ from .const import (
     SYNC_MODE_AUTO,
     SYNC_MODE_MANUAL,
 )
+from .coordinator import EmonCMSConfigEntry
 
 
 def get_options(feeds: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -71,7 +71,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: EmonCMSConfigEntry,
     ) -> EmoncmsOptionsFlow:
         """Get the options flow for this handler."""
         return EmoncmsOptionsFlow(config_entry)
@@ -125,11 +125,11 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_URL): str,
-                        vol.Required(CONF_API_KEY): str,
-                        vol.Required(
+                        probatio.Required(CONF_URL): str,
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                        probatio.Required(
                             SYNC_MODE, default=SYNC_MODE_MANUAL
                         ): SelectSelector(
                             SelectSelectorConfig(
@@ -168,9 +168,9 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         return self.async_show_form(
             step_id="choose_feeds",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_ONLY_INCLUDE_FEEDID,
                         default=include_only_feeds,
                     ): selector({"select": self.dropdown}),
@@ -208,10 +208,10 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_URL): str,
-                        vol.Required(CONF_API_KEY): str,
+                        probatio.Required(CONF_URL): str,
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                     }
                 ),
                 user_input or reconfig_entry.data,
@@ -224,7 +224,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
 class EmoncmsOptionsFlow(OptionsFlowWithReload):
     """Emoncms Options flow handler."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: EmonCMSConfigEntry) -> None:
         """Initialize emoncms options flow."""
         self._url = config_entry.data[CONF_URL]
         self._api_key = config_entry.data[CONF_API_KEY]
@@ -262,9 +262,9 @@ class EmoncmsOptionsFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_ONLY_INCLUDE_FEEDID, default=include_only_feeds
                     ): selector({"select": dropdown}),
                 }

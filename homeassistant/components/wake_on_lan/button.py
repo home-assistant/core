@@ -64,7 +64,7 @@ class WolButton(ButtonEntity):
         self._attr_unique_id = dr.format_mac(mac_address)
         self._attr_device_info = dr.DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._attr_unique_id)},
-            default_name=name,
+            name=name,
         )
 
     @override

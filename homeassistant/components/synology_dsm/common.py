@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 from contextlib import suppress
 import logging
+from typing import TYPE_CHECKING
 
 from awesomeversion import AwesomeVersion
 from synology_dsm import SynologyDSM
@@ -25,7 +26,6 @@ from synology_dsm.exceptions import (
     SynologyDSMRequestException,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -50,6 +50,9 @@ from .const import (
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
 
+if TYPE_CHECKING:
+    from .coordinator import SynologyDSMConfigEntry
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -58,7 +61,7 @@ class SynoApi:
 
     dsm: SynologyDSM
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: SynologyDSMConfigEntry) -> None:
         """Initialize the API wrapper class."""
         self._hass = hass
         self._entry = entry
@@ -194,6 +197,7 @@ class SynoApi:
                     self._hass,
                     DOMAIN,
                     f"{ISSUE_MISSING_BACKUP_SETUP}_{self._entry.unique_id}",
+                    config_entry_id=self._entry.entry_id,
                     data={"entry_id": self._entry.entry_id},
                     is_fixable=True,
                     is_persistent=False,
@@ -273,8 +277,10 @@ class SynoApi:
         self._with_information = bool(
             self._fetching_entities.get(SynoDSMInformation.API_KEY)
         )
+        # Keep fetching while no device is connected, as no entity subscribes yet
         self._with_external_usb = bool(
             self._fetching_entities.get(SynoCoreExternalUSB.API_KEY)
+            or (self.external_usb is not None and not self.external_usb.get_devices)
         )
         self._with_hardware = bool(
             self._fetching_entities.get(SynoCoreHardware.API_KEY)

@@ -6,7 +6,7 @@ from typing import Any, override
 from aiohttp import ClientError
 from imgw_pib import ImgwPib
 from imgw_pib.exceptions import ApiError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -69,9 +69,9 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
             for station_id, station_name in imgwpib.hydrological_stations.items()
         ]
 
-        schema: vol.Schema = vol.Schema(
+        schema: probatio.Schema = probatio.Schema(
             {
-                vol.Required(CONF_STATION_ID): SelectSelector(
+                probatio.Required(CONF_STATION_ID): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         multiple=False,

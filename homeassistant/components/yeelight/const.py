@@ -3,7 +3,11 @@
 from datetime import timedelta
 from typing import Any
 
+import probatio
+
 from homeassistant.const import Platform
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "yeelight"
@@ -99,3 +103,26 @@ UPDATE_REQUEST_PROPERTIES = [
 
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT]
+
+YEELIGHT_FLOW_TRANSITION_SCHEMA: VolDictType = {
+    probatio.Optional(ATTR_COUNT, default=0): cv.positive_int,
+    probatio.Optional(ATTR_ACTION, default=ACTION_RECOVER): probatio.Any(
+        ACTION_RECOVER, ACTION_OFF, ACTION_STAY
+    ),
+    probatio.Required(ATTR_TRANSITIONS): [
+        {
+            probatio.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION): probatio.All(
+                probatio.EnsureList(), [cv.positive_int]
+            ),
+            probatio.Exclusive(YEELIGHT_HSV_TRANSACTION, CONF_TRANSITION): probatio.All(
+                probatio.EnsureList(), [cv.positive_int]
+            ),
+            probatio.Exclusive(
+                YEELIGHT_TEMPERATURE_TRANSACTION, CONF_TRANSITION
+            ): probatio.All(probatio.EnsureList(), [cv.positive_int]),
+            probatio.Exclusive(
+                YEELIGHT_SLEEP_TRANSACTION, CONF_TRANSITION
+            ): probatio.All(probatio.EnsureList(), [cv.positive_int]),
+        }
+    ],
+}

@@ -15,9 +15,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AdaxConfigEntry
 from .const import CONNECTION_TYPE, DOMAIN, LOCAL
-from .coordinator import AdaxCloudCoordinator
+from .coordinator import AdaxCloudCoordinator, AdaxConfigEntry
 
 
 @dataclass(kw_only=True, frozen=True)

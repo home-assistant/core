@@ -70,10 +70,7 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues:
-    status: exempt
-    comment: |
-      This integration has no cases where raising a repair issue is needed.
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: |

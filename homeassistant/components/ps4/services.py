@@ -1,6 +1,6 @@
 """Support for PlayStation 4 consoles."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_COMMAND, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -10,10 +10,10 @@ from .const import COMMANDS, DOMAIN, PS4_DATA
 
 SERVICE_COMMAND = "send_command"
 
-PS4_COMMAND_SCHEMA = vol.Schema(
+PS4_COMMAND_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_COMMAND): vol.In(list(COMMANDS)),
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        probatio.Required(ATTR_COMMAND): probatio.In(list(COMMANDS)),
     }
 )
 

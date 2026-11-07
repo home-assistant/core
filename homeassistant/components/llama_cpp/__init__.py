@@ -21,7 +21,7 @@ PLATFORMS = (Platform.CONVERSATION,)
 type LlamaCppConfigEntry = ConfigEntry[openai.AsyncOpenAI]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LlamaCppConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LlamaCppConfigEntry) -> None:
     """Set up llama.cpp from a config entry."""
     client = await async_create_client(hass, entry.data)
 
@@ -47,12 +47,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LlamaCppConfigEntry) -> 
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LlamaCppConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LlamaCppConfigEntry) -> None:
     """Unload llama.cpp."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_options(hass: HomeAssistant, entry: LlamaCppConfigEntry) -> None:

@@ -29,6 +29,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import (
+    TemperatureConverter,
+    TemperatureDeltaConverter,
+)
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import DOMAIN, MAIN, UNIT_MAP
@@ -64,6 +68,7 @@ OPERATING_STATE_TO_ACTION = {
 
 AC_MODE_TO_STATE = {
     "auto": HVACMode.AUTO,
+    "aIComfort": HVACMode.AUTO,
     "cool": HVACMode.COOL,
     "dry": HVACMode.DRY,
     "coolClean": HVACMode.COOL,
@@ -110,6 +115,7 @@ PRESET_MODE_TO_HA = {
     "smart": "smart",
     "motionIndirect": "motion_indirect",
     "motionDirect": "motion_direct",
+    "dryComfort": "dry_comfort",
 }
 
 HA_MODE_TO_PRESET_MODE = {v: k for k, v in PRESET_MODE_TO_HA.items()}
@@ -281,7 +287,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get_attribute_value(
             Capability.TEMPERATURE_MEASUREMENT, Attribute.TEMPERATURE
@@ -344,7 +350,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
             return self.get_attribute_value(
@@ -358,7 +364,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.get_attribute_value(
@@ -368,7 +374,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.get_attribute_value(
@@ -378,7 +384,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
         # Offline third party thermostats may not have a unit
         # Since climate always requires a unit, default to Celsius
@@ -410,6 +416,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 Capability.THERMOSTAT_COOLING_SETPOINT,
                 Capability.TEMPERATURE_MEASUREMENT,
                 Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+                Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL,
                 Capability.DEMAND_RESPONSE_LOAD_CONTROL,
             },
         )
@@ -453,6 +460,20 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             tasks.append(self.async_turn_on())
 
         mode = STATE_TO_AC_MODE[hvac_mode]
+
+        # If new hvac_mode is HVACMode.AUTO and
+        # AirConditioner doesn't support "auto"
+        # but supports "aIComfort", change mode to "aIComfort"
+        if hvac_mode == HVACMode.AUTO:
+            supported_modes = (
+                self.get_attribute_value(
+                    Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+                )
+                or []
+            )
+            if "auto" not in supported_modes and "aIComfort" in supported_modes:
+                mode = "aIComfort"
+
         # If new hvac_mode is HVAC_MODE_FAN_ONLY and
         # AirConditioner supports "wind" or "fan" mode,
         # the AirConditioner new mode has to be "wind" or "fan"
@@ -516,7 +537,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get_attribute_value(
             Capability.TEMPERATURE_MEASUREMENT, Attribute.TEMPERATURE
@@ -576,7 +597,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.get_attribute_value(
             Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
@@ -594,30 +615,80 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         return setpoint_range.get(key)
 
     @property
+    def _setpoint_range_unit(self) -> str:
+        """Return the unit the cooling setpoint range is reported in."""
+        if (
+            unit := self._internal_state[Capability.THERMOSTAT_COOLING_SETPOINT][
+                Attribute.COOLING_SETPOINT_RANGE
+            ].unit
+        ) is None:
+            return self.native_temperature_unit
+        return UNIT_MAP[unit]
+
+    @property
     @override
     def target_temperature_step(self) -> float | None:
         """Return the supported step of target temperature."""
-        return self._get_setpoint_range_value("step")
+        if (step := self._get_setpoint_range_value("step")) is None:
+            return None
+        return TemperatureDeltaConverter.convert(
+            step, self._setpoint_range_unit, self.native_temperature_unit
+        )
+
+    def _get_custom_setpoint(self, attribute: Attribute) -> float | None:
+        """Return a setpoint bound from the custom setpoint control capability."""
+        if not self.supports_capability(Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL):
+            return None
+        setpoint = self.get_attribute_value(
+            Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL, attribute
+        )
+        # Devices report -1000 when the bound is not available
+        if setpoint is None or setpoint == -1000:
+            return None
+        unit = self._internal_state[Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL][
+            attribute
+        ].unit
+        return TemperatureConverter.convert(
+            setpoint,
+            UNIT_MAP[unit] if unit else self.native_temperature_unit,
+            self.native_temperature_unit,
+        )
 
     @property
     @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        if (minimum := self._get_setpoint_range_value("minimum")) is None:
-            return DEFAULT_MIN_TEMP
-        return minimum
+        if (minimum := self._get_setpoint_range_value("minimum")) is not None:
+            return TemperatureConverter.convert(
+                minimum, self._setpoint_range_unit, self.native_temperature_unit
+            )
+        if (
+            minimum := self._get_custom_setpoint(Attribute.MINIMUM_SETPOINT)
+        ) is not None:
+            return minimum
+        return TemperatureConverter.convert(
+            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.native_temperature_unit
+        )
 
     @property
     @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        if (maximum := self._get_setpoint_range_value("maximum")) is None:
-            return DEFAULT_MAX_TEMP
-        return maximum
+        if (maximum := self._get_setpoint_range_value("maximum")) is not None:
+            return TemperatureConverter.convert(
+                maximum, self._setpoint_range_unit, self.native_temperature_unit
+            )
+        if (
+            maximum := self._get_custom_setpoint(Attribute.MAXIMUM_SETPOINT)
+        ) is not None:
+            return maximum
+        return TemperatureConverter.convert(
+            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.native_temperature_unit
+        )
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
         unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
             Attribute.TEMPERATURE
@@ -828,7 +899,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get_attribute_value(
             Capability.TEMPERATURE_MEASUREMENT, Attribute.TEMPERATURE
@@ -848,7 +919,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.get_attribute_value(
             Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
@@ -856,7 +927,7 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
         unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
             Attribute.TEMPERATURE

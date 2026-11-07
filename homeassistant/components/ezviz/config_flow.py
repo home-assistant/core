@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from pyezvizapi.client import EzvizClient
 from pyezvizapi.exceptions import (
     AuthTestResultFailed,
@@ -13,7 +14,6 @@ from pyezvizapi.exceptions import (
     PyEzvizError,
 )
 from pyezvizapi.test_cam_rtsp import TestRTSPAuth
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -30,11 +30,17 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     ATTR_SERIAL,
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
+    CONF_ENCRYPTION_PASSWORD,
     CONF_FFMPEG_ARGUMENTS,
     CONF_RFSESSION_ID,
     CONF_SESSION_ID,
@@ -142,6 +148,24 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             options=DEFAULT_OPTIONS,
         )
 
+    async def _async_validate_cloud_auth(
+        self, data: dict[str, Any]
+    ) -> tuple[dict[str, Any], dict[str, str]]:
+        """Log in to the EZVIZ cloud and return the auth data and form errors."""
+        try:
+            auth_data = await self.hass.async_add_executor_job(
+                _validate_and_create_auth, data
+            )
+        except InvalidURL:
+            return {}, {"base": "invalid_host"}
+        except InvalidHost:
+            return {}, {"base": "cannot_connect"}
+        except EzvizAuthVerificationCode:
+            return {}, {"base": "mfa_required"}
+        except PyEzvizError:
+            return {}, {"base": "invalid_auth"}
+        return auth_data, {}
+
     @staticmethod
     @callback
     @override
@@ -163,8 +187,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
                 return self.async_abort(reason="already_configured_account")
 
-        errors = {}
-        auth_data = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_USERNAME])
@@ -176,38 +199,23 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_user_custom_url()
 
             try:
-                auth_data = await self.hass.async_add_executor_job(
-                    _validate_and_create_auth, user_input
-                )
-
-            except InvalidURL:
-                errors["base"] = "invalid_host"
-
-            except InvalidHost:
-                errors["base"] = "cannot_connect"
-
-            except EzvizAuthVerificationCode:
-                errors["base"] = "mfa_required"
-
-            except PyEzvizError:
-                errors["base"] = "invalid_auth"
-
+                auth_data, errors = await self._async_validate_cloud_auth(user_input)
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
-            else:
+            if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
                     data=auth_data,
                     options=DEFAULT_OPTIONS,
                 )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_URL, default=EU_URL): vol.In(
+                probatio.Required(CONF_USERNAME): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                probatio.Required(CONF_URL, default=EU_URL): probatio.In(
                     [EU_URL, RUSSIA_URL, CONF_CUSTOMIZE]
                 ),
             }
@@ -221,44 +229,28 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user for custom region url."""
-        errors = {}
-        auth_data = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             user_input[CONF_USERNAME] = self.username
             user_input[CONF_PASSWORD] = self.password
 
             try:
-                auth_data = await self.hass.async_add_executor_job(
-                    _validate_and_create_auth, user_input
-                )
-
-            except InvalidURL:
-                errors["base"] = "invalid_host"
-
-            except InvalidHost:
-                errors["base"] = "cannot_connect"
-
-            except EzvizAuthVerificationCode:
-                errors["base"] = "mfa_required"
-
-            except PyEzvizError:
-                errors["base"] = "invalid_auth"
-
+                auth_data, errors = await self._async_validate_cloud_auth(user_input)
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
-            else:
+            if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
                     data=auth_data,
                     options=DEFAULT_OPTIONS,
                 )
 
-        data_schema_custom_url = vol.Schema(
+        data_schema_custom_url = probatio.Schema(
             {
-                vol.Required(CONF_URL, default=EU_URL): str,
+                probatio.Required(CONF_URL, default=EU_URL): str,
             }
         )
 
@@ -278,7 +270,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             # A unique ID is passed in via the discovery info
             assert self.unique_id is not None
-        self.context["title_placeholders"] = {ATTR_SERIAL: self.unique_id}
+        self.context["title_placeholders"] = {"serial": self.unique_id}
         self.ip_address = discovery_info[CONF_IP_ADDRESS]
 
         return await self.async_step_confirm()
@@ -308,10 +300,10 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
-        discovered_camera_schema = vol.Schema(
+        discovered_camera_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
 
@@ -320,8 +312,8 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=discovered_camera_schema,
             errors=errors,
             description_placeholders={
-                ATTR_SERIAL: self.unique_id,
-                CONF_IP_ADDRESS: self.ip_address,
+                "serial": self.unique_id,
+                "ip_address": self.ip_address,
             },
         )
 
@@ -342,7 +334,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
-                self.context["title_placeholders"] = {ATTR_SERIAL: item.title}
+                self.context["title_placeholders"] = {"serial": item.title}
                 entry = await self.async_set_unique_id(item.title)
 
         if not entry:
@@ -375,10 +367,12 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=auth_data,
                 )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=entry.title): vol.In([entry.title]),
-                vol.Required(CONF_PASSWORD): str,
+                probatio.Required(CONF_USERNAME, default=entry.title): probatio.In(
+                    [entry.title]
+                ),
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
 
@@ -386,6 +380,45 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=data_schema,
             errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the EZVIZ cloud account."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        if reconfigure_entry.data[CONF_TYPE] != ATTR_TYPE_CLOUD:
+            return self.async_abort(reason="reconfigure_camera_not_supported")
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                auth_data, errors = await self._async_validate_cloud_auth(
+                    {**user_input, CONF_USERNAME: reconfigure_entry.unique_id}
+                )
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors = {"base": "unknown"}
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=auth_data
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                        probatio.Required(CONF_URL): str,
+                    }
+                ),
+                {CONF_URL: reconfigure_entry.data[CONF_URL]},
+            ),
+            errors=errors,
+            description_placeholders={"username": reconfigure_entry.title},
         )
 
 
@@ -399,21 +432,30 @@ class EzvizOptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        options = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_TIMEOUT,
-                    default=self.config_entry.options.get(
-                        CONF_TIMEOUT, DEFAULT_TIMEOUT
-                    ),
-                ): int,
-                vol.Optional(
-                    CONF_FFMPEG_ARGUMENTS,
-                    default=self.config_entry.options.get(
-                        CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
-                    ),
-                ): str,
-            }
-        )
+        fields: dict[probatio.Marker, Any] = {
+            probatio.Optional(
+                CONF_TIMEOUT,
+                default=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            ): int,
+            probatio.Optional(
+                CONF_FFMPEG_ARGUMENTS,
+                default=self.config_entry.options.get(
+                    CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
+                ),
+            ): str,
+        }
+        # Alarm pictures can be encrypted with a password that differs from
+        # the verification code used for the RTSP stream.
+        if self.config_entry.data[CONF_TYPE] == ATTR_TYPE_CAMERA:
+            fields[
+                probatio.Optional(
+                    CONF_ENCRYPTION_PASSWORD,
+                    description={
+                        "suggested_value": self.config_entry.options.get(
+                            CONF_ENCRYPTION_PASSWORD
+                        )
+                    },
+                )
+            ] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
-        return self.async_show_form(step_id="init", data_schema=options)
+        return self.async_show_form(step_id="init", data_schema=probatio.Schema(fields))

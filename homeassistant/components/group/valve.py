@@ -2,30 +2,27 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.valve import (
-    ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as VALVE_DOMAIN,
     PLATFORM_SCHEMA as VALVE_PLATFORM_SCHEMA,
     ValveEntity,
     ValveEntityFeature,
+    ValveEntityStateAttribute,
+    ValveService,
+    ValveServiceArgument,
     ValveState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
-    SERVICE_STOP_VALVE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -35,6 +32,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 from .util import reduce_attribute
 
@@ -49,9 +47,9 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = VALVE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(VALVE_DOMAIN),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(VALVE_DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -120,7 +118,9 @@ class ValveGroup(GroupEntity, ValveEntity):
         }
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entities
+        }
         self._attr_unique_id = unique_id
 
     @callback
@@ -136,7 +136,7 @@ class ValveGroup(GroupEntity, ValveEntity):
                 values.discard(entity_id)
             return
 
-        features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = new_state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if features & (ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE):
             self._valves[KEY_OPEN_CLOSE].add(entity_id)
@@ -156,7 +156,11 @@ class ValveGroup(GroupEntity, ValveEntity):
         """Open the valves."""
         data = {ATTR_ENTITY_ID: self._valves[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            VALVE_DOMAIN, SERVICE_OPEN_VALVE, data, blocking=True, context=self._context
+            VALVE_DOMAIN,
+            ValveService.OPEN,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     @override  # type: ignore[misc]
@@ -175,7 +179,7 @@ class ValveGroup(GroupEntity, ValveEntity):
         data = {ATTR_ENTITY_ID: self._valves[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             VALVE_DOMAIN,
-            SERVICE_CLOSE_VALVE,
+            ValveService.CLOSE,
             data,
             blocking=True,
             context=self._context,
@@ -196,11 +200,11 @@ class ValveGroup(GroupEntity, ValveEntity):
         """Move the valves to a specific position."""
         data = {
             ATTR_ENTITY_ID: self._valves[KEY_SET_POSITION],
-            ATTR_POSITION: position,
+            ValveServiceArgument.POSITION: position,
         }
         await self.hass.services.async_call(
             VALVE_DOMAIN,
-            SERVICE_SET_VALVE_POSITION,
+            ValveService.SET_POSITION,
             data,
             blocking=True,
             context=self._context,
@@ -211,7 +215,11 @@ class ValveGroup(GroupEntity, ValveEntity):
         """Stop the valves."""
         data = {ATTR_ENTITY_ID: self._valves[KEY_STOP]}
         await self.hass.services.async_call(
-            VALVE_DOMAIN, SERVICE_STOP_VALVE, data, blocking=True, context=self._context
+            VALVE_DOMAIN,
+            ValveService.STOP,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     @callback
@@ -233,7 +241,10 @@ class ValveGroup(GroupEntity, ValveEntity):
         self._attr_reports_position = False
         self._update_assumed_state_from_members()
         for state in states:
-            if state.attributes.get(ATTR_CURRENT_POSITION) is not None:
+            if (
+                state.attributes.get(ValveEntityStateAttribute.CURRENT_POSITION)
+                is not None
+            ):
                 self._attr_reports_position = True
             if state.state == ValveState.OPEN:
                 self._attr_is_closed = False
@@ -255,7 +266,7 @@ class ValveGroup(GroupEntity, ValveEntity):
             self._attr_is_closed = None
 
         self._attr_current_valve_position = reduce_attribute(
-            states, ATTR_CURRENT_POSITION
+            states, ValveEntityStateAttribute.CURRENT_POSITION
         )
 
         supported_features = ValveEntityFeature(0)

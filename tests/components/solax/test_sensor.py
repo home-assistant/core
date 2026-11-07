@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from solax.inverter import InverterError, InverterResponse
 from solax.inverters import X1MiniV34
 
@@ -15,8 +16,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def __mock_get_data() -> InverterResponse:

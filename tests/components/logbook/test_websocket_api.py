@@ -1,13 +1,26 @@
 """The tests for the logbook component."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import Any
 from unittest.mock import ANY, patch
 
+import attr
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    async_fire_time_changed,
+    async_mock_service,
+)
+from pytest_homeassistant.components.recorder.common import (
+    async_block_recorder,
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+)
+from pytest_homeassistant.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 from homeassistant import core
 from homeassistant.components import logbook, recorder
@@ -37,7 +50,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.event import async_track_state_change_event
@@ -50,21 +63,13 @@ from .common import (
     simulate_thermostat_context_chain,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import (
-    async_block_recorder,
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-)
-from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
-
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
-    """Return listeners without final write listeners."""
+    """Return listeners without core startup and final write listeners."""
     return {
         key: value
         for key, value in listeners.items()
-        if key != EVENT_HOMEASSISTANT_FINAL_WRITE
+        if key not in (EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_FINAL_WRITE)
     }
 
 
@@ -93,7 +98,9 @@ async def _async_mock_logbook_platform_with_broken_describe(
     logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
 
-async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
+async def _async_mock_logbook_platform(
+    hass: HomeAssistant, domain: str = "test", event_name: str = "mock_event"
+) -> None:
     class MockLogbookPlatform:
         """Mock a logbook platform."""
 
@@ -114,9 +121,9 @@ async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
                     "message": event.data.get("message", "is on fire"),
                 }
 
-            async_describe_event("test", "mock_event", async_describe_test_event)
+            async_describe_event(domain, event_name, async_describe_test_event)
 
-    logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    logbook._process_logbook_platform(hass, domain, MockLogbookPlatform)
 
 
 async def _async_mock_entity_with_broken_logbook_platform(
@@ -301,6 +308,69 @@ async def test_get_events(
     assert results[0]["entity_id"] == "light.kitchen"
     assert results[0]["state"] == "off"
     assert isinstance(results[0]["when"], float)
+
+
+async def test_get_events_automation_and_script_run_ids(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test entries of an automation and the scripts it calls identify their runs."""
+    now = dt_util.utcnow()
+    assert await async_setup_component(hass, "logbook", {})
+    assert await async_setup_component(
+        hass, "script", {"script": {"callee": {"sequence": {"event": "callee_event"}}}}
+    )
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "id": "caller",
+                "alias": "Caller",
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "actions": [{"action": "script.callee"}, {"action": "script.callee"}],
+            }
+        },
+    )
+    await async_recorder_block_till_done(hass)
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "trace/list", "domain": "automation"})
+    response = await client.receive_json()
+    assert response["success"]
+    automation_run_ids = [trace["run_id"] for trace in response["result"]]
+    await client.send_json_auto_id({"type": "trace/list", "domain": "script"})
+    response = await client.receive_json()
+    assert response["success"]
+    script_run_ids = [trace["run_id"] for trace in response["result"]]
+    assert len(automation_run_ids) == 1
+    assert len(script_run_ids) == 2
+
+    await client.send_json_auto_id(
+        {"type": "logbook/get_events", "start_time": now.isoformat()}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    entries = [entry for entry in response["result"] if "run_id" in entry]
+
+    # One shared context, but each entry points to the trace of its own run
+    assert len({entry["context_id"] for entry in entries}) == 1
+    assert [
+        (entry["domain"], entry["item_id"], entry["run_id"], entry["message"])
+        for entry in entries
+    ] == [
+        (
+            "automation",
+            "caller",
+            automation_run_ids[0],
+            "triggered by event 'test_event'",
+        ),
+        ("script", "callee", script_run_ids[0], "started"),
+        ("script", "callee", script_run_ids[1], "started"),
+    ]
 
 
 async def test_get_events_entities_filtered_away(
@@ -579,6 +649,75 @@ async def test_get_events_with_device_ids(
     assert results[4]["entity_id"] == "light.kitchen"
     assert results[4]["state"] == "off"
     assert isinstance(results[4]["when"], float)
+
+
+async def test_get_events_with_composite_device_id(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test logbook get_events for a pre-migration composite device id.
+
+    The composite device spans two config entries with different domains, so the
+    external logbook events of both domains must be returned. A composite reports
+    only one of the two as its config_entry_id, so the union of its config entries
+    is what makes both domains interesting.
+    """
+    composite_id = "composite00000000000000000000ab"
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+
+    entry_a = MockConfigEntry(domain="test_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="test_b")
+    entry_b.add_to_hass(hass)
+    await _async_mock_logbook_platform(hass, "test_a", "mock_event_a")
+    await _async_mock_logbook_platform(hass, "test_b", "mock_event_b")
+
+    device_a = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id, identifiers={("test_a", "0123")}
+    )
+    device_b = device_registry.async_get_or_create(
+        config_entry_id=entry_b.entry_id, identifiers={("test_b", "0123")}
+    )
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry._devices[device_a.id] = attr.evolve(
+        device_a, composite_device_id=composite_id
+    )
+    device_registry._devices[device_b.id] = attr.evolve(
+        device_b, composite_device_id=composite_id
+    )
+    assert device_registry.async_get(composite_id).is_composite_device is True
+
+    # No entity_ids are requested, so the composite device is the only route by which
+    # either domain can become interesting
+    hass.bus.async_fire("mock_event_a", {"device_id": composite_id})
+    hass.bus.async_fire("mock_event_b", {"device_id": composite_id})
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "logbook/get_events",
+            "start_time": now.isoformat(),
+            "device_ids": [composite_id],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+
+    results = response["result"]
+    assert len(results) == 2
+    assert {result["domain"] for result in results} == {"test_a", "test_b"}
+    assert {result["message"] for result in results} == {"is on fire"}
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -1194,10 +1333,6 @@ async def test_subscribe_unsubscribe_logbook_stream(
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
     init_listeners = hass.bus.async_listeners()
-    init_listeners = {
-        **init_listeners,
-        EVENT_HOMEASSISTANT_START: init_listeners[EVENT_HOMEASSISTANT_START] - 1,
-    }
     await websocket_client.send_json(
         {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
     )
@@ -3693,3 +3828,292 @@ async def test_logbook_stream_live_parent_service_call_only(
     assert len(heater_entries) == 1
     assert heater_entries[0]["state"] == "on"
     assert heater_entries[0]["context_user_id"] == user_id
+
+
+async def test_get_action_calls(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test logbook get_action_calls describes what made each call."""
+    now = dt_util.utcnow()
+    assert await async_setup_component(hass, "logbook", {})
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "id": "caller",
+                "alias": "Caller",
+                "triggers": {"trigger": "event", "event_type": "test_event"},
+                "actions": {"action": "test.inner", "data": {"from": "automation"}},
+            }
+        },
+    )
+    async_mock_service(hass, "test", "inner")
+
+    async def _async_outer(call: ServiceCall) -> None:
+        await hass.services.async_call(
+            "test", "inner", {"from": "outer"}, blocking=True, context=call.context
+        )
+
+    hass.services.async_register("test", "outer", _async_outer)
+    await async_recorder_block_till_done(hass)
+
+    user_context = core.Context(user_id=hass_admin_user.id)
+    await hass.services.async_call(
+        "test",
+        "outer",
+        {ATTR_ENTITY_ID: "light.kitchen"},
+        blocking=True,
+        context=user_context,
+    )
+    # The automation runs in a child context of the event, without a user
+    hass.bus.async_fire("test_event", context=core.Context(user_id=hass_admin_user.id))
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {"type": "logbook/get_action_calls", "start_time": now.isoformat()}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "when": ANY,
+            "domain": "test",
+            "service": "outer",
+            "service_data": {ATTR_ENTITY_ID: "light.kitchen"},
+            "context_id": user_context.id,
+            "context_user_id": hass_admin_user.id,
+        },
+        {
+            "when": ANY,
+            "domain": "test",
+            "service": "inner",
+            "service_data": {"from": "outer"},
+            "context_id": user_context.id,
+            "context_user_id": hass_admin_user.id,
+            "context_event_type": EVENT_CALL_SERVICE,
+            "context_domain": "test",
+            "context_service": "outer",
+        },
+        {
+            "when": ANY,
+            "domain": "test",
+            "service": "inner",
+            "service_data": {"from": "automation"},
+            "context_id": ANY,
+            "context_user_id": hass_admin_user.id,
+            "context_event_type": EVENT_AUTOMATION_TRIGGERED,
+            "context_domain": "automation",
+            "context_name": "Caller",
+            "context_entity_id": "automation.caller",
+            "context_message": "triggered by event 'test_event'",
+            "context_source": "event 'test_event'",
+        },
+    ]
+    assert isinstance(response["result"][0]["when"], float)
+
+    await client.send_json_auto_id(
+        {
+            "type": "logbook/get_action_calls",
+            "start_time": now.isoformat(),
+            "end_time": now.isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+
+async def test_get_action_calls_context_older_than_start_time(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test an action call is described by a context that started before start_time."""
+    now = dt_util.utcnow()
+    assert await async_setup_component(hass, "logbook", {})
+    assert await async_setup_component(hass, "script", {})
+    async_mock_service(hass, "test", "inner")
+    await async_recorder_block_till_done(hass)
+
+    context = core.Context()
+    with freeze_time(now - timedelta(hours=1)):
+        hass.bus.async_fire(
+            EVENT_SCRIPT_STARTED,
+            {ATTR_NAME: "Mock script", ATTR_ENTITY_ID: "script.mock_script"},
+            context=context,
+        )
+        await hass.async_block_till_done()
+    await hass.services.async_call("test", "inner", blocking=True, context=context)
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "logbook/get_action_calls",
+            "start_time": (now - timedelta(minutes=30)).isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "when": ANY,
+            "domain": "test",
+            "service": "inner",
+            "service_data": {},
+            "context_id": context.id,
+            "context_event_type": EVENT_SCRIPT_STARTED,
+            "context_domain": "script",
+            "context_name": "Mock script",
+            "context_entity_id": "script.mock_script",
+            "context_message": "started",
+        },
+    ]
+
+
+async def _async_call_parent_action(hass: HomeAssistant, context: core.Context) -> None:
+    """Call an action in the parent context."""
+    await hass.services.async_call("test", "parent", blocking=True, context=context)
+
+
+async def _async_set_parent_state(hass: HomeAssistant, context: core.Context) -> None:
+    """Change a state in the parent context, like a sensor update."""
+    hass.states.async_set("sensor.temperature", "18", context=context)
+
+
+@pytest.mark.parametrize(
+    ("async_make_parent", "parent_origin"),
+    [
+        pytest.param(
+            _async_call_parent_action,
+            {
+                "context_event_type": EVENT_CALL_SERVICE,
+                "context_domain": "test",
+                "context_service": "parent",
+            },
+            id="action",
+        ),
+        pytest.param(
+            _async_set_parent_state,
+            {"context_state": "18", "context_entity_id": "sensor.temperature"},
+            id="state",
+        ),
+    ],
+)
+async def test_get_action_calls_parent_context_older_than_start_time(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    async_make_parent: Callable[[HomeAssistant, core.Context], Awaitable[None]],
+    parent_origin: dict[str, str],
+) -> None:
+    """Test an action call is described by a parent context from before start_time."""
+    now = dt_util.utcnow()
+    assert await async_setup_component(hass, "logbook", {})
+    async_mock_service(hass, "test", "parent")
+    async_mock_service(hass, "test", "child")
+    await async_recorder_block_till_done(hass)
+
+    parent_context = core.Context(user_id=hass_admin_user.id)
+    with freeze_time(now - timedelta(hours=1)):
+        await async_make_parent(hass, parent_context)
+        await hass.async_block_till_done()
+    # A child context, like a thermostat switching its heater
+    child_context = core.Context(parent_id=parent_context.id)
+    await hass.services.async_call(
+        "test", "child", blocking=True, context=child_context
+    )
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "logbook/get_action_calls",
+            "start_time": (now - timedelta(minutes=30)).isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "when": ANY,
+            "domain": "test",
+            "service": "child",
+            "service_data": {},
+            "context_id": child_context.id,
+            "context_user_id": hass_admin_user.id,
+            **parent_origin,
+        },
+    ]
+
+
+async def test_get_action_calls_future_start_time(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test get_action_calls with a future start time."""
+    assert await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {
+            "type": "logbook/get_action_calls",
+            "start_time": (dt_util.utcnow() + timedelta(hours=1)).isoformat(),
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+
+@pytest.mark.parametrize(
+    ("time_range", "error_code"),
+    [
+        pytest.param({"start_time": "cats"}, "invalid_start_time", id="start_time"),
+        pytest.param(
+            {"start_time": "2026-01-01T00:00:00+00:00", "end_time": "cats"},
+            "invalid_end_time",
+            id="end_time",
+        ),
+    ],
+)
+async def test_get_action_calls_bad_time(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    time_range: dict[str, str],
+    error_code: str,
+) -> None:
+    """Test get_action_calls with an invalid time."""
+    assert await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "logbook/get_action_calls", **time_range})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == error_code
+
+
+async def test_get_action_calls_requires_admin(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test get_action_calls requires an admin, as action data can hold secrets."""
+    assert await async_setup_component(hass, "logbook", {})
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+    await client.send_json_auto_id(
+        {"type": "logbook/get_action_calls", "start_time": dt_util.utcnow().isoformat()}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"

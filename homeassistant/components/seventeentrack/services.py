@@ -2,10 +2,10 @@
 
 from typing import Any, Final
 
+import probatio
 from pyseventeentrack.package import PACKAGE_STATUS_MAP, Package
-import voluptuous as vol
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_FRIENDLY_NAME, ATTR_LOCATION
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_LOCATION
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -35,10 +35,12 @@ from .const import (
 )
 from .coordinator import SeventeenTrackConfigEntry
 
-SERVICE_GET_PACKAGES_SCHEMA: Final = vol.Schema(
+_ATTR_FRIENDLY_NAME = "friendly_name"
+
+SERVICE_GET_PACKAGES_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Optional(ATTR_PACKAGE_STATE): selector.SelectSelector(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Optional(ATTR_PACKAGE_STATE): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 multiple=True,
                 options=[
@@ -52,18 +54,18 @@ SERVICE_GET_PACKAGES_SCHEMA: Final = vol.Schema(
     }
 )
 
-SERVICE_ADD_PACKAGE_SCHEMA: Final = vol.Schema(
+SERVICE_ADD_PACKAGE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
-        vol.Required(ATTR_PACKAGE_FRIENDLY_NAME): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
+        probatio.Required(ATTR_PACKAGE_FRIENDLY_NAME): cv.string,
     }
 )
 
-SERVICE_ARCHIVE_PACKAGE_SCHEMA: Final = vol.Schema(
+SERVICE_ARCHIVE_PACKAGE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
     }
 )
 
@@ -130,7 +132,7 @@ def _package_to_dict(package: Package) -> dict[str, Any]:
         ATTR_LOCATION: package.location,
         ATTR_STATUS: package.status,
         ATTR_INFO_TEXT: package.info_text,
-        ATTR_FRIENDLY_NAME: package.friendly_name,
+        _ATTR_FRIENDLY_NAME: package.friendly_name,
     }
     if timestamp := package.timestamp:
         result[ATTR_TIMESTAMP] = timestamp.isoformat()

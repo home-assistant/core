@@ -12,6 +12,9 @@
       "completed_torrents": {
         "default": "mdi:counter"
       },
+      "download_dir_free_space": {
+        "default": "mdi:harddisk"
+      },
       "download_speed": {
         "default": "mdi:cloud-download"
       },

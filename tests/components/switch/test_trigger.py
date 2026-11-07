@@ -3,22 +3,24 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.switch import DOMAIN
-from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.switch import DOMAIN
+from homeassistant.components.switch.trigger import TRIGGERS
+from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 TRIGGER_STATES = [
     *parametrize_trigger_states(
@@ -46,6 +48,12 @@ async def target_input_booleans(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "input_boolean")
 
 
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "turned_on": TargetSupport.STANDARD,
+    "turned_off": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -68,6 +76,11 @@ async def test_switch_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 # --- Switch domain tests ---

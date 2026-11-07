@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from amberelectric.models.interval import Interval
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.amberelectric.const import (
     CONF_SITE_ID,
@@ -24,8 +25,6 @@ from .helpers import (
     GENERAL_FORECASTS,
     GENERAL_ONLY_SITE_ID,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_API_TOKEN = "psk_0000000000000000"
 
@@ -59,7 +58,7 @@ def mock_amber_client() -> Generator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.amberelectric.async_setup_entry", return_value=True
+        "homeassistant.components.amberelectric.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

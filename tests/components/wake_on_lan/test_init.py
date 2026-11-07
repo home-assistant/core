@@ -2,16 +2,16 @@
 
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
-from homeassistant.components.wake_on_lan import DOMAIN, SERVICE_SEND_MAGIC_PACKET
+from homeassistant.components.wake_on_lan.const import DOMAIN
+from homeassistant.components.wake_on_lan.services import SERVICE_SEND_MAGIC_PACKET
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:
@@ -25,7 +25,9 @@ async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
 
 async def test_send_magic_packet(hass: HomeAssistant) -> None:
     """Test of send magic packet service call."""
-    with patch("homeassistant.components.wake_on_lan.wakeonlan") as mocked_wakeonlan:
+    with patch(
+        "homeassistant.components.wake_on_lan.services.wakeonlan"
+    ) as mocked_wakeonlan:
         mac = "aa:bb:cc:dd:ee:ff"
         secureon_password = "00:aa:22:bb:33:cc"
         bc_ip = "192.168.255.255"
@@ -86,7 +88,7 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
         assert "ip_address" not in mocked_wakeonlan.mock_calls[0][2]
 
         mocked_wakeonlan.reset_mock()
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_SEND_MAGIC_PACKET,
@@ -111,7 +113,7 @@ async def test_send_magic_packet_raise_repair(
     """Test of send magic packet service call raises a repair."""
     assert await async_setup_component(hass, "repairs", {})
     mac = "aa:bb:cc:dd:ee:ff"
-    with patch("homeassistant.components.wake_on_lan.wakeonlan"):
+    with patch("homeassistant.components.wake_on_lan.services.wakeonlan"):
         await async_setup_component(hass, DOMAIN, {})
         await hass.services.async_call(
             DOMAIN,

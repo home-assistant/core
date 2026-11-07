@@ -1,14 +1,13 @@
 """Support for Google Sheets."""
 
-from datetime import datetime
-from typing import TYPE_CHECKING
+from enum import StrEnum
+from typing import TYPE_CHECKING, cast
 
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
-from gspread import Client
-from gspread.exceptions import APIError
+from gspread import Client, GSpreadException, Spreadsheet, Worksheet
 from gspread.utils import ValueInputOption
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import (
@@ -21,62 +20,90 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
-from homeassistant.util.json import JsonObjectType
+from homeassistant.util import dt as dt_util
+from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import GoogleSheetsConfigEntry
 
-ADD_CREATED_COLUMN = "add_created_column"
-DATA = "data"
-DATA_CONFIG_ENTRY = "config_entry"
-ROWS = "rows"
-WORKSHEET = "worksheet"
 
-SERVICE_APPEND_SHEET = "append_sheet"
-SERVICE_GET_SHEET = "get_sheet"
+class GoogleSheetsService(StrEnum):
+    """Store keys for Google Sheets services."""
 
-SHEET_SERVICE_SCHEMA = vol.All(
+    APPEND_SHEET = "append_sheet"
+    GET_SHEET = "get_sheet"
+
+
+class GoogleSheetsServiceArgument(StrEnum):
+    """Store keys for Google Sheets service arguments."""
+
+    CONFIG_ENTRY = "config_entry"
+    WORKSHEET = "worksheet"
+    ADD_CREATED_COLUMN = "add_created_column"
+    DATA = "data"
+    ROWS = "rows"
+
+
+SHEET_SERVICE_SCHEMA = probatio.All(
     {
-        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(WORKSHEET): cv.string,
-        vol.Optional(ADD_CREATED_COLUMN, default=True): cv.boolean,
-        vol.Required(DATA): vol.Any(cv.ensure_list, [dict]),
+        probatio.Required(
+            GoogleSheetsServiceArgument.CONFIG_ENTRY
+        ): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Optional(GoogleSheetsServiceArgument.WORKSHEET): cv.string,
+        probatio.Optional(
+            GoogleSheetsServiceArgument.ADD_CREATED_COLUMN, default=True
+        ): cv.boolean,
+        probatio.Required(GoogleSheetsServiceArgument.DATA): probatio.Any(
+            probatio.EnsureList(), [dict]
+        ),
     },
 )
 
-get_SHEET_SERVICE_SCHEMA = vol.All(
+get_SHEET_SERVICE_SCHEMA = probatio.All(
     {
-        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(WORKSHEET): cv.string,
-        vol.Required(ROWS): cv.positive_int,
+        probatio.Required(
+            GoogleSheetsServiceArgument.CONFIG_ENTRY
+        ): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Optional(GoogleSheetsServiceArgument.WORKSHEET): cv.string,
+        probatio.Required(GoogleSheetsServiceArgument.ROWS): cv.positive_int,
     },
 )
+
+
+def _get_worksheet(sheet: Spreadsheet, name: str | None) -> Worksheet:
+    """Return the requested worksheet, or the first one when none was given.
+
+    Looking the name up eagerly would fetch the document metadata even when a
+    worksheet was requested and the first one is discarded.
+    """
+    if name is None:
+        return sheet.sheet1
+
+    return sheet.worksheet(name)
 
 
 def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
     """Run append in the executor."""
+    assert entry.unique_id is not None
     client = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
-    try:
-        sheet = client.open_by_key(entry.unique_id)
-    except RefreshError:
-        entry.async_start_reauth(call.hass)
-        raise
-    except APIError as ex:
-        raise HomeAssistantError("Failed to write data") from ex
-
-    worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
-    columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
-    add_created_column = call.data[ADD_CREATED_COLUMN]
-    now = str(datetime.now())  # pylint: disable=home-assistant-enforce-naive-now
+    sheet = client.open_by_key(entry.unique_id)
+    worksheet = _get_worksheet(
+        sheet, call.data.get(GoogleSheetsServiceArgument.WORKSHEET)
+    )
+    columns: list[str] = next(iter(worksheet.get_values("1:1")), [])
+    add_created_column = call.data[GoogleSheetsServiceArgument.ADD_CREATED_COLUMN]
+    now = str(dt_util.now())
     rows = []
-    for d in call.data[DATA]:
+    for d in call.data[GoogleSheetsServiceArgument.DATA]:
         row_data = ({"created": now} | d) if add_created_column else d
         row = [row_data.get(column, "") for column in columns]
         for key, value in row_data.items():
             if key not in columns:
                 columns.append(key)
+                if len(columns) > worksheet.col_count:
+                    worksheet.add_cols(len(columns) - worksheet.col_count)
                 worksheet.update_cell(1, len(columns), key)
                 row.append(value)
         rows.append(row)
@@ -87,36 +114,52 @@ def _get_from_sheet(
     call: ServiceCall, entry: GoogleSheetsConfigEntry
 ) -> JsonObjectType:
     """Run get in the executor."""
+    assert entry.unique_id is not None
     client = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
-    try:
-        sheet = client.open_by_key(entry.unique_id)
-    except RefreshError:
-        entry.async_start_reauth(call.hass)
-        raise
-    except APIError as ex:
-        raise HomeAssistantError("Failed to retrieve data") from ex
-
-    worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
+    sheet = client.open_by_key(entry.unique_id)
+    worksheet = _get_worksheet(
+        sheet, call.data.get(GoogleSheetsServiceArgument.WORKSHEET)
+    )
     all_values = worksheet.get_values()
-    return {"range": all_values[-call.data[ROWS] :]}
+    return {
+        "range": cast(
+            JsonArrayType, all_values[-call.data[GoogleSheetsServiceArgument.ROWS] :]
+        )
+    }
 
 
 async def _async_append_to_sheet(call: ServiceCall) -> None:
     """Append new line of data to a Google Sheets document."""
     entry: GoogleSheetsConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[DATA_CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[GoogleSheetsServiceArgument.CONFIG_ENTRY]
     )
     await entry.runtime_data.async_ensure_token_valid()
-    await call.hass.async_add_executor_job(_append_to_sheet, call, entry)
+    try:
+        await call.hass.async_add_executor_job(_append_to_sheet, call, entry)
+    except RefreshError:
+        entry.async_start_reauth(call.hass)
+        raise
+    except (GSpreadException, PermissionError) as ex:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="append_failed"
+        ) from ex
 
 
 async def _async_get_from_sheet(call: ServiceCall) -> ServiceResponse:
     """Get lines of data from a Google Sheets document."""
     entry: GoogleSheetsConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[DATA_CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[GoogleSheetsServiceArgument.CONFIG_ENTRY]
     )
     await entry.runtime_data.async_ensure_token_valid()
-    return await call.hass.async_add_executor_job(_get_from_sheet, call, entry)
+    try:
+        return await call.hass.async_add_executor_job(_get_from_sheet, call, entry)
+    except RefreshError:
+        entry.async_start_reauth(call.hass)
+        raise
+    except (GSpreadException, PermissionError) as ex:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="get_failed"
+        ) from ex
 
 
 @callback
@@ -125,14 +168,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_APPEND_SHEET,
+        GoogleSheetsService.APPEND_SHEET,
         _async_append_to_sheet,
         schema=SHEET_SERVICE_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_SHEET,
+        GoogleSheetsService.GET_SHEET,
         _async_get_from_sheet,
         schema=get_SHEET_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,

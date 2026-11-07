@@ -4,14 +4,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pythonxbox.api.client import XboxLiveClient
 from pythonxbox.authentication.manager import AuthenticationManager
 from pythonxbox.authentication.models import OAuth2TokenResponse
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -56,7 +55,7 @@ class OAuth2FlowHandler(
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: XboxConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"friend": FriendSubentryFlowHandler}
@@ -162,9 +161,9 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_XUID): SelectSelector(
+                        probatio.Required(CONF_XUID): SelectSelector(
                             SelectSelectorConfig(options=options)
                         )
                     }

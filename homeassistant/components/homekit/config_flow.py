@@ -8,7 +8,7 @@ import re
 import string
 from typing import Any, Final, TypedDict, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import device_automation
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
@@ -19,13 +19,11 @@ from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
     CONF_DEVICES,
     CONF_DOMAINS,
     CONF_ENTITIES,
@@ -33,6 +31,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import (
@@ -61,7 +60,7 @@ from .const import (
     TYPE_THERMOSTAT,
     VIDEO_CODEC_COPY,
 )
-from .models import HomeKitEntryData
+from .models import HomeKitConfigEntry, HomeKitEntryData
 from .util import async_find_next_available_port, state_needs_accessory_mode
 
 CONF_CAMERA_AUDIO = "camera_audio"
@@ -253,9 +252,9 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         name_to_type_map = await _async_name_to_type_map(self.hass)
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_INCLUDE_DOMAINS, default=default_domains
                     ): cv.multi_select(name_to_type_map),
                 }
@@ -287,7 +286,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         hk_data[CONF_EXCLUDE_ACCESSORY_MODE] = True
         return self.async_show_form(
             step_id="pairing",
-            description_placeholders={CONF_NAME: hk_data[CONF_NAME]},
+            description_placeholders={"name": hk_data[CONF_NAME]},
         )
 
     async def _async_add_entries_for_accessory_mode_entities(
@@ -323,7 +322,9 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
 
         state = self.hass.states.get(entity_id)
         assert state is not None
-        name = state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id
+        name = (
+            state.attributes.get(EntityStateAttribute.FRIENDLY_NAME) or state.entity_id
+        )
 
         entry_data = {
             CONF_PORT: port,
@@ -388,7 +389,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HomeKitConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -457,9 +458,9 @@ class OptionsFlowHandler(OptionsFlow):
                 translation_key="climate_accessory_type",
             )
         )
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     label,
                     default=all_entity_config.get(entity_id, {}).get(
                         CONF_TYPE, CLIMATE_TYPE_AUTOMATIC
@@ -531,9 +532,9 @@ class OptionsFlowHandler(OptionsFlow):
         ]
         return self.async_show_form(
             step_id="bridged_device_triggers",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_DEVICES, default=devices): cv.multi_select(
+                    probatio.Optional(CONF_DEVICES, default=devices): cv.multi_select(
                         all_supported_devices
                     )
                 }
@@ -580,9 +581,9 @@ class OptionsFlowHandler(OptionsFlow):
             if entity_config.get(CONF_SUPPORT_AUDIO):
                 cameras_with_audio.append(entity)
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_CAMERA_COPY, default=cameras_with_copy
                 ): selector.EntitySelector(
                     selector.EntitySelectorConfig(
@@ -590,7 +591,7 @@ class OptionsFlowHandler(OptionsFlow):
                         include_entities=(self.included_cameras),
                     )
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_CAMERA_AUDIO, default=cameras_with_audio
                 ): selector.EntitySelector(
                     selector.EntitySelectorConfig(
@@ -611,7 +612,7 @@ class OptionsFlowHandler(OptionsFlow):
         entity_filter: EntityFilterDict
 
         if user_input is not None:
-            entities = cv.ensure_list(user_input[CONF_ENTITIES])
+            entities = probatio.EnsureList()(user_input[CONF_ENTITIES])
             entity_filter = _async_build_entities_filter(domains, entities)
             self.included_cameras = _async_entities_in_domain(entities, CAMERA_DOMAIN)
             self.included_climates = _async_entities_in_domain(entities, CLIMATE_DOMAIN)
@@ -635,9 +636,9 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="accessory",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_ENTITIES, default=default_value
                     ): selector.EntitySelector(
                         selector.EntitySelectorConfig(
@@ -655,7 +656,7 @@ class OptionsFlowHandler(OptionsFlow):
         hk_options = self.hk_options
         domains = hk_options[CONF_DOMAINS]
         if user_input is not None:
-            entities = cv.ensure_list(user_input[CONF_ENTITIES])
+            entities = probatio.EnsureList()(user_input[CONF_ENTITIES])
             entity_filter = _async_build_entities_filter(domains, entities)
             self.included_cameras = _async_included_domain_entities(
                 self.hass, entity_filter, entities, CAMERA_DOMAIN
@@ -681,9 +682,9 @@ class OptionsFlowHandler(OptionsFlow):
             description_placeholders={
                 "domains": await _async_domain_names(self.hass, domains)
             },
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ENTITIES, default=default_value
                     ): selector.EntitySelector(
                         selector.EntitySelectorConfig(
@@ -703,7 +704,7 @@ class OptionsFlowHandler(OptionsFlow):
         domains = hk_options[CONF_DOMAINS]
 
         if user_input is not None:
-            entities = cv.ensure_list(user_input[CONF_ENTITIES])
+            entities = probatio.EnsureList()(user_input[CONF_ENTITIES])
 
             def _remaining_in_domain(domain: str) -> list[str]:
                 if domain not in domains:
@@ -738,9 +739,9 @@ class OptionsFlowHandler(OptionsFlow):
             description_placeholders={
                 "domains": await _async_domain_names(self.hass, domains)
             },
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ENTITIES, default=default_value
                     ): selector.EntitySelector(
                         selector.EntitySelectorConfig(
@@ -780,15 +781,15 @@ class OptionsFlowHandler(OptionsFlow):
         name_to_type_map = await _async_name_to_type_map(self.hass)
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOMEKIT_MODE, default=homekit_mode): vol.In(
-                        HOMEKIT_MODES
-                    ),
-                    vol.Required(
+                    probatio.Required(
+                        CONF_HOMEKIT_MODE, default=homekit_mode
+                    ): probatio.In(HOMEKIT_MODES),
+                    probatio.Required(
                         CONF_INCLUDE_EXCLUDE_MODE, default=include_exclude_mode
-                    ): vol.In(INCLUDE_EXCLUDE_MODES),
-                    vol.Required(
+                    ): probatio.In(INCLUDE_EXCLUDE_MODES),
+                    probatio.Required(
                         CONF_DOMAINS,
                         default=domains,
                     ): cv.multi_select(name_to_type_map),

@@ -1,6 +1,11 @@
 {
   "domain": "vesync",
   "name": "VeSync",
+  "categories": [
+    "climate.air_purifiers_humidifiers",
+    "plugs_switches",
+    "appliances_cleaning.cooking"
+  ],
   "codeowners": [
     "@markperdue",
     "@webdjoe",
@@ -10,11 +15,12 @@
     "@sapuseven"
   ],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dhcp": [{ "hostname": "levoit-*" }],
   "documentation": "https://www.home-assistant.io/integrations/vesync",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pyvesync"],
   "quality_scale": "bronze",
-  "requirements": ["pyvesync==3.4.2"]
+  "requirements": ["pyvesync==3.5.0"]
 }

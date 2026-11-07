@@ -5,19 +5,18 @@ import logging
 import socket
 from unittest.mock import patch
 
+from probatio import MultipleInvalid
 import pytest
-from voluptuous import MultipleInvalid
+from pytest_homeassistant.common import (
+    assert_setup_component,
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 from homeassistant.components import pilight
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    assert_setup_component,
-    async_capture_events,
-    async_fire_time_changed,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,7 +113,7 @@ async def test_send_code_no_protocol(hass: HomeAssistant) -> None:
                 service_data={"noprotocol": "test", "value": 42},
                 blocking=True,
             )
-        assert "required key not provided @ data['protocol']" in str(excinfo.value)
+        assert "required key not provided at 'protocol'" in str(excinfo.value)
 
 
 @patch("homeassistant.components.pilight._LOGGER.error")

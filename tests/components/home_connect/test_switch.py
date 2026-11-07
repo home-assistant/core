@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfEvents,
     ArrayOfSettings,
     Event,
@@ -26,6 +27,7 @@ from aiohomeconnect.model.error import (
 from aiohomeconnect.model.program import ProgramDefinitionOption
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.home_connect.const import (
     BSH_POWER_OFF,
@@ -50,8 +52,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def platforms() -> list[Platform]:
@@ -59,7 +59,7 @@ def platforms() -> list[Platform]:
     return [Platform.SWITCH]
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -121,7 +121,7 @@ async def test_paired_depaired_devices_flow(
     ("appliance", "keys_to_check"),
     [
         (
-            "Washer",
+            ApplianceType.WASHER,
             (
                 SettingKey.BSH_COMMON_POWER_STATE,
                 SettingKey.BSH_COMMON_CHILD_LOCK,
@@ -190,7 +190,7 @@ async def test_connected_devices(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_switch_entity_availability(
     hass: HomeAssistant,
     client: MagicMock,
@@ -269,7 +269,7 @@ async def test_switch_entity_availability(
             SettingKey.BSH_COMMON_CHILD_LOCK,
             True,
             STATE_ON,
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
         ),
         (
             "switch.dishwasher_child_lock",
@@ -277,7 +277,7 @@ async def test_switch_entity_availability(
             SettingKey.BSH_COMMON_CHILD_LOCK,
             False,
             STATE_OFF,
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
         ),
     ],
     indirect=["appliance"],
@@ -393,13 +393,13 @@ async def test_switch_exception_handling(
             "switch.fridgefreezer_freezer_super_mode",
             SERVICE_TURN_ON,
             STATE_ON,
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
         ),
         (
             "switch.fridgefreezer_freezer_super_mode",
             SERVICE_TURN_OFF,
             STATE_OFF,
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
         ),
     ],
     indirect=["appliance"],
@@ -436,14 +436,14 @@ async def test_ent_desc_switch_functionality(
             "switch.fridgefreezer_freezer_super_mode",
             {SettingKey.REFRIGERATION_FRIDGE_FREEZER_SUPER_MODE_FREEZER: ""},
             SERVICE_TURN_ON,
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
             r"Error.*turn.*on.*",
         ),
         (
             "switch.fridgefreezer_freezer_super_mode",
             {SettingKey.REFRIGERATION_FRIDGE_FREEZER_SUPER_MODE_FREEZER: ""},
             SERVICE_TURN_OFF,
-            "FridgeFreezer",
+            ApplianceType.FRIDGE_FREEZER,
             r"Error.*turn.*off.*",
         ),
     ],
@@ -500,7 +500,7 @@ async def test_ent_desc_switch_exception_handling(
             SERVICE_TURN_ON,
             BSH_POWER_ON,
             STATE_ON,
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
         ),
         (
             "switch.dishwasher_power",
@@ -508,7 +508,7 @@ async def test_ent_desc_switch_exception_handling(
             SERVICE_TURN_OFF,
             BSH_POWER_OFF,
             STATE_OFF,
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
         ),
         (
             "switch.dishwasher_power",
@@ -516,7 +516,7 @@ async def test_ent_desc_switch_exception_handling(
             SERVICE_TURN_ON,
             BSH_POWER_ON,
             STATE_ON,
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
         ),
         (
             "switch.dishwasher_power",
@@ -524,7 +524,7 @@ async def test_ent_desc_switch_exception_handling(
             SERVICE_TURN_OFF,
             BSH_POWER_STANDBY,
             STATE_OFF,
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
         ),
     ],
     indirect=["appliance"],
@@ -694,7 +694,7 @@ async def test_power_switch_service_validation_errors(
         (
             "switch.dishwasher_half_load",
             OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
         )
     ],
     indirect=["appliance"],
@@ -759,7 +759,7 @@ async def test_options_functionality(
     assert hass.states.is_state(entity_id, STATE_ON)
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_options_unavailable_when_option_is_missing(
     hass: HomeAssistant,
     client: MagicMock,
@@ -820,7 +820,7 @@ async def test_options_unavailable_when_option_is_missing(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 @pytest.mark.parametrize(
     "event_key",
     [
@@ -889,7 +889,7 @@ async def test_options_available_when_program_is_null(
     assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.DISHWASHER], indirect=True)
 async def test_restore_option_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

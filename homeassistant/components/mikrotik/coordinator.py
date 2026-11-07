@@ -9,15 +9,10 @@ from librouteros.exceptions import ConnectionClosed
 from librouteros.login import plain as login_plain, token as login_token
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_MODEL,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ARP,
@@ -62,7 +57,10 @@ class MikrotikData:
     """Handle all communication with the Mikrotik API."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: librouteros.Api
+        self,
+        hass: HomeAssistant,
+        config_entry: MikrotikConfigEntry,
+        api: librouteros.Api,
     ) -> None:
         """Initialize the Mikrotik Client."""
         self.hass = hass
@@ -195,7 +193,7 @@ class MikrotikData:
         """Get Hub info."""
         self._get_system_details(during_setup=True)
         self.hostname = str(self.system[IDENTITY].get(NAME))
-        self.model = str(self.system[ROUTERBOARD].get(ATTR_MODEL))
+        self.model = str(self.system[ROUTERBOARD].get("model"))
         self.firmware = str(self.system[ROUTERBOARD].get(ATTR_ROUTERBOARD_FIRMWARE))
         self.serial_number = str(self.system[ROUTERBOARD].get(ATTR_SERIAL_NUMBER))
         self.support_capsman = bool(
@@ -239,18 +237,22 @@ class MikrotikData:
         with mikrotik_config_entry_errors():
             # Retrieve data
             self.all_devices = self.get_list_from_interface(DHCP)
-            if self.support_capsman:
-                LOGGER.debug("Hub is a CAPSman manager")
-                device_list = wireless_devices = self.get_list_from_interface(CAPSMAN)
-            elif self.support_wireless:
-                LOGGER.debug("Hub supports wireless Interface")
-                device_list = wireless_devices = self.get_list_from_interface(WIRELESS)
-            elif self.support_wifiwave2:
-                LOGGER.debug("Hub supports wifiwave2 Interface")
-                device_list = wireless_devices = self.get_list_from_interface(WIFIWAVE2)
-            elif self.support_wifi:
-                LOGGER.debug("Hub supports wifi Interface")
-                device_list = wireless_devices = self.get_list_from_interface(WIFI)
+
+            # A hub can expose more than one wireless stack at once (e.g. the
+            # legacy "wireless" package kept for CAPsMAN alongside the newer
+            # "wifi" registration table), so merge every supported interface
+            # instead of picking only the first match.
+            for supported, interface, message in (
+                (self.support_capsman, CAPSMAN, "Hub is a CAPSman manager"),
+                (self.support_wireless, WIRELESS, "Hub supports wireless Interface"),
+                (self.support_wifiwave2, WIFIWAVE2, "Hub supports wifiwave2 Interface"),
+                (self.support_wifi, WIFI, "Hub supports wifi Interface"),
+            ):
+                if supported:
+                    LOGGER.debug(message)
+                    wireless_devices.update(self.get_list_from_interface(interface))
+
+            device_list = wireless_devices
 
             if not device_list or self.force_dhcp:
                 device_list = self.all_devices
@@ -275,29 +277,34 @@ class MikrotikData:
             return
 
         for mac, params in device_list.items():
-            if mac not in self.devices:
-                self.devices[mac] = Device(mac, self.all_devices.get(mac, {}))
+            if mac in wireless_devices:
+                active = True
+            # for wired devices or when forcing dhcp check for active-address
+            elif not params.get("active-address"):
+                active = False
             else:
-                self.devices[mac].update(params=self.all_devices.get(mac, {}))
+                # ping check the rest of active devices if arp ping is enabled
+                active = True
+                if self.arp_enabled and mac in arp_devices:
+                    active = self.do_arp_ping(
+                        str(params.get("active-address")),
+                        str(arp_devices[mac].get("interface")),
+                    )
+
+            if (device := self.devices.get(mac)) is None:
+                # Known clients are restored from the entity registry, so an
+                # inactive lease can't bring back a client the user removed
+                if not active:
+                    continue
+                device = self.devices[mac] = Device(mac, self.all_devices.get(mac, {}))
+            else:
+                device.update(params=self.all_devices.get(mac, {}))
 
             if mac in wireless_devices:
                 # if wireless is supported then wireless_params are params
-                self.devices[mac].update(
-                    wireless_params=wireless_devices[mac], active=True
-                )
-                continue
-            # for wired devices or when forcing dhcp check for active-address
-            if not params.get("active-address"):
-                self.devices[mac].update(active=False)
-                continue
-            # ping check the rest of active devices if arp ping is enabled
-            active = True
-            if self.arp_enabled and mac in arp_devices:
-                active = self.do_arp_ping(
-                    str(params.get("active-address")),
-                    str(arp_devices[mac].get("interface")),
-                )
-            self.devices[mac].update(active=active)
+                device.update(wireless_params=wireless_devices[mac], active=True)
+            else:
+                device.update(active=active)
 
     def do_arp_ping(self, ip_address: str, interface: str) -> bool:
         """Attempt to arp ping MAC address via interface."""
@@ -359,10 +366,12 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         config_entry: MikrotikConfigEntry,
-        api: librouteros.Api,
+        mk_data: MikrotikData,
     ) -> None:
         """Initialize the Mikrotik Client."""
-        self._mk_data = MikrotikData(hass, config_entry, api)
+        self._mk_data = mk_data
+        # MACs which have a device tracker entity
+        self.tracked_macs: set[str] = set()
         super().__init__(
             hass,
             LOGGER,
@@ -410,6 +419,19 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Represent Mikrotik data object."""
         return self._mk_data
 
+    def is_client_connected(self, device: Device) -> bool:
+        """Return true if the client was seen within the detection time."""
+        return bool(
+            device.last_seen
+            and dt_util.utcnow() - device.last_seen < self.option_detection_time
+        )
+
+    @callback
+    def async_forget_client(self, mac: str) -> None:
+        """Forget a removed client so it is re-created when it returns."""
+        self._mk_data.devices.pop(mac, None)
+        self.tracked_macs.discard(mac)
+
     @override
     async def _async_update_data(self) -> None:
         """Update Mikrotik devices information."""
@@ -441,11 +463,11 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
             )
             _error = None
             break
-        except (
-            librouteros.exceptions.LibRouterosError,
-            OSError,
-            TimeoutError,
-        ) as api_error:
+        except CONNECTION_ERRORS as api_error:
+            LOGGER.debug("Mikrotik %s error: %s", entry[CONF_HOST], api_error)
+            # Falling back to token login would mask this with a bogus auth error
+            raise CannotConnect from api_error
+        except librouteros.exceptions.LibRouterosError as api_error:
             _error = api_error
 
     if _error is not None:
