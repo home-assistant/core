@@ -1403,7 +1403,7 @@
     'state': '0.116468',
   })
 # ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_current_electricity_injection_price-entry]
+# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_injection_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1419,7 +1419,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.main_street_1_1000_brussels_current_electricity_injection_price',
+    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_injection_price',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1427,7 +1427,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current electricity injection price',
+    'object_id_base': 'Electricity injection price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 6,
@@ -1435,21 +1435,21 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current electricity injection price',
+    'original_name': 'Electricity injection price',
     'platform': 'engie_be',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_current_injection_price',
+    'translation_key': 'electricity_price_injection',
     'unique_id': '000000000001_541448820000000002_ID1_injection_current_price',
     'unit_of_measurement': 'EUR/kWh',
   })
 # ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_current_electricity_injection_price-state]
+# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_injection_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Current electricity injection price',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Electricity injection price',
       'next_price': None,
       'next_slot_code': 'offpeak',
       'next_transition': HAFakeDatetime(2026, 10, 3, 22, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Brussels')),
@@ -1458,14 +1458,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.main_street_1_1000_brussels_current_electricity_injection_price',
+    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_injection_price',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.05',
   })
 # ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_current_electricity_offtake_price-entry]
+# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_offtake_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1481,7 +1481,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.main_street_1_1000_brussels_current_electricity_offtake_price',
+    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1489,7 +1489,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current electricity offtake price',
+    'object_id_base': 'Electricity offtake price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 6,
@@ -1497,21 +1497,21 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current electricity offtake price',
+    'original_name': 'Electricity offtake price',
     'platform': 'engie_be',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_current_offtake_price',
+    'translation_key': 'electricity_price_offtake',
     'unique_id': '000000000001_541448820000000002_ID1_offtake_current_price',
     'unit_of_measurement': 'EUR/kWh',
   })
 # ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_current_electricity_offtake_price-state]
+# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_offtake_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Current electricity offtake price',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Electricity offtake price',
       'next_price': 0.12,
       'next_slot_code': 'exclusive_night',
       'next_transition': HAFakeDatetime(2026, 10, 3, 22, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Brussels')),
@@ -1520,7 +1520,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.main_street_1_1000_brussels_current_electricity_offtake_price',
+    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

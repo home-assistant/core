@@ -6,18 +6,6 @@
       }
     },
     "sensor": {
-      "electricity_current_injection_price": {
-        "default": "mdi:cash-plus"
-      },
-      "electricity_current_injection_price_with_ean": {
-        "default": "mdi:cash-plus"
-      },
-      "electricity_current_offtake_price": {
-        "default": "mdi:cash-minus"
-      },
-      "electricity_current_offtake_price_with_ean": {
-        "default": "mdi:cash-minus"
-      },
       "electricity_price_injection": {
         "default": "mdi:cash-plus"
       },

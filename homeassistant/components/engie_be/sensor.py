@@ -557,7 +557,7 @@ class EngieBeActivePriceSensor(EngieBeTouEntity):
         self._direction = direction
         self._attr_device_info = device_info
         translation_key, placeholders = _ean_aware_translation(
-            f"electricity_current_{direction}_price", ean_suffix
+            f"electricity_price_{direction}", ean_suffix
         )
         self._attr_translation_key = translation_key
         if placeholders:
