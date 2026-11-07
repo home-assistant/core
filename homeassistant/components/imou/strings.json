@@ -72,6 +72,16 @@
         "name": "Live view SD"
       }
     },
+    "datetime": {
+      "count_down_switch": {
+        "name": "Turn off at"
+      }
+    },
+    "number": {
+      "overcharge_switch": {
+        "name": "Max power (W)"
+      }
+    },
     "select": {
       "collection_point": {
         "name": "Go to collection point",
@@ -181,6 +191,9 @@
     "alarm_arm_disarm_failed": {
       "message": "Imou rejected the arming change"
     },
+    "countdown_too_far": {
+      "message": "Choose a time within the next {hours} hours"
+    },
     "fetch_devices_failed": {
       "message": "Could not list devices from Imou"
     },
@@ -201,6 +214,9 @@
     },
     "select_option_failed": {
       "message": "Imou rejected the new option"
+    },
+    "set_text_value_failed": {
+      "message": "Imou rejected the new value"
     },
     "siren_operation_failed": {
       "message": "Imou rejected the siren change"
