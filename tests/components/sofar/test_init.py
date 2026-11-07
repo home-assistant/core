@@ -13,6 +13,7 @@ from modbus_connection import (
     ModbusSerialParams,
     ModbusTcpParams,
     ModbusTimeoutError,
+    ServerDeviceBusyError,
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
@@ -27,6 +28,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sofar.const import (
     CONF_BAUDRATE,
@@ -297,35 +299,154 @@ async def test_setup_keeps_meter_sensors_a_model_serves(
     assert hass.states.get(entity_id).state == "1000.0"
 
 
-async def test_setup_removes_meter_sensors_a_model_denies(
+@pytest.mark.parametrize(
+    ("platform", "key"),
+    [
+        pytest.param(SENSOR_DOMAIN, "load_consumption_total", id="denied_meter"),
+        pytest.param(SENSOR_DOMAIN, "offgrid_frequency", id="offgrid_sensor"),
+        pytest.param(SELECT_DOMAIN, "charger_use_mode", id="charger_select"),
+        pytest.param(SELECT_DOMAIN, "eps_control", id="eps_select"),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_removes_entities_the_inverter_does_not_serve(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    platform: str,
+    key: str,
 ) -> None:
-    """Test an upgrade drops meter sensors the model turns out to deny."""
+    """Test an upgrade drops entities the PV model turns out not to serve."""
     mock_config_entry.add_to_hass(hass)
     deny_meter_energy(mock_connection.for_unit(1))
-    stale = [
-        entity_registry.async_get_or_create(
-            SENSOR_DOMAIN,
-            DOMAIN,
-            f"{MOCK_SERIAL}_{key}",
-            config_entry=mock_config_entry,
-        ).entity_id
-        for key in METER_ENERGY_KEYS
-    ]
+    entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{MOCK_SERIAL}_{key}", config_entry=mock_config_entry
+    )
 
-    with patch(
-        "homeassistant.components.sofar.async_get_unit",
-        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
-            unit_id
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert all(entity_registry.async_get(entity_id) is None for entity_id in stale)
+    assert (
+        entity_registry.async_get_entity_id(platform, DOMAIN, f"{MOCK_SERIAL}_{key}")
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_grid_frequency"
+        )
+        is not None
+    )
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_while_asleep_keeps_what_only_setup_finds(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test a silent restart without a stored set keeps the EPS select."""
+    seed_hybrid_inverter(mock_connection.for_unit(1))
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_ENTRY_DATA,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    # The serial's type has no EPS; only the setup probe adds it.
+    entity_registry.async_get_or_create(
+        SELECT_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_eps_control", config_entry=entry
+    )
+    mock_connection.for_unit(1).fail_requests(ModbusTimeoutError("asleep"))
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (
+        entity_registry.async_get_entity_id(
+            SELECT_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_eps_control"
+        )
+        is not None
+    )
+
+
+@pytest.mark.parametrize(
+    "stored",
+    [
+        pytest.param({}, id="first_setup"),
+        pytest.param({SERVED_COMPONENTS: ["energy"]}, id="stored_without_log"),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_fault_log_timing_out_at_setup_keeps_its_event(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    stored: dict[str, Any],
+) -> None:
+    """Test a fault log probe timing out at setup deletes nothing."""
+    mock_connection.for_unit(1).fail_read(
+        FAULT_LOG_REGISTER, ModbusTimeoutError("stuck")
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_SERIAL,
+        data={**MOCK_ENTRY_DATA, **stored},
+        title=MOCK_MODEL,
+    )
+    entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        EVENT_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault", config_entry=entry
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert FAULT_LOG not in entry.data[SERVED_COMPONENTS]
+    assert (
+        entity_registry.async_get_entity_id(
+            EVENT_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_fault"
+        )
+        is not None
+    )
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_busy_charge_cutoff_mask_keeps_its_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+) -> None:
+    """Test a busy answer on the battery config mask retries setup."""
+    unit = mock_connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    unit.fail_read(0x1040, ServerDeviceBusyError())
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_ENTRY_DATA,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_HYBRID_SERIAL}_bat_config_charge_cutoff_soc",
+        config_entry=entry,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_bat_config_charge_cutoff_soc"
+        )
+        is not None
+    )
 
 
 async def test_setup_keeps_meter_sensors_when_no_mask_is_published(
@@ -500,7 +621,7 @@ async def test_setup_while_asleep_builds_from_the_stored_components(
     entity_registry: er.EntityRegistry,
     mock_connection: MockModbusConnection,
 ) -> None:
-    """Test a silent restart creates no sensors an earlier setup ruled out."""
+    """Test a silent restart keeps no sensors an earlier setup ruled out."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_SERIAL,
@@ -508,6 +629,10 @@ async def test_setup_while_asleep_builds_from_the_stored_components(
         title=MOCK_MODEL,
     )
     entry.add_to_hass(hass)
+    for key in METER_ENERGY_KEYS:
+        entity_registry.async_get_or_create(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_{key}", config_entry=entry
+        )
     mock_connection.for_unit(1).fail_requests(ModbusTimeoutError("asleep"))
 
     await hass.config_entries.async_setup(entry.entry_id)

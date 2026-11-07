@@ -45,7 +45,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import METER_ENERGY
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
@@ -1588,7 +1587,7 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     ),
     SofarTotalSensorDescription(
         key="load_consumption_today",
-        component=METER_ENERGY,
+        component="meter_energy",
         translation_key="load_consumption_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1599,7 +1598,7 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     ),
     SofarTotalSensorDescription(
         key="load_consumption_total",
-        component=METER_ENERGY,
+        component="meter_energy",
         translation_key="load_consumption_total",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1609,7 +1608,7 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     ),
     SofarTotalSensorDescription(
         key="import_energy_today",
-        component=METER_ENERGY,
+        component="meter_energy",
         translation_key="import_energy_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1620,7 +1619,7 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     ),
     SofarTotalSensorDescription(
         key="import_energy_total",
-        component=METER_ENERGY,
+        component="meter_energy",
         translation_key="import_energy_total",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1630,7 +1629,7 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     ),
     SofarTotalSensorDescription(
         key="export_energy_today",
-        component=METER_ENERGY,
+        component="meter_energy",
         translation_key="export_energy_today",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -1641,7 +1640,7 @@ TOTAL_SENSOR_DESCRIPTIONS: tuple[SofarTotalSensorDescription, ...] = (
     ),
     SofarTotalSensorDescription(
         key="export_energy_total",
-        component=METER_ENERGY,
+        component="meter_energy",
         translation_key="export_energy_total",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
