@@ -1,0 +1,14 @@
+set_contracted_power:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: v2c
+    power:
+      required: true
+      example: 4600
+      selector:
+        number:
+          mode: box
+          unit_of_measurement: W
