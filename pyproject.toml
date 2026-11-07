@@ -79,6 +79,7 @@ dependencies = [
   # truststore.SSLContext is replaced in homeassistant/__init__.py
   "truststore==0.10.4",
   "typing-extensions>=4.16.0,<5.0",
+  "tzdata==2026.6",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
   "uv==0.13.6",
