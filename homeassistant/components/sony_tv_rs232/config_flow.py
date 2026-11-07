@@ -40,8 +40,7 @@ async def _async_attempt_connect(port: str) -> str | None:
     try:
         async with asyncio.timeout(_CONNECT_TIMEOUT):
             await tv.connect()
-    except (SerialKitError, OSError, ValueError, TimeoutError) as err:
-        LOGGER.debug("Error opening %s: %s", _loggable_port(port), err)
+    except SerialKitError, OSError, ValueError, TimeoutError:
         return "cannot_connect"
     except Exception:  # noqa: BLE001
         LOGGER.exception("Unexpected exception opening %s", _loggable_port(port))
@@ -67,6 +66,9 @@ class SonyTVRS232ConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_PORT: port})
             error = await _async_attempt_connect(port)
             if error is None:
+                # A second flow for the same port may have finished while
+                # this one was connecting.
+                self._async_abort_entries_match({CONF_PORT: port})
                 return self.async_create_entry(
                     title="Sony TV",
                     data={CONF_PORT: port},

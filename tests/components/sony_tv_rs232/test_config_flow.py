@@ -1,7 +1,6 @@
 """Tests for the Sony TV RS-232 config flow."""
 
 from collections.abc import Generator
-import logging
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
@@ -123,16 +122,39 @@ async def test_user_duplicate_aborts(
     assert result["reason"] == "already_configured"
 
 
+async def test_user_duplicate_added_while_connecting_aborts(
+    hass: HomeAssistant,
+    mock_sony_tv: MockSonyTV,
+    mock_async_setup_entry: AsyncMock,
+) -> None:
+    """Test we abort if the port was configured while the flow was connecting."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    async def _connect_while_other_flow_finishes() -> None:
+        MockConfigEntry(domain=DOMAIN, data={CONF_PORT: MOCK_PORT}).add_to_hass(hass)
+
+    mock_sony_tv.connect.side_effect = _connect_while_other_flow_finishes
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PORT: MOCK_PORT}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_async_setup_entry.assert_not_awaited()
+
+
 async def test_esphome_api_key_not_logged(
     hass: HomeAssistant,
     mock_sony_tv: MockSonyTV,
     mock_async_setup_entry: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a failed ESPHome proxy port is logged without its query string."""
-    caplog.set_level(logging.DEBUG, logger="homeassistant.components.sony_tv_rs232")
+    """Test an unexpected error logs the ESPHome proxy port without its query."""
     port = "esphome://tv-proxy.local/?port_name=TTL&key=secret-api-key"
-    mock_sony_tv.connect.side_effect = OSError("Connection refused")
+    mock_sony_tv.connect.side_effect = RuntimeError("boom")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -141,7 +163,7 @@ async def test_esphome_api_key_not_logged(
         result["flow_id"], {CONF_PORT: port}
     )
 
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "unknown"}
     assert "esphome://tv-proxy.local/" in caplog.text
     assert "secret-api-key" not in caplog.text
 
