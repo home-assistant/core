@@ -12,6 +12,7 @@ GET_MAPS_SERVICE_NAME = "get_maps"
 SET_VACUUM_ZONED_CLEANING_SERVICE_NAME = "set_vacuum_zoned_cleaning"
 SET_VACUUM_GOTO_POSITION_SERVICE_NAME = "set_vacuum_goto_position"
 GET_VACUUM_CURRENT_POSITION_SERVICE_NAME = "get_vacuum_current_position"
+RESOLVE_ERROR_SERVICE_NAME = "resolve_error"
 
 
 @callback
@@ -70,5 +71,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
             },
         ),
         func="async_set_vacuum_zoned_cleaning",
+        supports_response=SupportsResponse.NONE,
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        RESOLVE_ERROR_SERVICE_NAME,
+        entity_domain=VACUUM_DOMAIN,
+        schema=cv.make_entity_service_schema(
+            {
+                probatio.Optional("error_code"): probatio.Coerce(int),
+            },
+        ),
+        func="async_resolve_error",
         supports_response=SupportsResponse.NONE,
     )
