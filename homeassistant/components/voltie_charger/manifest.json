@@ -1,0 +1,13 @@
+{
+  "domain": "voltie_charger",
+  "name": "Voltie Charger",
+  "categories": ["energy.ev_charging"],
+  "codeowners": ["@lmate", "@voltie-eu"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/voltie_charger",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["voltie"],
+  "quality_scale": "bronze",
+  "requirements": ["voltie==1.0.0"]
+}

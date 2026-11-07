@@ -1,0 +1,95 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "incomplete_credentials": "Enter both a username and a password, or neither.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_firmware": "The firmware of the charger is too old. Connect the charger to the internet so it updates itself, then try again."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Voltie charger on your home network.",
+          "password": "The HTTP API password, if you set one in the Voltie app.",
+          "port": "The port of the charger's HTTP API. Keep the default unless you changed it in the Voltie app.",
+          "username": "The HTTP API username, if you set one in the Voltie app."
+        },
+        "description": "Set up your Voltie charger. Turn on its HTTP API in the Voltie app first."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "charge_current": {
+        "name": "Charging current"
+      },
+      "charge_power": {
+        "name": "Charging power"
+      },
+      "evse_state": {
+        "name": "Status",
+        "state": {
+          "booting": "Starting up",
+          "diode_check_failed": "Diode check failed",
+          "disabled": "Out of service",
+          "ev_connected_charging": "Charging",
+          "ev_connected_charging_ventilation": "Charging with ventilation",
+          "ev_connected_not_charging": "Car connected",
+          "ev_fault": "Car fault",
+          "ev_not_connected": "No car connected",
+          "firmware_update": "Updating firmware",
+          "gfci_fault": "Residual current fault",
+          "gfi_self_test_failure": "Residual current self-test failed",
+          "i2c_bus_error": "Internal bus error",
+          "mid_meter_missing": "MID meter missing",
+          "no_ground": "No ground",
+          "over_current": "Overcurrent",
+          "over_humidity": "Humidity too high",
+          "over_temperature": "Temperature too high",
+          "overvoltage": "Overvoltage",
+          "pe_n_fault": "PE-N fault",
+          "phase_misconnected": "Phase misconnected",
+          "power_board_unknown": "Unknown power board",
+          "shutdown": "Shut down",
+          "sleeping": "Sleeping",
+          "stuck_relay": "Stuck relay",
+          "undervoltage": "Undervoltage",
+          "undetermined": "Undetermined"
+        }
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "total_energy": {
+        "name": "Total energy"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_error": {
+      "message": "The Voltie charger rejected the HTTP API username and password."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with the Voltie charger: {error}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Voltie charger: {error}"
+    },
+    "unsupported_firmware": {
+      "message": "The firmware of the Voltie charger is too old for this integration, which needs HTTP API version 5. Connect the charger to the internet so it updates itself, then reload the integration."
+    },
+    "wrong_charger": {
+      "message": "A different Voltie charger answers at {host}. Remove this charger and add it again with its current address."
+    }
+  }
+}
