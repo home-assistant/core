@@ -230,7 +230,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "tailwind": {"gotailwind": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
     "toon": {"toonapi": {"backoff"}},
-    "velbus": {"velbus-aio": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
     "weatherflow_cloud": {"weatherflow4py": {"dataclasses-json"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},

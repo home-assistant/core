@@ -17,7 +17,7 @@
     "velbus-handler"
   ],
   "quality_scale": "silver",
-  "requirements": ["velbus-aio==2026.9.0"],
+  "requirements": ["velbus-aio==2026.11.0"],
   "usb": [
     {
       "pid": "0B1B",
