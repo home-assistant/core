@@ -1,6 +1,7 @@
 """Test the Fressnapf Tracker light platform."""
 
 from collections.abc import AsyncGenerator
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from fressnapftracker import (
@@ -10,8 +11,13 @@ from fressnapftracker import (
     TrackerFeatures,
     TrackerSettings,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -224,57 +230,56 @@ async def test_turn_on_off_error(
         )
 
 
+@pytest.mark.parametrize(
+    ("brightness", "activatable", "expected_state"),
+    [
+        pytest.param(0, False, STATE_UNAVAILABLE, id="off_not_activatable"),
+        pytest.param(0, True, STATE_OFF, id="off_activatable"),
+        pytest.param(50, False, STATE_ON, id="on_not_activatable"),
+        pytest.param(50, True, STATE_ON, id="on_activatable"),
+    ],
+)
 @pytest.mark.usefixtures("mock_auth_client")
-async def test_unavailable_when_not_activatable(
+async def test_availability(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client_init: MagicMock,
+    brightness: int,
+    activatable: bool,
+    expected_state: str,
 ) -> None:
-    """Test the flashlight is unavailable while the tracker cannot activate it."""
+    """Test the flashlight is only unavailable if it is off and cannot be activated.
+
+    A flashlight that is already on stays available so it can be turned off.
+    """
     tracker = mock_api_client_init.get_tracker.return_value
-    tracker.led_brightness.value = 0
-    tracker.led_activatable.overall = False
+    tracker.led_brightness.value = brightness
+    tracker.led_activatable.overall = activatable
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fluffy_flashlight")
+    assert state is not None
+    assert state.state == expected_state
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unavailable_when_update_fails(
+    hass: HomeAssistant,
+    mock_api_client_coordinator: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the flashlight is unavailable when the tracker data cannot be updated."""
+    mock_api_client_coordinator.get_tracker.side_effect = FressnapfTrackerError(
+        "API Error"
+    )
+
+    freezer.tick(timedelta(minutes=16))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("light.fluffy_flashlight")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-
-@pytest.mark.usefixtures("mock_auth_client")
-async def test_available_when_off_and_activatable(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_api_client_init: MagicMock,
-) -> None:
-    """Test the flashlight is available while it is off and can be activated."""
-    mock_api_client_init.get_tracker.return_value.led_brightness.value = 0
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.fluffy_flashlight")
-    assert state is not None
-    assert state.state == STATE_OFF
-
-
-@pytest.mark.usefixtures("mock_auth_client")
-async def test_available_when_on_but_not_activatable(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_api_client_init: MagicMock,
-) -> None:
-    """Test a flashlight that is on stays available so it can be turned off."""
-    mock_api_client_init.get_tracker.return_value.led_activatable.overall = False
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.fluffy_flashlight")
-    assert state is not None
-    assert state.state == STATE_ON
