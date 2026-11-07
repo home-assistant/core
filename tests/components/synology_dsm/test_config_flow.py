@@ -28,6 +28,7 @@ from homeassistant.components.synology_dsm.const import (
     CONF_BACKUP_SHARE,
     CONF_DEVICE_TOKEN,
     CONF_SNAPSHOT_QUALITY,
+    CONF_VOLUMES,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
@@ -38,6 +39,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
 )
 from homeassistant.const import (
+    CONF_DISKS,
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
@@ -691,6 +693,37 @@ async def test_reconfigure_2sa(hass: HomeAssistant, service_2sa: MagicMock) -> N
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data == {**RECONFIGURED_DATA, CONF_DEVICE_TOKEN: DEVICE_TOKEN}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_keeps_disks_and_volumes(
+    hass: HomeAssistant, service: MagicMock
+) -> None:
+    """Test reconfiguring keeps the legacy disk and volume selection."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            **_reconfigure_entry().data,
+            CONF_DISKS: ["sda", "sdb"],
+            CONF_VOLUMES: ["volume_1"],
+        },
+        unique_id=SERIAL,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=RECONFIGURE_INPUT
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        **RECONFIGURED_DATA,
+        CONF_DISKS: ["sda", "sdb"],
+        CONF_VOLUMES: ["volume_1"],
+    }
 
 
 @pytest.mark.parametrize(
