@@ -6,7 +6,10 @@ from pytest_homeassistant.components.diagnostics import get_diagnostics_for_conf
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.fressnapf_tracker.const import CONF_USER_ID
+from homeassistant.components.fressnapf_tracker.const import (
+    CONF_PHONE_NUMBER,
+    CONF_USER_ID,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
@@ -24,6 +27,7 @@ async def test_entry_diagnostics(
 
     assert result["entry_data"][CONF_ACCESS_TOKEN] == REDACTED
     assert result["entry_data"][CONF_USER_ID] == REDACTED
+    assert result["entry_data"][CONF_PHONE_NUMBER] == REDACTED
 
     assert len(result["trackers"]) == 1
     tracker = result["trackers"][0]
