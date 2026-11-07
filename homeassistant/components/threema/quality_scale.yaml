@@ -70,9 +70,7 @@ rules:
   dynamic-devices:
     status: exempt
     comment: No devices in current scope.
-  entity-category:
-    status: exempt
-    comment: Notify entities have no applicable category.
+  entity-category: done
   entity-device-class:
     status: exempt
     comment: No applicable device class for notify entities.
