@@ -3,12 +3,12 @@
 from typing import override
 
 from homeassistant.components.device_tracker import TrackerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from . import TeslaFleetConfigEntry
 from .entity import TeslaFleetVehicleEntity
 from .models import TeslaFleetVehicleData
 
@@ -17,7 +17,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TeslaFleetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tesla Fleet device tracker platform from a config entry."""

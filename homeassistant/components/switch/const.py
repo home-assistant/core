@@ -1,11 +1,19 @@
 """Constants for the Switch integration."""
 
 from enum import StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import probatio
 
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from .entity import SwitchEntity
+
 DOMAIN: Final = "switch"
+DATA_COMPONENT: HassKey[EntityComponent[SwitchEntity]] = HassKey(DOMAIN)
 
 
 class SwitchDeviceClass(StrEnum):
@@ -16,3 +24,11 @@ class SwitchDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(SwitchDeviceClass))
+
+
+class SwitchService(StrEnum):
+    """Store keys for switch services."""
+
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"

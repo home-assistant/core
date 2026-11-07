@@ -36,7 +36,7 @@ async def get_upnp_desc(hass: HomeAssistant, host: str):
     return upnp_desc
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MusicCastConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MusicCastConfigEntry) -> None:
     """Set up MusicCast from a config entry."""
 
     if entry.data.get(CONF_UPNP_DESC) is None:
@@ -81,16 +81,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: MusicCastConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MusicCastConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MusicCastConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        entry.runtime_data.musiccast.device.disable_polling()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    entry.runtime_data.musiccast.device.disable_polling()
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: MusicCastConfigEntry) -> None:

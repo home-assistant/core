@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 import yarl
 
 from homeassistant.components import media_source
@@ -15,8 +16,6 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_source import const
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_websocket_browse_media(

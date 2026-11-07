@@ -1,10 +1,12 @@
 """Test config flow."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from contextlib import contextmanager
+from unittest.mock import AsyncMock, patch
 
 from aiomusiccast import MusicCastConnectionException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.yamaha_musiccast.const import DOMAIN
@@ -18,22 +20,13 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-from tests.common import MockConfigEntry
 
-
-@pytest.fixture(autouse=True)
-def silent_ssdp_scanner() -> Generator[None]:
-    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
-    with (
-        patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
-        patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"),
-        patch("homeassistant.components.ssdp.Scanner.async_scan"),
-        patch(
-            "homeassistant.components.ssdp.Server._async_start_upnp_servers",
-        ),
-        patch(
-            "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
-        ),
+@contextmanager
+def _patch_valid_device_info() -> Generator[None]:
+    """Patch getting valid device info from musiccast API."""
+    with patch(
+        "aiomusiccast.MusicCastDevice.get_device_info",
+        return_value={"system_id": "1234567890", "model_name": "MC20"},
     ):
         yield
 
@@ -42,7 +35,7 @@ def silent_ssdp_scanner() -> Generator[None]:
 def mock_setup_entry():
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.yamaha_musiccast.async_setup_entry", return_value=True
+        "homeassistant.components.yamaha_musiccast.async_setup_entry", return_value=None
     ):
         yield
 
@@ -133,9 +126,10 @@ def mock_empty_discovery_information():
 # User Flows
 
 
-async def test_user_input_device_not_found(
-    hass: HomeAssistant, mock_get_device_info_mc_exception
-) -> None:
+@pytest.mark.usefixtures(
+    "mock_get_device_info_mc_exception", "mock_valid_discovery_information"
+)
+async def test_user_input_device_not_found(hass: HomeAssistant) -> None:
     """Test when user specifies a non-existing device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -150,10 +144,18 @@ async def test_user_input_device_not_found(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_valid_device_info():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "127.0.0.1"},
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_user_input_non_yamaha_device_found(
-    hass: HomeAssistant, mock_get_device_info_invalid
-) -> None:
+
+@pytest.mark.usefixtures(
+    "mock_get_device_info_invalid", "mock_valid_discovery_information"
+)
+async def test_user_input_non_yamaha_device_found(hass: HomeAssistant) -> None:
     """Test when device does not provide the musiccast API."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -167,6 +169,13 @@ async def test_user_input_non_yamaha_device_found(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_musiccast_device"}
+
+    with _patch_valid_device_info():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "127.0.0.1"},
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_input_device_already_existing(
@@ -193,9 +202,10 @@ async def test_user_input_device_already_existing(
     assert result2["reason"] == "already_configured"
 
 
-async def test_user_input_unknown_error(
-    hass: HomeAssistant, mock_get_device_info_exception
-) -> None:
+@pytest.mark.usefixtures(
+    "mock_get_device_info_exception", "mock_valid_discovery_information"
+)
+async def test_user_input_unknown_error(hass: HomeAssistant) -> None:
     """Test when device info raises an unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -209,6 +219,13 @@ async def test_user_input_unknown_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_valid_device_info():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "127.0.0.1"},
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_input_device_found(
@@ -234,6 +251,7 @@ async def test_user_input_device_found(
         "serial": "1234567890",
         "upnp_description": "http://127.0.0.1:9000/MediaRenderer/desc.xml",
     }
+    assert result2["result"].unique_id == "1234567890"
 
 
 async def test_user_input_device_found_no_ssdp(
@@ -259,6 +277,7 @@ async def test_user_input_device_found_no_ssdp(
         "serial": "1234567890",
         "upnp_description": "http://127.0.0.1:49154/MediaRenderer/desc.xml",
     }
+    assert result2["result"].unique_id == "1234567890"
 
 
 # SSDP Flows
@@ -318,6 +337,7 @@ async def test_ssdp_discovery_successful_add_device(
         "serial": "1234567890",
         "upnp_description": "http://127.0.0.1/desc.xml",
     }
+    assert result2["result"].unique_id == "1234567890"
 
 
 async def test_ssdp_discovery_existing_device_update(
@@ -347,3 +367,142 @@ async def test_ssdp_discovery_existing_device_update(
     assert result["reason"] == "already_configured"
     assert mock_entry.data[CONF_HOST] == "127.0.0.1"
     assert mock_entry.data["upnp_description"] == "http://127.0.0.1/desc.xml"
+
+
+@pytest.fixture
+def mock_reconfigure_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a config entry to reconfigure."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234567890",
+        data={
+            CONF_HOST: "192.168.188.18",
+            "serial": "1234567890",
+            "upnp_description": "http://192.168.188.18:49154/MediaRenderer/desc.xml",
+        },
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.mark.usefixtures(
+    "mock_get_device_info_valid", "mock_valid_discovery_information"
+)
+async def test_reconfigure(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the device host."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "127.0.0.1"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data == {
+        CONF_HOST: "127.0.0.1",
+        "serial": "1234567890",
+        "upnp_description": "http://127.0.0.1:9000/MediaRenderer/desc.xml",
+    }
+
+
+@pytest.mark.usefixtures(
+    "mock_get_device_info_valid", "mock_valid_discovery_information"
+)
+async def test_reconfigure_with_update_listener(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring a loaded entry leaves the reload to its update listener."""
+    update_listener = AsyncMock()
+    mock_reconfigure_entry.add_update_listener(update_listener)
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "127.0.0.1"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data[CONF_HOST] == "127.0.0.1"
+    update_listener.assert_called_once()
+    mock_reload.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_valid_discovery_information")
+@pytest.mark.parametrize(
+    ("side_effect", "return_value", "error"),
+    [
+        pytest.param(
+            MusicCastConnectionException("mocked error"),
+            None,
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(Exception("mocked error"), None, "unknown", id="unknown"),
+        pytest.param(
+            None, {"type": "no_yamaha"}, "no_musiccast_device", id="no_musiccast"
+        ),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_reconfigure_entry: MockConfigEntry,
+    side_effect: Exception | None,
+    return_value: dict[str, str] | None,
+    error: str,
+) -> None:
+    """Test errors during reconfigure and recovery."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "aiomusiccast.MusicCastDevice.get_device_info",
+        side_effect=side_effect,
+        return_value=return_value,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "127.0.0.1"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    with _patch_valid_device_info():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "127.0.0.1"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_reconfigure_entry.data[CONF_HOST] == "127.0.0.1"
+
+
+@pytest.mark.usefixtures("mock_valid_discovery_information")
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, mock_reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure aborts when the host points to another device."""
+    result = await mock_reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "aiomusiccast.MusicCastDevice.get_device_info",
+        return_value={"system_id": "0987654321", "model_name": "MC20"},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "127.0.0.1"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_reconfigure_entry.data[CONF_HOST] == "192.168.188.18"

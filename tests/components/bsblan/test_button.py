@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from bsblan import BSBLANError, DeviceTime
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bsblan.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_SYNC_TIME = "button.bsb_lan_sync_time"
 
@@ -63,8 +62,7 @@ async def test_button_press_syncs_time(
     assert mock_bsblan.time.called
 
     # Verify set_time() was called with current HA time
-    current_time_str = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
-    mock_bsblan.set_time.assert_called_once_with(current_time_str)
+    mock_bsblan.set_time.assert_called_once_with(dt_util.now())
 
 
 async def test_button_press_no_update_when_same(

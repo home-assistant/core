@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from google_photos_library_api.exceptions import GooglePhotosApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_photos.const import DOMAIN, UPLOAD_SCOPE
 from homeassistant.components.media_player import BrowseError
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import CONFIG_ENTRY_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

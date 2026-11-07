@@ -6,6 +6,7 @@ from typing import cast, override
 from midealocal.const import DeviceType
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -106,6 +107,7 @@ SELECTS: list[MideaSelectEntityDescription] = [
         translation_key="screen_display",
         models=[DeviceType.FC, DeviceType.FD],
         options_attribute="screen_displays",
+        entity_category=EntityCategory.CONFIG,
     ),
 ]
 
@@ -159,7 +161,7 @@ class MideaSelect(MideaEntity, SelectEntity):
         return value
 
     @override
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Select an option."""
         with midea_api_call():
             self._device.set_attribute(attr=self.entity_description.key, value=option)

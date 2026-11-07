@@ -65,7 +65,7 @@ PLATFORM_SCHEMA = GEO_LOCATION_PLATFORM_SCHEMA.extend(
             float
         ),
         probatio.Optional(CONF_CATEGORIES, default=[]): probatio.All(
-            cv.ensure_list, [probatio.In(VALID_CATEGORIES)]
+            probatio.EnsureList(), [probatio.In(VALID_CATEGORIES)]
         ),
     }
 )

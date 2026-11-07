@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'devices': list([
+      dict({
+        'device': dict({
+          'board_serial': '**REDACTED**',
+          'firmware': '1.2.3',
+          'model': '1VMC01012B FlowPLUS',
+          'name': 'VMC Soggiorno',
+          'serial_number': '**REDACTED**',
+        }),
+        'last_update_success': True,
+        'state': dict({
+          'alarms': '0000000000000000',
+          'co2': None,
+          'fan_exhaust': 15,
+          'fan_supply': 17,
+          'filter_partial_m3': 61920,
+          'filter_total_m3': 234830,
+          'humidity': 38.5,
+          'mode': 1,
+          'temperature_indoor': 30.8,
+          'temperature_outdoor': 37.4,
+          'timestamp': 1792756800000,
+          'voc': None,
+        }),
+      }),
+    ]),
+    'entry_data': dict({
+      'email': '**REDACTED**',
+      'password': '**REDACTED**',
+    }),
+  })
+# ---

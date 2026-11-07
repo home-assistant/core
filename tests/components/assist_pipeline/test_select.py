@@ -1,6 +1,7 @@
 """Test select entity."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockPlatform, mock_platform
 
 from homeassistant.components.assist_pipeline import DOMAIN, Pipeline
 from homeassistant.components.assist_pipeline.pipeline import (
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from tests.common import MockConfigEntry, MockPlatform, mock_platform
 
 
 class SelectPlatform(MockPlatform):

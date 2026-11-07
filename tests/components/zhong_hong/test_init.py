@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.zhong_hong.const import (
@@ -19,8 +20,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .conftest import ENTITY_ID, HOST, FakeGateway
-
-from tests.common import MockConfigEntry
 
 YAML_CONFIG = {CLIMATE_DOMAIN: {"platform": DOMAIN, CONF_HOST: HOST}}
 

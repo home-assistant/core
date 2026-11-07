@@ -1,8 +1,10 @@
 {
   "domain": "omie",
   "name": "OMIE - Spain and Portugal electricity prices",
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@luuuis"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/omie",
   "integration_type": "service",
   "iot_class": "cloud_polling",

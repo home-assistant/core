@@ -15,7 +15,8 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
+from . import SwitchbotCloudConfigEntry
+from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 

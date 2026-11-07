@@ -51,6 +51,15 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to the receiver at {host}."
+    },
+    "interview_error": {
+      "message": "Unexpected error while interviewing the receiver at {host}."
+    },
+    "interview_timeout": {
+      "message": "Timed out while interviewing the receiver at {host}."
+    },
     "invalid_sound_mode": {
       "message": "Cannot select sound mode \"{invalid_sound_mode}\" for entity: {entity_id}."
     },

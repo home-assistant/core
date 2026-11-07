@@ -1,8 +1,9 @@
 """Test the Raspberry Pi integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
 from homeassistant.components.raspberry_pi.const import DOMAIN
@@ -10,15 +11,13 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
-
 
 @pytest.fixture(autouse=True)
 def mock_rpi_power():
     """Mock the rpi_power integration."""
     with patch(
         "homeassistant.components.rpi_power.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 
@@ -95,6 +94,56 @@ async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:
 
     assert len(mock_get_os_info.mock_calls) == 1
     assert len(hass.config_entries.async_entries()) == 0
+
+
+@pytest.mark.parametrize(
+    ("hassio", "board", "reason"),
+    [
+        pytest.param(
+            False,
+            None,
+            "Home Assistant is not running on Home Assistant OS, the Raspberry Pi"
+            " entry will be removed",
+            id="no_hassio",
+        ),
+        pytest.param(
+            True,
+            "generic-x86-64",
+            "Home Assistant is not running on a Raspberry Pi (generic-x86-64), the"
+            " Raspberry Pi entry will be removed",
+            id="wrong_board",
+        ),
+    ],
+)
+async def test_setup_entry_error_reason(
+    hass: HomeAssistant, hassio: bool, board: str | None, reason: str
+) -> None:
+    """Test the setup error reason when the entry is about to be removed."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={},
+        title="Raspberry Pi",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.raspberry_pi.is_hassio",
+            return_value=hassio,
+        ),
+        patch(
+            "homeassistant.components.raspberry_pi.get_os_info",
+            return_value={"board": board},
+        ),
+        patch.object(hass.config_entries, "async_remove", AsyncMock()) as mock_remove,
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == reason
+    mock_remove.assert_awaited_once_with(config_entry.entry_id)
 
 
 async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:

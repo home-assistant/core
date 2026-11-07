@@ -1,10 +1,10 @@
 """Tests for the Holiday integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.holiday.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_CONFIG_DATA = {
     "country": "Germany",

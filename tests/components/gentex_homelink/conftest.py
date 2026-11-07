@@ -2,42 +2,18 @@
 
 from collections.abc import Generator
 from http import HTTPStatus
+from time import time
 from unittest.mock import AsyncMock, patch
 
 from homelink.model.button import Button
 import homelink.model.device
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.plugins import AiohttpClientMocker
 
 from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN_URL
 
-from . import TEST_ACCESS_JWT, TEST_UNIQUE_ID
-
-from tests.common import MockConfigEntry
-from tests.conftest import AiohttpClientMocker
-
-
-@pytest.fixture
-def mock_srp_access_token() -> str:
-    """Return preferred JWT for mock SRP auth requests."""
-    return TEST_ACCESS_JWT
-
-
-@pytest.fixture
-def mock_srp_auth(mock_srp_access_token: str) -> Generator[AsyncMock]:
-    """Mock SRP authentication."""
-    with patch(
-        "homeassistant.components.gentex_homelink.config_flow.SRPAuth"
-    ) as mock_srp_auth:
-        instance = mock_srp_auth.return_value
-        instance.async_get_access_token.return_value = {
-            "AuthenticationResult": {
-                "AccessToken": mock_srp_access_token,
-                "RefreshToken": "refresh",
-                "TokenType": "bearer",
-                "ExpiresIn": 3600,
-            }
-        }
-        yield instance
+from . import TEST_UNIQUE_ID
 
 
 @pytest.fixture
@@ -86,7 +62,7 @@ def mock_config_entry() -> MockConfigEntry:
                 "refresh_token": "refresh",
                 "expires_in": 3600,
                 "token_type": "bearer",
-                "expires_at": 1234567890,
+                "expires_at": time() + 3600,
             },
         },
     )
@@ -96,6 +72,6 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setup entry."""
     with patch(
-        "homeassistant.components.gentex_homelink.async_setup_entry", return_value=True
+        "homeassistant.components.gentex_homelink.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

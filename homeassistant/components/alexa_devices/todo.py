@@ -40,6 +40,7 @@ async def async_setup_entry(
 
     def _check_lists() -> None:
         current_list_ids = {todo_list.id for todo_list in coordinator.api.todo_lists}
+        known_list_ids.intersection_update(current_list_ids)
         new_list_ids = current_list_ids - known_list_ids
         if new_list_ids:
             known_list_ids.update(new_list_ids)

@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,6 +24,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import DiscogsConfigEntry
 from .const import DEFAULT_NAME, DOMAIN
 
 ATTR_IDENTITY = "identity"
@@ -62,10 +62,10 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string,
         probatio.Optional("name"): cv.string,
         probatio.Optional("monitored_conditions"): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
     }
 )
@@ -125,7 +125,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: DiscogsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Discogs sensor from a config entry."""
@@ -144,7 +144,7 @@ class DiscogsSensor(SensorEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: DiscogsConfigEntry,
         client: discogs_client.Client,
         description: SensorEntityDescription,
     ) -> None:
@@ -174,12 +174,15 @@ class DiscogsSensor(SensorEntity):
             self.entity_description.key == SENSOR_RANDOM_RECORD_TYPE
             and self._attr_native_value is not None
         ):
+            record_format = self._attrs["formats"][0]
+            descriptions = record_format.get("descriptions")
             return {
                 "cat_no": self._attrs["labels"][0]["catno"],
                 "cover_image": self._attrs["cover_image"],
                 "format": (
-                    f"{self._attrs['formats'][0]['name']}"
-                    f" ({self._attrs['formats'][0]['descriptions'][0]})"
+                    f"{record_format['name']} ({descriptions[0]})"
+                    if descriptions
+                    else record_format["name"]
                 ),
                 "label": self._attrs["labels"][0]["name"],
                 "released": self._attrs["year"],

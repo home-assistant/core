@@ -88,11 +88,9 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             # Under normal conditions GREE units timeout every once in a while
             if self.last_update_success and self._error_count >= MAX_ERRORS:
-                _LOGGER.warning(
-                    "Device %s is unavailable: %s", self.name, self.device.device_info
-                )
                 raise UpdateFailed(
-                    f"Device {self.name} is unavailable, could not send update request"
+                    f"Device {self.name} at {self.device.device_info.ip} is"
+                    " unavailable, could not send update request"
                 ) from error
         else:
             # raise update failed if time for more than

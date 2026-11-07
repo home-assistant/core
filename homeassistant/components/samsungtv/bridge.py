@@ -526,6 +526,8 @@ class SamsungTVWSBridge(
         # On some TVs, opening a websocket turns on the TV
         # so first check "PowerState" if device_info has it
         # then fallback to default, trying to open a websocket
+        if self._device_info is None:
+            await self.async_device_info()
         if self._get_device_spec("PowerState") is not None:
             LOGGER.debug("Checking if TV %s is on using device info", self.host)
             # Ensure we get an updated value

@@ -38,10 +38,10 @@ PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Optional(CONF_CAMERAS): probatio.Schema(
-            probatio.All(cv.ensure_list, [CAMERAS_SCHEMA])
+            probatio.All(probatio.EnsureList(), [CAMERAS_SCHEMA])
         ),
         probatio.Optional(CONF_NEW_VERSION, default=True): cv.boolean,
-        probatio.Optional(CONF_PASSWORD): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_USERNAME): cv.string,
     }
 )

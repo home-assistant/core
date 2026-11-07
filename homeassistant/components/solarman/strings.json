@@ -71,9 +71,6 @@
       "positive_active_energy": {
         "name": "Positive active energy"
       },
-      "power_factor": {
-        "name": "Power factor"
-      },
       "reverse_active_energy": {
         "name": "Reverse active energy"
       },

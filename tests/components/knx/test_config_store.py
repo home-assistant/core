@@ -1,26 +1,61 @@
 """Test KNX config store."""
 
+import dataclasses
+import json
+import string
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import (
     DOMAIN,
     KNX_MODULE_KEY,
     REPAIR_ISSUE_ENTITY_VALIDATION_ERROR,
+    REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR,
+    REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR,
 )
 from homeassistant.components.knx.storage.config_store import (
     STORAGE_KEY as KNX_CONFIG_STORAGE_KEY,
+    to_storage_dict,
 )
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.components.knx.storage.const import CONF_DATA
+from homeassistant.components.knx.storage.entity_store_schema import (
+    BaseEntityConfig,
+    BinarySensorKnxConfig,
+    ButtonKnxConfig,
+    ClimateKnxConfig,
+    CoverKnxConfig,
+    DateKnxConfig,
+    DatetimeKnxConfig,
+    FanKnxConfig,
+    KnxEntityData,
+    LightKnxConfig,
+    NotifyKnxConfig,
+    NumberKnxConfig,
+    SceneKnxConfig,
+    SelectKnxConfig,
+    SensorKnxConfig,
+    SwitchKnxConfig,
+    TextKnxConfig,
+    TimeKnxConfig,
+    WeatherKnxConfig,
+)
+from homeassistant.components.knx.storage.entity_store_validation import (
+    EntityStoreValidationException,
+    validate_entity_data,
+)
+from homeassistant.components.knx.storage.expose_controller import validate_expose_data
+from homeassistant.components.knx.storage.serialize import get_serialized_schema
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import CONF_PLATFORM, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.translation import async_get_translations
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import async_load_json_object_fixture
-from tests.typing import WebSocketGenerator
 
 
 async def test_create_entity(
@@ -53,6 +88,7 @@ async def test_create_entity(
     assert identifiers[0]["unique_id"] == test_entity.unique_id
     assert identifiers[0]["platform"] == Platform.SWITCH
     assert identifiers[0]["ui"] is True
+    assert identifiers[0]["disabled"] is False
     # Test if entity is correctly stored in config store
     test_storage_data = next(
         iter(
@@ -341,6 +377,147 @@ async def test_delete_entity(
 
     assert not entity_registry.async_get(test_entity_id)
     assert not hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["entities"].get("switch")
+
+
+async def test_disabled_ui_entity_at_setup(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a stored entity disabled before setup is tracked for its group addresses."""
+    entity_registry.async_get_or_create(
+        Platform.SWITCH,
+        DOMAIN,
+        "knx_es_9d97829f47f1a2a3176a7c5b4216070c",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await knx.setup_integration(config_store_fixture="config_store_light_switch.json")
+    assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
+    assert hass.states.get("light.test") is not None
+    # only the light reads its state - the disabled switch is not set up
+    await knx.assert_read("1/0/21", response=True)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    switch_identifier = {
+        "platform": "switch",
+        "unique_id": "knx_es_9d97829f47f1a2a3176a7c5b4216070c",
+        "ui": True,
+        "disabled": True,
+    }
+    light_identifier = {
+        "platform": "light",
+        "unique_id": "knx_es_01J85ZKTFHSZNG4X9DYBE592TF",
+        "ui": True,
+        "disabled": False,
+    }
+    assert res["result"] == {
+        "1/1/45": [switch_identifier],
+        "1/0/45": [switch_identifier],
+        "1/1/21": [light_identifier],
+        "1/0/21": [light_identifier],
+    }
+
+
+async def test_update_disabled_entity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test updating a disabled entity replaces its tracked group addresses."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    test_entity = await create_ui_entity(
+        platform=Platform.SWITCH,
+        knx_data={"ga_switch": {"write": "1/2/3"}},
+        entity_data={"name": "Test"},
+    )
+    test_entity_id = test_entity.entity_id
+    entity_registry.async_update_entity(
+        test_entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(test_entity_id) is None
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/update_entity",
+            "platform": Platform.SWITCH,
+            "entity_id": test_entity_id,
+            "data": {
+                "entity": {"name": "Updated name"},
+                "knx": {"ga_switch": {"write": "4/5/6"}},
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"]
+    assert hass.states.get(test_entity_id) is None
+    assert (
+        hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["entities"]["switch"][
+            test_entity.unique_id
+        ]["knx"]["ga_switch"]["write"]
+        == "4/5/6"
+    )
+
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"] == {
+        "4/5/6": [
+            {
+                "platform": "switch",
+                "unique_id": test_entity.unique_id,
+                "ui": True,
+                "disabled": True,
+            }
+        ]
+    }
+
+
+async def test_delete_disabled_entity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test deleting a disabled entity drops its tracked group addresses."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    test_entity = await create_ui_entity(
+        platform=Platform.SWITCH,
+        knx_data={"ga_switch": {"write": "1/2/3"}},
+        entity_data={"name": "Test"},
+    )
+    test_entity_id = test_entity.entity_id
+    entity_registry.async_update_entity(
+        test_entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id(
+        {"type": "knx/delete_entity", "entity_id": test_entity_id}
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert not entity_registry.async_get(test_entity_id)
+    assert not hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["entities"].get("switch")
+
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"] == {}
 
 
 async def test_delete_entity_error(
@@ -708,11 +885,88 @@ async def test_load_skips_invalid_entity_config(
         DOMAIN, f"{REPAIR_ISSUE_ENTITY_VALIDATION_ERROR}_{Platform.SWITCH}"
     )
     assert issue is not None
+    assert issue.config_entry_id == knx.mock_config_entry.entry_id
     assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {
         "platform": Platform.SWITCH,
         "entities": f"- {INVALID_SWITCH_UID}",
     }
+
+    await hass.config_entries.async_remove(knx.mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"{REPAIR_ISSUE_ENTITY_VALIDATION_ERROR}_{Platform.SWITCH}"
+        )
+        is None
+    )
+
+
+async def test_load_skips_invalid_expose_and_time_server_config(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test invalid stored exposes and time server configs are skipped."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_invalid.json", state_updater=False
+    )
+    # the time server isn't started - it would write its addresses on startup
+    await knx.assert_no_telegram()
+
+    hass.states.async_set("light.valid", "on", {"brightness": 50})
+    hass.states.async_set("light.valid", "on", {"brightness": 100})
+    await hass.async_block_till_done()
+    await knx.assert_write("5/5/5", (100,))
+
+    expose_issue = issue_registry.async_get_issue(
+        DOMAIN, REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR
+    )
+    assert expose_issue is not None
+    assert expose_issue.config_entry_id == knx.mock_config_entry.entry_id
+    assert expose_issue.severity is ir.IssueSeverity.ERROR
+    assert expose_issue.translation_placeholders == {"entities": "- light.invalid"}
+    time_server_issue = issue_registry.async_get_issue(
+        DOMAIN, REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR
+    )
+    assert time_server_issue is not None
+    assert time_server_issue.config_entry_id == knx.mock_config_entry.entry_id
+    assert time_server_issue.severity is ir.IssueSeverity.ERROR
+
+    # invalid configs stay in storage so they can be corrected
+    config_store = hass.data[KNX_MODULE_KEY].config_store
+    assert "light.invalid" in config_store.data["expose"]
+    assert config_store.get_time_server_config() == {
+        "time": {"write": "6/6/6"},
+        "date": {"state": "6/6/7"},
+    }
+
+    await hass.config_entries.async_remove(knx.mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR)
+        is None
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR
+        )
+        is None
+    )
+
+
+async def test_get_entity_configs_wrong_type(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test requesting a config type the platform schema doesn't yield fails."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_invalid.json", state_updater=False
+    )
+    config_store = hass.data[KNX_MODULE_KEY].config_store
+    with pytest.raises(
+        TypeError, match="light schema yields LightKnxConfig, not SwitchKnxConfig"
+    ):
+        config_store.get_entity_configs(Platform.LIGHT, SwitchKnxConfig)
 
 
 async def test_load_applies_schema_defaults_and_coercion(
@@ -731,9 +985,11 @@ async def test_load_applies_schema_defaults_and_coercion(
     )
     assert hass.states.get("light.missing_defaults") is not None
     config_store = hass.data[KNX_MODULE_KEY].config_store
-    light_config = config_store.get_entity_configs(Platform.LIGHT)[LIGHT_UID][DOMAIN]
-    assert light_config["color_temp_min"] == 2700
-    assert light_config["color_temp_max"] == 6000
+    light_config = config_store.get_entity_configs(Platform.LIGHT, LightKnxConfig)[
+        LIGHT_UID
+    ].knx
+    assert light_config.color_temp_min == 2700
+    assert light_config.color_temp_max == 6000
 
     switch_id = entity_registry.async_get_entity_id(
         Platform.SWITCH, DOMAIN, VALID_SWITCH_UID
@@ -811,3 +1067,879 @@ async def test_migration_2_4_to_2_5(
     # entities that could not be set up before are now created
     assert hass.states.get("sensor.test_sensor")
     assert hass.states.get("binary_sensor.test_binary_sensor")
+
+
+TYPED_CONFIG_CASES = [
+    pytest.param(
+        Platform.SWITCH,
+        SwitchKnxConfig,
+        {"ga_switch": {"write": "1/2/3"}},
+        {
+            "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+            "invert": False,
+            "respond_to_read": False,
+            "sync_state": True,
+        },
+        id="switch",
+    ),
+    pytest.param(
+        Platform.DATE,
+        DateKnxConfig,
+        {
+            "ga_date": {"write": "1/2/3", "passive": ["1/2/4"]},
+            "sync_state": "expire 60",
+        },
+        {
+            "ga_date": {"write": "1/2/3", "state": None, "passive": ["1/2/4"]},
+            "respond_to_read": False,
+            "sync_state": "expire 60",
+        },
+        id="date",
+    ),
+    pytest.param(
+        Platform.DATETIME,
+        DatetimeKnxConfig,
+        {"ga_datetime": {"write": "1/2/3", "state": "1/2/4"}, "respond_to_read": True},
+        {
+            "ga_datetime": {"write": "1/2/3", "state": "1/2/4", "passive": []},
+            "respond_to_read": True,
+            "sync_state": True,
+        },
+        id="datetime",
+    ),
+    pytest.param(
+        Platform.TIME,
+        TimeKnxConfig,
+        {"ga_time": {"write": "1/2/3"}},
+        {
+            "ga_time": {"write": "1/2/3", "state": None, "passive": []},
+            "respond_to_read": False,
+            "sync_state": True,
+        },
+        id="time",
+    ),
+    pytest.param(
+        Platform.NOTIFY,
+        NotifyKnxConfig,
+        {"ga_send": {"write": "1/2/3", "dpt": "16.000"}},
+        {"ga_send": {"write": "1/2/3", "dpt": "16.000"}},
+        id="notify",
+    ),
+    pytest.param(
+        Platform.SCENE,
+        SceneKnxConfig,
+        {"ga_scene": {"write": "1/2/3"}, "scene_number": 4.0},
+        {"ga_scene": {"write": "1/2/3"}, "scene_number": 4},
+        id="scene",
+    ),
+    pytest.param(
+        Platform.BINARY_SENSOR,
+        BinarySensorKnxConfig,
+        {"ga_sensor": {"state": "1/2/3"}, "context_timeout": 1.5},
+        {
+            "ga_sensor": {"state": "1/2/3", "passive": []},
+            "invert": False,
+            "ignore_internal_state": False,
+            "context_timeout": 1.5,
+            "reset_after": None,
+            "sync_state": True,
+        },
+        id="binary_sensor",
+    ),
+    pytest.param(
+        Platform.SENSOR,
+        SensorKnxConfig,
+        {"ga_sensor": {"state": "1/2/3", "dpt": "9.001"}, "sync_state": False},
+        {
+            "ga_sensor": {"state": "1/2/3", "passive": [], "dpt": "9.001"},
+            "unit_of_measurement": None,
+            "device_class": None,
+            "state_class": None,
+            "always_callback": False,
+            "sync_state": False,
+        },
+        id="sensor",
+    ),
+    pytest.param(
+        Platform.NUMBER,
+        NumberKnxConfig,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "9.001"}, "max": 50},
+        {
+            "ga_sensor": {
+                "write": "1/2/3",
+                "state": None,
+                "passive": [],
+                "dpt": "9.001",
+            },
+            "respond_to_read": False,
+            "mode": "auto",
+            "min": None,
+            "max": 50,
+            "step": None,
+            "unit_of_measurement": None,
+            "device_class": None,
+            "sync_state": True,
+        },
+        id="number",
+    ),
+    pytest.param(
+        Platform.TEXT,
+        TextKnxConfig,
+        {"ga_text": {"write": "1/2/3", "dpt": "16.000"}},
+        {
+            "ga_text": {
+                "write": "1/2/3",
+                "state": None,
+                "passive": [],
+                "dpt": "16.000",
+            },
+            "mode": "text",
+            "respond_to_read": False,
+            "sync_state": True,
+        },
+        id="text",
+    ),
+    pytest.param(
+        Platform.WEATHER,
+        WeatherKnxConfig,
+        {
+            "ga_temperature": {"state": "1/2/3"},
+            "ga_rain_alarm": {"state": "1/2/4", "passive": ["1/2/5"]},
+        },
+        {
+            "ga_temperature": {"state": "1/2/3", "passive": []},
+            "ga_humidity": None,
+            "ga_air_pressure": None,
+            "ga_wind_speed": None,
+            "ga_wind_bearing": None,
+            "ga_brightness_east": None,
+            "ga_brightness_south": None,
+            "ga_brightness_west": None,
+            "ga_brightness_north": None,
+            "ga_day_night": None,
+            "invert_day_night": False,
+            "ga_rain_alarm": {"state": "1/2/4", "passive": ["1/2/5"]},
+            "ga_frost_alarm": None,
+            "ga_wind_alarm": None,
+            "sync_state": True,
+        },
+        id="weather",
+    ),
+    pytest.param(
+        Platform.COVER,
+        CoverKnxConfig,
+        {
+            "ga_up_down": {"write": "1/2/3"},
+            "ga_angle": {"write": "1/2/4", "state": "1/2/5"},
+            "travelling_time_down": 10,
+        },
+        {
+            "ga_up_down": {"write": "1/2/3", "passive": []},
+            "invert_updown": False,
+            "ga_stop": None,
+            "ga_step": None,
+            "ga_position_set": None,
+            "ga_position_state": None,
+            "invert_position": False,
+            "ga_angle": {"write": "1/2/4", "state": "1/2/5", "passive": []},
+            "invert_angle": False,
+            "travelling_time_up": 25.0,
+            "travelling_time_down": 10.0,
+            "sync_state": True,
+        },
+        id="cover",
+    ),
+    pytest.param(
+        Platform.FAN,
+        FanKnxConfig,
+        {"speed": {"ga_step": {"write": "1/2/3"}, "max_step": 4.0}},
+        {
+            "ga_switch": None,
+            "speed": {
+                "ga_step": {"write": "1/2/3", "state": None, "passive": []},
+                "max_step": 4,
+            },
+            "ga_oscillation": None,
+            "sync_state": True,
+        },
+        id="fan_step",
+    ),
+    pytest.param(
+        Platform.FAN,
+        FanKnxConfig,
+        {"ga_switch": {"write": "1/2/3"}, "speed": {"ga_speed": {"write": "1/2/4"}}},
+        {
+            "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+            "speed": {"ga_speed": {"write": "1/2/4", "state": None, "passive": []}},
+            "ga_oscillation": None,
+            "sync_state": True,
+        },
+        id="fan_percentage",
+    ),
+    pytest.param(
+        Platform.LIGHT,
+        LightKnxConfig,
+        {
+            "ga_switch": {"write": "1/2/3"},
+            "color": {"ga_color": {"write": "1/2/4", "dpt": "251.600"}},
+        },
+        {
+            "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+            "ga_brightness": None,
+            "ga_color_temp": None,
+            "color_temp_min": 2700,
+            "color_temp_max": 6000,
+            "color": {
+                "ga_color": {
+                    "write": "1/2/4",
+                    "state": None,
+                    "passive": [],
+                    "dpt": "251.600",
+                }
+            },
+            "sync_state": True,
+        },
+        id="light_single_address",
+    ),
+    pytest.param(
+        Platform.LIGHT,
+        LightKnxConfig,
+        {
+            "color": {
+                "ga_red_brightness": {"write": "1/2/1"},
+                "ga_green_brightness": {"write": "1/2/2"},
+                "ga_blue_brightness": {"write": "1/2/3"},
+                "ga_white_switch": {"write": "1/2/4"},
+            }
+        },
+        {
+            "ga_switch": None,
+            "ga_brightness": None,
+            "ga_color_temp": None,
+            "color_temp_min": 2700,
+            "color_temp_max": 6000,
+            "color": {
+                "ga_red_switch": None,
+                "ga_red_brightness": {"write": "1/2/1", "state": None, "passive": []},
+                "ga_green_switch": None,
+                "ga_green_brightness": {"write": "1/2/2", "state": None, "passive": []},
+                "ga_blue_switch": None,
+                "ga_blue_brightness": {"write": "1/2/3", "state": None, "passive": []},
+                "ga_white_switch": {"write": "1/2/4", "state": None, "passive": []},
+                "ga_white_brightness": None,
+            },
+            "sync_state": True,
+        },
+        id="light_individual_addresses",
+    ),
+    pytest.param(
+        Platform.LIGHT,
+        LightKnxConfig,
+        {
+            "ga_switch": {"write": "1/2/3"},
+            "ga_brightness": {"write": "1/2/4"},
+            "color": {
+                "ga_hue": {"write": "1/2/5"},
+                "ga_saturation": {"write": "1/2/6"},
+            },
+        },
+        {
+            "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+            "ga_brightness": {"write": "1/2/4", "state": None, "passive": []},
+            "ga_color_temp": None,
+            "color_temp_min": 2700,
+            "color_temp_max": 6000,
+            "color": {
+                "ga_hue": {"write": "1/2/5", "state": None, "passive": []},
+                "ga_saturation": {"write": "1/2/6", "state": None, "passive": []},
+            },
+            "sync_state": True,
+        },
+        id="light_hsv_addresses",
+    ),
+    pytest.param(
+        Platform.CLIMATE,
+        ClimateKnxConfig,
+        {
+            "ga_temperature_current": {"state": "1/2/1"},
+            "target_temperature": {
+                "ga_temperature_target": {"state": "1/2/2"},
+                "ga_setpoint_shift": {
+                    "write": "1/2/3",
+                    "state": "1/2/4",
+                    "dpt": "6.010",
+                },
+            },
+        },
+        {
+            "ga_temperature_current": {"state": "1/2/1", "passive": []},
+            "ga_humidity_current": None,
+            "target_temperature": {
+                "ga_temperature_target": {"state": "1/2/2", "passive": []},
+                "ga_setpoint_shift": {
+                    "write": "1/2/3",
+                    "state": "1/2/4",
+                    "passive": [],
+                    "dpt": "6.010",
+                },
+                "setpoint_shift_min": -6,
+                "setpoint_shift_max": 6,
+                "temperature_step": 0.1,
+            },
+            "ga_active": None,
+            "ga_valve": None,
+            "ga_operation_mode": None,
+            "ignore_auto_mode": False,
+            "ga_operation_mode_comfort": None,
+            "ga_operation_mode_economy": None,
+            "ga_operation_mode_standby": None,
+            "ga_operation_mode_protection": None,
+            "ga_heat_cool": None,
+            "ga_on_off": None,
+            "on_off_invert": False,
+            "ga_controller_mode": None,
+            "ga_controller_status": None,
+            "default_controller_mode": "heat",
+            "ga_fan_speed": None,
+            "fan_max_step": 3,
+            "fan_zero_mode": "off",
+            "ga_fan_swing": None,
+            "ga_fan_swing_horizontal": None,
+            "sync_state": True,
+        },
+        id="climate_setpoint_shift",
+    ),
+    pytest.param(
+        Platform.BUTTON,
+        ButtonKnxConfig,
+        {"ga_send": {"write": "1/2/3"}, "data": {"payload": "1F", "payload_length": 1}},
+        {
+            "ga_send": {"write": "1/2/3"},
+            "data": {"payload": "0x1f", "payload_length": 1},
+        },
+        id="button_raw",
+    ),
+    pytest.param(
+        Platform.BUTTON,
+        ButtonKnxConfig,
+        {"ga_send": {"write": "1/2/3", "dpt": "5.001"}, "data": {"value": 50}},
+        {"ga_send": {"write": "1/2/3", "dpt": "5.001"}, "data": {"value": 50}},
+        id="button_value",
+    ),
+    pytest.param(
+        Platform.SELECT,
+        SelectKnxConfig,
+        {"options_source": {"ga_enum": {"write": "1/2/3", "dpt": "20.102"}}},
+        {
+            "options_source": {
+                "ga_enum": {
+                    "write": "1/2/3",
+                    "state": None,
+                    "passive": [],
+                    "dpt": "20.102",
+                }
+            },
+            "respond_to_read": False,
+            "sync_state": True,
+        },
+        id="select_from_dpt",
+    ),
+    pytest.param(
+        Platform.SELECT,
+        SelectKnxConfig,
+        {
+            "options_source": {
+                "ga_custom": {"write": "1/2/3", "dpt": "5.010"},
+                "custom_options": [
+                    {"option": "a", "value": 1},
+                    {"option": "b", "payload": "2", "payload_length": 1},
+                ],
+            }
+        },
+        {
+            "options_source": {
+                "ga_custom": {
+                    "write": "1/2/3",
+                    "state": None,
+                    "passive": [],
+                    "dpt": "5.010",
+                },
+                "custom_options": [
+                    {"option": "a", "value": 1},
+                    {"option": "b", "payload": "0x2", "payload_length": 1},
+                ],
+            },
+            "respond_to_read": False,
+            "sync_state": True,
+        },
+        id="select_custom",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("platform", "config_type", "knx_input", "knx_stored"), TYPED_CONFIG_CASES
+)
+def test_typed_config_storage_roundtrip(
+    platform: Platform,
+    config_type: type,
+    knx_input: dict[str, Any],
+    knx_stored: dict[str, Any],
+) -> None:
+    """Test typed configs render to the stored shape and load back unchanged."""
+    entity_input = {"name": "test"}
+    validated = validate_entity_data(
+        {CONF_PLATFORM: platform, CONF_DATA: {"entity": entity_input, "knx": knx_input}}
+    )[CONF_DATA]
+    assert isinstance(validated, KnxEntityData)
+    assert validated.entity == BaseEntityConfig(name="test")
+    assert isinstance(validated.knx, config_type)
+
+    stored = to_storage_dict(validated)
+    assert stored["entity"] == {
+        "name": "test",
+        "device_info": None,
+        "entity_category": None,
+    }
+    assert stored["knx"] == knx_stored
+    assert json.loads(json.dumps(stored)) == stored  # storage is JSON
+
+    reloaded = validate_entity_data({CONF_PLATFORM: platform, CONF_DATA: stored})[
+        CONF_DATA
+    ]
+    assert reloaded == validated
+    assert to_storage_dict(reloaded) == stored
+
+
+@pytest.mark.parametrize(
+    ("platform", "config_type", "knx_input", "knx_stored"), TYPED_CONFIG_CASES
+)
+def test_typed_config_field_order_is_ui_order(
+    platform: Platform,
+    config_type: type,
+    knx_input: dict[str, Any],
+    knx_stored: dict[str, Any],
+) -> None:
+    """Test the serialized schema lists fields in dataclass declaration order."""
+    serialized = get_serialized_schema(platform)
+    assert serialized is not None
+    assert [field["name"] for field in serialized] == [
+        field.name for field in dataclasses.fields(config_type)
+    ]
+
+
+@pytest.mark.parametrize(
+    "knx_data",
+    [
+        pytest.param({"ga_stop": {"write": "1/2/3"}}, id="no_control"),
+        pytest.param({"ga_up_down": {"passive": ["1/2/3"]}}, id="up_down_not_writable"),
+        pytest.param(
+            {"ga_position_set": {"passive": ["1/2/3"]}},
+            id="position_set_not_writable",
+        ),
+    ],
+)
+def test_cover_requires_writable_control(knx_data: dict[str, Any]) -> None:
+    """Test a cover needs a writable open/close or set position address."""
+    with pytest.raises(EntityStoreValidationException) as exc_info:
+        validate_entity_data(
+            {
+                CONF_PLATFORM: Platform.COVER,
+                CONF_DATA: {"entity": {"name": "test"}, "knx": knx_data},
+            }
+        )
+    errors = exc_info.value.validation_error["errors"]
+    assert len(errors) == 1
+    assert errors[0]["path"] == ["data", "knx"]
+    assert errors[0]["message"] == (
+        "At least one of 'Open/Close control' or 'Position - Set position' is required."
+    )
+
+
+_HSV_MSG = (
+    "'Hue', 'Saturation' and 'Brightness' addresses are required for HSV configuration"
+)
+
+
+@pytest.mark.parametrize(
+    ("platform", "knx_data", "message"),
+    [
+        pytest.param(
+            Platform.FAN,
+            {"ga_oscillation": {"write": "1/2/3"}},
+            "At least one of 'Switch' or 'Fan speed' is required.",
+            id="fan_no_switch_or_speed",
+        ),
+        pytest.param(
+            Platform.LIGHT,
+            {"ga_brightness": {"write": "1/2/3"}},
+            "At least one of 'Switch' or 'Individual addresses' is required.",
+            id="light_no_switch_or_individual_colors",
+        ),
+        pytest.param(
+            Platform.LIGHT,
+            {
+                "ga_switch": {"write": "1/2/3"},
+                "color": {
+                    "ga_hue": {"write": "1/2/4"},
+                    "ga_saturation": {"write": "1/2/5"},
+                },
+            },
+            _HSV_MSG,
+            id="light_hsv_without_brightness",
+        ),
+    ],
+)
+def test_cross_field_rules(
+    platform: Platform, knx_data: dict[str, Any], message: str
+) -> None:
+    """Test cross field rules report on the platform config."""
+    with pytest.raises(EntityStoreValidationException) as exc_info:
+        validate_entity_data(
+            {
+                CONF_PLATFORM: platform,
+                CONF_DATA: {"entity": {"name": "test"}, "knx": knx_data},
+            }
+        )
+    errors = exc_info.value.validation_error["errors"]
+    assert len(errors) == 1
+    assert errors[0]["path"] == ["data", "knx"]
+    assert errors[0]["message"] == message
+    assert errors[0]["code"] == "no_match"
+
+
+_GA = {"write": "1/2/3"}
+_NAME = {"name": "test"}
+
+VALIDATION_ERROR_CASES = [
+    pytest.param("switch", {}, {"ga_switch": _GA}, "name_or_device_required"),
+    pytest.param(
+        "switch",
+        {"name": "test", "entity_category": "invalid"},
+        {"ga_switch": _GA},
+        "invalid_entity_category",
+    ),
+    pytest.param(
+        "sensor",
+        {"name": "test", "entity_category": "config"},
+        {"ga_sensor": {"state": "1/2/3", "dpt": "9.001"}},
+        "entity_category_not_supported",
+    ),
+    pytest.param(
+        "switch", _NAME, {"ga_switch": {"write": "1/2/3/4"}}, "invalid_group_address"
+    ),
+    pytest.param(
+        "climate",
+        _NAME,
+        {
+            "ga_temperature_current": {"state": "1/2/1"},
+            "target_temperature": {"ga_temperature_target": _GA},
+            "ga_active": {},
+        },
+        "group_address_required",
+    ),
+    pytest.param(
+        "switch", _NAME, {"ga_switch": _GA, "sync_state": False}, "sync_state_disabled"
+    ),
+    pytest.param("switch", _NAME, {"ga_switch": _GA, "bogus": 1}, "not_a_valid_option"),
+    pytest.param("switch", _NAME, {}, "required"),
+    pytest.param("switch", _NAME, "invalid", "expected_mapping"),
+    pytest.param(
+        "switch",
+        _NAME,
+        {"ga_switch": {"write": "1/2/3", "passive": "invalid"}},
+        "expected_sequence",
+    ),
+    pytest.param(
+        "scene", _NAME, {"ga_scene": _GA, "scene_number": "x"}, "expected_type"
+    ),
+    pytest.param("invalid", _NAME, {}, "expected_type_or_one_of"),
+    pytest.param(
+        "text",
+        _NAME,
+        {"ga_text": {"write": "1/2/3", "dpt": "16.000"}, "mode": "invalid"},
+        "value_one_of",
+    ),
+    pytest.param("cover", _NAME, {"ga_stop": _GA}, "cover_control_required"),
+    pytest.param("fan", _NAME, {}, "fan_switch_or_speed_required"),
+    pytest.param(
+        "light",
+        _NAME,
+        {"ga_brightness": _GA},
+        "light_switch_or_individual_colors_required",
+    ),
+    pytest.param(
+        "light",
+        _NAME,
+        {"ga_switch": _GA, "color": {"ga_hue": _GA, "ga_saturation": _GA}},
+        "light_hsv_requires_brightness",
+    ),
+    pytest.param(
+        "number",
+        _NAME,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "14.000"}},
+        "number_min_required",
+    ),
+    pytest.param(
+        "number",
+        _NAME,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "14.000"}, "min": 0},
+        "number_max_required",
+    ),
+    pytest.param(
+        "number",
+        _NAME,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "5.001"}, "min": -5},
+        "number_min_below_dpt_min",
+    ),
+    pytest.param(
+        "number",
+        _NAME,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "5.001"}, "max": 500},
+        "number_max_above_dpt_max",
+    ),
+    pytest.param(
+        "number",
+        _NAME,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "5.001"}, "step": 0.0001},
+        "number_step_below_dpt_resolution",
+    ),
+    pytest.param(
+        "number",
+        _NAME,
+        {"ga_sensor": {"write": "1/2/3", "dpt": "5.001"}, "device_class": "voltage"},
+        "unit_invalid_for_device_class",
+    ),
+    pytest.param(
+        "sensor",
+        _NAME,
+        {"ga_sensor": {"state": "1/2/3", "dpt": "9.001"}, "state_class": "total"},
+        "state_class_invalid_for_device_class",
+    ),
+    pytest.param(
+        "sensor",
+        _NAME,
+        {
+            "ga_sensor": {"state": "1/2/3", "dpt": "7.001"},
+            "state_class": "measurement_angle",
+        },
+        "unit_invalid_for_state_class",
+    ),
+    pytest.param(
+        "sensor",
+        _NAME,
+        {"ga_sensor": {"state": "1/2/3", "dpt": "9.001"}, "device_class": "enum"},
+        "sensor_enum_device_class_unsupported",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {"ga_send": _GA, "data": {"value": 1}},
+        "value_requires_dpt",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {"ga_send": {"write": "1/2/3", "dpt": "5.001"}, "data": {"value": 500}},
+        "value_invalid_for_dpt",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {
+            "ga_send": {"write": "1/2/3", "dpt": "5.001"},
+            "data": {"payload": "0x1", "payload_length": 2},
+        },
+        "payload_length_invalid_for_dpt",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {"ga_send": _GA, "data": {"payload": "zz", "payload_length": 1}},
+        "payload_invalid_format",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {"ga_send": _GA, "data": {"payload": "-1", "payload_length": 1}},
+        "payload_negative",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {"ga_send": _GA, "data": {"payload": "0x40", "payload_length": 0}},
+        "payload_exceeds_6_bit",
+    ),
+    pytest.param(
+        "button",
+        _NAME,
+        {"ga_send": _GA, "data": {"payload": "0x100", "payload_length": 1}},
+        "payload_exceeds_length",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {"options_source": {"ga_enum": {"write": "1/2/3", "dpt": "5.010"}}},
+        "enum_dpt_required",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {"options_source": {"ga_custom": _GA, "custom_options": []}},
+        "select_option_required",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {"options_source": {"ga_custom": _GA, "custom_options": ["invalid"]}},
+        "select_option_not_a_mapping",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": _GA,
+                "custom_options": [{"option": "", "value": 1}],
+            }
+        },
+        "select_option_name_required",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": _GA,
+                "custom_options": [
+                    {"option": "a", "payload": "0", "payload_length": 1},
+                    {"option": "a", "payload": "1", "payload_length": 1},
+                ],
+            }
+        },
+        "select_option_duplicate",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": _GA,
+                "custom_options": [{"option": "a", "value": 1}],
+            }
+        },
+        "select_option_value_requires_dpt",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": {"write": "1/2/3", "dpt": "5.010"},
+                "custom_options": [{"option": "a", "value": 1000}],
+            }
+        },
+        "select_option_value_invalid_for_dpt",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": _GA,
+                "custom_options": [
+                    {"option": "a", "payload": "0", "payload_length": 1},
+                    {"option": "b", "payload": "1", "payload_length": 2},
+                ],
+            }
+        },
+        "select_option_payload_length_mismatch",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": {"write": "1/2/3", "dpt": "5.010"},
+                "custom_options": [
+                    {"option": "a", "payload": "0", "payload_length": 2}
+                ],
+            }
+        },
+        "select_option_payload_length_mismatch_dpt",
+    ),
+    pytest.param(
+        "select",
+        _NAME,
+        {
+            "options_source": {
+                "ga_custom": _GA,
+                "custom_options": [
+                    {"option": "a", "payload": "1", "payload_length": 1},
+                    {"option": "b", "payload": "0x01", "payload_length": 1},
+                ],
+            }
+        },
+        "select_option_payload_duplicate",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("platform", "entity", "knx_data", "translation_key"), VALIDATION_ERROR_CASES
+)
+async def test_validation_errors_are_translated(
+    hass: HomeAssistant,
+    platform: str,
+    entity: dict[str, Any],
+    knx_data: Any,
+    translation_key: str,
+) -> None:
+    """Test entity validation errors carry a translation with matching placeholders."""
+    with pytest.raises(EntityStoreValidationException) as exc_info:
+        validate_entity_data(
+            {CONF_PLATFORM: platform, CONF_DATA: {"entity": entity, "knx": knx_data}}
+        )
+    await _assert_errors_translated(
+        hass, exc_info.value.validation_error["errors"], translation_key
+    )
+
+
+@pytest.mark.parametrize(
+    ("option_data", "translation_key"),
+    [
+        pytest.param({"value_template": "static"}, "static_template", id="static"),
+        pytest.param(
+            {"value_template": "{{ invalid"}, "invalid_template", id="invalid"
+        ),
+        pytest.param({"cooldown": -1}, "range_min", id="negative"),
+    ],
+)
+async def test_expose_validation_errors_are_translated(
+    hass: HomeAssistant, option_data: dict[str, Any], translation_key: str
+) -> None:
+    """Test expose validation errors carry a translation with matching placeholders."""
+    option = {"ga": {"write": "1/2/3", "dpt": "5.001"}, **option_data}
+    with pytest.raises(EntityStoreValidationException) as exc_info:
+        validate_expose_data({"entity_id": "light.test", "data": {"options": [option]}})
+    await _assert_errors_translated(
+        hass, exc_info.value.validation_error["errors"], translation_key
+    )
+
+
+async def _assert_errors_translated(
+    hass: HomeAssistant, errors: list[dict[str, Any]], translation_key: str
+) -> None:
+    """Assert the expected key is raised and every error has a usable translation."""
+    translations = await async_get_translations(hass, "en", "config_panel", [DOMAIN])
+    assert translation_key in [error["translation_key"] for error in errors]
+    for error in errors:
+        translation = translations.get(
+            f"component.{DOMAIN}.config_panel.validation_error.{error['translation_key']}"
+        )
+        assert translation is not None, error
+        fields = {
+            field for _, field, _, _ in string.Formatter().parse(translation) if field
+        }
+        assert fields <= error["placeholders"].keys(), error
+        json.dumps(error)  # sent over the websocket

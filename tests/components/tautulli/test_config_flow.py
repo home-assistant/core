@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock, patch
 
 from pytautulli import exceptions
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.tautulli.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -11,9 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import CONF_DATA, NAME, patch_config_flow_tautulli, setup_integration
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_flow_user(hass: HomeAssistant) -> None:
@@ -27,7 +26,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
 
     with (
         patch_config_flow_tautulli(AsyncMock()),
-        patch("homeassistant.components.tautulli.async_setup_entry", return_value=True),
+        patch("homeassistant.components.tautulli.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -42,10 +41,18 @@ async def test_flow_user(hass: HomeAssistant) -> None:
 
 async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     with patch_config_flow_tautulli(AsyncMock()) as tautullimock:
         tautullimock.side_effect = exceptions.PyTautulliConnectionException
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -53,7 +60,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
 
     with (
         patch_config_flow_tautulli(AsyncMock()),
-        patch("homeassistant.components.tautulli.async_setup_entry", return_value=True),
+        patch("homeassistant.components.tautulli.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -68,10 +75,18 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
 
 async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test user initialized flow with invalid authentication."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     with patch_config_flow_tautulli(AsyncMock()) as tautullimock:
         tautullimock.side_effect = exceptions.PyTautulliAuthenticationException
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -79,7 +94,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
 
     with (
         patch_config_flow_tautulli(AsyncMock()),
-        patch("homeassistant.components.tautulli.async_setup_entry", return_value=True),
+        patch("homeassistant.components.tautulli.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -94,10 +109,18 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
 
 async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable server."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     with patch_config_flow_tautulli(AsyncMock()) as tautullimock:
         tautullimock.side_effect = exceptions.PyTautulliException
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_USER}, data=CONF_DATA
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -105,7 +128,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
 
     with (
         patch_config_flow_tautulli(AsyncMock()),
-        patch("homeassistant.components.tautulli.async_setup_entry", return_value=True),
+        patch("homeassistant.components.tautulli.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -123,11 +146,17 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
     entry.add_to_hass(hass)
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     with patch_config_flow_tautulli(AsyncMock()):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONF_DATA,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
@@ -152,7 +181,7 @@ async def test_flow_user_multiple_entries_allowed(hass: HomeAssistant) -> None:
     }
     with (
         patch_config_flow_tautulli(AsyncMock()),
-        patch("homeassistant.components.tautulli.async_setup_entry", return_value=True),
+        patch("homeassistant.components.tautulli.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

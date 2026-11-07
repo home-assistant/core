@@ -49,7 +49,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) -> None:
     """Set up Synology DSM sensors."""
 
     # Migrate device identifiers
@@ -190,17 +190,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
             async_check_last_update_success
         )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SynologyDSMConfigEntry
-) -> bool:
+) -> None:
     """Unload Synology DSM sensors."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        entry_data = entry.runtime_data
-        await entry_data.api.async_unload()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    entry_data = entry.runtime_data
+    await entry_data.api.async_unload()
 
 
 async def async_remove_config_entry_device(

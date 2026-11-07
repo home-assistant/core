@@ -25,7 +25,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import FGLairConfigEntry, FGLairCoordinator
@@ -74,7 +74,7 @@ async def async_setup_entry(
 class FGLairDevice(FGLairEntity, ClimateEntity):
     """Represent a Fujitsu HVAC device."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_HALVES
     _attr_target_temperature_step = 0.5
     _attr_name = None
@@ -153,9 +153,10 @@ class FGLairDevice(FGLairEntity, ClimateEntity):
             ]
             self._attr_min_temp = self.device.temperature_range[0]
             self._attr_max_temp = self.device.temperature_range[1]
-            self._attr_current_temperature = self.device.sensed_temp
-            self._attr_target_temperature = self.device.set_temp
+            self._attr_native_current_temperature = self.device.sensed_temp
+            self._attr_native_target_temperature = self.device.set_temp
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         self._set_attr()

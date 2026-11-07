@@ -8,13 +8,7 @@ from aioimaplib import AioImapException
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
@@ -42,6 +36,7 @@ from .const import (
     DEFAULT_MAX_MESSAGE_SIZE,
     DEFAULT_PORT,
     DOMAIN,
+    INVALID_COMMAND_CHARS,
     MAX_MESSAGE_SIZE_LIMIT,
     MESSAGE_DATA_OPTIONS,
 )
@@ -68,9 +63,9 @@ EVENT_MESSAGE_DATA_SELECTOR = SelectSelector(
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(CONF_SERVER): str,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_CHARSET, default="utf-8"): str,
         probatio.Optional(CONF_FOLDER, default="INBOX"): str,
         probatio.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
@@ -109,7 +104,18 @@ async def validate_input(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> dict[str, str]:
     """Validate user input."""
-    errors = {}
+    if errors := {
+        key: "invalid_characters"
+        for key in (
+            CONF_USERNAME,
+            CONF_PASSWORD,
+            CONF_FOLDER,
+            CONF_SEARCH,
+            CONF_CHARSET,
+        )
+        if INVALID_COMMAND_CHARS.search(user_input[key])
+    }:
+        return errors
 
     try:
         imap_client = await connect_to_server(user_input)
@@ -123,13 +129,8 @@ async def validate_input(
     except InvalidFolder:
         errors[CONF_FOLDER] = "invalid_folder"
     except ssl.SSLError:
-        # The aioimaplib library 1.0.1 does not raise an
-        # ssl.SSLError correctly, but is logged.
-        # See
-        # https://github.com/bamthomas/aioimaplib/issues/91
-        # This handler supplies a better error message.
         errors["base"] = "ssl_error"
-    except TimeoutError, AioImapException, ConnectionRefusedError:
+    except OSError, AioImapException:
         errors["base"] = "cannot_connect"
     else:
         if result != "OK":
@@ -191,13 +192,13 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             description_placeholders={
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
-                CONF_NAME: reauth_entry.title,
+                "username": reauth_entry.data[CONF_USERNAME],
+                "name": reauth_entry.title,
             },
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -237,6 +238,11 @@ class ImapOptionsFlow(OptionsFlow):
             except AbortFlow as err:
                 errors = {"base": err.reason}
             else:
+                if (
+                    CONF_CUSTOM_EVENT_DATA_TEMPLATE not in user_input
+                    and CONF_CUSTOM_EVENT_DATA_TEMPLATE in entry_data
+                ):
+                    entry_data.pop(CONF_CUSTOM_EVENT_DATA_TEMPLATE)
                 entry_data.update(user_input)
                 errors = await validate_input(self.hass, entry_data)
                 if not errors:

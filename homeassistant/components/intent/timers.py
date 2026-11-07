@@ -92,6 +92,12 @@ class TimerInfo:
     This agent will be used to execute the conversation command.
     """
 
+    context: Context | None = None
+    """Context of the request that set the timer.
+
+    The conversation command runs as the user of this context.
+    """
+
     _created_seconds: int = 0
     """Number of seconds on the timer when it was created."""
 
@@ -254,6 +260,7 @@ class TimerManager:
         name: str | None = None,
         conversation_command: str | None = None,
         conversation_agent_id: str | None = None,
+        context: Context | None = None,
     ) -> str:
         """Start a timer."""
         if (not conversation_command) and (device_id is None):
@@ -289,6 +296,7 @@ class TimerManager:
             updated_at=created_at,
             conversation_command=conversation_command,
             conversation_agent_id=conversation_agent_id,
+            context=context,
         )
 
         # Fill in area/floor info
@@ -457,20 +465,8 @@ class TimerManager:
         timer.finish()
 
         if timer.conversation_command:
-            from homeassistant.components.conversation import (  # noqa: PLC0415
-                async_converse,
-            )
-
             self.hass.async_create_background_task(
-                async_converse(
-                    self.hass,
-                    timer.conversation_command,
-                    conversation_id=None,
-                    context=Context(),
-                    language=timer.language,
-                    agent_id=timer.conversation_agent_id,
-                    device_id=timer.device_id,
-                ),
+                self._async_run_conversation_command(timer),
                 "timer assist command",
             )
         elif timer.device_id in self.handlers:
@@ -482,6 +478,35 @@ class TimerManager:
             timer.name,
             timer.device_id,
         )
+
+    async def _async_run_conversation_command(self, timer: TimerInfo) -> None:
+        """Run the delayed command of a finished timer."""
+        from homeassistant.components.conversation import async_converse  # noqa: PLC0415
+
+        assert timer.conversation_command is not None
+
+        context = Context()
+        if timer.context is not None:
+            context = Context(user_id=timer.context.user_id, parent_id=timer.context.id)
+
+        result = await async_converse(
+            self.hass,
+            timer.conversation_command,
+            conversation_id=None,
+            context=context,
+            language=timer.language,
+            agent_id=timer.conversation_agent_id,
+            device_id=timer.device_id,
+        )
+
+        # Nothing is listening to the response, so an error is only visible here.
+        if result.response.response_type is intent.IntentResponseType.ERROR:
+            _LOGGER.warning(
+                "Delayed command failed: command=%s, code=%s, response=%s",
+                timer.conversation_command,
+                result.response.error_code,
+                result.response.speech.get("plain", {}).get("speech", ""),
+            )
 
     def is_timer_device(self, device_id: str) -> bool:
         """Return True if device has been registered to handle timer events."""
@@ -885,6 +910,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
             name=name,
             conversation_command=conversation_command,
             conversation_agent_id=intent_obj.conversation_agent_id,
+            context=intent_obj.context,
         )
 
         return intent_obj.create_response()

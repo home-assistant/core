@@ -3,6 +3,8 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import (
     CONF_ALIAS,
@@ -13,8 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 def _get_mock_nutclient(

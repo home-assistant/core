@@ -14,7 +14,10 @@ from .const import DOMAIN, SUPPORTED_MODEL_TYPES
 from .exceptions import CredentialsInvalid, UuidChanged
 
 DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
 
 
@@ -83,7 +86,7 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
                 probatio.Required(
                     CONF_USERNAME, default=self.init_data[CONF_USERNAME]
                 ): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
 

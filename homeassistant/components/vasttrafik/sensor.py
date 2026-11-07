@@ -42,14 +42,14 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_KEY): cv.string,
-        probatio.Required(CONF_SECRET): cv.string,
+        probatio.Required(probatio.Secret(CONF_SECRET)): cv.string,
         probatio.Required(CONF_DEPARTURES): [
             {
                 probatio.Required(CONF_FROM): cv.string,
                 probatio.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
                 probatio.Optional(CONF_HEADING): cv.string,
                 probatio.Optional(CONF_LINES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_NAME): cv.string,
             }

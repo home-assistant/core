@@ -42,7 +42,7 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     ),
     BinarySensorEntityDescription(
         key="GLASS_BREAK",
-        device_class=BinarySensorDeviceClass.SOUND,
+        device_class=BinarySensorDeviceClass.GLASS_BREAK,
     ),
 )
 
@@ -77,7 +77,7 @@ async def async_setup_entry(
 
     sensors: list[BinarySensorEntity] = []
 
-    devices = hive.session.deviceList.get("binary_sensor")
+    devices = hive.session.deviceList.get("binary_sensor", [])
     sensors.extend(
         HiveBinarySensorEntity(hass, entry, hive, dev, description)
         for dev in devices
@@ -85,7 +85,7 @@ async def async_setup_entry(
         if dev["hiveType"] == description.key
     )
 
-    devices = hive.session.deviceList.get("sensor")
+    devices = hive.session.deviceList.get("sensor", [])
     sensors.extend(
         HiveSensorEntity(hass, entry, hive, dev, description)
         for dev in devices

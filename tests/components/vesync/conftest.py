@@ -7,6 +7,8 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pyvesync import VeSync
 from pyvesync.auth import VeSyncAuth
 from pyvesync.base_devices.bulb_base import VeSyncBulb
@@ -24,9 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .common import DEVICE_CATEGORIES, mock_multiple_device_responses
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)

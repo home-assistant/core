@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zwave_js_server.event import Event
 
 from homeassistant.components.zwave_js import DOMAIN
@@ -10,8 +11,6 @@ from homeassistant.const import STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 NUMBER_ENTITY = "number.thermostat_hvac_valve_control"
 VOLUME_NUMBER_ENTITY = "number.indoor_siren_6_default_volume_2"

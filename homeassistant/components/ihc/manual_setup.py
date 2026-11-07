@@ -85,22 +85,22 @@ SENSOR_SCHEMA = DEVICE_SCHEMA.extend(
 
 IHC_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Required(CONF_URL): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
         probatio.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
         probatio.Optional(CONF_BINARY_SENSOR, default=[]): probatio.All(
-            cv.ensure_list, [probatio.All(BINARY_SENSOR_SCHEMA, validate_name)]
+            probatio.EnsureList(), [probatio.All(BINARY_SENSOR_SCHEMA, validate_name)]
         ),
         probatio.Optional(CONF_INFO, default=True): cv.boolean,
         probatio.Optional(CONF_LIGHT, default=[]): probatio.All(
-            cv.ensure_list, [probatio.All(LIGHT_SCHEMA, validate_name)]
+            probatio.EnsureList(), [probatio.All(LIGHT_SCHEMA, validate_name)]
         ),
         probatio.Optional(CONF_SENSOR, default=[]): probatio.All(
-            cv.ensure_list, [probatio.All(SENSOR_SCHEMA, validate_name)]
+            probatio.EnsureList(), [probatio.All(SENSOR_SCHEMA, validate_name)]
         ),
         probatio.Optional(CONF_SWITCH, default=[]): probatio.All(
-            cv.ensure_list, [probatio.All(SWITCH_SCHEMA, validate_name)]
+            probatio.EnsureList(), [probatio.All(SWITCH_SCHEMA, validate_name)]
         ),
     }
 )

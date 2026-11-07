@@ -7,6 +7,8 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp.hdrs import AUTHORIZATION
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.html5.const import ATTR_ACTION, ATTR_TAG, DOMAIN
@@ -20,9 +22,6 @@ from homeassistant.setup import async_setup_component
 
 from .test_notify import SUBSCRIPTION_1
 
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import ClientSessionGenerator
-
 
 @pytest.fixture
 def event_only() -> Generator[None]:
@@ -34,7 +33,7 @@ def event_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid", "event_only")
+@pytest.mark.usefixtures("mock_jwt", "mock_uuid", "event_only")
 @pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
 async def test_setup(
     hass: HomeAssistant,
@@ -79,7 +78,7 @@ async def test_setup(
         },
     ],
 )
-@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.usefixtures("mock_jwt", "mock_uuid")
 @pytest.mark.freeze_time("1970-01-01T00:00:00.000Z")
 async def test_events(
     hass: HomeAssistant,
@@ -122,7 +121,7 @@ async def test_events(
 
 
 @pytest.mark.parametrize("event_type", ["clicked", "received", "closed"])
-@pytest.mark.usefixtures("mock_wp", "mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.usefixtures("mock_jwt", "mock_uuid")
 async def test_deprecation_event_bus(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -163,7 +162,7 @@ async def test_deprecation_event_bus(
 
 
 @pytest.mark.parametrize("event_type", ["clicked", "received", "closed"])
-@pytest.mark.usefixtures("mock_wp", "mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.usefixtures("mock_jwt", "mock_uuid")
 async def test_deprecation_event_bus_no_listeners(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

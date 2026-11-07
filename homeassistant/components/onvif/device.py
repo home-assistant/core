@@ -51,10 +51,10 @@ class ONVIFDevice:
     device: ONVIFCamera
     events: EventManager
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ONVIFConfigEntry) -> None:
         """Initialize the device."""
         self.hass: HomeAssistant = hass
-        self.config_entry: ConfigEntry = config_entry
+        self.config_entry: ONVIFConfigEntry = config_entry
         self._original_options = dict(config_entry.options)
         self.available: bool = True
 
@@ -68,7 +68,7 @@ class ONVIFDevice:
         self._dt_diff_seconds: float = 0
 
     async def _async_update_listener(
-        self, hass: HomeAssistant, entry: ConfigEntry
+        self, hass: HomeAssistant, entry: ONVIFConfigEntry
     ) -> None:
         """Handle options update."""
         if self._original_options != entry.options:
@@ -344,13 +344,10 @@ class ONVIFDevice:
             firmware_version = device_info.FirmwareVersion
             serial_number = device_info.SerialNumber
 
-        # Grab the last MAC address for backwards compatibility
         mac = None
         try:
             network_interfaces = await device_mgmt.GetNetworkInterfaces()
-            for interface in network_interfaces:
-                if interface.Enabled:
-                    mac = interface.Info.HwAddress
+            mac = get_mac_address(network_interfaces)
         except Fault as fault:
             if "not implemented" not in fault.message:
                 raise
@@ -702,3 +699,16 @@ def get_device(
         f"{os.path.dirname(onvif.__file__)}/wsdl/",
         no_cache=True,
     )
+
+
+def get_mac_address(network_interfaces: list[Any]) -> str | None:
+    """Get the MAC address of the last enabled network interface.
+
+    Existing entries and entities are keyed on the last one. Some cameras also
+    list a dummy interface first that has the same MAC address on every unit.
+    """
+    mac = None
+    for interface in network_interfaces:
+        if interface.Enabled:
+            mac = interface.Info.HwAddress
+    return mac
