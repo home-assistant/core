@@ -1506,6 +1506,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/picnic/ @corneyl @codesalatdev
 /homeassistant/components/picotts/ @rrooggiieerr
 /tests/components/picotts/ @rrooggiieerr
+/homeassistant/components/pikvm/ @adamoutler
+/tests/components/pikvm/ @adamoutler
 /homeassistant/components/ping/ @jpbede
 /tests/components/ping/ @jpbede
 /homeassistant/components/plaato/ @JohNan
