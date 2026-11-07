@@ -32,7 +32,13 @@ from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DIRECTIONS, DOMAIN, EPEX_SCAN_INTERVAL, LOGGER, PRICES_SCAN_INTERVAL
+from .const import (
+    DIRECTIONS,
+    DOMAIN,
+    EPEX_SCAN_INTERVAL,
+    HOUSEHOLD_SCAN_INTERVAL,
+    LOGGER,
+)
 
 if TYPE_CHECKING:
     from . import EngieBeConfigEntry
@@ -109,7 +115,9 @@ class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreem
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except EngieBeError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
 
         agreements = {
             agreement.business_agreement_number: agreement
@@ -141,7 +149,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
             LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN}_prices_{mask_identifier(ban)}",
-            update_interval=PRICES_SCAN_INTERVAL,
+            update_interval=HOUSEHOLD_SCAN_INTERVAL,
         )
         self.client = client
         self.ban = ban
@@ -169,7 +177,9 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except EngieBeError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
 
         new_eans = list(
             dict.fromkeys(
@@ -245,7 +255,7 @@ class EngieBeTouCoordinator(DataUpdateCoordinator[dict[str, TouScheduleItem]]):
             LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN}_tou_{mask_identifier(ban)}",
-            update_interval=PRICES_SCAN_INTERVAL,
+            update_interval=HOUSEHOLD_SCAN_INTERVAL,
         )
         self.client = client
         self.ban = ban

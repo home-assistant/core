@@ -37,7 +37,7 @@ from homeassistant.components.engie_be.const import (
     CONTRACTS_RETRY_INTERVAL,
     DOMAIN,
     EPEX_SCAN_INTERVAL,
-    PRICES_SCAN_INTERVAL,
+    HOUSEHOLD_SCAN_INTERVAL,
 )
 from homeassistant.components.engie_be.coordinator import (
     EngieBePricesCoordinator,
@@ -568,7 +568,7 @@ async def test_recovering_ban_adds_entities(
         build_prices(),
         build_prices(),
     ]
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -659,7 +659,7 @@ async def test_new_slot_code_appears(
     mock_engie_client.return_value.async_get_prices.return_value = _add_offtake_slot(
         build_prices(), OFFTAKE_INJECTION_EAN, extra_slot
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -698,7 +698,7 @@ async def test_no_duplicate_entities_on_repeated_refresh(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -736,7 +736,7 @@ async def test_late_service_point_failure_falls_back(
     mock_engie_client.return_value.async_get_service_point.side_effect = (
         EngieBeCommunicationError("boom")
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -818,7 +818,7 @@ async def test_single_ban_transient_failure_goes_unavailable(
             BAN_2: EngieBeCommunicationError("boom"),
         }
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -843,7 +843,7 @@ async def test_all_bans_fail(
     mock_engie_client.return_value.async_get_prices.side_effect = (
         EngieBeCommunicationError("boom")
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -867,7 +867,7 @@ async def test_unexpected_exception_is_not_swallowed(
     await _setup_two_bans(hass, mock_config_entry, mock_engie_client)
 
     mock_engie_client.return_value.async_get_prices.side_effect = ValueError("boom")
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -893,7 +893,7 @@ async def test_failure_and_recovery_are_logged_once(
         }
     )
     caplog.clear()
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -907,7 +907,7 @@ async def test_failure_and_recovery_are_logged_once(
             BAN_2: _single_ban_prices_response(OFFTAKE_ONLY_EAN, 0.3),
         }
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -920,7 +920,7 @@ async def test_failure_and_recovery_are_logged_once(
             BAN_2: _single_ban_prices_response(OFFTAKE_ONLY_EAN, 0.5),
         }
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -947,7 +947,7 @@ async def test_recovery_after_all_bans_fail(
     mock_engie_client.return_value.async_get_prices.side_effect = (
         EngieBeCommunicationError("boom")
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -957,7 +957,7 @@ async def test_recovery_after_all_bans_fail(
             BAN_2: _single_ban_prices_response(OFFTAKE_ONLY_EAN, 0.5),
         }
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -992,7 +992,7 @@ async def test_service_point_transient_failure_is_retried(
     assert "Fetching service point for …0001 failed" in caplog.text
     assert "…_ID1" not in caplog.text
 
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -1016,7 +1016,7 @@ async def test_service_point_success_without_ean_is_cached_once(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -1595,7 +1595,7 @@ async def test_tou_schedules_failure_degrades_entities(
     assert hass.states.get(active_price_id).state != STATE_UNAVAILABLE
 
     client.async_get_tou_schedules.side_effect = EngieBeCommunicationError("boom")
-    freezer.tick(PRICES_SCAN_INTERVAL)
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -1958,7 +1958,7 @@ async def test_injection_price_unavailable_when_injection_schedule_drops(
     client.async_get_tou_schedules.return_value = build_tou_schedules(
         with_supplier_injection=False
     )
-    freezer.tick(PRICES_SCAN_INTERVAL)
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

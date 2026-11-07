@@ -23,7 +23,7 @@ from homeassistant.components.engie_be.const import (
     CONTRACTS_RETRY_INTERVAL,
     DOMAIN,
     EPEX_SCAN_INTERVAL,
-    PRICES_SCAN_INTERVAL,
+    HOUSEHOLD_SCAN_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
@@ -162,7 +162,7 @@ async def test_prices_refresh_auth_error_starts_reauth(
     mock_engie_client.return_value.async_get_prices.side_effect = (
         EngieBeAuthenticationError("boom")
     )
-    freezer.tick(PRICES_SCAN_INTERVAL)
+    freezer.tick(HOUSEHOLD_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

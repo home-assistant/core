@@ -1,7 +1,7 @@
 """Sensor platform for the ENGIE Belgium integration."""
 
 from collections import Counter
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Literal, override
@@ -32,7 +32,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ATTRIBUTION
+from .const import ATTRIBUTION, DIRECTIONS, LOGGER
 from .coordinator import (
     BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
@@ -68,7 +68,11 @@ _WEEKDAY_FIELDS = (
     "saturday",
     "sunday",
 )
-_DIRECTIONS: tuple[Literal["offtake", "injection"], ...] = ("offtake", "injection")
+
+
+def _slot_code_suffix(slot_code: str) -> str | None:
+    """Return the translation suffix of a slot code, or None when it is not priced."""
+    return _SLOT_CODE_SUFFIXES.get(canonicalise_slot_code(slot_code))
 
 
 def _energy_type_key(ean: str, ean_energy_types: Mapping[str, str | None]) -> str:
@@ -102,6 +106,19 @@ def _direction_schedule(
     if direction == "offtake":
         return schedule.offtake
     return schedule.injection
+
+
+def _switching_direction_schedules(
+    schedule: TouSchedule,
+) -> Iterator[tuple[Literal["offtake", "injection"], TouDirectionSchedule]]:
+    """Yield each direction and schedule that switches between multiple slot codes."""
+    for direction in DIRECTIONS:
+        direction_schedule = _direction_schedule(schedule, direction)
+        if (
+            direction_schedule is not None
+            and direction_schedule.has_multiple_slot_codes()
+        ):
+            yield direction, direction_schedule
 
 
 def _has_price_slots(
@@ -148,13 +165,7 @@ def _build_tou_entities(
         for source, schedule in source_schedules.items():
             if schedule is None:
                 continue
-            for direction in _DIRECTIONS:
-                direction_schedule = _direction_schedule(schedule, direction)
-                if (
-                    direction_schedule is None
-                    or not direction_schedule.has_multiple_slot_codes()
-                ):
-                    continue
+            for direction, _ in _switching_direction_schedules(schedule):
                 entity: EngieBeTouEntity = EngieBeTouSlotSensor(
                     household.tou,
                     ban=ban,
@@ -169,14 +180,10 @@ def _build_tou_entities(
         if household.is_dynamic is False and prices_data is not None:
             supplier = meter.supplier
             if supplier is not None:
-                for direction in _DIRECTIONS:
-                    direction_schedule = _direction_schedule(supplier, direction)
+                for direction, _ in _switching_direction_schedules(supplier):
                     ean_prices = lookup_by_ean(prices_data.prices_by_ean, ean)
-                    if (
-                        direction_schedule is None
-                        or not direction_schedule.has_multiple_slot_codes()
-                        or ean_prices is None
-                        or not _has_price_slots(ean_prices, direction)
+                    if ean_prices is None or not _has_price_slots(
+                        ean_prices, direction
                     ):
                         continue
                     active_entity = EngieBeActivePriceSensor(
@@ -214,7 +221,8 @@ async def async_setup_entry(
                 prices_data.eans, household.prices.ean_energy_types
             )
             for ean, direction, slot_code in prices_data.slots:
-                if canonicalise_slot_code(slot_code) not in _SLOT_CODE_SUFFIXES:
+                if (suffix := _slot_code_suffix(slot_code)) is None:
+                    LOGGER.debug("Skipping unpriced slot code %s", slot_code)
                     continue
                 type_key = _energy_type_key(ean, household.prices.ean_energy_types)
                 ean_suffix = bare_ean(ean)[-4:] if ean in duplicate_eans else ""
@@ -225,6 +233,7 @@ async def async_setup_entry(
                         ean=ean,
                         direction=direction,
                         slot_code=slot_code,
+                        suffix=suffix,
                         excl_vat=excl_vat,
                         type_key=type_key,
                         ean_suffix=ean_suffix,
@@ -315,6 +324,7 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         ean: str,
         direction: str,
         slot_code: str,
+        suffix: str,
         excl_vat: bool,
         type_key: str,
         ean_suffix: str,
@@ -330,7 +340,6 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         unique_id = f"{business_agreement_number}_{ean}_{direction}_{slot_code}"
         self._attr_unique_id = f"{unique_id}_excl_vat" if excl_vat else unique_id
 
-        suffix = _SLOT_CODE_SUFFIXES[canonicalise_slot_code(slot_code)]
         translation_key = f"{type_key}_price_{direction}{suffix}"
         if excl_vat:
             translation_key = f"{translation_key}_excl_vat"
