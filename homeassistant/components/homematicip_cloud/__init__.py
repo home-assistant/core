@@ -110,7 +110,7 @@ async def async_unload_entry(
 
 
 async def async_migrate_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+    hass: HomeAssistant, config_entry: HomematicIPConfigEntry
 ) -> None:
     """Migrate the config entry from version 1 to version 2."""
 

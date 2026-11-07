@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@bdraco", "@prystupa", "@joshs85", "@marciogranzotto"],
   "config_flow": true,
+  "connectivity": ["infrared", "network", "rf"],
   "dhcp": [
     {
       "hostname": "bond-*",

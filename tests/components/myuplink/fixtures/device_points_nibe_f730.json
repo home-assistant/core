@@ -1159,5 +1159,39 @@
     "enumValues": [],
     "scaleValue": "1",
     "zoneId": null
+  },
+  {
+    "category": "Scheduling",
+    "parameterId": "10035",
+    "parameterName": "activated",
+    "parameterUnit": "",
+    "writable": true,
+    "timestamp": "2026-08-08T07:58:03+00:00",
+    "value": 0.0,
+    "strVal": "0",
+    "smartHomeCategories": [],
+    "minValue": null,
+    "maxValue": null,
+    "stepValue": 1.0,
+    "enumValues": [],
+    "scaleValue": "1",
+    "zoneId": null
+  },
+  {
+    "category": "Energy Log",
+    "parameterId": "10077",
+    "parameterName": "EL Energy used for heating, current hour",
+    "parameterUnit": "kWh",
+    "writable": false,
+    "timestamp": "2026-11-05T08:50:00+00:00",
+    "value": 0.5,
+    "strVal": "0.5kWh",
+    "smartHomeCategories": [],
+    "minValue": null,
+    "maxValue": null,
+    "stepValue": 1.0,
+    "enumValues": [],
+    "scaleValue": "0.001",
+    "zoneId": null
   }
 ]

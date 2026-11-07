@@ -7,7 +7,7 @@ from aioairq import AirQ, InvalidAuth
 from aiohttp.client_exceptions import ClientConnectionError
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -21,6 +21,7 @@ from homeassistant.helpers.service_info.zeroconf import (
     ZeroconfServiceInfo,
 )
 
+from . import AirQConfigEntry
 from .const import CONF_CLIP_NEGATIVE, CONF_RETURN_AVERAGE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -155,7 +156,7 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: AirQConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Return the options flow."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

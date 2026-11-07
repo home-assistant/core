@@ -2,11 +2,26 @@
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant.components import llm as llm_component
+from homeassistant.components.llm.llm import GetDateTimeTool
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+
+
+def test_get_datetime_equality() -> None:
+    """Only the stateless date/time tool opts into equality."""
+
+    class ConfiguredDateTimeTool(GetDateTimeTool):
+        """A tool whose subclass may introduce configuration."""
+
+    assert GetDateTimeTool() == GetDateTimeTool()
+    assert GetDateTimeTool() != llm.Tool()
+    assert GetDateTimeTool() != ConfiguredDateTimeTool()
+    assert ConfiguredDateTimeTool() != GetDateTimeTool()
+    assert ConfiguredDateTimeTool() != ConfiguredDateTimeTool()
 
 
 @pytest.fixture(autouse=True)
@@ -51,3 +66,31 @@ async def test_get_datetime_tool(hass: HomeAssistant) -> None:
             "weekday": "Wednesday",
         }
     )
+
+
+@pytest.mark.parametrize(
+    "api_ids",
+    [
+        [llm.LLM_API_ASSIST, llm.LLM_API_HOME_ASSISTANT],
+        [llm.LLM_API_HOME_ASSISTANT, llm.LLM_API_ASSIST],
+    ],
+)
+async def test_builtin_apis_merge_without_prefixes(
+    hass: HomeAssistant, hass_admin_user: MockUser, api_ids: list[str]
+) -> None:
+    """Shared built-in tools must compare equal so merging preserves their names."""
+    llm_context = _llm_context()
+    llm_context.context = Context(user_id=hass_admin_user.id)
+    instances = [
+        await llm.async_get_api(hass, api_id, llm_context) for api_id in api_ids
+    ]
+    original_names = {tool.name for instance in instances for tool in instance.tools}
+    assert {
+        "homeassistant__GetLiveContext",
+        "homeassistant__render_template",
+        "llm__GetDateTime",
+    } <= original_names
+
+    merged = await llm.async_get_api(hass, api_ids, llm_context)
+
+    assert sorted(tool.name for tool in merged.tools) == sorted(original_names)

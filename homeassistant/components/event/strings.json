@@ -18,14 +18,19 @@
           "state": {
             "long_press_end": "Long press end",
             "long_press_start": "Long press start",
+            "multi_press": "Multi-press",
             "multi_press_end": "Multi-press end",
             "multi_press_ongoing": "Multi-press ongoing",
             "press_end": "Press end",
-            "press_start": "Press start"
+            "press_start": "Press start",
+            "single_press": "Single press"
           }
         },
         "multi_press_count": {
           "name": "Multi-press count"
+        },
+        "press_count": {
+          "name": "Press count"
         }
       }
     },

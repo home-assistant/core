@@ -6,7 +6,6 @@ import probatio
 from pyemoncms import EmoncmsClient
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -33,6 +32,7 @@ from .const import (
     SYNC_MODE_AUTO,
     SYNC_MODE_MANUAL,
 )
+from .coordinator import EmonCMSConfigEntry
 
 
 def get_options(feeds: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -71,7 +71,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: EmonCMSConfigEntry,
     ) -> EmoncmsOptionsFlow:
         """Get the options flow for this handler."""
         return EmoncmsOptionsFlow(config_entry)
@@ -224,7 +224,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
 class EmoncmsOptionsFlow(OptionsFlowWithReload):
     """Emoncms Options flow handler."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: EmonCMSConfigEntry) -> None:
         """Initialize emoncms options flow."""
         self._url = config_entry.data[CONF_URL]
         self._api_key = config_entry.data[CONF_API_KEY]

@@ -1,6 +1,7 @@
 """The Lunatone integration."""
 
 import logging
+import re
 from typing import Final
 
 from lunatone_rest_api_client import Auth, DALIScan, Devices, Info, Sensors
@@ -21,6 +22,8 @@ from .coordinator import (
     LunatoneInfoDataUpdateCoordinator,
     LunatoneScanDataUpdateCoordinator,
     LunatoneSensorsDataUpdateCoordinator,
+    find_devices,
+    remove_devices,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,6 +92,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         new_unique_id = info_api.data.uid.replace("-", "")
         if new_unique_id != entry.unique_id:
             await _update_unique_id(hass, entry, new_unique_id)
+            coordinator_info.previous_devices = {
+                f"{new_unique_id}-line{line_id}"
+                for line_id in coordinator_info.data.lines
+            }
 
     assert entry.unique_id
 
@@ -146,6 +153,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
             hass, entry, sensors_api
         )
         await coordinator_sensors.async_config_entry_first_refresh()
+    else:
+        # Remove potentially orphaned devices
+        device_registry = dr.async_get(hass)
+        devices = find_devices(
+            device_registry,
+            entry.entry_id,
+            re.compile(rf"{re.escape(entry.unique_id)}-line\d+-d24-address\d+"),
+        )
+        remove_devices(device_registry, entry.entry_id, devices)
 
     entry.runtime_data = LunatoneData(
         coordinator_info,

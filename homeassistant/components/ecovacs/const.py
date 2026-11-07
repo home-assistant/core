@@ -44,6 +44,7 @@ SUPPORTED_STATION_ACTIONS = (
     StationAction.CLEAN_BASE,
     StationAction.DRY_MOP,
     StationAction.EMPTY_DUSTBIN,
+    StationAction.WASH_MOP,
 )
 
 LEGACY_SUPPORTED_LIFESPANS = (
