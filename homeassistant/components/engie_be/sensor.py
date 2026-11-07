@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal, override
 
 from aioengiebelgium import (
     ActiveTouPrice,
+    EanPrices,
     EpexGranularity,
     EpexSlot,
     TouDirectionSchedule,
@@ -67,6 +68,7 @@ _WEEKDAY_FIELDS = (
     "saturday",
     "sunday",
 )
+_DIRECTIONS: tuple[Literal["offtake", "injection"], ...] = ("offtake", "injection")
 
 
 def _energy_type_key(ean: str, ean_energy_types: Mapping[str, str | None]) -> str:
@@ -91,6 +93,25 @@ def _ean_aware_translation(
     if not ean_suffix:
         return base_key, {}
     return f"{base_key}_with_ean", {"ean_suffix": ean_suffix}
+
+
+def _direction_schedule(
+    schedule: TouSchedule, direction: Literal["offtake", "injection"]
+) -> TouDirectionSchedule | None:
+    """Return the direction schedule of a supplier or grid schedule."""
+    if direction == "offtake":
+        return schedule.offtake
+    return schedule.injection
+
+
+def _has_price_slots(
+    ean_prices: EanPrices, direction: Literal["offtake", "injection"]
+) -> bool:
+    """Return True when any price period prices the given direction."""
+    return any(
+        period.offtake if direction == "offtake" else period.injection
+        for period in ean_prices.periods
+    )
 
 
 def _build_tou_entities(
@@ -127,13 +148,8 @@ def _build_tou_entities(
         for source, schedule in source_schedules.items():
             if schedule is None:
                 continue
-            direction_schedules: dict[
-                Literal["offtake", "injection"], TouDirectionSchedule | None
-            ] = {
-                "offtake": schedule.offtake,
-                "injection": schedule.injection,
-            }
-            for direction, direction_schedule in direction_schedules.items():
+            for direction in _DIRECTIONS:
+                direction_schedule = _direction_schedule(schedule, direction)
                 if (
                     direction_schedule is None
                     or not direction_schedule.has_multiple_slot_codes()
@@ -153,17 +169,14 @@ def _build_tou_entities(
         if household.is_dynamic is False and prices_data is not None:
             supplier = meter.supplier
             if supplier is not None:
-                active_direction_schedules: dict[
-                    Literal["offtake", "injection"], TouDirectionSchedule | None
-                ] = {
-                    "offtake": supplier.offtake,
-                    "injection": supplier.injection,
-                }
-                for direction, direction_schedule in active_direction_schedules.items():
+                for direction in _DIRECTIONS:
+                    direction_schedule = _direction_schedule(supplier, direction)
+                    ean_prices = lookup_by_ean(prices_data.prices_by_ean, ean)
                     if (
                         direction_schedule is None
                         or not direction_schedule.has_multiple_slot_codes()
-                        or lookup_by_ean(prices_data.prices_by_ean, ean) is None
+                        or ean_prices is None
+                        or not _has_price_slots(ean_prices, direction)
                     ):
                         continue
                     active_entity = EngieBeActivePriceSensor(
@@ -448,9 +461,7 @@ class EngieBeTouSlotSensor(EngieBeTouEntity):
         schedule = meter.supplier if self._source == "supplier" else meter.dgo_tgo
         if schedule is None:
             return None
-        if self._direction == "offtake":
-            return schedule.offtake
-        return schedule.injection
+        return _direction_schedule(schedule, self._direction)
 
     def _current(self) -> tuple[str | None, datetime | None]:
         """Return the current slot code and the next boundary."""
@@ -509,9 +520,9 @@ class EngieBeTouSlotSensor(EngieBeTouEntity):
                     "code": slot.slot_code,
                     "cost": slot.cost_indicator,
                 }
-                for slot in getattr(schedule, day)
+                for slot in schedule.slots_for_weekday(weekday)
             ]
-            for day in _WEEKDAY_FIELDS
+            for weekday, day in enumerate(_WEEKDAY_FIELDS)
         }
         return {
             "optimal_slot": schedule.optimal_timeslot_code,
@@ -591,9 +602,7 @@ class EngieBeActivePriceSensor(EngieBeTouEntity):
         schedule = self._supplier_schedule()
         if schedule is None:
             return None
-        direction_schedule = (
-            schedule.offtake if self._direction == "offtake" else schedule.injection
-        )
+        direction_schedule = _direction_schedule(schedule, self._direction)
         if direction_schedule is None:
             return None
         return direction_schedule.current_slot(

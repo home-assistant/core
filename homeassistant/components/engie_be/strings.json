@@ -391,6 +391,7 @@
       "grid_injection_slot": {
         "name": "Grid operator injection slot",
         "state": {
+          "day": "Day",
           "exclusive_night": "Exclusive night",
           "offpeak": "Off-peak",
           "peak": "Peak",
@@ -402,6 +403,7 @@
       "grid_injection_slot_with_ean": {
         "name": "Grid operator injection slot ({ean_suffix})",
         "state": {
+          "day": "Day",
           "exclusive_night": "Exclusive night",
           "offpeak": "Off-peak",
           "peak": "Peak",
@@ -413,6 +415,7 @@
       "grid_offtake_slot": {
         "name": "Grid operator offtake slot",
         "state": {
+          "day": "Day",
           "exclusive_night": "Exclusive night",
           "offpeak": "Off-peak",
           "peak": "Peak",
@@ -424,6 +427,7 @@
       "grid_offtake_slot_with_ean": {
         "name": "Grid operator offtake slot ({ean_suffix})",
         "state": {
+          "day": "Day",
           "exclusive_night": "Exclusive night",
           "offpeak": "Off-peak",
           "peak": "Peak",
@@ -435,6 +439,7 @@
       "tou_injection_slot": {
         "name": "Supplier injection slot",
         "state": {
+          "day": "Day",
           "exclusive_night": "Exclusive night",
           "offpeak": "Off-peak",
           "peak": "Peak",
@@ -446,6 +451,7 @@
       "tou_injection_slot_with_ean": {
         "name": "Supplier injection slot ({ean_suffix})",
         "state": {
+          "day": "Day",
           "exclusive_night": "Exclusive night",
           "offpeak": "Off-peak",
           "peak": "Peak",
@@ -457,6 +463,7 @@
       "tou_offtake_slot": {
         "name": "Supplier offtake slot",
         "state": {
+          "day": "Day",
           "exclusive_night": "Exclusive night",
           "offpeak": "Off-peak",
           "peak": "Peak",
@@ -468,6 +475,7 @@
       "tou_offtake_slot_with_ean": {
         "name": "Supplier offtake slot ({ean_suffix})",
         "state": {
+          "day": "Day",
           "exclusive_night": "Exclusive night",
           "offpeak": "Off-peak",
           "peak": "Peak",
