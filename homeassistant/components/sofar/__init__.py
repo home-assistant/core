@@ -25,8 +25,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .binary_sensor import FAULT_SENSOR_DESCRIPTIONS, FLAG_SENSOR_DESCRIPTIONS
-from .button import BUTTON_DESCRIPTIONS
 from .const import (
     CONF_UNIT_ID,
     DOMAIN,
@@ -37,13 +35,9 @@ from .const import (
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
-from .entity import SofarEntityDescription
-from .event import EVENT_DESCRIPTIONS
 from .helpers import create_modbus_params
-from .select import SELECT_DESCRIPTIONS
-from .sensor import SENSOR_DESCRIPTIONS, TOTAL_SENSOR_DESCRIPTIONS
+from .sensor import TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
-from .switch import SWITCH_DESCRIPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,17 +52,6 @@ PLATFORMS: list[Platform] = [
 
 _REMOVED_SENSOR_KEYS = ("serial_number", "waiting_time")
 
-_PLATFORM_DESCRIPTIONS: tuple[
-    tuple[Platform, tuple[SofarEntityDescription, ...]], ...
-] = (
-    (Platform.BINARY_SENSOR, FAULT_SENSOR_DESCRIPTIONS + FLAG_SENSOR_DESCRIPTIONS),
-    (Platform.BUTTON, BUTTON_DESCRIPTIONS),
-    (Platform.EVENT, EVENT_DESCRIPTIONS),
-    (Platform.SELECT, SELECT_DESCRIPTIONS),
-    (Platform.SENSOR, SENSOR_DESCRIPTIONS + TOTAL_SENSOR_DESCRIPTIONS),
-    (Platform.SWITCH, SWITCH_DESCRIPTIONS),
-)
-
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
@@ -82,25 +65,6 @@ def _async_remove_stale_sensors(hass: HomeAssistant, serial: str) -> None:
         )
         if entity_id is not None:
             registry.async_remove(entity_id)
-
-
-@callback
-def _async_remove_unserved_entities(
-    hass: HomeAssistant, serial: str, served: frozenset[str]
-) -> None:
-    """Drop entities the inverter does not serve, so they don't linger."""
-    registry = er.async_get(hass)
-    for platform, descriptions in _PLATFORM_DESCRIPTIONS:
-        for description in descriptions:
-            # A timed-out probe drops the log as a refusal does.
-            if description.component in served or description.component == FAULT_LOG:
-                continue
-            if (
-                entity_id := registry.async_get_entity_id(
-                    platform, DOMAIN, f"{serial}_{description.key}"
-                )
-            ) is not None:
-                registry.async_remove(entity_id)
 
 
 def _async_seed_high_water_marks(
@@ -231,9 +195,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         config_entry_id=entry.entry_id, device_info=readings.device_info
     )
     entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, served)
-    # A guess from the type alone lacks what setup adds, like EPS.
-    if SERVED_COMPONENTS in entry.data:
-        _async_remove_unserved_entities(hass, serial, served)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
