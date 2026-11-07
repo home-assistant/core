@@ -256,8 +256,11 @@ CONF_WHITE_SCALE = "white_scale"
 
 # Config flow constants
 CONF_CERTIFICATE = "certificate"
+CONF_CERTIFICATE_FILE = "certificate_file"
 CONF_CLIENT_KEY = "client_key"
+CONF_CLIENT_KEY_FILE = "client_key_file"
 CONF_CLIENT_CERT = "client_cert"
+CONF_CLIENT_CERT_FILE = "client_cert_file"
 CONF_COMPONENTS = "components"
 CONF_TLS_INSECURE = "tls_insecure"
 
