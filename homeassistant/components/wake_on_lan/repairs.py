@@ -6,6 +6,8 @@ from typing import Any
 import probatio
 
 from homeassistant import config as conf_util
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
@@ -21,7 +23,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -97,20 +99,9 @@ class MigrateSwitchFlow(RepairsFlow):
                     return self.async_abort(reason="could_not_import_host")
                 ping_entry_id = import_result["result"].entry_id
 
-            for _ in range(10):
-                # Wait for Ping binary sensor to be created
-                if ping_entry_id and (
-                    entities := er.async_entries_for_config_entry(
-                        entity_reg,
-                        ping_entry_id,
-                    )
-                ):
-                    for entity in entities:
-                        if entity.domain == "binary_sensor":
-                            ping_entity_id = entity.entity_id
-                            break
-                    break
-                await asyncio.sleep(1)
+            ping_entity_id = await self._async_wait_for_entity(
+                entity_reg, ping_entry_id, BINARY_SENSOR_DOMAIN
+            )
             if not ping_entity_id:
                 return self.async_abort(reason="could_not_get_ping_entity")
 
@@ -142,16 +133,9 @@ class MigrateSwitchFlow(RepairsFlow):
                 return self.async_abort(reason="could_not_import_wol")
             wol_entry_id = import_result["result"].entry_id
 
-        wol_entity_id = None
-        for _ in range(10):
-            # Wait for WOL button to be created
-            if entities := er.async_entries_for_config_entry(
-                entity_reg,
-                wol_entry_id,
-            ):
-                wol_entity_id = entities[0].entity_id
-                break
-            await asyncio.sleep(1)
+        wol_entity_id = await self._async_wait_for_entity(
+            entity_reg, wol_entry_id, BUTTON_DOMAIN
+        )
         if not wol_entity_id:
             return self.async_abort(reason="could_not_get_wol_entity")
 
@@ -188,11 +172,58 @@ class MigrateSwitchFlow(RepairsFlow):
         ):
             return self.async_abort(reason="could_not_import_template")
 
+        if import_result["type"] is FlowResultType.CREATE_ENTRY and (
+            old_entity_id := entity_reg.async_get_entity_id(
+                SWITCH_DOMAIN, DOMAIN, dr.format_mac(mac)
+            )
+        ):
+            template_entity_id = await self._async_wait_for_entity(
+                entity_reg, import_result["result"].entry_id, SWITCH_DOMAIN
+            )
+            if not template_entity_id:
+                return self.async_abort(reason="could_not_get_template_entity")
+            self._async_take_over_entity(entity_reg, old_entity_id, template_entity_id)
+
         return self.async_create_entry(
             data={},
             description="with_ping" if ping_host else "no_ping",
             description_placeholders={"mac": mac, "host": ping_host or ""},
         )
+
+    async def _async_wait_for_entity(
+        self, entity_reg: er.EntityRegistry, entry_id: str, domain: str
+    ) -> str | None:
+        """Return the entity ID of the config entry's entity once it is registered."""
+        for _ in range(10):
+            for entity in er.async_entries_for_config_entry(entity_reg, entry_id):
+                if entity.domain == domain:
+                    return entity.entity_id
+            await asyncio.sleep(1)
+        return None
+
+    @callback
+    def _async_take_over_entity(
+        self,
+        entity_reg: er.EntityRegistry,
+        old_entity_id: str,
+        new_entity_id: str,
+    ) -> None:
+        """Move entity ID and user customizations from the WOL to the Template switch."""
+        if (old_entry := entity_reg.async_get(old_entity_id)) is None:
+            return
+        entity_reg.async_remove(old_entity_id)
+        entity_reg.async_update_entity(
+            new_entity_id,
+            new_entity_id=old_entity_id,
+            aliases=old_entry.aliases,
+            area_id=old_entry.area_id,
+            categories=dict(old_entry.categories),
+            icon=old_entry.icon,
+            labels=set(old_entry.labels),
+            name=old_entry.name,
+        )
+        for domain, options in old_entry.options.items():
+            entity_reg.async_update_entity_options(old_entity_id, domain, options)
 
     async def _async_get_raw_turn_off_action(self, mac: str) -> Any | None:
         """Return the unvalidated off action of the YAML switch for this MAC."""

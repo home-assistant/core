@@ -25,6 +25,7 @@
       "fix_flow": {
         "abort": {
           "could_not_get_ping_entity": "Ping entity could not be retrieved after the import",
+          "could_not_get_template_entity": "Template switch could not be retrieved after the import",
           "could_not_get_wol_entity": "Wake on LAN button could not be retrieved after the import",
           "could_not_import_host": "Failed to import the configuration into a Ping sensor",
           "could_not_import_template": "Failed to import the configuration into a Template switch",
@@ -32,8 +33,8 @@
           "could_not_read_configuration": "Failed to read the YAML configuration"
         },
         "create_entry": {
-          "no_ping": "Your configuration has been migrated to a new Wake on LAN config entry.\n\n-A Wake on LAN config entry has been created with a button for sending magic packets to {mac}.\n- A Template switch has been created that will use the newly created Wake on LAN button.\n\nYou can now remove the old Wake on LAN switch from your YAML configuration and restart Home Assistant to fix this issue.",
-          "with_ping": "Your configuration has been migrated to a new Wake on LAN config entry.\n\n-A Wake on LAN config entry has been created with a button for sending magic packets to {mac}.\n- A Ping binary sensor has been created for the host {host}.\n- A Template switch has been created that will use the newly created Wake on LAN button and Ping binary sensor.\n\nYou can now remove the old Wake on LAN switch from your YAML configuration and restart Home Assistant to fix this issue."
+          "no_ping": "Your configuration has been migrated to a new Wake on LAN config entry.\n\n- A Wake on LAN config entry has been created with a button for sending magic packets to {mac}.\n- A Template switch has been created that will use the newly created Wake on LAN button. It has taken over the entity ID of the old Wake on LAN switch.\n\nYou can now remove the old Wake on LAN switch from your YAML configuration and restart Home Assistant to fix this issue.",
+          "with_ping": "Your configuration has been migrated to a new Wake on LAN config entry.\n\n- A Wake on LAN config entry has been created with a button for sending magic packets to {mac}.\n- A Ping binary sensor has been created for the host {host}.\n- A Template switch has been created that will use the newly created Wake on LAN button and Ping binary sensor. It has taken over the entity ID of the old Wake on LAN switch.\n\nYou can now remove the old Wake on LAN switch from your YAML configuration and restart Home Assistant to fix this issue."
         },
         "step": {
           "migrate": {

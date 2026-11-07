@@ -18,7 +18,11 @@ from homeassistant.components.wake_on_lan.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    entity_registry as er,
+    label_registry as lr,
+)
 from homeassistant.setup import async_setup_component
 
 FULL_CONFIG = {
@@ -129,9 +133,9 @@ async def test_full_config(
     assert data["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Repair does not remove the WOL switch
-    state = hass.states.get("switch.test")
-    assert state
+    # Template switch takes over the entity ID of the WOL switch
+    assert entity_registry.async_get("switch.test").platform == "template"
+    assert hass.states.get("switch.test")
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
@@ -253,9 +257,9 @@ async def test_minimal_config(
     assert data["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Repair does not remove the WOL switch
-    state = hass.states.get("switch.wake_on_lan")
-    assert state
+    # Template switch takes over the entity ID of the WOL switch
+    assert entity_registry.async_get("switch.wake_on_lan").platform == "template"
+    assert hass.states.get("switch.wake_on_lan")
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
@@ -352,9 +356,9 @@ async def test_no_host_config(
     assert data["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Repair does not remove the WOL switch
-    state = hass.states.get("switch.test")
-    assert state
+    # Template switch takes over the entity ID of the WOL switch
+    assert entity_registry.async_get("switch.test").platform == "template"
+    assert hass.states.get("switch.test")
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
@@ -457,9 +461,9 @@ async def test_no_turn_off_config(
     assert data["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Repair does not remove the WOL switch
-    state = hass.states.get("switch.test")
-    assert state
+    # Template switch takes over the entity ID of the WOL switch
+    assert entity_registry.async_get("switch.test").platform == "template"
+    assert hass.states.get("switch.test")
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
@@ -609,9 +613,9 @@ async def test_input_entities_already_exist(
     assert data["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Repair does not remove the WOL switch
-    state = hass.states.get("switch.test")
-    assert state
+    # Template switch takes over the entity ID of the WOL switch
+    assert entity_registry.async_get("switch.test").platform == "template"
+    assert hass.states.get("switch.test")
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
@@ -645,12 +649,11 @@ async def test_input_entities_already_exist(
     assert template_entities
 
     states = hass.states.async_all()
-    # switch.test - WOL YAML switch
+    # switch.test - Template switch
     # binary_sensor.somehostname_local - Ping config entry
     # zone.home
     # button.wake_on_lan_00_01_02_03_04_05 - WOL config entry
-    # switch.test_2 - Template switch
-    assert len(states) == 5
+    assert len(states) == 4
 
 
 async def test_template_switch_already_exist(
@@ -758,9 +761,10 @@ async def test_template_switch_already_exist(
     assert data["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Repair does not remove the WOL switch
-    state = hass.states.get("switch.test")
-    assert state
+    # The existing Template switch was not created by the repair, so the WOL
+    # switch keeps its entity ID
+    assert entity_registry.async_get("switch.test").platform == DOMAIN
+    assert hass.states.get("switch.test")
 
     await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await ws_client.receive_json()
@@ -909,3 +913,66 @@ async def test_read_configuration_fails(
     assert data["type"] == FlowResultType.ABORT
     assert data["reason"] == "could_not_read_configuration"
     assert not hass.config_entries.async_entries("template")
+
+
+async def test_template_switch_takes_over_customized_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
+    mock_yaml_config: MagicMock,
+) -> None:
+    """Test the Template switch takes over a renamed and customized WOL switch."""
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(
+        hass,
+        SWITCH_DOMAIN,
+        {SWITCH_DOMAIN: NO_HOST_CONFIG},
+    )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: NO_HOST_CONFIG}
+    await hass.async_block_till_done()
+
+    area = area_registry.async_create("Office")
+    label = label_registry.async_create("Computers")
+    entity_registry.async_update_entity(
+        "switch.test",
+        new_entity_id="switch.office_pc",
+        aliases=["Computer"],
+        area_id=area.id,
+        categories={"helpers": "category_id"},
+        icon="mdi:desktop-tower",
+        labels={label.label_id},
+        name="Office PC",
+    )
+    entity_registry.async_update_entity_options(
+        "switch.office_pc", "conversation", {"should_expose": True}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
+    )
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, "00:01:02:03:04:05")
+        is None
+    )
+    template_config_entries = hass.config_entries.async_entries("template")
+    assert len(template_config_entries) == 1
+    entity_entry = entity_registry.async_get("switch.office_pc")
+    assert entity_entry.config_entry_id == template_config_entries[0].entry_id
+    assert entity_entry.aliases == ["Computer"]
+    assert entity_entry.area_id == area.id
+    assert entity_entry.categories == {"helpers": "category_id"}
+    assert entity_entry.icon == "mdi:desktop-tower"
+    assert entity_entry.labels == {label.label_id}
+    assert entity_entry.name == "Office PC"
+    assert entity_entry.options["conversation"] == {"should_expose": True}
+    assert hass.states.get("switch.office_pc").name == "Office PC"
+    assert hass.states.get("switch.test") is None
