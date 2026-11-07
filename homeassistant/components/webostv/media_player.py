@@ -5,6 +5,8 @@ from contextlib import suppress
 from http import HTTPStatus
 from typing import Any, cast, override
 
+from wakeonlan import send_magic_packet
+
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -16,7 +18,7 @@ from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -30,6 +32,7 @@ from .const import (
 )
 from .coordinator import WebOsTvConfigEntry
 from .entity import WebOsTvEntity, cmd
+from .helpers import get_mac_addresses
 from .triggers.turn_on import async_get_turn_on_trigger
 
 SUPPORT_WEBOSTV = (
@@ -194,9 +197,8 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
             self._attr_device_info.serial_number = serial_number
 
         if connections := {
-            (CONNECTION_NETWORK_MAC, format_mac(mac))
-            for key in ("wiredInfo", "wifiInfo")
-            if (mac := tv_info.connection.get(key, {}).get("macAddress"))
+            (CONNECTION_NETWORK_MAC, mac)
+            for mac in get_mac_addresses(tv_info.connection).values()
         }:
             self._attr_device_info.connections = connections
 
@@ -263,7 +265,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
     @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self.coordinator.turn_on:
+        if self.coordinator.turn_on or self.coordinator.mac_addresses:
             return self._supported_features | MediaPlayerEntityFeature.TURN_ON
 
         return self._supported_features
@@ -277,7 +279,10 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
     @override
     async def async_turn_on(self) -> None:
         """Turn on media player."""
-        await self.coordinator.turn_on.async_run(self.hass, self._context)
+        if self.coordinator.turn_on:
+            await self.coordinator.turn_on.async_run(self.hass, self._context)
+        elif macs := self.coordinator.mac_addresses:
+            await self.hass.async_add_executor_job(send_magic_packet, *macs)
 
     @cmd
     @override
