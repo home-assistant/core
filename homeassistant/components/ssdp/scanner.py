@@ -324,18 +324,7 @@ class Scanner:
 
         location = ssdp_device.location
         _, info_desc = self._description_cache.peek_description_dict(location)
-        if (
-            location is not None
-            and info_desc is not None
-            and dst == _ROOT_DEVICE
-            and _description_is_stale(ssdp_device, info_desc)
-        ):
-            # Address was reassigned to a different device (e.g. by DHCP).
-            _LOGGER.debug(
-                "SSDP: cached description for %s belongs to another device",
-                location,
-            )
-            self._description_cache.uncache_description(location)
+        if self._async_uncache_if_stale(ssdp_device, dst, location):
             info_desc = None
         if info_desc is None:
             # Fetch info desc in separate task and process from there.
@@ -437,6 +426,24 @@ class Scanner:
             ),
         )
 
+    @core_callback
+    def _async_uncache_if_stale(
+        self, ssdp_device: SsdpDevice, dst: str, location: str | None
+    ) -> bool:
+        """Uncache the description if it belongs to another root device."""
+        if TYPE_CHECKING:
+            assert self._description_cache is not None
+        if location is None or dst != _ROOT_DEVICE:
+            return False
+        _, info_desc = self._description_cache.peek_description_dict(location)
+        if info_desc is None or not _description_is_stale(ssdp_device, info_desc):
+            return False
+        _LOGGER.debug(
+            "SSDP: cached description for %s belongs to another device", location
+        )
+        self._description_cache.uncache_description(location)
+        return True
+
     async def _async_get_description_dict(
         self, location: str | None
     ) -> Mapping[str, str]:
@@ -458,6 +465,8 @@ class Scanner:
         Building this is a bit expensive so we only do it on demand.
         """
         location = headers["location"]
+        dst = headers.get_lower("st") or headers["nt"]
+        self._async_uncache_if_stale(ssdp_device, dst, location)
         info_desc = await self._async_get_description_dict(location)
         return discovery_info_from_headers_and_description(
             ssdp_device, headers, info_desc
@@ -511,6 +520,7 @@ class Scanner:
                 if ssdp_device.udn != udn:
                     continue
                 for dst in ssdp_device.all_combined_headers:
+                    self._async_uncache_if_stale(ssdp_device, dst, ssdp_device.location)
                     has_cached_desc, info_desc = cache.peek_description_dict(
                         ssdp_device.location
                     )
