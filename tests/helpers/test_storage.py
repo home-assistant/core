@@ -37,6 +37,7 @@ from homeassistant.helpers import issue_registry as ir, storage
 from homeassistant.helpers.json import json_bytes, prepare_save_json
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
+from homeassistant.util.file import WriteError
 from homeassistant.util.json import JsonValueType
 
 MOCK_VERSION = 1
@@ -649,6 +650,36 @@ async def test_multiple_save_calls(
 
     data = await store.async_load()
     assert data == {"savecount": 5}
+
+
+async def test_save_error_propagates_to_caller(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test an awaited save reports a write failure to its caller."""
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    with (
+        patch.object(store, "_async_write_data", side_effect=WriteError("simulated")),
+        pytest.raises(WriteError),
+    ):
+        await store.async_save(MOCK_DATA)
+
+    assert store.key not in hass_storage
+
+
+async def test_delayed_save_error_is_logged_not_raised(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a delayed save failure is only logged, not raised."""
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    with patch.object(store, "_async_write_data", side_effect=WriteError("simulated")):
+        store.async_delay_save(lambda: MOCK_DATA, 0)
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    assert "Error writing config" in caplog.text
+    assert store.key not in hass_storage
 
 
 async def test_migrator_no_existing_config(
