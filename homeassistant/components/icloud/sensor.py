@@ -3,22 +3,32 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, override
+from functools import partial
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfInformation,
+    UnitOfLength,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .account import IcloudAccount, IcloudConfigEntry, IcloudDevice
-from .const import DEVICE_STATUS_CODES
+from .const import DEVICE_STATUS_CODES, DOMAIN
+from .coordinator import IcloudStorageCoordinator, IcloudStorageData
 from .entity import IcloudDeviceEntity
 
 BATTERY_STATUS_OPTIONS = ["charging", "full", "not_charging"]
@@ -187,6 +197,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for iCloud devices."""
+    _async_setup_storage(entry, async_add_entities)
     account = entry.runtime_data
     tracked = set[str]()
 
@@ -263,3 +274,125 @@ class IcloudDeviceSensor(IcloudDeviceEntity, SensorEntity):
         if not self.entity_description.legacy_attributes:
             return None
         return self._device.extra_state_attributes
+
+
+@dataclass(frozen=True, kw_only=True)
+class IcloudStorageSensorDescription(SensorEntityDescription):
+    """Describe an account storage sensor."""
+
+    value_fn: Callable[[IcloudStorageData], int | float | None]
+
+
+STORAGE_SENSORS = (
+    IcloudStorageSensorDescription(
+        key="total",
+        translation_key="storage_total",
+        value_fn=lambda data: data.total,
+    ),
+    IcloudStorageSensorDescription(
+        key="used",
+        translation_key="storage_used",
+        value_fn=lambda data: data.used,
+    ),
+    IcloudStorageSensorDescription(
+        key="free",
+        translation_key="storage_free",
+        value_fn=lambda data: data.free,
+    ),
+    IcloudStorageSensorDescription(
+        key="percentage",
+        translation_key="storage_percentage",
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda data: data.percentage,
+    ),
+)
+
+STORAGE_MEDIA = {"photos", "backup", "docs", "mail", "messages"}
+
+
+def _storage_media_value(data: IcloudStorageData, *, key: str) -> int | None:
+    """Return a category value if it is still present in the latest snapshot."""
+    return data.media.get(key)
+
+
+@callback
+def _async_setup_storage(
+    entry: IcloudConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up account storage and discover categories on subsequent refreshes."""
+    coordinator = entry.runtime_data.storage_coordinator
+    if TYPE_CHECKING:
+        assert coordinator is not None
+    async_add_entities(
+        IcloudStorageSensor(coordinator, entry, description)
+        for description in STORAGE_SENSORS
+    )
+    known: set[str] = set()
+
+    @callback
+    def add_media() -> None:
+        """Add sensors for storage categories first reported by Apple."""
+        if coordinator.data is None:
+            return
+        entities = []
+        for key in coordinator.data.media.keys() - known:
+            description = IcloudStorageSensorDescription(
+                key=f"media_{key}",
+                translation_key=(
+                    f"storage_{key}" if key in STORAGE_MEDIA else "storage_media"
+                ),
+                translation_placeholders={"name": coordinator.data.labels[key]},
+                value_fn=partial(_storage_media_value, key=key),
+            )
+            entities.append(IcloudStorageSensor(coordinator, entry, description))
+            known.add(key)
+        async_add_entities(entities)
+
+    add_media()
+    entry.async_on_unload(coordinator.async_add_listener(add_media))
+
+
+class IcloudStorageSensor(CoordinatorEntity[IcloudStorageCoordinator], SensorEntity):
+    """Account storage usage reported by iCloud."""
+
+    _attr_has_entity_name = True
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 1
+
+    entity_description: IcloudStorageSensorDescription
+
+    def __init__(
+        self,
+        coordinator: IcloudStorageCoordinator,
+        entry: IcloudConfigEntry,
+        description: IcloudStorageSensorDescription,
+    ) -> None:
+        """Initialize the storage sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{entry.unique_id}_storage_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.unique_id}_account")},
+            manufacturer="Apple",
+            name=entry.title,
+            entry_type=DeviceEntryType.SERVICE,
+        )
+        if description.native_unit_of_measurement != PERCENTAGE:
+            self._attr_device_class = SensorDeviceClass.DATA_SIZE
+            self._attr_native_unit_of_measurement = UnitOfInformation.BYTES
+            self._attr_suggested_unit_of_measurement = UnitOfInformation.GIGABYTES
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether a successful storage snapshot is available."""
+        return super().available and self.coordinator.data is not None
+
+    @property
+    @override
+    def native_value(self) -> int | float | None:
+        """Return usage from the current snapshot."""
+        if (data := self.coordinator.data) is None:
+            return None
+        return self.entity_description.value_fn(data)
