@@ -63,4 +63,8 @@ class FressnapfTrackerDataUpdateCoordinator(DataUpdateCoordinator[Tracker]):
                 translation_key="invalid_auth",
             ) from exception
         except FressnapfTrackerError as exception:
-            raise UpdateFailed(exception) from exception
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error_message": str(exception)},
+            ) from exception

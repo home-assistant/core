@@ -72,7 +72,11 @@ async def _get_valid_tracker(
         )
         return None
     except FressnapfTrackerError as err:
-        raise ConfigEntryNotReady(err) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="api_error",
+            translation_placeholders={"error_message": str(err)},
+        ) from err
 
 
 async def async_setup_entry(
