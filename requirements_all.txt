@@ -915,6 +915,7 @@ dremel3dpy==2.1.1
 dropmqttapi==1.0.3
 
 # homeassistant.components.dsmr
+# homeassistant.components.homey_energy_dongle
 dsmr-parser==1.11.1
 
 # homeassistant.components.dwd_weather_warnings
@@ -1371,6 +1372,9 @@ homematicip==2.22.0
 
 # homeassistant.components.homevolt
 homevolt==0.7.0
+
+# homeassistant.components.homey_energy_dongle
+homey-energy-dongle-ws==0.6.1
 
 # homeassistant.components.horizon
 horimote==0.4.1
