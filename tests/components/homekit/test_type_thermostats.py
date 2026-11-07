@@ -314,7 +314,7 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events: list[Event]) -
     )
     await hass.async_block_till_done()
     assert acc.char_target_temp.value == 22.0
-    assert acc.char_current_heat_cool.value == 2
+    assert acc.char_current_heat_cool.value == 0
     assert acc.char_target_heat_cool.value == 2
     assert acc.char_current_temp.value == 22.0
     assert acc.char_display_units.value == 0
@@ -3016,3 +3016,54 @@ async def test_climate_base_fan_swing_guards(hass: HomeAssistant, hk_driver) -> 
 
     assert len(call_set_fan_mode) == 0
     assert len(call_set_swing_mode) == 0
+
+
+@pytest.mark.parametrize(
+    ("initial_action", "initial_state"),
+    [
+        pytest.param(HVACAction.HEATING, HC_HEAT_COOL_HEAT, id="heating"),
+        pytest.param(HVACAction.COOLING, HC_HEAT_COOL_COOL, id="cooling"),
+    ],
+)
+async def test_fan_only_action_keeps_fan_active(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    initial_action: HVACAction,
+    initial_state: int,
+) -> None:
+    """Test fan circulation does not report active heating or cooling."""
+    entity_id = "climate.test"
+    attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.FAN_MODE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.OFF],
+        ATTR_TARGET_TEMP_LOW: 20.0,
+        ATTR_TARGET_TEMP_HIGH: 22.0,
+        ATTR_CURRENT_TEMPERATURE: 21.0,
+        ATTR_FAN_MODES: [FAN_LOW, FAN_HIGH],
+        ATTR_FAN_MODE: FAN_HIGH,
+        ATTR_HVAC_ACTION: initial_action,
+    }
+    hass.states.async_set(entity_id, HVACMode.HEAT_COOL, attrs)
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_current_heat_cool.value == initial_state
+    assert acc.char_current_fan_state.value == FAN_STATE_ACTIVE
+
+    hass.states.async_set(
+        entity_id, HVACMode.HEAT_COOL, {**attrs, ATTR_HVAC_ACTION: HVACAction.FAN}
+    )
+    await hass.async_block_till_done()
+
+    assert acc.char_current_heat_cool.value == HC_HEAT_COOL_OFF
+    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_AUTO
+    assert acc.char_current_fan_state.value == FAN_STATE_ACTIVE
+
+    hass.states.async_set(entity_id, HVACMode.HEAT_COOL, attrs)
+    await hass.async_block_till_done()
+
+    assert acc.char_current_heat_cool.value == initial_state
+    assert acc.char_current_fan_state.value == FAN_STATE_ACTIVE
