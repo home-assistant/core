@@ -9870,6 +9870,15 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "nepviewer": {
+      "name": "NEPViewer",
+      "integration_type": "hub",
+      "categories": [
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ness_alarm": {
       "name": "Ness Alarm",
       "integration_type": "hub",
