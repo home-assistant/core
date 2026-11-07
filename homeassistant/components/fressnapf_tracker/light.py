@@ -101,6 +101,20 @@ class FressnapfTrackerLight(FressnapfTrackerEntity, LightEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return if the flashlight can currently be used.
+
+        The Fressnapf app disables the flashlight while the tracker is asleep,
+        charging or has an empty battery. A flashlight that is already on stays
+        available so that it can still be turned off.
+        """
+        if not super().available:
+            return False
+        activatable = self.coordinator.data.led_activatable
+        return self.is_on or (activatable is not None and activatable.overall)
+
+    @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         if self.coordinator.data.led_brightness_value is not None:
