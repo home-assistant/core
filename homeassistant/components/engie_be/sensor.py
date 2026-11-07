@@ -620,7 +620,9 @@ class EngieBeActivePriceSensor(EngieBeTouEntity):
             and self._prices.last_update_success
             and prices_data is not None
             and self._supplier_schedule() is not None
-            and lookup_by_ean(prices_data.prices_by_ean, self._ean) is not None
+            and (ean_prices := lookup_by_ean(prices_data.prices_by_ean, self._ean))
+            is not None
+            and _has_price_slots(ean_prices, self._direction)
         )
 
     @property

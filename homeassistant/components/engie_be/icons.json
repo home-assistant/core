@@ -338,6 +338,7 @@
           "offpeak": "mdi:weather-night",
           "peak": "mdi:flash",
           "superoffpeak": "mdi:weather-sunny",
+          "total_hours": "mdi:clock-outline",
           "weekend": "mdi:calendar-today"
         }
       },
@@ -349,6 +350,7 @@
           "offpeak": "mdi:weather-night",
           "peak": "mdi:flash",
           "superoffpeak": "mdi:weather-sunny",
+          "total_hours": "mdi:clock-outline",
           "weekend": "mdi:calendar-today"
         }
       },
@@ -360,6 +362,7 @@
           "offpeak": "mdi:weather-night",
           "peak": "mdi:flash",
           "superoffpeak": "mdi:weather-sunny",
+          "total_hours": "mdi:clock-outline",
           "weekend": "mdi:calendar-today"
         }
       },
@@ -371,6 +374,7 @@
           "offpeak": "mdi:weather-night",
           "peak": "mdi:flash",
           "superoffpeak": "mdi:weather-sunny",
+          "total_hours": "mdi:clock-outline",
           "weekend": "mdi:calendar-today"
         }
       },
@@ -382,6 +386,7 @@
           "offpeak": "mdi:weather-night",
           "peak": "mdi:flash",
           "superoffpeak": "mdi:weather-sunny",
+          "total_hours": "mdi:clock-outline",
           "weekend": "mdi:calendar-today"
         }
       },
@@ -393,6 +398,7 @@
           "offpeak": "mdi:weather-night",
           "peak": "mdi:flash",
           "superoffpeak": "mdi:weather-sunny",
+          "total_hours": "mdi:clock-outline",
           "weekend": "mdi:calendar-today"
         }
       },
@@ -404,6 +410,7 @@
           "offpeak": "mdi:weather-night",
           "peak": "mdi:flash",
           "superoffpeak": "mdi:weather-sunny",
+          "total_hours": "mdi:clock-outline",
           "weekend": "mdi:calendar-today"
         }
       },
@@ -415,6 +422,7 @@
           "offpeak": "mdi:weather-night",
           "peak": "mdi:flash",
           "superoffpeak": "mdi:weather-sunny",
+          "total_hours": "mdi:clock-outline",
           "weekend": "mdi:calendar-today"
         }
       }
