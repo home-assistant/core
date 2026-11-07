@@ -39,6 +39,7 @@ class SkyHubCoordinator(DataUpdateCoordinator[dict[str, str]]):
             update_interval=SCAN_INTERVAL,
         )
         self.router = router
+        self.tracked_macs: set[str] = set()
 
     @override
     async def _async_setup(self) -> None:

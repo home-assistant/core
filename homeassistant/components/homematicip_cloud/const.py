@@ -23,6 +23,8 @@ PLATFORMS = [
     Platform.WEATHER,
 ]
 
+MODE_AWAY = "away"
+MODE_HOME = "home"
 SIGNAL_ARMING_BLOCKED = f"{DOMAIN}_arming_blocked_{{}}"
 
 CONF_ACCESSPOINT = "accesspoint"

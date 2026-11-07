@@ -10,6 +10,7 @@
   "categories": ["security_safety.locks_access"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/yalexs_ble",
   "integration_type": "device",

@@ -121,7 +121,7 @@ def mock_config_entry2(hass: HomeAssistant) -> MockConfigEntry:
         },
         unique_id="1234567",
         version=1,
-        minor_version=1,
+        minor_version=2,
     )
 
 

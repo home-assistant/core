@@ -718,6 +718,7 @@ class DPCode(StrEnum):
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
+    DROP_STATE = "drop_state"
     DUSTER_CLOTH = "duster_cloth"
     EC_CURRENT = "ec_current"
     ECO2 = "eco2"
@@ -751,6 +752,7 @@ class DPCode(StrEnum):
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
+    FLOW_RATE = "flow_rate"
     FOOD_STORAGE_STATUS = "food_storage_status"
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
     FROST = "frost"  # Frost protection

@@ -57,6 +57,9 @@
       "drop": {
         "name": "Drop"
       },
+      "fall": {
+        "name": "Fall"
+      },
       "feed_blocked": {
         "name": "Feed blocked"
       },

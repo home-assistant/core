@@ -33,10 +33,10 @@ async def test_dsmr_sensor_mqtt(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    electricity_delivered_1 = "sensor.dsmr_reading_electricity_delivered_1"
+    electricity_delivered_1 = "sensor.low_tariff_usage"
     assert hass.states.get(electricity_delivered_1).state == STATE_UNKNOWN
 
-    electricity_delivered_2 = "sensor.dsmr_reading_electricity_delivered_2"
+    electricity_delivered_2 = "sensor.high_tariff_usage"
     assert hass.states.get(electricity_delivered_2).state == STATE_UNKNOWN
 
     # Test if the payload is empty
