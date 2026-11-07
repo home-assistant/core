@@ -64,13 +64,14 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
                 translation_placeholders={"error": str(error)},
             ) from error
 
-        if (
-            not spa.info.mac_address
-            or spa.info.mac_address != self.config_entry.unique_id
-        ):
+        if spa.info.mac_address != self.config_entry.unique_id:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="unexpected_device",
+                translation_key="wrong_device",
+                translation_placeholders={
+                    "found": spa.info.mac_address or "unknown",
+                    "expected": str(self.config_entry.unique_id),
+                },
             )
 
         return spa

@@ -84,10 +84,10 @@ async def test_async_setup_error(
 
 
 @pytest.mark.parametrize(
-    "root_topic",
+    ("root_topic", "found"),
     [
-        "unknownTopic123",
-        "mySpa112233445566",
+        ("unknownTopic123", "unknown"),
+        ("mySpa112233445566", "11:22:33:44:55:66"),
     ],
 )
 async def test_async_setup_mac_mismatch(
@@ -96,6 +96,7 @@ async def test_async_setup_mac_mismatch(
     mock_config_entry: MockConfigEntry,
     device_fixture: Spa,
     root_topic: str,
+    found: str,
 ) -> None:
     """Test setup fails when spa MAC is missing or mismatched."""
     device_fixture.info.root_topic = root_topic
@@ -103,4 +104,7 @@ async def test_async_setup_mac_mismatch(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.reason == "Found a different device at the configured host"
+    assert mock_config_entry.reason == (
+        f"The device at the configured host has MAC address {found},"
+        " not AA:BB:CC:DD:EE:FF"
+    )
