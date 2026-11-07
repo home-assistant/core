@@ -1403,7 +1403,7 @@
     'state': '0.116468',
   })
 # ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_current_electricity_price-entry]
+# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_current_electricity_injection_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1419,7 +1419,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.main_street_1_1000_brussels_current_electricity_price',
+    'entity_id': 'sensor.main_street_1_1000_brussels_current_electricity_injection_price',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1427,7 +1427,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current electricity price',
+    'object_id_base': 'Current electricity injection price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 6,
@@ -1435,21 +1435,83 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Current electricity price',
+    'original_name': 'Current electricity injection price',
     'platform': 'engie_be',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_current_price',
-    'unique_id': '000000000001_541448820000000002_ID1_current_price',
+    'translation_key': 'electricity_current_injection_price',
+    'unique_id': '000000000001_541448820000000002_ID1_injection_current_price',
     'unit_of_measurement': 'EUR/kWh',
   })
 # ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_current_electricity_price-state]
+# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_current_electricity_injection_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Current electricity price',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Current electricity injection price',
+      'next_price': None,
+      'next_slot_code': 'offpeak',
+      'next_transition': HAFakeDatetime(2026, 10, 3, 22, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Brussels')),
+      'slot_code': 'peak',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.main_street_1_1000_brussels_current_electricity_injection_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.05',
+  })
+# ---
+# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_current_electricity_offtake_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('engie_be', '000000000001')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.main_street_1_1000_brussels_current_electricity_offtake_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current electricity offtake price',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 6,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current electricity offtake price',
+    'platform': 'engie_be',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_current_offtake_price',
+    'unique_id': '000000000001_541448820000000002_ID1_offtake_current_price',
+    'unit_of_measurement': 'EUR/kWh',
+  })
+# ---
+# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_current_electricity_offtake_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Current electricity offtake price',
       'next_price': 0.12,
       'next_slot_code': 'exclusive_night',
       'next_transition': HAFakeDatetime(2026, 10, 3, 22, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Brussels')),
@@ -1458,7 +1520,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.main_street_1_1000_brussels_current_electricity_price',
+    'entity_id': 'sensor.main_street_1_1000_brussels_current_electricity_offtake_price',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1935,7 +1997,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'offpeak',
+        'peak',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -1954,7 +2021,7 @@
     'object_id_base': 'Grid operator offtake slot',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Grid operator offtake slot',
     'platform': 'engie_be',
@@ -1970,9 +2037,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Grid operator offtake slot',
       'next_transition': HAFakeDatetime(2026, 10, 3, 22, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Brussels')),
       'optimal_slot': 'offpeak',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'offpeak',
+        'peak',
+      ]),
       'weekday_slots': dict({
         'friday': list([
           dict({
@@ -2088,7 +2160,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'offpeak',
+        'peak',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -2107,7 +2184,7 @@
     'object_id_base': 'Supplier injection slot',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Supplier injection slot',
     'platform': 'engie_be',
@@ -2123,9 +2200,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Supplier injection slot',
       'next_transition': HAFakeDatetime(2026, 10, 3, 22, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Brussels')),
       'optimal_slot': 'peak',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'offpeak',
+        'peak',
+      ]),
       'weekday_slots': dict({
         'friday': list([
           dict({
@@ -2241,7 +2323,12 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'exclusive_night',
+        'peak',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
@@ -2260,7 +2347,7 @@
     'object_id_base': 'Supplier offtake slot',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Supplier offtake slot',
     'platform': 'engie_be',
@@ -2276,9 +2363,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Supplier offtake slot',
       'next_transition': HAFakeDatetime(2026, 10, 3, 22, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Brussels')),
       'optimal_slot': 'exclusive_night',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'exclusive_night',
+        'peak',
+      ]),
       'weekday_slots': dict({
         'friday': list([
           dict({

@@ -1305,6 +1305,7 @@ async def test_tou_entities(
     supplier_offtake = hass.states.get(supplier_offtake_id)
     assert supplier_offtake is not None
     assert supplier_offtake.state == "peak"
+    assert supplier_offtake.attributes["options"] == ["exclusive_night", "peak"]
     assert supplier_offtake.attributes["optimal_slot"] == "exclusive_night"
     assert supplier_offtake.attributes["next_transition"] == datetime(
         2026, 10, 3, 22, 0, tzinfo=BRUSSELS_TIME_ZONE
@@ -1340,7 +1341,7 @@ async def test_tou_entities(
     )
 
     active_price_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
     )
     assert active_price_id is not None
     active_price = hass.states.get(active_price_id)
@@ -1352,6 +1353,16 @@ async def test_tou_entities(
     )
     assert active_price.attributes["next_slot_code"] == "exclusive_night"
     assert float(active_price.attributes["next_price"]) == pytest.approx(0.12)
+
+    injection_price_id = _tou_entity_id(
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_current_price"
+    )
+    assert injection_price_id is not None
+    injection_price = hass.states.get(injection_price_id)
+    assert injection_price is not None
+    assert float(injection_price.state) == pytest.approx(0.05)
+    assert injection_price.attributes["slot_code"] == "peak"
+    assert injection_price.attributes["next_slot_code"] == "offpeak"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "frozen_afternoon")
@@ -1405,13 +1416,20 @@ async def test_tou_boundary_updates(
     assert hass.states.get(grid_offtake_id).state == "offpeak"
 
     active_price_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
     )
     active_price = hass.states.get(active_price_id)
     assert float(active_price.state) == pytest.approx(0.12)
     assert active_price.attributes["slot_code"] == "exclusive_night"
     assert active_price.attributes["next_slot_code"] == "peak"
     assert float(active_price.attributes["next_price"]) == pytest.approx(0.18)
+
+    injection_price_id = _tou_entity_id(
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_current_price"
+    )
+    injection_price = hass.states.get(injection_price_id)
+    assert injection_price.state == STATE_UNKNOWN
+    assert injection_price.attributes["slot_code"] == "offpeak"
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
@@ -1434,7 +1452,8 @@ async def test_tou_single_rate_schedules_create_no_entities(
         f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_injection_slot",
         f"{BAN}_{OFFTAKE_INJECTION_EAN}_grid_offtake_slot",
         f"{BAN}_{OFFTAKE_INJECTION_EAN}_grid_injection_slot",
-        f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price",
+        f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price",
+        f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_current_price",
     ):
         assert _tou_entity_id(entity_registry, unique_id) is None
 
@@ -1458,7 +1477,15 @@ async def test_tou_dynamic_household_has_no_active_price(
         is not None
     )
     assert (
-        _tou_entity_id(entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price")
+        _tou_entity_id(
+            entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
+        )
+        is None
+    )
+    assert (
+        _tou_entity_id(
+            entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_current_price"
+        )
         is None
     )
 
@@ -1522,7 +1549,7 @@ async def test_tou_schedules_failure_degrades_entities(
     )
     assert hass.states.get(supplier_offtake_id).state == "peak"
     active_price_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
     )
     assert hass.states.get(active_price_id).state != STATE_UNAVAILABLE
 
@@ -1554,7 +1581,9 @@ async def test_tou_entities_created_despite_prices_failure(
     assert supplier_offtake_id is not None
     assert hass.states.get(supplier_offtake_id).state == "peak"
     assert (
-        _tou_entity_id(entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price")
+        _tou_entity_id(
+            entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
+        )
         is None
     )
 
@@ -1579,7 +1608,9 @@ async def test_active_price_absent_while_tariff_unknown(
         is not None
     )
     assert (
-        _tou_entity_id(entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price")
+        _tou_entity_id(
+            entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
+        )
         is None
     )
 
@@ -1598,7 +1629,9 @@ async def test_active_price_appears_when_retry_resolves_fixed(
     client.async_get_tou_schedules.return_value = build_tou_schedules()
     await setup_entry(hass, mock_config_entry)
     assert (
-        _tou_entity_id(entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price")
+        _tou_entity_id(
+            entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
+        )
         is None
     )
 
@@ -1607,7 +1640,7 @@ async def test_active_price_appears_when_retry_resolves_fixed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     active_price_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
     )
     assert active_price_id is not None
     active_price = hass.states.get(active_price_id)
@@ -1655,11 +1688,13 @@ async def test_tou_entities_with_ean_suffix_for_duplicate_type(
         (f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_offtake_slot", "0002"),
         (f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_injection_slot", "0002"),
         (f"{BAN}_{OFFTAKE_INJECTION_EAN}_grid_offtake_slot", "0002"),
-        (f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price", "0002"),
+        (f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price", "0002"),
+        (f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_current_price", "0002"),
         (f"{BAN}_{ELECTRICITY_EAN_2}_tou_offtake_slot", "0003"),
         (f"{BAN}_{ELECTRICITY_EAN_2}_tou_injection_slot", "0003"),
         (f"{BAN}_{ELECTRICITY_EAN_2}_grid_offtake_slot", "0003"),
-        (f"{BAN}_{ELECTRICITY_EAN_2}_current_price", "0003"),
+        (f"{BAN}_{ELECTRICITY_EAN_2}_offtake_current_price", "0003"),
+        (f"{BAN}_{ELECTRICITY_EAN_2}_injection_current_price", "0003"),
     ):
         entity_id = _tou_entity_id(entity_registry, unique_id)
         assert entity_id is not None
@@ -1701,7 +1736,7 @@ async def test_active_price_boundary_survives_unmatched_slot(
     await setup_entry(hass, mock_config_entry)
 
     active_price_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
     )
     assert float(hass.states.get(active_price_id).state) == pytest.approx(0.18)
 
@@ -1736,7 +1771,7 @@ async def test_active_price_created_with_bare_ean_prices(
     await setup_entry(hass, mock_config_entry)
 
     active_price_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
     )
     assert active_price_id is not None
     assert float(hass.states.get(active_price_id).state) == pytest.approx(0.18)
@@ -1772,7 +1807,7 @@ async def test_active_price_unavailable_when_meter_dropped_from_data(
     await setup_entry(hass, mock_config_entry)
 
     active_price_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
     )
     assert hass.states.get(active_price_id).state != STATE_UNAVAILABLE
 
@@ -1894,7 +1929,7 @@ async def test_active_price_wakes_at_period_boundary_without_refresh(
     await setup_entry(hass, mock_config_entry)
 
     active_price_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
     )
     active_price = hass.states.get(active_price_id)
     assert active_price.state == initial_state

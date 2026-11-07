@@ -18,6 +18,7 @@ from aioengiebelgium import (
 )
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -149,24 +150,33 @@ def _build_tou_entities(
                 )
                 if entity.unique_id not in known_unique_ids:
                     entities.append(entity)
-        if (
-            household.is_dynamic is False
-            and prices_data is not None
-            and meter.supplier is not None
-            and meter.supplier.offtake is not None
-            and meter.supplier.offtake.has_multiple_slot_codes()
-            and lookup_by_ean(prices_data.prices_by_ean, ean) is not None
-        ):
-            active_entity = EngieBeActivePriceSensor(
-                household.tou,
-                prices=household.prices,
-                ban=ban,
-                ean=ean,
-                device_info=household.prices.device_info,
-                ean_suffix=ean_suffix,
-            )
-            if active_entity.unique_id not in known_unique_ids:
-                entities.append(active_entity)
+        if household.is_dynamic is False and prices_data is not None:
+            supplier = meter.supplier
+            if supplier is not None:
+                active_direction_schedules: dict[
+                    Literal["offtake", "injection"], TouDirectionSchedule | None
+                ] = {
+                    "offtake": supplier.offtake,
+                    "injection": supplier.injection,
+                }
+                for direction, direction_schedule in active_direction_schedules.items():
+                    if (
+                        direction_schedule is None
+                        or not direction_schedule.has_multiple_slot_codes()
+                        or lookup_by_ean(prices_data.prices_by_ean, ean) is None
+                    ):
+                        continue
+                    active_entity = EngieBeActivePriceSensor(
+                        household.tou,
+                        prices=household.prices,
+                        ban=ban,
+                        ean=ean,
+                        direction=direction,
+                        device_info=household.prices.device_info,
+                        ean_suffix=ean_suffix,
+                    )
+                    if active_entity.unique_id not in known_unique_ids:
+                        entities.append(active_entity)
     return entities
 
 
@@ -401,6 +411,8 @@ class EngieBeTouEntity(CoordinatorEntity[EngieBeTouCoordinator], SensorEntity):
 class EngieBeTouSlotSensor(EngieBeTouEntity):
     """Current time-of-use slot of one direction on one meter."""
 
+    _attr_device_class = SensorDeviceClass.ENUM
+
     def __init__(
         self,
         coordinator: EngieBeTouCoordinator,
@@ -456,6 +468,21 @@ class EngieBeTouSlotSensor(EngieBeTouEntity):
 
     @property
     @override
+    def options(self) -> list[str] | None:
+        """Return the slot codes this meter's schedule switches between."""
+        schedule = self._direction_schedule()
+        if schedule is None:
+            return None
+        return sorted(
+            {
+                slot.slot_code
+                for weekday in range(7)
+                for slot in schedule.slots_for_weekday(weekday)
+            }
+        )
+
+    @property
+    @override
     def available(self) -> bool:
         """Return True while the schedule data of this direction is present."""
         return super().available and self._direction_schedule() is not None
@@ -494,7 +521,7 @@ class EngieBeTouSlotSensor(EngieBeTouEntity):
 
 
 class EngieBeActivePriceSensor(EngieBeTouEntity):
-    """Electricity offtake price that applies right now on the supplier schedule."""
+    """Electricity price that applies right now on the supplier schedule."""
 
     _attr_native_unit_of_measurement = _UNIT
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -507,6 +534,7 @@ class EngieBeActivePriceSensor(EngieBeTouEntity):
         prices: EngieBePricesCoordinator,
         ban: str,
         ean: str,
+        direction: Literal["offtake", "injection"],
         device_info: DeviceInfo,
         ean_suffix: str = "",
     ) -> None:
@@ -514,14 +542,15 @@ class EngieBeActivePriceSensor(EngieBeTouEntity):
         super().__init__(coordinator)
         self._prices = prices
         self._ean = ean
+        self._direction = direction
         self._attr_device_info = device_info
         translation_key, placeholders = _ean_aware_translation(
-            "electricity_current_price", ean_suffix
+            f"electricity_current_{direction}_price", ean_suffix
         )
         self._attr_translation_key = translation_key
         if placeholders:
             self._attr_translation_placeholders = placeholders
-        self._attr_unique_id = f"{ban}_{ean}_current_price"
+        self._attr_unique_id = f"{ban}_{ean}_{direction}_current_price"
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -548,7 +577,7 @@ class EngieBeActivePriceSensor(EngieBeTouEntity):
             return None
         return ean_prices.active_tou_price(
             schedule,
-            "offtake",
+            self._direction,
             dt_util.now(BRUSSELS_TIME_ZONE),
             BRUSSELS_TIME_ZONE,
         )
@@ -560,9 +589,14 @@ class EngieBeActivePriceSensor(EngieBeTouEntity):
         if active is not None:
             return active.next_transition
         schedule = self._supplier_schedule()
-        if schedule is None or schedule.offtake is None:
+        if schedule is None:
             return None
-        return schedule.offtake.current_slot(
+        direction_schedule = (
+            schedule.offtake if self._direction == "offtake" else schedule.injection
+        )
+        if direction_schedule is None:
+            return None
+        return direction_schedule.current_slot(
             dt_util.now(BRUSSELS_TIME_ZONE), BRUSSELS_TIME_ZONE
         )[1]
 

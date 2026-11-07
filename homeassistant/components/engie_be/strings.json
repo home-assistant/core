@@ -52,11 +52,17 @@
       }
     },
     "sensor": {
-      "electricity_current_price": {
-        "name": "Current electricity price"
+      "electricity_current_injection_price": {
+        "name": "Current electricity injection price"
       },
-      "electricity_current_price_with_ean": {
-        "name": "Current electricity price ({ean_suffix})"
+      "electricity_current_injection_price_with_ean": {
+        "name": "Current electricity injection price ({ean_suffix})"
+      },
+      "electricity_current_offtake_price": {
+        "name": "Current electricity offtake price"
+      },
+      "electricity_current_offtake_price_with_ean": {
+        "name": "Current electricity offtake price ({ean_suffix})"
       },
       "electricity_price_injection": {
         "name": "Electricity injection price"
@@ -383,28 +389,92 @@
         "name": "Gas offtake price ({ean_suffix})"
       },
       "grid_injection_slot": {
-        "name": "Grid operator injection slot"
+        "name": "Grid operator injection slot",
+        "state": {
+          "exclusive_night": "Exclusive night",
+          "offpeak": "Off-peak",
+          "peak": "Peak",
+          "superoffpeak": "Super off-peak",
+          "total_hours": "Total hours",
+          "weekend": "Weekend"
+        }
       },
       "grid_injection_slot_with_ean": {
-        "name": "Grid operator injection slot ({ean_suffix})"
+        "name": "Grid operator injection slot ({ean_suffix})",
+        "state": {
+          "exclusive_night": "Exclusive night",
+          "offpeak": "Off-peak",
+          "peak": "Peak",
+          "superoffpeak": "Super off-peak",
+          "total_hours": "Total hours",
+          "weekend": "Weekend"
+        }
       },
       "grid_offtake_slot": {
-        "name": "Grid operator offtake slot"
+        "name": "Grid operator offtake slot",
+        "state": {
+          "exclusive_night": "Exclusive night",
+          "offpeak": "Off-peak",
+          "peak": "Peak",
+          "superoffpeak": "Super off-peak",
+          "total_hours": "Total hours",
+          "weekend": "Weekend"
+        }
       },
       "grid_offtake_slot_with_ean": {
-        "name": "Grid operator offtake slot ({ean_suffix})"
+        "name": "Grid operator offtake slot ({ean_suffix})",
+        "state": {
+          "exclusive_night": "Exclusive night",
+          "offpeak": "Off-peak",
+          "peak": "Peak",
+          "superoffpeak": "Super off-peak",
+          "total_hours": "Total hours",
+          "weekend": "Weekend"
+        }
       },
       "tou_injection_slot": {
-        "name": "Supplier injection slot"
+        "name": "Supplier injection slot",
+        "state": {
+          "exclusive_night": "Exclusive night",
+          "offpeak": "Off-peak",
+          "peak": "Peak",
+          "superoffpeak": "Super off-peak",
+          "total_hours": "Total hours",
+          "weekend": "Weekend"
+        }
       },
       "tou_injection_slot_with_ean": {
-        "name": "Supplier injection slot ({ean_suffix})"
+        "name": "Supplier injection slot ({ean_suffix})",
+        "state": {
+          "exclusive_night": "Exclusive night",
+          "offpeak": "Off-peak",
+          "peak": "Peak",
+          "superoffpeak": "Super off-peak",
+          "total_hours": "Total hours",
+          "weekend": "Weekend"
+        }
       },
       "tou_offtake_slot": {
-        "name": "Supplier offtake slot"
+        "name": "Supplier offtake slot",
+        "state": {
+          "exclusive_night": "Exclusive night",
+          "offpeak": "Off-peak",
+          "peak": "Peak",
+          "superoffpeak": "Super off-peak",
+          "total_hours": "Total hours",
+          "weekend": "Weekend"
+        }
       },
       "tou_offtake_slot_with_ean": {
-        "name": "Supplier offtake slot ({ean_suffix})"
+        "name": "Supplier offtake slot ({ean_suffix})",
+        "state": {
+          "exclusive_night": "Exclusive night",
+          "offpeak": "Off-peak",
+          "peak": "Peak",
+          "superoffpeak": "Super off-peak",
+          "total_hours": "Total hours",
+          "weekend": "Weekend"
+        }
       }
     }
   },
