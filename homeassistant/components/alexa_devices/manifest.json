@@ -14,6 +14,6 @@
   "loggers": ["aioamazondevices"],
   "quality_scale": "platinum",
   "requirements": [
-    "git+https://github.com/chemelli74/aioamazondevices.git@refs/pull/1040/head#aioamazondevices==17.2.4"
+    "git+https://github.com/chemelli74/aioamazondevices.git@refs/pull/1040/head#aioamazondevices==17.2.5"
   ]
 }

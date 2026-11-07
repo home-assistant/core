@@ -23,7 +23,6 @@ from pyicloud.exceptions import (
 
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -32,7 +31,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.storage import Store
 
-from .account import code_can_be_delivered, is_2fa_status, is_auth_error
+from .account import (
+    IcloudConfigEntry,
+    code_can_be_delivered,
+    is_2fa_status,
+    is_auth_error,
+)
 from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_INCLUDE_COMPLETED,
@@ -677,7 +681,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: IcloudConfigEntry,
     ) -> IcloudOptionsFlowHandler:
         """Get the options flow for this handler."""
         return IcloudOptionsFlowHandler()

@@ -109,7 +109,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 @callback
 def _async_register_base_station(
-    hass: HomeAssistant, entry: ConfigEntry, system: SystemType
+    hass: HomeAssistant, entry: SimpliSafeConfigEntry, system: SystemType
 ) -> None:
     """Register a new bridge."""
     device_registry = dr.async_get(hass)
@@ -141,7 +141,10 @@ def _async_register_base_station(
 
 @callback
 def _async_register_camera(
-    hass: HomeAssistant, entry: ConfigEntry, system: SystemType, camera: Camera
+    hass: HomeAssistant,
+    entry: SimpliSafeConfigEntry,
+    system: SystemType,
+    camera: Camera,
 ) -> None:
     """Register a camera device."""
     if not isinstance(system, SystemV3):
@@ -168,7 +171,9 @@ def _async_register_camera(
 
 
 @callback
-def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def _async_standardize_config_entry(
+    hass: HomeAssistant, entry: SimpliSafeConfigEntry
+) -> None:
     """Bring a config entry up to current standards."""
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed(
@@ -220,7 +225,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
 
     current_options = {**entry.options}
 
-    async def async_reload_entry(_: HomeAssistant, updated_entry: ConfigEntry) -> None:
+    async def async_reload_entry(
+        _: HomeAssistant, updated_entry: SimpliSafeConfigEntry
+    ) -> None:
         """Handle an options update.
 
         This method will get called in two scenarios:
@@ -248,7 +255,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) 
 class SimpliSafe:
     """Define a SimpliSafe data object."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: API) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: SimpliSafeConfigEntry, api: API
+    ) -> None:
         """Initialize."""
         self._api = api
         self._hass = hass
