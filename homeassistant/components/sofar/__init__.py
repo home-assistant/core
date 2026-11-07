@@ -199,8 +199,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-def _battery_pack_number(serial: str, identifier: str) -> int | None:
-    """The battery pack a device identifier names, if it names one."""
+def _battery_string_number(serial: str, identifier: str) -> int | None:
+    """The battery string a device identifier names, if it names one."""
     prefix = f"{serial}_battery_"
     if not identifier.startswith(prefix):
         return None
@@ -214,7 +214,7 @@ async def async_remove_config_entry_device(
     config_entry: SofarConfigEntry,
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
-    """Allow removing a battery pack the inverter no longer reports."""
+    """Allow removing a battery string the inverter no longer reports."""
     serial = config_entry.unique_id
     if TYPE_CHECKING:
         assert serial is not None
@@ -223,23 +223,23 @@ async def async_remove_config_entry_device(
         if config_entry.state is ConfigEntryState.LOADED
         else None
     )
-    packs: set[int] = set()
+    strings: set[int] = set()
     for domain, identifier in device_entry.identifiers:
         if domain != DOMAIN:
             continue
         if identifier == serial or identifier.startswith(f"{serial}_pv_string_"):
             return False
-        if (number := _battery_pack_number(serial, identifier)) is None:
+        if (number := _battery_string_number(serial, identifier)) is None:
             continue
         if (
             runtime_data is not None
             and number in runtime_data.readings.device.wired_battery_strings
         ):
             return False
-        packs.add(number)
+        strings.add(number)
 
     if runtime_data is not None:
-        runtime_data.wired_packs -= packs
+        runtime_data.added_battery_strings -= strings
     return True
 
 
