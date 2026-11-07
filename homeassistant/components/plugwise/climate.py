@@ -104,8 +104,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
         """Set up the Plugwise API."""
         super().__init__(coordinator, device_id)
 
-        model_name = (
-            f"{self.device.get('model', 'thermostat')}".lower().replace(" ", "-")
+        model_name = f"{self.device.get('model', 'thermostat')}".lower().replace(
+            " ", "-"
         )
         self._attr_unique_id = f"{device_id}-{model_name}"
 
