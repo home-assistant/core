@@ -916,7 +916,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 Namespace,
             ),
         ):
-            return attr[0] != "_"
+            return not attr.startswith("_")
 
         return super().is_safe_attribute(obj, attr, value)
 
