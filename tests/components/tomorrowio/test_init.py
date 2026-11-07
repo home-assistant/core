@@ -1,7 +1,7 @@
 """Tests for Tomorrow.io init."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -125,6 +125,36 @@ async def test_update_intervals(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(tomorrowio_config_entry_update.call_args_list) == 2
+
+
+async def test_update_interval_floor(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    tomorrowio_config_entry_update: AsyncMock,
+) -> None:
+    """Test a high daily request limit does not poll more often than the floor."""
+    config_entry = make_v2_config_entry()
+    config_entry.add_to_hass(hass)
+    # ceil(24 * 60 * 1 * 2 / 90000) = 1 minute without the floor
+    with patch(
+        "homeassistant.components.tomorrowio.TomorrowioV4.max_requests_per_day",
+        new_callable=PropertyMock,
+        return_value=100_000,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(tomorrowio_config_entry_update.call_args_list) == 1
+        tomorrowio_config_entry_update.reset_mock()
+
+        freezer.tick(timedelta(minutes=4))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert len(tomorrowio_config_entry_update.call_args_list) == 0
+
+        freezer.tick(timedelta(minutes=1, seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert len(tomorrowio_config_entry_update.call_args_list) == 1
 
 
 async def test_migrate_entry_v1_to_v2(
