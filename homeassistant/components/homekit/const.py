@@ -65,6 +65,7 @@ CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_MAX_FPS = "max_fps"
 CONF_MAX_HEIGHT = "max_height"
 CONF_MAX_WIDTH = "max_width"
+CONF_SECURE_VIDEO = "secure_video"
 CONF_STREAM_ADDRESS = "stream_address"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_SUPPORT_AUDIO = "support_audio"
@@ -77,6 +78,7 @@ CONF_VIDEO_PACKET_SIZE = "video_packet_size"
 CONF_STREAM_COUNT = "stream_count"
 
 # #### Config Defaults ####
+DEFAULT_SECURE_VIDEO = False
 DEFAULT_SUPPORT_AUDIO = False
 DEFAULT_AUDIO_CODEC = AUDIO_CODEC_OPUS
 DEFAULT_AUDIO_MAP = "0:a:0"

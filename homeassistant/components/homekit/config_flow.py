@@ -47,6 +47,7 @@ from .const import (
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
+    CONF_SECURE_VIDEO,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
     DEFAULT_CONFIG_FLOW_PORT,
@@ -65,6 +66,7 @@ from .util import async_find_next_available_port, state_needs_accessory_mode
 
 CONF_CAMERA_AUDIO = "camera_audio"
 CONF_CAMERA_COPY = "camera_copy"
+CONF_CAMERA_SECURE_VIDEO = "camera_secure_video"
 CONF_INCLUDE_EXCLUDE_MODE = "include_exclude_mode"
 
 CLIMATE_TYPE_AUTOMATIC = "automatic"
@@ -566,6 +568,11 @@ class OptionsFlowHandler(OptionsFlow):
                 elif CONF_SUPPORT_AUDIO in entity_config:
                     del entity_config[CONF_SUPPORT_AUDIO]
 
+                if entity_id in user_input.get(CONF_CAMERA_SECURE_VIDEO, []):
+                    entity_config[CONF_SECURE_VIDEO] = True
+                elif CONF_SECURE_VIDEO in entity_config:
+                    del entity_config[CONF_SECURE_VIDEO]
+
                 if not entity_config:
                     all_entity_config.pop(entity_id)
 
@@ -573,6 +580,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         cameras_with_audio = []
         cameras_with_copy = []
+        cameras_with_secure_video = []
         all_entity_config = hk_options.setdefault(CONF_ENTITY_CONFIG, {})
         for entity in self.included_cameras:
             entity_config = all_entity_config.get(entity, {})
@@ -580,27 +588,30 @@ class OptionsFlowHandler(OptionsFlow):
                 cameras_with_copy.append(entity)
             if entity_config.get(CONF_SUPPORT_AUDIO):
                 cameras_with_audio.append(entity)
+            if entity_config.get(CONF_SECURE_VIDEO):
+                cameras_with_secure_video.append(entity)
 
-        data_schema = probatio.Schema(
-            {
-                probatio.Optional(
-                    CONF_CAMERA_COPY, default=cameras_with_copy
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        multiple=True,
-                        include_entities=(self.included_cameras),
-                    )
-                ),
-                probatio.Optional(
-                    CONF_CAMERA_AUDIO, default=cameras_with_audio
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        multiple=True,
-                        include_entities=(self.included_cameras),
-                    )
-                ),
-            }
+        camera_selector = selector.EntitySelector(
+            selector.EntitySelectorConfig(
+                multiple=True, include_entities=self.included_cameras
+            )
         )
+        schema: dict[probatio.Marker, selector.EntitySelector] = {
+            probatio.Optional(
+                CONF_CAMERA_COPY, default=cameras_with_copy
+            ): camera_selector,
+            probatio.Optional(
+                CONF_CAMERA_AUDIO, default=cameras_with_audio
+            ): camera_selector,
+        }
+        # Recordings need the camera as its own accessory.
+        if hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
+            schema[
+                probatio.Optional(
+                    CONF_CAMERA_SECURE_VIDEO, default=cameras_with_secure_video
+                )
+            ] = camera_selector
+        data_schema = probatio.Schema(schema)
         return self.async_show_form(step_id="cameras", data_schema=data_schema)
 
     async def async_step_accessory(

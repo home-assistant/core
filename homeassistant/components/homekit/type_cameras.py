@@ -1,8 +1,14 @@
 """Class to hold all camera accessories."""
 
 import asyncio
+from collections import deque
+from collections.abc import AsyncIterator
+from dataclasses import asdict
 from datetime import datetime, timedelta
 import logging
+import math
+import re
+import shlex
 from typing import TYPE_CHECKING, Any, override
 
 from haffmpeg.core import FFMPEG_STDERR, HAFFmpeg
@@ -12,7 +18,9 @@ from pyhap.camera import (
     VIDEO_CODEC_PARAM_PROFILE_ID_TYPES,
     Camera as PyhapCamera,
 )
-from pyhap.const import CATEGORY_CAMERA
+from pyhap.const import CATEGORY_CAMERA, STANDALONE_AID
+from pyhap.hds_recording import RecordingPacket, fmp4_recording_packets
+from pyhap.hksv_recording import AudioSampleRate, SelectedRecordingConfiguration
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import camera
@@ -44,6 +52,7 @@ from .const import (
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
+    CONF_SECURE_VIDEO,
     CONF_STREAM_ADDRESS,
     CONF_STREAM_COUNT,
     CONF_STREAM_SOURCE,
@@ -58,6 +67,7 @@ from .const import (
     DEFAULT_MAX_FPS,
     DEFAULT_MAX_HEIGHT,
     DEFAULT_MAX_WIDTH,
+    DEFAULT_SECURE_VIDEO,
     DEFAULT_STREAM_COUNT,
     DEFAULT_SUPPORT_AUDIO,
     DEFAULT_VIDEO_CODEC,
@@ -65,6 +75,8 @@ from .const import (
     DEFAULT_VIDEO_PACKET_SIZE,
     DEFAULT_VIDEO_PROFILE_NAMES,
     SERV_MOTION_SENSOR,
+    VIDEO_CODEC_COPY,
+    VIDEO_CODEC_LIBX264,
 )
 from .doorbell import HomeDoorbellAccessory
 from .util import pid_is_alive, state_changed_event_is_same_state
@@ -97,6 +109,92 @@ AUDIO_OUTPUT = (
     "-ssrc {a_ssrc} -f rtp "
     "rtp://127.0.0.1:{a_proxy_port}?pkt_size={a_pkt_size}"
 )
+
+RECORDING_LEVELS = ("3.1", "3.2", "4.0")
+
+RECORDING_SAMPLE_RATES = {
+    AudioSampleRate.KHZ_8: 8000,
+    AudioSampleRate.KHZ_16: 16000,
+    AudioSampleRate.KHZ_24: 24000,
+    AudioSampleRate.KHZ_32: 32000,
+    AudioSampleRate.KHZ_44_1: 44100,
+    AudioSampleRate.KHZ_48: 48000,
+}
+
+# A recording ends when ffmpeg delivers no fragment for this many fragment lengths.
+RECORDING_STALL_FRAGMENTS = 3
+# Covers connecting to the camera, and a copied stream waiting for a keyframe.
+RECORDING_MIN_STALL_SECONDS = 30
+RECORDING_STDERR_LINES = 10
+# ffmpeg exits right after its output ends, a hang must not block the recording.
+RECORDING_EXIT_TIMEOUT = 5
+# ffmpeg errors can quote the input URL, which may carry credentials or tokens.
+RECORDING_STDERR_URL = re.compile(rb"[A-Za-z][A-Za-z0-9+.-]*://\S*[^\s:]")
+
+RECORDING_OUTPUT = (
+    "-f mp4 -movflags frag_keyframe+empty_moov+default_base_moof+skip_trailer -"
+)
+
+
+def recording_ffmpeg_args(
+    config: dict[str, Any],
+    selected: SelectedRecordingConfiguration,
+    input_source: str,
+    audio_active: bool,
+) -> tuple[str, str]:
+    """Return the ffmpeg input and output arguments for a recording."""
+    video = selected.video
+    attributes = video.attributes[0]
+    video_codec = config[CONF_VIDEO_CODEC]
+    if video_codec == VIDEO_CODEC_COPY:
+        # Fragments follow the camera GOP, the camera sets the keyframe interval.
+        video_args = f"-map {config[CONF_VIDEO_MAP]} -c:v copy"
+    else:
+        fps = attributes.frame_rate
+        iframe_seconds = video.iframe_interval_ms / 1000
+        encoder_args = ""
+        if video_codec == VIDEO_CODEC_LIBX264:
+            # Hardware encoders take no level string.
+            encoder_args = (
+                f"-level:v {RECORDING_LEVELS[int(video.level)]} "
+                "-preset veryfast -tune zerolatency "
+            )
+        video_args = (
+            f"-map {config[CONF_VIDEO_MAP]} -c:v {video_codec} "
+            f"-profile:v {config[CONF_VIDEO_PROFILE_NAMES][int(video.profile)]} "
+            f"{encoder_args}-pix_fmt yuv420p "
+            f"-vf \"scale=w='min({attributes.width},iw)':"
+            f"h='min({attributes.height},ih)':force_original_aspect_ratio=decrease:"
+            'force_divisible_by=2" '
+            f"-r {fps} -b:v {video.bitrate_kbps}k -maxrate {video.bitrate_kbps}k "
+            f"-bufsize {video.bitrate_kbps * 2}k -bf 0 "
+            f"-g {math.ceil(fps * iframe_seconds)} "
+            f"-force_key_frames expr:gte(t,n_forced*{iframe_seconds:g}) "
+            # Without it scene cuts add keyframes and split fragments.
+            "-sc_threshold 0"
+        )
+    audio = selected.audio
+    sample_rate = RECORDING_SAMPLE_RATES[audio.sample_rate]
+    if "-i " not in input_source:
+        input_source = "-i " + input_source
+    if audio_active and config[CONF_SUPPORT_AUDIO]:
+        audio_input = ""
+        audio_map = config[CONF_AUDIO_MAP]
+    else:
+        # The hub expects an audio track, so a silent one stands in.
+        audio_input = (
+            f" -f lavfi -i anullsrc=channel_layout=mono:sample_rate={sample_rate}"
+        )
+        audio_map = f"{shlex.split(input_source).count('-i')}:a:0"
+    audio_args = (
+        f"-map {audio_map} -c:a aac -profile:a aac_low -ac {audio.channels} "
+        f"-ar {sample_rate} -b:a {audio.max_audio_bitrate_kbps}k"
+    )
+    return (
+        input_source + audio_input,
+        f"{video_args} {audio_args} -shortest {RECORDING_OUTPUT}",
+    )
+
 
 SLOW_RESOLUTIONS = [
     (320, 180, 15),
@@ -141,6 +239,7 @@ CONFIG_DEFAULTS = {
     CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
     CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
     CONF_STREAM_COUNT: DEFAULT_STREAM_COUNT,
+    CONF_SECURE_VIDEO: DEFAULT_SECURE_VIDEO,
 }
 
 
@@ -202,12 +301,27 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
 
         stream_address = config.get(CONF_STREAM_ADDRESS, driver.state.address)
 
+        self.secure_video = False
+        if config[CONF_SECURE_VIDEO]:
+            if not config.get(CONF_LINKED_MOTION_SENSOR):
+                _LOGGER.warning(
+                    "%s: HomeKit Secure Video needs a linked motion sensor", entity_id
+                )
+            elif aid != STANDALONE_AID:
+                _LOGGER.warning(
+                    "%s: HomeKit Secure Video needs the camera in accessory mode",
+                    entity_id,
+                )
+            else:
+                self.secure_video = True
+
         options = {
             "video": video_options,
             "audio": audio_options,
             "address": stream_address,
             "srtp": True,
             "stream_count": config[CONF_STREAM_COUNT],
+            "recording": self.secure_video,
         }
 
         super().__init__(
@@ -222,6 +336,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         )
 
         self._char_motion_detected = None
+        self._recording_transport_stop: asyncio.Task[None] | None = None
         self._cancel_motion_reset: CALLBACK_TYPE | None = None
         self.linked_motion_sensor: str | None = self.config.get(
             CONF_LINKED_MOTION_SENSOR
@@ -229,11 +344,18 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         self.motion_is_event = False
         if linked_motion_sensor := self.linked_motion_sensor:
             self.motion_is_event = linked_motion_sensor.startswith("event.")
-            if state := self.hass.states.get(linked_motion_sensor):
+            state = self.hass.states.get(linked_motion_sensor)
+            if self.secure_video:
+                # Recordings are triggered by the motion sensor pyhap links.
+                self._char_motion_detected = self.get_service(
+                    SERV_MOTION_SENSOR
+                ).get_characteristic(CHAR_MOTION_DETECTED)
+            elif state:
                 serv_motion = self.add_preload_service(SERV_MOTION_SENSOR)
                 self._char_motion_detected = serv_motion.configure_char(
                     CHAR_MOTION_DETECTED, value=False
                 )
+            if state:
                 self._async_update_motion_state(None, state)
 
     @pyhap_callback  # type: ignore[untyped-decorator]
@@ -253,6 +375,11 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                     self._async_update_motion_state_event,
                     job_type=HassJobType.Callback,
                 )
+            )
+        if self.secure_video:
+            self.hass.async_create_background_task(
+                self._async_start_recording_transport(),
+                f"homekit.camera-recording-transport-{self.entity_id}",
             )
 
         super().run()
@@ -491,7 +618,168 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             self.hass.async_create_background_task(
                 self.stop_stream(session_info), "homekit.camera-stop-stream"
             )
+        if self.secure_video:
+            self._recording_transport_stop = self.hass.async_create_background_task(
+                self.stop_recording_transport(),
+                f"homekit.camera-stop-recording-transport-{self.entity_id}",
+            )
         super().async_stop()
+
+    @override
+    async def stop(self) -> None:
+        """Stop the accessory and wait for the recording transport to close."""
+        await super().stop()
+        if self._recording_transport_stop:
+            await self._recording_transport_stop
+
+    async def _async_start_recording_transport(self) -> None:
+        """Start the HomeKit Data Stream listener recordings are sent over."""
+        try:
+            await self.start_recording_transport()
+        except OSError as err:
+            _LOGGER.error(
+                "[%s] HomeKit Secure Video cannot listen for recordings: %s",
+                self.entity_id,
+                err,
+            )
+
+    def recording_diagnostics(self) -> dict[str, Any]:
+        """Return the HomeKit Secure Video state for diagnostics."""
+        selected = self.selected_recording_configuration
+        return {
+            "active": self.recording_active,
+            "audio_active": self.recording_audio_active,
+            "homekit_camera_active": self.homekit_camera_active,
+            "selected_configuration": asdict(selected) if selected else None,
+            "transport_port": self.recording_transport_port,
+            "connections": self.recording_connection_count,
+        }
+
+    @override
+    async def handle_recording_stream(
+        self, stream_id: int
+    ) -> AsyncIterator[RecordingPacket]:
+        """Stream a HomeKit Secure Video recording from ffmpeg."""
+        if not (input_source := await self._async_get_stream_source()):
+            _LOGGER.error("[%s] Camera has no stream source", self.entity_id)
+            return
+        selected = self.selected_recording_configuration
+        if TYPE_CHECKING:
+            assert isinstance(selected, SelectedRecordingConfiguration)
+        input_args, output = recording_ffmpeg_args(
+            self.config, selected, input_source, self.recording_audio_active
+        )
+        _LOGGER.debug("[%s] Recording %s with: %s", self.entity_id, stream_id, output)
+        stream = HAFFmpeg(self._ffmpeg.binary)
+        if not await stream.open(
+            cmd=[],
+            input_source=input_args,
+            output=output,
+            extra_cmd="-hide_banner -nostats -loglevel error",
+            stdout_pipe=True,
+            stderr_pipe=True,
+        ):
+            _LOGGER.error("[%s] Failed to start recording ffmpeg", self.entity_id)
+            return
+        stderr: deque[bytes] = deque(maxlen=RECORDING_STDERR_LINES)
+        stderr_task = self.hass.async_create_background_task(
+            self._async_collect_stderr(await stream.get_reader(FFMPEG_STDERR), stderr),
+            f"homekit.camera-recording-stderr-{self.entity_id}",
+        )
+        stall_timeout = (
+            selected.recording.media_containers[0].fragment_length_ms
+            / 1000
+            * RECORDING_STALL_FRAGMENTS
+        )
+        if self.config[CONF_VIDEO_CODEC] == VIDEO_CODEC_COPY:
+            stall_timeout = max(stall_timeout, RECORDING_MIN_STALL_SECONDS)
+        timeout = max(stall_timeout, RECORDING_MIN_STALL_SECONDS)
+        packets = fmp4_recording_packets(await stream.get_reader())
+        # The first packet is the init segment, video starts with the second.
+        sent_packets = 0
+        try:
+            while True:
+                try:
+                    async with asyncio.timeout(timeout):
+                        packet = await anext(packets)
+                except StopAsyncIteration:
+                    if not await self._async_recording_failed(
+                        stream, stderr_task, stderr
+                    ):
+                        self._log_recording_without_video(stderr)
+                    return
+                except TimeoutError:
+                    _LOGGER.warning(
+                        "[%s] Recording ended, ffmpeg delivered no video for %s"
+                        " seconds: %s",
+                        self.entity_id,
+                        timeout,
+                        b" ".join(stderr).decode(errors="replace"),
+                    )
+                    return
+                timeout = stall_timeout
+                # A failed ffmpeg must not end the recording as complete.
+                if packet.is_last and await self._async_recording_failed(
+                    stream, stderr_task, stderr
+                ):
+                    return
+                if packet.is_last and sent_packets < 2:
+                    self._log_recording_without_video(stderr)
+                    return
+                sent_packets += 1
+                yield packet
+        finally:
+            await packets.aclose()
+            # kill() reads stderr itself, so our reader must stop first.
+            stderr_task.cancel()
+            await asyncio.wait({stderr_task})
+            # Closing would wait for ffmpeg to flush, the hub already ended.
+            if stream.is_running:
+                stream.kill()
+                await stream.process.wait()
+
+    def _log_recording_without_video(self, stderr: deque[bytes]) -> None:
+        _LOGGER.warning(
+            "[%s] Recording ffmpeg ended without video: %s",
+            self.entity_id,
+            b" ".join(stderr).decode(errors="replace"),
+        )
+
+    async def _async_recording_failed(
+        self,
+        stream: HAFFmpeg,
+        stderr_task: asyncio.Task[None],
+        stderr: deque[bytes],
+    ) -> bool:
+        """Log and return if the recording ffmpeg exited with an error."""
+        try:
+            async with asyncio.timeout(RECORDING_EXIT_TIMEOUT):
+                returncode = await stream.process.wait()
+        except TimeoutError:
+            _LOGGER.warning(
+                "[%s] Recording ffmpeg did not exit after its output ended",
+                self.entity_id,
+            )
+            return True
+        if not returncode:
+            return False
+        await asyncio.wait({stderr_task}, timeout=1)
+        _LOGGER.error(
+            "[%s] Recording ffmpeg exited with %s: %s",
+            self.entity_id,
+            returncode,
+            b" ".join(stderr).decode(errors="replace"),
+        )
+        return True
+
+    async def _async_collect_stderr(
+        self, reader: asyncio.StreamReader, lines: deque[bytes]
+    ) -> None:
+        """Keep the last ffmpeg output lines of a recording."""
+        while line := await reader.readline():
+            line = RECORDING_STDERR_URL.sub(b"<url>", line.rstrip())
+            _LOGGER.debug("%s: recording ffmpeg: %s", self.display_name, line)
+            lines.append(line)
 
     async def stop_stream(self, session_info: dict[str, Any]) -> None:
         """Stop the stream for the given ``session_id``."""
