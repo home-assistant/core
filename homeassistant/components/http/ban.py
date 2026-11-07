@@ -157,7 +157,7 @@ async def process_wrong_login(request: Request, access_method: AccessMethod) -> 
         except JSONDecodeError:
             pass
     else:
-        base_msg = f"API request with invalid authentication from {remote_host} ({remote_addr})."
+        base_msg = f"Failed API access attempt from {remote_host} ({remote_addr})."
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
