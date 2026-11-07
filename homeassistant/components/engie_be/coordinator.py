@@ -283,7 +283,7 @@ def epex_day_available(data: EngieBeEpexData, day: date) -> bool:
 
 @dataclass(frozen=True)
 class EngieBePeaksData:
-    """Capacity-tariff peaks of one business agreement."""
+    """Capacity tariff peaks of one business agreement."""
 
     monthly: MonthlyPeaks
     previous_month: MonthlyPeaks | None
@@ -318,7 +318,7 @@ class EngieBePeaksData:
 
 
 class EngieBePeaksCoordinator(DataUpdateCoordinator[EngieBePeaksData]):
-    """Coordinator that fetches capacity-tariff peaks for one business agreement."""
+    """Coordinator that fetches capacity tariff peaks for one business agreement."""
 
     config_entry: EngieBeConfigEntry
 

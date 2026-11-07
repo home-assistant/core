@@ -38,7 +38,7 @@ def _hashed_identifier(identifier: str) -> str:
 
 
 def _peak_diagnostics(peak: Peak) -> dict[str, Any]:
-    """Return the diagnostics of one capacity-tariff peak."""
+    """Return the diagnostics of one capacity tariff peak."""
     return {
         "peak_kw": peak.peak_kw,
         "peak_kwh": peak.peak_kwh,
@@ -48,7 +48,7 @@ def _peak_diagnostics(peak: Peak) -> dict[str, Any]:
 
 
 def _monthly_peaks_diagnostics(monthly: MonthlyPeaks) -> dict[str, Any]:
-    """Return the diagnostics of one month of capacity-tariff peaks."""
+    """Return the diagnostics of one month of capacity tariff peaks."""
     return {
         "year": monthly.year,
         "month": monthly.month,
@@ -68,7 +68,7 @@ def _monthly_peaks_diagnostics(monthly: MonthlyPeaks) -> dict[str, Any]:
 
 
 def _peaks_diagnostics(peaks: EngieBePeaksCoordinator) -> dict[str, Any]:
-    """Return the diagnostics of the capacity-tariff peaks coordinator."""
+    """Return the diagnostics of the capacity tariff peaks coordinator."""
     data = peaks.data
     return {
         "last_update_success": peaks.last_update_success,

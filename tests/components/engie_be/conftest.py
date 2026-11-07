@@ -255,7 +255,7 @@ def build_epex_payload_with_partial_tomorrow(
 def build_peak(
     start: datetime, *, power_kw: float = 4.2, energy_kwh: float = 1.05
 ) -> Peak:
-    """Build a 15-minute capacity-tariff peak starting at the given moment."""
+    """Build a 15-minute capacity tariff peak starting at the given moment."""
     return Peak(
         peak_kw=power_kw,
         peak_kwh=energy_kwh,
