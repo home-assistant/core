@@ -20,6 +20,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_conversion import InformationConverter
 
 from .coordinator import (
+    PaperlessAsnCoordinator,
     PaperlessConfigEntry,
     PaperlessCoordinator,
     PaperlessStatisticCoordinator,
@@ -250,6 +251,12 @@ SENSOR_STATUS: tuple[PaperlessEntityDescription[Status], ...] = (
     ),
 )
 
+SENSOR_NEXT_ASN = PaperlessEntityDescription[int](
+    key="next_asn",
+    translation_key="next_asn",
+    value_fn=lambda data: data,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -275,6 +282,13 @@ async def async_setup_entry(
         )
         for description in SENSOR_STATUS
     ]
+
+    entities.append(
+        PaperlessSensor[PaperlessAsnCoordinator](
+            coordinator=entry.runtime_data.next_asn,
+            description=SENSOR_NEXT_ASN,
+        )
+    )
 
     async_add_entities(entities)
 

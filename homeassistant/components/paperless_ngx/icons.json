@@ -49,6 +49,9 @@
           "warning": "mdi:alert"
         }
       },
+      "next_asn": {
+        "default": "mdi:identifier"
+      },
       "redis_status": {
         "default": "mdi:check-circle",
         "state": {
