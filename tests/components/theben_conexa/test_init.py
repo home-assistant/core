@@ -3,7 +3,6 @@
 import asyncio
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
@@ -140,29 +139,37 @@ async def test_setup_entry_initializes_correctly(
     freezer: FrozenDateTimeFactory,
     mock_conexa_smgw: SimpleNamespace,
     mock_config_entry: MockConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test setup initializes runtime coordinator data and schedules updates."""
-    # Skip the 500 ms inter-query delay in this scheduling test
-    # otherwise the frozen time logic used in this test would become needlessly complicated
-    monkeypatch.setattr(
-        "homeassistant.components.theben_conexa.coordinator.async_sleep", AsyncMock()
-    )
-    # Freeze the clock so the coordinator and test advance from the same time base.
     now = datetime(2026, 8, 6, 12, 33, 5, tzinfo=UTC)
     freezer.move_to(now)
 
     mock_config_entry.add_to_hass(hass)
+    query_started = asyncio.Event()
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    async def get_latest_values() -> dict[str, object]:
+        query_started.set()
+        return {}
+
+    mock_conexa_smgw.client.getLatestValues.side_effect = get_latest_values
+    setup_task = hass.async_create_task(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
+    )
+    await query_started.wait()
+    # getLatestValues sleeps for 0.5 seconds, so we need to advance the freezer to allow the task to complete
+    freezer.tick(1)
+    assert await setup_task
     await hass.async_block_till_done()
 
     scheduled_call_count = mock_conexa_smgw.client.getLatestValues.call_count
 
+    query_started.clear()
     freezer.tick(timedelta(minutes=12, seconds=35))
 
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await query_started.wait()
+    freezer.tick(1)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         mock_conexa_smgw.client.getLatestValues.call_count == scheduled_call_count + 1
@@ -249,24 +256,38 @@ async def test_scheduled_update_unexpected_reply(
     freezer: FrozenDateTimeFactory,
     mock_conexa_smgw: SimpleNamespace,
     mock_config_entry: MockConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test an unexpected reply during a scheduled poll marks the update failed."""
-    # Skip the 500 ms inter-query delay in this scheduling test
-    # otherwise the frozen time logic used in this test would become needlessly complicated
-    monkeypatch.setattr(
-        "homeassistant.components.theben_conexa.coordinator.async_sleep", AsyncMock()
-    )
     freezer.move_to(datetime(2026, 8, 6, 12, 33, 5, tzinfo=UTC))
     mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    query_started = asyncio.Event()
+
+    async def get_latest_values() -> dict[str, object]:
+        query_started.set()
+        return {}
+
+    mock_conexa_smgw.client.getLatestValues.side_effect = get_latest_values
+    setup_task = hass.async_create_task(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
+    )
+    await query_started.wait()
+    # getLatestValues sleeps for 0.5 seconds, so we need to advance the freezer to allow the task to complete
+    freezer.tick(1)
+    assert await setup_task
     await hass.async_block_till_done()
     assert mock_config_entry.runtime_data.last_update_success
 
-    mock_conexa_smgw.client.getLatestValues.side_effect = UnexpectedReturnCode("boom")
+    async def unexpected_return() -> dict[str, object]:
+        query_started.set()
+        raise UnexpectedReturnCode("boom")
+
+    query_started.clear()
+    mock_conexa_smgw.client.getLatestValues.side_effect = unexpected_return
     freezer.tick(timedelta(minutes=12, seconds=35))
     async_fire_time_changed(hass)
+    await query_started.wait()
+    freezer.tick(1)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_conexa_smgw.client.getLatestValues.call_count == 2
