@@ -285,8 +285,15 @@ def parse_transition_control(value: str) -> ActiveTransition | None:
     )
 
 
-def interpolate(transition: ActiveTransition, now_millis: int) -> float | None:
-    """Return the mired value for this moment, or None past the end of the curve."""
+def interpolate_point(
+    transition: ActiveTransition, now_millis: int
+) -> tuple[float, float] | None:
+    """Return (mired, brightness adjustment factor) for this moment.
+
+    Both values are interpolated between the two surrounding curve points, so
+    the factor does not jump when the curve moves on to the next point. None is
+    returned past the end of the curve.
+    """
     offset = now_millis - transition.time_millis_offset - transition.start_millis
     if offset < 0:
         return None
@@ -303,16 +310,30 @@ def interpolate(transition: ActiveTransition, now_millis: int) -> float | None:
             ):
                 transition_offset = offset - lower_bound_time_offset
                 if lower.duration and transition_offset <= lower.duration:
-                    return lower.temperature
+                    return lower.temperature, lower.brightness_adjustment_factor
+                if not upper.transition_time:
+                    return upper.temperature, upper.brightness_adjustment_factor
                 percentage = (
                     transition_offset - lower.duration
                 ) / upper.transition_time
                 return (
                     lower.temperature
-                    + (upper.temperature - lower.temperature) * percentage
+                    + (upper.temperature - lower.temperature) * percentage,
+                    lower.brightness_adjustment_factor
+                    + (
+                        upper.brightness_adjustment_factor
+                        - lower.brightness_adjustment_factor
+                    )
+                    * percentage,
                 )
         lower_bound_time_offset += lower.duration
     return None
+
+
+def interpolate(transition: ActiveTransition, now_millis: int) -> float | None:
+    """Return the mired value for this moment, or None past the end of the curve."""
+    point = interpolate_point(transition, now_millis)
+    return None if point is None else point[0]
 
 
 STORAGE_KEY = "homekit.adaptive_lighting"
@@ -601,19 +622,18 @@ class AdaptiveLightingController:
         if not (transition := self.transition):
             return
 
-        temperature = interpolate(transition, int(time.time() * 1000))
-        if temperature is None:
+        point = interpolate_point(transition, int(time.time() * 1000))
+        if point is None:
             self.disable("reached the end of the curve")
             return
+        temperature, adjustment_factor = point
 
         # Apple sends a factor that shifts the colour with the brightness level.
         brightness = self.char_brightness.value or transition.max_multiplier
         multiplier = min(
             transition.max_multiplier, max(transition.min_multiplier, brightness)
         )
-        point = self._current_curve_point(transition)
-        if point is not None:
-            temperature += point.brightness_adjustment_factor * multiplier
+        temperature += adjustment_factor * multiplier
 
         mireds = round(temperature)
         properties = self.char_color_temp.properties
@@ -645,25 +665,3 @@ class AdaptiveLightingController:
             self.accessory.async_set_adaptive_color_temperature(mireds)
         finally:
             self.applying = False
-
-    def _current_curve_point(self, transition: ActiveTransition) -> CurveEntry | None:
-        """Return the curve entry in effect right now, for its brightness factor."""
-        offset = (
-            int(time.time() * 1000)
-            - transition.time_millis_offset
-            - transition.start_millis
-        )
-        accumulated = 0
-        for index in range(len(transition.curve) - 1):
-            lower = transition.curve[index]
-            accumulated += lower.transition_time
-            if (
-                accumulated
-                <= offset
-                <= accumulated
-                + lower.duration
-                + transition.curve[index + 1].transition_time
-            ):
-                return lower
-            accumulated += lower.duration
-        return None

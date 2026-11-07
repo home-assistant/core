@@ -25,6 +25,7 @@ from homeassistant.components.homekit.adaptive_lighting import (
     _transition_as_dict,
     _transition_from_dict,
     interpolate,
+    interpolate_point,
     parse_transition_control,
     supported_transition_configuration,
     tlv_decode,
@@ -395,9 +396,9 @@ async def test_the_same_value_is_not_sent_twice(
     await _wait_for_light_coalesce(hass)
     assert len(call_turn_on) == 1
 
-    # One update interval later the curve has barely moved.
-    freezer.tick(timedelta(seconds=60))
-    async_fire_time_changed(hass)
+    # A second update at the same moment computes the same value again.
+    assert acc.adaptive_lighting is not None
+    await acc.adaptive_lighting._async_update()
     await hass.async_block_till_done()
     await _wait_for_light_coalesce(hass)
 
@@ -685,17 +686,39 @@ async def test_the_controller_does_nothing_while_disarmed(
     assert controller.char_active_count.value == 0
 
 
-async def test_no_curve_point_applies_past_the_end(
-    hass: HomeAssistant, hk_driver
-) -> None:
+def test_interpolate_point_returns_none_past_the_end() -> None:
     """The brightness factor is only known inside the 24 hours of the curve."""
-    acc = await _setup_light(hass, hk_driver)
-    assert acc.adaptive_lighting is not None
     transition = parse_transition_control(TRANSITION_CONTROL_WRITE)
     assert transition is not None
-    transition.time_millis_offset -= 48 * 3600 * 1000
+    start = transition.start_millis + transition.time_millis_offset
+    assert interpolate_point(transition, start + 48 * 3600 * 1000) is None
 
-    assert acc.adaptive_lighting._current_curve_point(transition) is None
+
+def test_interpolate_point_interpolates_the_brightness_factor() -> None:
+    """The factor moves smoothly between points, like the temperature.
+
+    A factor that stepped at each point would shift the colour by up to
+    factor * brightness mireds in a single update.
+    """
+    transition = parse_transition_control(TRANSITION_CONTROL_WRITE)
+    assert transition is not None
+    start = transition.start_millis + transition.time_millis_offset
+
+    previous: tuple[float, float] | None = None
+    for minutes in range(24 * 60):
+        point = interpolate_point(transition, start + minutes * 60000)
+        if point is None:
+            break
+        temperature, factor = point
+        if previous is not None:
+            shift = abs(
+                (temperature + factor * transition.max_multiplier)
+                - (previous[0] + previous[1] * transition.max_multiplier)
+            )
+            assert shift < 10
+        previous = point
+        assert interpolate(transition, start + minutes * 60000) == temperature
+    assert previous is not None
 
 
 def test_an_incomplete_curve_entry_is_skipped() -> None:
