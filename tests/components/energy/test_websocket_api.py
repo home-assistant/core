@@ -147,6 +147,7 @@ async def test_save_preferences(
                 "stat_energy_to": "my_battery_charging",
                 "stat_rate": "my_battery_power",
                 "stat_soc": "sensor.my_battery_state_of_charge",
+                "entity_capacity": "sensor.my_battery_capacity",
                 "name": "Battery",
             },
             {"type": "gas", "stat_energy_from": "sensor.gas", "name": "My gas"},
