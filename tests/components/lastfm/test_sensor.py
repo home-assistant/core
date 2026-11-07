@@ -16,7 +16,7 @@ from homeassistant.components.lastfm.const import (
     DOMAIN,
     STATE_NOT_SCROBBLING,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import ATTR_ENTITY_PICTURE, CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -51,6 +51,21 @@ async def test_sensors(
     state = hass.states.get(entity_id)
 
     assert state == snapshot
+
+
+async def test_sensor_without_avatar(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    default_user: MockUser,
+) -> None:
+    """Test a user without an avatar has no entity picture."""
+    with patch.object(default_user, "get_image", return_value=None):
+        await setup_integration(config_entry, default_user)
+
+    state = hass.states.get("sensor.lastfm_testaccount1")
+    assert state.state == "artist - title"
+    assert ATTR_ENTITY_PICTURE not in state.attributes
 
 
 async def test_sensor_hidden_listening_information(

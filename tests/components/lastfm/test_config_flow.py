@@ -1,6 +1,7 @@
 """Test Lastfm config flow."""
 
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 from threading import Event
 from unittest.mock import MagicMock, call, patch
@@ -735,6 +736,45 @@ async def test_flow_abort_cancels_session_key_polling(
         await hass.async_block_till_done(wait_background_tasks=True)
         session_exchange.assert_not_called()
 
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def test_flow_abort_during_polling_wakeup(
+    hass: HomeAssistant,
+    default_user: MockUser,
+    mock_session_key_generator: MagicMock,
+) -> None:
+    """Test a polling wakeup after removal does not exchange a session."""
+    polling_started = asyncio.Event()
+
+    async def delayed_cancellation(delay: float) -> None:
+        """Finish waking up even if removal cancels the polling task."""
+        polling_started.set()
+        with suppress(asyncio.CancelledError):
+            await asyncio.sleep(delay)
+
+    with (
+        patch("pylast.User", return_value=default_user),
+        patch(
+            f"{FLOW_MODULE}.asyncio",
+            wraps=asyncio,
+            CancelledError=asyncio.CancelledError,
+        ) as mock_asyncio,
+    ):
+        mock_asyncio.sleep.side_effect = delayed_cancellation
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
+        )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        await polling_started.wait()
+
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_session_key_generator.get_web_auth_session_key_username.assert_not_called()
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
