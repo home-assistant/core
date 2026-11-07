@@ -1219,20 +1219,33 @@ async def test_description_kept_for_embedded_device(
 
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
-    return_value={"mock-domain": [{"manufacturer": "Paulus"}]},
+    return_value={
+        "mock-domain": [{"st": "urn:schemas-upnp-org:device:ZonePlayer:1"}]
+    },
+)
+@pytest.mark.parametrize(
+    "search_targets",
+    [
+        pytest.param(
+            ("upnp:rootdevice", "urn:schemas-upnp-org:device:ZonePlayer:1"),
+            id="root_first",
+        ),
+        pytest.param(
+            ("urn:schemas-upnp-org:device:ZonePlayer:1", "upnp:rootdevice"),
+            id="service_first",
+        ),
+    ],
 )
 async def test_ssdp_rediscover_refetches_stale_description(
     mock_get_ssdp,
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_flow_init,
+    search_targets: tuple[str, str],
 ) -> None:
-    """Test rediscovery fetches a fresh description when the cached one is stale."""
+    """Test rediscovery replays all targets with a fresh description."""
     location = "http://1.1.1.1"
-    description = (
-        "<root><device><UDN>{udn}</UDN>"
-        "<manufacturer>Paulus</manufacturer></device></root>"
-    )
+    description = "<root><device><UDN>{udn}</UDN></device></root>"
     entry = MockConfigEntry(
         domain="mock-domain",
         discovery_keys={
@@ -1246,16 +1259,17 @@ async def test_ssdp_rediscover_refetches_stale_description(
 
     aioclient_mock.get(location, text=description.format(udn="uuid:mock-udn"))
     ssdp_listener = await init_ssdp_component(hass)
-    ssdp_listener._on_search(
-        _ssdp_headers(
-            {
-                "st": "upnp:rootdevice",
-                "location": location,
-                "usn": "uuid:mock-udn::upnp:rootdevice",
-                "_source": "search",
-            }
+    for search_target in search_targets:
+        ssdp_listener._on_search(
+            _ssdp_headers(
+                {
+                    "st": search_target,
+                    "location": location,
+                    "usn": f"uuid:mock-udn::{search_target}",
+                    "_source": "search",
+                }
+            )
         )
-    )
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -1275,4 +1289,7 @@ async def test_ssdp_rediscover_refetches_stale_description(
     assert len(aioclient_mock.mock_calls) == 1
     assert len(mock_flow_init.mock_calls) == 2
     mock_call_data: SsdpServiceInfo = mock_flow_init.mock_calls[1][2]["data"]
+    assert mock_call_data.ssdp_st == "urn:schemas-upnp-org:device:ZonePlayer:1"
     assert mock_call_data.upnp[ATTR_UPNP_UDN] == "uuid:mock-udn"
+
+

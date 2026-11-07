@@ -499,12 +499,18 @@ class Scanner:
             if ssdp_device.udn == udn
         ]
 
-    async def _async_rediscover_with_lookup(
-        self, ssdp_device: SsdpDevice, dst: str
-    ) -> None:
-        """Fetch a replacement description and rediscover the service."""
+    async def _async_rediscover_with_lookup(self, ssdp_device: SsdpDevice) -> None:
+        """Fetch the description once and rediscover all targets of the device."""
         info_desc = await self._async_get_description_dict(ssdp_device.location)
         if info_desc:
+            self._async_rediscover_device(ssdp_device, info_desc)
+
+    @core_callback
+    def _async_rediscover_device(
+        self, ssdp_device: SsdpDevice, info_desc: Mapping[str, Any]
+    ) -> None:
+        """Replay all targets of the device with the given description."""
+        for dst in ssdp_device.all_combined_headers:
             self._ssdp_listener_process_callback(
                 ssdp_device,
                 dst,
@@ -531,27 +537,22 @@ class Scanner:
             for ssdp_device in self._ssdp_devices:
                 if ssdp_device.udn != udn:
                     continue
-                for dst in ssdp_device.all_combined_headers:
-                    if self._async_uncache_if_stale(
-                        ssdp_device, dst, ssdp_device.location
-                    ):
-                        self.hass.async_create_background_task(
-                            self._async_rediscover_with_lookup(ssdp_device, dst),
-                            name=f"ssdp_rediscover_lookup_{ssdp_device.location}",
-                            eager_start=True,
-                        )
-                        continue
-                    has_cached_desc, info_desc = cache.peek_description_dict(
-                        ssdp_device.location
+                if _ROOT_DEVICE in ssdp_device.all_combined_headers and (
+                    self._async_uncache_if_stale(
+                        ssdp_device, _ROOT_DEVICE, ssdp_device.location
                     )
-                    if has_cached_desc and info_desc:
-                        self._ssdp_listener_process_callback(
-                            ssdp_device,
-                            dst,
-                            SsdpSource.SEARCH,
-                            info_desc,
-                            True,  # Skip integration callbacks
-                        )
+                ):
+                    self.hass.async_create_background_task(
+                        self._async_rediscover_with_lookup(ssdp_device),
+                        name=f"ssdp_rediscover_lookup_{ssdp_device.location}",
+                        eager_start=True,
+                    )
+                    continue
+                has_cached_desc, info_desc = cache.peek_description_dict(
+                    ssdp_device.location
+                )
+                if has_cached_desc and info_desc:
+                    self._async_rediscover_device(ssdp_device, info_desc)
 
 
 def discovery_info_from_headers_and_description(

@@ -7,12 +7,13 @@ from functools import partial
 from http import HTTPStatus
 from ipaddress import AddressValueError, IPv4Address
 import logging
+import re
 import socket
 import threading
 from typing import Any, cast
 from urllib.parse import urlparse
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientTimeout
 import probatio
 from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
@@ -31,6 +32,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     issue_registry as ir,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.service_info.ssdp import (
@@ -66,6 +68,8 @@ from .services import async_setup_services
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
+
+_ROOT_UDN_RE = re.compile(r"<UDN>uuid:(RINCON_\w+)</UDN>")
 
 CONF_ADVERTISE_ADDR = "advertise_addr"
 CONF_INTERFACE_ADDR = "interface_addr"
@@ -605,6 +609,33 @@ class SonosDiscoveryManager:
             return False
         return device.disabled
 
+    async def _async_is_other_player_on_known_speaker(self, discovered_ip: str) -> bool:
+        """Return if the IP is still answered by the known speaker that holds it.
+
+        Another player announced there (e.g. the Arc's headphone zone) must not
+        replace that speaker's subscription. A new speaker that took over the
+        address (e.g. via DHCP) is not ignored.
+        """
+        known_uids = {
+            speaker.uid
+            for speaker in self.data.discovered.values()
+            if speaker.available and speaker.soco.ip_address == discovered_ip
+        }
+        if not known_uids:
+            return False
+        session = async_get_clientsession(self.hass)
+        try:
+            async with session.get(
+                f"http://{discovered_ip}:1400/xml/device_description.xml",
+                timeout=ClientTimeout(total=5),
+            ) as response:
+                description = await response.text()
+        except (ClientError, TimeoutError):
+            return False
+        if not (match := _ROOT_UDN_RE.search(description)):
+            return False
+        return match.group(1) in known_uids
+
     async def _async_handle_discovery_message(
         self,
         uid: str,
@@ -624,14 +655,9 @@ class SonosDiscoveryManager:
             elif uid not in self.data.discovered:
                 if self.is_device_invisible(discovered_ip):
                     return
-                if any(
-                    speaker.available and speaker.soco.ip_address == discovered_ip
-                    for speaker in self.data.discovered.values()
-                ):
-                    # Another player on a known speaker's IP (e.g. a stale SSDP
-                    # description); subscribing would replace its subscription.
+                if await self._async_is_other_player_on_known_speaker(discovered_ip):
                     _LOGGER.debug(
-                        "Ignoring %s for %s, IP belongs to a known speaker",
+                        "Ignoring %s for %s, IP is still owned by a known speaker",
                         uid,
                         discovered_ip,
                     )
