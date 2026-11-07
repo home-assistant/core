@@ -130,6 +130,7 @@ async def test_water_heater_set_temperature(
             name="My Boiler",
             min_temperature=10.0,
             max_temperature=85.0,
+            supported_features=WaterHeaterFeature.SUPPORTS_TARGET_TEMPERATURE,
         )
     ]
     states = [
@@ -520,6 +521,7 @@ async def test_water_heater_fahrenheit_unit(
             min_temperature=32.0,
             max_temperature=212.0,
             temperature_unit=TemperatureUnit.FAHRENHEIT,
+            supported_features=WaterHeaterFeature.SUPPORTS_TARGET_TEMPERATURE,
         )
     ]
     states = [WaterHeaterState(key=1, target_temperature=32.0)]
@@ -563,6 +565,7 @@ async def test_water_heater_fahrenheit_unit_fahrenheit_system(
             min_temperature=32.0,
             max_temperature=212.0,
             temperature_unit=TemperatureUnit.FAHRENHEIT,
+            supported_features=WaterHeaterFeature.SUPPORTS_TARGET_TEMPERATURE,
         )
     ]
     states = [WaterHeaterState(key=1, target_temperature=72.0)]
@@ -587,4 +590,48 @@ async def test_water_heater_fahrenheit_unit_fahrenheit_system(
     )
     mock_client.water_heater_command.assert_called_once_with(
         key=1, target_temperature=86.0, device_id=0
+    )
+
+
+@pytest.mark.parametrize(
+    ("supported_features", "has_target_temperature"),
+    [
+        (WaterHeaterFeature.SUPPORTS_TARGET_TEMPERATURE, True),
+        (WaterHeaterFeature(0), False),
+    ],
+)
+async def test_water_heater_target_temperature_feature_flag(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    supported_features: WaterHeaterFeature,
+    has_target_temperature: bool,
+) -> None:
+    """Test TARGET_TEMPERATURE feature flag tracks the ESPHome flag."""
+    entity_info = [
+        WaterHeaterInfo(
+            object_id="my_boiler",
+            key=1,
+            name="My Boiler",
+            min_temperature=10.0,
+            max_temperature=85.0,
+            supported_features=supported_features,
+        )
+    ]
+    states = [WaterHeaterState(key=1, target_temperature=50.0)]
+
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    assert (
+        bool(
+            state.attributes[ATTR_SUPPORTED_FEATURES]
+            & WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        )
+        is has_target_temperature
     )
