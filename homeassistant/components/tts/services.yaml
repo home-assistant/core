@@ -16,6 +16,10 @@ say:
       default: false
       selector:
         boolean:
+    pregenerate:
+      default: false
+      selector:
+        boolean:
     language:
       example: "ru"
       selector:
@@ -42,6 +46,10 @@ speak:
         text:
     cache:
       default: true
+      selector:
+        boolean:
+    pregenerate:
+      default: false
       selector:
         boolean:
     language:
