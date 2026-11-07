@@ -489,6 +489,51 @@ async def test_discovery_from_ssdp_advertisement(
     assert hass.states.get("media_player.zone_a")
 
 
+@pytest.mark.parametrize(
+    ("speaker_changes", "expected_subscribes"),
+    [
+        pytest.param([], 0, id="speaker_available"),
+        pytest.param([SsdpChange.BYEBYE], 1, id="speaker_unavailable"),
+    ],
+)
+async def test_discovery_unknown_uid_on_known_speaker_ip(
+    hass: HomeAssistant,
+    async_autosetup_sonos: None,
+    soco: MockSoCo,
+    discover: MagicMock,
+    speaker_changes: list[SsdpChange],
+    expected_subscribes: int,
+) -> None:
+    """Test an unknown uid on a known speaker's IP, e.g. an Arc headphone zone."""
+    ssdp_callback = discover.call_args.args[1]
+    for change in speaker_changes:
+        ssdp_callback(
+            SsdpServiceInfo(
+                ssdp_location=f"http://{soco.ip_address}:1400/",
+                ssdp_st=UPNP_ST,
+                ssdp_usn=f"uuid:{soco.uid}::{UPNP_ST}",
+                upnp={ATTR_UPNP_UDN: f"uuid:{soco.uid}"},
+            ),
+            change,
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    soco.zoneGroupTopology.subscribe.reset_mock()
+
+    headphone_uid = "RINCON_test01500"
+    ssdp_callback(
+        SsdpServiceInfo(
+            ssdp_location=f"http://{soco.ip_address}:1500/xml/device_description.xml",
+            ssdp_st=UPNP_ST,
+            ssdp_usn=f"uuid:{headphone_uid}::{UPNP_ST}",
+            upnp={ATTR_UPNP_UDN: f"uuid:{headphone_uid}"},
+        ),
+        SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert soco.zoneGroupTopology.subscribe.await_count == expected_subscribes
+
+
 async def test_async_poll_manual_hosts_warnings(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
