@@ -409,6 +409,7 @@ def _check_whole_event(
 
 def _set_fields(series: icalendar.Event, event: dict[str, Any]) -> None:
     """Set the fields of an update, keeping any field it leaves out."""
+    original_start = series.DTSTART
     for key in (
         EVENT_SUMMARY,
         EVENT_START,
@@ -417,8 +418,20 @@ def _set_fields(series: icalendar.Event, event: dict[str, Any]) -> None:
         EVENT_LOCATION,
     ):
         if key in event:
+            value = event[key]
+            # Times come in Home Assistant's time zone, keep the event's own
+            if (
+                key in (EVENT_START, EVENT_END)
+                and isinstance(value, datetime)
+                and isinstance(original_start, datetime)
+            ):
+                value = (
+                    value.astimezone(original_start.tzinfo)
+                    if original_start.tzinfo is not None
+                    else value.replace(tzinfo=None)
+                )
             series.pop(key)
-            if value := event[key]:
+            if value:
                 series.add(key, value)
     # DTEND is always set, so the event must not keep a DURATION
     series.pop("DURATION")

@@ -1888,6 +1888,81 @@ async def test_update_event(
     assert stored_event.client.put.call_args.args[1] == snapshot
 
 
+NEW_YORK_SERIES_ICS = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+{SERIES_MAIN}END:VCALENDAR
+"""
+
+FLOATING_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+BEGIN:VEVENT
+UID:floating
+DTSTAMP:20261101T000000Z
+DTSTART:20261110T070000
+DTEND:20261110T073000
+SUMMARY:Run
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+@pytest.mark.parametrize("tz", [UTC])
+@pytest.mark.parametrize(
+    ("ics", "uid", "event"),
+    [
+        pytest.param(
+            NEW_YORK_SERIES_ICS,
+            "series",
+            # 09:00 in New York before daylight saving time ends, sent in UTC
+            {
+                "summary": "Weekly renamed",
+                "dtstart": "2026-10-26T13:00:00",
+                "dtend": "2026-10-26T13:30:00",
+            },
+            id="series_title_only",
+        ),
+        pytest.param(
+            NEW_YORK_SERIES_ICS,
+            "series",
+            {
+                "summary": "Weekly",
+                "dtstart": "2026-10-26T14:00:00",
+                "dtend": "2026-10-26T15:00:00",
+            },
+            id="series_new_time",
+        ),
+        pytest.param(
+            FLOATING_ICS,
+            "floating",
+            {
+                "summary": "Run",
+                "dtstart": "2026-11-10T08:00:00",
+                "dtend": "2026-11-10T08:30:00",
+            },
+            id="floating",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_update_event_keeps_time_zone(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    stored_event: Event,
+    snapshot: SnapshotAssertion,
+    uid: str,
+    event: dict[str, Any],
+) -> None:
+    """Test an update keeps the time zone of the event, or its floating time."""
+    response = await _ws_call(
+        hass, hass_ws_client, type="calendar/event/update", uid=uid, event=event
+    )
+
+    assert response["success"]
+    assert stored_event.client.put.call_args.args[1] == snapshot
+
+
 @pytest.mark.parametrize(
     ("ics", "uid", "recurrence_id"),
     [
