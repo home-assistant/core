@@ -318,7 +318,8 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
             translation_placeholders["ean_suffix"] = ean_suffix
         if suffix == _FALLBACK_SLOT_SUFFIX:
             translation_placeholders["slot_code"] = normalized_slot_code.lower()
-        self._attr_translation_placeholders = translation_placeholders
+        if translation_placeholders:
+            self._attr_translation_placeholders = translation_placeholders
         if excl_vat:
             self._attr_entity_registry_enabled_default = False
 
