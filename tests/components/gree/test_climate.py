@@ -1,7 +1,7 @@
 """Tests for gree component."""
 
 from datetime import timedelta
-from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, patch
+from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from greeclimate.device import (
@@ -18,8 +18,11 @@ from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
@@ -550,6 +553,27 @@ async def test_update_target_temperature(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == temperature
+
+
+@pytest.mark.usefixtures("discovery")
+async def test_fahrenheit_device_unit_applied_at_setup(
+    hass: HomeAssistant, device: MagicMock
+) -> None:
+    """Test a Fahrenheit device is not labelled Celsius before its state changes."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    device().temperature_units = 1
+    device().target_temperature = 68
+    device().current_temperature = 69
+
+    await async_setup_gree(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get(ATTR_TEMPERATURE) == 68
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 69
+    assert state.attributes.get(ATTR_MIN_TEMP) == TEMP_MIN_F
+    assert state.attributes.get(ATTR_MAX_TEMP) == TEMP_MAX_F
 
 
 @pytest.mark.parametrize(

@@ -349,10 +349,23 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Apply the device's temperature unit before the first state is written."""
+        # Coordinator updates only reach the entity when the device data changes.
+        self._sync_temperature_unit()
+        await super().async_added_to_hass()
+
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Update the state of the entity."""
+        self._sync_temperature_unit()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _sync_temperature_unit(self) -> None:
+        """Match the native temperature unit and limits to the device's display unit."""
         units = self.coordinator.device.temperature_units
         if (
             units == TemperatureUnits.C
@@ -370,5 +383,3 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
             self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
             self._attr_min_temp = TEMP_MIN_F
             self._attr_max_temp = TEMP_MAX_F
-
-        super()._handle_coordinator_update()
