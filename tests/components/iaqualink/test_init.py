@@ -10,14 +10,17 @@ from iaqualink.exception import (
     AqualinkServiceThrottledException,
     AqualinkServiceUnauthorizedException,
 )
-from iaqualink.systems.iaqua.device import IaquaLightSwitch
+from iaqualink.systems.iaqua.device import IaquaAuxSwitch, IaquaLightSwitch
 from iaqualink.systems.iaqua.system import IaquaSystem
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.iaqualink.const import UPDATE_INTERVAL_BY_SYSTEM_TYPE
+from homeassistant.components.iaqualink.const import (
+    DOMAIN,
+    UPDATE_INTERVAL_BY_SYSTEM_TYPE,
+)
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -32,7 +35,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import get_aqualink_device, get_aqualink_system, setup_integration
@@ -47,6 +50,55 @@ async def _advance_coordinator_time(
     freezer.tick(delta=update_interval)
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+def _build_single_light_system(
+    client: AqualinkClient,
+) -> IaquaSystem:
+    """Build a system with a single light device for stale-cleanup tests."""
+    system = get_aqualink_system(
+        client,
+        cls=IaquaSystem,
+        data={"home_screen": [{}, {}, {}, {"temp_scale": "F"}]},
+    )
+    system.online = True
+
+    async def update() -> None:
+        system.temp_unit = "F"
+
+    system.update = AsyncMock(side_effect=update)
+
+    light = get_aqualink_device(
+        system,
+        name="aux_2",
+        cls=IaquaLightSwitch,
+        data={"state": "1", "aux": "2", "label": "Pool Light"},
+    )
+    system.devices = {light.name: light}
+    system.get_devices = AsyncMock(return_value={light.name: light})
+    system.set_aux = AsyncMock()
+    system.set_light = AsyncMock()
+    return system
+
+
+async def _setup_system(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    system: IaquaSystem,
+) -> None:
+    """Set up the integration with patches (config entry must already be added)."""
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value={system.serial: system},
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -665,3 +717,176 @@ async def test_system_refresh_unauthorized_triggers_reauth(
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
     assert flows[0]["context"]["entry_id"] == config_entry.entry_id
+
+
+async def test_dynamic_device_addition(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test new devices discovered at runtime are dynamically added."""
+    devices = await setup_integration(hass, config_entry, client)
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
+
+    new_switch = get_aqualink_device(
+        devices.system,
+        name="aux_3",
+        cls=IaquaAuxSwitch,
+        data={"state": "1", "aux": "4"},
+    )
+
+    original_devices = dict(devices.system.get_devices.return_value)
+    updated_devices = {**original_devices, new_switch.name: new_switch}
+    devices.system.get_devices = AsyncMock(return_value=updated_devices)
+
+    await _advance_coordinator_time(hass, freezer)
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
+    state = hass.states.get("switch.pool_aux_3")
+    assert state is not None
+    assert state.state == STATE_ON
+
+
+async def test_stale_device_removal(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test devices removed from the system are cleaned up from the registry."""
+    devices = await setup_integration(hass, config_entry, client)
+
+    switch_device_id = f"{devices.system.serial}_aux_1"
+    device_entry = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, switch_device_id), config_entry.entry_id
+    )
+    assert device_entry is not None
+
+    original_devices = dict(devices.system.get_devices.return_value)
+    reduced_devices = {k: v for k, v in original_devices.items() if k != "aux_1"}
+    devices.system.get_devices = AsyncMock(return_value=reduced_devices)
+
+    await _advance_coordinator_time(hass, freezer)
+
+    device_entry = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, switch_device_id), config_entry.entry_id
+    )
+    assert device_entry is None
+
+
+@pytest.mark.parametrize(
+    ("orphan_identifiers", "extra_identifiers"),
+    [
+        pytest.param(
+            [("{serial}_removed_device",)],
+            [],
+            id="previous_session",
+        ),
+        pytest.param(
+            [("OLD_SERIAL",), ("OLD_SERIAL_aux_1",)],
+            [("other_domain", "other_id")],
+            id="stale_system",
+        ),
+    ],
+)
+async def test_stale_device_cleanup_on_setup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+    device_registry: dr.DeviceRegistry,
+    orphan_identifiers: list[tuple[str]],
+    extra_identifiers: list[tuple[str, str]],
+) -> None:
+    """Test stale devices are cleaned up on setup."""
+    config_entry.add_to_hass(hass)
+    system = _build_single_light_system(client)
+
+    # Create orphan devices that should be removed.
+    resolved = [ident[0].format(serial=system.serial) for ident in orphan_identifiers]
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, system.serial)},
+        name="Pool",
+    )
+    for identifier in resolved:
+        if identifier.startswith(f"{system.serial}_"):
+            device_registry.async_get_or_create_child(
+                config_entry_id=config_entry.entry_id,
+                identifiers={(DOMAIN, identifier)},
+                name=f"Orphan {identifier}",
+                parent_device_id=parent_device.id,
+            )
+        else:
+            device_registry.async_get_or_create(
+                config_entry_id=config_entry.entry_id,
+                identifiers={(DOMAIN, identifier)},
+                name=f"Orphan {identifier}",
+            )
+    # Device with only a non-iaqualink identifier (triggers domain != DOMAIN skip).
+    for ident in extra_identifiers:
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={ident},
+            name="Non-iaqualink Device",
+        )
+
+    await _setup_system(hass, config_entry, system)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # All orphan devices should be gone.
+    for identifier in resolved:
+        if identifier.startswith(f"{system.serial}_"):
+            assert (
+                device_registry.async_get_child_device_by_identifier(
+                    (DOMAIN, identifier), config_entry.entry_id
+                )
+                is None
+            )
+        else:
+            assert (
+                device_registry.async_get_device_by_identifier(
+                    (DOMAIN, identifier), config_entry.entry_id
+                )
+                is None
+            )
+
+    # New system's device should exist.
+    assert (
+        device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, f"{system.serial}_aux_2"), config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_rate_limited_first_refresh_retries(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+) -> None:
+    """Test rate limiting on first refresh causes setup retry."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock(side_effect=AqualinkServiceThrottledException)
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value={system.serial: system},
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
