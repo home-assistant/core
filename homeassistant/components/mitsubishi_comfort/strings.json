@@ -1,16 +1,29 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "Sign in with the same Mitsubishi Comfort account that was used to set up this integration."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_devices": "No devices were found on this account",
-      "no_usable_devices": "The cloud did not return complete local-control information for any device on this account. Wait a few minutes and try again.",
+      "no_usable_devices": "The cloud did not return complete local-control information for any device on this account. For cloud control, add the Mitsubishi Comfort Cloud integration.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password for your Kumo Cloud account.",
+          "username": "The email address for your Kumo Cloud account."
+        },
+        "description": "Sign in with the same Mitsubishi Comfort account to restore cloud access.",
+        "title": "Reauthenticate Mitsubishi Comfort"
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -19,7 +32,8 @@
         "data_description": {
           "password": "The password for your Kumo Cloud account.",
           "username": "The email address for your Kumo Cloud account."
-        }
+        },
+        "description": "Control devices over your local network using credentials retrieved from your Mitsubishi Comfort account. For cloud control, add the separate Mitsubishi Comfort Cloud integration."
       }
     }
   },

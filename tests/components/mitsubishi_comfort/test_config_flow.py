@@ -23,6 +23,116 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from .conftest import MOCK_MAC, MOCK_PASSWORD, MOCK_SERIAL, MOCK_USERNAME
 
 
+@pytest.mark.parametrize(
+    ("cached", "recovered", "expected"),
+    [
+        pytest.param(
+            {"password": "saved", "crypto_serial": "saved", "mac": MOCK_MAC},
+            {"password": "", "crypto_serial": "", "mac": ""},
+            {"password": "saved", "crypto_serial": "saved", "mac": MOCK_MAC},
+            id="keep-cached-fields",
+        ),
+        pytest.param(
+            {"password": "", "crypto_serial": "saved", "mac": MOCK_MAC},
+            {"password": "recovered", "crypto_serial": "", "mac": ""},
+            {"password": "recovered", "crypto_serial": "saved", "mac": MOCK_MAC},
+            id="recover-password",
+        ),
+        pytest.param(
+            {"password": "saved", "crypto_serial": "", "mac": ""},
+            {"password": "", "crypto_serial": "recovered", "mac": MOCK_MAC},
+            {"password": "saved", "crypto_serial": "recovered", "mac": MOCK_MAC},
+            id="recover-crypto-serial-and-mac",
+        ),
+        pytest.param(
+            {"password": "saved", "crypto_serial": "saved", "mac": MOCK_MAC},
+            {
+                "password": "updated",
+                "crypto_serial": "updated",
+                "mac": "11:22:33:44:55:66",
+            },
+            {
+                "password": "updated",
+                "crypto_serial": "updated",
+                "mac": "11:22:33:44:55:66",
+            },
+            id="prefer-new-fields",
+        ),
+        pytest.param(
+            {},
+            {"password": "recovered", "crypto_serial": "", "mac": ""},
+            {"password": "recovered", "crypto_serial": "", "mac": ""},
+            id="no-cached-fields",
+        ),
+    ],
+)
+async def test_reauth_merges_local_credentials(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    mock_device_info: DeviceInfo,
+    mock_setup_entry: AsyncMock,
+    cached: dict[str, str],
+    recovered: dict[str, str],
+    expected: dict[str, str],
+) -> None:
+    """Reload receives recovered credentials without losing previously saved fields."""
+    credentials = {
+        MOCK_SERIAL: cached,
+        "OTHER_SERIAL": {"password": "other", "crypto_serial": "", "mac": ""},
+    }
+    mock_device_info.password = recovered["password"]
+    mock_device_info.crypto_serial = recovered["crypto_serial"]
+    mock_device_info.mac = recovered["mac"]
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_CREDENTIALS: credentials},
+    )
+    original_addresses = mock_config_entry.data[CONF_ADDRESSES]
+    credentials_at_setup: list[dict[str, dict[str, str]]] = []
+
+    async def capture_setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+        credentials_at_setup.append(entry.data[CONF_CREDENTIALS])
+
+    mock_setup_entry.side_effect = capture_setup
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: "new-password"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+    expected_credentials = {**credentials, MOCK_SERIAL: expected}
+    assert mock_config_entry.data[CONF_CREDENTIALS] == expected_credentials
+    assert credentials_at_setup == [expected_credentials]
+    assert mock_config_entry.data[CONF_ADDRESSES] == original_addresses
+    mock_cloud_account.discover_devices.assert_awaited_once_with(
+        cached_credentials=credentials
+    )
+
+
+async def test_reauth_wrong_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Reauthentication cannot replace the original account."""
+    mock_config_entry.add_to_hass(hass)
+    mock_cloud_account.user_id = "another-account"
+    original = dict(mock_config_entry.data)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "other@example.com", CONF_PASSWORD: "password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == original
+
+
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry and async_unload_entry."""
