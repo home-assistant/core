@@ -1,7 +1,7 @@
 """Test the VLC media player Telnet integration."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 from aiovlc.exceptions import CommandError, ConnectError
 from freezegun.api import FrozenDateTimeFactory
@@ -11,6 +11,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -20,6 +21,7 @@ from homeassistant.components.media_player import (
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     MediaType,
+    RepeatMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -29,6 +31,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
+    SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
@@ -112,6 +115,18 @@ ENTITY_ID = "media_player.vlc_telnet"
             "random",
             id="shuffle_set",
         ),
+        pytest.param(
+            SERVICE_REPEAT_SET,
+            {ATTR_MEDIA_REPEAT: RepeatMode.ONE},
+            "repeat",
+            id="repeat_set_repeat",
+        ),
+        pytest.param(
+            SERVICE_REPEAT_SET,
+            {ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+            "loop",
+            id="repeat_set_loop",
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -179,3 +194,84 @@ async def test_update_logs_error_instead_of_raising(
     assert state
     assert state.state == expected_state
     assert expected_log in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("repeat", "expected_calls"),
+    [
+        pytest.param(RepeatMode.OFF, [call.loop("off"), call.repeat("off")], id="off"),
+        pytest.param(RepeatMode.ONE, [call.repeat("on")], id="one"),
+        pytest.param(RepeatMode.ALL, [call.loop("on"), call.repeat("off")], id="all"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_repeat_set(
+    hass: HomeAssistant,
+    vlc_mock: MagicMock,
+    repeat: RepeatMode,
+    expected_calls: list,
+) -> None:
+    """Test that repeat_set sends the VLC loop and repeat commands in order."""
+    vlc_mock.reset_mock()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: repeat},
+        blocking=True,
+    )
+
+    assert [
+        method_call
+        for method_call in vlc_mock.method_calls
+        if method_call[0] in ("loop", "repeat")
+    ] == expected_calls
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_MEDIA_REPEAT] == repeat
+
+
+@pytest.mark.parametrize(
+    ("previous", "repeat", "failing_method", "expected"),
+    [
+        pytest.param(
+            RepeatMode.ONE, RepeatMode.ALL, "loop", RepeatMode.ONE, id="one_loop_fails"
+        ),
+        pytest.param(
+            RepeatMode.ONE, RepeatMode.ALL, "repeat", None, id="one_repeat_fails"
+        ),
+        pytest.param(RepeatMode.OFF, RepeatMode.ALL, "loop", None, id="off_loop_fails"),
+        pytest.param(
+            RepeatMode.ALL, RepeatMode.ONE, "repeat", None, id="all_repeat_fails"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_repeat_set_failure_keeps_confirmed_mode(
+    hass: HomeAssistant,
+    vlc_mock: MagicMock,
+    previous: RepeatMode,
+    repeat: RepeatMode,
+    failing_method: str,
+    expected: RepeatMode | None,
+) -> None:
+    """Test that a failed VLC command leaves only the mode VLC has confirmed."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: previous},
+        blocking=True,
+    )
+    getattr(vlc_mock, failing_method).side_effect = CommandError("test error")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_REPEAT_SET,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: repeat},
+            blocking=True,
+        )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes.get(ATTR_MEDIA_REPEAT) == expected
