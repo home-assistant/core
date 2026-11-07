@@ -49,6 +49,23 @@ from .const import ACCOUNT_NUMBER
             ],
             id="new_readings_only",
         ),
+        pytest.param(
+            [
+                {
+                    "read_at": "2024-06-01T13:00:00",
+                    "consumption": 20,
+                    "read": 40,
+                    "corrected": False,
+                },
+                {
+                    "read_at": "2024-06-01T14:00:00",
+                    "consumption": 35,
+                    "read": 70,
+                    "corrected": True,
+                },
+            ],
+            id="corrected_reading",
+        ),
     ],
 )
 @pytest.mark.usefixtures("recorder_mock", "mock_anglian_water_client")
