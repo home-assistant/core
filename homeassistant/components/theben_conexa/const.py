@@ -1,6 +1,7 @@
 """Constants for the Theben Conexa Smartmeter gateway integration."""
 
 DOMAIN = "theben_conexa"
+DATA_QUERY_LOCKS = "query_locks"
 
 # The pypi package theben_conexa_smgw returns the raw OBIS codes
 # according to the EN IEC 62056-61:2024 standard as a string of 12 hex digits.

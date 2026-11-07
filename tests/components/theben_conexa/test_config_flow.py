@@ -1,5 +1,6 @@
 """Test the Theben Conexa Smartmeter gateway config flow."""
 
+import asyncio
 from types import SimpleNamespace
 from unittest.mock import ANY, AsyncMock
 
@@ -19,6 +20,129 @@ TEST_CONFIG_DATA = {
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
 }
+
+
+async def test_client_creation_for_same_host_is_serialized(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_conexa_smgw: SimpleNamespace,
+) -> None:
+    """Test client creation for the same host is serialized across config flows."""
+    first_flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    second_flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    active_requests = 0
+    max_active_requests = 0
+    active_probes = 0
+    max_active_probes = 0
+
+    async def check_network(*args: object) -> None:
+        nonlocal active_probes, max_active_probes
+        active_probes += 1
+        max_active_probes = max(max_active_probes, active_probes)
+        try:
+            await asyncio.sleep(0.01)
+        finally:
+            active_probes -= 1
+
+    async def create_client(*args: object) -> ConexaSMGW:
+        nonlocal active_requests, max_active_requests
+        active_requests += 1
+        max_active_requests = max(max_active_requests, active_requests)
+        try:
+            await asyncio.sleep(0.01)
+            return mock_conexa_smgw.client
+        finally:
+            active_requests -= 1
+
+    mock_conexa_smgw.network.side_effect = check_network
+    mock_conexa_smgw.create.side_effect = create_client
+
+    first_result, second_result = await asyncio.gather(
+        hass.config_entries.flow.async_configure(
+            first_flow["flow_id"], TEST_CONFIG_DATA
+        ),
+        hass.config_entries.flow.async_configure(
+            second_flow["flow_id"],
+            {**TEST_CONFIG_DATA, CONF_USERNAME: "another-user"},
+        ),
+    )
+
+    assert first_result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        first_result["result"].unique_id
+        == f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-test-username"
+    )
+    assert second_result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        second_result["result"].unique_id
+        == f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-another-user"
+    )
+    assert max_active_requests == 1
+    assert max_active_probes == 1
+
+
+async def test_client_creation_for_different_hosts_is_not_serialized(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_conexa_smgw: SimpleNamespace,
+) -> None:
+    """Test client creation for different hosts use independent locks."""
+    first_flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    second_flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    active_requests = 0
+    max_active_requests = 0
+    requests_started = asyncio.Barrier(2)
+    probes_started = asyncio.Barrier(2)
+
+    async def check_network(*args: object) -> None:
+        await asyncio.wait_for(probes_started.wait(), timeout=1)
+
+    async def create_client(*args: object) -> ConexaSMGW:
+        nonlocal active_requests, max_active_requests
+        active_requests += 1
+        max_active_requests = max(max_active_requests, active_requests)
+        try:
+            await asyncio.wait_for(requests_started.wait(), timeout=1)
+            return mock_conexa_smgw.client
+        finally:
+            active_requests -= 1
+
+    mock_conexa_smgw.network.side_effect = check_network
+    mock_conexa_smgw.create.side_effect = create_client
+
+    first_result, second_result = await asyncio.gather(
+        hass.config_entries.flow.async_configure(
+            first_flow["flow_id"], TEST_CONFIG_DATA
+        ),
+        hass.config_entries.flow.async_configure(
+            second_flow["flow_id"],
+            {
+                **TEST_CONFIG_DATA,
+                CONF_HOST: "2.2.2.2",
+                CONF_USERNAME: "another-user",
+            },
+        ),
+    )
+
+    assert first_result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        first_result["result"].unique_id
+        == f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-test-username"
+    )
+    assert second_result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        second_result["result"].unique_id
+        == f"{mock_conexa_smgw.client.gatewayInfo.smgwID}-another-user"
+    )
+    assert max_active_requests == 2
 
 
 def _assert_create_entry_result(
