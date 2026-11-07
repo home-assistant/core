@@ -2,12 +2,9 @@
 
 import asyncio
 
-from google_weather_api import GoogleWeatherApi
-
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_REFERRER, DOMAIN
@@ -18,6 +15,7 @@ from .coordinator import (
     GoogleWeatherHourlyForecastCoordinator,
     GoogleWeatherRuntimeData,
     GoogleWeatherSubEntryRuntimeData,
+    create_api,
 )
 from .services import async_setup_services
 
@@ -37,14 +35,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Google Weather from a config entry."""
 
-    api = GoogleWeatherApi(
-        session=async_get_clientsession(hass),
-        api_key=entry.data[CONF_API_KEY],
-        referrer=entry.data.get(CONF_REFERRER),
-        language_code=hass.config.language,
-        # The entities report native values in metric units.
-        units_system="METRIC",
-    )
+    api = create_api(hass, entry.data[CONF_API_KEY], entry.data.get(CONF_REFERRER))
     subentries_runtime_data: dict[str, GoogleWeatherSubEntryRuntimeData] = {}
     for subentry in entry.subentries.values():
         subentry_runtime_data = GoogleWeatherSubEntryRuntimeData(

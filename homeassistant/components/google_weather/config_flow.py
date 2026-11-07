@@ -26,11 +26,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import section
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import CONF_REFERRER, DOMAIN, SECTION_API_KEY_OPTIONS
-from .coordinator import GoogleWeatherConfigEntry
+from .coordinator import GoogleWeatherConfigEntry, create_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,13 +66,32 @@ async def _validate_input(
     return False
 
 
-def _get_location_schema(hass: HomeAssistant) -> probatio.Schema:
-    """Return the schema for a location with default values from the hass config."""
+def _is_location_already_configured(
+    entry: GoogleWeatherConfigEntry,
+    new_data: dict[str, float],
+    epsilon: float = 1e-4,
+    exclude_subentry_id: str | None = None,
+) -> bool:
+    """Check if the location is already configured in the entry."""
+    for subentry in entry.subentries.values():
+        if exclude_subentry_id and subentry.subentry_id == exclude_subentry_id:
+            continue
+        # A more accurate way is to use the haversine formula, but for simplicity
+        # we use a simple distance check. The epsilon value is small anyway.
+        # This is mostly to capture cases where the user
+        # has slightly moved the location pin.
+        if (
+            abs(subentry.data[CONF_LATITUDE] - new_data[CONF_LATITUDE]) <= epsilon
+            and abs(subentry.data[CONF_LONGITUDE] - new_data[CONF_LONGITUDE]) <= epsilon
+        ):
+            return True
+    return False
+
+
+def _location_schema(hass: HomeAssistant) -> probatio.Schema:
+    """Return the schema for a location with the home location as default."""
     return probatio.Schema(
         {
-            # Name field is no longer allowed in config flow schemas
-            # pylint: disable-next=home-assistant-config-flow-name-field
-            probatio.Required(CONF_NAME, default=hass.config.location_name): str,
             probatio.Required(
                 CONF_LOCATION,
                 default={
@@ -85,28 +103,14 @@ def _get_location_schema(hass: HomeAssistant) -> probatio.Schema:
     )
 
 
-def _is_location_already_configured(
-    hass: HomeAssistant,
-    new_data: dict[str, float],
-    epsilon: float = 1e-4,
-    exclude_subentry_id: str | None = None,
-) -> bool:
-    """Check if the location is already configured."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        for subentry in entry.subentries.values():
-            if exclude_subentry_id and subentry.subentry_id == exclude_subentry_id:
-                continue
-            # A more accurate way is to use the haversine formula, but for simplicity
-            # we use a simple distance check. The epsilon value is small anyway.
-            # This is mostly to capture cases where the user
-            # has slightly moved the location pin.
-            if (
-                abs(subentry.data[CONF_LATITUDE] - new_data[CONF_LATITUDE]) <= epsilon
-                and abs(subentry.data[CONF_LONGITUDE] - new_data[CONF_LONGITUDE])
-                <= epsilon
-            ):
-                return True
-    return False
+def _location_title(hass: HomeAssistant, location: dict[str, float]) -> str:
+    """Return the title for a location, using the home name when it matches home."""
+    if (
+        abs(location[CONF_LATITUDE] - hass.config.latitude) <= 1e-4
+        and abs(location[CONF_LONGITUDE] - hass.config.longitude) <= 1e-4
+    ):
+        return hass.config.location_name
+    return f"{location[CONF_LATITUDE]:.5f}, {location[CONF_LONGITUDE]:.5f}"
 
 
 class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -136,27 +140,20 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 subentry = next(iter(entry.subentries.values()), None)
                 if subentry:
-                    latitude = subentry.data[CONF_LATITUDE]
-                    longitude = subentry.data[CONF_LONGITUDE]
+                    location = {
+                        CONF_LATITUDE: subentry.data[CONF_LATITUDE],
+                        CONF_LONGITUDE: subentry.data[CONF_LONGITUDE],
+                    }
                 else:
-                    latitude = self.hass.config.latitude
-                    longitude = self.hass.config.longitude
-                validation_input = {
-                    CONF_LOCATION: {CONF_LATITUDE: latitude, CONF_LONGITUDE: longitude}
-                }
+                    location = {
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                    }
             else:
-                if _is_location_already_configured(
-                    self.hass, user_input[CONF_LOCATION]
-                ):
-                    return self.async_abort(reason="already_configured")
-                validation_input = user_input
+                location = user_input[CONF_LOCATION]
+            validation_input = {CONF_LOCATION: location}
 
-            api = GoogleWeatherApi(
-                session=async_get_clientsession(self.hass),
-                api_key=api_key,
-                referrer=referrer,
-                language_code=self.hass.config.language,
-            )
+            api = create_api(self.hass, api_key, referrer)
             if await _validate_input(
                 validation_input, api, errors, description_placeholders
             ):
@@ -170,8 +167,8 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                     subentries=[
                         {
                             "subentry_type": "location",
-                            "data": user_input[CONF_LOCATION],
-                            "title": user_input[CONF_NAME],
+                            "data": location,
+                            "title": _location_title(self.hass, location),
                             "unique_id": None,
                         },
                     ],
@@ -190,17 +187,15 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_REFERRER: entry.data.get(CONF_REFERRER)
                     },
                 }
-            schema = STEP_USER_DATA_SCHEMA
+            data_schema = STEP_USER_DATA_SCHEMA
         else:
             if user_input is None:
                 user_input = {}
-            schema_dict = STEP_USER_DATA_SCHEMA.schema.copy()
-            schema_dict.update(_get_location_schema(self.hass).schema)
-            schema = probatio.Schema(schema_dict)
+            data_schema = STEP_USER_DATA_SCHEMA.extend(_location_schema(self.hass))
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(schema, user_input),
+            data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -235,13 +230,31 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         """Return if this is a new subentry."""
         return self.source == SOURCE_USER
 
+    def _get_location_schema(self) -> probatio.Schema:
+        """Return the schema for a location with default values from the hass config."""
+        return probatio.Schema(
+            {
+                probatio.Required(
+                    CONF_NAME, default=self.hass.config.location_name
+                ): str,
+                probatio.Required(
+                    CONF_LOCATION,
+                    default={
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                    },
+                ): LocationSelector(LocationSelectorConfig(radius=False)),
+            }
+        )
+
     async def async_step_location(
         self,
         user_input: dict[str, Any] | None = None,
     ) -> SubentryFlowResult:
         """Handle the location step."""
-        if self._get_entry().state is not ConfigEntryState.LOADED:
-            return self.async_abort(reason="entry_not_loaded")
+        entry = self._get_entry()
+        if entry.disabled_by:
+            return self.async_abort(reason="entry_disabled")
 
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -250,10 +263,19 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                 None if self._is_new else self._get_reconfigure_subentry().subentry_id
             )
             if _is_location_already_configured(
-                self.hass, user_input[CONF_LOCATION], exclude_subentry_id=exclude_id
+                entry,
+                user_input[CONF_LOCATION],
+                exclude_subentry_id=exclude_id,
             ):
                 return self.async_abort(reason="already_configured")
-            api: GoogleWeatherApi = self._get_entry().runtime_data.api
+            if entry.state is ConfigEntryState.LOADED:
+                api = entry.runtime_data.api
+            else:
+                api = create_api(
+                    self.hass,
+                    entry.data[CONF_API_KEY],
+                    entry.data.get(CONF_REFERRER),
+                )
             if await _validate_input(user_input, api, errors, description_placeholders):
                 if self._is_new:
                     return self.async_create_entry(
@@ -261,7 +283,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                         data=user_input[CONF_LOCATION],
                     )
                 return self.async_update_and_abort(
-                    self._get_entry(),
+                    entry,
                     self._get_reconfigure_subentry(),
                     title=user_input[CONF_NAME],
                     data=user_input[CONF_LOCATION],
@@ -278,7 +300,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="location",
             data_schema=self.add_suggested_values_to_schema(
-                _get_location_schema(self.hass), user_input
+                self._get_location_schema(), user_input
             ),
             errors=errors,
             description_placeholders=description_placeholders,
