@@ -76,6 +76,9 @@
       },
       "indoor_unit_water_pump_state": {
         "name": "Indoor unit water pump"
+      },
+      "on_off_thermostat_state": {
+        "name": "On/off thermostat"
       }
     },
     "sensor": {
