@@ -15,8 +15,11 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.izone.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_EXCLUDE, CONF_HOST
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import async_setup_component
 
 from .conftest import async_load_yaml_exclude, create_mock_controller
 
@@ -105,14 +108,40 @@ async def test_migrate_heals_legacy_domain_unique_id_keeps_custom_title(
     assert entry.title == "Living Room AC"
 
 
+YAML_ISSUE_ID = f"config_entry_only_{DOMAIN}"
+
+
+@pytest.mark.parametrize(
+    ("config", "issue_expected"),
+    [
+        pytest.param({DOMAIN: {CONF_EXCLUDE: []}}, True, id="yaml"),
+        pytest.param({}, False, id="no_yaml"),
+    ],
+)
+async def test_yaml_config_raises_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    config: ConfigType,
+    issue_expected: bool,
+) -> None:
+    """YAML config is unsupported and asks the user to remove it."""
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, YAML_ISSUE_ID) is not None
+    ) is issue_expected
+    assert not hass.config_entries.flow.async_progress()
+
+
 async def test_migrate_legacy_domain_unique_id_filters_yaml_excluded(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_create_discovery: AsyncMock,
     mock_discovery_service: Mock,
     mock_controller: Mock,
 ) -> None:
-    """YAML exclude narrows multiple discoveries to one eligible controller."""
-    await async_load_yaml_exclude(hass, "000000002")
+    """YAML exclude picks the controller, then the YAML repair is raised."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=DOMAIN,
@@ -128,12 +157,47 @@ async def test_migrate_legacy_domain_unique_id_filters_yaml_excluded(
         ]
     )
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await async_load_yaml_exclude(hass, "000000002")
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id == "000000001"
     assert entry.data[CONF_HOST] == "192.0.2.1"
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, YAML_ISSUE_ID)
+
+
+async def test_migrate_legacy_domain_unique_id_retry_defers_yaml_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_create_discovery: AsyncMock,
+    mock_discovery_service: Mock,
+    mock_controller: Mock,
+) -> None:
+    """The YAML repair waits until a retried legacy migration succeeds."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        title="iZone Aircon",
+        data={},
+        version=2,
+    )
+    entry.add_to_hass(hass)
+    mock_discovery_service.discover_all = AsyncMock(return_value=[])
+
+    await async_load_yaml_exclude(hass, "000000002")
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, YAML_ISSUE_ID) is None
+
+    mock_discovery_service.discover_all.return_value = [
+        ControllerEndpoint(uid="000000001", host="192.0.2.1"),
+        ControllerEndpoint(uid="000000002", host="192.0.2.2"),
+    ]
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == "000000001"
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, YAML_ISSUE_ID)
 
 
 async def test_migrate_legacy_domain_unique_id_filters_already_configured(

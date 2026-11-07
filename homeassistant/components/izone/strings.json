@@ -5,7 +5,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "continue_setup": "Continue setting up the discovered iZone controller.",
       "discovery_failed": "Failed to start iZone discovery. Make sure your network is properly configured.",
-      "discovery_started": "iZone discovery has started. Your controllers will appear as discovered devices under Settings \u003e Devices \u0026 services.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "unpaired_bridge": "This iZone bridge is not paired with an air conditioner."
     },

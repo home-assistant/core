@@ -13,7 +13,7 @@ import probatio
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, FlowType
 from homeassistant.const import CONF_HOST
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -54,7 +54,7 @@ def _flow_uid_for_matching(flow: ConfigFlow) -> str | None:
 
 
 class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Config flow: user, YAML import, HomeKit, and integration discovery."""
+    """Config flow: user, HomeKit, and integration discovery."""
 
     VERSION = 2
     MINOR_VERSION = 2
@@ -73,36 +73,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             return False
         return self_uid == other_uid
 
-    # -- User-visible and internal steps (roughly: import → user → discovery UI → HK → fan-out → confirm)
-
-    async def async_step_import(
-        self, _import_data: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """YAML import: start discovery and let runtime discovery offer flows.
-
-        The import step runs exactly once (Home Assistant calls it only when the YAML
-        key is present at startup). We start the discovery service so every controller
-        surfaced by the service's normal listener appears in discovered devices and
-        still requires normal confirmation.
-
-        No explicit rescan is issued: the service will broadcast its own discovery
-        request as part of start-up, and the import step itself will not be repeated.
-        """
-        if self._async_in_progress(include_uninitialized=True):
-            return self.async_abort(
-                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
-            )
-
-        try:
-            await izone_discovery.async_ensure_discovery(self.hass)
-        except OSError:
-            _LOGGER.debug("Unable to start iZone discovery from import", exc_info=True)
-            return self.async_abort(reason="discovery_failed")
-
-        # Discovery is now running; each controller will surface as an individual
-        # integration_discovery flow.  Use a dedicated abort reason so the UI does
-        # not misleadingly show "No devices found" when setup is actually in progress.
-        return self.async_abort(reason="discovery_started")
+    # -- User-visible and internal steps (roughly: user → discovery UI → HK → fan-out → confirm)
 
     @override
     async def async_step_user(
@@ -245,9 +216,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         device_uid = model.split(" ", 1)[1]
 
-        if device_uid in izone_discovery.yaml_excluded_uids(self.hass):
-            return self.async_abort(reason="no_devices_found")
-
         # async_set_unique_id + _abort_if_unique_id_configured handles both existing
         # entries (including SOURCE_IGNORE) and stale in-progress flows for this UID.
         # A direct async_entry_for_domain_unique_id pre-check would miss the
@@ -291,12 +259,9 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
-        """Handle fan-out, YAML import secondaries, and runtime discovery."""
+        """Handle fan-out and runtime discovery."""
         uid = self.context["unique_id"]
         host = discovery_info[CONF_HOST]
-        if uid in izone_discovery.yaml_excluded_uids(self.hass):
-            return self.async_abort(reason="no_devices_found")
-
         await self.async_set_unique_id(uid)
         self._abort_if_unique_id_configured()
         # Persist through confirm into entry data as CONF_HOST.
@@ -431,12 +396,6 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values={CONF_HOST: host},
             )
 
-        if endpoint.uid in izone_discovery.yaml_excluded_uids(self.hass):
-            return self._async_show_manual_host_form(
-                errors={"base": "no_devices_found"},
-                suggested_values={CONF_HOST: host},
-            )
-
         existing = self.hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, endpoint.uid
         )
@@ -504,7 +463,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         *,
         selected_uid: str,
     ) -> None:
-        """Start confirm flows for every other discovered UID (import uses its own path)."""
+        """Start confirm flows for every other discovered UID."""
         current_ids = self._async_current_ids(include_ignore=True)
         in_progress_ids = {
             flow["context"].get("unique_id")
