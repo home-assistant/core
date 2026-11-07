@@ -608,6 +608,15 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
             "format": "RGB",
         }
 
+    if isinstance(schema, selector.ColorRGBWSelector):
+        return {
+            "type": "array",
+            "items": {"type": "number"},
+            "minItems": 4,
+            "maxItems": 4,
+            "format": "RGBW",
+        }
+
     if isinstance(schema, selector.ConditionSelector):
         return probatio.to_openapi(cv.CONDITIONS_SCHEMA)
 
