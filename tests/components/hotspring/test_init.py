@@ -60,8 +60,9 @@ async def test_device_info(
             id="connection_error",
         ),
         pytest.param(
-            HotSpringError,
-            "Invalid response received from the Hot Spring API",
+            HotSpringError("Unexpected status payload"),
+            "Invalid response received from the Hot Spring API: "
+            "Unexpected status payload",
             id="invalid_response",
         ),
     ],
@@ -102,3 +103,4 @@ async def test_async_setup_mac_mismatch(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == "Found a different device at the configured host"

@@ -6,6 +6,7 @@ from hotspring import (
     HotSpringConnectionError,
     HotSpringConnectionTimeoutError,
     HotSpringError,
+    HotSpringNotReadyError,
     Spa,
     TemperatureUnit,
 )
@@ -98,8 +99,14 @@ async def test_set_target_temperature(
             id="connection_error",
         ),
         pytest.param(
-            HotSpringError,
-            "Invalid response received from the Hot Spring API",
+            HotSpringNotReadyError("SNA bridge is not connected"),
+            "^The spa is not connected to its Hot Spring home network adapter: "
+            "SNA bridge is not connected$",
+            id="not_ready",
+        ),
+        pytest.param(
+            HotSpringError("Unexpected response"),
+            "^Invalid response received from the Hot Spring API: Unexpected response$",
             id="invalid_response",
         ),
     ],

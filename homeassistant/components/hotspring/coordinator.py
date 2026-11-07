@@ -61,6 +61,7 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_response",
+                translation_placeholders={"error": str(error)},
             ) from error
 
         if (
@@ -69,7 +70,7 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
         ):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="invalid_response",
+                translation_key="unexpected_device",
             )
 
         return spa
