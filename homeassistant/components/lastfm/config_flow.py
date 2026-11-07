@@ -80,6 +80,42 @@ def _credentials_changed(
     )
 
 
+def _reconfigure_candidate(
+    options: Mapping[str, Any], user_input: dict[str, Any]
+) -> tuple[dict[str, Any], dict[str, str]]:
+    """Build candidate credentials and validate the matching API secret."""
+    candidate = {
+        CONF_API_KEY: user_input[CONF_API_KEY],
+        CONF_MAIN_USER: options[CONF_MAIN_USER] or user_input[CONF_MAIN_USER],
+    }
+    if not user_input[CONF_ENABLE_AUTHENTICATION]:
+        return candidate, {}
+    api_secret = user_input.get(CONF_API_SECRET) or options.get(CONF_API_SECRET)
+    if not api_secret or (
+        candidate[CONF_API_KEY] != options[CONF_API_KEY]
+        and not user_input.get(CONF_API_SECRET)
+    ):
+        return candidate, {CONF_API_SECRET: "api_secret_required"}
+    candidate[CONF_API_SECRET] = api_secret
+    return candidate, {}
+
+
+def _reconfigure_schema(options: Mapping[str, Any]) -> probatio.Schema:
+    """Build the credential form for an existing Last.fm entry."""
+    schema: dict[probatio.Marker, Any] = {
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+        probatio.Required(CONF_ENABLE_AUTHENTICATION): bool,
+        probatio.Optional(probatio.Secret(CONF_API_SECRET)): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    }
+    if not options[CONF_MAIN_USER]:
+        schema[probatio.Required(CONF_MAIN_USER)] = SelectSelector(
+            SelectSelectorConfig(options=options[CONF_USERS], custom_value=True)
+        )
+    return probatio.Schema(schema)
+
+
 def get_lastfm_user(
     api_key: str,
     username: str,
@@ -141,7 +177,7 @@ def validate_lastfm_users(
 
 def get_user_friends(api_key: str, username: str) -> list[str]:
     """Get the usernames of the friends of a Last.fm user."""
-    user, _ = get_lastfm_user(api_key, username)
+    user = LastFMNetwork(api_key=api_key).get_user(username)
     return [friend.get_name() for friend in user.get_friends()]
 
 
@@ -404,21 +440,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         options = entry.options
         errors: dict[str, str] = {}
         if user_input is not None:
-            candidate = {
-                CONF_API_KEY: user_input[CONF_API_KEY],
-                CONF_MAIN_USER: options[CONF_MAIN_USER] or user_input[CONF_MAIN_USER],
-            }
-            if user_input[CONF_ENABLE_AUTHENTICATION]:
-                api_secret = user_input.get(CONF_API_SECRET) or options.get(
-                    CONF_API_SECRET
-                )
-                if not api_secret or (
-                    candidate[CONF_API_KEY] != options[CONF_API_KEY]
-                    and not user_input.get(CONF_API_SECRET)
-                ):
-                    errors[CONF_API_SECRET] = "api_secret_required"
-                else:
-                    candidate[CONF_API_SECRET] = api_secret
+            candidate, errors = _reconfigure_candidate(options, user_input)
             if not errors:
                 _, errors = await self.hass.async_add_executor_job(
                     partial(
@@ -453,21 +475,10 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         return await self.async_step_finish_reconfigure()
             if self.cur_step is not None and self.cur_step["step_id"] != "reconfigure":
                 return self.cur_step
-        schema: dict[probatio.Marker, Any] = {
-            probatio.Required(probatio.Secret(CONF_API_KEY)): str,
-            probatio.Required(CONF_ENABLE_AUTHENTICATION): bool,
-            probatio.Optional(probatio.Secret(CONF_API_SECRET)): TextSelector(
-                TextSelectorConfig(type=TextSelectorType.PASSWORD)
-            ),
-        }
-        if not options[CONF_MAIN_USER]:
-            schema[probatio.Required(CONF_MAIN_USER)] = SelectSelector(
-                SelectSelectorConfig(options=options[CONF_USERS], custom_value=True)
-            )
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                probatio.Schema(schema),
+                _reconfigure_schema(options),
                 user_input
                 or {
                     CONF_API_KEY: options[CONF_API_KEY],

@@ -1,7 +1,7 @@
 """Configure tests for the LastFM integration."""
 
-from collections.abc import Awaitable, Callable
-from unittest.mock import patch
+from collections.abc import Awaitable, Callable, Generator
+from unittest.mock import MagicMock, patch
 
 from pylast import Track, WSError
 import pytest
@@ -14,8 +14,10 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     API_KEY,
+    AUTH_URL,
     CONF_DATA_WITH_SESSION_KEY,
     LOGIN_REQUIRED_ERROR,
+    SESSION_KEY,
     USERNAME_1,
     USERNAME_2,
     MockNetwork,
@@ -23,6 +25,25 @@ from . import (
 )
 
 type ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
+
+
+@pytest.fixture
+def mock_session_key_generator() -> Generator[MagicMock]:
+    """Mock web authentication with a controllable polling interval."""
+    with (
+        patch(
+            "homeassistant.components.lastfm.config_flow.SessionKeyGenerator",
+            autospec=True,
+        ) as constructor,
+        patch("homeassistant.components.lastfm.config_flow.POLLING_INTERVAL", 60),
+    ):
+        generator = constructor.return_value
+        generator.get_web_auth_url.return_value = AUTH_URL
+        generator.get_web_auth_session_key_username.return_value = (
+            SESSION_KEY,
+            USERNAME_1,
+        )
+        yield generator
 
 
 @pytest.fixture(name="config_entry")

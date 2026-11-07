@@ -184,11 +184,6 @@ class MockSessionKeyGenerator:
             raise self.session_key_error
         return self.session_key, self.session_username
 
-    def get_web_auth_session_key(self, url: str, token: str = "") -> str:
-        """Get mock session key."""
-        session_key, _username = self.get_web_auth_session_key_username(url, token)
-        return session_key
-
 
 def patch_user(user: MockUser) -> MockUser:
     """Patch interface."""

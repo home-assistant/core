@@ -13,7 +13,6 @@ from homeassistant.components.lastfm.const import (
     ATTR_LAST_PLAYED,
     CONF_API_SECRET,
     CONF_ENABLE_AUTHENTICATION,
-    CONF_SESSION_KEY,
     DOMAIN,
     STATE_NOT_SCROBBLING,
 )
@@ -21,7 +20,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import API_KEY, API_SECRET, SESSION_KEY, MockSessionKeyGenerator, MockUser
+from . import API_KEY, API_SECRET, SESSION_KEY, MockUser
 from .conftest import ComponentSetup
 
 
@@ -114,6 +113,7 @@ async def test_sensor_now_playing_with_hidden_listening_information(
     assert caplog.messages.count(warning) == 1
 
 
+@pytest.mark.usefixtures("mock_session_key_generator")
 async def test_reconfigure_unlocks_hidden_listening_information(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -130,11 +130,6 @@ async def test_reconfigure_unlocks_hidden_listening_information(
 
     with (
         patch("pylast.User", return_value=default_user),
-        patch(
-            "homeassistant.components.lastfm.config_flow.SessionKeyGenerator",
-            return_value=MockSessionKeyGenerator(),
-        ),
-        patch("homeassistant.components.lastfm.config_flow.POLLING_INTERVAL", 60),
         patch(
             "homeassistant.components.lastfm.coordinator.LastFMNetwork",
             wraps=LastFMNetwork,
@@ -165,88 +160,49 @@ async def test_reconfigure_unlocks_hidden_listening_information(
 
 
 @pytest.mark.parametrize(
-    "user",
-    [
-        pytest.param(
-            MockUser(
-                thrown_error=WSError(
-                    LastFMNetwork(
-                        api_key=API_KEY,
-                        api_secret=API_SECRET,
-                        session_key=SESSION_KEY,
-                    ),
-                    "status",
-                    "Something strange",
-                )
-            ),
-            id="user_data",
-        ),
-        pytest.param(
-            MockUser(
-                recent_tracks_error=WSError(
-                    LastFMNetwork(
-                        api_key=API_KEY,
-                        api_secret=API_SECRET,
-                        session_key=SESSION_KEY,
-                    ),
-                    "status",
-                    "Something strange",
-                )
-            ),
-            id="recent_tracks",
-        ),
-        pytest.param(
-            MockUser(thrown_error=PyLastError("Something strange")),
-            id="plain_library_error",
-        ),
-        pytest.param(
-            MockUser(recent_tracks_error=PyLastError("Something strange")),
-            id="recent_tracks_library_error",
-        ),
-    ],
-)
-async def test_error_log_does_not_include_credentials(
-    setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-    user: MockUser,
-) -> None:
-    """Test authenticated client credentials are excluded from error logs."""
-    authenticated_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={
-            **config_entry.options,
-            CONF_API_SECRET: API_SECRET,
-            CONF_SESSION_KEY: SESSION_KEY,
-        },
-    )
-
-    await setup_integration(authenticated_entry, user)
-
-    assert "Something strange" in caplog.text
-    assert API_KEY not in caplog.text
-    assert API_SECRET not in caplog.text
-    assert SESSION_KEY not in caplog.text
-
-
-@pytest.mark.parametrize(
     "error_kwarg",
     [
         pytest.param("thrown_error", id="user_info"),
         pytest.param("recent_tracks_error", id="recent_tracks"),
     ],
 )
-async def test_update_error_does_not_log_api_key(
-    hass: HomeAssistant,
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        pytest.param(
+            WSError(
+                LastFMNetwork(
+                    api_key=API_KEY,
+                    api_secret=API_SECRET,
+                    session_key=SESSION_KEY,
+                ),
+                "8",
+                "Operation failed",
+            ),
+            "8: Operation failed",
+            id="api_error",
+        ),
+        pytest.param(
+            PyLastError("Something strange"),
+            "Something strange",
+            id="library_error",
+        ),
+    ],
+)
+async def test_error_log_does_not_include_credentials(
     setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
+    authenticated_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
     error_kwarg: str,
+    error: PyLastError,
+    message: str,
 ) -> None:
-    """Test the API key in the pylast network repr is not logged."""
-    error = WSError(LastFMNetwork(api_key=API_KEY), "8", "Operation failed")
-    await setup_integration(config_entry, MockUser(**{error_kwarg: error}))
+    """Test API and library error logs exclude authenticated client credentials."""
+    await setup_integration(
+        authenticated_config_entry, MockUser(**{error_kwarg: error})
+    )
 
-    assert "LastFM update for testaccount1 failed: 8: Operation failed" in caplog.text
+    assert f"LastFM update for testaccount1 failed: {message}" in caplog.text
     assert API_KEY not in caplog.text
+    assert API_SECRET not in caplog.text
+    assert SESSION_KEY not in caplog.text

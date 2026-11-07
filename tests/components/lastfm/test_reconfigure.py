@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 from threading import Event
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from pylast import MalformedResponseError, NetworkError, WSError
 import pytest
@@ -241,23 +241,16 @@ async def test_reconfigure_authorization(
     user_input: dict[str, str | bool],
     session_username: str,
     expected_options: dict[str, str | list[str]],
+    mock_session_key_generator: MagicMock,
 ) -> None:
     """Authorize an existing hidden profile without creating another entry."""
     entry: MockConfigEntry = request.getfixturevalue(entry_fixture)
     entry.add_to_hass(hass)
     original_options = dict(entry.options)
-    generator = MockSessionKeyGenerator(
-        session_key=NEW_SESSION_KEY, session_username=session_username
-    )
+    exchange_session = mock_session_key_generator.get_web_auth_session_key_username
+    exchange_session.return_value = NEW_SESSION_KEY, session_username
     with (
         patch("pylast.User", return_value=hidden_user),
-        patch(SESSION_KEY_GENERATOR_PATH, return_value=generator),
-        patch.object(
-            generator,
-            "get_web_auth_session_key_username",
-            wraps=generator.get_web_auth_session_key_username,
-        ) as exchange_session,
-        patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry() as setup_entry,
     ):
         result = await entry.start_reconfigure_flow(hass)
@@ -441,14 +434,13 @@ async def test_reconfigure_authorization_start_retry(
     default_user: MockUser,
     error: Exception,
     expected_error: str,
+    mock_session_key_generator: MagicMock,
 ) -> None:
     """Keep the old configuration when starting authorization fails and retry."""
     config_entry.add_to_hass(hass)
-    generator = MockSessionKeyGenerator(web_auth_url_error=error)
+    mock_session_key_generator.get_web_auth_url.side_effect = error
     with (
         patch("pylast.User", return_value=default_user),
-        patch(SESSION_KEY_GENERATOR_PATH, return_value=generator),
-        patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry(),
     ):
         result = await config_entry.start_reconfigure_flow(hass)
@@ -459,7 +451,7 @@ async def test_reconfigure_authorization_start_retry(
         assert result["errors"] == {"base": expected_error}
         assert config_entry.options == CONF_DATA
 
-        generator.web_auth_url_error = None
+        mock_session_key_generator.get_web_auth_url.side_effect = None
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=RECONFIGURE_DATA
         )
@@ -523,6 +515,7 @@ async def test_reconfigure_authorization_failure(
     assert authenticated_config_entry.options == CONF_DATA_WITH_SESSION_KEY
 
 
+@pytest.mark.usefixtures("mock_session_key_generator")
 async def test_reconfigure_automatic_authorization(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -532,8 +525,6 @@ async def test_reconfigure_automatic_authorization(
     config_entry.add_to_hass(hass)
     with (
         patch("pylast.User", return_value=hidden_user),
-        patch(SESSION_KEY_GENERATOR_PATH, return_value=MockSessionKeyGenerator()),
-        patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry(),
     ):
         result = await config_entry.start_reconfigure_flow(hass)
@@ -558,20 +549,12 @@ async def test_reconfigure_abort(
     hass: HomeAssistant,
     authenticated_config_entry: MockConfigEntry,
     default_user: MockUser,
+    mock_session_key_generator: MagicMock,
 ) -> None:
     """Cancel polling and retain credentials when reconfiguration is abandoned."""
     authenticated_config_entry.add_to_hass(hass)
-    generator = MockSessionKeyGenerator()
-    with (
-        patch("pylast.User", return_value=default_user),
-        patch(SESSION_KEY_GENERATOR_PATH, return_value=generator),
-        patch.object(
-            generator,
-            "get_web_auth_session_key_username",
-            wraps=generator.get_web_auth_session_key_username,
-        ) as exchange_session,
-        patch(POLLING_INTERVAL_PATH, 60),
-    ):
+    exchange_session = mock_session_key_generator.get_web_auth_session_key_username
+    with patch("pylast.User", return_value=default_user):
         result = await authenticated_config_entry.start_reconfigure_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1316,6 +1299,7 @@ async def test_reconfigure_rejects_concurrent_credentials_flow(
     assert authenticated_config_entry.options == CONF_DATA_WITH_SESSION_KEY
 
 
+@pytest.mark.usefixtures("mock_session_key_generator")
 async def test_reconfigure_preserves_users_changed_during_authorization(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -1325,8 +1309,6 @@ async def test_reconfigure_preserves_users_changed_during_authorization(
     config_entry.add_to_hass(hass)
     with (
         patch("pylast.User", return_value=default_user),
-        patch(SESSION_KEY_GENERATOR_PATH, return_value=MockSessionKeyGenerator()),
-        patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry(),
     ):
         result = await config_entry.start_reconfigure_flow(hass)
