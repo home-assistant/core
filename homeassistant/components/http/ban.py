@@ -5,8 +5,11 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from datetime import datetime
+from enum import Enum
+import html
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
+from json.decoder import JSONDecodeError
 import logging
 from socket import gethostbyaddr
 from typing import Any, Concatenate, Final
@@ -90,7 +93,7 @@ async def ban_middleware(
     try:
         return await handler(request)
     except HTTPUnauthorized:
-        await process_wrong_login(request)
+        await process_wrong_login(request, AccessMethod.HTTP)
         raise
 
 
@@ -105,13 +108,21 @@ def log_invalid_auth[_HassViewT: HomeAssistantView, **_P](
         """Try to log failed login attempts if response status >= BAD_REQUEST."""
         resp = await func(view, request, *args, **kwargs)
         if resp.status >= HTTPStatus.BAD_REQUEST:
-            await process_wrong_login(request)
+            await process_wrong_login(request, AccessMethod.HTTP)
         return resp
 
     return handle_req
 
 
-async def process_wrong_login(request: Request) -> None:
+class AccessMethod(Enum):
+    """The method of authenticated access."""
+
+    LOGIN = "login"
+    HTTP = "http"
+    WEBSOCKET = "websocket"
+
+
+async def process_wrong_login(request: Request, access_method: AccessMethod) -> None:
     """Process a wrong login attempt.
 
     Increase failed login attempts counter for remote IP address.
@@ -132,14 +143,25 @@ async def process_wrong_login(request: Request) -> None:
                 gethostbyaddr, request.remote
             )
 
-    base_msg = (
-        "Login attempt or request with invalid authentication from"
-        f" {remote_host} ({remote_addr})."
-    )
+    if access_method is AccessMethod.LOGIN:
+        base_msg = f"Failed login attempt (incorrect MFA code) from {remote_host} ({remote_addr})."
+
+        try:
+            form_data = await request.json()
+            if isinstance(form_data, dict) and isinstance(
+                raw_username := form_data.get("username"), str
+            ):
+                username = html.escape(repr(raw_username)[1:-1])
+
+                base_msg = f"Failed login attempt (with username: '{username}') from {remote_host} ({remote_addr})."
+        except JSONDecodeError:
+            pass
+    else:
+        base_msg = f"API request with invalid authentication from {remote_host} ({remote_addr})."
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
-    log_msg = f"{base_msg} Requested URL: '{request.rel_url}'. ({user_agent})"
+    log_msg = f"{base_msg} Requested URL: '{request.rel_url}'. Access method: '{access_method}'. ({user_agent})"
 
     notification_msg = f"{base_msg} See the log for details."
 
