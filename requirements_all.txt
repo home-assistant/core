@@ -2922,6 +2922,7 @@ pythonegardia==1.0.52
 pythonkuma==0.5.3
 
 # homeassistant.components.tile
+# homeassistant.components.tile_ble
 pytile==2024.12.0
 
 # homeassistant.components.tomorrowio
@@ -3357,6 +3358,9 @@ thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.14
+
+# homeassistant.components.tile_ble
+tile-ble==0.0.1
 
 # homeassistant.components.tilt_ble
 tilt-ble==1.0.1

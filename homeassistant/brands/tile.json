@@ -1,0 +1,5 @@
+{
+  "domain": "tile",
+  "name": "Tile",
+  "integrations": ["tile", "tile_ble"]
+}
