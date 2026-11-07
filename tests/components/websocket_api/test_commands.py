@@ -1,6 +1,7 @@
 """Tests for WebSocket API commands."""
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from copy import deepcopy
 import io
 import logging
@@ -17,6 +18,7 @@ from pytest_homeassistant.common import (
     MockEntityPlatform,
     MockModule,
     MockUser,
+    async_fire_time_changed,
     async_mock_service,
     mock_device_registry,
     mock_integration,
@@ -66,11 +68,15 @@ from homeassistant.helpers import (
     system_state,
     trace,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
@@ -2598,6 +2604,109 @@ async def test_render_template_with_timeout(
     assert msg["error"]["code"] == const.ERR_TEMPLATE_ERROR
 
     assert "TemplateError" not in caplog.text
+
+
+async def test_render_template_closed_before_first_render(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a render_template subscription is gone when the client closes at once."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.websocket_api")
+    hass.states.async_set("sensor.switch", "off")
+    hass.states.async_set("sensor.value", "0")
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "render_template",
+            "template": "{{ now().year }}{% if is_state('sensor.switch', 'on') %}"
+            "{{ states('sensor.value') }}{% endif %}",
+        }
+    )
+    # The close frame is read together with the subscription, before the first render
+    await client.close()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.switch", "on")
+    freezer.tick(61)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    caplog.clear()
+    hass.states.async_set("sensor.value", "1")
+    await hass.async_block_till_done()
+
+    assert "on closed connection" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("target", "original", "message"),
+    [
+        pytest.param(
+            "homeassistant.helpers.template.Template.async_render_will_timeout",
+            AsyncMock(return_value=False),
+            {
+                "type": "render_template",
+                "template": "{{ states('sensor.value') }}",
+                "timeout": 3,
+            },
+            id="render_template_with_timeout",
+        ),
+        pytest.param(
+            "homeassistant.components.websocket_api.commands"
+            ".async_validate_trigger_config",
+            async_validate_trigger_config,
+            {
+                "type": "subscribe_trigger",
+                "trigger": {"platform": "state", "entity_id": "sensor.value"},
+            },
+            id="subscribe_trigger",
+        ),
+    ],
+)
+async def test_subscription_registered_after_close(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    target: str,
+    original: Callable[..., Awaitable[Any]],
+    message: dict[str, Any],
+) -> None:
+    """Test a subscription registered after the connection closed is removed."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.websocket_api")
+    hass.states.async_set("sensor.value", "0")
+    client = await hass_ws_client(hass)
+    entered = asyncio.Event()
+    release = asyncio.Event()
+    disconnected = asyncio.Event()
+
+    async def wait_for_release(*args: Any, **kwargs: Any) -> Any:
+        entered.set()
+        await release.wait()
+        return await original(*args, **kwargs)
+
+    @callback
+    def on_disconnected() -> None:
+        disconnected.set()
+
+    async_dispatcher_connect(hass, const.SIGNAL_WEBSOCKET_DISCONNECTED, on_disconnected)
+
+    with patch(target, side_effect=wait_for_release):
+        await client.send_json_auto_id(message)
+        await entered.wait()
+        # Keep the handler suspended until the server has handled the close
+        await client.close()
+        await disconnected.wait()
+        release.set()
+        # The handler runs as a background task
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    caplog.clear()
+    hass.states.async_set("sensor.value", "1")
+    await hass.async_block_till_done()
+
+    assert "on closed connection" not in caplog.text
 
 
 async def test_render_template_returns_with_match_all(

@@ -48,6 +48,15 @@ REDACT_KEYS = {
     "auth_token",
 }
 
+
+class _ClosedSubscriptions(dict[Hashable, Callable[[], Any]]):
+    """Subscriptions of a closed connection: unsubscribe on registration."""
+
+    @override
+    def __setitem__(self, key: Hashable, unsub: Callable[[], Any]) -> None:
+        unsub()
+
+
 type MessageHandler = Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], None]
 type BinaryHandler = Callable[[HomeAssistant, ActiveConnection, bytes], None]
 
@@ -332,6 +341,7 @@ class ActiveConnection:
     def async_handle_close(self) -> None:
         """Handle closing down connection."""
         self._async_unsubscribe_all()
+        self.subscriptions = _ClosedSubscriptions()
         self._send_message = self._connect_closed_error
         current_request.set(None)
         current_connection.set(None)
