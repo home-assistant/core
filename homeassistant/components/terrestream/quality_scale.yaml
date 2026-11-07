@@ -1,0 +1,93 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration defines no custom actions.
+  appropriate-polling:
+    status: done
+    comment: >-
+      A shared snapshot is polled every 30 seconds, matching the default sensor
+      interval and renewing the device's 60-second controller lease.
+  brands:
+    status: done
+    comment: >-
+      Artwork is submitted with passing image validation in
+      https://github.com/home-assistant/brands/pull/11222.
+      Maintainer approval and merge are still pending.
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration defines no custom actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration defines no custom conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration defines no custom triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration defines no custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no configuration options.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery: todo
+  discovery-update-info: todo
+  docs-data-update: done
+  docs-examples:
+    status: todo
+    comment: The documentation describes a use case but has no YAML example or blueprint.
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry represents one device with a fixed set of sensors.
+  entity-category:
+    status: done
+    comment: All entities expose primary measurements.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: All entities expose primary measurements used in dashboards and automations.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices:
+    status: exempt
+    comment: Each config entry represents one device, removed with the entry.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
