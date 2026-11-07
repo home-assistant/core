@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import timedelta
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -9,7 +10,10 @@ from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, BlindType
 from motionblinds.motion_blinds import DEVICE_TYPE_BLIND
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
+from homeassistant.components.config import DOMAIN as CONFIG_DOMAIN
+from homeassistant.components.motion_blinds import async_remove_config_entry_device
 from homeassistant.components.motion_blinds.const import (
     DEFAULT_INTERFACE,
     DOMAIN,
@@ -18,6 +22,7 @@ from homeassistant.components.motion_blinds.const import (
 from homeassistant.const import CONF_API_KEY, CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 TEST_HOST = "1.2.3.4"
 TEST_API_KEY = "12ab345c-d67e-8f"
@@ -163,3 +168,61 @@ async def test_entity_unavailable_on_update_failure(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("identifier", "expected_result"),
+    [
+        pytest.param(TEST_GATEWAY_MAC, False, id="gateway"),
+        pytest.param(TEST_BLIND_MAC, False, id="connected-blind"),
+        pytest.param("old_blind", True, id="stale-blind"),
+    ],
+)
+async def test_remove_config_entry_device_via_websocket(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    identifier: str,
+    expected_result: bool,
+) -> None:
+    """Test device removal through the device-registry WebSocket API."""
+    assert await async_setup_component(hass, CONFIG_DOMAIN, {})
+    ws_client: MockHAClientWebSocket = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_MAC,
+        data={CONF_HOST: TEST_HOST, CONF_API_KEY: TEST_API_KEY},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "old_blind")},
+    )
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, identifier), entry.entry_id
+    )
+    assert device_entry is not None
+
+    await ws_client.send_json_auto_id(
+        {"type": "config/device_registry/remove", "device_id": device_entry.id}
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"] is expected_result
+    assert (device_registry.async_get(device_entry.id) is None) is expected_result
+
+
+async def test_remove_config_entry_device_without_runtime_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a device cannot be removed when runtime data is unavailable."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    device_entry = SimpleNamespace(identifiers={(DOMAIN, "old_blind")})
+
+    assert not await async_remove_config_entry_device(hass, config_entry, device_entry)
