@@ -140,8 +140,23 @@
     "rate_limit_exceeded": {
       "message": "The Škoda API rejected the command because the rate limit was reached or the vehicle's 12 V battery is low. Try again later."
     },
+    "render_unavailable": {
+      "message": "The vehicle render is currently unavailable."
+    },
     "vehicle_not_responding": {
       "message": "The vehicle did not respond in time. Try again later."
+    }
+  },
+  "services": {
+    "get_image_url": {
+      "description": "Retrieves the URL of the vehicle render image.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The vehicle to retrieve the render image URL for.",
+          "name": "Vehicle"
+        }
+      },
+      "name": "Get image URL"
     }
   }
 }
