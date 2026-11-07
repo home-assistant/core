@@ -602,6 +602,9 @@
     "communication_error": {
       "message": "Error communicating with Growatt API: {error}"
     },
+    "device_list_failed": {
+      "message": "Failed to fetch the device list from Growatt, will retry."
+    },
     "device_not_configured": {
       "message": "{device_type} device {serial_number} is not configured for actions."
     },
@@ -650,6 +653,9 @@
     "login_failed": {
       "message": "Growatt login failed: {message}"
     },
+    "login_rate_limited": {
+      "message": "Growatt has temporarily blocked logins for this account after too many attempts (error 507). Home Assistant will try again automatically later."
+    },
     "migration_invalid_plant_id": {
       "message": "The configuration contains an invalid plant ID, reconfigure the integration"
     },
@@ -668,11 +674,23 @@
     "rate_limited": {
       "message": "Growatt API rate limited, will retry: {error}"
     },
+    "relogin_throttled": {
+      "message": "Growatt did not return data, and Home Assistant logged in less than {minutes} minutes ago. It will try again later."
+    },
     "token_auth_required": {
       "message": "This action requires token authentication (V1 API)."
     },
+    "unexpected_web_page": {
+      "message": "Growatt returned a web page instead of data, even right after logging in."
+    },
     "unknown_auth_type": {
       "message": "Unknown authentication type in config entry"
+    }
+  },
+  "issues": {
+    "unexpected_web_page": {
+      "description": "Growatt is returning a web page instead of data for {title}, even right after logging in. Log in to the ShinePhone app, accept any pending terms, then reload the integration.",
+      "title": "Growatt is returning a web page instead of data"
     }
   },
   "selector": {
