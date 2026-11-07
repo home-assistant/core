@@ -201,4 +201,4 @@ async def test_update_release_notes(
         {"id": 1, "type": "update/release_notes", "entity_id": ENTITY_ID}
     )
     result = await ws_client.receive_json()
-    assert "5 package" in result["result"]
+    assert "5 package" in result["result"]["release_notes"]

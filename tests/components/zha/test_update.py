@@ -681,9 +681,9 @@ async def test_update_release_notes(
 
         result = await ws_client.receive_json()
         assert result["success"] is True
-        assert "Some lengthy release notes" in result["result"]
-        assert OTA_MESSAGE_RELIABILITY in result["result"]
-        assert OTA_MESSAGE_BATTERY_POWERED not in result["result"]
+        assert "Some lengthy release notes" in result["result"]["release_notes"]
+        assert OTA_MESSAGE_RELIABILITY in result["result"]["release_notes"]
+        assert OTA_MESSAGE_BATTERY_POWERED not in result["result"]["release_notes"]
 
     # Battery-powered devices
     with patch(
@@ -700,9 +700,9 @@ async def test_update_release_notes(
 
         result = await ws_client.receive_json()
         assert result["success"] is True
-        assert "Some lengthy release notes" in result["result"]
-        assert OTA_MESSAGE_RELIABILITY in result["result"]
-        assert OTA_MESSAGE_BATTERY_POWERED in result["result"]
+        assert "Some lengthy release notes" in result["result"]["release_notes"]
+        assert OTA_MESSAGE_RELIABILITY in result["result"]["release_notes"]
+        assert OTA_MESSAGE_BATTERY_POWERED in result["result"]["release_notes"]
 
 
 async def test_update_version_sync_device_registry(

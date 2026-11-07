@@ -645,7 +645,7 @@ async def test_update_release_notes(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] is not None
+    assert result["result"]["release_notes"] is not None
 
 
 async def test_update_blank_release_notes(
@@ -677,7 +677,7 @@ async def test_update_blank_release_notes(
     )
     result = await ws_client.receive_json()
     await hass.async_block_till_done()
-    assert result["result"] is None
+    assert result["result"]["release_notes"] is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_ultima_client")

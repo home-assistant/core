@@ -127,8 +127,8 @@ async def test_update_firm(
         }
     )
     result = await client.receive_json()
-    assert TEST_DOWNLOAD_URL in result["result"]
-    assert TEST_RELEASE_NOTES in result["result"]
+    assert TEST_DOWNLOAD_URL in result["result"]["release_notes"]
+    assert TEST_RELEASE_NOTES in result["result"]["release_notes"]
 
     # test install
     await hass.services.async_call(

@@ -40,7 +40,7 @@ async def test_plex_update(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] is None
+    assert result["result"]["release_notes"] is None
 
     apply_mock = requests_mock.put("/updater/apply")
 
@@ -86,7 +86,7 @@ async def test_plex_update(
         }
     )
     result = await ws_client.receive_json()
-    assert result["result"] == "* Summary of\n* release notes"
+    assert result["result"]["release_notes"] == "* Summary of\n* release notes"
 
     # Successful upgrade request
     await hass.services.async_call(
