@@ -6,7 +6,7 @@ from typing import override
 from kaco_rs485 import AsyncBus, BusError, InverterState, KacoRs485Client, status_text
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -15,6 +15,11 @@ from .const import CONF_ADDRESSES, DOMAIN, LOGGER
 SCAN_INTERVAL = timedelta(seconds=30)
 
 type KacoRs485ConfigEntry = ConfigEntry[KacoRs485Coordinator]
+
+
+def device_identifier(entry: KacoRs485ConfigEntry, address: int) -> tuple[str, str]:
+    """Return the device registry identifier of one inverter."""
+    return (DOMAIN, f"{entry.entry_id}_{address}")
 
 
 class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
@@ -53,7 +58,7 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
             for address in self.config_entry.data[CONF_ADDRESSES]
             if (
                 device := registry.async_get_device_by_identifier(
-                    (DOMAIN, f"{self.config_entry.entry_id}_{address}"),
+                    device_identifier(self.config_entry, address),
                     self.config_entry.entry_id,
                 )
             )
@@ -69,8 +74,18 @@ class KacoRs485Coordinator(DataUpdateCoordinator[dict[int, InverterState]]):
     async def async_close(self) -> None:
         """Close the bus if it is open."""
         if self._opened:
-            await self._bus.close()
             self._opened = False
+            await self._bus.close()
+
+    @callback
+    @override
+    def _unschedule_refresh(self) -> None:
+        """Release the port once no entity listens; polling stops with it."""
+        super()._unschedule_refresh()
+        # Not a background task: unload would cancel it mid-close.
+        self.config_entry.async_create_task(
+            self.hass, self.async_close(), "kaco_rs485 close bus"
+        )
 
     @override
     async def _async_update_data(self) -> dict[int, InverterState]:
