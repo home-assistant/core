@@ -1,6 +1,5 @@
 """Tests for the ONVIF integration."""
 
-import collections
 from collections import defaultdict
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -258,18 +257,16 @@ async def async_parse_raw_events(
 ) -> None:
     """Parse raw library events with a real EventManager."""
     mock_messages = []
-    event_by_topic: collections.defaultdict[str, list[EventEntity]] = (
-        collections.defaultdict(list)
-    )
+    events_by_message: dict[int, list[EventEntity]] = {}
     for topic, topic_events in raw_events:
         mock_msg = MagicMock()
         mock_msg.Topic._value_1 = topic
         mock_msg.Message._value_1.PropertyOperation = property_operation
         mock_messages.append(mock_msg)
-        event_by_topic[topic].extend(topic_events)
+        events_by_message[id(mock_msg)] = topic_events
 
     async def mock_parse(topic, unique_id, msg):
-        return event_by_topic.get(topic)
+        return events_by_message[id(msg)]
 
     with patch(
         "homeassistant.components.onvif.event_manager.onvif_parsers"

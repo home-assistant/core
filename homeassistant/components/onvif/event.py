@@ -14,7 +14,6 @@ from homeassistant.util.enum import try_parse_enum
 
 from .device import ONVIFConfigEntry, ONVIFDevice
 from .entity import ONVIFBaseEntity
-from .models import Event
 from .util import build_event_entity_names
 
 EVENT_TYPE_TRIGGERED = "triggered"
@@ -82,7 +81,6 @@ class ONVIFEvent(ONVIFBaseEntity, EventEntity):
     ) -> None:
         """Initialize the ONVIF event entity."""
         self._attr_unique_id = uid
-        self._last_event: Event | None = None
         if entry is not None:
             self._attr_device_class = try_parse_enum(
                 EventDeviceClass, entry.original_device_class
@@ -103,21 +101,16 @@ class ONVIFEvent(ONVIFBaseEntity, EventEntity):
         super().__init__(device)
 
     @callback
-    def _async_check_triggered(self) -> None:
-        """Trigger if a new message has been received for this event."""
-        event = self.device.events.get_uid(self._attr_unique_id)
-        # The event manager stores a new Event object for every message
-        if event is None or event is self._last_event:
-            return
-        self._last_event = event
-        if event.property_operation != "Initialized":
-            self._trigger_event(EVENT_TYPE_TRIGGERED)
-
-    @callback
     def _async_handle_update(self) -> None:
         """Handle updated events from the event manager."""
-        self._async_check_triggered()
-        self.async_write_ha_state()
+        if not (
+            triggers := self.device.events.async_pop_triggers(self._attr_unique_id)
+        ):
+            self.async_write_ha_state()
+            return
+        for _ in range(triggers):
+            self._trigger_event(EVENT_TYPE_TRIGGERED)
+            self.async_write_ha_state()
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -126,5 +119,5 @@ class ONVIFEvent(ONVIFBaseEntity, EventEntity):
         self.async_on_remove(
             self.device.events.async_add_listener(self._async_handle_update)
         )
-        # The message that created this entity arrived before it was added
-        self._async_check_triggered()
+        # Messages may have arrived before this entity was added
+        self._async_handle_update()

@@ -1,6 +1,7 @@
 """ONVIF event abstraction."""
 
 import asyncio
+from collections import Counter
 from collections.abc import Callable
 import datetime as dt
 from typing import TYPE_CHECKING
@@ -124,6 +125,7 @@ class EventManager:
 
         self._uid_by_platform: dict[str, set[str]] = {}
         self._events: dict[str, Event] = {}
+        self._pending_triggers: Counter[str] = Counter()
         self._listeners: list[CALLBACK_TYPE] = []
 
     @property
@@ -225,10 +227,13 @@ class EventManager:
                 continue
 
             # "Initialized" is resent on every subscribe and renew
-            property_operation = getattr(
-                msg.Message._value_1,  # noqa: SLF001
-                "PropertyOperation",
-                None,
+            initialized = (
+                getattr(
+                    msg.Message._value_1,  # noqa: SLF001
+                    "PropertyOperation",
+                    None,
+                )
+                == "Initialized"
             )
             for event in events:
                 value = event.value
@@ -246,10 +251,11 @@ class EventManager:
                         event.entity_category or ""
                     ),
                     entity_enabled=event.entity_enabled,
-                    property_operation=property_operation,
                 )
                 self.get_uids_by_platform(ha_event.platform).add(ha_event.uid)
                 self._events[ha_event.uid] = ha_event
+                if ha_event.platform == "event" and not initialized:
+                    self._pending_triggers[ha_event.uid] += 1
 
     def get_uid(self, uid: str) -> Event | None:
         """Retrieve event for given id."""
@@ -258,6 +264,11 @@ class EventManager:
     def get_platform(self, platform) -> list[Event]:
         """Retrieve events for given platform."""
         return [event for event in self._events.values() if event.platform == platform]
+
+    @callback
+    def async_pop_triggers(self, uid: str) -> int:
+        """Return and reset the number of pending triggers for an event."""
+        return self._pending_triggers.pop(uid, 0)
 
     def get_uids_by_platform(self, platform: str) -> set[str]:
         """Retrieve uids for a given platform."""

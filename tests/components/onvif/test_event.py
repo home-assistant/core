@@ -5,7 +5,7 @@ from datetime import timedelta
 from freezegun.api import FrozenDateTimeFactory
 from onvif_parsers.model import EventEntity
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    EVENT_STATE_CHANGED,
     HTTP_DIGEST_AUTHENTICATION,
     STATE_UNKNOWN,
 )
@@ -159,6 +160,33 @@ async def test_event_triggered_on_each_message(
     await hass.async_block_till_done()
 
     assert hass.states.get(LINE_CROSSED_ENTITY_ID).state == triggered_at
+
+
+async def test_event_triggered_for_each_message_in_batch(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that each message for the same event in one batch triggers it."""
+    _, _, mock_device = await setup_onvif_integration(
+        hass, capabilities=CAPABILITIES, raw_events=LINE_CROSSED_EVENTS
+    )
+    event_manager = mock_device.events
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    freezer.tick(timedelta(seconds=10))
+    await async_parse_raw_events(event_manager, LINE_CROSSED_EVENTS * 3)
+    event_manager.async_callback_listeners()
+    await hass.async_block_till_done()
+
+    assert [
+        event.data["new_state"].state
+        for event in state_changes
+        if event.data["entity_id"] == LINE_CROSSED_ENTITY_ID
+    ] == [
+        (dt_util.utcnow() + timedelta(milliseconds=offset)).isoformat(
+            timespec="milliseconds"
+        )
+        for offset in range(3)
+    ]
 
 
 @pytest.mark.usefixtures("freezer")
