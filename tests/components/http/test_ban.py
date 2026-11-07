@@ -380,13 +380,13 @@ async def test_ip_bans_file_creation(
         notifications = async_get_persistent_notifications(hass)
         assert len(notifications) == 2
         assert (
-            notifications["http-login"]["message"] == "Failed API access attempt from"
+            notifications["http-login"]["message"] == "Failed API access attempt"
             " from example.com (200.201.202.204)."
             " See the log for details."
         )
 
         assert (
-            "Failed API access attempt from"
+            "Failed API access attempt"
             " from example.com (200.201.202.204)."
             " Requested URL: '/example'." in caplog.text
         )
@@ -529,12 +529,12 @@ async def test_failed_login_reverse_dns_failure(
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][ip_address("200.201.202.204")] == 1
     assert (
-        "Failed API access attempt from"
+        "Failed API access attempt"
         " from 200.201.202.204 (200.201.202.204)." in caplog.text
     )
     notifications = async_get_persistent_notifications(hass)
     assert (
-        notifications["http-login"]["message"] == "Failed API access attempt from"
+        notifications["http-login"]["message"] == "Failed API access attempt"
         " from 200.201.202.204 (200.201.202.204)."
         " See the log for details."
     )
