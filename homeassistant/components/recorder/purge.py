@@ -205,7 +205,10 @@ def _purge_states_and_attributes_ids(
     # The logbook only shows a state change that links to its old state, so
     # keep the current state of each recorded entity and the old state of
     # each state that is not purged yet
-    keep_state_ids = instance.states_manager.committed_state_ids()
+    linked_state_ids = instance.states_manager.linked_state_ids(
+        purge_before.timestamp()
+    )
+    keep_state_ids = instance.states_manager.committed_state_ids() | linked_state_ids
     for _ in range(states_batch_size):
         state_ids, attributes_ids = _select_state_attributes_ids_to_purge(
             session, purge_before, max_bind_vars, keep_state_ids
@@ -213,11 +216,12 @@ def _purge_states_and_attributes_ids(
         if not state_ids:
             has_remaining_state_ids_to_purge = False
             break
-        linked_state_ids = _select_linked_old_state_ids(
+        batch_linked_state_ids = _select_linked_old_state_ids(
             session, purge_before, state_ids
         )
-        keep_state_ids |= linked_state_ids
-        _purge_state_ids(instance, session, state_ids - linked_state_ids)
+        linked_state_ids |= batch_linked_state_ids
+        keep_state_ids |= batch_linked_state_ids
+        _purge_state_ids(instance, session, state_ids - batch_linked_state_ids)
         attributes_ids_batch = attributes_ids_batch | attributes_ids
 
     _purge_unused_attributes_ids(instance, session, attributes_ids_batch)
