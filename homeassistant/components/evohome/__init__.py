@@ -33,7 +33,7 @@ from .const import (
     SCAN_INTERVAL_DEFAULT,
     SCAN_INTERVAL_MINIMUM,
 )
-from .coordinator import EvoDataUpdateCoordinator
+from .coordinator import EvoAccountCoordinator, EvoLocationCoordinator
 from .services import async_setup_services
 from .storage import TokenManager
 
@@ -62,7 +62,8 @@ CONFIG_SCHEMA: Final = probatio.Schema(
 class EvoData:
     """Dataclass for storing evohome data."""
 
-    coordinator: EvoDataUpdateCoordinator
+    account: EvoAccountCoordinator
+    coordinator: EvoLocationCoordinator
     loc_idx: int
     tcs: ec2.ControlSystem
 
@@ -85,26 +86,35 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         config[DOMAIN][CONF_PASSWORD],
         async_get_clientsession(hass),
     )
-    coordinator = EvoDataUpdateCoordinator(
+    account = EvoAccountCoordinator(
         hass,
         _LOGGER,
         ec2.EvohomeClient(token_manager),
+        name=f"{DOMAIN}_account_coordinator",
+        update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
+        client_v1=ec1.EvohomeClient(token_manager),
+    )
+    coordinator = EvoLocationCoordinator(
+        hass,
+        _LOGGER,
+        account,
         name=f"{DOMAIN}_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         location_idx=config[DOMAIN][CONF_LOCATION_IDX],
-        client_v1=ec1.EvohomeClient(token_manager),
     )
 
-    await coordinator.async_register_shutdown()
-    await coordinator.async_first_refresh()
+    for coord in (account, coordinator):
+        await coord.async_register_shutdown()
+        await coord.async_first_refresh()
 
-    if not coordinator.last_update_success:
-        _LOGGER.error(f"Failed to fetch initial data: {coordinator.last_exception}")  # noqa: G004
-        return False
+        if not coord.last_update_success:
+            _LOGGER.error(f"Failed to fetch initial data: {coord.last_exception}")  # noqa: G004
+            return False
 
     assert coordinator.tcs is not None  # mypy
 
     hass.data[EVOHOME_DATA] = EvoData(
+        account=account,
         coordinator=coordinator,
         loc_idx=coordinator.loc_idx,
         tcs=coordinator.tcs,
