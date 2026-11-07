@@ -398,6 +398,12 @@ def hubs_music_library_fixture():
     return load_fixture("plex/hubs_library_section.xml")
 
 
+@pytest.fixture(name="hubs_search", scope="package")
+def hubs_search_fixture():
+    """Load hub search resource payload and return it."""
+    return load_fixture("plex/hubs_search.xml")
+
+
 @pytest.fixture(name="update_check_nochange", scope="package")
 def update_check_fixture_nochange() -> str:
     """Load a no-change update resource payload and return it."""

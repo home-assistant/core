@@ -51,7 +51,8 @@ def search_media(
 
     # Preserve legacy service parameters
     for legacy_key, key in LEGACY_PARAM_MAPPING.items():
-        if value := kwargs.pop(legacy_key, None):
+        value = kwargs.pop(legacy_key, None)
+        if value is not None and value != "":
             _LOGGER.debug(
                 "Legacy parameter '%s' used, consider using '%s'", legacy_key, key
             )
