@@ -52,6 +52,9 @@
       "reset_tamper": {
         "name": "Reset tamper"
       },
+      "siren_test_alarm": {
+        "name": "Test alarm"
+      },
       "smoke_test": {
         "name": "Start self-test"
       }
