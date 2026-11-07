@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from requests import RequestException
 
 from homeassistant.components.tado import DOMAIN
@@ -101,7 +102,7 @@ async def test_no_rate_limit_info_keeps_the_static_interval(
 
 @pytest.mark.usefixtures("init_integration")
 async def test_rate_limited_update_does_not_poll_every_five_minutes(
-    hass: HomeAssistant,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """A failed update with the quota at zero backs off instead of retrying soon."""
     coordinator = _coordinator(hass)
@@ -111,7 +112,9 @@ async def test_rate_limited_update_does_not_poll_every_five_minutes(
             coordinator._tado, "rate_limit_info", return_value={"remaining": "0"}
         ),
     ):
-        await coordinator.async_refresh()
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
     assert not coordinator.last_update_success
     assert coordinator.update_interval == QUOTA_RETRY
 
@@ -123,5 +126,8 @@ async def test_rate_limited_update_does_not_poll_every_five_minutes(
             return_value={"remaining": "0", "reset-seconds": "1800"},
         ),
     ):
-        await coordinator.async_refresh()
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+    assert not coordinator.last_update_success
     assert coordinator.update_interval == timedelta(minutes=31)
