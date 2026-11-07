@@ -33,8 +33,13 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle Zeroconf discovery."""
 
-        # Do not probe the device if the host is already configured
-        self._async_abort_entries_match({CONF_HOST: discovery_info.host})
+        # Ignored devices may advertise a different UUID than their API returns.
+        for entry in self._async_current_entries(include_ignore=True):
+            if (
+                entry.entry_id != self.context.get("entry_id")
+                and entry.data.get(CONF_HOST) == discovery_info.host
+            ):
+                return self.async_abort(reason="already_configured")
 
         # Do not probe the device if the UUID advertised over mDNS matches
         # an existing (or ignored) entry
