@@ -13,21 +13,6 @@ CONF_RFSESSION_ID = "rf_session_id"
 CONF_EZVIZ_ACCOUNT = "ezviz_account"
 CONF_ENCRYPTION_PASSWORD = "encryption_password"
 
-# Services data
-DIR_UP = "up"
-DIR_DOWN = "down"
-DIR_LEFT = "left"
-DIR_RIGHT = "right"
-ATTR_ENABLE = "enable"
-ATTR_DIRECTION = "direction"
-ATTR_SPEED = "speed"
-ATTR_LEVEL = "level"
-ATTR_TYPE = "type_value"
-
-# Service names
-SERVICE_WAKE_DEVICE = "wake_device"
-SERVICE_DETECTION_SENSITIVITY = "set_alarm_detection_sensibility"
-
 # Defaults
 EU_URL = "apiieu.ezvizlife.com"
 RUSSIA_URL = "apirus.ezvizru.com"

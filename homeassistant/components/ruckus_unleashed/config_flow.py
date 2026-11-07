@@ -12,7 +12,6 @@ import probatio
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -33,6 +32,7 @@ from .const import (
     KEY_SYS_SERIAL,
     KEY_SYS_TITLE,
 )
+from .coordinator import RuckusUnleashedConfigEntry
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -81,7 +81,7 @@ class RuckusConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RuckusUnleashedConfigEntry,
     ) -> RuckusOptionsFlowHandler:
         """Get the options flow for this handler."""
         return RuckusOptionsFlowHandler()

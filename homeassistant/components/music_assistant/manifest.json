@@ -5,12 +5,13 @@
   "categories": ["media_entertainment.music_radio_services"],
   "codeowners": ["@music-assistant", "@arturpragacz"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["auth"],
   "documentation": "https://www.home-assistant.io/integrations/music_assistant",
   "integration_type": "service",
   "iot_class": "local_push",
   "loggers": ["music_assistant"],
   "quality_scale": "bronze",
-  "requirements": ["music-assistant-client==1.6.0"],
+  "requirements": ["music-assistant-client==1.8.0"],
   "zeroconf": ["_mass._tcp.local."]
 }

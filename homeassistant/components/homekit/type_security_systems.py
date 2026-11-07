@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_ALARM_SYSTEM
 
 from homeassistant.components.alarm_control_panel import (
@@ -25,6 +26,7 @@ from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_CURRENT_SECURITY_STATE,
     CHAR_TARGET_SECURITY_STATE,
+    PROP_VALID_VALUES,
     SERV_SECURITY_SYSTEM,
 )
 
@@ -80,6 +82,7 @@ class SecuritySystem(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
         assert state
         self._alarm_code = self.config.get(ATTR_CODE)
+        self._skipped: set[tuple[str, int]] = set()
 
         supported_states = state.attributes.get(
             EntityStateAttribute.SUPPORTED_FEATURES,
@@ -95,8 +98,8 @@ class SecuritySystem(HomeAccessory):
         serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
         current_char = serv_alarm.get_characteristic(CHAR_CURRENT_SECURITY_STATE)
         target_char = serv_alarm.get_characteristic(CHAR_TARGET_SECURITY_STATE)
-        default_current_states = current_char.properties.get("ValidValues")
-        default_target_services = target_char.properties.get("ValidValues")
+        default_current_states = current_char.properties.get(PROP_VALID_VALUES)
+        default_target_services = target_char.properties.get(PROP_VALID_VALUES)
 
         # Both characteristics start at 0 (stay armed). Panels without
         # ARM_HOME drop 0 from the valid values below, and HAP-python logs an
@@ -156,6 +159,24 @@ class SecuritySystem(HomeAccessory):
             params[AlarmControlPanelServiceArgument.CODE] = self._alarm_code
         self.async_call_service(ALARM_CONTROL_PANEL_DOMAIN, service, params)
 
+    def _set_if_valid(self, char: Characteristic, value: int) -> bool:
+        """Push value to char, or skip (returning False) if not advertised.
+
+        The characteristic's valid values are frozen at build time; pushing a
+        value outside that set would raise ValueError in pyhap. A skip is
+        logged once per value, as only a rebuild can change the outcome.
+        """
+        name = char.display_name
+        if value in char.properties[PROP_VALID_VALUES].values():
+            char.set_value(value)
+            return True
+        if (name, value) not in self._skipped:
+            self._skipped.add((name, value))
+            _LOGGER.warning(
+                "%s: Skipping unsupported %s value %d", self.entity_id, name, value
+            )
+        return False
+
     @callback
     @override
     def async_update_state(self, new_state: State) -> None:
@@ -164,21 +185,25 @@ class SecuritySystem(HomeAccessory):
         if hass_state in {"None", STATE_UNKNOWN, STATE_UNAVAILABLE}:
             # Bail out early for no state, unknown or unavailable
             return
-        if hass_state is not None:
-            hass_state = AlarmControlPanelState(hass_state)
-        if (
-            hass_state
-            and (current_state := HASS_TO_HOMEKIT_CURRENT.get(hass_state)) is not None
+        hass_state = AlarmControlPanelState(hass_state)
+        current_state = HASS_TO_HOMEKIT_CURRENT.get(hass_state)
+        target_state = HASS_TO_HOMEKIT_TARGET.get(hass_state)
+        if current_state is not None and self._set_if_valid(
+            self.char_current_state, current_state
         ):
-            self.char_current_state.set_value(current_state)
             _LOGGER.debug(
                 "%s: Updated current state to %s (%d)",
                 self.entity_id,
                 hass_state,
                 current_state,
             )
+        if target_state is None:
+            return
         if (
-            hass_state
-            and (target_state := HASS_TO_HOMEKIT_TARGET.get(hass_state)) is not None
+            hass_state is AlarmControlPanelState.ARMING
+            and target_state
+            not in self.char_target_state.properties[PROP_VALID_VALUES].values()
         ):
-            self.char_target_state.set_value(target_state)
+            # Arming doesn't say which mode is pending, so keep the current target
+            return
+        self._set_if_valid(self.char_target_state, target_state)

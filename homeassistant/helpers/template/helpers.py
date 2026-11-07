@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, Any, NoReturn, overload
 
 import probatio
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.helpers import (
     area_registry as ar,
@@ -16,7 +17,7 @@ from .context import template_cv
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 def raise_no_default(function: str, value: Any) -> NoReturn:
@@ -70,16 +71,14 @@ def resolve_area_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
 
 
 @overload
-def forgiving_boolean(value: Any) -> bool | object: ...
+def forgiving_boolean(value: Any) -> bool: ...
 
 
 @overload
 def forgiving_boolean[_T](value: Any, default: _T) -> bool | _T: ...
 
 
-def forgiving_boolean[_T](
-    value: Any, default: _T | object = _SENTINEL
-) -> bool | _T | object:
+def forgiving_boolean[_T](value: Any, default: _T | _SENTINEL = _SENTINEL) -> bool | _T:
     """Try to convert value to a boolean."""
     try:
         return cv.boolean(value)

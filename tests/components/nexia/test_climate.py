@@ -1,11 +1,21 @@
 """Tests for the nexia climate platform."""
 
-from nexia.home import NexiaHome
+from typing import Any
+from unittest.mock import call
 
-from homeassistant.components.climate import HVACMode
+from nexia.const import HOLD_PERMANENT, OPERATION_MODE_COOL
+from nexia.home import NexiaHome
+import pytest
+
+from homeassistant.components.climate import ATTR_HVAC_MODE, HVACMode
+from homeassistant.components.nexia.const import ATTR_RUN_MODE, DOMAIN
+from homeassistant.components.nexia.services import SERVICE_SET_HVAC_RUN_MODE
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration
+
+ENTITY_ID = "climate.nick_office_nick_office"
 
 
 async def test_climate_zones(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:
@@ -13,7 +23,7 @@ async def test_climate_zones(hass: HomeAssistant, patch_nexia_home: NexiaHome) -
 
     await setup_integration(hass, patch_nexia_home)
 
-    state = hass.states.get("climate.nick_office_nick_office")
+    state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == HVACMode.HEAT_COOL
     expected_attributes = {
@@ -76,3 +86,43 @@ async def test_climate_zones(hass: HomeAssistant, patch_nexia_home: NexiaHome) -
     # HA changes the implementation and a new one appears
     for key, value in expected_attributes.items():
         assert state.attributes[key] == value, f"key = {key}"
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_hold_calls", "expected_set_mode_calls"),
+    [
+        pytest.param({ATTR_RUN_MODE: HOLD_PERMANENT}, 1, [], id="run_mode_only"),
+        pytest.param(
+            {ATTR_HVAC_MODE: HVACMode.COOL},
+            0,
+            [call(mode=OPERATION_MODE_COOL)],
+            id="hvac_mode_only",
+        ),
+        pytest.param(
+            {ATTR_RUN_MODE: HOLD_PERMANENT, ATTR_HVAC_MODE: HVACMode.COOL},
+            1,
+            [call(mode=OPERATION_MODE_COOL)],
+            id="both",
+        ),
+    ],
+)
+async def test_set_hvac_run_mode(
+    hass: HomeAssistant,
+    patch_nexia_home: NexiaHome,
+    service_data: dict[str, Any],
+    expected_hold_calls: int,
+    expected_set_mode_calls: list[Any],
+) -> None:
+    """Test the set_hvac_run_mode action with either field left out."""
+    await setup_integration(hass, patch_nexia_home)
+    zone = patch_nexia_home.get_thermostat_by_id(2000000).get_zone_by_id(100)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_RUN_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        blocking=True,
+    )
+
+    assert zone.set_permanent_hold.call_count == expected_hold_calls
+    assert zone.set_mode.call_args_list == expected_set_mode_calls

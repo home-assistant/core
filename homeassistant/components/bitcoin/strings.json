@@ -5,6 +5,14 @@
       "unknown_currency": "blockchain.com does not quote Bitcoin in the currency from your YAML configuration."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "currency": "[%key:component::bitcoin::config::step::user::data::currency%]"
+        },
+        "data_description": {
+          "currency": "[%key:component::bitcoin::config::step::user::data_description::currency%]"
+        }
+      },
       "user": {
         "data": {
           "currency": "Currency"
@@ -12,6 +20,76 @@
         "data_description": {
           "currency": "The currency the Bitcoin exchange rate is shown in."
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "blocks_size": {
+        "name": "Blocks size"
+      },
+      "btc_mined": {
+        "name": "Mined"
+      },
+      "difficulty": {
+        "name": "Difficulty"
+      },
+      "estimated_btc_sent": {
+        "name": "Estimated sent"
+      },
+      "estimated_transaction_volume_usd": {
+        "name": "Estimated transaction volume"
+      },
+      "exchangerate": {
+        "name": "Exchange rate"
+      },
+      "hash_rate": {
+        "name": "Hash rate"
+      },
+      "market_price_usd": {
+        "name": "Market price"
+      },
+      "mined_blocks": {
+        "name": "Mined blocks",
+        "unit_of_measurement": "blocks"
+      },
+      "miners_revenue_btc": {
+        "name": "Miners revenue"
+      },
+      "miners_revenue_usd": {
+        "name": "Miners revenue in USD"
+      },
+      "minutes_between_blocks": {
+        "name": "Time between blocks"
+      },
+      "next_retarget": {
+        "name": "Next retarget"
+      },
+      "number_of_transactions": {
+        "name": "Transactions",
+        "unit_of_measurement": "transactions"
+      },
+      "timestamp": {
+        "name": "Statistics timestamp"
+      },
+      "total_blocks": {
+        "name": "Total blocks",
+        "unit_of_measurement": "[%key:component::bitcoin::entity::sensor::mined_blocks::unit_of_measurement%]"
+      },
+      "total_btc": {
+        "name": "Total supply"
+      },
+      "total_btc_sent": {
+        "name": "Total sent"
+      },
+      "total_fees_btc": {
+        "name": "Total fees"
+      },
+      "trade_volume_btc": {
+        "name": "Trade volume"
+      },
+      "trade_volume_usd": {
+        "name": "Trade volume in USD"
       }
     }
   },

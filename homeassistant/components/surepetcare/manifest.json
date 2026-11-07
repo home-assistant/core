@@ -4,6 +4,7 @@
   "categories": ["pets"],
   "codeowners": ["@benleb", "@danielhiversen"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/surepetcare",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

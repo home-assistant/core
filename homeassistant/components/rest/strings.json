@@ -3,6 +3,15 @@
     "error_communicating": {
       "message": "Error communicating with {resource}"
     },
+    "no_route": {
+      "message": "No route to resource/endpoint: {resource}"
+    },
+    "resource_not_set": {
+      "message": "The resource is not set"
+    },
+    "ssl_error": {
+      "message": "An SSL error occurred while connecting to {resource}"
+    },
     "turn_off_failed": {
       "message": "Failed to turn off {resource}"
     },
