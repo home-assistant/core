@@ -227,7 +227,7 @@ async def test_migrate_climate_unique_id(
         identifiers={(DOMAIN, "c50f167537524366a5af7aa3942feb1e")},
         model="ThermoZone",
     )
-    entity_registry.async_get_or_create(
+    entity = entity_registry.async_get_or_create(
         domain=Platform.CLIMATE,
         platform=DOMAIN,
         unique_id="c50f167537524366a5af7aa3942feb1e-climate",
@@ -240,14 +240,9 @@ async def test_migrate_climate_unique_id(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = entity_registry.async_get_entity_id(
-        Platform.CLIMATE,
-        DOMAIN,
-        "c50f167537524366a5af7aa3942feb1e-thermozone",
-    )
-    assert entity_id
-    entity_migrated = entity_registry.async_get(entity_id)
+    entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
+    assert entity_migrated.id == entity.id
     assert entity_migrated.unique_id == "c50f167537524366a5af7aa3942feb1e-thermozone"
 
 
