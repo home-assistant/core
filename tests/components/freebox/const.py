@@ -54,3 +54,9 @@ DATA_HOME_ALARM_GET_VALUE = load_json_object_fixture(
 # Home
 # Set a node value with success
 DATA_HOME_SET_VALUE = load_json_object_fixture("freebox/home_set_value.json")
+
+# Home
+# SHUTTER node id 150/151, endpoint id 4
+DATA_HOME_SHUTTER_GET_VALUE = load_json_object_fixture(
+    "freebox/home_shutter_get_value.json"
+)
