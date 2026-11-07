@@ -607,6 +607,12 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.NTQ: (
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="power",
+        ),
+    ),
     DeviceCategory.PC: (
         TuyaSwitchEntityDescription(
             key=DPCode.CHILD_LOCK,

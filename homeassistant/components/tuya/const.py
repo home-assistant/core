@@ -767,6 +767,7 @@ class DPCode(StrEnum):
     HUMIDITY_OUTDOOR_3 = "humidity_outdoor_3"  # Outdoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
+    INLET_TEMP = "inlet_temp"  # Inlet temperature
     INSTALLATION_HEIGHT = "installation_height"
     INVERTER_OUTPUT_POWER = "inverter_output_power"
     IPC_AUTO_SIREN = "ipc_auto_siren"
@@ -808,6 +809,7 @@ class DPCode(StrEnum):
     NEAR_DETECTION = "near_detection"
     OPPOSITE = "opposite"
     ORP_CURRENT = "orp_current"
+    OUTLET_TEMP = "outlet_temp"  # Outlet temperature
     OUTPUT_POWER_LIMIT = "output_power_limit"
     OXYGEN = "oxygen"  # Oxygen bar
     PAUSE = "pause"

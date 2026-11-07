@@ -1039,6 +1039,20 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
     ),
+    DeviceCategory.NTQ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.INLET_TEMP,
+            translation_key="inlet_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.OUTLET_TEMP,
+            translation_key="outlet_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
     DeviceCategory.PC: (
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
