@@ -77,8 +77,8 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
         try:
             data = await self.solarlog.update_basic_data()
             if self._update_counter >= 100:
-                self._update_counter = 0
                 firmware_data = await self.solarlog.update_firmware_information()
+                self._update_counter = 0
         except SolarLogConnectionError as ex:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
