@@ -301,6 +301,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         item = await self._async_get_event(uid)
         series = _get_series(item.icalendar_instance)
         _check_whole_event(series, recurrence_id, recurrence_range)
+        _check_series_change(series, event)
         _set_fields(series, event)
         await self._async_save(item)
         await self.coordinator.async_request_refresh()
@@ -404,6 +405,17 @@ def _check_whole_event(
     ):
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="occurrence_not_supported"
+        )
+
+
+def _check_series_change(series: icalendar.Event, event: dict[str, Any]) -> None:
+    """Refuse changes the recurrence of a series can't follow."""
+    if "RRULE" not in series and "RDATE" not in series:
+        return
+    # UNTIL, EXDATE and RECURRENCE-ID keep the type of the old start
+    if isinstance(event[EVENT_START], datetime) != isinstance(series.DTSTART, datetime):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="all_day_change_not_supported"
         )
 
 

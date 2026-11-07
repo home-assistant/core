@@ -44,6 +44,9 @@
     }
   },
   "exceptions": {
+    "all_day_change_not_supported": {
+      "message": "A recurring event can't be changed between all-day and timed"
+    },
     "event_not_found": {
       "message": "The event was not found on the CalDAV server"
     },

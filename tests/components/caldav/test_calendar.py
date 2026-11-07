@@ -2062,6 +2062,56 @@ async def test_occurrence_not_supported(
     stored_event.client.delete.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    ("ics", "uid", "recurrence_id", "event"),
+    [
+        pytest.param(
+            SERIES_ICS,
+            "series",
+            FIRST_OCCURRENCE,
+            {"summary": "Weekly", "dtstart": "2026-10-26", "dtend": "2026-10-27"},
+            id="timed_to_all_day",
+        ),
+        pytest.param(
+            ALL_DAY_SERIES_ICS,
+            "all-day-series",
+            "",
+            {
+                "summary": "Holiday",
+                "dtstart": "2026-11-20T09:00:00",
+                "dtend": "2026-11-20T10:00:00",
+            },
+            id="all_day_to_timed",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_update_series_all_day_change(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    stored_event: Event,
+    uid: str,
+    recurrence_id: str,
+    event: dict[str, Any],
+) -> None:
+    """Test a recurring event can't switch between all-day and timed."""
+    response = await _ws_call(
+        hass,
+        hass_ws_client,
+        type="calendar/event/update",
+        uid=uid,
+        recurrence_id=recurrence_id,
+        recurrence_range="THISANDFUTURE",
+        event=event,
+    )
+
+    assert response["error"] == {
+        "code": "failed",
+        "message": "A recurring event can't be changed between all-day and timed",
+    }
+    stored_event.client.put.assert_not_called()
+
+
 UPDATE_SINGLE = {**UPDATE, "uid": "single"}
 DELETE_SINGLE = {**DELETE, "uid": "single"}
 
