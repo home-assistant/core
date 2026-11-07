@@ -41,6 +41,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
+import homeassistant.helpers.issue_registry as ir
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
@@ -570,24 +571,39 @@ async def test_refresh_failure_makes_entities_unavailable(
     assert hass.states.get(ZONE_ENTITY).state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("refresh_error", "connected"),
+    [
+        pytest.param(ConnectionError("offline"), True, id="bridge_unreachable"),
+        pytest.param(None, False, id="system_offline"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
-async def test_soft_fault_marks_entities_unavailable_until_reconnect(
+async def test_unavailable_logged_once_until_reconnect(
     hass: HomeAssistant,
     mock_controller: Mock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    refresh_error: Exception | None,
+    connected: bool,
 ) -> None:
-    """Successful refresh with connected=False marks entities unavailable."""
+    """Entities go unavailable with one log line, and one more on recovery."""
     assert hass.states.get(CONTROLLER_ENTITY).state == HVACMode.COOL
     assert hass.states.get(ZONE_ENTITY).state == HVACMode.HEAT_COOL
 
-    mock_controller.connected = False
-    freezer.tick(UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    mock_controller.refresh_all.side_effect = refresh_error
+    mock_controller.connected = connected
+    # Repeated failed polls must not log again.
+    for _ in range(3):
+        freezer.tick(UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
     assert hass.states.get(CONTROLLER_ENTITY).state == STATE_UNAVAILABLE
     assert hass.states.get(ZONE_ENTITY).state == STATE_UNAVAILABLE
+    assert caplog.text.count("Error fetching izone 000000001 data") == 1
 
+    mock_controller.refresh_all.side_effect = None
     mock_controller.connected = True
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
@@ -595,6 +611,11 @@ async def test_soft_fault_marks_entities_unavailable_until_reconnect(
 
     assert hass.states.get(CONTROLLER_ENTITY).state == HVACMode.COOL
     assert hass.states.get(ZONE_ENTITY).state == HVACMode.HEAT_COOL
+    assert (
+        "homeassistant.components.izone.coordinator",
+        logging.INFO,
+        "Fetching izone 000000001 data recovered",
+    ) in caplog.record_tuples
 
 
 @pytest.mark.parametrize(
@@ -926,6 +947,39 @@ async def test_command_connection_error_recovers_on_coordinator_refresh(
 
     assert hass.states.get(CONTROLLER_ENTITY).state == HVACMode.COOL
     assert hass.states.get(ZONE_ENTITY).state == HVACMode.HEAT_COOL
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("service", "setter"),
+    [
+        pytest.param(IZoneService.AIRFLOW_MIN, "set_airflow_min", id="min"),
+        pytest.param(IZoneService.AIRFLOW_MAX, "set_airflow_max", id="max"),
+    ],
+)
+async def test_deprecated_airflow_action_still_works_and_raises_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_zones: list[Mock],
+    service: str,
+    setter: str,
+) -> None:
+    """Deprecated airflow actions still set the limit and raise a repair issue."""
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {
+            CommonServiceArgument.ENTITY_ID: ZONE_ENTITY,
+            IZoneServiceArgument.AIRFLOW: 40,
+        },
+        blocking=True,
+    )
+
+    getattr(mock_zones[0], setter).assert_awaited_once_with(40)
+    issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_action_{service}")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_placeholders == {"action": f"{DOMAIN}.{service}"}
 
 
 @pytest.mark.usefixtures("init_integration")

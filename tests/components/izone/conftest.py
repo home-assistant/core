@@ -146,6 +146,9 @@ def create_mock_zone(
     temp_setpoint: float = 24.0,
     zone_type: Zone.Type = Zone.Type.AUTO,
     damper_position: int | None = 50,
+    sensor_type: Zone.SensorType | None = Zone.SensorType.WIRELESS,
+    rf_signal: Zone.RfSignal | None = Zone.RfSignal.FULL,
+    battery_level: Zone.BatteryLevel | None = Zone.BatteryLevel.FULL,
 ) -> Mock:
     """Create a mock Zone with configurable parameters."""
     zone = Mock(spec=Zone)
@@ -158,6 +161,9 @@ def create_mock_zone(
     zone.airflow_min = 0
     zone.airflow_max = 100
     zone.damper_position = damper_position
+    zone.sensor_type = sensor_type
+    zone.rf_signal = rf_signal
+    zone.battery_level = battery_level
     zone.is_on = True
     zone._zone_data = {
         "AirStreamDeviceUId": "000000001",
