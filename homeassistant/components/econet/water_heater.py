@@ -19,9 +19,11 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EconetConfigEntry
+from .const import PUSH_UPDATE
 from .entity import EcoNetEntity
 
 SCAN_INTERVAL = timedelta(hours=1)
@@ -161,6 +163,7 @@ class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
         """Get the latest energy usage."""
         await self.water_heater.get_energy_usage()
         await self.water_heater.get_water_usage()
+        async_dispatcher_send(self.hass, PUSH_UPDATE)
 
     @override
     def turn_away_mode_on(self) -> None:
