@@ -21,6 +21,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
+from . import helpers
 from .const import BROADLINK_DATA, DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
 from .updater import BroadlinkUpdateManager, get_update_manager
 
@@ -82,8 +83,9 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             (DOMAIN, entry.unique_id), entry.entry_id
         )
         assert device_entry
-        device_registry.async_update_device(device_entry.id, name=entry.title)
-        await hass.config_entries.async_reload(entry.entry_id)
+        if device_entry.name != entry.title:
+            device_registry.async_update_device(device_entry.id, name=entry.title)
+            await hass.config_entries.async_reload(entry.entry_id)
 
     async def _async_get_firmware_version(self) -> int | None:
         """Get firmware version."""
@@ -116,15 +118,41 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             return False
 
         except (NetworkTimeoutError, OSError) as err:
-            await api.aclose()
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="connect_failed",
-                translation_placeholders={
-                    "host": api.host[0],
-                    "error": str(err),
-                },
-            ) from err
+            _LOGGER.warning(
+                "Failed to connect to %s at %s (%s); attempting MAC rediscovery",
+                config.title,
+                config.data[CONF_HOST],
+                err,
+            )
+            if await self._async_rediscover_by_mac():
+                try:
+                    self.fw_version = await self._async_get_firmware_version()
+                except AuthenticationError:
+                    if hasattr(self, "api") and self.api:
+                        await self.api.aclose()
+                    await self._async_handle_auth_error()
+                    return False
+                except Exception as retry_err:
+                    if hasattr(self, "api") and self.api:
+                        await self.api.aclose()
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN,
+                        translation_key="connect_failed",
+                        translation_placeholders={
+                            "host": self.api.host[0],
+                            "error": str(retry_err),
+                        },
+                    ) from retry_err
+            else:
+                await api.aclose()
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="connect_failed",
+                    translation_placeholders={
+                        "host": api.host[0],
+                        "error": str(err),
+                    },
+                ) from err
 
         except BroadlinkException as err:
             await api.aclose()
@@ -141,6 +169,8 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             await coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady:
             await api.aclose()
+            if hasattr(self, "api") and self.api and self.api is not api:
+                await self.api.aclose()
             raise
 
         self.update_manager = update_manager
@@ -201,6 +231,47 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             if not await self.async_auth():
                 raise
             return await function(*args, **kwargs)
+
+    async def _async_rediscover_by_mac(self) -> bool:
+        """Attempt to locate device by MAC address and update host."""
+        target_mac = self.mac_address
+        current_ip = self.config.data.get(CONF_HOST)
+        result = await helpers.async_find_device_by_mac(
+            target_mac, fallback_ip=current_ip
+        )
+        if result is None:
+            _LOGGER.debug(
+                "MAC rediscovery failed to locate %s (MAC: %s)",
+                self.name,
+                target_mac,
+            )
+            return False
+
+        new_ip, _ = result
+        if new_ip == current_ip:
+            return True
+
+        _LOGGER.warning(
+            "Broadlink device %s shifted IP from %s to %s. Updating configuration",
+            self.name,
+            current_ip,
+            new_ip,
+        )
+        self.hass.config_entries.async_update_entry(
+            self.config,
+            data={**self.config.data, CONF_HOST: new_ip},
+        )
+        if hasattr(self, "api") and self.api:
+            await self.api.aclose()
+
+        self.api = blk.gendevice(
+            self.config.data[CONF_TYPE],
+            (new_ip, DEFAULT_PORT),
+            bytes.fromhex(self.config.data[CONF_MAC]),
+            name=self.config.title,
+        )
+        self.api.timeout = self.config.data[CONF_TIMEOUT]
+        return True
 
     async def _async_handle_auth_error(self) -> None:
         """Handle an authentication error."""
