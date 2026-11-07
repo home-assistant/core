@@ -4,11 +4,15 @@ from unittest.mock import AsyncMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
 
 from homeassistant.components.silvercrest_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
     SilverCrestIrDeviceType,
 )
@@ -45,6 +49,7 @@ async def test_form(
         {
             CONF_DEVICE_TYPE: device_type,
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
         },
     )
 
@@ -53,6 +58,7 @@ async def test_form(
     assert result["data"] == {
         CONF_DEVICE_TYPE: device_type,
         CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+        CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -62,6 +68,9 @@ async def test_form(
     [
         {
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+        },
+        {
+            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
         },
     ],
 )
@@ -83,10 +92,7 @@ async def test_form_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_DEVICE_TYPE: SilverCrestIrDeviceType.STVD45A1,
-            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
-        },
+        {CONF_DEVICE_TYPE: SilverCrestIrDeviceType.STVD45A1, **user_input},
     )
     await hass.async_block_till_done()
 
@@ -105,9 +111,20 @@ async def test_user_flow_no_emitters_receivers(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_infrared_entities"
 
 
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        {
+            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+        },
+        {
+            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
+        },
+    ],
+)
 @pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
-async def test_user_flow_requires_emitter(
-    hass: HomeAssistant,
+async def test_user_flow_requires_emitter_or_receiver(
+    hass: HomeAssistant, user_input: dict[str, str]
 ) -> None:
     """Test user flow requires an infrared emitter or receiver."""
     result = await hass.config_entries.flow.async_init(
@@ -126,7 +143,7 @@ async def test_user_flow_requires_emitter(
         result["flow_id"],
         user_input={
             CONF_DEVICE_TYPE: SilverCrestIrDeviceType.STVD45A1,
-            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+            **user_input,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -142,6 +159,7 @@ async def test_flow_reconfigure(hass: HomeAssistant) -> None:
         data={
             CONF_DEVICE_TYPE: SilverCrestIrDeviceType.STVD45A1,
             CONF_INFRARED_ENTITY_ID: None,
+            CONF_INFRARED_RECEIVER_ENTITY_ID: None,
         },
     )
     config_entry.add_to_hass(hass)
@@ -152,20 +170,35 @@ async def test_flow_reconfigure(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID},
+        user_input={
+            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
+        },
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data[CONF_INFRARED_ENTITY_ID] == EMITTER_ENTITY_ID
+    assert config_entry.data[CONF_INFRARED_RECEIVER_ENTITY_ID] == RECEIVER_ENTITY_ID
 
     assert len(hass.config_entries.async_entries()) == 1
 
 
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        {
+            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+        },
+        {
+            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
+        },
+    ],
+)
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
-async def test_reconfigure_flow_requires_emitter(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+async def test_reconfigure_flow_requires_emitter_or_receiver(
+    hass: HomeAssistant, config_entry: MockConfigEntry, user_input: dict[str, str]
 ) -> None:
     """Test reconfigure flow requires an infrared emitter."""
     config_entry.add_to_hass(hass)
@@ -184,16 +217,27 @@ async def test_reconfigure_flow_requires_emitter(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID},
+        user_input=user_input,
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        {
+            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+        },
+        {
+            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
+        },
+    ],
+)
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_flow_reconfigure_already_configured(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, user_input: dict[str, str]
 ) -> None:
     """Test reconfigure flow."""
     config_entry_2 = MockConfigEntry(
@@ -203,6 +247,7 @@ async def test_flow_reconfigure_already_configured(
         data={
             CONF_DEVICE_TYPE: SilverCrestIrDeviceType.STVD45A1,
             CONF_INFRARED_ENTITY_ID: None,
+            CONF_INFRARED_RECEIVER_ENTITY_ID: None,
         },
     )
     config_entry.add_to_hass(hass)
@@ -214,7 +259,7 @@ async def test_flow_reconfigure_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID},
+        user_input=user_input,
     )
     await hass.async_block_till_done()
 

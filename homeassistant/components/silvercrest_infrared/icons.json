@@ -7,6 +7,11 @@
       "power": { "default": "mdi:power" },
       "speed": { "default": "mdi:fan-chevron-up" },
       "timer": { "default": "mdi:timer" }
+    },
+    "event": {
+      "received_command": {
+        "default": "mdi:remote"
+      }
     }
   }
 }
