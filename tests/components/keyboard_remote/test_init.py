@@ -1048,6 +1048,46 @@ async def test_exclusive_option_decides_the_grab(
     assert len(disconnected) == 1
 
 
+@pytest.mark.parametrize(
+    ("stored_options", "expected_exclusive"),
+    [
+        pytest.param({}, DEFAULT_EXCLUSIVE, id="option_added"),
+        pytest.param({CONF_EXCLUSIVE: False}, False, id="stored_value_kept"),
+    ],
+)
+async def test_migration_adds_the_exclusive_option(
+    hass: HomeAssistant,
+    fake_input: FakeInput,
+    stored_options: dict[str, bool],
+    expected_exclusive: bool,
+) -> None:
+    """Test an entry from before the exclusive option is migrated.
+
+    Entries created by the first config flow release have no exclusive option.
+    The migration adds the default, so they keep grabbing the device, and
+    leaves a value a stored entry already carries alone.
+    """
+    kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_DEVICE_PATH,
+        data={CONF_DEVICE_PATH: FAKE_DEVICE_PATH, CONF_DEVICE_NAME: FAKE_DEVICE_NAME},
+        options={
+            **{key: value for key, value in OPTIONS.items() if key != CONF_EXCLUSIVE},
+            **stored_options,
+        },
+        version=1,
+        minor_version=1,
+    )
+
+    await _set_up(hass, fake_input, entry)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    assert entry.options[CONF_EXCLUSIVE] is expected_exclusive
+    assert kbd.grab.called is expected_exclusive
+
+
 async def test_grab_failure_warns_and_releases(
     hass: HomeAssistant,
     fake_input: FakeInput,
