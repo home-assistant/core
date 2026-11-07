@@ -3,9 +3,8 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import ssl
-from typing import Literal, Self
+from typing import TYPE_CHECKING, Literal, Self
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -39,12 +38,15 @@ from ..const import (
     DEFAULT_TRACK_WIRED_CLIENTS,
 )
 
+if TYPE_CHECKING:
+    from .. import UnifiConfigEntry
+
 
 @dataclass
 class UnifiConfig:
     """Represent a UniFi config entry."""
 
-    entry: ConfigEntry
+    entry: UnifiConfigEntry
 
     host: str
     port: int
@@ -88,7 +90,7 @@ class UnifiConfig:
     """Config entry option to allow uptime sensors."""
 
     @classmethod
-    def from_config_entry(cls, config_entry: ConfigEntry) -> Self:
+    def from_config_entry(cls, config_entry: UnifiConfigEntry) -> Self:
         """Create object from config entry."""
         config = config_entry.data
         options = config_entry.options
