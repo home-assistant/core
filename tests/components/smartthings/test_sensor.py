@@ -1,7 +1,9 @@
 """Test for the SmartThings sensors platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pysmartthings import Attribute, Capability
 from pysmartthings.models import HealthStatus
 import pytest
@@ -510,3 +512,89 @@ async def test_negative_power_consumption_values(
     assert hass.states.get("sensor.theater_washer_energy_saved").state == STATE_UNKNOWN
     assert hass.states.get("sensor.theater_washer_energy_difference").state == "-0.2"
     assert hass.states.get("sensor.theater_washer_power_energy").state == "-0.3"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_000001"])
+@pytest.mark.parametrize(
+    ("reported_state", "expected_state"),
+    [
+        ("none", "none"),
+        ("delayWashing", "delay_washing"),
+        ("preWashing", "pre_washing"),
+        ("washing", "washing"),
+        ("dryingAutoReleaseDelay", "drying_auto_release_delay"),
+        ("autoReleaseDrying", "auto_release_drying"),
+        ("finished", "finished"),
+    ],
+)
+async def test_dishwasher_detailed_job_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    reported_state: str,
+    expected_state: str,
+) -> None:
+    """Test the Samsung dishwasher job states are mapped onto the entity options."""
+    await setup_integration(hass, mock_config_entry)
+
+    await trigger_update(
+        hass,
+        devices,
+        "f36dc7ce-cac0-0667-dc14-a3704eb5e676",
+        Capability.SAMSUNG_CE_DISHWASHER_JOB_STATE,
+        Attribute.DISHWASHER_JOB_STATE,
+        reported_state,
+    )
+
+    assert (state := hass.states.get("sensor.theater_dishwasher_detailed_job_state"))
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_000001"])
+async def test_dishwasher_delayed_start_time(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the delayed start time is derived from the minutes left to start."""
+    freezer.move_to("2023-10-21T10:00:30+00:00")
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.theater_dishwasher_delayed_start_time"
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    await trigger_update(
+        hass,
+        devices,
+        "f36dc7ce-cac0-0667-dc14-a3704eb5e676",
+        Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
+        Attribute.TIME_LEFT_TO_START,
+        488.0,
+    )
+
+    assert hass.states.get(entity_id).state == "2023-10-21T18:08:00+00:00"
+
+    # The device counts down every minute, the start time stays the same
+    freezer.tick(timedelta(minutes=1))
+    await trigger_update(
+        hass,
+        devices,
+        "f36dc7ce-cac0-0667-dc14-a3704eb5e676",
+        Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
+        Attribute.TIME_LEFT_TO_START,
+        487.0,
+    )
+
+    assert hass.states.get(entity_id).state == "2023-10-21T18:08:00+00:00"
+
+    await trigger_update(
+        hass,
+        devices,
+        "f36dc7ce-cac0-0667-dc14-a3704eb5e676",
+        Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
+        Attribute.TIME_LEFT_TO_START,
+        0.0,
+    )
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
