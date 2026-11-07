@@ -512,6 +512,121 @@ def test_valid_flow_step(
         type_hint_checker.visit_classdef(class_node)
 
 
+@pytest.mark.parametrize(
+    ("code", "expected_messages_fn"),
+    [
+        (
+            """
+    class FlowHandler():
+        pass
+
+    class RepairsFlow(FlowHandler):
+        pass
+
+    class AxisRepairsFlowHandler(RepairsFlow): #@
+        async def async_step_init(
+            self,
+            user_input: dict[str, str] #@
+        ) -> RepairsFlowResult:
+            pass
+""",
+            lambda func_node: [
+                pylint.testutils.MessageTest(
+                    msg_id="home-assistant-argument-type",
+                    node=func_node,
+                    args=(
+                        "user_input",
+                        ["dict[str, Any] | None", "dict[str, str] | None"],
+                        "async_step_init",
+                    ),
+                    line=11,
+                    col_offset=8,
+                    end_line=11,
+                    end_col_offset=34,
+                ),
+            ],
+        ),
+        (
+            """
+    class FlowHandler():
+        pass
+
+    class RepairsFlow(FlowHandler):
+        pass
+
+    class AxisRepairsFlowHandler(RepairsFlow): #@
+        async def async_step_arbitrary( #@
+            self,
+            user_input: dict[str, str]
+        ) -> FlowResult:
+            pass
+""",
+            lambda func_node: [
+                pylint.testutils.MessageTest(
+                    msg_id="home-assistant-return-type",
+                    node=func_node,
+                    args=("RepairsFlowResult", "async_step_arbitrary"),
+                    line=9,
+                    col_offset=4,
+                    end_line=9,
+                    end_col_offset=34,
+                ),
+            ],
+        ),
+    ],
+    ids=["Invalid argument type", "Invalid return type"],
+)
+def test_invalid_repairs_flow_async_step_init(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+    code: str,
+    expected_messages_fn: Callable[
+        [nodes.NodeNG], tuple[pylint.testutils.MessageTest, ...]
+    ],
+) -> None:
+    """Ensure valid hints are accepted for flow step."""
+    class_node, func_node = astroid.extract_node(
+        code,
+        "homeassistant.components.pylint_test.repairs",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(linter, *expected_messages_fn(func_node)):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_valid_repair_flow_step(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+) -> None:
+    """Ensure valid hints are accepted for repairs flow steps."""
+    class_node = astroid.extract_node(
+        """
+        class FlowHandler():
+            pass
+
+        class RepairsFlow(FlowHandler):
+            pass
+
+        class AxisRepairsFlowHandler(RepairsFlow):
+            async def async_step_init(
+                self,
+                user_input: dict[str, Any] | None
+            ) -> RepairsFlowResult:
+                pass
+            async def async_step_arbitrary(
+                self
+            ) -> RepairsFlowResult:
+                pass
+        """,
+        "homeassistant.components.pylint_test.repairs",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
+
+
 def test_invalid_config_flow_async_get_options_flow(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
