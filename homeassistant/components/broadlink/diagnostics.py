@@ -5,8 +5,19 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .const import BROADLINK_DATA
+
+DAY_ID_TO_NAME = {
+    1: "monday",
+    2: "tuesday",
+    3: "wednesday",
+    4: "thursday",
+    5: "friday",
+    6: "saturday",
+    7: "sunday",
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -18,7 +29,7 @@ async def async_get_config_entry_diagnostics(
     update_manager = device.update_manager
     if TYPE_CHECKING:
         assert update_manager is not None
-    return {
+    diagnostics: dict[str, Any] = {
         "device": {
             "type": api.type,
             "devtype": api.devtype,
@@ -32,3 +43,18 @@ async def async_get_config_entry_diagnostics(
         "update_manager": type(update_manager).__name__,
         "data": update_manager.coordinator.data,
     }
+
+    if (
+        api.type == "HYS"
+        and (data := update_manager.coordinator.data)
+        and (last_update := update_manager.last_update)
+    ):
+        # Compare the device clock with the local time it was read at, as
+        # the coordinator data may be a few polls old.
+        diagnostics["device_clock"] = {
+            "time": f"{data['hour']:02d}:{data['min']:02d}:{data['sec']:02d}",
+            "day_of_week": DAY_ID_TO_NAME.get(data["dayofweek"]),
+            "local_time_at_poll": dt_util.as_local(last_update).isoformat(),
+        }
+
+    return diagnostics

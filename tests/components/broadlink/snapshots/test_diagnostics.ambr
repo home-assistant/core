@@ -5,9 +5,13 @@
     'data': dict({
       'active': 1,
       'auto_mode': 0,
+      'dayofweek': 3,
       'external_temp': 30,
+      'hour': 12,
+      'min': 34,
       'power': 1,
       'room_temp': 22,
+      'sec': 56,
       'sensor': 0,
       'thermostat_temp': 23,
     }),
@@ -19,6 +23,11 @@
       'model': 'HY02/HY03',
       'timeout': 5,
       'type': 'HYS',
+    }),
+    'device_clock': dict({
+      'day_of_week': 'wednesday',
+      'local_time_at_poll': '2026-10-21T12:35:10+00:00',
+      'time': '12:34:56',
     }),
     'update_manager': 'BroadlinkThermostatUpdateManager',
   })
