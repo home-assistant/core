@@ -52,6 +52,21 @@
       }
     },
     "sensor": {
+      "captar_daily_power_peak": {
+        "name": "Captar latest daily peak"
+      },
+      "captar_monthly_energy_peak": {
+        "name": "Captar monthly peak energy"
+      },
+      "captar_monthly_peak_end": {
+        "name": "Captar monthly peak end"
+      },
+      "captar_monthly_peak_start": {
+        "name": "Captar monthly peak start"
+      },
+      "captar_monthly_power_peak": {
+        "name": "Captar monthly peak power"
+      },
       "electricity_price_injection": {
         "name": "Electricity injection price"
       },
