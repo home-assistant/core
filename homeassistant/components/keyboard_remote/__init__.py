@@ -41,6 +41,7 @@ from .const import (
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+    DEFAULT_EXCLUSIVE,
     DEFAULT_KEY_TYPES,
     DEVINPUT,
     DEVINPUT_BY_ID,
@@ -198,6 +199,21 @@ async def async_setup_entry(
         await manager.async_start()
 
     entry.async_on_unload(async_at_start(hass, _async_start))
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: KeyboardRemoteConfigEntry
+) -> None:
+    """Migrate an old config entry."""
+    if entry.minor_version < 2:
+        # Entries created before the exclusive option existed always grabbed
+        # the device, which the default keeps. An entry that already carries
+        # the option was set up with it and must not be flipped to grabbing.
+        hass.config_entries.async_update_entry(
+            entry,
+            options={CONF_EXCLUSIVE: DEFAULT_EXCLUSIVE, **entry.options},
+            minor_version=2,
+        )
 
 
 async def async_unload_entry(
