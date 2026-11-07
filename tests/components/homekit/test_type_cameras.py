@@ -1936,6 +1936,12 @@ async def test_camera_secure_video_recording_stalls(
             "Cannot build the recording: list index out of range",
             id="unknown_profile",
         ),
+        pytest.param(
+            {CONF_STREAM_SOURCE: "-i rtsp://cam -vf"},
+            0,
+            "Cannot build the recording: -vf without a filter",
+            id="filter_flag_without_filter",
+        ),
         pytest.param({}, 1, "Failed to start recording ffmpeg", id="ffmpeg_fails"),
     ],
 )

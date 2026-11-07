@@ -196,7 +196,9 @@ def recording_ffmpeg_args(
         tokens = iter(input_args)
         for token in tokens:
             if token in ("-vf", "-filter:v"):
-                filters.insert(0, next(tokens))
+                if (value := next(tokens, None)) is None:
+                    raise ValueError(f"{token} without a filter")
+                filters.insert(0, value)
             else:
                 source_args.append(token)
         input_args = source_args
