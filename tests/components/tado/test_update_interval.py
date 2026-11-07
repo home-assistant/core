@@ -34,10 +34,12 @@ async def test_unknown_reset_spreads_quota_over_a_full_window(
 ) -> None:
     """Before the reset time is known, the quota is spread over a full window."""
     coordinator = _coordinator(hass)
-    coordinator.data["rate_limit"] = {"per-day": "1000", "remaining": "500"}
+    # Below the setup polls' 100, so this is not a refill that reveals the reset
+    coordinator.data["rate_limit"] = {"per-day": "1000", "remaining": "80"}
     coordinator._calculate_update_interval()
+    assert coordinator._quota_reset is None
 
-    planned = QUOTA_WINDOW * _calls_per_cycle(coordinator) / (500 * 0.9)
+    planned = QUOTA_WINDOW * _calls_per_cycle(coordinator) / (80 * 0.9)
     minimum = timedelta(minutes=5 if coordinator._is_any_zone_active else 30)
     assert coordinator.update_interval == max(planned, minimum)
 
@@ -177,6 +179,16 @@ async def test_cached_reset_seconds_are_not_applied_twice(
     later = start + timedelta(hours=2, minutes=1)
     coordinator._learn_quota_reset(later, dict(reading), 0)
     assert coordinator._quota_reset == start + timedelta(hours=2) + QUOTA_WINDOW
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_reset_due_now_is_not_moved_to_tomorrow(hass: HomeAssistant) -> None:
+    """reset-seconds 0 means the quota resets now: retry shortly, not in a day."""
+    coordinator = _coordinator(hass)
+    now = dt_util.utcnow()
+    coordinator._learn_quota_reset(now, {"remaining": "0", "reset-seconds": "0"}, 0)
+    assert coordinator._quota_reset == now
+    assert coordinator._wait_for_quota(now) == timedelta(minutes=1)
 
 
 @pytest.mark.usefixtures("init_integration")

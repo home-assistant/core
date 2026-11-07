@@ -201,9 +201,11 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         reset_in = _as_int(rate_limit.get("reset-seconds"))
         if fresh and reset_in is not None:
-            self._quota_reset = now + timedelta(seconds=reset_in)
-        while self._quota_reset is not None and self._quota_reset <= now:
-            self._quota_reset += QUOTA_WINDOW
+            # An explicit countdown is the next reset, even when it is due now
+            self._quota_reset = now + timedelta(seconds=max(reset_in, 0))
+        else:
+            while self._quota_reset is not None and self._quota_reset <= now:
+                self._quota_reset += QUOTA_WINDOW
 
         if (
             fresh
