@@ -1124,3 +1124,51 @@ def test_description_is_stale(
     """Test detecting a cached description that belongs to another device."""
     ssdp_device = MagicMock(udn=device_udn)
     assert scanner._description_is_stale(ssdp_device, description) is expected
+
+
+async def test_description_refetched_when_address_changes_device(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a stale cached description is refetched when another device takes over."""
+    location = "http://1.1.1.1"
+    aioclient_mock.get(
+        location,
+        text="<root><device><UDN>uuid:device-a</UDN></device></root>",
+    )
+    ssdp_listener = await init_ssdp_component(hass)
+    callback = AsyncMock()
+    await ssdp.async_register_callback(hass, callback, {"st": "upnp:rootdevice"})
+
+    ssdp_listener._on_search(
+        _ssdp_headers(
+            {
+                "st": "upnp:rootdevice",
+                "location": location,
+                "usn": "uuid:device-a::upnp:rootdevice",
+                "_source": "search",
+            }
+        )
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert callback.call_args[0][0].upnp[ATTR_UPNP_UDN] == "uuid:device-a"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        location,
+        text="<root><device><UDN>uuid:device-b</UDN></device></root>",
+    )
+    ssdp_listener._on_search(
+        _ssdp_headers(
+            {
+                "st": "upnp:rootdevice",
+                "location": location,
+                "usn": "uuid:device-b::upnp:rootdevice",
+                "_source": "search",
+            }
+        )
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert callback.call_args[0][0].upnp[ATTR_UPNP_UDN] == "uuid:device-b"
