@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "inverter_mode": {
+        "default": "mdi:sine-wave"
+      }
+    }
+  }
+}
