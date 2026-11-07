@@ -9,17 +9,23 @@ from pytest_homeassistant.common import (
     MockEntityPlatform,
     async_mock_service,
     get_fixture_path,
+    setup_test_component_platform,
 )
 
 from homeassistant import config as hass_config
 from homeassistant.components import input_number, input_select, media_player, switch
 from homeassistant.components.media_player import (
+    ATTR_GROUP_MEMBERS,
     BrowseMedia,
     MediaClass,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerState,
 )
 from homeassistant.components.universal import media_player as universal
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
@@ -28,8 +34,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityPlatformState
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
@@ -1418,3 +1426,262 @@ async def test_reload(hass: HomeAssistant) -> None:
         "device_class" not in hass.states.get("media_player.master_bed_tv").attributes
     )
     assert "unique_id" not in hass.states.get("media_player.master_bed_tv").attributes
+
+
+KITCHEN = "media_player.kitchen"
+KITCHEN_UNIVERSAL = "media_player.kitchen_universal"
+LIVING_ROOM = "media_player.living_room"
+LIVING_ROOM_UNIVERSAL = "media_player.living_room_universal"
+BEDROOM = "media_player.bedroom"
+TV_UNIVERSAL = "media_player.tv_universal"
+OFF_UNIVERSAL = "media_player.off_universal"
+NO_MEMBERS_UNIVERSAL = "media_player.no_members_universal"
+LOOP_A = "media_player.loop_a"
+LOOP_B = "media_player.loop_b"
+
+
+class MockGroupingMediaPlayer(media_player.MediaPlayerEntity):
+    """Mock media player that supports grouping."""
+
+    _attr_should_poll = False
+    _attr_state = MediaPlayerState.PLAYING
+    _attr_supported_features = MediaPlayerEntityFeature.GROUPING
+
+    def __init__(self, name: str) -> None:
+        """Initialize the media player."""
+        self._attr_name = name
+        self._attr_group_members = []
+
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join group_members as a player group with this player."""
+        self._attr_group_members = [self.entity_id, *group_members]
+        self.async_write_ha_state()
+
+    async def async_unjoin_player(self) -> None:
+        """Remove this player from any group."""
+        self._attr_group_members = []
+        self.async_write_ha_state()
+
+
+@pytest.fixture
+async def grouping_players(hass: HomeAssistant) -> None:
+    """Set up grouping media players and universal players controlling them."""
+    setup_test_component_platform(
+        hass,
+        media_player.DOMAIN,
+        [
+            MockGroupingMediaPlayer("Kitchen"),
+            MockGroupingMediaPlayer("Living room"),
+            MockGroupingMediaPlayer("Bedroom"),
+        ],
+    )
+    hass.states.async_set(
+        "media_player.no_members",
+        STATE_PLAYING,
+        {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.GROUPING},
+    )
+    assert await async_setup_component(
+        hass,
+        media_player.DOMAIN,
+        {
+            media_player.DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": "universal",
+                    "name": "Kitchen universal",
+                    "children": [KITCHEN],
+                },
+                {
+                    "platform": "universal",
+                    "name": "Living room universal",
+                    "children": [LIVING_ROOM],
+                },
+                # Its active child is a universal player
+                {
+                    "platform": "universal",
+                    "name": "TV universal",
+                    "children": [LIVING_ROOM_UNIVERSAL],
+                },
+                {
+                    "platform": "universal",
+                    "name": "Off universal",
+                    "children": ["media_player.missing"],
+                },
+                {
+                    "platform": "universal",
+                    "name": "No members universal",
+                    "children": ["media_player.no_members"],
+                },
+                # Misconfigured: each is the active child of the other
+                {
+                    "platform": "universal",
+                    "name": "Loop a",
+                    "children": [LOOP_B],
+                    "active_child_template": LOOP_B,
+                },
+                {
+                    "platform": "universal",
+                    "name": "Loop b",
+                    "children": [LOOP_A],
+                    "active_child_template": LOOP_A,
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    # Universal players only pick an active child when a child changes
+    for entity_id in (KITCHEN_UNIVERSAL, LIVING_ROOM_UNIVERSAL, NO_MEMBERS_UNIVERSAL):
+        await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("grouping_players")
+@pytest.mark.parametrize(
+    ("entity_id", "group_members"),
+    [
+        pytest.param(LIVING_ROOM_UNIVERSAL, [], id="no_group"),
+        pytest.param(NO_MEMBERS_UNIVERSAL, None, id="child_without_group_members"),
+    ],
+)
+async def test_group_members(
+    hass: HomeAssistant, entity_id: str, group_members: list[str] | None
+) -> None:
+    """Test the group members of the active child are passed through."""
+    assert hass.states.get(entity_id).attributes[ATTR_GROUP_MEMBERS] == group_members
+
+
+@pytest.mark.usefixtures("grouping_players")
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "group_members",
+        "child_entity_id",
+        "child_group_members",
+        "universal_group_members",
+    ),
+    [
+        pytest.param(
+            LIVING_ROOM_UNIVERSAL,
+            [KITCHEN_UNIVERSAL],
+            LIVING_ROOM,
+            [LIVING_ROOM, KITCHEN],
+            [LIVING_ROOM_UNIVERSAL, KITCHEN_UNIVERSAL],
+            id="universal_member",
+        ),
+        pytest.param(
+            LIVING_ROOM_UNIVERSAL,
+            [KITCHEN],
+            LIVING_ROOM,
+            [LIVING_ROOM, KITCHEN],
+            [LIVING_ROOM_UNIVERSAL, KITCHEN_UNIVERSAL],
+            id="child_member",
+        ),
+        pytest.param(
+            LIVING_ROOM_UNIVERSAL,
+            [BEDROOM],
+            LIVING_ROOM,
+            [LIVING_ROOM, BEDROOM],
+            [LIVING_ROOM_UNIVERSAL, BEDROOM],
+            id="member_without_universal",
+        ),
+        pytest.param(
+            KITCHEN_UNIVERSAL,
+            [TV_UNIVERSAL],
+            KITCHEN,
+            [KITCHEN, LIVING_ROOM],
+            [KITCHEN_UNIVERSAL, LIVING_ROOM_UNIVERSAL],
+            id="nested_universal_member",
+        ),
+        pytest.param(
+            TV_UNIVERSAL,
+            [KITCHEN_UNIVERSAL],
+            LIVING_ROOM,
+            [LIVING_ROOM, KITCHEN],
+            [TV_UNIVERSAL, KITCHEN_UNIVERSAL],
+            id="nested_universal_player",
+        ),
+    ],
+)
+async def test_join(
+    hass: HomeAssistant,
+    entity_id: str,
+    group_members: list[str],
+    child_entity_id: str,
+    child_group_members: list[str],
+    universal_group_members: list[str],
+) -> None:
+    """Test joining universal players groups the media players they control."""
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        MediaPlayerService.JOIN,
+        {ATTR_ENTITY_ID: entity_id, ATTR_GROUP_MEMBERS: group_members},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(child_entity_id).attributes[ATTR_GROUP_MEMBERS]
+        == child_group_members
+    )
+    assert (
+        hass.states.get(entity_id).attributes[ATTR_GROUP_MEMBERS]
+        == universal_group_members
+    )
+
+
+@pytest.mark.usefixtures("grouping_players")
+async def test_join_universal_loop(hass: HomeAssistant) -> None:
+    """Test resolving universal players that control each other stops."""
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        MediaPlayerService.JOIN,
+        {ATTR_ENTITY_ID: LIVING_ROOM_UNIVERSAL, ATTR_GROUP_MEMBERS: [LOOP_A]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(LIVING_ROOM).attributes[ATTR_GROUP_MEMBERS] == [
+        LIVING_ROOM,
+        LOOP_A,
+    ]
+
+
+@pytest.mark.usefixtures("grouping_players")
+async def test_join_member_without_active_child(hass: HomeAssistant) -> None:
+    """Test joining a universal player without an active child fails."""
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            media_player.DOMAIN,
+            MediaPlayerService.JOIN,
+            {
+                ATTR_ENTITY_ID: LIVING_ROOM_UNIVERSAL,
+                ATTR_GROUP_MEMBERS: [OFF_UNIVERSAL],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "no_active_child"
+    assert exc_info.value.translation_placeholders == {"entity_id": OFF_UNIVERSAL}
+    assert hass.states.get(LIVING_ROOM).attributes[ATTR_GROUP_MEMBERS] == []
+
+
+@pytest.mark.usefixtures("grouping_players")
+async def test_unjoin(hass: HomeAssistant) -> None:
+    """Test unjoining a universal player unjoins its active child."""
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        MediaPlayerService.JOIN,
+        {ATTR_ENTITY_ID: LIVING_ROOM_UNIVERSAL, ATTR_GROUP_MEMBERS: [KITCHEN]},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        MediaPlayerService.UNJOIN,
+        {ATTR_ENTITY_ID: LIVING_ROOM_UNIVERSAL},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(LIVING_ROOM).attributes[ATTR_GROUP_MEMBERS] == []
+    assert hass.states.get(LIVING_ROOM_UNIVERSAL).attributes[ATTR_GROUP_MEMBERS] == []
