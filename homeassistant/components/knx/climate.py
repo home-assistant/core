@@ -14,6 +14,7 @@ from xknx.remote_value.remote_value_setpoint_shift import SetpointShiftMode
 
 from homeassistant import config_entries
 from homeassistant.components.climate import (
+    ATTR_PRESET_MODE,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
@@ -26,11 +27,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, Platform, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -298,7 +300,7 @@ def _create_climate_ui(
     )
 
 
-class _KnxClimate(ClimateEntity, _KnxEntityBase):
+class _KnxClimate(ClimateEntity, _KnxEntityBase, RestoreEntity):
     """Representation of a KNX climate device."""
 
     _device: XknxClimate
@@ -620,9 +622,44 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
             attr[ATTR_COMMAND_VALUE] = self._device.command_value.value
         return attr
 
+    def _restore_last_state(self, last_state: State) -> None:
+        """Restore on/off and modes until they are updated from the bus."""
+        try:
+            hvac_mode = HVACMode(last_state.state)
+        except ValueError:  # unknown, unavailable or invalid
+            return
+        if self._device.supports_on_off and self._device.on.value is None:
+            self._device.on.value = hvac_mode != HVACMode.OFF
+        if (mode := self._device.mode) is None:
+            return
+        # only restore modes supported by the current configuration
+        # read-only modes support all values of their state addresses
+        controller_modes = mode.controller_modes or mode.gather_controller_modes(
+            only_writable=False
+        )
+        knx_controller_mode = CONTROLLER_MODES_INV.get(hvac_mode)
+        if (
+            knx_controller_mode is not None
+            and knx_controller_mode in controller_modes
+            and (hvac_mode != HVACMode.OFF or not self._device.supports_on_off)
+        ):
+            mode.controller_mode = knx_controller_mode
+            if hvac_mode != HVACMode.OFF:
+                self._last_hvac_mode = hvac_mode
+
+        # preset_mode is only available if operation modes are writable
+        # inverse of the preset_mode property: operation_mode.name.lower()
+        operation_mode = HVACOperationMode.__members__.get(
+            str(last_state.attributes.get(ATTR_PRESET_MODE)).upper()
+        )
+        if operation_mode is not None and operation_mode in mode.operation_modes:
+            mode.operation_mode = operation_mode
+
     @override
     async def async_added_to_hass(self) -> None:
         """Store register state change callback and start device object."""
+        if (last_state := await self.async_get_last_state()) is not None:
+            self._restore_last_state(last_state)
         await super().async_added_to_hass()
         if self._device.mode is not None:
             self._device.mode.register_device_updated_cb(self.after_update_callback)
