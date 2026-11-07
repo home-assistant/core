@@ -1,0 +1,75 @@
+{
+  "entity": {
+    "button": {
+      "account": {
+        "default": "mdi:account-circle"
+      },
+      "apps": {
+        "default": "mdi:apps"
+      },
+      "back": {
+        "default": "mdi:keyboard-backspace"
+      },
+      "down": {
+        "default": "mdi:arrow-down"
+      },
+      "exit": {
+        "default": "mdi:exit-to-app"
+      },
+      "fast_forward": {
+        "default": "mdi:fast-forward"
+      },
+      "free_hotkey": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "guide": {
+        "default": "mdi:television-guide"
+      },
+      "home": {
+        "default": "mdi:home"
+      },
+      "info": {
+        "default": "mdi:information-outline"
+      },
+      "input": {
+        "default": "mdi:import"
+      },
+      "left": {
+        "default": "mdi:arrow-left"
+      },
+      "menu": {
+        "default": "mdi:menu"
+      },
+      "ok": {
+        "default": "mdi:check"
+      },
+      "power": {
+        "default": "mdi:power"
+      },
+      "program_down": {
+        "default": "mdi:chevron-down"
+      },
+      "program_up": {
+        "default": "mdi:chevron-up"
+      },
+      "rewind": {
+        "default": "mdi:rewind"
+      },
+      "right": {
+        "default": "mdi:arrow-right"
+      },
+      "settings": {
+        "default": "mdi:cog"
+      },
+      "subtitles": {
+        "default": "mdi:subtitles"
+      },
+      "up": {
+        "default": "mdi:arrow-up"
+      },
+      "voice": {
+        "default": "mdi:microphone"
+      }
+    }
+  }
+}

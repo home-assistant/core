@@ -18,6 +18,77 @@
     }
   },
   "entity": {
+    "button": {
+      "account": {
+        "name": "Account"
+      },
+      "apps": {
+        "name": "Apps"
+      },
+      "back": {
+        "name": "[%key:common::entity::button::back::name%]"
+      },
+      "down": {
+        "name": "[%key:common::entity::button::down::name%]"
+      },
+      "exit": {
+        "name": "[%key:common::entity::button::exit::name%]"
+      },
+      "fast_forward": {
+        "name": "Fast forward"
+      },
+      "free_hotkey": {
+        "name": "Free hotkey"
+      },
+      "guide": {
+        "name": "[%key:common::entity::button::guide::name%]"
+      },
+      "home": {
+        "name": "[%key:common::entity::button::home::name%]"
+      },
+      "info": {
+        "name": "[%key:common::entity::button::info::name%]"
+      },
+      "input": {
+        "name": "[%key:common::entity::button::input::name%]"
+      },
+      "left": {
+        "name": "[%key:common::entity::button::left::name%]"
+      },
+      "menu": {
+        "name": "[%key:common::entity::button::menu::name%]"
+      },
+      "ok": {
+        "name": "[%key:common::entity::button::ok::name%]"
+      },
+      "power": {
+        "name": "[%key:common::entity::button::power::name%]"
+      },
+      "program_down": {
+        "name": "Program down"
+      },
+      "program_up": {
+        "name": "Program up"
+      },
+      "rewind": {
+        "name": "Rewind"
+      },
+      "right": {
+        "name": "[%key:common::entity::button::right::name%]"
+      },
+      "settings": {
+        "name": "Settings"
+      },
+      "subtitles": {
+        "name": "Subtitles"
+      },
+      "up": {
+        "name": "[%key:common::entity::button::up::name%]"
+      },
+      "voice": {
+        "name": "Voice"
+      }
+    },
     "media_player": {
       "tv": {
         "state_attributes": {
