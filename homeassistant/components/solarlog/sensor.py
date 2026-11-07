@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from typing import override
 
 from solarlog_cli.solarlog_models import (
@@ -41,7 +41,7 @@ from .models import SolarlogIntegrationData
 class SolarLogCoordinatorSensorEntityDescription(SensorEntityDescription):
     """Describes Solarlog coordinator sensor entity."""
 
-    value_fn: Callable[[SolarlogData], StateType | datetime | None]
+    value_fn: Callable[[SolarlogData], StateType | datetime | date | None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -62,7 +62,7 @@ class SolarLogBatterySensorEntityDescription(SensorEntityDescription):
 class SolarLogInverterSensorEntityDescription(SensorEntityDescription):
     """Describes Solarlog inverter sensor entity."""
 
-    value_fn: Callable[[InverterData], float | None]
+    value_fn: Callable[[InverterData], str | float | None]
 
 
 SOLARLOG_BASIC_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = (
@@ -260,6 +260,17 @@ SOLARLOG_BASIC_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, .
         suggested_display_precision=1,
         value_fn=lambda data: data.usage,
     ),
+    SolarLogCoordinatorSensorEntityDescription(
+        key="firmware_release_date",
+        translation_key="firmware_release_date",
+        device_class=SensorDeviceClass.DATE,
+        value_fn=lambda data: data.firmware_release_date,
+    ),
+    SolarLogCoordinatorSensorEntityDescription(
+        key="firmware_version",
+        translation_key="firmware_version",
+        value_fn=lambda data: data.firmware_version,
+    ),
 )
 
 """SOLARLOG_LONGTIME_SENSOR_TYPES represent data points that
@@ -325,6 +336,11 @@ SOLARLOG_INVERTER_SENSOR_TYPES: tuple[SolarLogInverterSensorEntityDescription, .
         value_fn=(
             lambda inverter: None if inverter is None else inverter.consumption_year
         ),
+    ),
+    SolarLogInverterSensorEntityDescription(
+        key="device_status",
+        translation_key="device_status",
+        value_fn=(lambda inverter: None if inverter is None else inverter.status),
     ),
 )
 
@@ -405,7 +421,7 @@ class SolarLogBasicCoordinatorSensor(SolarLogBasicCoordinatorEntity, SensorEntit
 
     @property
     @override
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType | date | datetime:
         """Return the state for this sensor."""
 
         return self.entity_description.value_fn(self.coordinator.data)

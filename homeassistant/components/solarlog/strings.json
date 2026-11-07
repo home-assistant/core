@@ -86,11 +86,20 @@
       "consumption_yesterday": {
         "name": "Consumption yesterday"
       },
+      "device_status": {
+        "name": "Status"
+      },
       "discharging_power": {
         "name": "Discharging power"
       },
       "efficiency": {
         "name": "Efficiency"
+      },
+      "firmware_release_date": {
+        "name": "Firmware release date"
+      },
+      "firmware_version": {
+        "name": "Firmware version"
       },
       "last_update": {
         "name": "Last update"

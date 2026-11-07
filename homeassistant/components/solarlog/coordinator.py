@@ -95,7 +95,7 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
                 translation_key="update_failed",
             ) from ex
 
-        _LOGGER.debug("Basic data successfully updated")
+        _LOGGER.debug("Basic data successfully updated: %s", data)
 
         return data
 
@@ -163,7 +163,7 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
                 translation_key="update_failed",
             ) from ex
 
-        _LOGGER.debug("Device data successfully updated")
+        _LOGGER.debug("Device data successfully updated: %s", inverter_data)
 
         self.data = inverter_data
 
@@ -279,6 +279,9 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
             energy_data: EnergyData | None = await self.solarlog.update_energy_data(
                 timeout=self.connection_timeout
             )
+            firmware_data = await self.solarlog.update_firmware_information(
+                timeout=self.connection_timeout
+            )
         except SolarLogAuthenticationError as ex:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -293,10 +296,32 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
         if energy_data is None:
             energy_data = EnergyData(None, None)
 
-        (
-            self.config_entry.runtime_data.basic_data_coordinator.data.self_consumption_year
-        ) = energy_data.self_consumption
+        self.config_entry.runtime_data.basic_data_coordinator.data.self_consumption_year = energy_data.self_consumption
+        _LOGGER.debug(
+            "firmware_data: %s; local firmware data: %s,%s",
+            firmware_data,
+            self.config_entry.runtime_data.basic_data_coordinator.data.firmware_version,
+            self.config_entry.runtime_data.basic_data_coordinator.data.firmware_release_date,
+        )
+        if (
+            firmware_data[0]
+            != self.config_entry.runtime_data.basic_data_coordinator.data.firmware_version
+        ):
+            self.config_entry.runtime_data.basic_data_coordinator.data.firmware_version = firmware_data[
+                0
+            ]
+            self.config_entry.runtime_data.basic_data_coordinator.data.firmware_release_date = firmware_data[
+                1
+            ]
+            device_registry = dr.async_get(self.hass)
+            if device := device_registry.async_get_device_by_identifier(
+                identifier=(DOMAIN, self.config_entry.entry_id),
+                config_entry_id=self.config_entry.entry_id,
+            ):
+                device_registry.async_update_device(
+                    device_id=device.id, sw_version=str(firmware_data[0])
+                )
 
-        _LOGGER.debug("Energy data successfully updated")
+        _LOGGER.debug("Energy data successfully updated: %s", energy_data)
 
         return energy_data

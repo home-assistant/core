@@ -41,8 +41,8 @@
       'consumption_year': 4587.0,
       'consumption_yesterday': 7.34,
       'efficiency': 98.1,
-      'firmware_release_date': None,
-      'firmware_version': None,
+      'firmware_release_date': '2024-01-01',
+      'firmware_version': '1.0',
       'inverter_data': dict({
       }),
       'last_updated': '2024-08-01T15:20:45+00:00',
