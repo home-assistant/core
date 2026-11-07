@@ -126,6 +126,14 @@
       "twist_position": {
         "name": "Twist position"
       }
+    },
+    "sensor": {
+      "battery_level": {
+        "name": "Battery"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      }
     }
   },
   "exceptions": {
