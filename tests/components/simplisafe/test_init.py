@@ -3,7 +3,7 @@
 import asyncio
 import copy
 import logging
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -22,13 +22,98 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.simplisafe import DOMAIN, WEBSOCKET_RETRY_DELAY
+from homeassistant.components.simplisafe import (
+    EVENT_SIMPLISAFE_EVENT,
+    WEBSOCKET_RETRY_DELAY,
+    _filter_systems,
+)
+from homeassistant.components.simplisafe.const import (
+    CONF_EXCLUDE_SYSTEMS,
+    CONF_INCLUDE_SYSTEMS,
+    DOMAIN,
+)
 from homeassistant.components.simplisafe.coordinator import DEFAULT_SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
+
+
+@pytest.mark.parametrize(
+    ("include_systems", "exclude_systems", "expected_system_ids"),
+    [
+        pytest.param([], [], {12345}, id="no-filter"),
+        pytest.param(["12345"], [], {12345}, id="include-selected"),
+        pytest.param([], ["12345"], set(), id="exclude-selected"),
+        pytest.param(["12345"], ["12345"], set(), id="exclude-takes-precedence"),
+    ],
+)
+async def test_configured_system_filters(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api: None,
+    include_systems: list[str],
+    exclude_systems: list[str],
+    expected_system_ids: set[int],
+) -> None:
+    """Test included and excluded systems are filtered during setup."""
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            CONF_INCLUDE_SYSTEMS: include_systems,
+            CONF_EXCLUDE_SYSTEMS: exclude_systems,
+        },
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert set(config_entry.runtime_data.systems) == expected_system_ids
+
+
+async def test_websocket_ignores_excluded_system(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api: None,
+    websocket: Mock,
+) -> None:
+    """Test websocket events from excluded systems are ignored."""
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_EXCLUDE_SYSTEMS: ["12345"]}
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    event_callback = websocket.add_event_callback.call_args[0][0]
+    event = WebsocketEvent(
+        event_cid=1602,
+        info="Automatic test",
+        system_id=12345,
+        _raw_timestamp=0,
+        _video=None,
+        _vid=None,
+    )
+    events: list[Event] = []
+    hass.bus.async_listen(EVENT_SIMPLISAFE_EVENT, events.append)
+
+    with patch("homeassistant.components.simplisafe.async_dispatcher_send") as dispatch:
+        event_callback(event)
+    await hass.async_block_till_done()
+
+    dispatch.assert_not_called()
+    assert events == []
+
+
+def test_filter_systems(system_v3: SystemV3) -> None:
+    """Test that include and exclude system ID filters are applied."""
+    systems = {12345: system_v3, 67890: system_v3}
+
+    assert set(_filter_systems(systems, [], [])) == {12345, 67890}
+    assert set(_filter_systems(systems, ["12345"], [])) == {12345}
+    assert set(_filter_systems(systems, [], ["67890"])) == {12345}
+    assert set(_filter_systems(systems, ["12345", "67890"], ["67890"])) == {12345}
 
 
 async def test_base_station_migration(
