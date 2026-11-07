@@ -21,7 +21,7 @@ import logging
 import math
 from pathlib import Path
 import threading
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import av
 from av.codec.codec import UnknownCodecError  # pylint: disable=no-name-in-module
@@ -865,6 +865,234 @@ async def test_update_stream_source(hass: HomeAssistant) -> None:
 
         # Cleanup
         await stream.stop()
+
+
+class BlockingStreamWorker:
+    """Stub for stream_worker that runs until it is asked to quit.
+
+    After the quit event is set, the first run blocks until `release` is set,
+    like a worker that is still busy opening or reading the old source.
+    """
+
+    def __init__(self) -> None:
+        """Initialize BlockingStreamWorker."""
+        self.sources: list[str] = []
+        self.running = threading.Event()
+        self.release = threading.Event()
+
+    def __call__(
+        self,
+        source: str,
+        pyav_options: dict[str, str],
+        stream_settings: StreamSettings,
+        stream_state: StreamState,
+        keyframe_converter: KeyFrameConverter,
+        quit_event: threading.Event,
+    ) -> None:
+        """Run until the quit event is set."""
+        self.sources.append(source)
+        self.running.set()
+        # Bounded, so that a worker leaked by a lost stop still ends
+        quit_event.wait(TIMEOUT)
+        if len(self.sources) == 1:
+            self.release.wait(TIMEOUT)
+
+
+@pytest.fixture
+def worker_stub() -> Iterator[BlockingStreamWorker]:
+    """Replace stream_worker with a BlockingStreamWorker."""
+    stub = BlockingStreamWorker()
+    with patch("homeassistant.components.stream.worker.stream_worker", stub):
+        yield stub
+
+
+async def test_stop_after_update_source_pending(
+    hass: HomeAssistant, worker_stub: BlockingStreamWorker
+) -> None:
+    """Test that stop() ends the worker while an update_source() restart is pending."""
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
+    await stream.start()
+    assert await hass.async_add_executor_job(worker_stub.running.wait, TIMEOUT)
+
+    stream.update_source(STREAM_SOURCE + "-updated-source")
+    # Let stop() run until it waits for the worker thread, then let the
+    # worker return from the old source
+    stop_task = hass.async_create_task(stream.stop())
+    await asyncio.sleep(0)
+    worker_stub.release.set()
+    await stop_task
+
+    assert worker_stub.sources == [STREAM_SOURCE]
+
+
+async def test_update_source_while_stopping(
+    hass: HomeAssistant, worker_stub: BlockingStreamWorker
+) -> None:
+    """Test that update_source() does not undo a stop() in progress."""
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
+    await stream.start()
+    assert await hass.async_add_executor_job(worker_stub.running.wait, TIMEOUT)
+
+    # Let stop() run until it waits for the worker thread
+    stop_task = hass.async_create_task(stream.stop())
+    await asyncio.sleep(0)
+    stream.update_source(STREAM_SOURCE + "-updated-source")
+    worker_stub.release.set()
+    await stop_task
+
+    assert worker_stub.sources == [STREAM_SOURCE]
+
+
+async def test_stop_after_update_source_while_stopped(
+    hass: HomeAssistant, worker_stub: BlockingStreamWorker
+) -> None:
+    """Test that update_source() on a stopped stream does not break a later stop()."""
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
+    worker_stub.release.set()
+
+    stream.update_source(STREAM_SOURCE + "-updated-source")
+    await stream.start()
+    assert await hass.async_add_executor_job(worker_stub.running.wait, TIMEOUT)
+    await stream.stop()
+
+    assert worker_stub.sources == [STREAM_SOURCE + "-updated-source"]
+
+
+class FailFirstStreamWorker:
+    """Stub for stream_worker whose first run fails, then runs until quit."""
+
+    def __init__(self, quit_on_restart: bool = False) -> None:
+        """Initialize FailFirstStreamWorker."""
+        self.sources: list[str] = []
+        self.restarted = threading.Event()
+        self.quit_on_restart = quit_on_restart
+
+    def __call__(
+        self,
+        source: str,
+        pyav_options: dict[str, str],
+        stream_settings: StreamSettings,
+        stream_state: StreamState,
+        keyframe_converter: KeyFrameConverter,
+        quit_event: threading.Event,
+    ) -> None:
+        """Fail on the first run, then run until the quit event is set."""
+        self.sources.append(source)
+        if len(self.sources) == 1:
+            raise StreamWorkerError("Unable to open the source")
+        self.restarted.set()
+        if self.quit_on_restart:
+            # A restart that should not happen then ends the worker, so the
+            # test fails instead of hanging in the next wait to retry
+            quit_event.set()
+            return
+        # Bounded, so that a leaked worker still ends
+        quit_event.wait(TIMEOUT)
+
+
+class RetryWaitQuitEvent(threading.Event):
+    """Quit event that tells when the worker waits to retry, and can hold it there."""
+
+    def __init__(self) -> None:
+        """Initialize RetryWaitQuitEvent."""
+        super().__init__()
+        self.retry_wait = threading.Event()
+        self.release = threading.Event()
+        self.release.set()
+
+    def wait(self, timeout: float | None = None) -> bool:
+        """Wait, and for a wait with a timeout, signal it and hold until released."""
+        if not timeout:
+            return super().wait(timeout)
+        self.retry_wait.set()
+        result = super().wait(timeout)
+        # Bounded, so that a failing test still ends
+        self.release.wait(TIMEOUT)
+        return result
+
+
+async def test_update_source_while_waiting_to_retry(
+    hass: HomeAssistant, should_retry: Mock
+) -> None:
+    """Test that update_source() during the wait before a retry restarts the worker."""
+    should_retry.return_value = True
+    worker = FailFirstStreamWorker()
+    with (
+        patch("homeassistant.components.stream.worker.stream_worker", worker),
+        # Long enough that only update_source() can end the wait in the test
+        patch("homeassistant.components.stream.STREAM_RESTART_INCREMENT", 3600),
+    ):
+        stream = Stream(
+            hass,
+            STREAM_SOURCE,
+            {},
+            hass.data[DOMAIN][ATTR_SETTINGS],
+            dynamic_stream_settings(),
+        )
+        quit_event = stream._thread_quit = RetryWaitQuitEvent()
+        await stream.start()
+        assert await hass.async_add_executor_job(quit_event.retry_wait.wait, TIMEOUT)
+
+        stream.update_source(STREAM_SOURCE + "-updated-source")
+        assert await hass.async_add_executor_job(worker.restarted.wait, TIMEOUT)
+        assert worker.sources == [STREAM_SOURCE, STREAM_SOURCE + "-updated-source"]
+
+        await stream.stop()
+        assert stream._thread is None
+
+
+async def test_stop_while_waiting_to_retry_with_update_pending(
+    hass: HomeAssistant, should_retry: Mock
+) -> None:
+    """Test that stop() during the wait before a retry ends the worker, restart pending or not."""
+    should_retry.return_value = True
+    worker = FailFirstStreamWorker(quit_on_restart=True)
+    with (
+        patch("homeassistant.components.stream.worker.stream_worker", worker),
+        patch("homeassistant.components.stream.STREAM_RESTART_INCREMENT", 3600),
+    ):
+        stream = Stream(
+            hass,
+            STREAM_SOURCE,
+            {},
+            hass.data[DOMAIN][ATTR_SETTINGS],
+            dynamic_stream_settings(),
+        )
+        quit_event = stream._thread_quit = RetryWaitQuitEvent()
+        quit_event.release.clear()
+        await stream.start()
+        assert await hass.async_add_executor_job(quit_event.retry_wait.wait, TIMEOUT)
+
+        # The update ends the wait, and the worker is held there until the
+        # stop is pending
+        stream.update_source(STREAM_SOURCE + "-updated-source")
+        stop_task = hass.async_create_task(stream.stop())
+        async with asyncio.timeout(TIMEOUT):
+            while not stream._stopping:
+                await asyncio.sleep(0)
+        quit_event.release.set()
+        async with asyncio.timeout(TIMEOUT):
+            await stop_task
+        assert stream._thread is None
+        assert worker.sources == [STREAM_SOURCE]
 
 
 test_worker_log_cases = (
