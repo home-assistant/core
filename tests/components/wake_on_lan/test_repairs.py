@@ -15,6 +15,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerat
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.wake_on_lan.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -833,6 +834,22 @@ async def test_turn_off_action_not_json_serializable_when_validated(
     # Issue is identified by the MAC so it does not depend on the validated config
     assert "migrate_to_template_00:01:02:03:04:05" in issue_ids
 
+    # Issue data only holds values that can be sent as JSON
+    await ws_client.send_json(
+        {
+            "id": 2,
+            "type": "repairs/get_issue_data",
+            "domain": DOMAIN,
+            "issue_id": "migrate_to_template_00:01:02:03:04:05",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["issue_data"] == {
+        "mac": "00-01-02-03-04-05",
+        "name": "Test",
+    }
+
     data = await start_repair_fix_flow(
         client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
     )
@@ -976,3 +993,121 @@ async def test_template_switch_takes_over_customized_entity(
     assert entity_entry.options["conversation"] == {"should_expose": True}
     assert hass.states.get("switch.office_pc").name == "Office PC"
     assert hass.states.get("switch.test") is None
+
+
+async def _setup_ping_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up an existing Ping config entry for somehostname.local."""
+    ping_entry = MockConfigEntry(
+        title="somehostname.local",
+        domain="ping",
+        data={},
+        options={"host": "somehostname.local", "count": 5, "consider_home": 180},
+        minor_version=2,
+    )
+    ping_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.ping.helpers.async_ping",
+        return_value=Host(address="10.10.10.10", packets_sent=10, rtts=[]),
+    ):
+        await hass.config_entries.async_setup(ping_entry.entry_id)
+    await hass.async_block_till_done()
+    return ping_entry
+
+
+async def test_reuse_disabled_ping_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_yaml_config: MagicMock,
+) -> None:
+    """Test an existing disabled Ping sensor is reused and enabled.
+
+    The host has surrounding whitespace, which Ping strips when storing it.
+    """
+    config = {**FULL_CONFIG, "host": " somehostname.local "}
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: config})
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: config}
+    ping_entry = await _setup_ping_entry(hass)
+    entity_registry.async_update_entity(
+        "binary_sensor.somehostname_local",
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
+    )
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+    assert hass.config_entries.async_entries("ping") == [ping_entry]
+    assert (
+        entity_registry.async_get("binary_sensor.somehostname_local").disabled_by
+        is None
+    )
+    template_config_entries = hass.config_entries.async_entries("template")
+    assert len(template_config_entries) == 1
+    assert template_config_entries[0].options["value_template"] == (
+        "{{ is_state('binary_sensor.somehostname_local', 'on') }}"
+    )
+
+
+async def test_ping_entity_disabled_by_config_entry(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_yaml_config: MagicMock,
+) -> None:
+    """Test the repair aborts when the Ping sensor's config entry is disabled."""
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(
+        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: FULL_CONFIG}
+    )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: FULL_CONFIG}
+    ping_entry = await _setup_ping_entry(hass)
+    await hass.config_entries.async_set_disabled_by(
+        ping_entry.entry_id, ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert (
+        entity_registry.async_get("binary_sensor.somehostname_local").disabled_by
+        is er.RegistryEntryDisabler.CONFIG_ENTRY
+    )
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
+    )
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+
+    assert data["type"] == FlowResultType.ABORT
+    assert data["reason"] == "could_not_get_ping_entity"
+    assert not hass.config_entries.async_entries("template")
+
+
+async def test_import_already_configured_without_lookup_match(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_yaml_config: MagicMock,
+) -> None:
+    """Test the repair aborts when an import is already configured but not found."""
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(
+        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: FULL_CONFIG}
+    )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: FULL_CONFIG}
+    # Ping's duplicate check also looks at data, the repair only at options
+    MockConfigEntry(
+        domain="ping", data={"host": "somehostname.local"}, options={}
+    ).add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
+    )
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+
+    assert data["type"] == FlowResultType.ABORT
+    assert data["reason"] == "could_not_import_host"

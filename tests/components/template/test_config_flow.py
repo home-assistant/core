@@ -2726,3 +2726,93 @@ async def test_preview_this_variable_options_flow(
 
     msg = await client.receive_json()
     assert msg["event"]["state"] == expected_state
+
+
+SWITCH_TURN_ON = [{"action": "button.press", "target": {"entity_id": "button.wol"}}]
+SWITCH_TURN_OFF = [{"action": "input_number.increment", "target": {}}]
+
+
+async def test_config_flow_switch_with_same_actions_as_existing(
+    hass: HomeAssistant,
+) -> None:
+    """Test a switch with the same actions as an existing one can be created."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "template_type": "switch",
+            "name": "Existing",
+            "turn_on": SWITCH_TURN_ON,
+            "turn_off": SWITCH_TURN_OFF,
+        },
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "switch"}
+    )
+    with patch(
+        "homeassistant.components.template.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"name": "New", "turn_on": SWITCH_TURN_ON, "turn_off": SWITCH_TURN_OFF},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("existing_options", "expected_result"),
+    [
+        pytest.param(
+            {"template_type": "switch", "name": "Other", "turn_on": SWITCH_TURN_ON},
+            FlowResultType.ABORT,
+            id="same_switch",
+        ),
+        pytest.param(
+            {"template_type": "light", "name": "Other", "turn_on": SWITCH_TURN_ON},
+            FlowResultType.CREATE_ENTRY,
+            id="other_template_type",
+        ),
+        pytest.param(
+            {
+                "template_type": "switch",
+                "name": "Other",
+                "turn_on": SWITCH_TURN_ON,
+                "turn_off": SWITCH_TURN_OFF,
+            },
+            FlowResultType.CREATE_ENTRY,
+            id="extra_turn_off",
+        ),
+        pytest.param(
+            {
+                "template_type": "switch",
+                "name": "Other",
+                "turn_on": SWITCH_TURN_ON,
+                "value_template": "{{ True }}",
+            },
+            FlowResultType.CREATE_ENTRY,
+            id="extra_value_template",
+        ),
+    ],
+)
+async def test_wake_on_lan_import(
+    hass: HomeAssistant,
+    existing_options: dict[str, Any],
+    expected_result: FlowResultType,
+) -> None:
+    """Test the Wake on LAN import only aborts for an equivalent switch."""
+    MockConfigEntry(domain=DOMAIN, options=existing_options).add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.template.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"name": "Test", "turn_on": SWITCH_TURN_ON},
+        )
+
+    assert result["type"] is expected_result

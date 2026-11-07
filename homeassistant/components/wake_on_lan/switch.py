@@ -58,7 +58,18 @@ async def async_setup_platform(
         is_persistent=False,
         severity=IssueSeverity.WARNING,
         translation_key="migrate_to_template",
-        data=config,
+        # The validated config holds objects that can't be sent as JSON
+        data={
+            key: config[key]
+            for key in (
+                CONF_BROADCAST_ADDRESS,
+                CONF_BROADCAST_PORT,
+                CONF_HOST,
+                CONF_MAC,
+                CONF_NAME,
+            )
+            if key in config
+        },
     )
 
     broadcast_address: str | None = config.get(CONF_BROADCAST_ADDRESS)

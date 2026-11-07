@@ -57,7 +57,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import section
+from homeassistant.data_entry_flow import AbortFlow, section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -663,23 +663,13 @@ def validate_user_input(
     """
 
     async def _validate_user_input(
-        handler: SchemaCommonFlowHandler,
+        _: SchemaCommonFlowHandler,
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
         """Add template type to user input."""
         if template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
-        if template_type == Platform.SWITCH:
-            # Can be removed when Wake on LAN import is removed in 2027.6
-            match = {CONF_ON_ACTION: user_input.get(CONF_ON_ACTION)}
-            if turn_off := user_input.get(CONF_OFF_ACTION):
-                match[CONF_OFF_ACTION] = turn_off
-            if value_template := user_input.get(CONF_VALUE_TEMPLATE):
-                match[CONF_VALUE_TEMPLATE] = value_template
-            handler.parent_handler._async_abort_entries_match(  # noqa: SLF001
-                match
-            )
         if template_type == Platform.CLIMATE:
             tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)(
                 user_input
@@ -706,6 +696,27 @@ def validate_user_input(
         return {"template_type": template_type} | user_input
 
     return _validate_user_input
+
+
+async def _validate_wake_on_lan_import(
+    handler: SchemaCommonFlowHandler,
+    user_input: dict[str, Any],
+) -> dict[str, Any]:
+    """Abort if an equivalent Template switch already exists.
+
+    Can be removed when Wake on LAN import is removed in 2027.6.
+    """
+    options = {"template_type": Platform.SWITCH} | user_input
+    compared_keys = (
+        "template_type",
+        CONF_ON_ACTION,
+        CONF_OFF_ACTION,
+        CONF_VALUE_TEMPLATE,
+    )
+    for entry in handler.parent_handler.hass.config_entries.async_entries(DOMAIN):
+        if all(entry.options.get(key) == options.get(key) for key in compared_keys):
+            raise AbortFlow("already_configured")
+    return options
 
 
 TEMPLATE_TYPES = [
@@ -835,7 +846,7 @@ CONFIG_FLOW = {
     "import": SchemaFlowFormStep(
         # Can be removed when Wake on LAN import is removed in 2027.6
         config_schema(Platform.SWITCH),
-        validate_user_input=validate_user_input(Platform.SWITCH),
+        validate_user_input=_validate_wake_on_lan_import,
     ),
 }
 

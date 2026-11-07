@@ -69,69 +69,31 @@ class MigrateSwitchFlow(RepairsFlow):
             return self.async_abort(reason="could_not_read_configuration")
 
         entity_reg = er.async_get(self.hass)
-        ping_entry_id: str | None = None
 
         ping_entity_id = None
         if ping_host:
-            # If a hosts was provided, setup a Ping config entry
-            ping_entry_id = None
-            ping_entries = self.hass.config_entries.async_entries("ping")
-            for entry in ping_entries:
-                if entry.options.get(CONF_HOST) == ping_host:
-                    ping_entry_id = entry.entry_id
-                    break
+            # Ping strips the host before storing it
+            ping_entry_id = await self._async_get_or_import_entry(
+                "ping", CONF_HOST, ping_host.strip(), {CONF_HOST: ping_host}
+            )
             if not ping_entry_id:
-                ping_config = {
-                    CONF_HOST: ping_host,
-                }
-                import_result = await self.hass.config_entries.flow.async_init(
-                    "ping",
-                    context={"source": SOURCE_IMPORT},
-                    data=ping_config,
-                )
-                if not (
-                    import_result["type"] is FlowResultType.CREATE_ENTRY
-                    or (
-                        import_result["type"] is FlowResultType.ABORT
-                        and import_result["reason"] == "already_configured"
-                    )
-                ):
-                    return self.async_abort(reason="could_not_import_host")
-                ping_entry_id = import_result["result"].entry_id
-
+                return self.async_abort(reason="could_not_import_host")
             ping_entity_id = await self._async_wait_for_entity(
                 entity_reg, ping_entry_id, BINARY_SENSOR_DOMAIN
             )
             if not ping_entity_id:
                 return self.async_abort(reason="could_not_get_ping_entity")
 
-        # Import Wake on LAN config to get a config entry with a button entity
-        wol_entry_id = None
-        wol_entries = self.hass.config_entries.async_entries(DOMAIN)
-        for entry in wol_entries:
-            if entry.options.get(CONF_MAC) == dr.format_mac(mac):
-                wol_entry_id = entry.entry_id
-                break
+        wol_config: dict[str, Any] = {CONF_MAC: mac}
+        if broadcast_address is not None:
+            wol_config[CONF_BROADCAST_ADDRESS] = broadcast_address
+        if broadcast_port is not None:
+            wol_config[CONF_BROADCAST_PORT] = broadcast_port
+        wol_entry_id = await self._async_get_or_import_entry(
+            DOMAIN, CONF_MAC, dr.format_mac(mac), wol_config
+        )
         if not wol_entry_id:
-            wol_config: dict[str, Any] = {CONF_MAC: mac}
-            if broadcast_address is not None:
-                wol_config[CONF_BROADCAST_ADDRESS] = broadcast_address
-            if broadcast_port is not None:
-                wol_config[CONF_BROADCAST_PORT] = broadcast_port
-            import_result = await self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=wol_config,
-            )
-            if not (
-                import_result["type"] is FlowResultType.CREATE_ENTRY
-                or (
-                    import_result["type"] is FlowResultType.ABORT
-                    and import_result["reason"] == "already_configured"
-                )
-            ):
-                return self.async_abort(reason="could_not_import_wol")
-            wol_entry_id = import_result["result"].entry_id
+            return self.async_abort(reason="could_not_import_wol")
 
         wol_entity_id = await self._async_wait_for_entity(
             entity_reg, wol_entry_id, BUTTON_DOMAIN
@@ -190,14 +152,52 @@ class MigrateSwitchFlow(RepairsFlow):
             description_placeholders={"mac": mac, "host": ping_host or ""},
         )
 
+    async def _async_get_or_import_entry(
+        self, domain: str, key: str, value: str, import_data: dict[str, Any]
+    ) -> str | None:
+        """Return the ID of the config entry matching the value, importing it if missing."""
+
+        def find_entry_id() -> str | None:
+            return next(
+                (
+                    entry.entry_id
+                    for entry in self.hass.config_entries.async_entries(domain)
+                    if entry.options.get(key) == value
+                ),
+                None,
+            )
+
+        if entry_id := find_entry_id():
+            return entry_id
+        result = await self.hass.config_entries.flow.async_init(
+            domain, context={"source": SOURCE_IMPORT}, data=import_data
+        )
+        if result["type"] is FlowResultType.CREATE_ENTRY:
+            return result["result"].entry_id
+        if (
+            result["type"] is FlowResultType.ABORT
+            and result["reason"] == "already_configured"
+        ):
+            # Abort results don't carry the existing entry
+            return find_entry_id()
+        return None
+
     async def _async_wait_for_entity(
         self, entity_reg: er.EntityRegistry, entry_id: str, domain: str
     ) -> str | None:
-        """Return the entity ID of the config entry's entity once it is registered."""
+        """Return the entity ID of the config entry's entity once it is registered.
+
+        A disabled entity is enabled, as the Template switch depends on it.
+        """
         for _ in range(10):
             for entity in er.async_entries_for_config_entry(entity_reg, entry_id):
-                if entity.domain == domain:
-                    return entity.entity_id
+                if entity.domain != domain:
+                    continue
+                if entity.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY:
+                    return None
+                if entity.disabled:
+                    entity_reg.async_update_entity(entity.entity_id, disabled_by=None)
+                return entity.entity_id
             await asyncio.sleep(1)
         return None
 
