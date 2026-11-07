@@ -99,4 +99,5 @@ def mock_opower_api() -> Generator[AsyncMock]:
             ),
         ]
         api.async_get_cost_reads.return_value = []
+        api.async_get_usage_reads.return_value = []
         yield api

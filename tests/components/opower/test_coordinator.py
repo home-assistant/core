@@ -2,9 +2,10 @@
 
 import dataclasses
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from opower import AggregateType, CostRead, ReadResolution
+from opower import AggregateType, CostRead, ReadResolution, UsageRead
 from opower.exceptions import ApiException
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -809,3 +810,262 @@ async def test_coordinator_subsequent_run_time_gaps(
     )
     assert [s["state"] for s in stats[statistic_id]] == [1.5, 2.0, 3.0]
     assert [s["sum"] for s in stats[statistic_id]] == [1.5, 3.5, 6.5]
+
+
+ELEC_STATISTIC_IDS = {
+    "opower:pge_elec_111111_energy_consumption",
+    "opower:pge_elec_111111_energy_return",
+    "opower:pge_elec_111111_energy_cost",
+    "opower:pge_elec_111111_energy_compensation",
+}
+
+
+def _cost_read(hour: int, consumption: float, cost: float) -> CostRead:
+    return CostRead(
+        start_time=dt_util.as_utc(datetime(2023, 1, 1, hour)),
+        end_time=dt_util.as_utc(datetime(2023, 1, 1, hour + 1)),
+        consumption=consumption,
+        provided_cost=cost,
+    )
+
+
+def _usage_read(hour: int, consumption: float) -> UsageRead:
+    return UsageRead(
+        start_time=dt_util.as_utc(datetime(2023, 1, 1, hour)),
+        end_time=dt_util.as_utc(datetime(2023, 1, 1, hour + 1)),
+        consumption=consumption,
+    )
+
+
+async def _get_elec_stats(hass: HomeAssistant) -> dict[str, list[dict[str, Any]]]:
+    return await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        ELEC_STATISTIC_IDS,
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+
+
+async def test_coordinator_usage_ahead_of_cost(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test usage is recorded even when the utility hasn't priced it yet."""
+    mock_opower_api.async_get_cost_reads.return_value = [
+        _cost_read(8, 1.5, 0.5),
+        _cost_read(9, 2.0, 0.7),
+    ]
+    mock_opower_api.async_get_usage_reads.return_value = [
+        _usage_read(8, 1.5),
+        _usage_read(9, 2.0),
+        _usage_read(10, 3.0),
+        _usage_read(11, 1.0),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    data = await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await _get_elec_stats(hass)
+    consumption = stats["opower:pge_elec_111111_energy_consumption"]
+    cost = stats["opower:pge_elec_111111_energy_cost"]
+    assert [s["state"] for s in consumption] == [1.5, 2.0, 3.0, 1.0]
+    assert [s["sum"] for s in consumption] == [1.5, 3.5, 6.5, 7.5]
+    assert [s["sum"] for s in cost] == [0.5, 1.2]
+    assert data["111111"].last_changed == dt_util.as_utc(datetime(2023, 1, 1, 11))
+
+
+async def test_coordinator_cost_priced_later(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test cost priced after its usage was recorded is filled in later."""
+    mock_opower_api.async_get_cost_reads.return_value = [_cost_read(8, 1.5, 0.5)]
+    mock_opower_api.async_get_usage_reads.return_value = [
+        _usage_read(8, 1.5),
+        _usage_read(9, 2.0),
+        _usage_read(10, 3.0),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    # The utility has now priced hours 9 and 10, and reported hour 11.
+    mock_opower_api.async_get_cost_reads.return_value = [
+        _cost_read(8, 1.5, 0.5),
+        _cost_read(9, 2.0, 0.7),
+        _cost_read(10, 3.0, 1.0),
+    ]
+    mock_opower_api.async_get_usage_reads.return_value = [
+        _usage_read(8, 1.5),
+        _usage_read(9, 2.0),
+        _usage_read(10, 3.0),
+        _usage_read(11, 1.0),
+    ]
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await _get_elec_stats(hass)
+    consumption = stats["opower:pge_elec_111111_energy_consumption"]
+    cost = stats["opower:pge_elec_111111_energy_cost"]
+    assert [s["sum"] for s in consumption] == [1.5, 3.5, 6.5, 7.5]
+    assert [s["state"] for s in cost] == [0.5, 0.7, 1.0]
+    assert [s["sum"] for s in cost] == pytest.approx([0.5, 1.2, 2.2])
+
+
+@pytest.mark.parametrize(
+    "usage_reads_mock",
+    [
+        pytest.param({"return_value": []}, id="no_usage_reads"),
+        pytest.param({"side_effect": ApiException("", "")}, id="usage_reads_error"),
+    ],
+)
+async def test_coordinator_usage_from_cost_reads(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+    usage_reads_mock: dict[str, Any],
+) -> None:
+    """Test usage comes from the cost reads when there are no usage reads."""
+    mock_opower_api.async_get_cost_reads.return_value = [
+        _cost_read(8, 1.5, 0.5),
+        _cost_read(9, -0.5, -0.1),
+    ]
+    mock_opower_api.async_get_usage_reads.configure_mock(**usage_reads_mock)
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await _get_elec_stats(hass)
+    assert [s["state"] for s in stats["opower:pge_elec_111111_energy_consumption"]] == [
+        1.5,
+        0.0,
+    ]
+    assert [s["state"] for s in stats["opower:pge_elec_111111_energy_return"]] == [
+        0.0,
+        0.5,
+    ]
+
+
+async def test_coordinator_drops_unreported_usage(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test trailing intervals the meter hasn't reported aren't recorded as zero."""
+    mock_opower_api.async_get_usage_reads.return_value = [
+        _usage_read(8, 1.5),
+        _usage_read(9, 0.0),
+        _usage_read(10, 0.0),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await _get_elec_stats(hass)
+    assert [s["state"] for s in stats["opower:pge_elec_111111_energy_consumption"]] == [
+        1.5
+    ]
+
+
+async def test_coordinator_usage_only_utility(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a utility that never publishes cost keeps updating usage."""
+    mock_opower_api.async_get_usage_reads.return_value = [
+        _usage_read(8, 1.5),
+        _usage_read(9, 2.0),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    mock_opower_api.async_get_usage_reads.return_value = [
+        _usage_read(8, 1.5),
+        _usage_read(9, 2.0),
+        _usage_read(10, 3.0),
+    ]
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await _get_elec_stats(hass)
+    assert [s["sum"] for s in stats["opower:pge_elec_111111_energy_consumption"]] == [
+        1.5,
+        3.5,
+        6.5,
+    ]
+    assert "opower:pge_elec_111111_energy_cost" not in stats
+    assert not issue_registry.issues
+
+
+async def test_coordinator_keeps_trailing_zero_net_usage_with_registers(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test a trailing zero-net interval with real import and export is kept."""
+    mock_opower_api.async_get_usage_reads.return_value = [
+        _usage_read(8, 1.5),
+        UsageRead(
+            start_time=dt_util.as_utc(datetime(2023, 1, 1, 9)),
+            end_time=dt_util.as_utc(datetime(2023, 1, 1, 10)),
+            consumption=0.0,
+            imported=1.0,
+            exported=1.0,
+        ),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    stats = await _get_elec_stats(hass)
+    assert [s["state"] for s in stats["opower:pge_elec_111111_energy_consumption"]] == [
+        1.5,
+        1.0,
+    ]
+    assert [s["state"] for s in stats["opower:pge_elec_111111_energy_return"]] == [
+        0.0,
+        1.0,
+    ]
+
+
+async def test_coordinator_last_changed_not_moved_back_by_cost_fallback(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test falling back to lagging cost reads doesn't move last_changed back."""
+    mock_opower_api.async_get_cost_reads.return_value = [
+        _cost_read(8, 1.5, 0.5),
+        _cost_read(9, 2.0, 0.7),
+    ]
+    mock_opower_api.async_get_usage_reads.return_value = [
+        _usage_read(8, 1.5),
+        _usage_read(9, 2.0),
+        _usage_read(10, 3.0),
+        _usage_read(11, 1.0),
+    ]
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    mock_opower_api.async_get_usage_reads.side_effect = ApiException("", "")
+    data = await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+
+    assert data["111111"].last_changed == dt_util.as_utc(datetime(2023, 1, 1, 11))
