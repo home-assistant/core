@@ -8,7 +8,7 @@ from typing import override
 
 from modbus_connection import ModbusError
 from sofar_modbus.model import UpdateReport
-from sofar_modbus.modern.device import READING_COMPONENTS, SofarInverter
+from sofar_modbus.modern.device import BATTERY_PACKS, READING_COMPONENTS, SofarInverter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -31,6 +31,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         self,
         hass: HomeAssistant,
         entry: SofarConfigEntry,
+        name: str,
         device: SofarInverter,
         poll: Callable[[], Awaitable[UpdateReport]],
         interval: timedelta,
@@ -40,7 +41,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             hass,
             _LOGGER,
             config_entry=entry,
-            name=entry.title,
+            name=name,
             update_interval=interval,
         )
         self.device = device
@@ -110,12 +111,16 @@ class SofarRuntimeData:
 
     readings: SofarDataUpdateCoordinator
     settings: SofarDataUpdateCoordinator
+    packs: SofarDataUpdateCoordinator
     inverter_device_id: str
     served_components: frozenset[str]
     added_battery_strings: set[int] = field(default_factory=set)
+    added_battery_packs: set[tuple[int, int]] = field(default_factory=set)
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""
+        if component == BATTERY_PACKS:
+            return self.packs
         if component in READING_COMPONENTS:
             return self.readings
         return self.settings

@@ -5,7 +5,11 @@ import logging
 from typing import TYPE_CHECKING
 
 from modbus_connection import ModbusTimeoutError
-from sofar_modbus.modern.device import BATTERY_STRING_COMPONENTS, SofarInverter
+from sofar_modbus.modern.device import (
+    BATTERY_PACKS,
+    BATTERY_STRING_COMPONENTS,
+    SofarInverter,
+)
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.sensor import (
@@ -29,12 +33,14 @@ from .const import (
     CONF_UNIT_ID,
     DOMAIN,
     FAULT_LOG,
+    PACKS_SCAN_INTERVAL,
     SCAN_INTERVAL,
     SERVED_COMPONENTS,
     SETTINGS_SCAN_INTERVAL,
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
+from .entity import battery_pack_identifier
 from .helpers import create_modbus_params
 from .sensor import TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
@@ -129,16 +135,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         entry.data[CONF_UNIT_ID],
     )
 
+    stored = entry.data.get(SERVED_COMPONENTS, ())
     device = SofarInverter(
         unit,
         serial_number=serial,
-        has_fault_log=FAULT_LOG in entry.data.get(SERVED_COMPONENTS, ()),
+        has_fault_log=FAULT_LOG in stored,
+        has_battery_tower=BATTERY_PACKS in stored,
     )
     _async_seed_high_water_marks(hass, serial, device)
 
     readings = SofarDataUpdateCoordinator(
         hass,
         entry,
+        entry.title,
         device,
         device.async_update_readings,
         timedelta(seconds=SCAN_INTERVAL),
@@ -146,9 +155,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
     settings = SofarDataUpdateCoordinator(
         hass,
         entry,
+        entry.title,
         device,
         device.async_update_settings,
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
+    )
+    packs = SofarDataUpdateCoordinator(
+        hass,
+        entry,
+        f"{entry.title} battery packs",
+        device,
+        device.async_update_packs,
+        timedelta(seconds=PACKS_SCAN_INTERVAL),
     )
     try:
         await readings.async_config_entry_first_refresh()
@@ -185,6 +203,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         remove_listener = readings.async_add_listener(_async_settle_on_first_answer)
     else:
         await settings.async_refresh()
+        if BATTERY_PACKS in device.expected_components:
+            await packs.async_refresh()
         # Not tied to a coordinator: identity never changes once read.
         await device.async_read_identity()
         served = device.expected_components
@@ -194,7 +214,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
     inverter = dr.async_get(hass).async_get_or_create_from_info(
         config_entry_id=entry.entry_id, device_info=readings.device_info
     )
-    entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, served)
+    entry.runtime_data = SofarRuntimeData(
+        readings, settings, packs, inverter.id, served
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -214,7 +236,7 @@ async def async_remove_config_entry_device(
     config_entry: SofarConfigEntry,
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
-    """Allow removing a battery string the inverter no longer reports."""
+    """Allow removing a battery string or pack the inverter no longer reports."""
     serial = config_entry.unique_id
     if TYPE_CHECKING:
         assert serial is not None
@@ -229,6 +251,11 @@ async def async_remove_config_entry_device(
             continue
         if identifier == serial or identifier.startswith(f"{serial}_pv_string_"):
             return False
+        if runtime_data is not None and any(
+            pack.answered and identifier == battery_pack_identifier(serial, pack)
+            for pack in runtime_data.readings.device.battery_packs.values()
+        ):
+            return False
         if (number := _battery_string_number(serial, identifier)) is None:
             continue
         if (
@@ -240,6 +267,12 @@ async def async_remove_config_entry_device(
 
     if runtime_data is not None:
         runtime_data.added_battery_strings -= strings
+        runtime_data.added_battery_packs -= {
+            place
+            for place, pack in runtime_data.readings.device.battery_packs.items()
+            if (DOMAIN, battery_pack_identifier(serial, pack))
+            in device_entry.identifiers
+        }
     return True
 
 
