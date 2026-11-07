@@ -1,9 +1,8 @@
 """Coordinator for the Tado integration."""
 
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any, override
-from zoneinfo import ZoneInfo
 
 from PyTado.interface import Tado
 from PyTado.zone import TadoZone
@@ -31,6 +30,11 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
+
+# tado's daily quota window; the reset time differs per account
+QUOTA_WINDOW = timedelta(days=1)
+# Retry interval once the quota is used up and its reset time is not known yet
+QUOTA_RETRY = timedelta(hours=1)
 
 type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
 
@@ -82,6 +86,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._current_interval: float = 0
         self._next_update: datetime | None = None
         self._time_until_reset: float = 0
+        self._quota_reset: datetime | None = None
+        self._last_remaining: int | None = None
 
     @property
     def fallback(self) -> str:
@@ -111,6 +117,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug("Checking rate limit")
             ratelimit = self.get_rate_limit()
             if ratelimit.get("remaining") == "0":
+                # Polling again before the quota resets only adds failed calls
+                now = dt_util.utcnow()
+                self._learn_quota_reset(now, ratelimit, 0)
+                self.update_interval = max(SCAN_INTERVAL, self._wait_for_quota(now))
                 raise UpdateFailed(f"Tado API rate limit reached: {err}") from err
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
 
@@ -162,58 +172,83 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             for zone_data in self.data.get("zone", {}).values()
         )
 
+    def _learn_quota_reset(
+        self, now: datetime, rate_limit: dict[str, Any], remaining: int | None
+    ) -> None:
+        """Track when this account's daily quota resets.
+
+        The reset time differs per account. It is taken from the seconds-to-reset
+        value when the library provides one, or learned when the remaining count
+        goes up between two polls.
+        """
+        reset_in = _as_int(rate_limit.get("reset-seconds"))
+        if reset_in is not None:
+            self._quota_reset = now + timedelta(seconds=reset_in)
+        elif (
+            remaining is not None
+            and self._last_remaining is not None
+            and remaining > self._last_remaining
+        ):
+            self._quota_reset = now + QUOTA_WINDOW
+        while self._quota_reset is not None and self._quota_reset <= now:
+            self._quota_reset += QUOTA_WINDOW
+        if remaining is not None:
+            self._last_remaining = remaining
+
+    def _time_until_quota_reset(self, now: datetime) -> timedelta:
+        """Return the time to the next quota reset (a full window if not known yet)."""
+        if self._quota_reset is None:
+            return QUOTA_WINDOW
+        return max(timedelta(0), self._quota_reset - now)
+
+    def _wait_for_quota(self, now: datetime) -> timedelta:
+        """Return how long to wait once the quota is used up."""
+        if self._quota_reset is None:
+            return QUOTA_RETRY
+        return self._time_until_quota_reset(now) + timedelta(minutes=1)
+
     def _calculate_update_interval(self) -> None:
         """Calculate an update interval based on remaining calls and estimates."""
+        now = dt_util.utcnow()
+        rate_limit = self.data.get("rate_limit") or {}
+        remaining_calls = _as_int(rate_limit.get("remaining"))
+        self._learn_quota_reset(now, rate_limit, remaining_calls)
+        until_reset = self._time_until_quota_reset(now)
+        self._time_until_reset = until_reset.total_seconds()
 
-        # Tado resets somewhere between 12:00 and 13:00, Berlin time
-        # So let's pretend we're in Berlin...
-        reset_time = dt_util.now(ZoneInfo("Europe/Berlin"))
-
-        today_reset = datetime.combine(
-            reset_time.date(),
-            time(hour=12, minute=0),
-            tzinfo=ZoneInfo("Europe/Berlin"),
-        )
-
-        next_reset = today_reset
-        if reset_time >= today_reset:
-            next_reset = today_reset + timedelta(days=1)
-
-        self._time_until_reset = (next_reset - reset_time).total_seconds()
-
-        # When any zone is actively heating, we use a shorter minimum
-        # To prevent overshooting in temperature,
-        # check if there's heating/cooling activity
-        # Accept five minutes to "overshoot", else reset back to 30 minutes
-        min_interval = 300 if self._is_any_zone_active else 1800
-
-        remaining_calls = int(self.data.get("rate_limit", {}).get("remaining", 0))
-        if remaining_calls is None or remaining_calls <= 0:
+        if remaining_calls is None:
             # If rate limit info is unavailable, fall back to the static interval.
-            self._current_interval = SCAN_INTERVAL.total_seconds()
             self.update_interval = SCAN_INTERVAL
-            self._next_update = reset_time + timedelta(seconds=self._current_interval)
-            _LOGGER.debug(
-                "Rate limit info unavailable;"
-                " using default update interval: %s seconds",
-                self._current_interval,
-            )
-            return
+        else:
+            # When any zone is actively heating, we use a shorter minimum
+            # To prevent overshooting in temperature,
+            # check if there's heating/cooling activity
+            # Accept five minutes to "overshoot", else reset back to 30 minutes
+            min_interval = timedelta(seconds=300 if self._is_any_zone_active else 1800)
 
-        # Each refresh cycle costs 9 + len(zones) calls
-        # Also take 10% of the remaining calls as buffer
-        self._current_interval = max(
-            min_interval,
-            (self._time_until_reset * (9 + len(self.zones))) / (remaining_calls * 0.9),
-        )
+            # Each cycle: me, zones, devices (twice), zone states, home state and
+            # weather, plus one call per device (temperature offset) and one per
+            # zone (default overlay)
+            calls_per_cycle = 7 + len(self.devices) + len(self.zones)
 
-        self._next_update = reset_time + timedelta(seconds=self._current_interval)
-        self.update_interval = timedelta(seconds=self._current_interval)
+            if remaining_calls <= calls_per_cycle:
+                # Not enough left for a cycle: wait for the reset
+                self.update_interval = self._wait_for_quota(now)
+            else:
+                # Spread the remaining calls until the reset, keeping 10% spare
+                planned = until_reset * calls_per_cycle / (remaining_calls * 0.9)
+                self.update_interval = min(
+                    max(min_interval, planned), until_reset + timedelta(minutes=1)
+                )
+
+        self._current_interval = self.update_interval.total_seconds()
+        self._next_update = now + self.update_interval
 
         _LOGGER.debug(
-            "Calculated new update interval: %s seconds, for remaining calls: %s",
-            self._current_interval,
+            "Update interval %s for %s remaining calls, quota reset in %s",
+            self.update_interval,
             remaining_calls,
+            until_reset,
         )
 
     async def _async_update_devices(self) -> dict[str, dict]:
@@ -514,3 +549,11 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def get_rate_limit(self) -> dict[str, str]:
         """Get the current rate limit status from Tado."""
         return self._tado.rate_limit_info()
+
+
+def _as_int(value: Any) -> int | None:
+    """Return value as int, or None if it is missing or not a number."""
+    try:
+        return int(value)
+    except TypeError, ValueError:
+        return None
