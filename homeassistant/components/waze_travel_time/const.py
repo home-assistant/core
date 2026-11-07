@@ -7,6 +7,11 @@ from homeassistant.util.hass_dict import HassKey
 DOMAIN = "waze_travel_time"
 SEMAPHORE_KEY: HassKey[asyncio.Semaphore] = HassKey(DOMAIN)
 
+ROUTING_REQUEST_QUOTA = 100
+ROUTING_QUOTA_WINDOW_MINUTES = 120
+ROUTING_QUOTA_RESERVE = 0.1
+MIN_UPDATE_INTERVAL_MINUTES = 5
+
 CONF_BASE_COORDINATES = "base_coordinates"
 CONF_DESTINATION = "destination"
 CONF_ORIGIN = "origin"
