@@ -1481,10 +1481,11 @@ RECORDING_SELECTION = SelectedRecordingConfiguration(
     ),
     audio=AudioCodecConfiguration(sample_rate=AudioSampleRate.KHZ_32),
 )
-RECORDING_SCALE = (
-    '-vf "scale=1920:1080:force_original_aspect_ratio=decrease:force_divisible_by=2,'
-    'pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1"'
+RECORDING_FILTER = (
+    "scale=1920:1080:force_original_aspect_ratio=decrease:force_divisible_by=2,"
+    "pad=1920:1080:(ow-iw)/2:(oh-ih)/2,setsar=1"
 )
+RECORDING_SCALE = f"-vf '{RECORDING_FILTER}'"
 RECORDING_RATE = (
     "-r 30 -b:v 2000k -maxrate 2000k -bufsize 4000k -bf 0 -g 120 "
     "-force_key_frames expr:gte(t,n_forced*4) -sc_threshold 0"
@@ -1563,10 +1564,14 @@ RECORDING_CONTAINER = (
         ),
         pytest.param(
             {CONF_SUPPORT_AUDIO: True},
-            "-i rtsp://cam -vf hflip -filter:v crop=1920:800",
+            "-i rtsp://cam -vf \"drawtext=text='Front door'\" -filter:v hflip",
             True,
             "-i rtsp://cam",
-            RECORDING_TRANSCODE.replace('-vf "', '-vf "hflip,crop=1920:800,')
+            RECORDING_TRANSCODE.replace(
+                RECORDING_SCALE,
+                "-vf 'drawtext=text='\"'\"'Front door'\"'\"',hflip,"
+                f"{RECORDING_FILTER}'",
+            )
             + f" -map 0:a:0 {RECORDING_AUDIO} {RECORDING_CONTAINER}",
             id="source_filters_before_scaling",
         ),

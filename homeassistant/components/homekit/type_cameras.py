@@ -206,7 +206,7 @@ def recording_ffmpeg_args(
             f"-map {config[CONF_VIDEO_MAP]} -c:v {video_codec} "
             f"-profile:v {config[CONF_VIDEO_PROFILE_NAMES][int(video.profile)]} "
             f"{encoder_args}-pix_fmt yuv420p "
-            f'-vf "{",".join(filters)}" '
+            f"-vf {shlex.quote(','.join(filters))} "
             f"-r {fps} -b:v {video.bitrate_kbps}k -maxrate {video.bitrate_kbps}k "
             f"-bufsize {video.bitrate_kbps * 2}k -bf 0 "
             f"-g {math.ceil(fps * iframe_seconds)} "
