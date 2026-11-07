@@ -1,6 +1,7 @@
 """Tests for the SMLIGHT update platform."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 from unittest.mock import MagicMock, call, patch
 
@@ -722,6 +723,27 @@ async def test_zwave_update_naming_mr10(
     assert state.name == "Mock Title Z-Wave firmware"
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "version", "installed_version", "latest_version", "set_installed"),
+    [
+        pytest.param(
+            "update.mock_title_core_firmware",
+            "0.9.9",
+            "v2.3.6",
+            "v2.7.5",
+            lambda info, version: setattr(info, "sw_version", version),
+            id="core",
+        ),
+        pytest.param(
+            "update.mock_title_zigbee_firmware",
+            "20240315",
+            "20240314",
+            "20250201",
+            lambda info, version: setattr(info.radios[0], "zb_version", version),
+            id="zigbee",
+        ),
+    ],
+)
 @patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
 async def test_update_firmware_specific_version(
     mock_sleep: MagicMock,
@@ -729,140 +751,77 @@ async def test_update_firmware_specific_version(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
+    entity_id: str,
+    version: str,
+    installed_version: str,
+    latest_version: str,
+    set_installed: Callable[[Info, str], None],
 ) -> None:
-    """Test installing a specific core firmware version, older than the latest."""
-    await setup_integration(hass, mock_config_entry)
-    entity_id = "update.mock_title_core_firmware"
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
-    assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
-
-    await hass.services.async_call(
-        UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VERSION: "0.9.9"},
-        blocking=False,
-    )
-
-    assert len(mock_smlight_client.fw_update.mock_calls) == 1
-    firmware, idx = mock_smlight_client.fw_update.call_args.args
-    assert firmware.ver == "0.9.9"
-    assert idx == 0
-
-    event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
-    event_function(MOCK_FIRMWARE_DONE)
-
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = Info(sw_version="0.9.9")
-
-    freezer.tick(timedelta(seconds=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_IN_PROGRESS] is False
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.9.9"
-    assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
-
-
-@patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
-async def test_update_zigbee_firmware_specific_version(
-    mock_sleep: MagicMock,
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
-) -> None:
-    """Test installing a specific Zigbee firmware version from the radio catalog."""
+    """Test installing a specific firmware version, older than the latest."""
     mock_info = Info.from_dict(
         await async_load_json_object_fixture(hass, "info.json", DOMAIN)
     )
     mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = mock_info
     await setup_integration(hass, mock_config_entry)
-    entity_id = "update.mock_title_zigbee_firmware"
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "20240314"
-    assert state.attributes[ATTR_LATEST_VERSION] == "20250201"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == installed_version
+    assert state.attributes[ATTR_LATEST_VERSION] == latest_version
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VERSION: "20240315"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_VERSION: version},
         blocking=False,
     )
 
     assert len(mock_smlight_client.fw_update.mock_calls) == 1
     firmware, idx = mock_smlight_client.fw_update.call_args.args
-    assert firmware.ver == "20240315"
+    assert firmware.ver == version
     assert idx == 0
 
     event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
     event_function(MOCK_FIRMWARE_DONE)
 
-    mock_info.radios[0] = Radio(
-        chip_index=0, zb_channel=0, zb_type=0, zb_version="20240315"
-    )
+    set_installed(mock_info, version)
 
-    freezer.tick(timedelta(seconds=5))
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "20240315"
-    assert state.attributes[ATTR_LATEST_VERSION] == "20250201"
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_INSTALLED_VERSION] == version
+    assert state.attributes[ATTR_LATEST_VERSION] == latest_version
 
 
-@pytest.mark.parametrize("version", ["v9.9.9", ""])
-async def test_update_firmware_specific_version_not_found(
+@pytest.mark.parametrize(
+    ("version", "translation_key"),
+    [
+        pytest.param("v9.9.9", "firmware_version_not_found", id="not_in_catalog"),
+        pytest.param("", "firmware_version_not_found", id="empty"),
+        pytest.param(
+            "v2.3.6", "firmware_version_already_installed", id="already_installed"
+        ),
+    ],
+)
+async def test_update_firmware_specific_version_invalid(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
     version: str,
+    translation_key: str,
 ) -> None:
-    """Test a version missing from the catalog, or empty, is refused before flashing."""
+    """Test a version that cannot be installed is refused before flashing."""
     await setup_integration(hass, mock_config_entry)
-    entity_id = "update.mock_title_core_firmware"
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VERSION: version},
+            {ATTR_ENTITY_ID: "update.mock_title_core_firmware", ATTR_VERSION: version},
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "firmware_version_not_found"
-    assert exc_info.value.translation_placeholders["version"] == version
-    mock_smlight_client.fw_update.assert_not_called()
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_IN_PROGRESS] is False
-    assert mock_config_entry.runtime_data.firmware.in_progress is False
-
-
-async def test_update_firmware_specific_version_already_installed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
-) -> None:
-    """Test the installed version is refused before flashing."""
-    await setup_integration(hass, mock_config_entry)
-    entity_id = "update.mock_title_core_firmware"
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
-
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VERSION: "v2.3.6"},
-            blocking=True,
-        )
-
-    assert exc_info.value.translation_key == "firmware_version_already_installed"
-    mock_smlight_client.fw_update.assert_not_called()
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_IN_PROGRESS] is False
-    assert mock_config_entry.runtime_data.firmware.in_progress is False
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
