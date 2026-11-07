@@ -3106,9 +3106,6 @@ rxv==0.7.0
 samsung-exlink==1.2.1
 
 # homeassistant.components.samsungtv
-samsungctl[websocket]==0.7.1
-
-# homeassistant.components.samsungtv
 samsungtvws[async,encrypted]==3.0.7
 
 # homeassistant.components.sanix
@@ -3210,7 +3207,7 @@ snapcast==2.3.8
 soco==0.32.2
 
 # homeassistant.components.sofar
-sofar-modbus==0.25.3
+sofar-modbus==0.25.4
 
 # homeassistant.components.solaredge
 solaredge-web==0.5.0

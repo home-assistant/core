@@ -29,7 +29,6 @@ from .const import (
     CONF_UNIT_ID,
     DOMAIN,
     FAULT_LOG,
-    METER_ENERGY,
     SCAN_INTERVAL,
     SERVED_COMPONENTS,
     SETTINGS_SCAN_INTERVAL,
@@ -63,24 +62,6 @@ def _async_remove_stale_sensors(hass: HomeAssistant, serial: str) -> None:
     for key in _REMOVED_SENSOR_KEYS:
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{key}"
-        )
-        if entity_id is not None:
-            registry.async_remove(entity_id)
-
-
-@callback
-def _async_remove_denied_meter_energy(
-    hass: HomeAssistant, serial: str, served: frozenset[str]
-) -> None:
-    """Drop meter sensors a model denies, so they don't linger unavailable."""
-    if METER_ENERGY in served:
-        return
-    registry = er.async_get(hass)
-    for description in TOTAL_SENSOR_DESCRIPTIONS:
-        if description.component != METER_ENERGY:
-            continue
-        entity_id = registry.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
         )
         if entity_id is not None:
             registry.async_remove(entity_id)
@@ -214,9 +195,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         config_entry_id=entry.entry_id, device_info=readings.device_info
     )
     entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, served)
-    # Until the masks settle the type, nothing is served or denied.
-    if device.inverter_type:
-        _async_remove_denied_meter_energy(hass, serial, served)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
