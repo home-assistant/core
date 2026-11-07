@@ -896,6 +896,8 @@ def motion_detector2_device(
     motion_sensitivity: PirSensorConfigurationService.MotionSensitivity
     | None = PirSensorConfigurationService.MotionSensitivity.MIDDLE,
     smart_sensitivity: dict[str, str] | None = None,
+    binaryswitch: bool = False,
+    multi_level_switch: int = 0,
 ) -> SHCMotionDetector2:
     """Build a minimal device double for the motion_detectors2 bucket."""
     device = create_autospec(SHCMotionDetector2, instance=True, spec_set=True)
@@ -919,6 +921,8 @@ def motion_detector2_device(
         if smart_sensitivity
         else None
     )
+    device.binaryswitch = binaryswitch
+    device.multi_level_switch = multi_level_switch
     if motion_sensitivity is None:
         del device.motion_sensitivity
     else:
