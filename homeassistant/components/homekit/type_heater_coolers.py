@@ -10,20 +10,14 @@ from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_AIR_CONDITIONER, CATEGORY_HEATER
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_ON,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -439,13 +433,17 @@ class HeaterCooler(HomeKitClimateAccessory):
             and (params := self._fan_speed_params(char_values[CHAR_ROTATION_SPEED]))
             is not None
         ):
-            service_calls.append(ClimateServiceCall(SERVICE_SET_FAN_MODE, params))
+            service_calls.append(
+                ClimateServiceCall(ClimateService.SET_FAN_MODE, params)
+            )
         if (
             CHAR_SWING_MODE in char_values
             and (params := self._swing_mode_params(char_values[CHAR_SWING_MODE]))
             is not None
         ):
-            service_calls.append(ClimateServiceCall(SERVICE_SET_SWING_MODE, params))
+            service_calls.append(
+                ClimateServiceCall(ClimateService.SET_SWING_MODE, params)
+            )
 
     def _handle_active_mode_changes(
         self,
@@ -475,8 +473,8 @@ class HeaterCooler(HomeKitClimateAccessory):
                 # and restored by the next Active on.
                 service_calls.append(
                     ClimateServiceCall(
-                        SERVICE_SET_HVAC_MODE,
-                        {ATTR_HVAC_MODE: HVACMode.OFF},
+                        ClimateService.SET_HVAC_MODE,
+                        {ClimateServiceArgument.HVAC_MODE: HVACMode.OFF},
                         commit_mode=requested_mode,
                         pending_mode=HVACMode.OFF,
                     )
@@ -501,8 +499,8 @@ class HeaterCooler(HomeKitClimateAccessory):
             # a pending off write means it is about to stop running.
             service_calls.append(
                 ClimateServiceCall(
-                    SERVICE_SET_HVAC_MODE,
-                    {ATTR_HVAC_MODE: requested_mode},
+                    ClimateService.SET_HVAC_MODE,
+                    {ClimateServiceArgument.HVAC_MODE: requested_mode},
                     commit_mode=requested_mode,
                     pending_mode=requested_mode,
                 )
@@ -547,7 +545,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         if use_range:
             service_calls.append(
                 ClimateServiceCall(
-                    SERVICE_SET_TEMPERATURE,
+                    ClimateService.SET_TEMPERATURE,
                     self._dual_setpoint_params(
                         self.char_cool, self.char_heat, cooling_temp, heating_temp
                     ),
@@ -609,7 +607,10 @@ class HeaterCooler(HomeKitClimateAccessory):
         if selected_temp is not None:
             ha_temp = self._temperature_to_states(selected_temp)
             service_calls.append(
-                ClimateServiceCall(SERVICE_SET_TEMPERATURE, {ATTR_TEMPERATURE: ha_temp})
+                ClimateServiceCall(
+                    ClimateService.SET_TEMPERATURE,
+                    {ClimateServiceArgument.TEMPERATURE: ha_temp},
+                )
             )
 
     def _hk_target_mode(self, mode: HVACMode) -> int | None:
@@ -685,11 +686,11 @@ class HeaterCooler(HomeKitClimateAccessory):
         if supports_dual_temp:
             if self._has_cool_threshold:
                 self._update_temperature_char(
-                    self.char_cool, state, ATTR_TARGET_TEMP_HIGH
+                    self.char_cool, state, ClimateEntityStateAttribute.TARGET_TEMP_HIGH
                 )
             if self._has_heat_threshold:
                 self._update_temperature_char(
-                    self.char_heat, state, ATTR_TARGET_TEMP_LOW
+                    self.char_heat, state, ClimateEntityStateAttribute.TARGET_TEMP_LOW
                 )
         elif (
             target_temp := temperature_attribute_to_homekit(

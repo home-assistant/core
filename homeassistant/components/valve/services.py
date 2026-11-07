@@ -2,16 +2,14 @@
 
 import probatio
 
-from homeassistant.const import (
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
-    SERVICE_STOP_VALVE,
-    SERVICE_TOGGLE,
-)
 from homeassistant.core import HomeAssistant, callback
 
-from .const import ATTR_POSITION, DATA_COMPONENT, ValveEntityFeature
+from .const import (
+    DATA_COMPONENT,
+    ValveEntityFeature,
+    ValveService,
+    ValveServiceArgument,
+)
 
 
 @callback
@@ -20,20 +18,23 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        SERVICE_OPEN_VALVE, None, "async_handle_open_valve", [ValveEntityFeature.OPEN]
+        ValveService.OPEN,
+        None,
+        "async_handle_open_valve",
+        [ValveEntityFeature.OPEN],
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_VALVE,
+        ValveService.CLOSE,
         None,
         "async_handle_close_valve",
         [ValveEntityFeature.CLOSE],
     )
 
     component.async_register_entity_service(
-        SERVICE_SET_VALVE_POSITION,
+        ValveService.SET_POSITION,
         {
-            probatio.Required(ATTR_POSITION): probatio.All(
+            probatio.Required(ValveServiceArgument.POSITION): probatio.All(
                 probatio.Coerce(int), probatio.Percentage()
             )
         },
@@ -42,11 +43,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     component.async_register_entity_service(
-        SERVICE_STOP_VALVE, None, "async_stop_valve", [ValveEntityFeature.STOP]
+        ValveService.STOP, None, "async_stop_valve", [ValveEntityFeature.STOP]
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE,
+        ValveService.TOGGLE,
         None,
         "async_toggle",
         [ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE],

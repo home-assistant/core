@@ -24,7 +24,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIQUE_ID
+from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -35,7 +35,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as tcv
-from .const import DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -59,7 +59,7 @@ CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_SEGMENTS = "segments"
 CONF_VACUUMS = "vacuums"
 
-DEFAULT_NAME = "Template Vacuum"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.VACUUM]
 
 ENTITY_ID_FORMAT = VACUUM_DOMAIN + ".{}"
 

@@ -2,7 +2,6 @@
 
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from functools import partial
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -16,7 +15,6 @@ from homeassistant.components.midea.config_flow import (
     DEFAULT_CLOUD,
     LOGIN_MODE_ACCOUNT,
     LOGIN_MODE_PRESET,
-    _select_and_connect,
 )
 from homeassistant.components.midea.const import (
     CONF_ACCOUNT,
@@ -71,7 +69,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 @contextmanager
 def _patch_manual_success() -> Generator[None]:
     """Patch discovery and a device that accepts the connection."""
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
     with (
         patch(
@@ -95,7 +93,7 @@ def _patch_cloud_success() -> Generator[None]:
     cloud.get_cloud_keys = AsyncMock(
         return_value={"method": {"token": TEST_TOKEN, "key": TEST_KEY}}
     )
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
     with (
         patch(
@@ -162,7 +160,7 @@ async def test_manual_flow_success(hass: HomeAssistant) -> None:
             "homeassistant.components.midea.config_flow.device_selector",
         ) as mock_device_selector,
     ):
-        mock_device = MagicMock()
+        mock_device = MagicMock(spec=MideaDevice)
         mock_device.connect.return_value = True
         mock_device_selector.return_value = mock_device
 
@@ -224,7 +222,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             "homeassistant.components.midea.config_flow.device_selector",
         ) as mock_device_selector,
     ):
-        mock_device = MagicMock()
+        mock_device = MagicMock(spec=MideaDevice)
         mock_device.connect.return_value = True
         mock_device_selector.return_value = mock_device
 
@@ -432,7 +430,7 @@ async def test_manual_step_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manually"
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = connect_return
 
     cloud = MagicMock()
@@ -548,7 +546,7 @@ async def test_manual_step_retries_discovery_after_mismatch(
         user_input={"next_step_id": "manually"},
     )
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
 
     with (
@@ -618,7 +616,7 @@ async def test_search_flow_no_new_devices_found(hass: HomeAssistant) -> None:
     assert result["step_id"] == "search"
     assert result["errors"] == {"base": "no_devices"}
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
     with (
         patch(
@@ -691,7 +689,7 @@ async def test_auto_flow_cloud_device_info_overrides_name_and_subtype(
         return_value={"method": {"token": TEST_TOKEN, "key": TEST_KEY}}
     )
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
 
     with (
@@ -764,7 +762,7 @@ async def test_auto_flow_v3_preset_phase1_cloud_keys_success(
         return_value={"method": {"token": TEST_TOKEN, "key": TEST_KEY}}
     )
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
 
     with (
@@ -795,6 +793,8 @@ async def test_auto_flow_v3_preset_phase1_cloud_keys_success(
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_KEY] == TEST_KEY
     assert result["result"].unique_id == str(TEST_DEVICE_ID)
+    # the key check already proved the connection, entry creation must not probe again
+    assert dm.connect.call_count == 1
 
 
 async def test_auto_flow_v3_preset_phase1_default_key_success(
@@ -834,7 +834,7 @@ async def test_auto_flow_v3_preset_phase1_default_key_success(
     cloud.get_device_info = AsyncMock(return_value=None)
     cloud.get_cloud_keys = AsyncMock(return_value={})
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
 
     with (
@@ -910,7 +910,7 @@ async def test_auto_flow_v3_default_key_success_after_cloud_error(
         side_effect=NoDeviceRegistered(3201, "no permission")
     )
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
 
     with (
@@ -1056,7 +1056,7 @@ async def test_auto_flow_v3_token_retrieval_exhausted(hass: HomeAssistant) -> No
         ]
     )
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.side_effect = [False, False, False, False]
 
     with (
@@ -1263,7 +1263,7 @@ async def test_auto_flow_v3_phase2_success_after_phase1_failure(
         ]
     )
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
 
     with (
@@ -1410,7 +1410,7 @@ async def test_auto_flow_v1_v2_success_when_cloud_down(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "search"
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
 
     with (
@@ -1841,7 +1841,7 @@ async def test_login_credentials_step_recovers_after_failed_login(
         return_value={"method": {"token": TEST_TOKEN, "key": TEST_KEY}}
     )
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
 
     with (
@@ -1995,7 +1995,7 @@ async def test_manual_step_v3_missing_token_key_sets_retrieved_values(
         CONF_TOKEN: "",
         CONF_KEY: "",
     }
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     # First connect call is the cloud key candidate check (must succeed to
     # select the key); second is the final entry creation attempt, which
     # must fail to exercise the device_auth_failed branch.
@@ -2038,10 +2038,8 @@ async def test_manual_step_v3_missing_token_key_sets_retrieved_values(
     assert result["step_id"] == "manually"
     assert result["errors"] == {"base": "device_auth_failed"}
 
-    # _select_and_connect() calls device_selector() positionally (name,
-    # device_id, device_type, ip_address, port, token, key, ...); it is itself
-    # submitted to hass.async_add_executor_job via functools.partial so device
-    # selection and the connection attempt share a single executor job.
+    # device_selector() is called positionally (name, device_id, device_type,
+    # ip_address, port, token, key, ...).
     assert mock_device_selector.call_args.args[5] == TEST_TOKEN
     assert mock_device_selector.call_args.args[6] == TEST_KEY
 
@@ -2162,7 +2160,7 @@ async def test_manually_flow_success(hass: HomeAssistant) -> None:
             "homeassistant.components.midea.config_flow.device_selector",
         ) as mock_device_selector,
     ):
-        mock_device = MagicMock()
+        mock_device = MagicMock(spec=MideaDevice)
         mock_device.connect.return_value = True
         mock_device_selector.return_value = mock_device
 
@@ -2290,66 +2288,6 @@ async def test_manually_flow_builds_concrete_device_subclass(
     assert isinstance(dm.build_query(), list)
 
 
-async def test_manually_flow_runs_device_selector_in_executor(
-    hass: HomeAssistant,
-) -> None:
-    """Test device_selector() is dispatched via the executor, not the event loop.
-
-    Regression test: device_selector() calls importlib.import_module() to
-    dynamically load the concrete device subclass. That is a blocking call,
-    so it must never run directly on the event loop - Home Assistant's
-    blocking-call detector flags exactly that. device_selector() is invoked
-    from within _select_and_connect(), which is what actually gets dispatched
-    to the executor (wrapped in a functools.partial).
-    """
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-    flow_id = result["flow_id"]
-
-    await hass.config_entries.flow.async_configure(
-        flow_id,
-        user_input={"next_step_id": "manually"},
-    )
-
-    with (
-        patch(
-            "homeassistant.components.midea.config_flow.discover",
-            return_value=DISCOVERY_RESULT,
-        ),
-        patch.object(MideaDevice, "connect", autospec=True, return_value=True),
-        patch.object(MideaDevice, "close_socket", autospec=True),
-        patch.object(
-            hass,
-            "async_add_executor_job",
-            wraps=hass.async_add_executor_job,
-        ) as mock_executor_job,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id,
-            user_input={
-                CONF_DEVICE_ID: TEST_DEVICE_ID,
-                CONF_TYPE: TEST_TYPE,
-                CONF_IP_ADDRESS: TEST_IP_ADDRESS,
-                CONF_PORT: TEST_PORT,
-                CONF_PROTOCOL: TEST_PROTOCOL,
-                CONF_MODEL: TEST_MODEL,
-                CONF_SUBTYPE: TEST_SUBTYPE,
-                CONF_TOKEN: TEST_TOKEN,
-                CONF_KEY: TEST_KEY,
-            },
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == str(TEST_DEVICE_ID)
-    dispatched_funcs = [call.args[0] for call in mock_executor_job.call_args_list]
-    assert any(
-        isinstance(func, partial) and func.func is _select_and_connect
-        for func in dispatched_funcs
-    )
-
-
 async def test_login_credentials_step_falls_back_to_default_cloud(
     hass: HomeAssistant,
 ) -> None:
@@ -2452,7 +2390,7 @@ async def test_login_credentials_step_success_resumes_auto_flow(
         return_value={"method": {"token": TEST_TOKEN, "key": TEST_KEY}}
     )
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
 
     with (
@@ -2611,7 +2549,7 @@ async def _assert_reconfigure_success(
             "homeassistant.components.midea.config_flow.device_selector",
         ) as mock_device_selector,
     ):
-        mock_device = MagicMock()
+        mock_device = MagicMock(spec=MideaDevice)
         mock_device.connect.return_value = True
         mock_device_selector.return_value = mock_device
 
@@ -2771,3 +2709,100 @@ async def test_dhcp_discovery_no_match(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
     assert config_entry.data[CONF_IP_ADDRESS] == TEST_IP_ADDRESS
+
+
+@pytest.mark.parametrize(
+    ("discovered_subtype", "cloud_model", "expected"),
+    [
+        (5, "9", 5),
+        (0, "5", 5),
+        (0, "not-a-number", 0),
+    ],
+)
+async def test_subtype_prefers_discovery_over_cloud(
+    hass: HomeAssistant,
+    discovered_subtype: int,
+    cloud_model: str,
+    expected: int,
+) -> None:
+    """Test the subtype used for the token check comes from discovery when known."""
+    discovered = {
+        TEST_DEVICE_ID: {
+            **BASE_DATA,
+            CONF_TYPE: TEST_TYPE,
+            CONF_SUBTYPE: discovered_subtype,
+        }
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    flow_id = result["flow_id"]
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, user_input={"next_step_id": "search"}
+    )
+    assert result["step_id"] == "search"
+
+    with patch(
+        "homeassistant.components.midea.config_flow.discover",
+        return_value=discovered,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, user_input={CONF_IP_ADDRESS: "auto"}
+        )
+    assert result["step_id"] == "auto"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, user_input={CONF_DEVICE: TEST_DEVICE_ID}
+    )
+    assert result["step_id"] == "auth_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, user_input={"login_mode": LOGIN_MODE_ACCOUNT}
+    )
+    assert result["step_id"] == "login_credentials"
+
+    cloud = MagicMock()
+    cloud.login = AsyncMock(return_value=True)
+    cloud.get_device_info = AsyncMock(return_value={"model_number": cloud_model})
+    cloud.get_cloud_keys = AsyncMock(
+        return_value={"method": {"token": TEST_TOKEN, "key": TEST_KEY}}
+    )
+    dm = MagicMock(spec=MideaDevice)
+    dm.connect = AsyncMock(return_value=True)
+    dm.close_socket = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
+            return_value=object(),
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
+            return_value=cloud,
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
+            AsyncMock(return_value={}),
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.device_selector",
+            return_value=dm,
+        ) as mock_device_selector,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={
+                CONF_SERVER: DEFAULT_CLOUD,
+                CONF_ACCOUNT: "user",
+                CONF_PASSWORD: "pass",
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
+    assert result["result"].data[CONF_SUBTYPE] == expected
+    # subtype is the 10th positional argument of device_selector()
+    assert {call.args[9] for call in mock_device_selector.call_args_list} == {expected}

@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ring', 'aacdef987654')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -58,9 +58,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ring', 'aacdef987654')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -109,9 +109,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ring', 'aacdef765432')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -152,57 +152,6 @@
     'state': 'off',
   })
 # ---
-# name: test_states[switch.front_siren-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.front_siren',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Siren',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Siren',
-    'platform': 'ring',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'siren',
-    'unique_id': '765432-siren',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_states[switch.front_siren-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Siren',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.front_siren',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_states[switch.internal_motion_detection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -211,9 +160,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ring', 'aacdef345678')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -248,57 +197,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.internal_motion_detection',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_states[switch.internal_siren-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.internal_siren',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Siren',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Siren',
-    'platform': 'ring',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'siren',
-    'unique_id': '345678-siren',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_states[switch.internal_siren-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Internal Siren',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.internal_siren',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

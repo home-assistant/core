@@ -89,18 +89,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> None
     assert hub.bond_id is not None
     hub_name = hub.name or hub.bond_id
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, hub.bond_id)},
-            manufacturer=BRIDGE_MAKE,
-            name=hub_name,
-            model=hub.target,
-            sw_version=hub.fw_ver,
-            hw_version=hub.mcu_ver,
-            suggested_area=hub.location,
-            configuration_url=f"http://{host}",
-        ),
+        identifiers={(DOMAIN, hub.bond_id)},
+        manufacturer=BRIDGE_MAKE,
+        name=hub_name,
+        model=hub.target,
+        sw_version=hub.fw_ver,
+        hw_version=hub.mcu_ver,
+        suggested_area=hub.location,
+        configuration_url=f"http://{host}",
     )
 
     _async_remove_old_device_identifiers(config_entry_id, device_registry, hub)

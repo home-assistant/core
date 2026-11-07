@@ -27,7 +27,9 @@ DEVICE = HeltyDevice(
 )
 
 
-def make_state(mode: VmcMode = VmcMode.SPEED_1) -> HeltyState:
+def make_state(
+    mode: VmcMode = VmcMode.SPEED_1, alarms: str = "0000000000000000"
+) -> HeltyState:
     """Build a representative state, reported just now."""
     return HeltyState(
         mode=mode,
@@ -36,7 +38,9 @@ def make_state(mode: VmcMode = VmcMode.SPEED_1) -> HeltyState:
         humidity=38.5,
         fan_supply=17,
         fan_exhaust=15,
-        alarms="0000000000000000",
+        alarms=alarms,
+        filter_partial_m3=61920,
+        filter_total_m3=234830,
         timestamp=int(dt_util.utcnow().timestamp() * 1000),
     )
 

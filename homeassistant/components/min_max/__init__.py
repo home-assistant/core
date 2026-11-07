@@ -13,6 +13,9 @@ from .const import DEPRECATION_BREAKS_IN_HA_VERSION, DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 
+__all__ = [
+    "DOMAIN",
+]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Min/Max from a config entry."""

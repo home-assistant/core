@@ -89,6 +89,7 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
+            step_id="user",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_ACCOUNT_NAME): str,
@@ -157,6 +158,7 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={**reconfigure_entry.data, **user_input},
                 )
         return self.async_show_form(
+            step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(

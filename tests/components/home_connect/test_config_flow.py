@@ -5,7 +5,7 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 from aiohomeconnect.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
-from aiohomeconnect.model import HomeAppliance
+from aiohomeconnect.model import ApplianceType, HomeAppliance
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -302,6 +302,80 @@ async def test_reauth_flow_with_different_account(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("access_token", "reason", "refresh_token", "entry_state"),
+    [
+        pytest.param(
+            FAKE_ACCESS_TOKEN,
+            "reconfigure_successful",
+            "new-refresh-token",
+            ConfigEntryState.LOADED,
+            id="success",
+        ),
+        pytest.param(
+            (
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                ".eyJzdWIiOiJBQkNERSIsIm5hbWUiOiJKb2huIERvZSIsImFkbWluIjp0cnVlLCJpYXQiOjE1MTYyMzkwMjJ9"
+                ".Q9z9JT4qgNg9Y9ki61jzvd69j043GFWJk9HNYosAPzs"
+            ),
+            "wrong_account",
+            FAKE_REFRESH_TOKEN,
+            ConfigEntryState.NOT_LOADED,
+            id="different_account",
+        ),
+    ],
+)
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
+    access_token: str,
+    reason: str,
+    refresh_token: str,
+    entry_state: ConfigEntryState,
+) -> None:
+    """Test reconfigure flow re-runs OAuth for the same account."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    _client = await hass_client_no_auth()
+    resp = await _client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": access_token,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert config_entry.data["token"]["refresh_token"] == refresh_token
+    assert config_entry.state is entry_state
+
+
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_zeroconf_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -471,7 +545,7 @@ async def test_dhcp_flow_already_setup(
                 hostname="bosch-cookprocessor-123456789012345678",
                 macaddress="c8d778000000",
             ),
-            "CookProcessor",
+            ApplianceType.COOK_PROCESSOR,
         ),
         (
             DhcpServiceInfo(
@@ -479,7 +553,7 @@ async def test_dhcp_flow_already_setup(
                 hostname="BOSCH-HCS000000-68A40E000000",
                 macaddress="68a40e000000",
             ),
-            "Hob",
+            ApplianceType.HOB,
         ),
     ],
     indirect=["appliance"],

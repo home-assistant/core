@@ -1,6 +1,6 @@
 """Constants for the AI Task integration."""
 
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 import logging
 from typing import TYPE_CHECKING, Final
 
@@ -54,3 +54,25 @@ class AITaskEntityFeature(IntFlag):
 
     EVALUATE = 8
     """Evaluate typed questions."""
+
+
+class AITaskService(StrEnum):
+    """Store keys for ai task services."""
+
+    CLEAR_IMAGES = "clear_images"
+    EVALUATE = "evaluate"
+    GENERATE_DATA = "generate_data"
+    GENERATE_IMAGE = "generate_image"
+
+
+class AITaskServiceArgument(StrEnum):
+    """Store keys for ai task service arguments."""
+
+    ATTACHMENTS = "attachments"
+    DAYS = "days"
+    ENTITY_ID = "entity_id"
+    INSTRUCTIONS = "instructions"
+    QUESTIONS = "questions"
+    STATE = "state"
+    STRUCTURE = "structure"
+    TASK_NAME = "task_name"

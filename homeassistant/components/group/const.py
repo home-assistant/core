@@ -1,5 +1,6 @@
 """Constants for the Group integration."""
 
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
@@ -46,3 +47,31 @@ PLATFORMS = [
 ATTR_OBJECT_ID = "object_id"
 ATTR_ORDER = "order"
 ATTR_ALL = "all"
+
+
+class GroupService(StrEnum):
+    """Store keys for group services."""
+
+    RELOAD = "reload"
+    REMOVE = "remove"
+    SET = "set"
+
+
+class GroupServiceArgument(StrEnum):
+    """Store keys for group service arguments."""
+
+    ADD_ENTITIES = "add_entities"
+    ALL = "all"
+    ENTITIES = "entities"
+    ICON = "icon"
+    NAME = "name"
+    OBJECT_ID = "object_id"
+    REMOVE_ENTITIES = "remove_entities"
+
+
+class GroupEntityStateAttribute(StrEnum):
+    """State attributes for group entities."""
+
+    AUTO = "auto"
+    ENTITY_ID = "entity_id"
+    ORDER = "order"
