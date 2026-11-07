@@ -9,7 +9,7 @@ from fressnapftracker import (
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.typing import WebSocketGenerator
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fressnapf_tracker.const import DOMAIN
@@ -191,7 +191,9 @@ async def test_invalid_tracker_shared_between_entries(
     )
 
 
-async def _remove_device(ws_client, device_id: str, config_entry_id: str) -> bool:
+async def _remove_device(
+    ws_client: MockHAClientWebSocket, device_id: str, config_entry_id: str
+) -> bool:
     """Try to remove a device via the websocket API and return the success."""
     await ws_client.send_json_auto_id(
         {
