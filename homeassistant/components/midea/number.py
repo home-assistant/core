@@ -28,9 +28,21 @@ class MideaNumberEntityDescription(NumberEntityDescription):
 
     models: list[DeviceType]
     max_value_fn: Callable[[MideaDevice], float | None] | None = None
+    capability: str | None = None
+    requires_power: bool = False
 
 
 NUMBERS: list[MideaNumberEntityDescription] = [
+    MideaNumberEntityDescription(
+        key="fan_speed",
+        translation_key="fan_speed",
+        models=[DeviceType.AC],
+        native_min_value=1,
+        native_max_value=100,
+        native_step=1,
+        capability="fan_custom",
+        requires_power=True,
+    ),
     MideaNumberEntityDescription(
         key="dry_level",
         translation_key="dry_level",
@@ -125,6 +137,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up numbers for device."""
     device = config_entry.runtime_data
+    capabilities = getattr(device, "capabilities", None) or {}
 
     async_add_entities(
         MideaNumber(device, description)
@@ -133,6 +146,10 @@ async def async_setup_entry(
         # None means the model doesn't support this attribute at all,
         # unlike select.py's key-presence check.
         and device.attributes.get(description.key) is not None
+        and (
+            description.capability is None
+            or bool(capabilities.get(description.capability, True))
+        )
     )
 
 
@@ -140,6 +157,16 @@ class MideaNumber(MideaEntity, NumberEntity):
     """Represent a Midea number."""
 
     entity_description: MideaNumberEntityDescription
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return entity availability."""
+        if not super().available:
+            return False
+        if self.entity_description.requires_power:
+            return bool(self._device.get_attribute("power"))
+        return True
 
     @property
     @override
@@ -157,6 +184,9 @@ class MideaNumber(MideaEntity, NumberEntity):
         """Return the current value."""
         value = self._device.get_attribute(self.entity_description.key)
         if not isinstance(value, (int, float)):
+            return None
+        if self.entity_description.key == "fan_speed" and value > 100:
+            # Midea protocol uses >100 for auto fan speed; treat that as "unknown"
             return None
         return float(value)
 
