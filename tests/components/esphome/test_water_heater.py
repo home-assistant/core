@@ -30,6 +30,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -79,6 +80,44 @@ async def test_water_heater_entity(
     assert state.attributes["min_temp"] == 10.0
     assert state.attributes["max_temp"] == 85.0
     assert state.attributes["operation_list"] == ["eco", "gas"]
+
+
+async def test_water_heater_missing_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a water heater that has no state yet is unknown rather than off."""
+    entity_info = [
+        WaterHeaterInfo(
+            object_id="my_boiler",
+            key=1,
+            name="My Boiler",
+            min_temperature=10.0,
+            max_temperature=85.0,
+            supported_modes=[
+                WaterHeaterMode.OFF,
+                WaterHeaterMode.ECO,
+            ],
+        )
+    ]
+    states = [
+        WaterHeaterState(
+            key=1,
+            mode=WaterHeaterMode.OFF,
+            missing_state=True,
+        )
+    ]
+
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_water_heater_entity_no_modes(
