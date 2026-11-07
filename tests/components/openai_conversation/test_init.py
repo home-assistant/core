@@ -1,5 +1,7 @@
 """Tests for the OpenAI integration."""
 
+import subprocess
+import sys
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -38,6 +40,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
+
+IMPORT_TIMEOUT = 60
 
 
 @pytest.mark.parametrize(
@@ -1546,3 +1550,50 @@ async def test_migration_from_v2_7_existing_evaluation(
     assert mock_config_entry.minor_version == 8
     assert mock_config_entry.subentries == existing_subentries
     assert hass.states.get("ai_task.my_decisions") is not None
+
+
+CHECK_CLIENT_RESOURCE_IMPORTS = """
+import importlib
+
+import homeassistant.components.openai_conversation
+import openai
+
+imports = []
+import_module = importlib.import_module
+
+
+def record_import(name, package=None):
+    imports.append(name)
+    return import_module(name, package)
+
+
+importlib.import_module = record_import
+client = openai.AsyncOpenAI(api_key="test")
+client.responses
+client.audio.speech
+client.audio.transcriptions
+print(imports)
+"""
+
+
+def test_client_resources_are_imported_with_the_integration() -> None:
+    """Accessing the client resources must not import anything in the event loop.
+
+    The OpenAI client imports its responses and audio resources on first use
+    through importlib.import_module, which Home Assistant reports as a blocking
+    call when it happens in the event loop. Having the submodules in
+    sys.modules is not enough: the call uses a relative name that the check
+    does not resolve.
+
+    A clean interpreter is the only way to see this: anything the test suite
+    imported first would hide it.
+    """
+    result = subprocess.run(
+        [sys.executable, "-c", CHECK_CLIENT_RESOURCE_IMPORTS],
+        capture_output=True,
+        check=True,
+        text=True,
+        timeout=IMPORT_TIMEOUT,
+    )
+
+    assert result.stdout.strip() == "[]"
