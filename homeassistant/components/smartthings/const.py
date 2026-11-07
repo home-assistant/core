@@ -6,6 +6,17 @@ from homeassistant.const import UnitOfTemperature
 
 DOMAIN = "smartthings"
 
+APP_NAME_PREFIX = "homeassistant."
+
+HOME_ASSISTANT_CLOUD_CLIENT_ID = "e722892c-56a7-483d-a888-6b2b1359cdd6"
+
+SMARTTHINGS_API_URL = "https://api.smartthings.com"
+SMARTTHINGS_AUTH_URL = "https://auth-global.api.smartthings.com"
+SMARTTHINGS_ACCOUNT_URL = "https://account.smartthings.com"
+PAT_TOKEN_URL = SMARTTHINGS_ACCOUNT_URL + "/tokens"
+DEVELOPER_CENTER_URL = "https://developer.smartthings.com/console"
+MANAGE_PLANS_URL = DEVELOPER_CENTER_URL + "/service-integrations/manage-plans"
+
 SCOPES = [
     "r:devices:*",
     "w:devices:*",
@@ -21,24 +32,29 @@ SCOPES = [
     "sse",
 ]
 
-REQUESTED_SCOPES = [
-    *SCOPES,
-    "r:installedapps",
-    "w:installedapps",
-]
+REQUESTED_SCOPES = [*SCOPES, "r:installedapps:*", "w:installedapps:*"]
 
 CONF_APP_ID = "app_id"
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_INSTALLED_APP_ID = "installed_app_id"
 CONF_INSTANCE_ID = "instance_id"
 CONF_LOCATION_ID = "location_id"
+CONF_PAT_TOKEN = "pat_token"
 CONF_REFRESH_TOKEN = "refresh_token"
+
+PAT_IMPLEMENTATION = "pat"
 
 MAIN = "main"
 OLD_DATA = "old_data"
 
 CONF_SUBSCRIPTION_ID = "subscription_id"
 EVENT_BUTTON = "smartthings.button"
+
+
+def app_auth_domain(app_id: str) -> str:
+    """Return the application_credentials auth_domain for a provisioned app."""
+    return f"{DOMAIN}_{app_id}"
+
 
 BINARY_SENSOR_ATTRIBUTES_TO_CAPABILITIES: dict[str, str] = {
     Attribute.ACCELERATION: Capability.ACCELERATION_SENSOR,

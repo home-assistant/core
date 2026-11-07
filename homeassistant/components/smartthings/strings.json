@@ -2,14 +2,26 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "entitlement_required": "[%key:component::smartthings::config::error::entitlement_required%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_scopes": "Authentication failed. Please make sure you have granted all required permissions.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "quota_exceeded": "SmartThings API quota exceeded. SmartThings requires an active API plan with remaining API usage quotas to access the SmartThings APIs. Visit the SmartThings Developer Center to manage your plans: {manage_plans_url}",
       "reauth_account_mismatch": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account and pick the right location.",
       "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location."
     },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "entitlement_required": "SmartThings API Plan required. Please subscribe to a plan before setting up this integration and ensure your Personal Access token has 'application' scopes enabled.",
+      "invalid_pat": "Invalid Personal Access Token. Please make sure you have entered it correctly and that it has not expired.",
+      "quota_exceeded": "[%key:component::smartthings::config::abort::quota_exceeded%]"
     },
     "initiate_flow": {
       "user": "[%key:common::config_flow::initiate_flow::account%]"
@@ -18,12 +30,22 @@
       "oauth_discovery": {
         "description": "Home Assistant has found a SmartThings device on your network. Press **Submit** to continue setting up SmartThings."
       },
+      "pat": {
+        "data": {
+          "pat_token": "Personal Access Token"
+        },
+        "data_description": {
+          "pat_token": "A Personal Access Token used to create your own SmartThings app."
+        },
+        "description": "Enter a Personal Access Token to set up your own SmartThings app. Generate one on the [SmartThings tokens page]({token_url}), making sure the 'application' scopes are selected. This requires an active [SmartThings API subscription]({manage_plans_url}).",
+        "title": "Connect SmartThings"
+      },
       "pick_implementation": {
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
         },
         "data_description": {
-          "implementation": "[%key:common::config_flow::description::implementation%]"
+          "implementation": "Stored credentials or Personal Access Token for first time integrations"
         },
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
@@ -1187,11 +1209,20 @@
     "dishwasher_machine_state": {
       "message": "Can only be changed when the dishwasher machine state is {machine_state}"
     },
+    "entitlement_required": {
+      "message": "SmartThings subscription required. Reconnect your SmartThings account to restore access."
+    },
     "missing_token": {
       "message": "The configuration entry is missing a token, please reauthenticate"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
     "option_not_supported": {
       "message": "Option is not supported by the selected cycle"
+    },
+    "quota_exceeded": {
+      "message": "SmartThings API quota exceeded. SmartThings requires an active API plan with remaining API usage quotas to access the SmartThings APIs. Visit the SmartThings Developer Center to manage your plans: {manage_plans_url}"
     },
     "remote_control_status": {
       "message": "Can only be changed when remote control is enabled"
@@ -1237,6 +1268,14 @@
     "deprecated_switch_media_player_scripts": {
       "description": "The switch `{entity_id}` is deprecated and a media player entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new media player entity in the above automations or scripts and disable the switch to fix this issue.",
       "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]"
+    }
+  },
+  "selector": {
+    "implementation": {
+      "options": {
+        "cloud": "Legacy Integration (Support ends Dec 2026)",
+        "pat": "SmartThings API Access App with Developer Plan"
+      }
     }
   }
 }
