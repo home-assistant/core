@@ -2,7 +2,7 @@
 
 import asyncio
 from collections import deque
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from dataclasses import asdict
 from datetime import datetime, timedelta
 import logging
@@ -204,7 +204,7 @@ def recording_ffmpeg_args(
             # The hub expects exactly the selected size, other aspect ratios are padded.
             f'-vf "scale={attributes.width}:{attributes.height}:'
             "force_original_aspect_ratio=decrease:force_divisible_by=2,"
-            f'pad={attributes.width}:{attributes.height}:(ow-iw)/2:(oh-ih)/2" '
+            f'pad={attributes.width}:{attributes.height}:(ow-iw)/2:(oh-ih)/2,setsar=1" '
             f"-r {fps} -b:v {video.bitrate_kbps}k -maxrate {video.bitrate_kbps}k "
             f"-bufsize {video.bitrate_kbps * 2}k -bf 0 "
             f"-g {math.ceil(fps * iframe_seconds)} "
@@ -340,7 +340,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
 
         stream_address = config.get(CONF_STREAM_ADDRESS, driver.state.address)
 
-        # Recording sizes are scaled by ffmpeg, the streaming limits do not apply.
+        # Recordings are scaled to the selected size, streaming limits do not apply.
         self._recording_resolutions = [
             (height, width) if max_height > max_width else (width, height)
             for width, height in RECORDING_RESOLUTIONS
@@ -625,6 +625,10 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
             FFMPEG_WATCH_INTERVAL,
         )
 
+        if not self.homekit_camera_active:
+            # The camera was turned off while the stream started.
+            await self.stop_stream(session_info)
+            return False
         return await self._async_ffmpeg_watch(session_info["id"])
 
     async def _async_log_stderr_stream(
@@ -670,10 +674,8 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                 self.stop_stream(session_info), "homekit.camera-stop-stream"
             )
         if self.secure_video:
-            if self._recording_transport_start:
-                self._recording_transport_start.cancel()
             self._recording_transport_stop = self.hass.async_create_background_task(
-                self.stop_recording_transport(),
+                self._async_stop_recording_transport(),
                 f"homekit.camera-stop-recording-transport-{self.entity_id}",
             )
         super().async_stop()
@@ -684,6 +686,13 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         await super().stop()
         if self._recording_transport_stop:
             await self._recording_transport_stop
+
+    async def _async_stop_recording_transport(self) -> None:
+        """Close the recording listener once it has started."""
+        # Cancelling a start that is binding could leave a socket open.
+        if self._recording_transport_start:
+            await asyncio.wait({self._recording_transport_start})
+        await self.stop_recording_transport()
 
     async def _async_start_recording_transport(self) -> None:
         """Start the HomeKit Data Stream listener recordings are sent over."""
@@ -742,10 +751,22 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         """Stop live streams when the camera is turned off in the Home app."""
         if active:
             return
-        for session_info in self.sessions.values():
-            self.hass.async_create_background_task(
-                self.stop_stream(session_info), "homekit.camera-stop-stream"
-            )
+        # A starting stream checks the camera state once ffmpeg runs.
+        # The eager end tasks may change the sessions while we iterate.
+        for session_info in list(self.sessions.values()):
+            if "stream" in session_info:
+                self.hass.async_create_background_task(
+                    self._async_end_session(session_info),
+                    f"homekit.camera-end-session-{self.entity_id}",
+                )
+
+    async def _async_end_session(self, session_info: dict[str, Any]) -> None:
+        """End a live stream, the controller removes the session with its stop."""
+        await self.stop_stream(session_info)
+        self._close_talkback(session_info)
+        # The controller may have started a new session on this slot meanwhile.
+        if self.sessions.get(session_info["id"]) is session_info:
+            self.set_streaming_available(session_info["stream_idx"])
 
     @override
     def recording_state_changed(self) -> None:
@@ -762,21 +783,22 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
     @override
     async def handle_recording_stream(
         self, stream_id: int
-    ) -> AsyncIterator[RecordingPacket]:
+    ) -> AsyncGenerator[RecordingPacket]:
         """Stream a HomeKit Secure Video recording from ffmpeg."""
+        self._recording_with_audio = self.recording_audio_active
         if not (input_source := await self._async_get_stream_source()):
             self._log_recording_problem("[%s] Camera has no stream source")
             return
         selected = self.selected_recording_configuration
         if TYPE_CHECKING:
             assert isinstance(selected, SelectedRecordingConfiguration)
-        self._recording_with_audio = self.recording_audio_active
         try:
             input_args, output = recording_ffmpeg_args(
                 self.config, selected, input_source, self._recording_with_audio
             )
-        except ValueError as err:
-            self._log_recording_problem("[%s] Invalid stream source: %s", err)
+        except (ValueError, LookupError) as err:
+            # A stream source shlex cannot split or a format we did not advertise.
+            self._log_recording_problem("[%s] Cannot build the recording: %s", err)
             return
         _LOGGER.debug("[%s] Recording %s with: %s", self.entity_id, stream_id, output)
         stream = HAFFmpeg(self._ffmpeg.binary)
@@ -826,7 +848,6 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                     )
                     return
                 timeout = stall_timeout
-                # A failed ffmpeg must not end the recording as complete.
                 if packet.is_last and await self._async_recording_failed(
                     stream, stderr_task, stderr
                 ):
@@ -836,7 +857,6 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                     return
                 sent_packets += 1
                 if sent_packets == RECORDING_FIRST_VIDEO_PACKET:
-                    # Video arrived, warn again about the next failure.
                     self._recording_problem_logged = False
                 yield packet
                 if packet.is_last:
@@ -888,11 +908,12 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         """Keep the last ffmpeg output lines of a recording."""
         while line := await reader.readline():
             line = RECORDING_STDERR_URL.sub(b"<url>", line.rstrip())
-            _LOGGER.debug(
-                "[%s] Recording ffmpeg: %s",
-                self.entity_id,
-                line.decode(errors="replace"),
-            )
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                _LOGGER.debug(
+                    "[%s] Recording ffmpeg: %s",
+                    self.entity_id,
+                    line.decode(errors="replace"),
+                )
             lines.append(line)
 
     async def stop_stream(self, session_info: dict[str, Any]) -> None:
@@ -901,7 +922,8 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         if proxy := session_info.pop(AUDIO_PROXY, None):
             await proxy.async_stop()
 
-        if not (stream := session_info.get("stream")):
+        # Taken out before awaiting the close so a concurrent stop skips it.
+        if not (stream := session_info.pop("stream", None)):
             _LOGGER.debug("No stream for session ID %s", session_id)
             return
 
@@ -926,16 +948,21 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         self, session_info: dict[str, Any], stream_config: dict[str, Any]
     ) -> bool:
         """Reconfigure the stream so that it uses the given ``stream_config``."""
-        return True
+        # A camera turned off has no stream left to reconfigure.
+        return bool(self.homekit_camera_active)
+
+    def _raise_if_camera_off(self) -> None:
+        if not self.homekit_camera_active:
+            raise HomeAssistantError("Camera is off in the Home app")
 
     async def async_get_snapshot(self, image_size: dict[str, int]) -> bytes:
         """Return a jpeg of a snapshot from the camera."""
-        if not self.homekit_camera_active:
-            raise HomeAssistantError("Camera is off in the Home app")
+        self._raise_if_camera_off()
         image = await camera.async_get_image(
             self.hass,
             self.entity_id,
             width=image_size["image-width"],
             height=image_size["image-height"],
         )
+        self._raise_if_camera_off()
         return image.content
