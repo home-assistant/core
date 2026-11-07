@@ -57,7 +57,6 @@ _SLOT_CODE_SUFFIXES = {
     "offpeak": "_offpeak",
     "superoffpeak": "_superoffpeak",
 }
-_FALLBACK_SLOT_SUFFIX = "_slot"
 _ENERGY_TYPE_KEYS = {"ELECTRICITY": "electricity", "GAS": "gas"}
 _FALLBACK_TYPE_KEY = "energy"
 _WEEKDAY_FIELDS = (
@@ -215,6 +214,8 @@ async def async_setup_entry(
                 prices_data.eans, household.prices.ean_energy_types
             )
             for ean, direction, slot_code in prices_data.slots:
+                if canonicalise_slot_code(slot_code) not in _SLOT_CODE_SUFFIXES:
+                    continue
                 type_key = _energy_type_key(ean, household.prices.ean_energy_types)
                 ean_suffix = bare_ean(ean)[-4:] if ean in duplicate_eans else ""
                 for excl_vat in (False, True):
@@ -329,21 +330,15 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         unique_id = f"{business_agreement_number}_{ean}_{direction}_{slot_code}"
         self._attr_unique_id = f"{unique_id}_excl_vat" if excl_vat else unique_id
 
-        normalized_slot_code = canonicalise_slot_code(slot_code)
-        suffix = _SLOT_CODE_SUFFIXES.get(normalized_slot_code, _FALLBACK_SLOT_SUFFIX)
+        suffix = _SLOT_CODE_SUFFIXES[canonicalise_slot_code(slot_code)]
         translation_key = f"{type_key}_price_{direction}{suffix}"
         if excl_vat:
             translation_key = f"{translation_key}_excl_vat"
         if ean_suffix:
             translation_key = f"{translation_key}_with_ean"
         self._attr_translation_key = translation_key
-        translation_placeholders: dict[str, str] = {}
         if ean_suffix:
-            translation_placeholders["ean_suffix"] = ean_suffix
-        if suffix == _FALLBACK_SLOT_SUFFIX:
-            translation_placeholders["slot_code"] = normalized_slot_code.lower()
-        if translation_placeholders:
-            self._attr_translation_placeholders = translation_placeholders
+            self._attr_translation_placeholders = {"ean_suffix": ean_suffix}
         if excl_vat:
             self._attr_entity_registry_enabled_default = False
 
@@ -557,7 +552,7 @@ class EngieBeActivePriceSensor(EngieBeTouEntity):
         self._direction = direction
         self._attr_device_info = device_info
         translation_key, placeholders = _ean_aware_translation(
-            f"electricity_price_{direction}", ean_suffix
+            f"electricity_current_{direction}_price", ean_suffix
         )
         self._attr_translation_key = translation_key
         if placeholders:

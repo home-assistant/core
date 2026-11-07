@@ -52,6 +52,18 @@
       }
     },
     "sensor": {
+      "electricity_current_injection_price": {
+        "name": "Electricity current injection price"
+      },
+      "electricity_current_injection_price_with_ean": {
+        "name": "Electricity current injection price ({ean_suffix})"
+      },
+      "electricity_current_offtake_price": {
+        "name": "Electricity current offtake price"
+      },
+      "electricity_current_offtake_price_with_ean": {
+        "name": "Electricity current offtake price ({ean_suffix})"
+      },
       "electricity_price_injection": {
         "name": "Electricity injection price"
       },
@@ -84,18 +96,6 @@
       },
       "electricity_price_injection_peak_with_ean": {
         "name": "Electricity peak injection price ({ean_suffix})"
-      },
-      "electricity_price_injection_slot": {
-        "name": "Electricity injection price ({slot_code})"
-      },
-      "electricity_price_injection_slot_excl_vat": {
-        "name": "Electricity injection price excl. VAT ({slot_code})"
-      },
-      "electricity_price_injection_slot_excl_vat_with_ean": {
-        "name": "Electricity injection price excl. VAT ({slot_code}) ({ean_suffix})"
-      },
-      "electricity_price_injection_slot_with_ean": {
-        "name": "Electricity injection price ({slot_code}) ({ean_suffix})"
       },
       "electricity_price_injection_superoffpeak": {
         "name": "Electricity super off-peak injection price"
@@ -145,18 +145,6 @@
       "electricity_price_offtake_peak_with_ean": {
         "name": "Electricity peak offtake price ({ean_suffix})"
       },
-      "electricity_price_offtake_slot": {
-        "name": "Electricity offtake price ({slot_code})"
-      },
-      "electricity_price_offtake_slot_excl_vat": {
-        "name": "Electricity offtake price excl. VAT ({slot_code})"
-      },
-      "electricity_price_offtake_slot_excl_vat_with_ean": {
-        "name": "Electricity offtake price excl. VAT ({slot_code}) ({ean_suffix})"
-      },
-      "electricity_price_offtake_slot_with_ean": {
-        "name": "Electricity offtake price ({slot_code}) ({ean_suffix})"
-      },
       "electricity_price_offtake_superoffpeak": {
         "name": "Electricity super off-peak offtake price"
       },
@@ -205,18 +193,6 @@
       "energy_price_injection_peak_with_ean": {
         "name": "Peak injection price ({ean_suffix})"
       },
-      "energy_price_injection_slot": {
-        "name": "Injection price ({slot_code})"
-      },
-      "energy_price_injection_slot_excl_vat": {
-        "name": "Injection price excl. VAT ({slot_code})"
-      },
-      "energy_price_injection_slot_excl_vat_with_ean": {
-        "name": "Injection price excl. VAT ({slot_code}) ({ean_suffix})"
-      },
-      "energy_price_injection_slot_with_ean": {
-        "name": "Injection price ({slot_code}) ({ean_suffix})"
-      },
       "energy_price_injection_superoffpeak": {
         "name": "Super off-peak injection price"
       },
@@ -264,18 +240,6 @@
       },
       "energy_price_offtake_peak_with_ean": {
         "name": "Peak offtake price ({ean_suffix})"
-      },
-      "energy_price_offtake_slot": {
-        "name": "Offtake price ({slot_code})"
-      },
-      "energy_price_offtake_slot_excl_vat": {
-        "name": "Offtake price excl. VAT ({slot_code})"
-      },
-      "energy_price_offtake_slot_excl_vat_with_ean": {
-        "name": "Offtake price excl. VAT ({slot_code}) ({ean_suffix})"
-      },
-      "energy_price_offtake_slot_with_ean": {
-        "name": "Offtake price ({slot_code}) ({ean_suffix})"
       },
       "energy_price_offtake_superoffpeak": {
         "name": "Super off-peak offtake price"
@@ -348,18 +312,6 @@
       },
       "gas_price_offtake_peak_with_ean": {
         "name": "Gas peak offtake price ({ean_suffix})"
-      },
-      "gas_price_offtake_slot": {
-        "name": "Gas offtake price ({slot_code})"
-      },
-      "gas_price_offtake_slot_excl_vat": {
-        "name": "Gas offtake price excl. VAT ({slot_code})"
-      },
-      "gas_price_offtake_slot_excl_vat_with_ean": {
-        "name": "Gas offtake price excl. VAT ({slot_code}) ({ean_suffix})"
-      },
-      "gas_price_offtake_slot_with_ean": {
-        "name": "Gas offtake price ({slot_code}) ({ean_suffix})"
       },
       "gas_price_offtake_superoffpeak": {
         "name": "Gas super off-peak offtake price"

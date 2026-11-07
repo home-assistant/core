@@ -128,7 +128,7 @@ async def test_slot_aware_naming(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test slot-aware translation keys drive friendly names while unique_ids keep the raw slot code."""
+    """Test known slot codes drive friendly names and unknown codes create no entity."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -153,21 +153,13 @@ async def test_slot_aware_naming(
     assert peak_state is not None
     assert peak_state.name.endswith("Electricity peak offtake price")
 
-    fallback_unique_id = f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_WEEKEND"
-    fallback_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, fallback_unique_id
-    )
-    assert fallback_entity_id is not None
-    fallback_state = hass.states.get(fallback_entity_id)
-    assert fallback_state is not None
-    assert fallback_state.name.endswith("Electricity offtake price (weekend)")
-
-    assert (
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_EN"
+    for slot_code in ("S_TOU1_OFFTAKE_WEEKEND", "EN"):
+        assert (
+            entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_{slot_code}"
+            )
+            is None
         )
-        is None
-    )
 
 
 @pytest.mark.usefixtures("mock_engie_client")
@@ -660,7 +652,7 @@ async def test_new_slot_code_appears(
     )
 
     extra_slot = PriceSlot(
-        time_of_use_slot_code="S_TOU1_OFFTAKE_NIGHT",
+        time_of_use_slot_code="S_TOU1_OFFTAKE_OFFPEAK",
         price_value=0.09,
         price_value_excl_vat=0.084906,
     )
@@ -677,12 +669,14 @@ async def test_new_slot_code_appears(
     assert count_after == count_before + 2
 
     incl_vat_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_NIGHT"
+        "sensor",
+        DOMAIN,
+        f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_OFFPEAK",
     )
     excl_vat_id = entity_registry.async_get_entity_id(
         "sensor",
         DOMAIN,
-        f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_NIGHT_excl_vat",
+        f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_OFFPEAK_excl_vat",
     )
     assert incl_vat_id is not None
     assert excl_vat_id is not None

@@ -6,6 +6,18 @@
       }
     },
     "sensor": {
+      "electricity_current_injection_price": {
+        "default": "mdi:cash-clock"
+      },
+      "electricity_current_injection_price_with_ean": {
+        "default": "mdi:cash-clock"
+      },
+      "electricity_current_offtake_price": {
+        "default": "mdi:cash-clock"
+      },
+      "electricity_current_offtake_price_with_ean": {
+        "default": "mdi:cash-clock"
+      },
       "electricity_price_injection": {
         "default": "mdi:cash-plus"
       },
@@ -37,18 +49,6 @@
         "default": "mdi:cash-plus"
       },
       "electricity_price_injection_peak_with_ean": {
-        "default": "mdi:cash-plus"
-      },
-      "electricity_price_injection_slot": {
-        "default": "mdi:cash-plus"
-      },
-      "electricity_price_injection_slot_excl_vat": {
-        "default": "mdi:cash-plus"
-      },
-      "electricity_price_injection_slot_excl_vat_with_ean": {
-        "default": "mdi:cash-plus"
-      },
-      "electricity_price_injection_slot_with_ean": {
         "default": "mdi:cash-plus"
       },
       "electricity_price_injection_superoffpeak": {
@@ -99,18 +99,6 @@
       "electricity_price_offtake_peak_with_ean": {
         "default": "mdi:cash-minus"
       },
-      "electricity_price_offtake_slot": {
-        "default": "mdi:cash-minus"
-      },
-      "electricity_price_offtake_slot_excl_vat": {
-        "default": "mdi:cash-minus"
-      },
-      "electricity_price_offtake_slot_excl_vat_with_ean": {
-        "default": "mdi:cash-minus"
-      },
-      "electricity_price_offtake_slot_with_ean": {
-        "default": "mdi:cash-minus"
-      },
       "electricity_price_offtake_superoffpeak": {
         "default": "mdi:cash-minus"
       },
@@ -159,18 +147,6 @@
       "energy_price_injection_peak_with_ean": {
         "default": "mdi:cash-plus"
       },
-      "energy_price_injection_slot": {
-        "default": "mdi:cash-plus"
-      },
-      "energy_price_injection_slot_excl_vat": {
-        "default": "mdi:cash-plus"
-      },
-      "energy_price_injection_slot_excl_vat_with_ean": {
-        "default": "mdi:cash-plus"
-      },
-      "energy_price_injection_slot_with_ean": {
-        "default": "mdi:cash-plus"
-      },
       "energy_price_injection_superoffpeak": {
         "default": "mdi:cash-plus"
       },
@@ -217,18 +193,6 @@
         "default": "mdi:cash-minus"
       },
       "energy_price_offtake_peak_with_ean": {
-        "default": "mdi:cash-minus"
-      },
-      "energy_price_offtake_slot": {
-        "default": "mdi:cash-minus"
-      },
-      "energy_price_offtake_slot_excl_vat": {
-        "default": "mdi:cash-minus"
-      },
-      "energy_price_offtake_slot_excl_vat_with_ean": {
-        "default": "mdi:cash-minus"
-      },
-      "energy_price_offtake_slot_with_ean": {
         "default": "mdi:cash-minus"
       },
       "energy_price_offtake_superoffpeak": {
@@ -303,18 +267,6 @@
       "gas_price_offtake_peak_with_ean": {
         "default": "mdi:meter-gas"
       },
-      "gas_price_offtake_slot": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_slot_excl_vat": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_slot_excl_vat_with_ean": {
-        "default": "mdi:meter-gas"
-      },
-      "gas_price_offtake_slot_with_ean": {
-        "default": "mdi:meter-gas"
-      },
       "gas_price_offtake_superoffpeak": {
         "default": "mdi:meter-gas"
       },
@@ -331,100 +283,28 @@
         "default": "mdi:meter-gas"
       },
       "grid_injection_slot": {
-        "default": "mdi:transmission-tower",
-        "state": {
-          "day": "mdi:weather-sunny",
-          "exclusive_night": "mdi:weather-night",
-          "offpeak": "mdi:weather-night",
-          "peak": "mdi:flash",
-          "superoffpeak": "mdi:weather-sunny",
-          "total_hours": "mdi:clock-outline",
-          "weekend": "mdi:calendar-today"
-        }
+        "default": "mdi:transmission-tower-export"
       },
       "grid_injection_slot_with_ean": {
-        "default": "mdi:transmission-tower",
-        "state": {
-          "day": "mdi:weather-sunny",
-          "exclusive_night": "mdi:weather-night",
-          "offpeak": "mdi:weather-night",
-          "peak": "mdi:flash",
-          "superoffpeak": "mdi:weather-sunny",
-          "total_hours": "mdi:clock-outline",
-          "weekend": "mdi:calendar-today"
-        }
+        "default": "mdi:transmission-tower-export"
       },
       "grid_offtake_slot": {
-        "default": "mdi:transmission-tower",
-        "state": {
-          "day": "mdi:weather-sunny",
-          "exclusive_night": "mdi:weather-night",
-          "offpeak": "mdi:weather-night",
-          "peak": "mdi:flash",
-          "superoffpeak": "mdi:weather-sunny",
-          "total_hours": "mdi:clock-outline",
-          "weekend": "mdi:calendar-today"
-        }
+        "default": "mdi:transmission-tower-import"
       },
       "grid_offtake_slot_with_ean": {
-        "default": "mdi:transmission-tower",
-        "state": {
-          "day": "mdi:weather-sunny",
-          "exclusive_night": "mdi:weather-night",
-          "offpeak": "mdi:weather-night",
-          "peak": "mdi:flash",
-          "superoffpeak": "mdi:weather-sunny",
-          "total_hours": "mdi:clock-outline",
-          "weekend": "mdi:calendar-today"
-        }
+        "default": "mdi:transmission-tower-import"
       },
       "tou_injection_slot": {
-        "default": "mdi:flash",
-        "state": {
-          "day": "mdi:weather-sunny",
-          "exclusive_night": "mdi:weather-night",
-          "offpeak": "mdi:weather-night",
-          "peak": "mdi:flash",
-          "superoffpeak": "mdi:weather-sunny",
-          "total_hours": "mdi:clock-outline",
-          "weekend": "mdi:calendar-today"
-        }
+        "default": "mdi:transmission-tower-export"
       },
       "tou_injection_slot_with_ean": {
-        "default": "mdi:flash",
-        "state": {
-          "day": "mdi:weather-sunny",
-          "exclusive_night": "mdi:weather-night",
-          "offpeak": "mdi:weather-night",
-          "peak": "mdi:flash",
-          "superoffpeak": "mdi:weather-sunny",
-          "total_hours": "mdi:clock-outline",
-          "weekend": "mdi:calendar-today"
-        }
+        "default": "mdi:transmission-tower-export"
       },
       "tou_offtake_slot": {
-        "default": "mdi:flash",
-        "state": {
-          "day": "mdi:weather-sunny",
-          "exclusive_night": "mdi:weather-night",
-          "offpeak": "mdi:weather-night",
-          "peak": "mdi:flash",
-          "superoffpeak": "mdi:weather-sunny",
-          "total_hours": "mdi:clock-outline",
-          "weekend": "mdi:calendar-today"
-        }
+        "default": "mdi:transmission-tower-import"
       },
       "tou_offtake_slot_with_ean": {
-        "default": "mdi:flash",
-        "state": {
-          "day": "mdi:weather-sunny",
-          "exclusive_night": "mdi:weather-night",
-          "offpeak": "mdi:weather-night",
-          "peak": "mdi:flash",
-          "superoffpeak": "mdi:weather-sunny",
-          "total_hours": "mdi:clock-outline",
-          "weekend": "mdi:calendar-today"
-        }
+        "default": "mdi:transmission-tower-import"
       }
     }
   }

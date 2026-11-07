@@ -1,120 +1,4 @@
 # serializer version: 1
-# name: test_epex_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_offtake_price_excl_vat_weekend-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('engie_be', '000000000001')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price_excl_vat_weekend',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Electricity offtake price excl. VAT (weekend)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 6,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Electricity offtake price excl. VAT (weekend)',
-    'platform': 'engie_be',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_price_offtake_slot_excl_vat',
-    'unique_id': '000000000001_541448820000000002_ID1_offtake_S_TOU1_OFFTAKE_WEEKEND_excl_vat',
-    'unit_of_measurement': 'EUR/kWh',
-  })
-# ---
-# name: test_epex_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_offtake_price_excl_vat_weekend-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Electricity offtake price excl. VAT (weekend)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price_excl_vat_weekend',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.141509',
-  })
-# ---
-# name: test_epex_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_offtake_price_weekend-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('engie_be', '000000000001')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price_weekend',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Electricity offtake price (weekend)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 6,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Electricity offtake price (weekend)',
-    'platform': 'engie_be',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_price_offtake_slot',
-    'unique_id': '000000000001_541448820000000002_ID1_offtake_S_TOU1_OFFTAKE_WEEKEND',
-    'unit_of_measurement': 'EUR/kWh',
-  })
-# ---
-# name: test_epex_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_offtake_price_weekend-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Electricity offtake price (weekend)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price_weekend',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.15',
-  })
-# ---
 # name: test_epex_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_peak_injection_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -939,122 +823,6 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[sensor.main_street_1_1000_brussels_electricity_offtake_price_excl_vat_weekend-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('engie_be', '000000000001')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price_excl_vat_weekend',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Electricity offtake price excl. VAT (weekend)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 6,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Electricity offtake price excl. VAT (weekend)',
-    'platform': 'engie_be',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_price_offtake_slot_excl_vat',
-    'unique_id': '000000000001_541448820000000002_ID1_offtake_S_TOU1_OFFTAKE_WEEKEND_excl_vat',
-    'unit_of_measurement': 'EUR/kWh',
-  })
-# ---
-# name: test_sensors[sensor.main_street_1_1000_brussels_electricity_offtake_price_excl_vat_weekend-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Electricity offtake price excl. VAT (weekend)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price_excl_vat_weekend',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.141509',
-  })
-# ---
-# name: test_sensors[sensor.main_street_1_1000_brussels_electricity_offtake_price_weekend-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('engie_be', '000000000001')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price_weekend',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Electricity offtake price (weekend)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 6,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Electricity offtake price (weekend)',
-    'platform': 'engie_be',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_price_offtake_slot',
-    'unique_id': '000000000001_541448820000000002_ID1_offtake_S_TOU1_OFFTAKE_WEEKEND',
-    'unit_of_measurement': 'EUR/kWh',
-  })
-# ---
-# name: test_sensors[sensor.main_street_1_1000_brussels_electricity_offtake_price_weekend-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Electricity offtake price (weekend)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price_weekend',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.15',
-  })
-# ---
 # name: test_sensors[sensor.main_street_1_1000_brussels_electricity_peak_injection_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1403,7 +1171,7 @@
     'state': '0.116468',
   })
 # ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_injection_price-entry]
+# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_current_injection_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1419,7 +1187,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_injection_price',
+    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_current_injection_price',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1427,7 +1195,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Electricity injection price',
+    'object_id_base': 'Electricity current injection price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 6,
@@ -1435,21 +1203,21 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Electricity injection price',
+    'original_name': 'Electricity current injection price',
     'platform': 'engie_be',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_price_injection',
+    'translation_key': 'electricity_current_injection_price',
     'unique_id': '000000000001_541448820000000002_ID1_injection_current_price',
     'unit_of_measurement': 'EUR/kWh',
   })
 # ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_injection_price-state]
+# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_current_injection_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Electricity injection price',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Electricity current injection price',
       'next_price': None,
       'next_slot_code': 'offpeak',
       'next_transition': HAFakeDatetime(2026, 10, 3, 22, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Brussels')),
@@ -1458,14 +1226,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_injection_price',
+    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_current_injection_price',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.05',
   })
 # ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_offtake_price-entry]
+# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_current_offtake_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1481,7 +1249,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price',
+    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_current_offtake_price',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1489,7 +1257,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Electricity offtake price',
+    'object_id_base': 'Electricity current offtake price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 6,
@@ -1497,21 +1265,21 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Electricity offtake price',
+    'original_name': 'Electricity current offtake price',
     'platform': 'engie_be',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electricity_price_offtake',
+    'translation_key': 'electricity_current_offtake_price',
     'unique_id': '000000000001_541448820000000002_ID1_offtake_current_price',
     'unit_of_measurement': 'EUR/kWh',
   })
 # ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_offtake_price-state]
+# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_current_offtake_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Electricity offtake price',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Electricity current offtake price',
       'next_price': 0.12,
       'next_slot_code': 'exclusive_night',
       'next_transition': HAFakeDatetime(2026, 10, 3, 22, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Brussels')),
@@ -1520,127 +1288,11 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price',
+    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_current_offtake_price',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.18',
-  })
-# ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_offtake_price_excl_vat_weekend-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('engie_be', '000000000001')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price_excl_vat_weekend',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Electricity offtake price excl. VAT (weekend)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 6,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Electricity offtake price excl. VAT (weekend)',
-    'platform': 'engie_be',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_price_offtake_slot_excl_vat',
-    'unique_id': '000000000001_541448820000000002_ID1_offtake_S_TOU1_OFFTAKE_WEEKEND_excl_vat',
-    'unit_of_measurement': 'EUR/kWh',
-  })
-# ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_offtake_price_excl_vat_weekend-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Electricity offtake price excl. VAT (weekend)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price_excl_vat_weekend',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.141509',
-  })
-# ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_offtake_price_weekend-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('engie_be', '000000000001')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price_weekend',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Electricity offtake price (weekend)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 6,
-      }),
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Electricity offtake price (weekend)',
-    'platform': 'engie_be',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'electricity_price_offtake_slot',
-    'unique_id': '000000000001_541448820000000002_ID1_offtake_S_TOU1_OFFTAKE_WEEKEND',
-    'unit_of_measurement': 'EUR/kWh',
-  })
-# ---
-# name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_offtake_price_weekend-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ENGIE Belgium',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main street 1, 1000 Brussels Electricity offtake price (weekend)',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR/kWh',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.main_street_1_1000_brussels_electricity_offtake_price_weekend',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.15',
   })
 # ---
 # name: test_tou_sensors_snapshot[sensor.main_street_1_1000_brussels_electricity_peak_injection_price-entry]
