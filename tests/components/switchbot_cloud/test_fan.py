@@ -485,3 +485,25 @@ async def test_battery_circulator_fan_2_pro_turn_on(
             )
         )
     assert mock_send_command.await_args_list == expected_calls
+
+
+async def test_battery_circulator_fan_2_pro_turn_on_zero_percentage(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+) -> None:
+    """Test turning on the battery circulator fan 2 pro with zero percentage."""
+    mock_list_devices.return_value = [BATTERY_CIRCULATOR_FAN_2_PRO_INFO]
+    mock_get_status.return_value = {"power": "on", "mode": "direct", "fanSpeed": "88"}
+    await configure_integration(hass)
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "fan.device_1", ATTR_PERCENTAGE: 0},
+            blocking=True,
+        )
+    mock_send_command.assert_awaited_once_with(
+        "device-id-1", switchbot_api.CommonCommands.OFF, "command", "default"
+    )
