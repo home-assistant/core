@@ -1,6 +1,7 @@
 """Trigger entity."""
 
 from collections.abc import Callable
+from functools import partial
 import logging
 from typing import Any, override
 
@@ -74,6 +75,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
 
         await super().async_added_to_hass()
         self.coordinator.entities.add(self)
+        self.async_on_remove(partial(self.coordinator.entities.discard, self))
 
         if self.coordinator.data is not None:
             # The trigger already produced data; rendering it must win over
@@ -87,7 +89,6 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     async def async_will_remove_from_hass(self) -> None:
         """Clean up conditions when removing from Home Assistant."""
         await super().async_will_remove_from_hass()
-        self.coordinator.entities.discard(self)
         if self._cond_func:
             self._cond_func.async_unload()
 
