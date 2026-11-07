@@ -11,6 +11,7 @@ from miio import (
     AirFreshA1,
     AirFreshT2017,
     AirHumidifier,
+    AirHumidifierJsqs,
     AirHumidifierMiot,
     AirHumidifierMjjsq,
     AirPurifier,
@@ -64,6 +65,7 @@ from .const import (
     MODELS_FAN,
     MODELS_FAN_MIIO,
     MODELS_HUMIDIFIER,
+    MODELS_HUMIDIFIER_JSQS,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
@@ -339,6 +341,11 @@ async def async_create_miio_device_and_coordinator(
         migrate = True
     elif model in MODELS_HUMIDIFIER_MJJSQ:
         device = AirHumidifierMjjsq(
+            host, token, lazy_discover=lazy_discover, model=model
+        )
+        migrate = True
+    elif model in MODELS_HUMIDIFIER_JSQS:
+        device = AirHumidifierJsqs(
             host, token, lazy_discover=lazy_discover, model=model
         )
         migrate = True
