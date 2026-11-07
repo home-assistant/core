@@ -1754,6 +1754,20 @@ PRODID:-//Test//CalDAV Client//EN
 {SERIES_MAIN}END:VCALENDAR
 """
 
+MONDAYS_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Test//CalDAV Client//EN
+BEGIN:VEVENT
+UID:mondays
+DTSTAMP:20261101T000000Z
+DTSTART;TZID=America/New_York:20261102T090000
+DTEND;TZID=America/New_York:20261102T093000
+RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4
+SUMMARY:Planning
+END:VEVENT
+END:VCALENDAR
+"""
+
 ALL_DAY_SERIES_ICS = """BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Test//CalDAV Client//EN
@@ -1876,6 +1890,36 @@ async def _ws_call(
                 "rrule": "FREQ=WEEKLY;COUNT=8",
             },
             id="same_start_and_rrule_with_override",
+        ),
+        pytest.param(
+            MONDAYS_ICS,
+            "mondays",
+            "",
+            {
+                "summary": "Planning",
+                "dtstart": "2026-11-02T10:00:00",
+                "dtend": "2026-11-02T10:30:00",
+            },
+            id="pinned_days_new_time",
+        ),
+        pytest.param(
+            MONDAYS_ICS,
+            "mondays",
+            "",
+            {
+                "summary": "Planning",
+                "dtstart": "2026-11-03T09:00:00",
+                "dtend": "2026-11-03T09:30:00",
+                "rrule": "FREQ=WEEKLY;BYDAY=TU;COUNT=4",
+            },
+            id="pinned_days_new_day_and_rrule",
+        ),
+        pytest.param(
+            ALL_DAY_SERIES_ICS.replace("FREQ=DAILY", "FREQ=MONTHLY;BYMONTHDAY=20"),
+            "all-day-series",
+            "",
+            {"summary": "Rent", "dtstart": "2026-11-20", "dtend": "2026-11-21"},
+            id="pinned_days_all_day_same_day",
         ),
     ],
 )
@@ -2209,6 +2253,36 @@ async def test_update_series_with_exceptions(
         "message": (
             "The start and repeat rule of a recurring event with changed or "
             "deleted occurrences can't be changed"
+        ),
+    }
+    stored_event.client.put.assert_not_called()
+
+
+@pytest.mark.parametrize("ics", [MONDAYS_ICS])
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_update_series_pinned_days(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    stored_event: Event,
+) -> None:
+    """Test a series whose rule sets its days can't move to another day."""
+    response = await _ws_call(
+        hass,
+        hass_ws_client,
+        type="calendar/event/update",
+        uid="mondays",
+        event={
+            "summary": "Planning",
+            "dtstart": "2026-11-03T09:00:00",
+            "dtend": "2026-11-03T09:30:00",
+        },
+    )
+
+    assert response["error"] == {
+        "code": "failed",
+        "message": (
+            "The repeat rule of this event sets its days, so its start can only "
+            "move to another time on the same day"
         ),
     }
     stored_event.client.put.assert_not_called()

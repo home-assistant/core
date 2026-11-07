@@ -30,6 +30,57 @@
   
   '''
 # ---
+# name: test_update_event[pinned_days_all_day_same_day-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Rent
+  DTSTART;VALUE=DATE:20261120
+  DTEND;VALUE=DATE:20261121
+  DTSTAMP:20261101T000000Z
+  UID:all-day-series
+  RRULE:FREQ=MONTHLY;COUNT=5;BYMONTHDAY=20
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[pinned_days_new_day_and_rrule-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Planning
+  DTSTART;TZID=America/New_York:20261103T090000
+  DTEND;TZID=America/New_York:20261103T093000
+  DTSTAMP:20261101T000000Z
+  UID:mondays
+  RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=TU
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
+# name: test_update_event[pinned_days_new_time-America/New_York]
+  '''
+  BEGIN:VCALENDAR
+  VERSION:2.0
+  PRODID:-//Test//CalDAV Client//EN
+  BEGIN:VEVENT
+  SUMMARY:Planning
+  DTSTART;TZID=America/New_York:20261102T100000
+  DTEND;TZID=America/New_York:20261102T103000
+  DTSTAMP:20261101T000000Z
+  UID:mondays
+  RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=MO
+  END:VEVENT
+  END:VCALENDAR
+  
+  '''
+# ---
 # name: test_update_event[same_start_and_rrule_with_override-America/New_York]
   '''
   BEGIN:VCALENDAR

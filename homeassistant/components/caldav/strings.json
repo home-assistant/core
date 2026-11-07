@@ -50,6 +50,9 @@
     "ambiguous_time": {
       "message": "The time falls in the hour that repeats when daylight saving time ends in the event's time zone"
     },
+    "day_change_not_supported": {
+      "message": "The repeat rule of this event sets its days, so its start can only move to another time on the same day"
+    },
     "event_not_found": {
       "message": "The event was not found on the CalDAV server"
     },

@@ -66,6 +66,9 @@ SUPPORTED_COMPONENT = "VEVENT"
 
 THIS_AND_FUTURE = "THISANDFUTURE"
 
+# Parts of a repeat rule that tie the occurrences to particular days
+DAY_RULE_PARTS = ("BYDAY", "BYMONTHDAY", "BYMONTH", "BYYEARDAY", "BYWEEKNO", "BYSETPOS")
+
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_URL): probatio.Url(),
@@ -419,12 +422,13 @@ def _check_series_change(
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="all_day_change_not_supported"
         )
+    start = _in_time_basis(event[EVENT_START], series.DTSTART)
     # Changed and deleted occurrences are tied to the old start and rule
     has_exceptions = (
         "EXDATE" in series or "RDATE" in series or len(calendar.walk("VEVENT")) > 1
     )
     if has_exceptions and (
-        _in_time_basis(event[EVENT_START], series.DTSTART) != series.DTSTART
+        start != series.DTSTART
         or (
             (rrule := event.get(EVENT_RRULE))
             and icalendar.vRecur.from_ical(rrule) != series.get("RRULE")
@@ -433,6 +437,20 @@ def _check_series_change(
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="exceptions_change_not_supported"
         )
+    rule = series.get("RRULE", {})
+    if (
+        not event.get(EVENT_RRULE)
+        and any(part in rule for part in DAY_RULE_PARTS)
+        and _day_of(start) != _day_of(series.DTSTART)
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="day_change_not_supported"
+        )
+
+
+def _day_of(value: date | datetime) -> date:
+    """Return the day of a start, which may be a date or a datetime."""
+    return value.date() if isinstance(value, datetime) else value
 
 
 def _in_time_basis(
