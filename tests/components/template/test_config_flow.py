@@ -2796,6 +2796,16 @@ async def test_config_flow_switch_with_same_actions_as_existing(
             FlowResultType.CREATE_ENTRY,
             id="extra_value_template",
         ),
+        pytest.param(
+            {
+                "template_type": "switch",
+                "name": "Other",
+                "turn_on": SWITCH_TURN_ON,
+                "additional_options": {"availability": "{{ False }}"},
+            },
+            FlowResultType.CREATE_ENTRY,
+            id="availability",
+        ),
     ],
 )
 async def test_wake_on_lan_import(

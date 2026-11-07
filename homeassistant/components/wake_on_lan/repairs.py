@@ -1,6 +1,7 @@
 """Repairs platform for the Wake on LAN integration."""
 
 import asyncio
+from collections.abc import Callable
 from typing import Any
 
 import probatio
@@ -14,7 +15,7 @@ from homeassistant.components.repairs import (
     RepairsFlowResult,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
     CONF_BROADCAST_PORT,
@@ -27,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.entity_platform import async_get_platforms
 
 from .const import CONF_OFF_ACTION, CONF_ON_ACTION, DOMAIN
 
@@ -75,15 +76,19 @@ class MigrateSwitchFlow(RepairsFlow):
         if ping_host:
             # Ping strips the host before storing it
             ping_entry_id, _ = await self._async_get_or_import_entry(
-                "ping", {CONF_HOST: ping_host.strip()}, {CONF_HOST: ping_host}
+                "ping",
+                lambda entry: entry.options.get(CONF_HOST) == ping_host.strip(),
+                {CONF_HOST: ping_host},
             )
             if not ping_entry_id:
                 return self.async_abort(reason="could_not_import_host")
-            ping_entity_id = await self._async_wait_for_entity(
-                entity_reg, ping_entry_id, BINARY_SENSOR_DOMAIN
-            )
-            if not ping_entity_id:
+            if not (
+                ping_entity := await self._async_wait_for_entity(
+                    entity_reg, ping_entry_id, BINARY_SENSOR_DOMAIN
+                )
+            ):
                 return self.async_abort(reason="could_not_get_ping_entity")
+            ping_entity_id = ping_entity.entity_id
 
         wol_config: dict[str, Any] = {CONF_MAC: mac}
         if broadcast_address is not None:
@@ -91,16 +96,20 @@ class MigrateSwitchFlow(RepairsFlow):
         if broadcast_port is not None:
             wol_config[CONF_BROADCAST_PORT] = broadcast_port
         wol_entry_id, _ = await self._async_get_or_import_entry(
-            DOMAIN, {CONF_MAC: dr.format_mac(mac)}, wol_config
+            DOMAIN,
+            lambda entry: entry.options.get(CONF_MAC) == dr.format_mac(mac),
+            wol_config,
         )
         if not wol_entry_id:
             return self.async_abort(reason="could_not_import_wol")
 
-        wol_entity_id = await self._async_wait_for_entity(
-            entity_reg, wol_entry_id, BUTTON_DOMAIN
-        )
-        if not wol_entity_id:
+        if not (
+            wol_entity := await self._async_wait_for_entity(
+                entity_reg, wol_entry_id, BUTTON_DOMAIN
+            )
+        ):
             return self.async_abort(reason="could_not_get_wol_entity")
+        wol_entity_id = wol_entity.entity_id
 
         # Create the Template switch based on the above entities created
         template_config = {
@@ -121,13 +130,19 @@ class MigrateSwitchFlow(RepairsFlow):
         if turn_off_action:
             template_config[CONF_OFF_ACTION] = turn_off_action
 
-        # Same matching as the Template import, missing keys must be missing
-        template_match = {
-            key: template_config.get(key)
-            for key in (CONF_ON_ACTION, CONF_OFF_ACTION, CONF_VALUE_TEMPLATE)
-        } | {"template_type": SWITCH_DOMAIN}
+        def is_equivalent_template(entry: ConfigEntry) -> bool:
+            """Return if the entry is the same switch, like the Template import."""
+            return (
+                entry.options.get("template_type") == SWITCH_DOMAIN
+                and all(
+                    entry.options.get(key) == template_config.get(key)
+                    for key in (CONF_ON_ACTION, CONF_OFF_ACTION, CONF_VALUE_TEMPLATE)
+                )
+                and not entry.options.get("additional_options", {}).get("availability")
+            )
+
         template_entry_id, template_created = await self._async_get_or_import_entry(
-            "template", template_match, template_config
+            "template", is_equivalent_template, template_config
         )
         if not template_entry_id:
             return self.async_abort(reason="could_not_import_template")
@@ -137,40 +152,37 @@ class MigrateSwitchFlow(RepairsFlow):
 
         if not template_created:
             # The existing switch may be referenced by its own ID, so keep it
-            existing_entity_id = next(
+            existing_entity = next(
                 (
-                    entity.entity_id
+                    entity
                     for entity in er.async_entries_for_config_entry(
                         entity_reg, template_entry_id
                     )
                     if entity.domain == SWITCH_DOMAIN
                 ),
-                name,
+                None,
             )
+            if existing_entity is None or existing_entity.disabled:
+                return self.async_abort(reason="could_not_get_template_entity")
             return self.async_create_entry(
                 data={},
                 description="existing_template",
                 description_placeholders={
                     "mac": mac,
-                    "entity_id": existing_entity_id,
+                    "entity_id": existing_entity.entity_id,
                     "old_entity_id": old_entity_id or name,
                 },
             )
 
-        template_entity_id = await self._async_wait_for_entity(
-            entity_reg, template_entry_id, SWITCH_DOMAIN
-        )
-        if not template_entity_id:
-            return self.async_abort(reason="could_not_get_template_entity")
-        if old_entity_id and not await self._async_take_over_entity(
-            entity_reg, old_entity_id, template_entity_id
+        if not (
+            template_entity := await self._async_wait_for_entity(
+                entity_reg, template_entry_id, SWITCH_DOMAIN
+            )
         ):
-            return self.async_abort(
-                reason="could_not_take_over_entity_id",
-                description_placeholders={
-                    "entity_id": template_entity_id,
-                    "old_entity_id": old_entity_id,
-                },
+            return self.async_abort(reason="could_not_get_template_entity")
+        if old_entity_id:
+            await self._async_take_over_entity(
+                entity_reg, old_entity_id, template_entry_id, template_entity
             )
 
         return self.async_create_entry(
@@ -180,11 +192,14 @@ class MigrateSwitchFlow(RepairsFlow):
         )
 
     async def _async_get_or_import_entry(
-        self, domain: str, match: dict[str, Any], import_data: dict[str, Any]
+        self,
+        domain: str,
+        matches: Callable[[ConfigEntry], bool],
+        import_data: dict[str, Any],
     ) -> tuple[str | None, bool]:
         """Return the ID of the matching config entry and if it was created.
 
-        The entry is imported when no entry has options matching all of `match`.
+        The entry is imported when no entry matches.
         """
 
         def find_entry_id() -> str | None:
@@ -192,9 +207,7 @@ class MigrateSwitchFlow(RepairsFlow):
                 (
                     entry.entry_id
                     for entry in self.hass.config_entries.async_entries(domain)
-                    if all(
-                        entry.options.get(key) == value for key, value in match.items()
-                    )
+                    if matches(entry)
                 ),
                 None,
             )
@@ -216,8 +229,8 @@ class MigrateSwitchFlow(RepairsFlow):
 
     async def _async_wait_for_entity(
         self, entity_reg: er.EntityRegistry, entry_id: str, domain: str
-    ) -> str | None:
-        """Return the entity ID of the config entry's entity once it is registered.
+    ) -> er.RegistryEntry | None:
+        """Return the config entry's entity once it is registered.
 
         A disabled entity is enabled, as the Template switch depends on it.
         """
@@ -228,8 +241,10 @@ class MigrateSwitchFlow(RepairsFlow):
                 if entity.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY:
                     return None
                 if entity.disabled:
-                    entity_reg.async_update_entity(entity.entity_id, disabled_by=None)
-                return entity.entity_id
+                    return entity_reg.async_update_entity(
+                        entity.entity_id, disabled_by=None
+                    )
+                return entity
             await asyncio.sleep(1)
         return None
 
@@ -237,46 +252,28 @@ class MigrateSwitchFlow(RepairsFlow):
         self,
         entity_reg: er.EntityRegistry,
         old_entity_id: str,
-        new_entity_id: str,
-    ) -> bool:
-        """Move entity ID and user customizations from the WOL to the Template switch.
+        template_entry_id: str,
+        template_entity: er.RegistryEntry,
+    ) -> None:
+        """Move the registry entry of the WOL switch to the Template switch.
 
-        Return False if the entity ID is still in use after the WOL switch is removed.
+        Keeping the registry entry keeps the entity ID, user customizations and
+        references by entity registry ID, e.g. from switch_as_x helpers.
         """
-        if (old_entry := entity_reg.async_get(old_entity_id)) is None:
-            return True
-        entity_reg.async_remove(old_entity_id)
-        # The WOL switch leaves the state machine only after its off script stopped
-        for _ in range(50):
-            if self.hass.states.async_available(old_entity_id):
-                break
-            await asyncio.sleep(0.1)
-        else:
-            return False
-        entity_reg.async_update_entity(
-            new_entity_id,
-            new_entity_id=old_entity_id,
-            aliases=old_entry.aliases,
-            area_id=old_entry.area_id,
-            categories=dict(old_entry.categories),
-            device_class=old_entry.device_class,
-            icon=old_entry.icon,
-            labels=set(old_entry.labels),
-            name=old_entry.name,
-            disabled_by=(
-                old_entry.disabled_by
-                if old_entry.disabled_by is er.RegistryEntryDisabler.USER
-                else UNDEFINED
-            ),
-            hidden_by=(
-                old_entry.hidden_by
-                if old_entry.hidden_by is er.RegistryEntryHider.USER
-                else UNDEFINED
-            ),
+        await self.hass.config_entries.async_unload(template_entry_id)
+        entity_reg.async_remove(template_entity.entity_id)
+        for platform in async_get_platforms(self.hass, DOMAIN):
+            if platform.domain == SWITCH_DOMAIN and (
+                entity := platform.entities.get(old_entity_id)
+            ):
+                await entity.async_remove(force_remove=True)
+        entity_reg.async_update_entity_platform(
+            old_entity_id,
+            "template",
+            new_config_entry_id=template_entry_id,
+            new_unique_id=template_entity.unique_id,
         )
-        for domain, options in old_entry.options.items():
-            entity_reg.async_update_entity_options(old_entity_id, domain, options)
-        return True
+        await self.hass.config_entries.async_setup(template_entry_id)
 
     async def _async_get_raw_turn_off_action(self, mac: str) -> Any | None:
         """Return the unvalidated off action of the YAML switch for this MAC."""

@@ -690,33 +690,22 @@ async def test_import_already_configured_without_lookup_match(
     assert data["reason"] == "could_not_import_host"
 
 
-@pytest.mark.parametrize(
-    ("disabled_by", "expected_disabled_by"),
-    [
-        pytest.param(
-            er.RegistryEntryDisabler.USER,
-            er.RegistryEntryDisabler.USER,
-            id="user",
-        ),
-        pytest.param(er.RegistryEntryDisabler.INTEGRATION, None, id="integration"),
-    ],
-)
 async def test_template_switch_takes_over_disabled_entity(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     entity_registry: er.EntityRegistry,
     mock_yaml_config: MagicMock,
-    disabled_by: er.RegistryEntryDisabler,
-    expected_disabled_by: er.RegistryEntryDisabler | None,
 ) -> None:
-    """Test only a user disabled WOL switch leaves the Template switch disabled."""
+    """Test a user disabled WOL switch leaves the Template switch disabled."""
     assert await async_setup_component(hass, "repairs", {})
     assert await async_setup_component(
         hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: NO_HOST_CONFIG}
     )
     mock_yaml_config.return_value = {SWITCH_DOMAIN: NO_HOST_CONFIG}
     await hass.async_block_till_done()
-    entity_registry.async_update_entity("switch.test", disabled_by=disabled_by)
+    entity_registry.async_update_entity(
+        "switch.test", disabled_by=er.RegistryEntryDisabler.USER
+    )
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -726,7 +715,7 @@ async def test_template_switch_takes_over_disabled_entity(
     assert data["type"] == FlowResultType.CREATE_ENTRY
     entity_entry = entity_registry.async_get("switch.test")
     assert entity_entry.platform == "template"
-    assert entity_entry.disabled_by is expected_disabled_by
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.USER
 
 
 DELAYED_OFF_CONFIG = {
@@ -768,36 +757,84 @@ async def test_take_over_entity_id_while_off_script_runs(
     assert entity_registry.async_get("switch.test").platform == "template"
 
 
-async def test_take_over_entity_id_old_state_not_removed(
+async def test_switch_as_x_wrapping_wol_switch_is_kept(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     entity_registry: er.EntityRegistry,
     mock_yaml_config: MagicMock,
 ) -> None:
-    """Test the repair aborts when the old state is not removed in time."""
+    """Test a switch_as_x helper wrapping the WOL switch survives the migration.
+
+    The registry entry is moved instead of removed, so its ID stays the same.
+    """
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "repairs", {})
     assert await async_setup_component(
         hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: NO_HOST_CONFIG}
     )
     mock_yaml_config.return_value = {SWITCH_DOMAIN: NO_HOST_CONFIG}
     await hass.async_block_till_done()
-    never_set = asyncio.Event()
+    registry_id = entity_registry.async_get("switch.test").id
+    switch_as_x_entry = MockConfigEntry(
+        domain="switch_as_x",
+        options={"entity_id": registry_id, "invert": False, "target_domain": "light"},
+        title="Test",
+        minor_version=3,
+    )
+    switch_as_x_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(switch_as_x_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.test")
 
     client = await hass_client()
     data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
-    with (
-        patch.object(
-            WolSwitch, "async_will_remove_from_hass", side_effect=never_set.wait
-        ),
-        patch("homeassistant.components.wake_on_lan.repairs.asyncio.sleep"),
-    ):
-        data = await process_repair_fix_flow(client, data["flow_id"], json={})
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+    await hass.async_block_till_done()
+
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+    entity_entry = entity_registry.async_get("switch.test")
+    assert entity_entry.platform == "template"
+    assert entity_entry.id == registry_id
+    assert hass.config_entries.async_get_entry(switch_as_x_entry.entry_id)
+    assert hass.states.get("light.test")
+
+
+async def test_existing_template_switch_disabled(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_yaml_config: MagicMock,
+) -> None:
+    """Test the repair aborts when the equivalent Template switch is disabled."""
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(
+        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: MINIMAL_CONFIG}
+    )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: MINIMAL_CONFIG}
+    template_entry = MockConfigEntry(
+        domain="template",
+        options={
+            "template_type": "switch",
+            "name": "Existing",
+            "turn_on": [
+                {
+                    "action": "button.press",
+                    "target": {"entity_id": "button.wake_on_lan_00_01_02_03_04_05"},
+                }
+            ],
+        },
+        title="Existing",
+    )
+    template_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(template_entry.entry_id)
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity(
+        "switch.existing", disabled_by=er.RegistryEntryDisabler.USER
+    )
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
 
     assert data["type"] == FlowResultType.ABORT
-    assert data["reason"] == "could_not_take_over_entity_id"
-    assert data["description_placeholders"] == {
-        "entity_id": "switch.test_2",
-        "old_entity_id": "switch.test",
-    }
-    never_set.set()
-    await hass.async_block_till_done()
+    assert data["reason"] == "could_not_get_template_entity"

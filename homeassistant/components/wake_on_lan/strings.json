@@ -30,8 +30,7 @@
           "could_not_import_host": "Failed to import the configuration into a Ping sensor",
           "could_not_import_template": "Failed to import the configuration into a Template switch",
           "could_not_import_wol": "Failed to import the configuration into a Wake on LAN button",
-          "could_not_read_configuration": "Failed to read the YAML configuration",
-          "could_not_take_over_entity_id": "The old Wake on LAN switch was removed, but the Template switch `{entity_id}` could not take over its entity ID `{old_entity_id}`. Rename `{entity_id}` to `{old_entity_id}` in the entity settings."
+          "could_not_read_configuration": "Failed to read the YAML configuration"
         },
         "create_entry": {
           "existing_template": "Your Wake on LAN switch has been migrated.\n\nA Template switch with the same configuration already exists as `{entity_id}`, so no new switch was created and `{old_entity_id}` was not replaced.\n\nUpdate automations, scripts and dashboards that use `{old_entity_id}` to use `{entity_id}` before you remove the old Wake on LAN switch from your YAML configuration and restart Home Assistant.",

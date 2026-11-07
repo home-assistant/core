@@ -714,7 +714,9 @@ async def _validate_wake_on_lan_import(
         CONF_VALUE_TEMPLATE,
     )
     for entry in handler.parent_handler.hass.config_entries.async_entries(DOMAIN):
-        if all(entry.options.get(key) == options.get(key) for key in compared_keys):
+        if all(
+            entry.options.get(key) == options.get(key) for key in compared_keys
+        ) and not entry.options.get(CONF_ADDITIONAL_OPTIONS, {}).get(CONF_AVAILABILITY):
             raise AbortFlow("already_configured")
     return options
 
