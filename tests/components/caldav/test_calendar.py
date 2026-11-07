@@ -1975,6 +1975,38 @@ async def test_update_event_keeps_time_zone(
     assert stored_event.client.put.call_args.args[1] == snapshot
 
 
+@pytest.mark.parametrize("tz", [UTC])
+@pytest.mark.parametrize("ics", [NEW_YORK_SERIES_ICS])
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_update_event_repeated_hour(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    stored_event: Event,
+) -> None:
+    """Test a time in the hour repeated when daylight saving time ends is refused."""
+    response = await _ws_call(
+        hass,
+        hass_ws_client,
+        type="calendar/event/update",
+        uid="series",
+        event={
+            "summary": "Weekly",
+            # 01:30 EDT to 01:00 EST in New York, which a TZID can't tell apart
+            "dtstart": "2026-11-01T05:30:00",
+            "dtend": "2026-11-01T06:00:00",
+        },
+    )
+
+    assert response["error"] == {
+        "code": "failed",
+        "message": (
+            "The time falls in the hour that repeats when daylight saving time "
+            "ends in the event's time zone"
+        ),
+    }
+    stored_event.client.put.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("ics", "uid", "recurrence_id"),
     [

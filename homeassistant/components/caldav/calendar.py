@@ -446,7 +446,13 @@ def _in_time_basis(
         return value
     if original_start.tzinfo is None:
         return value.replace(tzinfo=None)
-    return value.astimezone(original_start.tzinfo)
+    converted = value.astimezone(original_start.tzinfo)
+    # A TZID time can't say which of the two repeated hours it means
+    if converted.replace(fold=1 - converted.fold).utcoffset() != converted.utcoffset():
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="ambiguous_time"
+        )
+    return converted
 
 
 def _set_fields(series: icalendar.Event, event: dict[str, Any]) -> None:
