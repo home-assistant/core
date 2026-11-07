@@ -1,0 +1,84 @@
+# serializer version: 1
+# name: test_entities[climate.home_living_room-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'home',
+        'away',
+        'boost',
+      ]),
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.home_living_room',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'fenix_control',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': 'AA11BB22CC00',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[climate.home_living_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.2,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Living room',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'home',
+        'away',
+        'boost',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 22.5,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.home_living_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
