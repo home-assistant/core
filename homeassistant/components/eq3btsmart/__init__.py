@@ -1,6 +1,7 @@
 """Support for EQ3 devices."""
 
 import asyncio
+from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING
 
@@ -78,7 +79,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> None
     """Handle config entry unload."""
 
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-    await entry.runtime_data.thermostat.async_disconnect()
+    with suppress(Eq3Exception):
+        await entry.runtime_data.thermostat.async_disconnect()
 
 
 async def update_listener(hass: HomeAssistant, entry: Eq3ConfigEntry) -> None:
@@ -133,7 +135,15 @@ async def _async_reconnect_thermostat(
     while True:
         try:
             await thermostat.async_connect()
-        except Eq3Exception:
+        except Eq3Exception as e:
+            _LOGGER.debug(
+                "[%s] Failed to connect to eQ-3 device: %s",
+                mac_address,
+                e,
+            )
+            if thermostat.is_connected:
+                with suppress(Eq3Exception):
+                    await thermostat.async_disconnect()
             await asyncio.sleep(scan_interval)
             continue
 
