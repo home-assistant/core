@@ -1,18 +1,28 @@
 """Tests for the lights provided by the Lunatone integration."""
 
 from copy import deepcopy
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from lunatone_rest_api_client.models import LineStatus
+from lunatone_rest_api_client.models import (
+    LineStatus,
+    SensorAddressType,
+    SensorDaliAddress,
+    SensorData,
+    SensorType,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.lunatone.const import DOMAIN
+from homeassistant.components.lunatone.coordinator import (
+    DEFAULT_INFO_UPDATE_INTERVAL,
+    DEFAULT_SENSORS_UPDATE_INTERVAL,
+)
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
@@ -74,13 +84,165 @@ async def test_sensor_value_update(
     assert entity
     assert entity.state == STATE_UNKNOWN
 
-    freezer.tick(timedelta(seconds=40))
+    freezer.tick(DEFAULT_SENSORS_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
     assert entity
     assert entity.state == expected_state
+
+
+async def test_sensor_added_after_update(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a DALI sensor added after setup creates its entity and device."""
+    await setup_integration(hass, mock_config_entry)
+
+    sensor_data = SensorData(
+        id=5,
+        name="Test Sensor 5",
+        type=SensorType.TEMPERATURE,
+        addressType=SensorAddressType.DALI,
+        daliSensorAddress=SensorDaliAddress(line=1, address=3, instanceNumber=0),
+    )
+    mock_lunatone_sensors.data.sensors.append(sensor_data)
+
+    freezer.tick(DEFAULT_SENSORS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity = entity_registry.async_get("sensor.dali_line_1_a32_temperature")
+    assert entity is not None
+
+    sensor_device = device_registry.async_get_device_by_identifier(
+        (
+            DOMAIN,
+            f"{mock_config_entry.unique_id}-line1-d24-address3",
+        ),
+        mock_config_entry.entry_id,
+    )
+    assert sensor_device is not None
+    assert entity.device_id == sensor_device.id
+
+
+async def test_sensor_removed_after_setup(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sensor removed after setup removes its entity."""
+    entity_id = "sensor.dali_line_0_a02_temperature"
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+
+    mock_lunatone_sensors.data.sensors = [
+        sensor_data
+        for sensor_data in mock_lunatone_sensors.data.sensors
+        if sensor_data.dali_sensor_address is None
+    ]
+
+    freezer.tick(DEFAULT_SENSORS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is None
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is None
+
+
+async def test_sensor_added_before_line_device(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sensor is added before its line device and linked later."""
+    entity_id = "sensor.dali_line_2_a02_illuminance"
+
+    await setup_integration(hass, mock_config_entry)
+
+    new_sensor_data = SensorData(
+        id=5,
+        name="Test Sensor 5",
+        type=SensorType.LIGHT,
+        addressType=SensorAddressType.DALI,
+        daliSensorAddress=SensorDaliAddress(line=2, address=0, instanceNumber=0),
+    )
+    mock_lunatone_sensors.data.sensors.append(new_sensor_data)
+
+    freezer.tick(DEFAULT_SENSORS_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    sensor_device = device_registry.async_get_device_by_identifier(
+        (
+            DOMAIN,
+            (
+                f"{mock_config_entry.unique_id}"
+                f"-line{new_sensor_data.dali_sensor_address.line}"
+                f"-d24-address{new_sensor_data.dali_sensor_address.address}"
+            ),
+        ),
+        mock_config_entry.entry_id,
+    )
+    assert sensor_device
+    assert sensor_device.via_device_id is None
+
+    info_data = deepcopy(mock_lunatone_info.data)
+    info_data.lines["2"] = deepcopy(info_data.lines["1"])
+    mock_lunatone_info.data = info_data
+
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state
+
+    assert mock_config_entry.unique_id
+
+    line_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}-line2"),
+        mock_config_entry.entry_id,
+    )
+    assert line_device
+
+    sensor_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}-line2-d24-address0"),
+        mock_config_entry.entry_id,
+    )
+    assert sensor_device
+    assert sensor_device.via_device_id == line_device.id
 
 
 async def test_dali_line_status_value_update(
@@ -90,17 +252,17 @@ async def test_dali_line_status_value_update(
     mock_lunatone_sensors: AsyncMock,
     mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Lunatone sensor value update."""
-    line_id = 0
+    line_id = "0"
     entity_id = f"sensor.dali_line_{line_id}_status"
-
-    line_statuses = iter((LineStatus.NO_POWER, LineStatus.OK))
+    line_status = iter((LineStatus.NO_POWER, LineStatus.OK))
 
     async def fake_update() -> None:
         info_data = deepcopy(mock_lunatone_info.data)
-        info_data.lines[str(line_id)].line_status = next(line_statuses)
+        info_data.lines[str(line_id)].line_status = next(line_status)
         mock_lunatone_info.data = info_data
 
     mock_lunatone_info.async_update.side_effect = fake_update
@@ -111,7 +273,7 @@ async def test_dali_line_status_value_update(
     assert entity
     assert entity.state == "no_power"
 
-    freezer.tick(timedelta(seconds=60))
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
