@@ -20,7 +20,13 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -216,3 +222,58 @@ async def test_turn_on_off_error(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+@pytest.mark.usefixtures("mock_auth_client")
+async def test_unavailable_when_not_activatable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client_init: MagicMock,
+) -> None:
+    """Test the flashlight is unavailable while the tracker cannot activate it."""
+    tracker = mock_api_client_init.get_tracker.return_value
+    tracker.led_brightness.value = 0
+    tracker.led_activatable.overall = False
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fluffy_flashlight")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_auth_client")
+async def test_available_when_off_and_activatable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client_init: MagicMock,
+) -> None:
+    """Test the flashlight is available while it is off and can be activated."""
+    mock_api_client_init.get_tracker.return_value.led_brightness.value = 0
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fluffy_flashlight")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("mock_auth_client")
+async def test_available_when_on_but_not_activatable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client_init: MagicMock,
+) -> None:
+    """Test a flashlight that is on stays available so it can be turned off."""
+    mock_api_client_init.get_tracker.return_value.led_activatable.overall = False
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fluffy_flashlight")
+    assert state is not None
+    assert state.state == STATE_ON
