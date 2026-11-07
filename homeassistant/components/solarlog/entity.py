@@ -34,7 +34,11 @@ class SolarLogBasicCoordinatorEntity(CoordinatorEntity[SolarLogBasicDataCoordina
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name="SolarLog",
             configuration_url=coordinator.solarlog.host,
-            sw_version=str(coordinator.data.firmware_version),
+            sw_version=(
+                str(coordinator.data.firmware_version)
+                if coordinator.data.firmware_version is not None
+                else None
+            ),
         )
         self.entity_description = description
 
