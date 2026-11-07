@@ -1172,3 +1172,46 @@ async def test_description_refetched_when_address_changes_device(
 
     assert len(aioclient_mock.mock_calls) == 1
     assert callback.call_args[0][0].upnp[ATTR_UPNP_UDN] == "uuid:device-b"
+
+
+async def test_description_kept_for_embedded_device(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test an embedded device's UDN does not invalidate the cached description."""
+    location = "http://1.1.1.1"
+    media_renderer = "urn:schemas-upnp-org:device:MediaRenderer:1"
+    aioclient_mock.get(
+        location,
+        text="<root><device><UDN>uuid:device-a</UDN></device></root>",
+    )
+    ssdp_listener = await init_ssdp_component(hass)
+    callback = AsyncMock()
+    await ssdp.async_register_callback(hass, callback, {"st": media_renderer})
+
+    ssdp_listener._on_search(
+        _ssdp_headers(
+            {
+                "st": "upnp:rootdevice",
+                "location": location,
+                "usn": "uuid:device-a::upnp:rootdevice",
+                "_source": "search",
+            }
+        )
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    ssdp_listener._on_search(
+        _ssdp_headers(
+            {
+                "st": media_renderer,
+                "location": location,
+                "usn": f"uuid:device-a_MR::{media_renderer}",
+                "_source": "search",
+            }
+        )
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert callback.call_count == 1
+    assert callback.call_args[0][0].upnp[ATTR_UPNP_UDN] == "uuid:device-a"
