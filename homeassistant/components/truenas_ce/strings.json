@@ -1,0 +1,83 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "The host now belongs to a different TrueNAS system than the configured one."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "permission_denied": "The API key's user lacks the permissions to read the system information.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::truenas_ce::config::step::user::data_description::api_key%]"
+        },
+        "description": "TrueNAS rejected the API key of {name}. Enter a new API key."
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "An API key generated in TrueNAS under Credentials > Users > API keys.",
+          "host": "The hostname or IP address of your TrueNAS system, without \"https://\" or a path.",
+          "verify_ssl": "Verify the TrueNAS system's SSL certificate. Disable it if TrueNAS uses its default self-signed certificate."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "system_cache_size_arc_value": {
+        "name": "ARC size"
+      },
+      "system_cpu_usage": {
+        "name": "CPU usage"
+      },
+      "system_load_longterm": {
+        "name": "CPU load longterm"
+      },
+      "system_load_midterm": {
+        "name": "CPU load midterm"
+      },
+      "system_load_shortterm": {
+        "name": "CPU load shortterm"
+      },
+      "system_memory_free": {
+        "name": "Memory free"
+      },
+      "system_memory_total": {
+        "name": "Memory total"
+      },
+      "system_memory_usage": {
+        "name": "Memory usage"
+      },
+      "traffic_rx": {
+        "name": "{interface} RX"
+      },
+      "traffic_tx": {
+        "name": "{interface} TX"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "The TrueNAS API key was rejected."
+    },
+    "permission_denied": {
+      "message": "The TrueNAS API key's user lacks the permissions to read the system information."
+    },
+    "update_failed": {
+      "message": "Error communicating with TrueNAS: {error}"
+    }
+  }
+}
