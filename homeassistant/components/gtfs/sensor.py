@@ -22,6 +22,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
+from .const import CONF_DATA, CONF_DESTINATION, CONF_ORIGIN, CONF_TOMORROW, DEFAULT_PATH
+
 _LOGGER = logging.getLogger(__name__)
 
 _SCHEDULE_SETUP_LOCK = threading.Lock()
@@ -46,13 +48,7 @@ ATTR_WHEELCHAIR = "trip_wheelchair_access_available"
 ATTR_WHEELCHAIR_DESTINATION = "destination_station_wheelchair_boarding_available"
 ATTR_WHEELCHAIR_ORIGIN = "origin_station_wheelchair_boarding_available"
 
-CONF_DATA = "data"
-CONF_DESTINATION = "destination"
-CONF_ORIGIN = "origin"
-CONF_TOMORROW = "include_tomorrow"
-
 DEFAULT_NAME = "GTFS Sensor"
-DEFAULT_PATH = "gtfs"
 
 BICYCLE_ALLOWED_DEFAULT = STATE_UNKNOWN
 BICYCLE_ALLOWED_OPTIONS = {1: True, 2: False}

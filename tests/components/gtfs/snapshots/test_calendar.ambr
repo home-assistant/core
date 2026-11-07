@@ -1,0 +1,91 @@
+# serializer version: 1
+# name: test_calendar[calendar.first_street_to_third_street-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.first_street_to_third_street',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'gtfs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'route_s1_s3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calendar[calendar.first_street_to_third_street-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '''
+        Main Line
+        Test Agency
+        Trip T1
+      ''',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2026-10-19 08:20:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'First Street to Third Street',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: 'First Street',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: '1 to Third Street',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2026-10-19 08:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.first_street_to_third_street',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_get_events
+  dict({
+    'calendar.first_street_to_third_street': dict({
+      'events': list([
+        dict({
+          'description': '''
+            Main Line
+            Test Agency
+            Trip T1
+          ''',
+          'end': '2026-10-20T08:20:00-04:00',
+          'location': 'First Street',
+          'start': '2026-10-20T08:00:00-04:00',
+          'summary': '1 to Third Street',
+        }),
+        dict({
+          'description': '''
+            Main Line
+            Test Agency
+            Trip T2
+          ''',
+          'end': '2026-10-20T17:20:00-04:00',
+          'location': 'First Street',
+          'start': '2026-10-20T17:00:00-04:00',
+          'summary': '1 to Third Street',
+        }),
+      ]),
+    }),
+  })
+# ---

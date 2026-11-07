@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_add_route
+  list([
+    dict({
+      'label': 'First Street (S1)',
+      'value': 'S1',
+    }),
+    dict({
+      'label': 'Night Depot (N1)',
+      'value': 'N1',
+    }),
+    dict({
+      'label': 'Night Terminal (N2)',
+      'value': 'N2',
+    }),
+    dict({
+      'label': 'Second Street (S2)',
+      'value': 'S2',
+    }),
+    dict({
+      'label': 'Third Street (S3)',
+      'value': 'S3',
+    }),
+  ])
+# ---
