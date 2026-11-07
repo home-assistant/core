@@ -30,7 +30,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import is_air_fryer, is_humidifier, is_outlet, rgetattr
+from .common import is_air_fryer, is_humidifier, is_outlet, is_purifier, rgetattr
 from .const import AIR_FRYER_MODE_MAP, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -101,6 +101,14 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.pm25,
         exists_fn=lambda device: rgetattr(device, "state.pm25") is not None,
+    ),
+    VeSyncSensorEntityDescription(
+        key="co2",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.co2,
+        exists_fn=lambda device: is_purifier(device) and device.state.co2 is not None,
     ),
     VeSyncSensorEntityDescription(
         key="power",

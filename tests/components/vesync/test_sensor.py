@@ -1,11 +1,18 @@
 """Tests for the sensor module."""
 
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
+
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pyvesync import VeSync
+from pyvesync.base_devices.purifier_base import VeSyncPurifier
+from pyvesync.const import ProductTypes
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -48,6 +55,64 @@ async def test_sensor_state(
     # Check states
     for entity in entities:
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
+
+
+@pytest.mark.parametrize(
+    ("co2", "expected_values", "expected_attributes"),
+    [
+        pytest.param(
+            645,
+            {"645"},
+            {("carbon_dioxide", "ppm", "measurement")},
+            id="available",
+        ),
+        pytest.param(None, set(), set(), id="unavailable"),
+    ],
+)
+async def test_co2_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    manager: VeSync,
+    entity_registry: er.EntityRegistry,
+    co2: int | None,
+    expected_values: set[str],
+    expected_attributes: set[tuple[str, str, str]],
+) -> None:
+    """Test the CO2 sensor is only created when the purifier reports a value."""
+    purifier = Mock(
+        VeSyncPurifier,
+        cid="sprout_purifier",
+        device_name="Sprout Purifier",
+        device_type="Sprout",
+        product_type=ProductTypes.PURIFIER,
+        sub_device_no=None,
+        current_firm_version="1.0",
+        state=SimpleNamespace(connection_status="online", co2=co2),
+    )
+    manager._dev_list["air_purifiers"].append(purifier)
+
+    with patch("homeassistant.components.vesync.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entities = [
+        entity
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entity.unique_id == "sprout_purifier-co2"
+    ]
+    states = [hass.states.get(entity.entity_id) for entity in entities]
+    assert {state.state for state in states if state is not None} == expected_values
+    assert {
+        (
+            state.attributes.get("device_class"),
+            state.attributes.get("unit_of_measurement"),
+            state.attributes.get("state_class"),
+        )
+        for state in states
+        if state is not None
+    } == expected_attributes
 
 
 @pytest.mark.parametrize(
