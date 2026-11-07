@@ -1,7 +1,5 @@
 """Tests for OpenWeatherMap sensors."""
 
-from unittest.mock import MagicMock
-
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -11,6 +9,7 @@ from homeassistant.components.openweathermap.const import (
     OWM_MODE_FREE_CURRENT,
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
+    OWM_MODE_V40,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -20,15 +19,16 @@ from . import setup_platform
 
 
 @pytest.mark.parametrize(
-    "mode", [OWM_MODE_V30, OWM_MODE_FREE_CURRENT, OWM_MODE_AIRPOLLUTION], indirect=True
+    "mode",
+    [OWM_MODE_V30, OWM_MODE_V40, OWM_MODE_FREE_CURRENT, OWM_MODE_AIRPOLLUTION],
+    indirect=True,
 )
+@pytest.mark.usefixtures("owm_client_mock")
 async def test_sensor_states(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    owm_client_mock: MagicMock,
-    mode: str,
 ) -> None:
     """Test sensor states are collected from library correctly."""
 
@@ -37,13 +37,11 @@ async def test_sensor_states(
 
 
 @pytest.mark.parametrize("mode", [OWM_MODE_FREE_FORECAST], indirect=True)
+@pytest.mark.usefixtures("owm_client_mock")
 async def test_mode_no_sensor(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    owm_client_mock: MagicMock,
-    mode: str,
 ) -> None:
     """Test modes that do not provide any sensor."""
 

@@ -1,0 +1,99 @@
+{
+  "current": {
+    "data": [
+      {
+        "dt": 1714063536,
+        "temp": 6.84,
+        "feels_like": 2.07,
+        "pressure": 1000,
+        "humidity": 82,
+        "dew_point": 3.99,
+        "uvi": 0.13,
+        "clouds": 75,
+        "visibility": 10000,
+        "wind_speed": 9.83,
+        "wind_gust": 11.81,
+        "wind_deg": 199,
+        "rain": { "1h": 1.21 },
+        "weather": [
+          {
+            "id": 803,
+            "main": "Clouds",
+            "description": "broken clouds",
+            "icon": "04d"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline/1min": {
+    "data": [{ "dt": 1714063560, "precipitation": 1.234 }]
+  },
+  "timeline/1h": {
+    "data": [
+      {
+        "dt": 1714064400,
+        "temp": 7.84,
+        "feels_like": 3.07,
+        "pressure": 1001,
+        "humidity": 81,
+        "dew_point": 4.99,
+        "uvi": 0.23,
+        "clouds": 65,
+        "wind_speed": 8.83,
+        "wind_gust": 10.81,
+        "wind_deg": 198,
+        "rain": { "1h": 2.21 },
+        "pop": 0.25,
+        "weather": [
+          {
+            "id": 500,
+            "main": "Rain",
+            "description": "light rain",
+            "icon": "10d"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline/1day": {
+    "data": [
+      {
+        "dt": 1714132800,
+        "temp": {
+          "day": 18.76,
+          "min": 8.11,
+          "max": 21.26,
+          "night": 13.06,
+          "eve": 20.51,
+          "morn": 8.47
+        },
+        "feels_like": {
+          "day": 18.76,
+          "night": 13.06,
+          "eve": 20.51,
+          "morn": 8.47
+        },
+        "pressure": 1015,
+        "humidity": 62,
+        "dew_point": 11.34,
+        "uvi": 4.06,
+        "clouds": 84,
+        "wind_speed": 8.14,
+        "wind_gust": 11.81,
+        "wind_deg": 168,
+        "rain": 3.21,
+        "snow": 0.5,
+        "pop": 0.5,
+        "weather": [
+          {
+            "id": 803,
+            "main": "Clouds",
+            "description": "broken clouds",
+            "icon": "04d"
+          }
+        ]
+      }
+    ]
+  }
+}
