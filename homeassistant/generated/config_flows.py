@@ -206,6 +206,7 @@ FLOWS = {
         "ecosmart",
         "ecovacs",
         "ecowitt",
+        "ecowitt_modbus",
         "edifier_infrared",
         "edl21",
         "efergy",

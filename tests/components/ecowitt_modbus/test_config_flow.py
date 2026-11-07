@@ -1,0 +1,619 @@
+"""Test the Ecowitt Modbus config flow."""
+
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
+from unittest.mock import AsyncMock, _patch, patch
+
+from modbus_connection import ModbusTcpParams, ModbusTimeoutError
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+import pytest
+
+from homeassistant.components.ecowitt_modbus.const import (
+    CONF_UNIT_ID,
+    DOMAIN,
+    MAX_UNIT_ID,
+)
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
+
+from . import ALL_MODELS, MOCK_HOST, MOCK_PORT, WN69LP_CASE, WN90LP_CASE, ModelCase
+
+from tests.common import MockConfigEntry
+
+TARGET = "homeassistant.components.ecowitt_modbus.config_flow.async_get_temporary_unit"
+
+EVERY_MODEL = pytest.mark.parametrize(
+    "model_case", ALL_MODELS, ids=lambda case: case.name, indirect=True
+)
+
+
+def _serving(unit_id: int, image: dict[int, int]) -> _patch:
+    """Patch the temporary unit onto a device answering with *image*."""
+    connection = MockModbusConnection()
+    connection.for_unit(unit_id).load_raw({"holding": dict(image)})
+
+    @asynccontextmanager
+    async def _get_unit(
+        hass: HomeAssistant, params: ModbusTcpParams, requested: int
+    ) -> AsyncIterator[MockModbusUnit]:
+        yield connection.for_unit(requested)
+
+    return patch(TARGET, side_effect=_get_unit)
+
+
+def _raising(error: Exception) -> _patch:
+    """Patch the temporary unit so acquiring it fails."""
+    return patch(TARGET, side_effect=error)
+
+
+async def _pick_model(hass: HomeAssistant, model_case: ModelCase) -> str:
+    """Start a flow and get through the model-selection step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_MODEL: model_case.slug}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "connection"
+    assert result["errors"] == {}
+    return str(result["flow_id"])
+
+
+@EVERY_MODEL
+@pytest.mark.usefixtures("mock_temporary_unit")
+async def test_full_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, model_case: ModelCase
+) -> None:
+    """Test picking a model and address creates the entry it should."""
+    flow_id = await _pick_model(hass, model_case)
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, model_case.user_input
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == (
+        f"{model_case.name} ({MOCK_HOST}:{MOCK_PORT}, unit {model_case.unit_id})"
+    )
+    assert result["data"] == model_case.entry_data
+    assert result["result"].unique_id == model_case.unique_id
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@EVERY_MODEL
+@pytest.mark.usefixtures("mock_temporary_unit")
+async def test_the_address_form_defaults_to_the_models_own_address(
+    hass: HomeAssistant, model_case: ModelCase
+) -> None:
+    """Test each model's factory-default device address is pre-filled.
+
+    The two models ship on different addresses, so a shared default would
+    be wrong for one of them.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_MODEL: model_case.slug}
+    )
+
+    schema = result["data_schema"].schema
+    unit_id = next(key for key in schema if key == CONF_UNIT_ID)
+    assert unit_id.default() == model_case.unit_id
+
+
+@EVERY_MODEL
+@pytest.mark.usefixtures("mock_temporary_unit")
+async def test_the_address_form_rejects_reserved_addresses(
+    hass: HomeAssistant, model_case: ModelCase
+) -> None:
+    """Test the device-address box stops at the end of the RTU range.
+
+    Addresses 248-252 fit in the sensors' own address register but cannot be
+    reached over the wire, so offering them would only produce a failed probe.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_MODEL: model_case.slug}
+    )
+
+    schema = result["data_schema"].schema
+    validator = next(schema[key] for key in schema if key == CONF_UNIT_ID)
+    selector = validator.validators[0]
+    assert selector.config["max"] == MAX_UNIT_ID
+
+
+@EVERY_MODEL
+@pytest.mark.usefixtures("mock_temporary_unit")
+async def test_errors_show_on_the_form_and_the_flow_still_completes(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    model_case: ModelCase,
+) -> None:
+    """Test every failure mode recovers without restarting the flow."""
+    failures: list[tuple[Callable[[], _patch], str]] = [
+        (lambda: _raising(ModbusTimeoutError("no answer")), "cannot_connect"),
+        # The device is already held on different link settings.
+        (lambda: _raising(HomeAssistantError("in use")), "cannot_connect"),
+        (lambda: _raising(RuntimeError("boom")), "unknown"),
+    ]
+
+    flow_id = await _pick_model(hass, model_case)
+    for failure, expected_error in failures:
+        with failure():
+            result = await hass.config_entries.flow.async_configure(
+                flow_id, model_case.user_input
+            )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": expected_error}, expected_error
+
+    # The healthy device the fixture serves is back once the failures lift.
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, model_case.user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == model_case.unique_id
+
+
+@EVERY_MODEL
+@pytest.mark.usefixtures("mock_temporary_unit")
+async def test_the_wrong_model_at_the_address_is_reported_as_such(
+    hass: HomeAssistant, model_case: ModelCase
+) -> None:
+    """Test a device that answers but is not the chosen model is distinguished.
+
+    "Something else is here" is a different problem from "nothing answered",
+    and the user needs to be told which one it is.
+    """
+    impostor = dict(model_case.registers) | model_case.impostor_registers
+    flow_id = await _pick_model(hass, model_case)
+
+    with _serving(model_case.unit_id, impostor):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, model_case.user_input
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "wrong_model"}
+
+
+@EVERY_MODEL
+@pytest.mark.usefixtures("mock_temporary_unit")
+async def test_the_same_device_cannot_be_added_twice(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    model_case: ModelCase,
+) -> None:
+    """Test re-adding a configured sensor array aborts."""
+    mock_config_entry.add_to_hass(hass)
+
+    flow_id = await _pick_model(hass, model_case)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, model_case.user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_an_address_stays_claimed_even_for_a_misleading_probe(
+    hass: HomeAssistant,
+) -> None:
+    """Test the address is checked before identity, not instead of it.
+
+    The two models' registers overlap enough that a WN69LP configured with
+    device address 0x90 answers a WN90LP probe's device-code check the same
+    way a genuine WN90LP would -- 0x160 means something different on each
+    model, but the values can coincide. If duplicate detection ran only on
+    the identity a model happens to report, this WN69LP could be claimed a
+    second time under the wrong label. The address check has to catch it
+    regardless of what either probe concludes about identity.
+    """
+    existing = MockConfigEntry(domain=DOMAIN, data=WN69LP_CASE.entry_data)
+    existing.add_to_hass(hass)
+
+    misleading = dict(WN69LP_CASE.registers)
+    misleading[0x160] = 0x90  # WN69LP's own device-address register
+
+    flow_id = await _pick_model(hass, WN90LP_CASE)
+    with _serving(WN69LP_CASE.unit_id, misleading):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, {**WN90LP_CASE.user_input, CONF_UNIT_ID: WN69LP_CASE.unit_id}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize("model_case", [WN69LP_CASE], ids=["WN69LP"], indirect=True)
+@pytest.mark.usefixtures("mock_temporary_unit")
+async def test_the_same_host_and_unit_on_different_ports_are_not_duplicates(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test duplicate detection matches the full endpoint, not part of it.
+
+    Only meaningful for a model with no serial number: a WN90LP reporting
+    the same identity would be refused regardless of port, correctly, since
+    the port it happens to be reached through doesn't change what physical
+    device it is. A WN69LP has no such check, so two entries can validly
+    share a host and unit ID if a gateway offers the same bus on more than
+    one port -- and a title built from only the host and unit would make
+    them indistinguishable in the UI even though both are allowed.
+    """
+    mock_config_entry.add_to_hass(hass)
+    other_port = mock_config_entry.data[CONF_PORT] + 1
+
+    flow_id = await _pick_model(hass, WN69LP_CASE)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {**WN69LP_CASE.user_input, CONF_PORT: other_port}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] != mock_config_entry.title
+
+
+async def test_the_same_host_in_a_different_case_is_still_a_duplicate(
+    hass: HomeAssistant,
+) -> None:
+    """Test duplicate detection is not fooled by hostname case.
+
+    The shared Modbus layer treats a host case-insensitively --
+    ``Device.local`` and ``device.local`` share one underlying connection --
+    so without normalizing here, typing the same host in a different case
+    would create a second entry polling the same physical unit as the first.
+    """
+    existing = MockConfigEntry(
+        domain=DOMAIN, data={**WN69LP_CASE.entry_data, CONF_HOST: "device.local"}
+    )
+    existing.add_to_hass(hass)
+
+    flow_id = await _pick_model(hass, WN69LP_CASE)
+    with _serving(WN69LP_CASE.unit_id, WN69LP_CASE.registers):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, {**WN69LP_CASE.user_input, CONF_HOST: "Device.local"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_a_new_hosts_case_is_normalized(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a host is lowercased before it is stored."""
+    flow_id = await _pick_model(hass, WN69LP_CASE)
+    with _serving(WN69LP_CASE.unit_id, WN69LP_CASE.registers):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, {**WN69LP_CASE.user_input, CONF_HOST: "Gateway.Local"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == "gateway.local"
+
+
+@pytest.mark.usefixtures("mock_temporary_unit")
+async def test_a_wn90lp_is_recognised_at_a_new_address(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a WN90LP's serial number identifies it wherever it is reached.
+
+    Moving a WN90LP to another gateway must not let it be added a second time,
+    which is the whole point of keying the entry on the device ID.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    flow_id = await _pick_model(hass, WN90LP_CASE)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {**WN90LP_CASE.user_input, CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize("model_case", [WN69LP_CASE], ids=["WN69LP"], indirect=True)
+@pytest.mark.usefixtures("mock_temporary_unit")
+async def test_a_wn69lp_at_a_new_address_looks_like_a_new_device(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the flip side of the WN69LP reporting no identity.
+
+    Nothing distinguishes the same sensor at a new address from a second
+    sensor, so it is added again. This pins a documented limitation, not a
+    desirable outcome; moving one is what the reconfigure flow is for.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    flow_id = await _pick_model(hass, WN69LP_CASE)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {**WN69LP_CASE.user_input, CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # A second entry, and one that is its own device rather than a second
+    # claim on the first entry's.
+    assert result["result"].unique_id is None
+    assert result["result"].entry_id != mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize("model_case", [WN69LP_CASE], ids=["WN69LP"], indirect=True)
+@pytest.mark.usefixtures("mock_temporary_unit", "mock_setup_entry")
+async def test_a_moved_wn69lp_frees_its_old_address_and_holds_its_new_one(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test duplicate detection follows the entry, not where it started.
+
+    An identity-less entry is matched on the address it currently polls.
+    Keying it on the address it was created at would get both directions
+    wrong once it moved: the same device could be added again at its new
+    address, while a genuinely different device would be turned away from
+    the old one.
+    """
+    mock_config_entry.add_to_hass(hass)
+    moved_to = "192.168.1.200"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**WN69LP_CASE.user_input, CONF_HOST: moved_to}
+    )
+    await hass.async_block_till_done()
+
+    # Its new address is taken: adding the same sensor again is refused.
+    flow_id = await _pick_model(hass, WN69LP_CASE)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {**WN69LP_CASE.user_input, CONF_HOST: moved_to}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Its old address is free again: a different sensor there is accepted.
+    flow_id = await _pick_model(hass, WN69LP_CASE)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, WN69LP_CASE.user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+class TestReconfigure:
+    """Moving a configured sensor array to a new address."""
+
+    @EVERY_MODEL
+    @pytest.mark.usefixtures("mock_temporary_unit")
+    async def test_the_form_is_seeded_with_the_current_settings(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+        model_case: ModelCase,
+    ) -> None:
+        """Test the user amends what is there instead of retyping it."""
+        mock_config_entry.add_to_hass(hass)
+
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+        schema = result["data_schema"].schema
+        defaults = {str(key): key.default() for key in schema}
+        assert defaults[CONF_HOST] == MOCK_HOST
+        assert defaults[CONF_PORT] == 502
+        assert defaults[CONF_UNIT_ID] == model_case.unit_id
+
+    @EVERY_MODEL
+    @pytest.mark.usefixtures("mock_temporary_unit")
+    async def test_an_address_holding_a_different_model_is_refused(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+        model_case: ModelCase,
+    ) -> None:
+        """Test the entry is not repointed at something that is not this model.
+
+        The model is fixed for the life of an entry, so an address where the
+        other model answers is not a valid destination.
+        """
+        mock_config_entry.add_to_hass(hass)
+        impostor = dict(model_case.registers) | model_case.impostor_registers
+
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        with _serving(model_case.unit_id, impostor):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {**model_case.user_input, CONF_HOST: "192.168.1.200"},
+            )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "wrong_model"}
+        assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+
+    @EVERY_MODEL
+    @pytest.mark.usefixtures("mock_temporary_unit")
+    async def test_an_unexpected_error_leaves_the_entry_alone(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+        model_case: ModelCase,
+    ) -> None:
+        """Test a bug in the probe path does not lose the working settings."""
+        mock_config_entry.add_to_hass(hass)
+
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        with _raising(RuntimeError("boom")):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {**model_case.user_input, CONF_HOST: "192.168.1.200"},
+            )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "unknown"}
+        assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+
+    @EVERY_MODEL
+    @pytest.mark.usefixtures("mock_temporary_unit", "mock_setup_entry")
+    async def test_a_new_address_is_saved(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+        model_case: ModelCase,
+    ) -> None:
+        """Test both models can be moved to a new gateway."""
+        mock_config_entry.add_to_hass(hass)
+
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**model_case.user_input, CONF_HOST: "192.168.1.200"},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+        # The model is not re-asked, so it has to survive the round trip.
+        assert mock_config_entry.data[CONF_MODEL] == model_case.name
+        # The title carries the host, so a move that left it behind would
+        # keep showing the old address in the UI.
+        assert mock_config_entry.title == (
+            f"{model_case.name} (192.168.1.200:{MOCK_PORT}, unit {model_case.unit_id})"
+        )
+
+    @pytest.mark.usefixtures("mock_temporary_unit", "mock_setup_entry")
+    async def test_a_new_hosts_case_is_normalized(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+    ) -> None:
+        """Test a host is lowercased on the reconfigure path too.
+
+        Only the create path is exercised elsewhere; the same normalization
+        has to apply here; otherwise moving an entry to a mixed-case host
+        would store it as typed, and a later add attempt using a different
+        case for that same host would no longer be caught as a duplicate.
+        """
+        mock_config_entry.add_to_hass(hass)
+
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**WN90LP_CASE.user_input, CONF_HOST: "New-Gateway.Local"},
+        )
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.data[CONF_HOST] == "new-gateway.local"
+
+    @EVERY_MODEL
+    @pytest.mark.usefixtures("mock_temporary_unit")
+    async def test_an_address_with_nothing_at_it_is_refused(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+        model_case: ModelCase,
+    ) -> None:
+        """Test the entry is not repointed somewhere that does not answer."""
+        mock_config_entry.add_to_hass(hass)
+
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        with _raising(ModbusTimeoutError("no answer")):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {**model_case.user_input, CONF_HOST: "192.168.1.200"},
+            )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+        assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+
+    @pytest.mark.usefixtures("mock_temporary_unit")
+    async def test_a_wn90lp_entry_will_not_adopt_a_different_wn90lp(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+    ) -> None:
+        """Test the serial number is checked before repointing an entry.
+
+        Otherwise the new sensor would silently inherit the old one's
+        history.
+        """
+        mock_config_entry.add_to_hass(hass)
+        other = dict(WN90LP_CASE.registers) | {0x163: 0x0000, 0x164: 0x0001}
+
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        with _serving(WN90LP_CASE.unit_id, other):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {**WN90LP_CASE.user_input, CONF_HOST: "192.168.1.200"},
+            )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "another_device"
+        assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+
+    @pytest.mark.parametrize("model_case", [WN69LP_CASE], ids=["WN69LP"], indirect=True)
+    @pytest.mark.usefixtures("mock_temporary_unit")
+    async def test_a_wn69lp_will_not_move_onto_another_entrys_address(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+    ) -> None:
+        """Test the one collision a model without an identity can still catch.
+
+        Its serial number cannot be checked, but two entries polling the
+        same address can be, and would fight over the same device.
+        """
+        mock_config_entry.add_to_hass(hass)
+        neighbour = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="wn69lp_192.168.1.200_502_36",
+            data={**WN69LP_CASE.entry_data, CONF_HOST: "192.168.1.200"},
+        )
+        neighbour.add_to_hass(hass)
+
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**WN69LP_CASE.user_input, CONF_HOST: "192.168.1.200"},
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+        assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+
+    @pytest.mark.parametrize("model_case", [WN69LP_CASE], ids=["WN69LP"], indirect=True)
+    @pytest.mark.usefixtures("mock_temporary_unit", "mock_setup_entry")
+    async def test_moving_a_wn69lp_does_not_orphan_its_entities(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+    ) -> None:
+        """Test an identity-less sensor keeps what its entities are keyed on.
+
+        With no serial number, the entry itself is that key. Deriving one
+        from the address instead would change it on every move, and every
+        entity's history would go with it.
+        """
+        mock_config_entry.add_to_hass(hass)
+        before = WN69LP_CASE.identity(mock_config_entry.entry_id)
+
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**WN69LP_CASE.user_input, CONF_HOST: "192.168.1.200"},
+        )
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+        assert WN69LP_CASE.identity(mock_config_entry.entry_id) == before
