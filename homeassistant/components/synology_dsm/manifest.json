@@ -10,6 +10,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["synology_dsm"],
+  "quality_scale": "bronze",
   "requirements": ["py-synologydsm-api==2.11.1"],
   "ssdp": [
     {

@@ -1766,7 +1766,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "syncthing",
     "syncthru",
     "synology_chat",
-    "synology_dsm",
     "synology_srm",
     "syslog",
     "systemmonitor",
