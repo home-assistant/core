@@ -11,6 +11,8 @@ DEFAULT_NAME = "Music Assistant"
 AUTH_SCHEMA_VERSION = 28
 # Schema version where hassio discovery support was added
 HASSIO_DISCOVERY_SCHEMA_VERSION = 28
+# Schema version where the queue settings, playback speed and DSP preset commands were added
+PLAYER_SETTINGS_SCHEMA_VERSION = 101
 
 # The official Music Assistant Home Assistant app
 APP_SLUG = "d5369777_music_assistant"
@@ -88,9 +90,6 @@ ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 # prefix of dashboard device identifiers and entity unique ids, which tells
 # them apart from player ids (a display may share its id with a player)
 DASHBOARD_ID_PREFIX = "dashboard:"
-
-# server schema from which the client sends the queue setting commands
-QUEUE_SETTINGS_SCHEMA_VERSION = 101
 DASHBOARD_DEVICE_MODEL = "Dashboard display"
 
 LOGGER = logging.getLogger(__package__)

@@ -1,6 +1,6 @@
 """Test Music Assistant number entities."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from music_assistant_models.enums import EventType
 from music_assistant_models.media_items import Audiobook
@@ -200,3 +200,22 @@ async def test_queue_playback_speed(
         queue_item_id=None,
         require_schema=101,
     )
+
+
+async def test_queue_playback_speed_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test the playback speed number is added disabled, also before its queue exists."""
+    music_assistant_client.server_info.schema_version = 101
+    # the server adds the queue after the player
+    with patch(
+        "tests.components.music_assistant.common.create_player_queues_from_fixture",
+        return_value=[],
+    ):
+        await setup_integration_from_fixtures(hass, music_assistant_client)
+    entry = entity_registry.async_get("number.test_player_1_playback_speed")
+    assert entry
+    assert entry.unique_id == "00:00:00:00:00:01_queue_playback_speed"
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

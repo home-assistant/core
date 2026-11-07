@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .const import QUEUE_SETTINGS_SCHEMA_VERSION
+from .const import PLAYER_SETTINGS_SCHEMA_VERSION
 from .entity import MusicAssistantEntity, MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
@@ -45,11 +45,9 @@ async def async_setup_entry(
             return
         entities: list[NumberEntity] = []
         assert mass.server_info  # for type checking
-        # older servers lack the command, so their players keep only the option numbers
-        if (
-            mass.server_info.schema_version >= QUEUE_SETTINGS_SCHEMA_VERSION
-            and mass.player_queues.get(player_id) is not None
-        ):
+        # older servers lack the command, so their players keep only the option numbers;
+        # the queue itself may still be missing, the server adds it after the player
+        if mass.server_info.schema_version >= PLAYER_SETTINGS_SCHEMA_VERSION:
             entities.append(MusicAssistantQueuePlaybackSpeed(mass, player_id))
         for player_option in player.options:
             if (
