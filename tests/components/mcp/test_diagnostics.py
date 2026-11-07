@@ -11,24 +11,39 @@ from mcp.types import (
     ToolAnnotations,
     ToolsCapability,
 )
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.mcp.const import DOMAIN
+from homeassistant.const import CONF_API_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from .conftest import TEST_API_NAME
+from .conftest import API_TOKEN, TEST_API_NAME
 
 
+@pytest.mark.parametrize(
+    "entry_data",
+    [
+        pytest.param({CONF_URL: "http://1.1.1.1/sse"}, id="no_auth"),
+        pytest.param(
+            {CONF_URL: "http://1.1.1.1/sse", CONF_API_TOKEN: API_TOKEN},
+            id="api_token",
+        ),
+    ],
+)
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    config_entry: MockConfigEntry,
     mock_mcp_client: AsyncMock,
     snapshot: SnapshotAssertion,
+    entry_data: dict[str, str],
 ) -> None:
     """Test config entry diagnostics."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=entry_data, title=TEST_API_NAME)
+    config_entry.add_to_hass(hass)
     session = mock_mcp_client.return_value
     session.initialize.return_value = InitializeResult(
         protocolVersion="2025-03-26",
