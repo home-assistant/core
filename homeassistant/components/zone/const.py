@@ -14,6 +14,19 @@ HOME_ZONE = "home"
 
 DATA_ZONE: HassKey[ZoneData] = HassKey(DOMAIN)
 
+PREVIEW_FEATURE_IMPROVED_PRESENCE_DETECTION = "improved_presence_detection"
+
+
+class ZoneRelation(StrEnum):
+    """Relation between a location's accuracy circle and a zone."""
+
+    CONTAINED = "contained"
+    """The accuracy circle fits fully inside the zone."""
+    OVERLAPPING = "overlapping"
+    """The accuracy circle partly overlaps the zone."""
+    SEPARATED = "separated"
+    """The accuracy circle does not overlap the zone."""
+
 
 class ZoneEntityStateAttribute(StrEnum):
     """State attributes for zone entities."""
