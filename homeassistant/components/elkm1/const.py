@@ -3,10 +3,8 @@
 from datetime import timedelta
 
 from elkm1_lib.const import Max
-import probatio
 
-from homeassistant.const import ATTR_CODE, CONF_ZONE
-from homeassistant.helpers.typing import VolDictType
+from homeassistant.const import CONF_ZONE
 
 DOMAIN = "elkm1"
 
@@ -40,7 +38,6 @@ ELK_ELEMENTS = {
 EVENT_ELKM1_KEYPAD_KEY_PRESSED = "elkm1.keypad_key_pressed"
 
 
-ATTR_DURATION = "duration"
 ATTR_KEYPAD_ID = "keypad_id"
 ATTR_KEY = "key"
 ATTR_KEY_NAME = "key_name"
@@ -48,10 +45,3 @@ ATTR_KEYPAD_NAME = "keypad_name"
 ATTR_CHANGED_BY_KEYPAD = "changed_by_keypad"
 ATTR_CHANGED_BY_ID = "changed_by_id"
 ATTR_CHANGED_BY_TIME = "changed_by_time"
-ATTR_VALUE = "value"
-
-ELK_USER_CODE_SERVICE_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_CODE): probatio.All(
-        probatio.Coerce(int), probatio.Range(0, 999999)
-    )
-}
