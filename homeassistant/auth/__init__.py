@@ -52,6 +52,14 @@ class InvalidProvider(Exception):
     """Authentication provider not found."""
 
 
+class CredentialsLinkError(Exception):
+    """Raised when credentials can't be linked to a user."""
+
+
+class CredentialsExistError(CredentialsLinkError):
+    """Raised when a user already has credentials of an auth provider."""
+
+
 class DuplicateCredentialsError(Exception):
     """Raised when new credentials match credentials stored in the meantime."""
 
@@ -354,8 +362,39 @@ class AuthManager:
             return
         if linked_user is not None:
             raise ValueError("Credential is already linked to a user")
+        # Enforced here to cover every way of linking credentials.
+        if user.system_generated:
+            raise CredentialsLinkError(
+                "Unable to link credentials to a system generated user"
+            )
+        if self._async_has_credentials_of(
+            user, credentials.auth_provider_type, credentials.auth_provider_id
+        ):
+            raise CredentialsExistError(
+                "User already has credentials for this provider"
+            )
 
         await self._store.async_link_user(user, credentials)
+
+    @callback
+    def async_can_link_credentials(
+        self, user: models.User, provider: AuthProvider
+    ) -> bool:
+        """Return if credentials of the auth provider can be linked to the user."""
+        return not user.system_generated and not self._async_has_credentials_of(
+            user, provider.type, provider.id
+        )
+
+    @callback
+    def _async_has_credentials_of(
+        self, user: models.User, provider_type: str, provider_id: str | None
+    ) -> bool:
+        """Return if the user has credentials of an auth provider."""
+        return any(
+            credential.auth_provider_type == provider_type
+            and credential.auth_provider_id == provider_id
+            for credential in user.credentials
+        )
 
     async def async_remove_user(self, user: models.User) -> None:
         """Remove a user."""
