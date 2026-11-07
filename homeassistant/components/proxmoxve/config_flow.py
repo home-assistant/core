@@ -155,6 +155,12 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
             _LOGGER.debug(
                 "Error fetching VMs/LXC for node %s", node["node"], exc_info=True
             )
+            if str(err.status_code) == "596":
+                _LOGGER.warning(
+                    "Unable to fetch VMs/LXC for node %s, skipping node",
+                    node["node"],
+                )
+                continue
             raise ProxmoxNoVMLXCFound from err
         except requests.exceptions.ConnectionError as err:
             raise ProxmoxConnectionError from err
