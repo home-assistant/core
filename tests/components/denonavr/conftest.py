@@ -32,4 +32,7 @@ def client_fixture() -> Generator[MagicMock]:
         mock_client_class.return_value.input_func_list = []
         mock_client_class.return_value.sound_mode_list = []
         mock_client_class.return_value.zones = {"Main": mock_client_class.return_value}
+        mock_client_class.return_value.telnet_connected = False
+        mock_client_class.return_value.telnet_healthy = False
+        mock_client_class.return_value.dynamic_eq = True
         yield mock_client_class.return_value
