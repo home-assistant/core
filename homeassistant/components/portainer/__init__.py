@@ -101,21 +101,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     system_version_coordinator = PortainerSystemVersionCoordinator(hass, entry, client)
     coordinator.system_version = system_version_coordinator
 
-    async def _defer_initial_refreshes(_: HomeAssistant) -> None:
-        """Defer the first refresh until Home Assistant has started."""
-        hass.async_create_task(
-            docker_disk_space_coordinator.async_refresh(),
-            "portainer_docker_disk_space_initial_refresh",
-        )
-        hass.async_create_task(
-            system_version_coordinator.async_refresh(),
-            "portainer_system_version_initial_refresh",
-        )
-
-    # On lower-end hardware, the DF endpoint can take long, and the version check
-    # waits for GitHub. Do not block the setup, but defer both until HA has started
-    entry.async_on_unload(async_at_started(hass, _defer_initial_refreshes))
-
     entry.runtime_data = coordinator
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
@@ -134,6 +119,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+
+    async def _defer_initial_refreshes(_: HomeAssistant) -> None:
+        """Defer the first refresh until Home Assistant has started."""
+        hass.async_create_task(
+            docker_disk_space_coordinator.async_refresh(),
+            "portainer_docker_disk_space_initial_refresh",
+        )
+        hass.async_create_task(
+            system_version_coordinator.async_refresh(),
+            "portainer_system_version_initial_refresh",
+        )
+
+    # On lower-end hardware, the DF endpoint can take long, and the version check
+    # waits for GitHub. Do not block the setup, but defer both until HA has started.
+    # Registered after the platforms, so the DF refresh sees the enabled entities.
+    entry.async_on_unload(async_at_started(hass, _defer_initial_refreshes))
 
     @callback
     def _start_watcher(_hass: HomeAssistant) -> None:

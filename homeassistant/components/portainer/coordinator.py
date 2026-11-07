@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 import asyncio
+from collections import Counter
 from collections.abc import Awaitable, Callable
 import dataclasses
 from dataclasses import dataclass
@@ -24,10 +25,8 @@ from pyportainer import (
 from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
-    DockerDFType,
     DockerSystemDF,
     DockerVolume,
-    DockerVolumeUsageData,
     LocalImageInformation,
     PortainerImageUpdateStatus,
 )
@@ -305,19 +304,10 @@ class PortainerCoordinator(
                 continue
 
             try:
-                (
-                    containers,
-                    docker_version,
-                    docker_info,
-                    docker_system_df,
-                    volumes,
-                ) = await asyncio.gather(
+                containers, docker_version, docker_info, volumes = await asyncio.gather(
                     self.portainer.get_containers(endpoint.id),
                     self.portainer.docker_version(endpoint.id),
                     self.portainer.docker_info(endpoint.id),
-                    self.portainer.docker_system_df(
-                        endpoint.id, data_type=DockerDFType.VOLUME, verbose=True
-                    ),
                     self.portainer.get_volumes(endpoint.id),
                 )
 
@@ -418,18 +408,10 @@ class PortainerCoordinator(
                         else None,
                     )
 
-                volume_usage_map = {
-                    item["Name"]: item
-                    for item in (docker_system_df.volume_disk_usage.items or [])
+                volume_map = {
+                    volume.name: PortainerVolumeData(volume=volume)
+                    for volume in volumes
                 }
-                volume_map: dict[str, PortainerVolumeData] = {}
-                for volume in volumes:
-                    if item := volume_usage_map.get(volume.name):
-                        volume.usage_data = DockerVolumeUsageData(
-                            size=item["UsageData"]["Size"],
-                            ref_count=item["UsageData"]["RefCount"],
-                        )
-                    volume_map[volume.name] = PortainerVolumeData(volume=volume)
 
                 # Separately fetch stats for active containers
                 active_containers = [
@@ -821,14 +803,43 @@ class PortainerCoordinator(
 class PortainerDockerDiskSpaceCoordinator(
     PortainerBaseCoordinator[dict[int, DockerSystemDF]]
 ):
-    """Data Update Coordinator for Docker disk space."""
+    """Data Update Coordinator for Docker disk space.
+
+    Docker sums up every file of every volume for this, which can take long on
+    slower hosts, so only endpoints with an enabled disk space entity are fetched.
+    """
 
     config_entry: PortainerConfigEntry
     _update_interval = DEFAULT_DF_SCAN_INTERVAL
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: PortainerConfigEntry,
+        portainer: Portainer,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, config_entry, portainer)
+        self._entities_per_endpoint: Counter[int] = Counter()
+
+    @callback
+    def async_add_endpoint_entity(self, endpoint_id: int) -> Callable[[], None]:
+        """Fetch an endpoint while it has an enabled entity; return the remover."""
+        self._entities_per_endpoint[endpoint_id] += 1
+
+        @callback
+        def _async_remove() -> None:
+            self._entities_per_endpoint[endpoint_id] -= 1
+            if not self._entities_per_endpoint[endpoint_id]:
+                del self._entities_per_endpoint[endpoint_id]
+
+        return _async_remove
+
     @override
     async def update_data(self) -> dict[int, DockerSystemDF]:
         """Fetch Docker disk space data independently from Portainer API."""
+        if not self._entities_per_endpoint:
+            return {}
         endpoints = await self.portainer.get_endpoints()
         subentry_endpoint_ids = {
             subentry.unique_id
@@ -840,11 +851,12 @@ class PortainerDockerDiskSpaceCoordinator(
             if (
                 endpoint.status == EndpointStatus.DOWN
                 or str(endpoint.id) not in subentry_endpoint_ids
+                or endpoint.id not in self._entities_per_endpoint
             ):
                 continue
             try:
                 results[endpoint.id] = await self.portainer.docker_system_df(
-                    endpoint.id
+                    endpoint.id, verbose=True
                 )
             except PortainerTimeoutError:
                 _LOGGER.warning(
