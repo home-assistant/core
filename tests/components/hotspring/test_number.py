@@ -2,7 +2,13 @@
 
 from unittest.mock import MagicMock
 
-from hotspring import HotSpringConnectionError, HotSpringError, Spa, TemperatureUnit
+from hotspring import (
+    HotSpringConnectionError,
+    HotSpringConnectionTimeoutError,
+    HotSpringError,
+    Spa,
+    TemperatureUnit,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -80,17 +86,28 @@ async def test_set_target_temperature(
 @pytest.mark.parametrize(
     ("exception", "match"),
     [
-        (
-            HotSpringConnectionError,
-            "An error occurred while communicating with the Hot Spring API",
+        pytest.param(
+            HotSpringConnectionTimeoutError("No response"),
+            "^Timed out while communicating with the Hot Spring API: No response$",
+            id="timeout",
         ),
-        (HotSpringError, "Invalid response received from the Hot Spring API"),
+        pytest.param(
+            HotSpringConnectionError("Server disconnected"),
+            "^An error occurred while communicating with the Hot Spring API: "
+            "Server disconnected$",
+            id="connection_error",
+        ),
+        pytest.param(
+            HotSpringError,
+            "Invalid response received from the Hot Spring API",
+            id="invalid_response",
+        ),
     ],
 )
 async def test_set_target_temperature_error(
     hass: HomeAssistant,
     mock_hotspring: MagicMock,
-    exception: type[Exception],
+    exception: Exception | type[Exception],
     match: str,
 ) -> None:
     """Test exception handling when setting target temperature."""

@@ -3,7 +3,11 @@
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate
 
-from hotspring import HotSpringConnectionError, HotSpringError
+from hotspring import (
+    HotSpringConnectionError,
+    HotSpringConnectionTimeoutError,
+    HotSpringError,
+)
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -25,10 +29,17 @@ def hotspring_exception_handler[_HotSpringEntityT: HotSpringEntity, **_P](
     ) -> None:
         try:
             await func(self, *args, **kwargs)
+        except HotSpringConnectionTimeoutError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout",
+                translation_placeholders={"error": str(error)},
+            ) from error
         except HotSpringConnectionError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
+                translation_placeholders={"error": str(error)},
             ) from error
         except HotSpringError as error:
             raise HomeAssistantError(
