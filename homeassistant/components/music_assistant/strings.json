@@ -281,7 +281,7 @@
         "name": "Pure direct"
       },
       "queue_autoplay": {
-        "name": "Don't stop the music"
+        "name": "Autoplay"
       },
       "queue_crossfade": {
         "name": "Crossfade"

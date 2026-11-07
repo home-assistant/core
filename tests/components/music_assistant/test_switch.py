@@ -141,7 +141,7 @@ async def test_name_translation_availability(
             "crossfade_enabled",
         ),
         (
-            "switch.test_player_1_don_t_stop_the_music",
+            "switch.test_player_1_autoplay",
             "player_queues/autoplay",
             "autoplay_enabled",
         ),
