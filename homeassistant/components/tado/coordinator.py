@@ -238,7 +238,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _quota_retry_seconds(self, now: datetime) -> float:
         """Return the seconds to wait after a failed update with no quota left."""
-        if self._quota_reset is not None and self._quota_reset > now:
+        if self._quota_reset is not None and self._quota_reset >= now:
+            # Includes a reset due right now: a short retry, not the fallback
             wait = self._quota_reset - now + timedelta(minutes=1)
         else:
             # Reset unknown, or passed and the quota not seen refilled yet
@@ -246,20 +247,26 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return max(SCAN_INTERVAL, wait).total_seconds()
 
     def _update_failed(self, message: str, err: Exception) -> UpdateFailed:
-        """Return the UpdateFailed for err, delaying the retry if the quota ran out.
+        """Return the UpdateFailed for err, timing the retry around the quota.
 
-        Only a new reading with no calls left counts: the library keeps the last
-        reading after a failed call, so a timeout must not look like a 429.
+        - no calls left (a new zero reading, or the kept one while the reset is
+          unknown or still ahead): retry once the quota resets, or hourly;
+        - the awaited reset has passed: retry soon, whatever the last interval;
+        - otherwise: a normal failure.
         """
         now = dt_util.utcnow()
         rate_limit = self.get_rate_limit()
         remaining = _as_int(rate_limit.get("remaining"))
-        if self._learn_quota_reset(now, rate_limit, remaining, roll=False) and (
-            remaining == 0
-        ):
+        fresh = self._learn_quota_reset(now, rate_limit, remaining, roll=False)
+        reset_passed = self._quota_reset is not None and self._quota_reset < now
+        if remaining == 0 and (fresh or not reset_passed):
             return UpdateFailed(
                 f"Tado API rate limit reached: {err}",
                 retry_after=self._quota_retry_seconds(now),
+            )
+        if reset_passed:
+            return UpdateFailed(
+                f"{message}: {err}", retry_after=SCAN_INTERVAL.total_seconds()
             )
         return UpdateFailed(f"{message}: {err}")
 

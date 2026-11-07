@@ -288,3 +288,67 @@ async def test_known_reset_is_kept_when_the_quota_refills(
         odd + timedelta(minutes=5), {"remaining": "995"}, 995
     )
     assert coordinator._quota_reset == odd + timedelta(minutes=5) + QUOTA_WINDOW
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_failure_with_reset_due_now_retries_soon(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A 429 saying the reset is due now retries after the short minimum."""
+    coordinator = _coordinator(hass)
+    with (
+        patch.object(coordinator._tado, "get_me", side_effect=TadoException) as get_me,
+        patch.object(
+            coordinator._tado,
+            "rate_limit_info",
+            return_value={"remaining": "0", "reset-seconds": "0"},
+        ),
+    ):
+        await _tick(hass, freezer, coordinator.update_interval)
+        assert get_me.call_count == 1
+        await _tick(hass, freezer, SCAN_INTERVAL)
+        assert get_me.call_count == 2
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_repeated_failure_keeps_backing_off(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """With the quota still at zero and no reset known, every retry waits an hour."""
+    coordinator = _coordinator(hass)
+    with (
+        patch.object(coordinator._tado, "get_me", side_effect=TadoException) as get_me,
+        patch.object(
+            coordinator._tado, "rate_limit_info", return_value={"remaining": "0"}
+        ),
+    ):
+        await _tick(hass, freezer, coordinator.update_interval)
+        await _tick(hass, freezer, QUOTA_RETRY)
+        assert get_me.call_count == 2
+        # The second failure sees the same reading and still waits
+        await _tick(hass, freezer, SCAN_INTERVAL)
+        assert get_me.call_count == 2
+        await _tick(hass, freezer, QUOTA_RETRY - SCAN_INTERVAL)
+        assert get_me.call_count == 3
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_failure_after_a_long_wait_retries_soon(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Quota used up by a successful poll, reset reached, then a timeout: retry soon."""
+    coordinator = _coordinator(hass)
+    reading = {"remaining": "0", "reset-seconds": "7200"}
+    with patch.object(coordinator._tado, "rate_limit_info", return_value=reading):
+        await _tick(hass, freezer, coordinator.update_interval)
+        assert coordinator.last_update_success
+        assert coordinator.update_interval == timedelta(hours=2, minutes=1)
+
+        with patch.object(
+            coordinator._tado, "get_me", side_effect=RequestException
+        ) as get_me:
+            await _tick(hass, freezer, coordinator.update_interval)
+            assert get_me.call_count == 1
+            # Not another two hours: the awaited reset has passed
+            await _tick(hass, freezer, SCAN_INTERVAL)
+            assert get_me.call_count == 2
