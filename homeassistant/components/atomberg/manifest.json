@@ -1,0 +1,13 @@
+{
+  "domain": "atomberg",
+  "name": "Atomberg",
+  "categories": ["climate.fans_ventilation"],
+  "codeowners": ["@ratulbmg"],
+  "config_flow": true,
+  "connectivity": ["cloud"],
+  "documentation": "https://www.home-assistant.io/integrations/atomberg",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["atomberg-api==0.1.1"]
+}
