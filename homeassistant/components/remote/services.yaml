@@ -60,6 +60,29 @@ send_command:
           step: 0.1
           unit_of_measurement: seconds
 
+navigate:
+  target:
+    entity:
+      domain: remote
+      supported_features:
+        - remote.RemoteEntityFeature.NAVIGATE
+  fields:
+    direction:
+      required: true
+      example: "up"
+      selector:
+        select:
+          translation_key: direction
+          options:
+            - "up"
+            - "down"
+            - "left"
+            - "right"
+            - "select"
+            - "back"
+            - "home"
+            - "menu"
+
 learn_command:
   target:
     entity:

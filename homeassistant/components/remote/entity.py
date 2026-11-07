@@ -8,7 +8,12 @@ from propcache.api import cached_property
 
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 
-from .const import RemoteEntityFeature, RemoteEntityStateAttribute
+from .const import (
+    RemoteEntityCapabilityAttribute,
+    RemoteEntityFeature,
+    RemoteEntityStateAttribute,
+    RemoteNavigation,
+)
 
 
 class RemoteEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
@@ -17,6 +22,7 @@ class RemoteEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "supported_features",
+    "supported_navigation",
     "current_activity",
     "activity_list",
 }
@@ -25,16 +31,43 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for remote entities."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        {RemoteEntityCapabilityAttribute.SUPPORTED_NAVIGATION}
+    )
+
     entity_description: RemoteEntityDescription
     _attr_activity_list: list[str] | None = None
     _attr_current_activity: str | None = None
     _attr_supported_features: RemoteEntityFeature = RemoteEntityFeature(0)
+    _attr_supported_navigation: list[RemoteNavigation] | None = None
 
     @cached_property
     @override
     def supported_features(self) -> RemoteEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
+
+    @cached_property
+    def supported_navigation(self) -> list[RemoteNavigation]:
+        """List of navigation actions the remote supports.
+
+        Only used when the NAVIGATE feature is set. Defaults to all actions.
+        """
+        if self._attr_supported_navigation is None:
+            return list(RemoteNavigation)
+        return self._attr_supported_navigation
+
+    @property
+    @override
+    def capability_attributes(self) -> dict[str, Any] | None:
+        """Return capability attributes."""
+        if RemoteEntityFeature.NAVIGATE not in self.supported_features:
+            return None
+        return {
+            RemoteEntityCapabilityAttribute.SUPPORTED_NAVIGATION: (
+                self.supported_navigation
+            )
+        }
 
     @cached_property
     def current_activity(self) -> str | None:
@@ -68,6 +101,14 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         await self.hass.async_add_executor_job(
             ft.partial(self.send_command, command, **kwargs)
         )
+
+    def navigate(self, direction: RemoteNavigation) -> None:
+        """Send a navigation (d-pad) action to a device."""
+        raise NotImplementedError
+
+    async def async_navigate(self, direction: RemoteNavigation) -> None:
+        """Send a navigation (d-pad) action to a device."""
+        await self.hass.async_add_executor_job(self.navigate, direction)
 
     def learn_command(self, **kwargs: Any) -> None:
         """Learn a command from a device."""

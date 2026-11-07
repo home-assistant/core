@@ -14,12 +14,13 @@ from homeassistant.components.remote import (
     DEFAULT_NUM_REPEATS,
     RemoteEntity,
     RemoteEntityFeature,
+    RemoteNavigation,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_APP_NAME, DOMAIN
+from .const import CONF_APP_NAME, DOMAIN, NAVIGATION_KEY_CODES
 from .entity import AndroidTVRemoteBaseEntity
 from .helpers import AndroidTVRemoteConfigEntry
 
@@ -59,7 +60,10 @@ async def async_setup_entry(
 class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
     """Android TV Remote Entity."""
 
-    _attr_supported_features = RemoteEntityFeature.ACTIVITY
+    _attr_supported_features = (
+        RemoteEntityFeature.ACTIVITY | RemoteEntityFeature.NAVIGATE
+    )
+    _attr_supported_navigation = list(RemoteNavigation)
 
     def _update_current_app(self, current_app: str) -> None:
         """Update current app info."""
@@ -116,6 +120,11 @@ class AndroidTVRemoteEntity(AndroidTVRemoteBaseEntity, RemoteEntity):
         """Turn the Android TV off."""
         if self.is_on:
             self._send_key_command("POWER")
+
+    @override
+    async def async_navigate(self, direction: RemoteNavigation) -> None:
+        """Send a navigation action to the Android TV."""
+        self._send_key_command(NAVIGATION_KEY_CODES[direction])
 
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:

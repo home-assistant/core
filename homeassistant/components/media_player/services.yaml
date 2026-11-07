@@ -233,6 +233,29 @@ select_sound_mode:
         state:
           attribute: sound_mode
 
+navigate:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.NAVIGATE
+  fields:
+    direction:
+      required: true
+      example: "up"
+      selector:
+        select:
+          translation_key: direction
+          options:
+            - "up"
+            - "down"
+            - "left"
+            - "right"
+            - "select"
+            - "back"
+            - "home"
+            - "menu"
+
 clear_playlist:
   target:
     entity:
