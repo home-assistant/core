@@ -222,10 +222,10 @@ async def test_excluded_fields_are_dropped_from_the_read_plan(
     """A field with no entity yet is not polled either, not just not created."""
     await setup_integration(hass, mock_config_entry)
 
-    ac_output = get_device("balco260").get_field("ac_o_switch")
-    assert ac_output is not None
+    protection = get_device("balco260").get_field("b_protect")
+    assert protection is not None
     assert mock_modbus_unit.read_events
     assert not any(
-        event.address <= ac_output.address < event.address + event.count
+        event.address <= protection.address < event.address + event.count
         for event in mock_modbus_unit.read_events
     )
