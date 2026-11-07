@@ -17,6 +17,7 @@ TO_REDACT = {
     CONF_USER_ID,
     "additional_parameters",
     "icon",
+    "inside_geofence",
     "last_position",
     "lat",
     "lng",
