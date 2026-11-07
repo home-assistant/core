@@ -1015,6 +1015,7 @@ class Repository:
 
         self.data.installed_version = None
         self.data.installed_commit = None
+        self._forget_readme()
         self.async_dispatch_changed("uninstall")
 
         await self.async_remove_entity_device()
@@ -1179,7 +1180,18 @@ class Repository:
         """Forget the version picked for the install and end its progress."""
         self.data.selected_tag = None
         self.force_branch = False
+        # Before the panel hears of the end, it asks for the page right after
+        self._forget_readme()
         self._async_dispatch_install_progress(False)
+
+    def _forget_readme(self) -> None:
+        """Fetch the README again for the next page, the installed version changed.
+
+        It is of the version installed before, whose addresses can point at
+        files the version installed now no longer has.
+        """
+        self.additional_info = ""
+        self.updated_info = False
 
     async def async_post_installation(self) -> None:
         """Run post install steps."""
