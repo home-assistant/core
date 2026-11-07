@@ -2606,3 +2606,49 @@ async def test_purge_finishes_when_kept_states_fill_the_batches(
     with session_scope(hass=hass) as session:
         states = session.query(States.state).order_by(States.state_id)
         assert [state for (state,) in states] == ["new", "new", "new"]
+
+
+async def test_purge_finishes_when_two_purges_alternate(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test two purges with different cutoffs that take turns both finish."""
+    now = dt_util.utcnow()
+    for days, entity_id in ((30, "sensor.a"), (29, "sensor.b")):
+        with freeze_time(now - timedelta(days=days)):
+            hass.states.async_set(entity_id, "old")
+            await async_wait_recording_done(hass)
+    for days in (20, 19, 18):
+        with freeze_time(now - timedelta(days=days)):
+            hass.states.async_set("sensor.c", str(days))
+            await async_wait_recording_done(hass)
+    for entity_id in ("sensor.a", "sensor.b", "sensor.c"):
+        hass.states.async_set(entity_id, "new")
+    await async_wait_recording_done(hass)
+
+    # One batch of two states per purge call, the purges take turns like
+    # requeued purge tasks do
+    pending = [now - timedelta(days=10), now - timedelta(days=15)]
+    with (
+        patch.object(recorder_mock, "max_bind_vars", 2),
+        patch.object(recorder_mock.database_engine, "max_bind_vars", 2),
+    ):
+        for _ in range(10):
+            pending = [
+                purge_before
+                for purge_before in pending
+                if not purge_old_data(
+                    recorder_mock,
+                    purge_before,
+                    repack=False,
+                    states_batch_size=1,
+                    events_batch_size=1,
+                )
+            ]
+            if not pending:
+                break
+        else:
+            pytest.fail("The purges did not finish")
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States.state).order_by(States.state_id)
+        assert [state for (state,) in states] == ["new", "new", "new"]
