@@ -1,13 +1,17 @@
 """Basic checks for HomeKitalarm_control_panel."""
 
 from collections.abc import Callable
+from unittest.mock import patch
 
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
+from aiohomekit.protocol.statuscodes import HapStatusCode
+import pytest
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_test_component
@@ -558,6 +562,87 @@ async def test_change_door_state(
             CharacteristicsTypes.DOOR_STATE_TARGET: 1,
         },
     )
+
+
+@pytest.mark.parametrize(
+    "status",
+    [
+        pytest.param(-70402, id="communication-failure"),
+        pytest.param(-70403, id="busy"),
+        pytest.param(70403, id="positive-status"),
+        pytest.param(-12345, id="unknown-status"),
+        pytest.param(HapStatusCode.CANT_WRITE_READ_ONLY, id="ble-status"),
+    ],
+)
+async def test_garage_door_write_error(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+    status: int | HapStatusCode,
+) -> None:
+    """Report a rejected target write without retrying or changing current state."""
+    aid = get_next_aid()
+    helper = await setup_test_component(hass, aid, create_garage_door_opener_service)
+    service = helper.accessory.services.first(
+        service_type=ServicesTypes.GARAGE_DOOR_OPENER
+    )
+    target = service.characteristics.first(
+        char_types=[CharacteristicsTypes.DOOR_STATE_TARGET]
+    )
+    with (
+        patch.object(
+            helper.pairing,
+            "put_characteristics",
+            return_value={(aid, target.iid): {"status": status}},
+        ) as mock_put,
+        pytest.raises(
+            HomeAssistantError,
+            match=rf"Failed to write HomeKit characteristic {aid}\.{target.iid}: status {status}",
+        ),
+    ):
+        await hass.services.async_call(
+            "cover", "close_cover", {"entity_id": helper.entity_id}, blocking=True
+        )
+
+    mock_put.assert_awaited_once_with([(aid, target.iid, 1)])
+    assert hass.states.get(helper.entity_id).state == "open"
+
+
+@pytest.mark.parametrize(
+    "status",
+    [
+        pytest.param(0, id="explicit-success"),
+        pytest.param(HapStatusCode.SUCCESS, id="enum-success"),
+    ],
+)
+async def test_garage_door_repeated_target_write(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+    status: int | HapStatusCode,
+) -> None:
+    """Dispatch identical targets even when success statuses are returned."""
+    aid = get_next_aid()
+    helper = await setup_test_component(hass, aid, create_garage_door_opener_service)
+    service = helper.accessory.services.first(
+        service_type=ServicesTypes.GARAGE_DOOR_OPENER
+    )
+    target = service.characteristics.first(
+        char_types=[CharacteristicsTypes.DOOR_STATE_TARGET]
+    )
+    with patch.object(
+        helper.pairing,
+        "put_characteristics",
+        return_value={(aid, target.iid): {"status": status}},
+    ) as mock_put:
+        await hass.services.async_call(
+            "cover", "open_cover", {"entity_id": helper.entity_id}, blocking=True
+        )
+        await hass.services.async_call(
+            "cover", "open_cover", {"entity_id": helper.entity_id}, blocking=True
+        )
+
+    assert mock_put.await_count == 2
+    mock_put.assert_awaited_with([(aid, target.iid, 0)])
+    assert hass.states.get(helper.entity_id).state == "open"
 
 
 async def test_read_door_state(
