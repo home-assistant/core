@@ -1,0 +1,7 @@
+[run]
+branch = True
+source =
+    homeassistant.components.visonic
+
+omit =
+    homeassistant/components/visonic/pyvisonicalarm/*

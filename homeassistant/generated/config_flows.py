@@ -916,6 +916,7 @@ FLOWS = {
         "victron_gx",
         "victron_remote_monitoring",
         "vilfo",
+        "visonic",
         "vistapool",
         "vitesy",
         "vivotek",

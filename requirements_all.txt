@@ -2961,6 +2961,12 @@ pyversasense==0.0.6
 # homeassistant.components.vesync
 pyvesync==3.5.0
 
+# homeassistant.components.visonic
+pyvisonic==4.1.3
+
+# homeassistant.components.visonic
+pyvisonicalarm==0.4.2
+
 # homeassistant.components.velux
 pyvlx==0.2.36
 
@@ -3159,6 +3165,7 @@ sentry-sdk==2.48.0
 
 # homeassistant.components.serial
 # homeassistant.components.usb
+# homeassistant.components.visonic
 serialx==1.15.1
 
 # homeassistant.components.sfr_box
