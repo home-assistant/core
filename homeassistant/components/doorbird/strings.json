@@ -83,6 +83,14 @@
       }
     }
   },
+  "exceptions": {
+    "device_not_found": {
+      "message": "The selected device is not a DoorBird device that is set up in Home Assistant."
+    },
+    "restart_failed": {
+      "message": "Restarting the DoorBird {name} failed. Check that the device is reachable, is not busy (for example installing an update), and that the DoorBird user has the API Operator permission."
+    }
+  },
   "issues": {
     "deprecated_camera_last_motion": {
       "description": "The `{entity_id}` ({entity_name}) camera entity is deprecated and has been replaced by the **Last motion** image entity on the same device, which shows the same still image and updates the moment a motion event fires. The image entity relies on the DoorBird calling Home Assistant, so make sure the events are set up as described in the [integration documentation]({docs_url}).\n\nUpdate any dashboards, templates, automations or scripts to use the image entity, then disable `{entity_id}` and it is removed automatically on the next restart or reload of the integration.",
@@ -122,6 +130,18 @@
           "events": "Add a comma-separated event name for each event you wish to track. After entering them here, use the DoorBird app to assign them to a specific event.\n\nExample: somebody_pressed_the_button, motion"
         }
       }
+    }
+  },
+  "services": {
+    "restart": {
+      "description": "Restarts a DoorBird device. The device is unavailable for a short time while it reboots.",
+      "fields": {
+        "device_id": {
+          "description": "The DoorBird devices to restart.",
+          "name": "Devices"
+        }
+      },
+      "name": "Restart"
     }
   }
 }

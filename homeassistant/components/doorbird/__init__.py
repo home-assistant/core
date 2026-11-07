@@ -22,6 +22,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_EVENTS, DOMAIN, PLATFORMS
 from .device import ConfiguredDoorBird
 from .models import DoorBirdConfigEntry, DoorBirdData
+from .services import async_setup_services
 from .view import DoorBirdRequestView
 
 CONF_CUSTOM_URL = "hass_url_override"
@@ -35,6 +36,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the DoorBird component."""
     # Provide an endpoint for the door stations to call to trigger events
     hass.http.register_view(DoorBirdRequestView)
+    async_setup_services(hass)
     return True
 
 
