@@ -1,57 +1,30 @@
 """Support for ZoneMinder switches."""
 
-import logging
 from typing import Any, override
 
-import probatio
 from zoneminder.monitor import Monitor, MonitorState
-from zoneminder.zm import ZoneMinder
 
-from homeassistant.components.switch import (
-    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
-    SwitchEntity,
-)
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {
-        probatio.Required(CONF_COMMAND_ON): cv.string,
-        probatio.Required(CONF_COMMAND_OFF): cv.string,
-    }
-)
+from . import ZoneMinderConfigEntry
+from .const import MONITOR_FUNCTIONS
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ZoneMinderConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ZoneMinder switch platform."""
-
-    on_state = MonitorState(config.get(CONF_COMMAND_ON))
-    off_state = MonitorState(config.get(CONF_COMMAND_OFF))
-
-    switches: list[ZMSwitchMonitors] = []
-    zm_client: ZoneMinder
-    for zm_client in hass.data[DOMAIN].values():
-        if not (monitors := zm_client.get_monitors()):
-            raise PlatformNotReady(
-                "Switch could not fetch any monitors from ZoneMinder"
-            )
-        switches.extend(
-            ZMSwitchMonitors(monitor, on_state, off_state) for monitor in monitors
-        )
-    add_entities(switches)
+    on_state = MONITOR_FUNCTIONS[entry.options[CONF_COMMAND_ON]]
+    off_state = MONITOR_FUNCTIONS[entry.options[CONF_COMMAND_OFF]]
+    async_add_entities(
+        ZMSwitchMonitors(monitor, entry.entry_id, on_state, off_state)
+        for monitor in entry.runtime_data.monitors
+    )
 
 
 class ZMSwitchMonitors(SwitchEntity):
@@ -59,13 +32,20 @@ class ZMSwitchMonitors(SwitchEntity):
 
     icon = "mdi:record-rec"
 
-    def __init__(self, monitor: Monitor, on_state: str, off_state: str) -> None:
+    def __init__(
+        self,
+        monitor: Monitor,
+        entry_id: str,
+        on_state: MonitorState,
+        off_state: MonitorState,
+    ) -> None:
         """Initialize the switch."""
         self._monitor = monitor
         self._on_state = on_state
         self._off_state = off_state
         self._state: bool | None = None
         self._attr_name = f"{monitor.name} State"
+        self._attr_unique_id = f"{entry_id}_{monitor.id}_state"
 
     def update(self) -> None:
         """Update the switch value."""
