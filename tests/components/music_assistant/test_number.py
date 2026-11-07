@@ -149,3 +149,31 @@ async def test_name_translation_availability(
         assert translations.get(f"{prefix}{translation_key}.name") is not None, (
             f"{translation_key} is missing in strings.json for platform number"
         )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_queue_playback_speed(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test the playback speed number sets the speed of the player's own queue."""
+    music_assistant_client.server_info.schema_version = 101
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "number.test_player_1_playback_speed"
+    state = hass.states.get(entity_id)
+    assert state
+    assert float(state.state) == 1.0
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 1.5},
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/set_playback_speed",
+        queue_id="00:00:00:00:00:01",
+        speed=1.5,
+        queue_item_id=None,
+        require_schema=101,
+    )

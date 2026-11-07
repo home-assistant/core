@@ -11,7 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .entity import MusicAssistantPlayerOptionEntity
+from .const import QUEUE_SETTINGS_SCHEMA_VERSION
+from .entity import MusicAssistantEntity, MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
 PLAYER_OPTIONS_NUMBER: Final[dict[str, bool]] = {
@@ -41,7 +42,14 @@ async def async_setup_entry(
         player = mass.players.get(player_id)
         if player is None:
             return
-        entities: list[MusicAssistantPlayerConfigNumber] = []
+        entities: list[NumberEntity] = []
+        assert mass.server_info  # for type checking
+        # older servers lack the command, so their players keep only the option numbers
+        if (
+            mass.server_info.schema_version >= QUEUE_SETTINGS_SCHEMA_VERSION
+            and mass.player_queues.get(player_id) is not None
+        ):
+            entities.append(MusicAssistantQueuePlaybackSpeed(mass, player_id))
         for player_option in player.options:
             if (
                 not player_option.read_only
@@ -117,3 +125,30 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
             if isinstance(player_option.value, (int, float))
             else None
         )
+
+
+class MusicAssistantQueuePlaybackSpeed(MusicAssistantEntity, NumberEntity):
+    """Playback speed of the item playing in the player's own queue."""
+
+    entity_description = NumberEntityDescription(
+        key="queue_playback_speed",
+        translation_key="queue_playback_speed",
+        native_min_value=0.5,
+        native_max_value=3.0,
+        native_step=0.05,
+        entity_registry_enabled_default=False,
+    )
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the playback speed of the queue."""
+        if (queue := self.mass.player_queues.get(self.player_id)) is None:
+            return None
+        return queue.playback_speed
+
+    @catch_musicassistant_error
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the playback speed of the playing item."""
+        await self.mass.player_queues.set_playback_speed(self.player_id, value)
