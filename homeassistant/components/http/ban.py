@@ -146,7 +146,7 @@ async def process_wrong_login(request: Request, access_method: AccessMethod) -> 
     if access_method is AccessMethod.LOGIN:
         base_msg = f"Failed login attempt (incorrect MFA code) from {remote_host} ({remote_addr})."
 
-        try:
+        with suppress(JSONDecodeError):
             form_data = await request.json()
             if isinstance(form_data, dict) and isinstance(
                 raw_username := form_data.get("username"), str
@@ -154,8 +154,6 @@ async def process_wrong_login(request: Request, access_method: AccessMethod) -> 
                 username = html.escape(repr(raw_username)[1:-1])
 
                 base_msg = f"Failed login attempt (with username: '{username}') from {remote_host} ({remote_addr})."
-        except JSONDecodeError:
-            pass
     else:
         base_msg = f"Failed API access attempt from {remote_host} ({remote_addr})."
 
