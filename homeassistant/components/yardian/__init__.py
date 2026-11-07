@@ -41,9 +41,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: YardianConfigEntry) -> N
             async_get_clientsession(hass), host, token=access_token
         )
     except NotAuthorizedException as err:
-        raise ConfigEntryError("Invalid access token") from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        ) from err
     except (NetworkException, TimeoutError) as err:
-        raise ConfigEntryNotReady("Failed to communicate with device") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="cannot_connect"
+        ) from err
 
     coordinator = YardianUpdateCoordinator(hass, entry, controller)
     await coordinator.async_config_entry_first_refresh()

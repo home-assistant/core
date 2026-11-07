@@ -43,6 +43,8 @@ async def test_setup_retries_client_creation(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+    assert mock_config_entry.error_reason_translation_domain == DOMAIN
     session = async_get_clientsession(hass)
     mock_yardian_client_create.assert_awaited_once_with(
         session,
@@ -98,6 +100,8 @@ async def test_startup_retries_client_creation(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+    assert mock_config_entry.error_reason_translation_domain == DOMAIN
     mock_yardian_client_create.assert_awaited_once()
     mock_yardian_client.fetch_device_state.assert_not_awaited()
     mock_yardian_client.fetch_oper_info.assert_not_awaited()
@@ -122,10 +126,12 @@ async def test_startup_retries_client_creation(
 
 
 @pytest.mark.parametrize(
-    ("exception", "reason"),
+    ("exception", "reason", "translation_key"),
     [
-        pytest.param(NotAuthorizedException(), "Invalid access token", id="auth"),
-        pytest.param(ValueError("unexpected"), None, id="unexpected"),
+        pytest.param(
+            NotAuthorizedException(), "Invalid access token", "invalid_auth", id="auth"
+        ),
+        pytest.param(ValueError("unexpected"), None, None, id="unexpected"),
     ],
 )
 async def test_client_creation_fatal_error(
@@ -136,6 +142,7 @@ async def test_client_creation_fatal_error(
     freezer: FrozenDateTimeFactory,
     exception: Exception,
     reason: str | None,
+    translation_key: str | None,
 ) -> None:
     """Test authentication and unexpected errors do not schedule retries."""
     mock_yardian_client_create.side_effect = exception
@@ -143,6 +150,7 @@ async def test_client_creation_fatal_error(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.reason == reason
+    assert mock_config_entry.error_reason_translation_key == translation_key
     mock_yardian_client.fetch_device_state.assert_not_awaited()
     mock_yardian_client.fetch_oper_info.assert_not_awaited()
     assert not hass.states.async_all()
