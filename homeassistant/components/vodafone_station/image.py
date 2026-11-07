@@ -7,7 +7,7 @@ from aiovodafone.const import WIFI_DATA
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -93,6 +93,7 @@ class VodafoneGuestWifiQRImage(
         self._attr_image_last_updated = dt_util.utcnow()
         await super().async_added_to_hass()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.

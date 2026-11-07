@@ -1,0 +1,27 @@
+"""Test the HP Printer diagnostics."""
+
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.core import HomeAssistant
+
+from . import setup_integration
+
+
+@pytest.mark.usefixtures("mock_hp_printer")
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test config entry diagnostics."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
+        == snapshot
+    )

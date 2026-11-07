@@ -43,6 +43,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
@@ -55,7 +56,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import validators as tcv
-from .const import DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -96,7 +97,7 @@ CONF_SOURCE_LIST = "source_list"
 CONF_VOLUME_LEVEL = "volume_level"
 CONF_VOLUME_UP_AND_DOWN = "volume_up_and_down"
 
-DEFAULT_NAME = "Template Media Player"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.MEDIA_PLAYER]
 
 SCRIPT_FIELDS = (
     SERVICE_CLEAR_PLAYLIST,

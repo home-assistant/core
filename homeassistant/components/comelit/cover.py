@@ -14,7 +14,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -166,6 +166,7 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         """Return if the cover is opening."""
         return self._current_action("opening")
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
