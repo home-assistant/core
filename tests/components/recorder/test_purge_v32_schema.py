@@ -105,8 +105,8 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
     with session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
-        assert states.count() == 2
-        assert state_attributes.count() == 1
+        assert states.count() == 3
+        assert state_attributes.count() == 2
 
         assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
@@ -116,9 +116,12 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
         state_map_by_state = {state.state: state for state in states_after_purge}
         dontpurgeme_5 = state_map_by_state["dontpurgeme_5"]
         dontpurgeme_4 = state_map_by_state["dontpurgeme_4"]
+        # Kept since dontpurgeme_4 links to it
+        purgeme_3 = state_map_by_state["purgeme_3"]
 
         assert dontpurgeme_5.old_state_id == dontpurgeme_4.state_id
-        assert dontpurgeme_4.old_state_id is None
+        assert dontpurgeme_4.old_state_id == purgeme_3.state_id
+        assert purgeme_3.old_state_id is None
 
     finished = purge_old_data(recorder_mock, purge_before, repack=False)
     assert finished
@@ -126,8 +129,8 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
     with session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
-        assert states.count() == 2
-        assert state_attributes.count() == 1
+        assert states.count() == 3
+        assert state_attributes.count() == 2
 
         assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
@@ -142,23 +145,25 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
     )
     assert not finished
 
+    # The current state of test.recorder2 is kept
     with session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
-        assert states.count() == 0
-        assert state_attributes.count() == 0
+        assert states.count() == 1
+        assert states[0].state == "dontpurgeme_5"
+        assert state_attributes.count() == 1
 
-        assert "test.recorder2" not in recorder_mock.states_manager._last_committed_id
+        assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
     # Add some more states
     await _add_test_states(hass)
 
-    # make sure we start with 6 states
+    # make sure the new states link to the kept state
     with session_scope(hass=hass) as session:
-        states = session.query(States)
-        assert states.count() == 6
-        assert states[0].old_state_id is None
-        assert states[5].old_state_id == states[4].state_id
+        states = session.query(States).order_by(States.state_id)
+        assert states.count() == 7
+        assert states[1].old_state_id == states[0].state_id
+        assert states[6].old_state_id == states[5].state_id
 
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 0
@@ -444,8 +449,9 @@ async def test_purge_method(
         events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
         statistics = session.query(StatisticsShortTerm)
 
-        # only purged old states, events and statistics
-        assert states.count() == 4
+        # only purged old states, events and statistics, the newest old state
+        # is kept since the oldest state in the window links to it
+        assert states.count() == 5
         assert events.count() == 4
         assert statistics.count() == 4
 
@@ -465,8 +471,9 @@ async def test_purge_method(
         recorder_runs = session.query(RecorderRuns)
         statistics_runs = session.query(StatisticsRuns)
 
-        # we should only have 2 states, events and statistics left after purging
-        assert states.count() == 2
+        # we should only have 2 events and statistics left after purging, and
+        # 3 states since the oldest state in the window links to an old one
+        assert states.count() == 3
         assert events.count() == 2
         assert statistics.count() == 2
 

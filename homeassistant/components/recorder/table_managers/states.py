@@ -17,9 +17,11 @@ class StatesManager:
     def __init__(self) -> None:
         """Initialize the states manager for linking old_state_id."""
         self._pending: dict[str, States] = {}
-        self._last_committed_id: dict[str, int] = {}
+        # The state_id is None if the state failed to save
+        self._last_committed_id: dict[str, int | None] = {}
         self._last_reported: dict[int, float] = {}
         self._oldest_ts: float | None = None
+        self._linked_state_ids: dict[float, set[int]] = {}
 
     @property
     def oldest_ts(self) -> float | None:
@@ -46,6 +48,36 @@ class StatesManager:
         recorder thread.
         """
         return self._last_committed_id.pop(entity_id, None)
+
+    def committed_state_ids(self) -> set[int]:
+        """Return the state_ids of the last committed state of each entity.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
+        # A NULL in the NOT IN of the purge query would match no rows at all
+        return {
+            state_id
+            for state_id in self._last_committed_id.values()
+            if state_id is not None
+        }
+
+    def linked_state_ids(self, purge_before: float) -> set[int]:
+        """Return the old states the purge before purge_before found linked so far.
+
+        A purge runs over several calls, so they don't have to find the same
+        states again, also when another purge runs in between. This call is
+        not thread-safe and must be called from the recorder thread.
+        """
+        return self._linked_state_ids.setdefault(purge_before, set())
+
+    def forget_linked_state_ids(self, purge_before: float) -> None:
+        """Forget the linked old states of a purge that ended.
+
+        This call is not thread-safe and must be called from the
+        recorder thread.
+        """
+        self._linked_state_ids.pop(purge_before, None)
 
     def add_pending(self, entity_id: str, state: States) -> None:
         """Add a pending state.
