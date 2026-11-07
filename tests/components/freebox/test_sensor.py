@@ -4,11 +4,14 @@ from copy import deepcopy
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
-from pytest_homeassistant.common import async_fire_time_changed
+import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.freebox import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 from .const import (
@@ -16,6 +19,18 @@ from .const import (
     DATA_HOME_GET_NODES,
     DATA_STORAGE_GET_DISKS,
 )
+
+
+@pytest.mark.usefixtures("router")
+async def test_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test all sensor entities."""
+    entry = await setup_platform(hass, SENSOR_DOMAIN)
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_network_speed(
@@ -89,23 +104,6 @@ async def test_disk(
     # To execute the save
     await hass.async_block_till_done()
     assert hass.states.get("sensor.disk_3000_freebox_free_space").state == "44.9"
-
-
-async def test_temperature(hass: HomeAssistant, router: Mock) -> None:
-    """Test temperature sensors expose API names and values."""
-    await setup_platform(hass, SENSOR_DOMAIN)
-
-    assert hass.states.get("sensor.freebox_server_r2_disque_dur").state == "40"
-    assert hass.states.get("sensor.freebox_server_r2_temperature_switch").state == "50"
-    assert hass.states.get("sensor.freebox_server_r2_temperature_cpu_m").state == "60"
-    assert hass.states.get("sensor.freebox_server_r2_temperature_cpu_b").state == "56"
-
-
-async def test_fan(hass: HomeAssistant, router: Mock) -> None:
-    """Test fan speed sensors expose API names and values."""
-    await setup_platform(hass, SENSOR_DOMAIN)
-
-    assert hass.states.get("sensor.freebox_server_r2_ventilateur_1").state == "2130"
 
 
 async def test_battery(
