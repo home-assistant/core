@@ -3029,6 +3029,66 @@ async def test_state_changed_events_to_not_leak_contexts(hass: HomeAssistant) ->
     assert len(_get_by_type("homeassistant.core.Context")) == init_count
 
 
+@pytest.mark.parametrize(
+    "replace_state",
+    [
+        pytest.param(
+            lambda hass: hass.states.async_set("light.kitchen", "off"),
+            id="state_changed",
+        ),
+        pytest.param(
+            lambda hass: hass.states.async_set("light.kitchen", "on", {"a": 1}),
+            id="attributes_changed",
+        ),
+        pytest.param(
+            lambda hass: hass.states.async_remove("light.kitchen"),
+            id="removed",
+        ),
+    ],
+)
+async def test_replaced_state_event_freed_without_gc(
+    hass: HomeAssistant, replace_state: Callable[[HomeAssistant], Any]
+) -> None:
+    """Test the event that created a state is freed by refcount once replaced."""
+    hass.bus.async_listen(EVENT_STATE_CHANGED, callback(lambda event: None))
+    hass.states.async_set("light.kitchen", "on")
+    context_id = hass.states.get("light.kitchen").context.id
+
+    gc.collect()
+    gc.disable()
+    gc.set_debug(gc.DEBUG_SAVEALL)
+    try:
+        replace_state(hass)
+        gc.collect()
+        # DEBUG_SAVEALL keeps everything the gc had to free in gc.garbage
+        leaked = [
+            obj
+            for obj in gc.garbage
+            if isinstance(obj, ha.Event) and obj.context.id == context_id
+        ]
+    finally:
+        gc.set_debug(0)
+        gc.garbage.clear()
+        gc.enable()
+
+    assert leaked == []
+
+
+async def test_replaced_state_keeps_origin_event_of_other_event(
+    hass: HomeAssistant,
+) -> None:
+    """Test a context that originates from another event keeps that origin."""
+    events = async_capture_events(hass, "test_event")
+    async_capture_events(hass, EVENT_STATE_CHANGED)
+    context = ha.Context()
+
+    hass.bus.async_fire("test_event", context=context)
+    hass.states.async_set("light.kitchen", "on", context=context)
+    hass.states.async_set("light.kitchen", "off")
+
+    assert context.origin_event is events[0]
+
+
 @pytest.mark.parametrize("eager_start", [True, False])
 async def test_background_task(hass: HomeAssistant, eager_start: bool) -> None:
     """Test background tasks being quit."""
