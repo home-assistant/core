@@ -3,15 +3,19 @@
 from typing import Final, override
 
 from music_assistant_client.client import MusicAssistantClient
+from music_assistant_models.dsp import DSPConfig, DSPConfigPreset
+from music_assistant_models.enums import EventType
+from music_assistant_models.event import MassEvent
 from music_assistant_models.player import PlayerOption, PlayerOptionType
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .entity import MusicAssistantPlayerOptionEntity
+from .const import DSP_PRESET_SCHEMA_VERSION
+from .entity import MusicAssistantEntity, MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
 PLAYER_OPTIONS_SELECT: Final[dict[str, bool]] = {
@@ -34,13 +38,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up Music Assistant Select Entities (Player Options) from Config Entry."""
     mass = entry.runtime_data.mass
+    assert mass.server_info  # for type checking
+    # older servers lack the preset command, so their players get no preset select
+    dsp_presets: list[DSPConfigPreset] | None = (
+        await mass.config.get_dsp_preset()
+        if mass.server_info.schema_version >= DSP_PRESET_SCHEMA_VERSION
+        else None
+    )
 
     def add_player(player_id: str) -> None:
         """Handle add player."""
         player = mass.players.get(player_id)
         if player is None:
             return
-        entities: list[MusicAssistantPlayerConfigSelect] = []
+        entities: list[SelectEntity] = []
+        if dsp_presets is not None:
+            entities.append(MusicAssistantDspPresetSelect(mass, player_id, dsp_presets))
         for player_option in player.options:
             if (
                 not player_option.read_only
@@ -127,3 +140,84 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
             if isinstance(player_option.value, str)
             else None
         )
+
+
+class MusicAssistantDspPresetSelect(MusicAssistantEntity, SelectEntity):
+    """Select which DSP preset a player uses."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    entity_description = SelectEntityDescription(
+        key="dsp_preset", translation_key="dsp_preset"
+    )
+
+    def __init__(
+        self,
+        mass: MusicAssistantClient,
+        player_id: str,
+        dsp_presets: list[DSPConfigPreset],
+    ) -> None:
+        """Initialize MusicAssistantDspPresetSelect."""
+        super().__init__(mass, player_id)
+        self._dsp_presets = dsp_presets
+        self._dsp_config: DSPConfig | None = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Load the player's DSP config and follow preset and config changes."""
+        self._dsp_config = await self.mass.config.get_player_dsp_config(self.player_id)
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.mass.subscribe(
+                self._on_dsp_config_updated,
+                EventType.PLAYER_DSP_CONFIG_UPDATED,
+                self.player_id,
+            )
+        )
+        self.async_on_remove(
+            self.mass.subscribe(
+                self._on_dsp_presets_updated, EventType.DSP_PRESETS_UPDATED
+            )
+        )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if there are presets to choose from."""
+        return super().available and bool(self._dsp_presets)
+
+    @property
+    @override
+    def options(self) -> list[str]:
+        """Return the names of the DSP presets."""
+        return [preset.name for preset in self._dsp_presets]
+
+    @property
+    @override
+    def current_option(self) -> str | None:
+        """Return the preset the player uses, if its DSP is on."""
+        if self._dsp_config is None or not self._dsp_config.enabled:
+            return None
+        return next(
+            (
+                preset.name
+                for preset in self._dsp_presets
+                if preset.preset_id == self._dsp_config.preset_id
+            ),
+            None,
+        )
+
+    @catch_musicassistant_error
+    @override
+    async def async_select_option(self, option: str) -> None:
+        """Apply the chosen DSP preset to the player."""
+        preset = next(preset for preset in self._dsp_presets if preset.name == option)
+        assert preset.preset_id  # stored presets always have an id
+        await self.mass.config.apply_dsp_preset(self.player_id, preset.preset_id)
+
+    def _on_dsp_config_updated(self, event: MassEvent) -> None:
+        self._dsp_config = DSPConfig.from_dict(event.data)
+        self.async_write_ha_state()
+
+    def _on_dsp_presets_updated(self, event: MassEvent) -> None:
+        self._dsp_presets = [DSPConfigPreset.from_dict(preset) for preset in event.data]
+        self.async_write_ha_state()

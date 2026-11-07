@@ -88,6 +88,9 @@ ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 # prefix of dashboard device identifiers and entity unique ids, which tells
 # them apart from player ids (a display may share its id with a player)
 DASHBOARD_ID_PREFIX = "dashboard:"
+
+# server schema from which the client sends the DSP preset command
+DSP_PRESET_SCHEMA_VERSION = 101
 DASHBOARD_DEVICE_MODEL = "Dashboard display"
 
 LOGGER = logging.getLogger(__package__)

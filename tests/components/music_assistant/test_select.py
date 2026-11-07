@@ -1,7 +1,8 @@
 """Test Music Assistant select entities."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import AsyncMock, MagicMock, call
 
+from music_assistant_models.dsp import DSPConfig, DSPConfigPreset
 from music_assistant_models.enums import EventType
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -151,3 +152,48 @@ async def test_name_translation_availability(
         assert translations.get(f"{prefix}{translation_key}.name") is not None, (
             f"{translation_key} is missing in strings.json for platform select"
         )
+
+
+async def test_dsp_preset_select(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test the DSP preset select shows and applies the preset of a player."""
+    music_assistant_client.server_info.schema_version = 101
+    config = music_assistant_client.config
+    config.get_dsp_preset = AsyncMock(
+        return_value=[
+            DSPConfigPreset(name="Night", config=DSPConfig(), preset_id="night"),
+            DSPConfigPreset(name="Party", config=DSPConfig(), preset_id="party"),
+        ]
+    )
+    config.get_player_dsp_config = AsyncMock(
+        return_value=DSPConfig(enabled=True, preset_id="night")
+    )
+    config.apply_dsp_preset = AsyncMock()
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "select.test_player_1_dsp_preset"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Night"
+    assert state.attributes["options"] == ["Night", "Party"]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Party"},
+        blocking=True,
+    )
+    assert config.apply_dsp_preset.call_args == call("00:00:00:00:00:01", "party")
+
+    # the select follows the config the server reports
+    await trigger_subscription_callback(
+        hass,
+        music_assistant_client,
+        EventType.PLAYER_DSP_CONFIG_UPDATED,
+        "00:00:00:00:00:01",
+        DSPConfig(enabled=True, preset_id="party").to_dict(),
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Party"
