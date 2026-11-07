@@ -185,6 +185,7 @@ SENSORS: tuple[VitesySensorEntityDescription, ...] = (
         translation_key="last_update",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_last_update,
     ),
     VitesySensorEntityDescription(
