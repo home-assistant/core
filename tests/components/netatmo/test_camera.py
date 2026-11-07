@@ -774,5 +774,5 @@ async def test_camera_image_raises_exception(
     with pytest.raises(Exception) as excinfo:
         await camera.async_get_image(hass, camera_entity_indoor)
 
-    assert excinfo.value.args == ("Unable to get image",)
+    assert excinfo.value.translation_key == "image_unavailable"
     assert fake_post_hits == 9
