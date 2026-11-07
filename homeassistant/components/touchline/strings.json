@@ -32,5 +32,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "error_set_preset": {
+      "message": "An error occurred while setting the preset mode."
+    },
+    "error_set_temperature": {
+      "message": "An error occurred while setting the temperature."
+    }
   }
 }
