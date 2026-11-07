@@ -5,9 +5,22 @@
         "default": "mdi:form-textbox-password"
       }
     },
+    "date": {
+      "firewall_policy_schedule_end_date": {
+        "default": "mdi:calendar-end"
+      },
+      "firewall_policy_schedule_start_date": {
+        "default": "mdi:calendar-start"
+      }
+    },
     "image": {
       "wlan_qr_code": {
         "default": "mdi:qrcode"
+      }
+    },
+    "select": {
+      "firewall_policy_schedule_mode": {
+        "default": "mdi:calendar-clock"
       }
     },
     "sensor": {
@@ -69,6 +82,30 @@
       "firewall_policy_control": {
         "default": "mdi:security-network"
       },
+      "firewall_policy_schedule_all_day": {
+        "default": "mdi:hours-24"
+      },
+      "firewall_policy_schedule_day_fri": {
+        "default": "mdi:calendar-week"
+      },
+      "firewall_policy_schedule_day_mon": {
+        "default": "mdi:calendar-week"
+      },
+      "firewall_policy_schedule_day_sat": {
+        "default": "mdi:calendar-week"
+      },
+      "firewall_policy_schedule_day_sun": {
+        "default": "mdi:calendar-week"
+      },
+      "firewall_policy_schedule_day_thu": {
+        "default": "mdi:calendar-week"
+      },
+      "firewall_policy_schedule_day_tue": {
+        "default": "mdi:calendar-week"
+      },
+      "firewall_policy_schedule_day_wed": {
+        "default": "mdi:calendar-week"
+      },
       "poe_port_control": {
         "default": "mdi:ethernet",
         "state": {
@@ -89,6 +126,14 @@
         "state": {
           "off": "mdi:wifi-off"
         }
+      }
+    },
+    "time": {
+      "firewall_policy_schedule_end": {
+        "default": "mdi:clock-end"
+      },
+      "firewall_policy_schedule_start": {
+        "default": "mdi:clock-start"
       }
     }
   },

@@ -1,11 +1,14 @@
 """UniFi Network abstraction."""
 
+import asyncio
+from collections import defaultdict
 from contextlib import suppress
 from datetime import datetime, tzinfo
 import re
 from typing import TYPE_CHECKING
 
 import aiounifi
+from aiounifi.interfaces.api_handlers import APIHandler
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import Event, HomeAssistant, callback
@@ -63,8 +66,18 @@ class UnifiHub:
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
+        self._control_locks: defaultdict[int, asyncio.Lock] = defaultdict(asyncio.Lock)
         self.time_zone: tzinfo | None = None
         """The controller's time zone. None means use Home Assistant's."""
+
+    def control_lock(self, handler: APIHandler) -> asyncio.Lock:
+        """Return the lock for writing a handler's objects.
+
+        Some writes send a whole object built from the cached copy. Entities
+        on different platforms can write the same object, so they hold this
+        lock from reading the cache until it has been refreshed.
+        """
+        return self._control_locks[id(handler)]
 
     @property
     def available(self) -> bool:
