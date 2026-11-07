@@ -17,7 +17,11 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_DOMAIN, CONF_REGION
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -75,7 +79,10 @@ class OAuth2FlowHandler(
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data
             )
-        self._abort_if_unique_id_configured()
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch()
+        else:
+            self._abort_if_unique_id_configured()
 
         # Default the region to the one detected from the OAuth token
         detected = token.get("ou_code", "").lower()
@@ -228,6 +235,10 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Show completion and virtual key installation."""
         if user_input is not None and self.uid and self.data:
+            if self.source == SOURCE_RECONFIGURE:
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(), data=self.data
+                )
             return self.async_create_entry(title=self.uid, data=self.data)
 
         if not self.domain:
@@ -271,6 +282,18 @@ class OAuth2FlowHandler(
             )
         # For reauth, skip domain registration and go straight to OAuth
         return await super().async_step_user()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """User initiated reconfiguration."""
+        return await self.async_step_pick_implementation(
+            user_input={
+                "implementation": self._get_reconfigure_entry().data[
+                    "auth_implementation"
+                ]
+            }
+        )
 
     def _is_valid_domain(self, domain: str) -> bool:
         """Validate domain format."""
