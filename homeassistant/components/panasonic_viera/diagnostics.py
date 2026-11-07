@@ -7,15 +7,17 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
 from . import PanasonicVieraConfigEntry
-from .const import ATTR_UDN, CONF_APP_ID, CONF_ENCRYPTION_KEY
+from .const import ATTR_UDN, CONF_APP_ID, CONF_ENCRYPTION_KEY, CONF_ON_ACTION
 
-# The UPnP identifiers of a TV all embed its MAC address
+# The UPnP identifiers of a TV all embed its MAC address, and the turn-on
+# action may carry credentials, such as a SecureOn password
 TO_REDACT = {
     CONF_HOST,
     CONF_MAC,
     CONF_UNIQUE_ID,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
+    CONF_ON_ACTION,
     ATTR_UDN,
     "viera:X_DMSUDN",
     "viera:X_DMRUDN",
@@ -31,7 +33,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     remote = entry.runtime_data
-    # The state as reported by the entities, before the TV is queried below
+    # The state as reported by the entities, which the fetch below leaves alone
     remote_data = {
         "state": remote.state,
         "available": remote.available,
@@ -42,7 +44,7 @@ async def async_get_config_entry_diagnostics(
         "source": remote.source,
     }
     # The description served by the TV now, None when it is unreachable
-    device_info = await remote.async_get_device_info()
+    device_info = await remote.async_fetch_device_info()
 
     return async_redact_data(
         {
