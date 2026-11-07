@@ -134,6 +134,7 @@ RECORDING_STALL_FRAGMENTS = 3
 # Covers connecting to the camera, and a copied stream waiting for a keyframe.
 RECORDING_MIN_STALL_SECONDS = 30
 RECORDING_STDERR_LINES = 10
+RECORDING_STDERR_CHUNK = 65536
 # ffmpeg exits right after its output ends, a hang must not block the recording.
 RECORDING_EXIT_TIMEOUT = 5
 # ffmpeg errors can quote the input URL, which may carry credentials or tokens.
@@ -906,15 +907,21 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         self, reader: asyncio.StreamReader, lines: deque[bytes]
     ) -> None:
         """Keep the last ffmpeg output lines of a recording."""
-        while line := await reader.readline():
-            line = RECORDING_STDERR_URL.sub(b"<url>", line.rstrip())
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug(
-                    "[%s] Recording ffmpeg: %s",
-                    self.entity_id,
-                    line.decode(errors="replace"),
-                )
-            lines.append(line)
+        try:
+            while line := await reader.readline():
+                line = RECORDING_STDERR_URL.sub(b"<url>", line.rstrip())
+                if _LOGGER.isEnabledFor(logging.DEBUG):
+                    _LOGGER.debug(
+                        "[%s] Recording ffmpeg: %s",
+                        self.entity_id,
+                        line.decode(errors="replace"),
+                    )
+                lines.append(line)
+        except ValueError:
+            # A line over the reader limit, keep draining so ffmpeg never blocks.
+            _LOGGER.debug("[%s] Recording ffmpeg output line too long", self.entity_id)
+            while await reader.read(RECORDING_STDERR_CHUNK):
+                continue
 
     async def stop_stream(self, session_info: dict[str, Any]) -> None:
         """Stop the stream for the given ``session_id``."""

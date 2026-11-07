@@ -2330,3 +2330,22 @@ async def test_camera_secure_video_turned_off_new_session_keeps_slot(
         .get_value()
         == STREAM_STREAMING
     )
+
+
+@pytest.mark.usefixtures("no_state_file", "recording_transport")
+async def test_camera_secure_video_recording_long_stderr_line(
+    hass: HomeAssistant,
+    run_driver: HomeDriver,
+    recording_ffmpeg: MagicMock,
+) -> None:
+    """Test an overlong ffmpeg output line does not stop draining stderr."""
+    stderr = _closed_pipe(b"x" * 2**17 + b"\nmore output\n")
+    _ffmpeg_output(recording_ffmpeg, _closed_pipe(INIT_SEGMENT + FRAGMENT), stderr)
+    acc = await _recording_camera(hass, run_driver)
+
+    assert [packet.data for packet in await _collect(acc)] == [
+        INIT_SEGMENT,
+        FRAGMENT,
+        b"",
+    ]
+    assert stderr.at_eof()
