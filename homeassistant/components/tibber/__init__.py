@@ -231,7 +231,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> No
         entry.runtime_data.price_coordinator = price_coordinator
 
         data_coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
-        await data_coordinator.async_config_entry_first_refresh()
+        try:
+            await data_coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady:
+            _LOGGER.warning(
+                "Unable to update Tibber consumption/production history and statistics;"
+                " will retry"
+            )
         entry.runtime_data.data_coordinator = data_coordinator
 
     coordinator = TibberDataAPICoordinator(hass, entry)
