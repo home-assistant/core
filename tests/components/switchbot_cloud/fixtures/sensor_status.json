@@ -275,6 +275,27 @@
     "onlineStatus": "online"
   },
   {
+    "deviceId": "5A3C1E9F7D0B",
+    "deviceType": "Keypad Touch",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "battery": 84,
+    "version": "V3.1"
+  },
+  {
+    "deviceId": "4F2B0D8E6C1A",
+    "deviceType": "Keypad Vision",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "battery": 76,
+    "version": "V2.5"
+  },
+  {
+    "deviceId": "3E1A9C7D5B0F",
+    "deviceType": "Keypad Vision Pro",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "battery": 92,
+    "version": "V3.0"
+  },
+  {
     "deviceId": "18F7D5B3A10C",
     "deviceType": "Curtain",
     "hubDeviceId": "BBBBBBBBBB",
