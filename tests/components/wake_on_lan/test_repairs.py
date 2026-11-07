@@ -763,7 +763,12 @@ async def test_template_switch_already_exist(
     await hass.async_block_till_done()
 
     # The existing Template switch was not created by the repair, so the WOL
-    # switch keeps its entity ID
+    # switch keeps its entity ID and the user is told to move references
+    assert data["description_placeholders"] == {
+        "mac": "00-01-02-03-04-05",
+        "entity_id": "switch.test_2",
+        "old_entity_id": "switch.test",
+    }
     assert entity_registry.async_get("switch.test").platform == DOMAIN
     assert hass.states.get("switch.test")
 
@@ -965,6 +970,9 @@ async def test_template_switch_takes_over_customized_entity(
     entity_registry.async_update_entity_options(
         "switch.office_pc", "conversation", {"should_expose": True}
     )
+    entity_registry.async_update_entity(
+        "switch.office_pc", hidden_by=er.RegistryEntryHider.USER
+    )
     await hass.async_block_till_done()
 
     client = await hass_client()
@@ -991,6 +999,8 @@ async def test_template_switch_takes_over_customized_entity(
     assert entity_entry.labels == {label.label_id}
     assert entity_entry.name == "Office PC"
     assert entity_entry.options["conversation"] == {"should_expose": True}
+    assert entity_entry.hidden_by is er.RegistryEntryHider.USER
+    assert entity_entry.disabled_by is None
     assert hass.states.get("switch.office_pc").name == "Office PC"
     assert hass.states.get("switch.test") is None
 
@@ -1111,3 +1121,44 @@ async def test_import_already_configured_without_lookup_match(
 
     assert data["type"] == FlowResultType.ABORT
     assert data["reason"] == "could_not_import_host"
+
+
+@pytest.mark.parametrize(
+    ("disabled_by", "expected_disabled_by"),
+    [
+        pytest.param(
+            er.RegistryEntryDisabler.USER,
+            er.RegistryEntryDisabler.USER,
+            id="user",
+        ),
+        pytest.param(er.RegistryEntryDisabler.INTEGRATION, None, id="integration"),
+    ],
+)
+async def test_template_switch_takes_over_disabled_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_yaml_config: MagicMock,
+    disabled_by: er.RegistryEntryDisabler,
+    expected_disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test only a user disabled WOL switch leaves the Template switch disabled."""
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(
+        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: NO_HOST_CONFIG}
+    )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: NO_HOST_CONFIG}
+    await hass.async_block_till_done()
+    entity_registry.async_update_entity("switch.test", disabled_by=disabled_by)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
+    )
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+    entity_entry = entity_registry.async_get("switch.test")
+    assert entity_entry.platform == "template"
+    assert entity_entry.disabled_by is expected_disabled_by

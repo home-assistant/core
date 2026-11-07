@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import CONF_OFF_ACTION, CONF_ON_ACTION, DOMAIN
 
@@ -73,8 +74,8 @@ class MigrateSwitchFlow(RepairsFlow):
         ping_entity_id = None
         if ping_host:
             # Ping strips the host before storing it
-            ping_entry_id = await self._async_get_or_import_entry(
-                "ping", CONF_HOST, ping_host.strip(), {CONF_HOST: ping_host}
+            ping_entry_id, _ = await self._async_get_or_import_entry(
+                "ping", {CONF_HOST: ping_host.strip()}, {CONF_HOST: ping_host}
             )
             if not ping_entry_id:
                 return self.async_abort(reason="could_not_import_host")
@@ -89,8 +90,8 @@ class MigrateSwitchFlow(RepairsFlow):
             wol_config[CONF_BROADCAST_ADDRESS] = broadcast_address
         if broadcast_port is not None:
             wol_config[CONF_BROADCAST_PORT] = broadcast_port
-        wol_entry_id = await self._async_get_or_import_entry(
-            DOMAIN, CONF_MAC, dr.format_mac(mac), wol_config
+        wol_entry_id, _ = await self._async_get_or_import_entry(
+            DOMAIN, {CONF_MAC: dr.format_mac(mac)}, wol_config
         )
         if not wol_entry_id:
             return self.async_abort(reason="could_not_import_wol")
@@ -120,30 +121,48 @@ class MigrateSwitchFlow(RepairsFlow):
         if turn_off_action:
             template_config[CONF_OFF_ACTION] = turn_off_action
 
-        import_result = await self.hass.config_entries.flow.async_init(
-            "template",
-            context={"source": SOURCE_IMPORT},
-            data=template_config,
+        # Same matching as the Template import, missing keys must be missing
+        template_match = {
+            key: template_config.get(key)
+            for key in (CONF_ON_ACTION, CONF_OFF_ACTION, CONF_VALUE_TEMPLATE)
+        } | {"template_type": SWITCH_DOMAIN}
+        template_entry_id, template_created = await self._async_get_or_import_entry(
+            "template", template_match, template_config
         )
-        if not (
-            import_result["type"] is FlowResultType.CREATE_ENTRY
-            or (
-                import_result["type"] is FlowResultType.ABORT
-                and import_result["reason"] == "already_configured"
-            )
-        ):
+        if not template_entry_id:
             return self.async_abort(reason="could_not_import_template")
+        old_entity_id = entity_reg.async_get_entity_id(
+            SWITCH_DOMAIN, DOMAIN, dr.format_mac(mac)
+        )
 
-        if import_result["type"] is FlowResultType.CREATE_ENTRY and (
-            old_entity_id := entity_reg.async_get_entity_id(
-                SWITCH_DOMAIN, DOMAIN, dr.format_mac(mac)
+        if not template_created:
+            # The existing switch may be referenced by its own ID, so keep it
+            existing_entity_id = next(
+                (
+                    entity.entity_id
+                    for entity in er.async_entries_for_config_entry(
+                        entity_reg, template_entry_id
+                    )
+                    if entity.domain == SWITCH_DOMAIN
+                ),
+                name,
             )
-        ):
-            template_entity_id = await self._async_wait_for_entity(
-                entity_reg, import_result["result"].entry_id, SWITCH_DOMAIN
+            return self.async_create_entry(
+                data={},
+                description="existing_template",
+                description_placeholders={
+                    "mac": mac,
+                    "entity_id": existing_entity_id,
+                    "old_entity_id": old_entity_id or name,
+                },
             )
-            if not template_entity_id:
-                return self.async_abort(reason="could_not_get_template_entity")
+
+        template_entity_id = await self._async_wait_for_entity(
+            entity_reg, template_entry_id, SWITCH_DOMAIN
+        )
+        if not template_entity_id:
+            return self.async_abort(reason="could_not_get_template_entity")
+        if old_entity_id:
             self._async_take_over_entity(entity_reg, old_entity_id, template_entity_id)
 
         return self.async_create_entry(
@@ -153,34 +172,39 @@ class MigrateSwitchFlow(RepairsFlow):
         )
 
     async def _async_get_or_import_entry(
-        self, domain: str, key: str, value: str, import_data: dict[str, Any]
-    ) -> str | None:
-        """Return the ID of the config entry matching the value, importing it if missing."""
+        self, domain: str, match: dict[str, Any], import_data: dict[str, Any]
+    ) -> tuple[str | None, bool]:
+        """Return the ID of the matching config entry and if it was created.
+
+        The entry is imported when no entry has options matching all of `match`.
+        """
 
         def find_entry_id() -> str | None:
             return next(
                 (
                     entry.entry_id
                     for entry in self.hass.config_entries.async_entries(domain)
-                    if entry.options.get(key) == value
+                    if all(
+                        entry.options.get(key) == value for key, value in match.items()
+                    )
                 ),
                 None,
             )
 
         if entry_id := find_entry_id():
-            return entry_id
+            return entry_id, False
         result = await self.hass.config_entries.flow.async_init(
             domain, context={"source": SOURCE_IMPORT}, data=import_data
         )
         if result["type"] is FlowResultType.CREATE_ENTRY:
-            return result["result"].entry_id
+            return result["result"].entry_id, True
         if (
             result["type"] is FlowResultType.ABORT
             and result["reason"] == "already_configured"
         ):
             # Abort results don't carry the existing entry
-            return find_entry_id()
-        return None
+            return find_entry_id(), False
+        return None, False
 
     async def _async_wait_for_entity(
         self, entity_reg: er.EntityRegistry, entry_id: str, domain: str
@@ -221,6 +245,16 @@ class MigrateSwitchFlow(RepairsFlow):
             icon=old_entry.icon,
             labels=set(old_entry.labels),
             name=old_entry.name,
+            disabled_by=(
+                old_entry.disabled_by
+                if old_entry.disabled_by is er.RegistryEntryDisabler.USER
+                else UNDEFINED
+            ),
+            hidden_by=(
+                old_entry.hidden_by
+                if old_entry.hidden_by is er.RegistryEntryHider.USER
+                else UNDEFINED
+            ),
         )
         for domain, options in old_entry.options.items():
             entity_reg.async_update_entity_options(old_entity_id, domain, options)
