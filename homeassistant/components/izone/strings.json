@@ -90,6 +90,9 @@
     "controller_not_found": {
       "message": "No iZone controller found for unique_id {uid}"
     },
+    "controller_offline": {
+      "message": "The iZone bridge is reachable, but the iZone system is offline"
+    },
     "discovery_failed_host": {
       "message": "iZone discovery failed while resolving config entry host"
     },
