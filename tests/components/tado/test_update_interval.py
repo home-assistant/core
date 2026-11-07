@@ -17,6 +17,7 @@ from homeassistant.components.tado.coordinator import (
     TadoDataUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 
@@ -172,15 +173,34 @@ async def test_empty_reply_waits_and_keeps_zones_and_devices(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_rate_limit_in_a_later_stage_waits(
+async def test_reply_without_homes_is_a_normal_failure(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """A 429 after the preload (zone states) gets the same quota back-off."""
+    """A /me reply without homes fails the update without a quota wait."""
     coordinator = _coordinator(hass)
+    with patch.object(coordinator._tado, "get_me", return_value={"id": 1}) as get_me:
+        await _tick(hass, freezer, coordinator.update_interval)
+        assert not coordinator.last_update_success
+        await _tick(hass, freezer, coordinator.update_interval)
+        assert get_me.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "method",
+    ["get_devices", "get_zone_states", "get_zone_overlay_default", "get_home_state"],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_rate_limit_in_a_later_stage_waits(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, method: str
+) -> None:
+    """A 429 after the preload gets the same quota back-off in every stage."""
+    coordinator = _coordinator(hass)
+    side_effect: object = TadoException
+    if method == "get_devices":
+        # The preload asks for the devices too; fail only the second call
+        side_effect = [coordinator.devices, TadoException]
     with (
-        patch.object(
-            coordinator._tado, "get_zone_states", side_effect=TadoException
-        ) as get_zone_states,
+        patch.object(coordinator._tado, method, side_effect=side_effect) as failing,
         patch.object(
             coordinator._tado,
             "rate_limit_info",
@@ -189,12 +209,27 @@ async def test_rate_limit_in_a_later_stage_waits(
     ):
         await _tick(hass, freezer, coordinator.update_interval)
         assert not coordinator.last_update_success
-        assert get_zone_states.call_count == 1
+        calls = failing.call_count
 
         await _tick(hass, freezer, SCAN_INTERVAL)
-        assert get_zone_states.call_count == 1
-        await _tick(hass, freezer, timedelta(minutes=31) - SCAN_INTERVAL)
-        assert get_zone_states.call_count == 2
+        assert failing.call_count == calls
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_rate_limit_when_refreshing_one_zone(hass: HomeAssistant) -> None:
+    """The single-zone refresh after a change reports the quota wait too."""
+    coordinator = _coordinator(hass)
+    with (
+        patch.object(coordinator._tado, "get_zone_state", side_effect=TadoException),
+        patch.object(
+            coordinator._tado,
+            "rate_limit_info",
+            return_value={"remaining": "0", "reset-seconds": "1800"},
+        ),
+        pytest.raises(UpdateFailed) as exc_info,
+    ):
+        await coordinator._update_zone(1)
+    assert exc_info.value.retry_after == timedelta(minutes=31).total_seconds()
 
 
 @pytest.mark.usefixtures("init_integration")

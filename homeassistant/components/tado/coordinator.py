@@ -111,9 +111,11 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
         try:
-            tado_home_call, zones, devices = await self.hass.async_add_executor_job(
-                _load_tado_data
-            )
+            (
+                tado_home_call,
+                zone_list,
+                device_list,
+            ) = await self.hass.async_add_executor_job(_load_tado_data)
         except (RequestException, TadoException) as err:
             raise self._update_failed("Error during Tado setup", err) from err
 
@@ -125,8 +127,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         if not tado_home_call.get("homes"):
             raise UpdateFailed("Tado returned no home data")
-        self.zones = zones
-        self.devices = devices
+        self.zones = zone_list
+        self.devices = device_list
 
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
