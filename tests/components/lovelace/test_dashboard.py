@@ -1149,3 +1149,36 @@ async def test_storage_dashboard_change_url_path_after_conflict(
     assert hass.data[frontend.DATA_PANELS]["created-url-path"].config == {
         "mode": "yaml"
     }
+
+
+async def test_storage_dashboard_change_url_path_free_form_user_data(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    hass_admin_user: MockUser,
+) -> None:
+    """Test a rename skips user data where core isn't a dictionary."""
+    user_key = f"{frontend.DOMAIN}.user_data_{hass_admin_user.id}"
+    hass_storage[user_key] = {
+        "version": 1,
+        "key": user_key,
+        "data": {"core": True},
+    }
+    assert await async_setup_component(hass, "frontend", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+    dashboard_id = await _create_dashboard(client)
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "lovelace/dashboards/update",
+            "dashboard_id": dashboard_id,
+            "url_path": "renamed-url-path",
+        }
+    )
+
+    assert (await client.receive_json())["success"]
+    assert "renamed-url-path" in hass.data[frontend.DATA_PANELS]
+    await client.send_json({"id": 3, "type": "frontend/get_user_data", "key": "core"})
+    assert (await client.receive_json())["result"]["value"] is True

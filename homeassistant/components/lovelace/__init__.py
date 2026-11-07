@@ -232,6 +232,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 _async_ensure_default_panel(hass)
             return
 
+        renamed_from: str | None = None
+
         if change_type == collection.CHANGE_ADDED:
             existing = hass.data[LOVELACE_DATA].dashboards.get(url_path)
 
@@ -262,9 +264,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             old_url_path = storage_url_paths[item_id]
             update = old_url_path == url_path
             if not update:
+                renamed_from = old_url_path
                 frontend.async_remove_panel(hass, old_url_path)
                 dashboards[url_path] = dashboards.pop(old_url_path)
-                await _async_update_default_panel(hass, old_url_path, url_path)
             dashboards[url_path].config = item
 
         storage_url_paths[item_id] = url_path
@@ -273,6 +275,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _register_panel(hass, url_path, MODE_STORAGE, item, update)
         except ValueError:
             _LOGGER.warning("Failed to %s panel %s from storage", change_type, url_path)
+
+        # Only after the rename is complete, as this waits for storage.
+        if renamed_from is not None:
+            await _async_update_default_panel(hass, renamed_from, url_path)
 
     # Process YAML dashboards
     for url_path, dashboard_conf in hass.data[LOVELACE_DATA].yaml_dashboards.items():
@@ -330,7 +336,11 @@ async def _async_update_default_panel(
 
     def moved(data: dict[str, Any]) -> dict[str, Any] | None:
         core_data = data.get("core")
-        if core_data and core_data.get("default_panel") == old_url_path:
+        # User data is free-form, so "core" isn't always a dict.
+        if (
+            isinstance(core_data, dict)
+            and core_data.get("default_panel") == old_url_path
+        ):
             return {**core_data, "default_panel": url_path}
         return None
 
