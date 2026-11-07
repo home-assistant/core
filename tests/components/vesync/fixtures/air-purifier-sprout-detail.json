@@ -1,0 +1,38 @@
+{
+  "code": 0,
+  "msg": "request success",
+  "traceId": "1234",
+  "result": {
+    "code": 0,
+    "result": {
+      "powerSwitch": 1,
+      "workMode": "manual",
+      "manualSpeedLevel": 2,
+      "fanSpeedLevel": 1,
+      "PM1": 10,
+      "PM25": 3,
+      "PM10": 5,
+      "screenState": 1,
+      "childLockSwitch": 1,
+      "screenSwitch": 1,
+      "scheduleCount": 0,
+      "timerRemain": 0,
+      "humidity": 50,
+      "AQI": 75,
+      "AQLevel": 1,
+      "temperature": 791,
+      "VOC": 120,
+      "CO2": 669,
+      "errorCode": 0,
+      "autoPreference": {
+        "autoPreferenceType": "default",
+        "roomSize": 630
+      },
+      "nightLight": {
+        "nightLightSwitch": 1,
+        "brightness": 50,
+        "colorTemperature": 3500
+      }
+    }
+  }
+}
