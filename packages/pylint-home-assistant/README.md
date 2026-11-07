@@ -176,6 +176,7 @@ Every check has a code following the
 | `W7454` | [`home-assistant-sequential-add-entities`](#w7454-home-assistant-sequential-add-entities) | Sequential `async_add_entities` calls should be grouped |
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
+| `W7461` | [`home-assistant-entity-sets-entity-id`](#w7461-home-assistant-entity-sets-entity-id) | Entity should not set its own `entity_id` |
 
 ## `home_assistant_logger` checker
 
@@ -419,8 +420,7 @@ it for the `config_entry` class annotation and `__init__` argument, so
 class MyCoordinator(DataUpdateCoordinator[MyData]):
     config_entry: MyConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None:
-        ...
+    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None: ...
 ```
 
 When the alias lives in `__init__.py`, import it in the coordinator under
@@ -783,9 +783,7 @@ cause and finish the flow, so the test proves the flow recovers:
 assert result["errors"] == {"base": "cannot_connect"}
 
 mock_client.connect.side_effect = None
-result = await hass.config_entries.flow.async_configure(
-    result["flow_id"], USER_INPUT
-)
+result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
 assert result["type"] is FlowResultType.CREATE_ENTRY
 ```
 
@@ -984,6 +982,32 @@ As for `W7425`, the rule targets new unique ids: existing unique ids in
 this format should be kept, with the check disabled on that line.
 
 
+## `home_assistant_entity_sets_entity_id` checker
+
+Checks that entities don't set their own entity ID.
+
+### `W7461`: `home-assistant-entity-sets-entity-id`
+
+Home Assistant generates the entity ID from the entity name when the entity is
+added, and users can change it in the entity registry. An entity should not
+set `entity_id` itself, either in its class body or through
+`self.entity_id`:
+
+```python
+class MySensor(SensorEntity):
+    entity_id = "sensor.my_sensor"  # flagged
+
+    def __init__(self, key: str) -> None:
+        self.entity_id = f"sensor.{key}"  # flagged
+```
+
+Give the entity a name (or a `translation_key`) and let Home Assistant
+generate the entity ID instead.
+
+Internal integrations (`quality_scale: internal` in `manifest.json`) are not
+checked.
+
+
 ## `home_assistant_entity_description_defaults` checker
 
 Detects fields in `EntityDescription` (and subclasses) that are explicitly
@@ -1142,10 +1166,10 @@ such as `CONF_USERNAME`. Integrations that need a constant can use a dedicated
 
 ```python
 # Bad
-description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]}
+description_placeholders = {CONF_USERNAME: entry.data[CONF_USERNAME]}
 
 # Good
-description_placeholders={"username": entry.data[CONF_USERNAME]}
+description_placeholders = {"username": entry.data[CONF_USERNAME]}
 
 # Bad
 self.context["title_placeholders"] = {CONF_HOST: discovery_info.host}

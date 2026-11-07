@@ -94,7 +94,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(self.hass, config)
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
+        self.entity_id = ENTITY_ID_FORMAT.format(object_id)  # pylint: disable=home-assistant-entity-sets-entity-id
         self._attr_is_on = False
         self._command_on = command_on
         self._command_off = command_off
