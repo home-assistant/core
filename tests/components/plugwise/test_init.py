@@ -213,29 +213,52 @@ async def test_migrate_unique_id_temperature(
     assert entity_migrated.unique_id == new_unique_id
 
 
-@pytest.mark.usefixtures("mock_smile_adam")
+@pytest.mark.parametrize(
+    ("device_link", "device_model"),
+    [
+        (True, "ThermoZone"),
+        (True, None),
+        (False, "ThermoZone"),
+        (False, None),
+    ],
+)
+@pytest.mark.parametrize("omit_coordinator_model", [False, True])
 async def test_migrate_climate_unique_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    mock_smile_adam: MagicMock,
+    device_link: bool,
+    device_model: str | None,
+    omit_coordinator_model: bool,
 ) -> None:
-    """Test migration of the climate unique ID."""
+    """Test migration of the climate unique ID without registry metadata."""
     mock_config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "c50f167537524366a5af7aa3942feb1e")},
-        model="ThermoZone",
-    )
+    device_id = "c50f167537524366a5af7aa3942feb1e"
+    if omit_coordinator_model:
+        mock_smile_adam.async_update.return_value[device_id].pop("model")
+
+    if device_link:
+        device_entry = device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={(DOMAIN, device_id)},
+            model=device_model,
+        )
+        registry_device_id = device_entry.id
+    else:
+        registry_device_id = None
+
     entity = entity_registry.async_get_or_create(
         domain=Platform.CLIMATE,
         platform=DOMAIN,
-        unique_id="c50f167537524366a5af7aa3942feb1e-climate",
-        suggested_object_id="c50f167537524366a5af7aa3942feb1e-climate",
+        unique_id=f"{device_id}-climate",
+        suggested_object_id=f"{device_id}-climate",
         disabled_by=None,
-        device_id=device_entry.id,
+        device_id=registry_device_id,
         config_entry=mock_config_entry,
     )
+    entity_registry.async_update_entity(entity.entity_id, name="Custom name")
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -243,7 +266,9 @@ async def test_migrate_climate_unique_id(
     entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
     assert entity_migrated.id == entity.id
-    assert entity_migrated.unique_id == "c50f167537524366a5af7aa3942feb1e-thermozone"
+    model_name = "thermostat" if omit_coordinator_model else "thermozone"
+    assert entity_migrated.unique_id == f"{device_id}-{model_name}"
+    assert entity_migrated.name == "Custom name"
 
 
 @pytest.mark.usefixtures("mock_smile_adam")

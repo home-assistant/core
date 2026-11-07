@@ -1,6 +1,5 @@
 """Plugwise platform for Home Assistant Core."""
 
-from functools import partial
 from typing import Any
 
 from homeassistant.const import Platform
@@ -17,11 +16,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
     await er.async_migrate_entries(
         hass,
         entry.entry_id,
-        partial(async_migrate_entity_entry, device_registry=device_registry),
+        async_migrate_entity_entry,
     )
 
     coordinator = PlugwiseDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
+    migrate_climate_entities(hass, coordinator)
     migrate_sensor_entities(hass, coordinator)
 
     entry.runtime_data = coordinator
@@ -46,25 +46,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) ->
 
 @callback
 def async_migrate_entity_entry(
-    entry: er.RegistryEntry, *, device_registry: dr.DeviceRegistry
+    entry: er.RegistryEntry,
 ) -> dict[str, Any] | None:
     """Migrate Plugwise entity entries.
 
-    Migrate old unique IDs from climate, binary sensor, sensor, and switch entities.
+    Migrate old unique IDs from binary sensor, sensor, and switch entities.
     """
-    if (
-        entry.domain == Platform.CLIMATE
-        and entry.unique_id.endswith("-climate")
-        and entry.device_id
-        and isinstance(
-            device := device_registry.async_get(entry.device_id), dr.DeviceEntry
-        )
-        and device.model
-    ):
-        model_name = device.model.lower().replace(" ", "-")
-        return {
-            "new_unique_id": f"{entry.unique_id.removesuffix('-climate')}-{model_name}"
-        }
     if entry.domain == Platform.BINARY_SENSOR and entry.unique_id.endswith(
         "-slave_boiler_state"
     ):
@@ -84,6 +71,40 @@ def async_migrate_entity_entry(
 
     # No migration needed
     return None
+
+
+@callback
+def migrate_climate_entities(
+    hass: HomeAssistant,
+    coordinator: PlugwiseDataUpdateCoordinator,
+) -> None:
+    """Migrate climate unique IDs using the refreshed device data."""
+    ent_reg = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(
+        ent_reg, coordinator.config_entry.entry_id
+    ):
+        if entity.domain != Platform.CLIMATE or not entity.unique_id.endswith(
+            "-climate"
+        ):
+            continue
+
+        device_id = entity.unique_id.removesuffix("-climate")
+        if device_id not in coordinator.data:
+            continue
+
+        model_name = (
+            f"{coordinator.data[device_id].get('model', 'thermostat')}".lower().replace(
+                " ", "-"
+            )
+        )
+        new_unique_id = f"{device_id}-{model_name}"
+        LOGGER.debug(
+            "Migrating climate entity %s from old unique ID '%s' to new unique ID '%s'",
+            entity.entity_id,
+            entity.unique_id,
+            new_unique_id,
+        )
+        ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
 
 
 def migrate_sensor_entities(
