@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from aiohpprinter import HpPrinter, HpPrinterError
+from aiohpprinter import HpPrinter, HpPrinterDevice, HpPrinterError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -29,14 +29,8 @@ class HpPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            client = HpPrinter(
-                user_input[CONF_HOST], async_get_clientsession(self.hass)
-            )
-            try:
-                device = await client.device()
-                # Updates fail without the status endpoint, so check it too.
-                await client.status()
-            except HpPrinterError:
+            device = await self._async_get_device(user_input[CONF_HOST])
+            if device is None:
                 errors["base"] = "cannot_connect"
             else:
                 if not device.serial_number:
@@ -55,3 +49,41 @@ class HpPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the printer's host."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            device = await self._async_get_device(user_input[CONF_HOST])
+            if device is None:
+                errors["base"] = "cannot_connect"
+            else:
+                if not device.serial_number:
+                    return self.async_abort(reason="missing_serial_number")
+                await self.async_set_unique_id(device.serial_number)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
+        )
+
+    async def _async_get_device(self, host: str) -> HpPrinterDevice | None:
+        """Return the printer's identity, or None if it cannot be reached."""
+        client = HpPrinter(host, async_get_clientsession(self.hass))
+        try:
+            device = await client.device()
+            # Updates fail without the status endpoint, so check it too.
+            await client.status()
+        except HpPrinterError:
+            return None
+        return device
