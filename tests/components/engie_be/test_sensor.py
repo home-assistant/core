@@ -53,6 +53,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .conftest import (
     BAN,
@@ -632,6 +633,38 @@ def _add_offtake_slot(
     )
 
 
+def _reprice_offtake_slot(
+    prices: PricesResponse, ean: str, slot_code: str, incl_vat: float, excl_vat: float
+) -> PricesResponse:
+    """Return a copy of prices with one offtake slot's price values changed."""
+    return PricesResponse(
+        items=tuple(
+            dataclasses.replace(
+                ean_prices,
+                periods=tuple(
+                    dataclasses.replace(
+                        period,
+                        offtake=tuple(
+                            dataclasses.replace(
+                                slot,
+                                price_value=incl_vat,
+                                price_value_excl_vat=excl_vat,
+                            )
+                            if slot.time_of_use_slot_code == slot_code
+                            else slot
+                            for slot in period.offtake
+                        ),
+                    )
+                    for period in ean_prices.periods
+                ),
+            )
+            if ean_prices.ean == ean
+            else ean_prices
+            for ean_prices in prices.items
+        )
+    )
+
+
 async def test_new_slot_code_appears(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -677,6 +710,47 @@ async def test_new_slot_code_appears(
     )
     assert incl_vat_id is not None
     assert excl_vat_id is not None
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_update_entity_refreshes_prices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the Update entity action fetches new prices for the active price sensor."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    client = mock_engie_client.return_value
+    client.async_get_tou_schedules.return_value = build_tou_schedules()
+    await setup_entry(hass, mock_config_entry)
+
+    active_price_id = _tou_entity_id(
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
+    )
+    assert active_price_id is not None
+    active_price = hass.states.get(active_price_id)
+    assert active_price is not None
+    assert float(active_price.state) == pytest.approx(0.18)
+
+    client.async_get_prices.return_value = _reprice_offtake_slot(
+        build_prices(),
+        OFFTAKE_INJECTION_EAN,
+        "S_TOU1_OFFTAKE_PEAK",
+        0.25,
+        0.235849,
+    )
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": active_price_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    active_price = hass.states.get(active_price_id)
+    assert active_price is not None
+    assert float(active_price.state) == pytest.approx(0.25)
 
 
 async def test_no_duplicate_entities_on_repeated_refresh(

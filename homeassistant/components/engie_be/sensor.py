@@ -576,6 +576,12 @@ class EngieBeActivePriceSensor(EngieBeTouEntity):
             self._prices.async_add_listener(self._handle_coordinator_update)
         )
 
+    @override
+    async def async_update(self) -> None:
+        """Refresh the schedules and the prices this sensor shows."""
+        await super().async_update()
+        await self._prices.async_request_refresh()
+
     def _supplier_schedule(self) -> TouSchedule | None:
         """Return the supplier schedule of this meter."""
         item = lookup_by_ean(self.coordinator.data, self._ean)
