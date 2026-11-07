@@ -1,5 +1,7 @@
 """Tests for the select platform."""
 
+from unittest.mock import MagicMock, Mock
+
 import pytest
 
 from homeassistant.components.select import (
@@ -7,11 +9,16 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.components.vesync.const import HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM
+from homeassistant.components.vesync.const import (
+    HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
+    HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
+    HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
+)
 from homeassistant.components.vesync.select import (
     HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .common import ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT
@@ -42,15 +49,33 @@ async def test_humidifier_set_nightlight_level(
 
 
 @pytest.mark.parametrize(
-    "install_humidifier_device", ["humidifier_300s"], indirect=True
+    ("brightness", "nightlight_status", "expected_state"),
+    [
+        pytest.param(0, "off", HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF, id="off"),
+        pytest.param(50, "on", HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM, id="dim"),
+        pytest.param(100, "on", HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT, id="bright"),
+        pytest.param(12, "on", STATE_UNKNOWN, id="sprout-brightness"),
+        pytest.param(75, "on", STATE_UNKNOWN, id="intermediate-brightness"),
+        pytest.param(None, "on", STATE_UNKNOWN, id="missing-brightness"),
+    ],
 )
 async def test_humidifier_nightlight_level(
-    hass: HomeAssistant, install_humidifier_device
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    manager: MagicMock,
+    humidifier_300s: Mock,
+    brightness: int | None,
+    nightlight_status: str,
+    expected_state: str,
 ) -> None:
     """Test the state of humidifier night light level select entity."""
+    humidifier_300s.state.nightlight_brightness = brightness
+    humidifier_300s.state.nightlight_status = nightlight_status
+    manager.devices.humidifiers.append(humidifier_300s)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    # The mocked device has night_light_brightness=50 which is "dim"
     assert (
         hass.states.get(ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT).state
-        == HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM
+        == expected_state
     )
