@@ -33,3 +33,14 @@ VAR_OUTPUT_SENSOR = Sensor(
     begin="",
     mac_addr="mock-mac",
 )
+LIFETIME_INPUT_SENSOR = Sensor(
+    channel="1",
+    base_name="My Sensor",
+    suffix=".wh",
+    io_type="Input",
+    unit="WattHours",
+    value=100.0,
+    begin="2023-07-20T12:52:00",
+    mac_addr="mock-mac",
+    lifetime=True,
+)
