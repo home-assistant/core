@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from aiounifi.models.device import DeviceState
+from aiounifi.models.firewall_policy import FirewallPolicyScheduleMode
 
 from homeassistant.const import Platform
 
@@ -18,11 +19,14 @@ CLIENT_RESTORE_MAX_AGE = timedelta(days=30)
 
 PLATFORMS = [
     Platform.BUTTON,
+    Platform.DATE,
     Platform.DEVICE_TRACKER,
     Platform.IMAGE,
     Platform.LIGHT,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
     Platform.UPDATE,
 ]
 
@@ -74,3 +78,12 @@ DEVICE_STATES = {
     DeviceState.ADOPTION_FALIED: "adoption_failed",
     DeviceState.ISOLATED: "isolated",
 }
+
+MODES_WITH_DAYS = (
+    FirewallPolicyScheduleMode.EVERY_WEEK,
+    FirewallPolicyScheduleMode.CUSTOM,
+)
+MODES_WITH_START_DATE = (
+    FirewallPolicyScheduleMode.ONE_TIME_ONLY,
+    FirewallPolicyScheduleMode.CUSTOM,
+)

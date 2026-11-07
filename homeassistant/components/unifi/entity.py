@@ -1,6 +1,7 @@
 """UniFi entity representation."""
 
 from abc import abstractmethod
+import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
@@ -17,6 +18,7 @@ from aiounifi.models.event import Event, EventKey
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -33,6 +35,29 @@ if TYPE_CHECKING:
     from .hub import UnifiHub
 
 type SubscriptionType = Callable[[CallbackType, ItemEvent], UnsubscribeType]
+
+
+def request_failed_error(err: aiounifi.AiounifiException) -> HomeAssistantError:
+    """Return the error to raise for a request UniFi Network didn't accept.
+
+    UniFi Network's v2 API explains a rejected change in a "message" field,
+    which aiounifi passes on as the exception's argument. Show it when present.
+    """
+    if (
+        err.args
+        and isinstance(details := err.args[0], dict)
+        and isinstance(reason := details.get("message"), str)
+        and reason
+    ):
+        return HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="action_request_rejected",
+            translation_placeholders={"reason": reason},
+        )
+    return HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="action_request_failed",
+    )
 
 
 def is_locally_administered_mac(mac: str) -> bool:
@@ -353,6 +378,11 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     async def async_update(self) -> None:
         """Update state if polling is configured."""
         self.async_update_state(ItemEvent.CHANGED, self._obj_id)
+
+    @property
+    def control_lock(self) -> asyncio.Lock:
+        """Return the lock to hold while writing this entity's object."""
+        return self.hub.control_lock(self.entity_description.api_handler_fn(self.api))
 
     async def async_refresh_after_control(self) -> None:
         """Refresh handler data after a control call when polling."""

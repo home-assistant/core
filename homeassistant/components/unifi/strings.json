@@ -69,6 +69,14 @@
         "name": "Regenerate password"
       }
     },
+    "date": {
+      "firewall_policy_schedule_end_date": {
+        "name": "{policy_name} schedule end date"
+      },
+      "firewall_policy_schedule_start_date": {
+        "name": "{policy_name} schedule start date"
+      }
+    },
     "image": {
       "wlan_qr_code": {
         "name": "QR code"
@@ -77,6 +85,18 @@
     "light": {
       "led_control": {
         "name": "LED"
+      }
+    },
+    "select": {
+      "firewall_policy_schedule_mode": {
+        "name": "{policy_name} schedule",
+        "state": {
+          "always": "Always",
+          "custom": "Custom",
+          "every_day": "Every day",
+          "every_week": "Every week",
+          "one_time": "One time"
+        }
       }
     },
     "sensor": {
@@ -192,6 +212,14 @@
         "name": "Enabled"
       }
     },
+    "time": {
+      "firewall_policy_schedule_end": {
+        "name": "{policy_name} schedule end"
+      },
+      "firewall_policy_schedule_start": {
+        "name": "{policy_name} schedule start"
+      }
+    },
     "update": {
       "ips_engine": {
         "name": "IPS engine"
@@ -201,6 +229,9 @@
   "exceptions": {
     "action_request_failed": {
       "message": "Failed to send action request to UniFi Network"
+    },
+    "action_request_rejected": {
+      "message": "UniFi Network rejected the change: {reason}"
     },
     "reconnect_client_device_not_found": {
       "message": "Unable to reconnect client: device not found"
@@ -213,6 +244,15 @@
     },
     "remove_clients_request_failed": {
       "message": "Failed to remove clients from UniFi Network"
+    },
+    "schedule_dates_out_of_order": {
+      "message": "The schedule's start date must be before its end date"
+    },
+    "schedule_mode_not_supported": {
+      "message": "This schedule mode can only be set in UniFi Network"
+    },
+    "schedule_setting_unused_in_mode": {
+      "message": "The policy's current schedule mode doesn't use this setting"
     },
     "site_not_found": {
       "message": "The configured UniFi Network site no longer exists"
