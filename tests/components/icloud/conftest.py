@@ -1,6 +1,7 @@
 """Configure iCloud tests."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable, Generator, Iterator
+from typing import Any
 from unittest.mock import patch
 
 from pyicloud.services.photos import AlbumContainer, PhotoAlbumFolder, PhotoAsset
@@ -17,7 +18,90 @@ from homeassistant.components.icloud.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import USER_INFO
+from .const import DEVICE, USER_INFO
+
+
+class MockAppleDevice:
+    """Mock an Apple device with the API surface the account uses."""
+
+    def __init__(self, status: dict[str, Any]) -> None:
+        """Initialize the device with its status payload."""
+        self._status = status
+        self.play_sound = MagicMock()
+
+    def _feature(self, key: str) -> bool:
+        """Return whether the device reports the feature flag."""
+        return bool((self._status.get("features") or {}).get(key, False))
+
+    def status(self, additional: list[str] | None = None) -> dict[str, Any]:
+        """Return the status payload, whatever subset the account asks for."""
+        return self._status
+
+    def __getitem__(self, key: str) -> Any:
+        """Allow indexing to proxy into the raw status dict."""
+        return self._status.get(key)
+
+    @property
+    def erase_available(self) -> bool:
+        """Return whether the device can be remotely erased."""
+        return self._feature("WIP")
+
+    @property
+    def location_available(self) -> bool:
+        """Return whether the device reports a location."""
+        return self._feature("LOC") and self._status.get("location") is not None
+
+    @property
+    def lost_mode_available(self) -> bool:
+        """Return whether the device supports lost mode."""
+        return bool(self._status.get("lostModeCapable", False))
+
+    @property
+    def sound_available(self) -> bool:
+        """Return whether the device can play a sound."""
+        return self._feature("SND")
+
+
+class MockDevicesContainer:
+    """Mock the Find My devices container."""
+
+    def __init__(
+        self,
+        userinfo: dict[str, Any] | None = None,
+        devices: list[Any] | None = None,
+    ) -> None:
+        """Initialize with the user info and the devices Apple reports."""
+        self.user_info = USER_INFO if userinfo is None else userinfo
+        self.devices: list[Any] = devices if devices is not None else []
+        self.refresh_calls: list[bool] = []
+
+    def add(self, status: dict[str, Any]) -> MockAppleDevice:
+        """Add a device reporting the given status payload."""
+        device = MockAppleDevice(status)
+        self.devices.append(device)
+        return device
+
+    def refresh(self, locate: bool = True) -> None:
+        """Record refresh calls made by the account."""
+        self.refresh_calls.append(locate)
+
+    def __iter__(self) -> Iterator[MockAppleDevice]:
+        """Iterate returns device objects (each must have .status(...))."""
+        return iter(
+            device if hasattr(device, "status") else MockAppleDevice(device)
+            for device in self.devices
+        )
+
+    def __len__(self) -> int:
+        """Return number of devices."""
+        return len(self.devices)
+
+    def __getitem__(self, idx: int) -> Any:
+        """Indexing returns the status of the indexed device."""
+        device = self.devices[idx]
+        if hasattr(device, "status"):
+            return device.status(None)
+        return device
 
 
 @pytest.fixture(autouse=True)
@@ -149,75 +233,26 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-class MockAppleDevice:
-    """Mock an Apple device with the API surface the account uses."""
-
-    def __init__(self, status: dict) -> None:
-        """Initialize the device with its status."""
-        self._status = status
-        self.play_sound = MagicMock()
-
-    def _feature(self, key: str) -> bool:
-        """Return whether the device reports the feature flag."""
-        return bool((self._status.get("features") or {}).get(key, False))
-
-    def status(self, additional: list[str] | None = None) -> dict:
-        """Return the device status."""
-        return self._status
-
-    def __getitem__(self, key: str):
-        """Return a status value by key."""
-        return self._status.get(key)
-
-    @property
-    def erase_available(self) -> bool:
-        """Return whether the device can be remotely erased."""
-        return self._feature("WIP")
-
-    @property
-    def location_available(self) -> bool:
-        """Return whether the device reports a location."""
-        return self._feature("LOC") and self._status.get("location") is not None
-
-    @property
-    def lost_mode_available(self) -> bool:
-        """Return whether the device supports lost mode."""
-        return bool(self._status.get("lostModeCapable", False))
-
-    @property
-    def sound_available(self) -> bool:
-        """Return whether the device can play a sound."""
-        return self._feature("SND")
+@pytest.fixture(name="icloud_devices")
+def mock_icloud_devices() -> list[MockAppleDevice]:
+    """Return the devices the mocked account reports to the integration."""
+    return [MockAppleDevice(DEVICE)]
 
 
-class MockDevicesContainer:
-    """Mock the Find My devices container."""
+@pytest.fixture(name="mock_icloud_service")
+def mock_icloud_service(
+    icloud_devices: list[MockAppleDevice],
+) -> Generator[MagicMock]:
+    """Mock the pyicloud client the account logs in with."""
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+    ) as service_mock:
+        service_instance = MagicMock()
+        service_instance.requires_2fa = False
+        service_instance.devices = MockDevicesContainer(USER_INFO, icloud_devices)
 
-    def __init__(self) -> None:
-        """Initialize the container."""
-        self.user_info = USER_INFO
-        self.devices: list[MockAppleDevice] = []
-
-    def add(self, status: dict) -> MockAppleDevice:
-        """Add a device reporting ``status``."""
-        device = MockAppleDevice(status)
-        self.devices.append(device)
-        return device
-
-    def refresh(self, locate: bool = True) -> None:
-        """Pretend to refresh the device locations."""
-
-    def __iter__(self):
-        """Iterate over the devices."""
-        return iter(self.devices)
-
-    def __len__(self) -> int:
-        """Return the number of devices."""
-        return len(self.devices)
-
-    def __getitem__(self, idx: int) -> dict:
-        """Return the status of the indexed device."""
-        return self.devices[idx].status()
+        service_mock.return_value = service_instance
+        yield service_mock
 
 
 @pytest.fixture(name="devices_config_entry")
@@ -238,7 +273,7 @@ def mock_devices_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(name="icloud_service")
-def mock_icloud_service() -> Generator[MagicMock]:
+def icloud_service_fixture() -> Generator[MagicMock]:
     """Mock PyiCloudService with a device container the test fills in."""
     with patch(
         "homeassistant.components.icloud.account.PyiCloudService"

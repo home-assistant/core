@@ -41,12 +41,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import Store
 
 from . import MockAppleDevice, MockDevicesContainer
 from .const import (
     DEVICE,
+    DEVICE_2,
     DEVICE_WITH_HALF_A_LOCATION,
     DEVICE_WITHOUT_BATTERY,
     DEVICE_WITHOUT_LOCATION,
@@ -113,23 +114,6 @@ async def test_setup_fails_when_userinfo_missing(
 
     with pytest.raises(ConfigEntryNotReady, match="No user info found"):
         account.setup()
-
-
-@pytest.fixture(name="mock_icloud_service")
-def mock_icloud_service_fixture():
-    """Mock PyiCloudService with iterable and indexable devices."""
-    with patch(
-        "homeassistant.components.icloud.account.PyiCloudService",
-    ) as service_mock:
-        service_instance = MagicMock()
-        device_obj = MockAppleDevice(DEVICE)
-        devices_container = MockDevicesContainer(USER_INFO, [device_obj])
-
-        service_instance.devices = devices_container
-        service_instance.requires_2fa = False
-
-        service_mock.return_value = service_instance
-        yield service_mock
 
 
 async def test_setup_connection_error(
@@ -212,6 +196,23 @@ async def test_setup_success_with_devices(
     with patch.object(account, "_schedule_next_fetch"):
         await hass.async_add_executor_job(account.update_devices)
     assert mock_icloud_service.return_value.devices.refresh_calls == [True]
+
+
+@pytest.fixture(name="mock_icloud_service")
+def mock_icloud_service_fixture():
+    """Mock PyiCloudService with iterable and indexable devices."""
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService",
+    ) as service_mock:
+        service_instance = MagicMock()
+        device_obj = MockAppleDevice(DEVICE)
+        devices_container = MockDevicesContainer(USER_INFO, [device_obj])
+
+        service_instance.devices = devices_container
+        service_instance.requires_2fa = False
+
+        service_mock.return_value = service_instance
+        yield service_mock
 
 
 class LiveDevicesContainer:
@@ -1563,3 +1564,101 @@ async def test_device_without_a_status_keeps_the_account_polling(
         await hass.async_block_till_done()
 
         assert service_instance.authenticate.called
+
+
+class UnavailableService:
+    """A session whose Find My webservice cannot be read."""
+
+    requires_2fa = False
+
+    @property
+    def devices(self) -> Any:
+        """Fail the way a service Apple will not answer for does."""
+        raise PyiCloudAPIResponseException("Service unavailable", 503)
+
+
+async def test_a_failed_fetch_keeps_the_reported_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    icloud_devices: list[dict[str, Any]],
+) -> None:
+    """Test that a poll which cannot read the devices removes none of them.
+
+    What Apple currently reports is what tells a device went missing, so a
+    fetch that dies before reaching that answer has to leave the devices
+    alone: an error is not the account reporting nothing.
+    """
+    icloud_devices.extend([DEVICE, DEVICE_2])
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        entry_id="test",
+        unique_id=USERNAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    account = config_entry.runtime_data
+
+    account.api = UnavailableService()
+    await hass.async_add_executor_job(account.update_devices)
+    await hass.async_block_till_done()
+
+    assert set(account.devices) == {"device1", "device6"}
+    for device_id in ("device1", "device6"):
+        assert (
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, device_id), config_entry.entry_id
+            )
+            is not None
+        )
+
+
+async def test_a_pending_fetch_keeps_the_devices_it_did_not_list(
+    hass: HomeAssistant,
+    icloud_devices: list[dict[str, Any]],
+) -> None:
+    """Test that a device missing from a still-loading list is kept.
+
+    Apple lists the account in stages and reports the read as pending until
+    it is finished, so the devices left out of such a read are not gone from
+    the account yet.
+    """
+    icloud_devices.extend([DEVICE, DEVICE_2])
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        entry_id="test",
+        unique_id=USERNAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    account = config_entry.runtime_data
+    assert set(account.devices) == {"device1", "device6"}
+
+    # The iPad has not shown up yet and the iPhone it does list is still
+    # loading, so the read is only a slice of the account.
+    icloud_devices.pop()
+    icloud_devices[0] = {**DEVICE, "deviceStatus": "203"}
+
+    await hass.async_add_executor_job(account.update_devices)
+    await hass.async_block_till_done()
+
+    assert set(account.devices) == {"device1", "device6"}
+    # A pending read shortens the interval to the 15 second retry.
+    assert account.fetch_interval == 0.25
+
+    # The listing finishes, and the iPad is still not in it.
+    icloud_devices[0] = DEVICE
+
+    await hass.async_add_executor_job(account.update_devices)
+    await hass.async_block_till_done()
+
+    assert set(account.devices) == {"device1"}
