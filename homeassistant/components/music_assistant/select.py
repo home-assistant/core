@@ -4,7 +4,7 @@ from typing import Final, override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.dsp import DSPConfig, DSPConfigPreset
-from music_assistant_models.enums import EventType
+from music_assistant_models.enums import EventType, PlayerType
 from music_assistant_models.event import MassEvent
 from music_assistant_models.player import PlayerOption, PlayerOptionType
 
@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .const import DSP_PRESET_SCHEMA_VERSION
+from .const import PLAYER_SETTINGS_SCHEMA_VERSION
 from .entity import MusicAssistantEntity, MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
@@ -42,7 +42,7 @@ async def async_setup_entry(
     # older servers lack the preset command, so their players get no preset select
     dsp_presets: list[DSPConfigPreset] | None = (
         await mass.config.get_dsp_preset()
-        if mass.server_info.schema_version >= DSP_PRESET_SCHEMA_VERSION
+        if mass.server_info.schema_version >= PLAYER_SETTINGS_SCHEMA_VERSION
         else None
     )
 
@@ -52,7 +52,8 @@ async def async_setup_entry(
         if player is None:
             return
         entities: list[SelectEntity] = []
-        if dsp_presets is not None:
+        # a group applies the DSP of each member, it has none of its own
+        if dsp_presets is not None and player.type is not PlayerType.GROUP:
             entities.append(MusicAssistantDspPresetSelect(mass, player_id, dsp_presets))
         for player_option in player.options:
             if (
@@ -145,9 +146,11 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
 class MusicAssistantDspPresetSelect(MusicAssistantEntity, SelectEntity):
     """Select which DSP preset a player uses."""
 
-    _attr_entity_category = EntityCategory.CONFIG
     entity_description = SelectEntityDescription(
-        key="dsp_preset", translation_key="dsp_preset"
+        key="dsp_preset",
+        translation_key="dsp_preset",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     )
 
     def __init__(
@@ -219,5 +222,8 @@ class MusicAssistantDspPresetSelect(MusicAssistantEntity, SelectEntity):
         self.async_write_ha_state()
 
     def _on_dsp_presets_updated(self, event: MassEvent) -> None:
-        self._dsp_presets = [DSPConfigPreset.from_dict(preset) for preset in event.data]
+        # the list is shared with the platform, so players added later get it as well
+        self._dsp_presets[:] = [
+            DSPConfigPreset.from_dict(preset) for preset in event.data
+        ]
         self.async_write_ha_state()

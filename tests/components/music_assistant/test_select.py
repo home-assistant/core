@@ -14,7 +14,12 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -154,6 +159,7 @@ async def test_name_translation_availability(
         )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_dsp_preset_select(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
@@ -197,3 +203,35 @@ async def test_dsp_preset_select(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "Party"
+
+    # the presets follow the server, without any the select is unavailable
+    party = DSPConfigPreset(name="Party", config=DSPConfig(), preset_id="party")
+    for presets, expected_state in (([party], "Party"), ([], STATE_UNAVAILABLE)):
+        await trigger_subscription_callback(
+            hass,
+            music_assistant_client,
+            EventType.DSP_PRESETS_UPDATED,
+            data=[preset.to_dict() for preset in presets],
+        )
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_state
+
+    # a group applies the DSP of each member
+    assert hass.states.get("select.test_group_player_1_dsp_preset") is None
+
+
+async def test_dsp_preset_select_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test the DSP preset select is a disabled config entity."""
+    music_assistant_client.server_info.schema_version = 101
+    music_assistant_client.config.get_dsp_preset = AsyncMock(return_value=[])
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entry = entity_registry.async_get("select.test_player_1_dsp_preset")
+    assert entry
+    assert entry.unique_id == "00:00:00:00:00:01_dsp_preset"
+    assert entry.entity_category is EntityCategory.CONFIG
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
