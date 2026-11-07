@@ -624,6 +624,18 @@ class SonosDiscoveryManager:
             elif uid not in self.data.discovered:
                 if self.is_device_invisible(discovered_ip):
                     return
+                if any(
+                    speaker.available and speaker.soco.ip_address == discovered_ip
+                    for speaker in self.data.discovered.values()
+                ):
+                    # Another player on a known speaker's IP (e.g. a stale SSDP
+                    # description); subscribing would replace its subscription.
+                    _LOGGER.debug(
+                        "Ignoring %s for %s, IP belongs to a known speaker",
+                        uid,
+                        discovered_ip,
+                    )
+                    return
                 await self.async_subscribe_to_zone_updates(discovered_ip)
             elif boot_seqnum and boot_seqnum > self.data.boot_counts[uid]:
                 self.data.boot_counts[uid] = boot_seqnum

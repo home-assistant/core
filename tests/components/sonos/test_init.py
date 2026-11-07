@@ -18,6 +18,7 @@ from requests.exceptions import HTTPError
 from homeassistant import config_entries
 from homeassistant.components import sonos
 from homeassistant.components.sonos.const import (
+    DATA_SONOS_DISCOVERY_MANAGER,
     DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
     UPNP_ISSUE_ID,
@@ -846,3 +847,27 @@ async def test_no_exception_when_entry_unloaded_during_speaker_discovery(
         "Config entry unloaded while adding speaker" in message
         for message in caplog.messages
     )
+
+
+async def test_discovery_ignores_other_uid_on_known_speaker_ip(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a different uid on a known speaker's IP does not resubscribe."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
+    speaker = manager.data.discovered[soco.uid]
+    soco.zoneGroupTopology.subscribe.reset_mock()
+
+    with caplog.at_level(logging.DEBUG):
+        await manager._async_handle_discovery_message(
+            "RINCON_other", speaker.soco.ip_address, "discovery"
+        )
+
+    soco.zoneGroupTopology.subscribe.assert_not_awaited()
+    assert "IP belongs to a known speaker" in caplog.text
