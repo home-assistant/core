@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_organizations": "The API key does not have access to any organization.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "organization": {
+        "data": {
+          "organization_id": "Organization"
+        },
+        "data_description": {
+          "organization_id": "The Meraki organization to add. Add the integration again for other organizations."
+        },
+        "description": "The API key has access to several organizations."
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "A Meraki Dashboard API key, created under Organization > API & Webhooks in the Meraki Dashboard."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "The Meraki API key is invalid or no longer has access to the organization."
+    },
+    "update_failed": {
+      "message": "Error communicating with the Meraki Dashboard API: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_cmx": {
+      "description": "Setting up Meraki presence detection with the CMX location service in YAML is deprecated and will stop working. To switch to the Meraki integration:\n\n1. Remove the `meraki` platform from the `device_tracker` section of your `configuration.yaml` file, and the devices it tracked from your `known_devices.yaml` file.\n2. Restart Home Assistant.\n3. Add the Meraki integration in the UI with a Meraki Dashboard API key.\n4. Enable the trackers of the devices you want to follow, as they start disabled, and update automations and scripts that used the old trackers.\n\nThe integration tracks whether Wi-Fi and wired clients are connected, without their position on the map. Bluetooth devices are not tracked yet.",
+      "title": "Meraki presence detection with the CMX location service is being removed"
+    }
+  }
+}
