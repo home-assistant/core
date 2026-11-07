@@ -53,10 +53,10 @@
     },
     "sensor": {
       "captar_daily_power_peak": {
-        "name": "Captar latest daily peak"
+        "name": "Captar daily power peak"
       },
       "captar_monthly_energy_peak": {
-        "name": "Captar monthly peak energy"
+        "name": "Captar monthly energy peak"
       },
       "captar_monthly_peak_end": {
         "name": "Captar monthly peak end"
@@ -65,7 +65,7 @@
         "name": "Captar monthly peak start"
       },
       "captar_monthly_power_peak": {
-        "name": "Captar monthly peak power"
+        "name": "Captar monthly power peak"
       },
       "electricity_price_injection": {
         "name": "Electricity injection price"
