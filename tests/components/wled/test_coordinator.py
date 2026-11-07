@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
+    async_capture_events,
     async_fire_time_changed,
     async_load_json_object_fixture,
 )
@@ -24,6 +25,7 @@ from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -208,6 +210,55 @@ async def test_websocket_error(
     state = hass.states.get("light.wled_websocket")
     assert state
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
+@pytest.mark.parametrize(
+    ("update_error", "expected_states"),
+    [
+        pytest.param(None, [], id="polling_works"),
+        pytest.param(WLEDConnectionError, [STATE_UNAVAILABLE], id="device_unreachable"),
+    ],
+)
+async def test_websocket_closed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    update_error: type[WLEDError] | None,
+    expected_states: list[str],
+) -> None:
+    """Test a closed WebSocket only marks lights unavailable if polling fails."""
+    connection_connected = asyncio.Future()
+    connection_finished = asyncio.Future()
+
+    async def connect(callback: Callable[[WLEDDevice], None]):
+        connection_connected.set_result(None)
+        await connection_finished
+
+    mock_wled.listen.side_effect = connect
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await connection_connected
+
+    # Catch a brief unavailable state, not just the final one
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    mock_wled.update.side_effect = update_error
+    # Keep polling in charge instead of reconnecting the WebSocket
+    mock_wled.connect.side_effect = WLEDConnectionError
+    connection_finished.set_exception(WLEDConnectionClosedError)
+    await hass.async_block_till_done()
+
+    # Let the debounced refresh after the close run
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        event.data["new_state"].state
+        for event in events
+        if event.data["entity_id"] == "light.wled_websocket"
+    ] == expected_states
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
