@@ -11,6 +11,7 @@ import requests
 from homeassistant.components.nx584.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import TEST_HOST, TEST_PORT
 
@@ -33,6 +34,23 @@ async def test_name_from_entry_title(hass: HomeAssistant) -> None:
     assert state
     assert state.name == "House"
     assert hass.states.get(ENTITY_ID) is None
+
+
+@pytest.mark.usefixtures("mock_client", "mock_watcher")
+async def test_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the alarm panel is registered with the entry ID as unique ID."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(ENTITY_ID)
+    assert entry
+    assert entry.unique_id == mock_config_entry.entry_id
+    assert entry.config_entry_id == mock_config_entry.entry_id
 
 
 @pytest.mark.usefixtures("mock_watcher")
