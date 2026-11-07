@@ -288,6 +288,7 @@ FLOWS = {
         "garages_amsterdam",
         "gardena_bluetooth",
         "gatus",
+        "gbfs",
         "gdacs",
         "generic",
         "geniushub",
