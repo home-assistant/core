@@ -232,3 +232,179 @@ async def test_reauth_other_account_aborts(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_API_KEY] == API_KEY
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client", "mock_setup_entry", "external_url")
+async def test_reconfigure(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring stores the new key and keeps the webhook id."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert "webhook_url" in result["description_placeholders"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: NEW_API_KEY, CONF_WEBHOOK_SECRET: "rotated"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_API_KEY: NEW_API_KEY,
+        CONF_WEBHOOK_ID: WEBHOOK_ID,
+        CONF_WEBHOOK_SECRET: "rotated",
+    }
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client", "mock_setup_entry", "external_url")
+async def test_reconfigure_can_drop_the_secret(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test clearing the secret turns push updates off and keeps polling."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert mock_config_entry.data == {
+        CONF_API_KEY: API_KEY,
+        CONF_WEBHOOK_ID: WEBHOOK_ID,
+    }
+
+
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        pytest.param(SmartyPlantsAuthError("boom"), "invalid_auth", id="auth"),
+        pytest.param(
+            SmartyPlantsConnectionError("boom"), "cannot_connect", id="connection"
+        ),
+        pytest.param(SmartyPlantsForbiddenError("boom"), "forbidden", id="forbidden"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_errors_then_recovers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smartyplants_client: AsyncMock,
+    error: SmartyPlantsError,
+    expected: str,
+) -> None:
+    """Test a failed check is reported and the flow can still finish."""
+    mock_config_entry.add_to_hass(hass)
+    mock_smartyplants_client.async_verify.side_effect = error
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected}
+
+    mock_smartyplants_client.async_verify.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == NEW_API_KEY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_other_account_aborts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smartyplants_client: AsyncMock,
+) -> None:
+    """Test a key for a different account is refused and the old key kept."""
+    mock_config_entry.add_to_hass(hass)
+    mock_smartyplants_client.async_verify.return_value = "acct-other"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_API_KEY] == API_KEY
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client", "mock_setup_entry")
+async def test_reconfigure_without_external_url_keeps_the_secret_editable(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the secret can still be changed when its URL cannot be shown."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_secret"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: NEW_API_KEY, CONF_WEBHOOK_SECRET: "rotated"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    # The endpoint stays registered without an address, so the secret it is
+    # signed with has to stay changeable.
+    assert mock_config_entry.data == {
+        CONF_API_KEY: NEW_API_KEY,
+        CONF_WEBHOOK_ID: WEBHOOK_ID,
+        CONF_WEBHOOK_SECRET: "rotated",
+    }
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client", "mock_setup_entry")
+async def test_reconfigure_without_external_url_can_drop_the_secret(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test pushed updates can be turned off with no URL to show."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert mock_config_entry.data == {
+        CONF_API_KEY: API_KEY,
+        CONF_WEBHOOK_ID: WEBHOOK_ID,
+    }
+
+
+@pytest.mark.usefixtures("mock_smartyplants_client", "mock_setup_entry", "external_url")
+async def test_reconfigure_without_a_webhook_offers_the_key_only(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test an entry that has no webhook is not offered a secret for one."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: API_KEY},
+        unique_id=ACCOUNT_ID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    # An address is reachable, but there is no webhook id to build a URL from.
+    assert result["step_id"] == "reconfigure_key"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_API_KEY: NEW_API_KEY}
