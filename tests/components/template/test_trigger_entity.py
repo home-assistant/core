@@ -349,14 +349,42 @@ async def test_variables_error_logs_entities(
     assert hass.states.get("sensor.test").state == STATE_UNKNOWN
 
 
-async def test_variables_error_logs_names_without_entities(
+@pytest.mark.parametrize(
+    ("block_config", "registry_unique_id", "sensor_config", "identifier"),
+    [
+        pytest.param({}, "test", {"name": "test"}, "name: test", id="name"),
+        pytest.param(
+            {},
+            "test",
+            {"default_entity_id": "sensor.custom"},
+            "default_entity_id: sensor.custom",
+            id="default_entity_id",
+        ),
+        pytest.param({}, "test", {}, "unique_id: test", id="unique_id"),
+        pytest.param(
+            {"unique_id": "block"},
+            "block-test",
+            {},
+            "unique_id: test",
+            id="block_unique_id",
+        ),
+    ],
+)
+async def test_variables_error_logs_config_without_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
+    block_config: dict[str, str],
+    registry_unique_id: str,
+    sensor_config: dict[str, str],
+    identifier: str,
 ) -> None:
-    """Test variables errors are logged with the entity names if none were added."""
+    """Test variables errors identify the entity config if no entity was added."""
     entity_registry.async_get_or_create(
-        "sensor", DOMAIN, "test", disabled_by=er.RegistryEntryDisabler.USER
+        "sensor",
+        DOMAIN,
+        registry_unique_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     with assert_setup_component(1, DOMAIN):
         assert await async_setup_component(
@@ -364,9 +392,14 @@ async def test_variables_error_logs_names_without_entities(
             DOMAIN,
             {
                 "template": {
+                    **block_config,
                     "variables": {"a": "{{ 'x' * 1.5 }}"},
                     "triggers": {"trigger": "event", "event_type": "my_event"},
-                    "sensor": {"unique_id": "test", "name": "test", "state": "{{ a }}"},
+                    "sensor": {
+                        "unique_id": "test",
+                        "state": "{{ a }}",
+                        **sensor_config,
+                    },
                 },
             },
         )
@@ -375,7 +408,33 @@ async def test_variables_error_logs_names_without_entities(
     hass.bus.async_fire("my_event")
     await hass.async_block_till_done()
 
-    assert "Error rendering variables for test: " in caplog.text
+    assert f"Error rendering variables for {identifier}: " in caplog.text
+
+
+async def test_variables_error_logs_without_entity_config(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test variables errors are logged for a trigger block without entities."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "template": {
+                "variables": {"a": "{{ 'x' * 1.5 }}"},
+                "triggers": {"trigger": "event", "event_type": "my_event"},
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("my_event")
+    await hass.async_block_till_done()
+
+    assert (
+        "Error rendering variables: "
+        "TypeError: can't multiply sequence by non-int of type 'float'"
+    ) in caplog.text
 
 
 async def test_variables_error_logs_entities_after_entity_id_change(
