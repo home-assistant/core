@@ -16,7 +16,7 @@ from pybabytracker import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -88,8 +88,9 @@ class BabyTrackerCoordinator(DataUpdateCoordinator[BabyTrackerData]):
         self.session = session
         self._device_uuid: str = entry.data[CONF_DEVICE_UUID]
         self.engine = SyncEngine(self._device_uuid)
+        # The sync state holds the babies' care history, so only the owner may read the file.
         self._store: Store[dict[str, Any]] = Store(
-            hass, STORAGE_VERSION, storage_key(entry.entry_id)
+            hass, STORAGE_VERSION, storage_key(entry.entry_id), private=True
         )
         self._baby_names: dict[str, str | None] = {}
         self.lock = asyncio.Lock()
@@ -133,7 +134,7 @@ class BabyTrackerCoordinator(DataUpdateCoordinator[BabyTrackerData]):
         try:
             await self.engine.sync(self.client)
         except AuthenticationError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="auth_failed"
             ) from err
         except BabyTrackerError as err:
@@ -154,7 +155,8 @@ class BabyTrackerCoordinator(DataUpdateCoordinator[BabyTrackerData]):
             await self._store.async_save(self.engine.to_dict())
         except Exception:
             _LOGGER.exception(
-                "Couldn't save the sync state; it will be saved after the next sync"
+                "Couldn't save the sync state; it's saved again after the next sync that brings "
+                "new records"
             )
 
     def _snapshot(self) -> BabyTrackerData:

@@ -80,9 +80,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: The only settings in the config flow are the account's credentials. A different email is a different account, which gets its own entry.
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: The integration raises no repair issues yet.
