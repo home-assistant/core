@@ -22,5 +22,33 @@
         "title": "PAJ GPS configuration"
       }
     }
+  },
+  "entity": {
+    "switch": {
+      "battery_alert": {
+        "name": "Battery alert"
+      },
+      "drop_alert": {
+        "name": "Drop alert"
+      },
+      "ignition_alert": {
+        "name": "Ignition alert"
+      },
+      "power_cut_off_alert": {
+        "name": "Power cut-off alert"
+      },
+      "shock_alert": {
+        "name": "Shock alert"
+      },
+      "sos_alert": {
+        "name": "SOS alert"
+      },
+      "speed_alert": {
+        "name": "Speed alert"
+      },
+      "voltage_alert": {
+        "name": "Voltage alert"
+      }
+    }
   }
 }
