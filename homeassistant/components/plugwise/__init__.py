@@ -56,7 +56,9 @@ def async_migrate_entity_entry(
         entry.domain == Platform.CLIMATE
         and entry.unique_id.endswith("-climate")
         and entry.device_id
-        and (device := device_registry.async_get(entry.device_id))
+        and isinstance(
+            device := device_registry.async_get(entry.device_id), dr.DeviceEntry
+        )
         and device.model
     ):
         model_name = device.model.lower().replace(" ", "-")
