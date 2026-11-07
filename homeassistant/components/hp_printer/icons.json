@@ -1,8 +1,17 @@
 {
   "entity": {
     "sensor": {
+      "black_counterfeit_refills": {
+        "default": "mdi:water-alert"
+      },
+      "black_genuine_refills": {
+        "default": "mdi:water-sync"
+      },
       "black_level": {
         "default": "mdi:gauge"
+      },
+      "black_pages_printed": {
+        "default": "mdi:file-document-multiple"
       },
       "black_pages_remaining": {
         "default": "mdi:file-document-outline"
@@ -10,11 +19,32 @@
       "color_pages": {
         "default": "mdi:file-document-multiple"
       },
+      "copied_adf_pages": {
+        "default": "mdi:content-copy"
+      },
+      "copied_color_pages": {
+        "default": "mdi:content-copy"
+      },
+      "copied_flatbed_pages": {
+        "default": "mdi:content-copy"
+      },
+      "copied_monochrome_pages": {
+        "default": "mdi:content-copy"
+      },
       "copied_pages": {
         "default": "mdi:content-copy"
       },
+      "cyan_counterfeit_refills": {
+        "default": "mdi:water-alert"
+      },
+      "cyan_genuine_refills": {
+        "default": "mdi:water-sync"
+      },
       "cyan_level": {
         "default": "mdi:gauge"
+      },
+      "cyan_pages_printed": {
+        "default": "mdi:file-document-multiple"
       },
       "cyan_pages_remaining": {
         "default": "mdi:file-document-outline"
@@ -22,14 +52,32 @@
       "duplex_sheets": {
         "default": "mdi:file-document-multiple"
       },
+      "faxed_adf_pages": {
+        "default": "mdi:fax"
+      },
+      "faxed_flatbed_pages": {
+        "default": "mdi:fax"
+      },
       "faxed_pages": {
+        "default": "mdi:fax"
+      },
+      "faxed_pc_pages": {
         "default": "mdi:fax"
       },
       "jams": {
         "default": "mdi:alert-circle-outline"
       },
+      "magenta_counterfeit_refills": {
+        "default": "mdi:water-alert"
+      },
+      "magenta_genuine_refills": {
+        "default": "mdi:water-sync"
+      },
       "magenta_level": {
         "default": "mdi:gauge"
+      },
+      "magenta_pages_printed": {
+        "default": "mdi:file-document-multiple"
       },
       "magenta_pages_remaining": {
         "default": "mdi:file-document-outline"
@@ -67,14 +115,32 @@
       "total_pages": {
         "default": "mdi:file-document-multiple"
       },
+      "tri_color_counterfeit_refills": {
+        "default": "mdi:water-alert"
+      },
+      "tri_color_genuine_refills": {
+        "default": "mdi:water-sync"
+      },
       "tri_color_level": {
         "default": "mdi:gauge"
+      },
+      "tri_color_pages_printed": {
+        "default": "mdi:file-document-multiple"
       },
       "tri_color_pages_remaining": {
         "default": "mdi:file-document-outline"
       },
+      "yellow_counterfeit_refills": {
+        "default": "mdi:water-alert"
+      },
+      "yellow_genuine_refills": {
+        "default": "mdi:water-sync"
+      },
       "yellow_level": {
         "default": "mdi:gauge"
+      },
+      "yellow_pages_printed": {
+        "default": "mdi:file-document-multiple"
       },
       "yellow_pages_remaining": {
         "default": "mdi:file-document-outline"
