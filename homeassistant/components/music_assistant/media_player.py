@@ -58,6 +58,7 @@ from .const import (
     ATTR_MASS_PLAYER_TYPE,
     ATTR_NEXT_ITEM,
     ATTR_QUEUE_ID,
+    ATTR_QUEUE_ITEMS,
     ATTR_RADIO_MODE,
     ATTR_REPEAT_MODE,
     ATTR_SHUFFLE_ENABLED,
@@ -66,6 +67,7 @@ from .const import (
 )
 from .entity import MusicAssistantDashboardEntity, MusicAssistantEntity
 from .helpers import (
+    acting_user,
     catch_musicassistant_error,
     catch_user_not_found,
     dashboard_identifier,
@@ -694,13 +696,29 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         )
 
     @catch_musicassistant_error
-    async def _async_handle_get_queue(self) -> ServiceResponse:
+    async def _async_handle_get_queue(
+        self, limit: int, offset: int, username: str | None = None
+    ) -> ServiceResponse:
         """Handle get_queue action."""
         if not self.active_queue:
             raise HomeAssistantError("No active queue found")
         active_queue = self.active_queue
+        details: dict[str, Any] = {}
+        # the items are opt-in, so a call without a limit stays a cache-only read
+        if limit:
+            with catch_user_not_found(username):
+                queue_items = await self.mass.player_queues.get_queue_items(
+                    active_queue.queue_id,
+                    limit,
+                    offset,
+                    user=acting_user(self.mass, username, self._context),
+                )
+            details[ATTR_QUEUE_ITEMS] = [
+                queue_item_dict_from_mass_item(self.mass, item) for item in queue_items
+            ]
         response: ServiceResponse = QUEUE_DETAILS_SCHEMA(
             {
+                **details,
                 ATTR_QUEUE_ID: active_queue.queue_id,
                 ATTR_ACTIVE: active_queue.active,
                 ATTR_NAME: active_queue.display_name,

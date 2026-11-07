@@ -127,6 +127,27 @@ get_queue:
       device_class: speaker
       supported_features:
         - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
+  fields:
+    limit:
+      example: 25
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 500
+          step: 1
+    offset:
+      example: 25
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 1000000
+          step: 1
+    username:
+      example: "john"
+      selector:
+        text:
 
 search:
   fields:

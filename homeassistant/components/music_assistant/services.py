@@ -199,7 +199,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_GET_QUEUE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
-        schema=None,
+        schema={
+            probatio.Optional(ATTR_LIMIT, default=0): cv.positive_int,
+            probatio.Optional(ATTR_OFFSET, default=DEFAULT_OFFSET): cv.positive_int,
+            probatio.Optional(ATTR_USERNAME): cv.string,
+        },
         func="_async_handle_get_queue",
         supports_response=SupportsResponse.ONLY,
     )

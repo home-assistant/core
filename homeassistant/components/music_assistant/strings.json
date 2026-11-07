@@ -331,6 +331,9 @@
     },
     "tts_entity_not_available": {
       "message": "The text-to-speech entity {entity_id} is not available."
+    },
+    "username_not_supported": {
+      "message": "The Music Assistant server is too old to run this action as a given user. Update Music Assistant or remove the username."
     }
   },
   "issues": {
@@ -446,7 +449,21 @@
       }
     },
     "get_queue": {
-      "description": "Retrieves the details of the currently active queue of a Music Assistant player.",
+      "description": "Retrieves the details and the items of the currently active queue of a Music Assistant player.",
+      "fields": {
+        "limit": {
+          "description": "Maximum number of queue items to return. Leave at 0 to only return the queue details.",
+          "name": "[%key:component::music_assistant::services::get_library::fields::limit::name%]"
+        },
+        "offset": {
+          "description": "Number of queue items to skip.",
+          "name": "[%key:component::music_assistant::services::get_library::fields::offset::name%]"
+        },
+        "username": {
+          "description": "Music Assistant username used to request the queue items. They are only returned when this user may access the player.",
+          "name": "[%key:component::music_assistant::services::get_library::fields::username::name%]"
+        }
+      },
       "name": "Get playerQueue details"
     },
     "play_announcement": {
