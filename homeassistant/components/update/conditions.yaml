@@ -2,6 +2,7 @@
   target:
     entity:
       domain: update
+    primary_entities_only: false
   fields:
     behavior:
       required: true

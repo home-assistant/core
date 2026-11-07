@@ -17,14 +17,19 @@ from pytest_homeassistant.components.common import (
 )
 
 from homeassistant.components.update.condition import CONDITIONS
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
 async def target_updates(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple update entities associated with different targets."""
-    return await target_entities(hass, "update", domain_excluded="switch")
+    return await target_entities(
+        hass,
+        "update",
+        domain_excluded="switch",
+        entity_category=EntityCategory.CONFIG,
+    )
 
 
 _CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
