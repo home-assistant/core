@@ -5,15 +5,7 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: todo
-  config-flow:
-    status: todo
-    comment: |
-      `test_user` initializes flow with `None` data
-      `test_user` imports a fixture that already patches, but then patches again
-      `test_user` doesn't continue the old flow but creates a second one
-      `test_user` can be parametrized to test the false SSL part
-      `test_user_2sa` directly initialized the flow with form data
-      Flows should end in CREATE_ENTRY or ABORT
+  config-flow: done
   dependency-transparency: done
   docs-actions: todo
   docs-conditions:
