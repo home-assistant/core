@@ -35,14 +35,7 @@ EXCLUDED_FIELDS: Final = frozenset(
         "b_error",
         "b_alarm_residential",
         "b_alarm_portable",
-        # Only served at the aggregate unit id (250); read 0 at the device's own.
-        "d_num_battery_packs",
-        "b_soc_total",
-        "b_soh_total",
-        "b_status",
-        "b_time_to_full_total",
-        "b_time_to_empty_total",
-        # Answer at the device's own unit id, but equal b_v and b_c with one pack.
+        # Read with the pack summary, but equal b_v and b_c with one pack.
         "b_v_total",
         "b_c_total",
         # Phases 2 and 3 read 0 on the single-phase units verified so far.

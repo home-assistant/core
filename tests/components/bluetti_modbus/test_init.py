@@ -2,14 +2,14 @@
 
 from unittest.mock import patch
 
-from bluetti_modbus_lib import get_device
+from bluetti_modbus_lib import AGGREGATE_SLAVE_ID, get_device
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import (
     AcknowledgeError,
     ModbusConnectionError,
     ModbusTimeoutError,
 )
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -229,3 +229,47 @@ async def test_excluded_fields_are_dropped_from_the_read_plan(
         event.address <= ac_output.address < event.address + event.count
         for event in mock_modbus_unit.read_events
     )
+
+
+async def test_pack_summary_is_read_at_the_aggregate_unit(
+    hass: HomeAssistant,
+    mock_modbus_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """The pack summary is read at unit 250, and not at the device's own."""
+    await setup_integration(hass, mock_config_entry)
+
+    summary = mock_modbus_connection.for_unit(AGGREGATE_SLAVE_ID)
+    assert [(event.address, event.count) for event in summary.read_events] == [
+        (51001, 8)
+    ]
+    assert not any(
+        event.address <= 51008 and event.address + event.count > 51001
+        for event in mock_modbus_unit.read_events
+    )
+
+
+async def test_pack_summary_failure_fails_the_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_modbus_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A pack summary that can't be read leaves the entities unavailable."""
+    await setup_integration(hass, mock_config_entry)
+
+    summary = mock_modbus_connection.for_unit(AGGREGATE_SLAVE_ID)
+    summary.fail_requests(ModbusTimeoutError("timed out"))
+    await _tick(hass, freezer)
+
+    state = hass.states.get(VOLTAGE_ENTITY)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    summary.fail_requests(None)
+    await _tick(hass, freezer)
+
+    state = hass.states.get(VOLTAGE_ENTITY)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
