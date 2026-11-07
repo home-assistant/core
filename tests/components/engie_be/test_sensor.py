@@ -192,9 +192,6 @@ async def test_excl_vat_disabled_by_default(
     assert all(entry.disabled_by is None for entry in incl_vat_entries)
 
 
-SECOND_ELECTRICITY_EAN = "541448820000000003_ID1"
-
-
 def _single_period_prices(ean: str) -> EanPrices:
     """Build a single-period, offtake-only EanPrices for the given EAN."""
     return EanPrices(
@@ -223,7 +220,7 @@ async def test_duplicate_type_suffix(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test entities get a distinct last-4 EAN suffix for two same-type household EANs."""
-    eans = (OFFTAKE_INJECTION_EAN, SECOND_ELECTRICITY_EAN)
+    eans = (OFFTAKE_INJECTION_EAN, ELECTRICITY_EAN_2)
     mock_engie_client.return_value.async_get_prices.return_value = PricesResponse(
         items=tuple(_single_period_prices(ean) for ean in eans)
     )
@@ -246,7 +243,7 @@ async def test_duplicate_type_suffix(
 
     for ean in eans:
         assert names[ean].endswith(f"({bare_ean(ean)[-4:]})")
-    assert names[OFFTAKE_INJECTION_EAN] != names[SECOND_ELECTRICITY_EAN]
+    assert names[OFFTAKE_INJECTION_EAN] != names[ELECTRICITY_EAN_2]
 
 
 async def test_type_fallback_when_service_point_lookup_fails(
@@ -719,9 +716,7 @@ async def test_late_service_point_failure_falls_back(
     mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
         build_relations(BAN, BAN_2)
     )
-    ban_2_prices = PricesResponse(
-        items=(_single_period_prices(SECOND_ELECTRICITY_EAN),)
-    )
+    ban_2_prices = PricesResponse(items=(_single_period_prices(ELECTRICITY_EAN_2),))
     mock_engie_client.return_value.async_get_prices.side_effect = [
         build_prices(),
         EngieBeCommunicationError("boom"),
@@ -741,7 +736,7 @@ async def test_late_service_point_failure_falls_back(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN_2}_{SECOND_ELECTRICITY_EAN}_offtake_TOTAL_HOURS"
+        "sensor", DOMAIN, f"{BAN_2}_{ELECTRICITY_EAN_2}_offtake_TOTAL_HOURS"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
@@ -1484,17 +1479,9 @@ async def test_tou_dynamic_household_has_no_active_price(
     )
 
 
-@pytest.mark.usefixtures("frozen_afternoon")
-async def test_injection_current_price_absent_without_injection_prices(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test a switching injection schedule without injection prices gets no entity."""
-    client = mock_engie_client.return_value
-    client.async_get_tou_schedules.return_value = build_tou_schedules()
-    client.async_get_prices.return_value = PricesResponse(
+def _peak_only_prices_response() -> PricesResponse:
+    """Build prices with one EAN and a single peak-only offtake slot."""
+    return PricesResponse(
         items=(
             EanPrices(
                 ean=OFFTAKE_INJECTION_EAN,
@@ -1515,6 +1502,19 @@ async def test_injection_current_price_absent_without_injection_prices(
             ),
         )
     )
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_injection_current_price_absent_without_injection_prices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a switching injection schedule without injection prices gets no entity."""
+    client = mock_engie_client.return_value
+    client.async_get_tou_schedules.return_value = build_tou_schedules()
+    client.async_get_prices.return_value = _peak_only_prices_response()
     await setup_entry(hass, mock_config_entry)
 
     assert (
@@ -1777,27 +1777,7 @@ async def test_active_price_boundary_survives_unmatched_slot(
     """Test the boundary timer keeps firing while no price slot matches the schedule."""
     client = mock_engie_client.return_value
     client.async_get_tou_schedules.return_value = build_tou_schedules()
-    client.async_get_prices.return_value = PricesResponse(
-        items=(
-            EanPrices(
-                ean=OFFTAKE_INJECTION_EAN,
-                periods=(
-                    PricePeriod(
-                        valid_from=date(2000, 1, 1),
-                        valid_to=date(2099, 12, 31),
-                        vat_tariff=6.0,
-                        offtake=(
-                            PriceSlot(
-                                time_of_use_slot_code="S_TOU1_OFFTAKE_PEAK",
-                                price_value=0.18,
-                                price_value_excl_vat=0.169811,
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-        )
-    )
+    client.async_get_prices.return_value = _peak_only_prices_response()
     await setup_entry(hass, mock_config_entry)
 
     active_price_id = _tou_entity_id(
@@ -1908,23 +1888,7 @@ async def test_injection_price_unavailable_when_injection_prices_drop(
             slots={},
             eans=(OFFTAKE_INJECTION_EAN,),
             prices_by_ean={
-                OFFTAKE_INJECTION_EAN: EanPrices(
-                    ean=OFFTAKE_INJECTION_EAN,
-                    periods=(
-                        PricePeriod(
-                            valid_from=date(2000, 1, 1),
-                            valid_to=date(2099, 12, 31),
-                            vat_tariff=6.0,
-                            offtake=(
-                                PriceSlot(
-                                    time_of_use_slot_code="S_TOU1_OFFTAKE_PEAK",
-                                    price_value=0.18,
-                                    price_value_excl_vat=0.169811,
-                                ),
-                            ),
-                        ),
-                    ),
-                )
+                OFFTAKE_INJECTION_EAN: _peak_only_prices_response().items[0]
             },
         )
     )

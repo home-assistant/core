@@ -311,11 +311,11 @@ def build_epex_payload_with_gap(
     end: datetime,
     granularity: EpexGranularity = EpexGranularity.HOURLY,
 ) -> EpexPayload:
-    """Return an hourly payload without the slot covering the frozen afternoon."""
+    """Return an hourly payload without the slot covering the current hour."""
     payload = build_epex_payload(start, end, granularity)
     if granularity is not EpexGranularity.HOURLY:
         return payload
-    gap_start = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
+    gap_start = dt_util.now(UTC).replace(minute=0, second=0, microsecond=0)
     return EpexPayload(
         slots=tuple(slot for slot in payload.slots if slot.start != gap_start),
         slot_duration=payload.slot_duration,
