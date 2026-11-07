@@ -496,6 +496,7 @@ FLOWS = {
         "marantz_infrared",
         "marantz_rs232",
         "marketplace",
+        "marstek",
         "mastodon",
         "matter",
         "mcp",
