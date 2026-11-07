@@ -3,7 +3,15 @@
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiosteamist import Steamist, SteamistStatus
+from aiosteamist import (
+    MODEL_450,
+    MODEL_550,
+    PROFILE_OFF,
+    PROFILE_SHOWER_1,
+    PROFILE_STEAM_1,
+    Steamist,
+    SteamistStatus,
+)
 from discovery30303 import AIODiscovery30303, Device30303
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -20,6 +28,30 @@ MOCK_ASYNC_GET_STATUS_INACTIVE = SteamistStatus(
 )
 MOCK_ASYNC_GET_STATUS_ACTIVE = SteamistStatus(
     temp=102, temp_units="F", minutes_remain=14, active=True
+)
+MOCK_ASYNC_GET_STATUS_550_INACTIVE = SteamistStatus(
+    temp=77,
+    temp_units="F",
+    minutes_remain=0,
+    active=False,
+    seconds_remain=0,
+    profile=PROFILE_OFF,
+)
+MOCK_ASYNC_GET_STATUS_550_STEAM_ACTIVE = SteamistStatus(
+    temp=104,
+    temp_units="F",
+    minutes_remain=14,
+    active=True,
+    seconds_remain=30,
+    profile=PROFILE_STEAM_1,
+)
+MOCK_ASYNC_GET_STATUS_550_SHOWER_ACTIVE = SteamistStatus(
+    temp=89,
+    temp_units="F",
+    minutes_remain=0,
+    active=False,
+    seconds_remain=0,
+    profile=PROFILE_SHOWER_1,
 )
 DEVICE_IP_ADDRESS = "127.0.0.1"
 DEVICE_NAME = "Master Bath"
@@ -59,14 +91,19 @@ DEFAULT_ENTRY_DATA = {
 
 
 async def _async_setup_entry_with_status(
-    hass: HomeAssistant, status: SteamistStatus
+    hass: HomeAssistant,
+    status: SteamistStatus,
+    model: str = MODEL_450,
 ) -> tuple[Steamist, ConfigEntry]:
+    data = {CONF_HOST: "127.0.0.1"}
+    if model == MODEL_550:
+        data[CONF_MODEL] = MODEL_550
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "127.0.0.1"},
+        data=data,
     )
     config_entry.add_to_hass(hass)
-    client = _mocked_steamist()
+    client = _mocked_steamist(model=model)
     client.async_get_status = AsyncMock(return_value=status)
     with _patch_status(status, client):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
@@ -75,10 +112,14 @@ async def _async_setup_entry_with_status(
     return client, config_entry
 
 
-def _mocked_steamist() -> Steamist:
+def _mocked_steamist(model: str = MODEL_450) -> Steamist:
     client = MagicMock(auto_spec=Steamist)
+    client.model = model
     client.async_turn_on_steam = AsyncMock()
     client.async_turn_off_steam = AsyncMock()
+    client.async_turn_on_shower = AsyncMock()
+    client.async_turn_off_shower = AsyncMock()
+    client.async_set_profile = AsyncMock()
     client.async_get_status = AsyncMock(return_value=MOCK_ASYNC_GET_STATUS_ACTIVE)
     return client
 
