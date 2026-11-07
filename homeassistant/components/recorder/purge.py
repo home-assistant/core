@@ -224,8 +224,6 @@ def _purge_states_and_attributes_ids(
         _purge_state_ids(instance, session, state_ids - batch_linked_state_ids)
         attributes_ids_batch = attributes_ids_batch | attributes_ids
 
-    if not has_remaining_state_ids_to_purge:
-        instance.states_manager.forget_linked_state_ids(purge_before.timestamp())
     _purge_unused_attributes_ids(instance, session, attributes_ids_batch)
     _LOGGER.debug(
         "After purging states and attributes_ids remaining=%s",

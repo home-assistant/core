@@ -33,7 +33,7 @@ from homeassistant.components.recorder.db_schema import (
     StatisticsShortTerm,
 )
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.recorder.purge import purge_old_data
+from homeassistant.components.recorder.purge import _purge_state_ids, purge_old_data
 from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.services import (
     RecorderService,
@@ -2667,8 +2667,6 @@ async def test_purge_finishes_when_two_purges_alternate(
                 break
         else:
             pytest.fail("The purges did not finish")
-    # Finished purges don't hold on to the states they kept
-    assert not recorder_mock.states_manager._linked_state_ids
 
     with session_scope(hass=hass) as session:
         states = session.query(States.state).order_by(States.state_id)
@@ -2680,3 +2678,36 @@ async def test_purge_finishes_when_two_purges_alternate(
             "new",
             "new",
         ]
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(None, id="finished"),
+        pytest.param(OperationalError("statement", {}, []), id="database_error"),
+        pytest.param(RuntimeError("unexpected"), id="other_error"),
+    ],
+)
+async def test_purge_task_forgets_linked_states(
+    hass: HomeAssistant, recorder_mock: Recorder, exception: Exception | None
+) -> None:
+    """Test a purge task that ends does not keep the linked states it found."""
+    with freeze_time(dt_util.utcnow() - timedelta(days=11)):
+        hass.states.async_set("sensor.a", "old")
+        await async_wait_recording_done(hass)
+    hass.states.async_set("sensor.a", "new")
+    await async_wait_recording_done(hass)
+
+    # The error comes after the batch found the linked old state
+    with patch(
+        "homeassistant.components.recorder.purge._purge_state_ids",
+        wraps=_purge_state_ids,
+        side_effect=exception,
+    ):
+        await hass.services.async_call(
+            DOMAIN, RecorderService.PURGE, {RecorderServiceArgument.KEEP_DAYS: 10}
+        )
+        await hass.async_block_till_done()
+        await async_wait_purge_done(hass)
+
+    assert not recorder_mock.states_manager._linked_state_ids

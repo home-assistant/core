@@ -72,7 +72,7 @@ class StatesManager:
         return self._linked_state_ids.setdefault(purge_before, set())
 
     def forget_linked_state_ids(self, purge_before: float) -> None:
-        """Forget the linked old states of a purge that has finished.
+        """Forget the linked old states of a purge that ended.
 
         This call is not thread-safe and must be called from the
         recorder thread.
