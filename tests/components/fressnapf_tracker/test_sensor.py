@@ -42,6 +42,7 @@ async def test_state_entity_device_snapshots(
             "2024-01-15T13:30:00+01:00", "2024-01-15T12:30:00+00:00", id="time_zone"
         ),
         pytest.param("not-a-timestamp", STATE_UNKNOWN, id="invalid"),
+        pytest.param("2024-02-30T12:30:00", STATE_UNKNOWN, id="impossible_date"),
         pytest.param(None, STATE_UNKNOWN, id="missing"),
     ],
 )
