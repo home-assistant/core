@@ -112,17 +112,13 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
                 firmware_data = await self.solarlog.update_firmware_information()
             except SolarLogAuthenticationError as ex:
                 if await self.renew_authentication():
-                    # login was successful, update availability
-                    # of extended data, retry data update
                     await self.solarlog.test_extended_data_available()
-                    raise ConfigEntryNotReady(
+                    self._update_counter = 99
+                else:
+                    raise ConfigEntryAuthFailed(
                         translation_domain=DOMAIN,
-                        translation_key="config_entry_not_ready",
+                        translation_key="auth_failed",
                     ) from ex
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="auth_failed",
-                ) from ex
             except (SolarLogConnectionError, SolarLogUpdateError) as ex:
                 _LOGGER.debug("Failed to update firmware information: %s", ex)
 
