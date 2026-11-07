@@ -344,6 +344,76 @@
     'state': 'off',
   })
 # ---
+# name: test_fans[mock_smart_tcl_portable_ac][fan.smart_tcl_portable_ac-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'sleep_wind',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000043-MatterNodeDevice'), ('matter', 'serial_serial_67')]>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.smart_tcl_portable_ac',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 59>,
+    'translation_key': 'fan',
+    'unique_id': '00000000000004D2-0000000000000043-MatterNodeDevice-1-MatterFan-514-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fans[mock_smart_tcl_portable_ac][fan.smart_tcl_portable_ac-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart TCL Portable AC',
+      <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: None,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'sleep_wind',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 59>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.smart_tcl_portable_ac',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_fans[silabs_fan][fan.sl_fan-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

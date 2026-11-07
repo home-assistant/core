@@ -132,6 +132,7 @@ SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8027),
     (0x1209, 0x8028),
     (0x1209, 0x8029),
+    (0x1334, 0x0A84),
     (0x138C, 0x0101),
     (0x138C, 0x3601),
 }
@@ -175,8 +176,18 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8028),
     (0x1209, 0x8029),
     (0x131A, 0x1000),
+    (0x1334, 0x0A84),
     (0x138C, 0x0101),
     (0x138C, 0x3601),
+}
+
+SUPPORT_HEAT_COOL_MODE_DEVICES: set[tuple[int, int]] = {
+    # These devices do not report the AutoMode feature flag even though
+    # they physically support heat_cool (auto) mode via SystemMode = kAuto.
+    #
+    # In the list below specify tuples of (vendorid, productid) of devices that
+    # support heat_cool mode, but don't report it.
+    (0x1334, 0x0A84),
 }
 
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
@@ -298,7 +309,7 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
         if target_temperature is not None:
             # single setpoint control
             if self.native_target_temperature != target_temperature:
-                if current_mode == HVACMode.COOL:
+                if self._uses_cooling_setpoint(current_mode):
                     matter_attribute = (
                         clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
                     )
@@ -538,6 +549,14 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
                 return HVACMode.OFF
 
     @callback
+    def _uses_cooling_setpoint(self, hvac_mode: HVACMode | None) -> bool:
+        """Return True if the cooling setpoint and limits apply for the given mode."""
+        # Cooling-only devices report null heating setpoints and limits.
+        return hvac_mode == HVACMode.COOL or not (
+            int(self._feature_map or 0) & ThermostatFeature.kHeating
+        )
+
+    @callback
     def _update_target_temperatures(self) -> None:
         """Update target temperature or temperature range."""
         supports_range = (
@@ -558,7 +577,7 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
             self._attr_native_target_temperature_high = None
             self._attr_native_target_temperature_low = None
             # update target_temperature
-            if self._attr_hvac_mode == HVACMode.COOL:
+            if self._uses_cooling_setpoint(self._attr_hvac_mode):
                 self._attr_native_target_temperature = self._get_temperature_in_degrees(
                     clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
                 )
@@ -570,8 +589,9 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
     @callback
     def _update_temperature_limits(self) -> None:
         """Update min and max temperature limits."""
+        uses_cooling_setpoint = self._uses_cooling_setpoint(self._attr_hvac_mode)
         # update min_temp
-        if self._attr_hvac_mode == HVACMode.COOL:
+        if uses_cooling_setpoint:
             attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
         else:
             attribute = clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit
@@ -580,7 +600,7 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
         else:
             self._attr_min_temp = DEFAULT_MIN_TEMP
         # update max_temp
-        if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.HEAT_COOL):
+        if uses_cooling_setpoint or self._attr_hvac_mode == HVACMode.HEAT_COOL:
             attribute = clusters.Thermostat.Attributes.AbsMaxCoolSetpointLimit
         else:
             attribute = clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
@@ -629,6 +649,8 @@ class MatterClimate(MatterEntity, ClimateEntity, RestoreEntity):
                 self._attr_supported_features |= (
                     ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
                 )
+        elif (vendor_id, product_id) in SUPPORT_HEAT_COOL_MODE_DEVICES:
+            self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
         if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
 
