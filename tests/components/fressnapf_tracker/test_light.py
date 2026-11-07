@@ -223,6 +223,7 @@ async def test_turn_on_off_error(
             blocking=True,
         )
 
+
 @pytest.mark.usefixtures("mock_auth_client")
 async def test_unavailable_when_not_activatable(
     hass: HomeAssistant,
