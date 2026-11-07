@@ -49,20 +49,17 @@ async def test_device_info(
     [
         pytest.param(
             HotSpringConnectionTimeoutError("no response within 10.0s"),
-            "Timed out while communicating with the Hot Spring API: "
-            "no response within 10.0s",
+            "Timed out while communicating with the Hot Spring API",
             id="timeout",
         ),
         pytest.param(
             HotSpringConnectionError("ServerDisconnectedError: Server disconnected"),
-            "An error occurred while communicating with the Hot Spring API: "
-            "ServerDisconnectedError: Server disconnected",
+            "An error occurred while communicating with the Hot Spring API",
             id="connection_error",
         ),
         pytest.param(
             HotSpringError("Unexpected status payload"),
-            "Invalid response received from the Hot Spring API: "
-            "Unexpected status payload",
+            "Invalid response received from the Hot Spring API",
             id="invalid_response",
         ),
     ],

@@ -49,19 +49,16 @@ class HotSpringDataUpdateCoordinator(DataUpdateCoordinator[Spa]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout",
-                translation_placeholders={"error": str(error)},
             ) from error
         except HotSpringConnectionError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": str(error)},
             ) from error
         except HotSpringError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_response",
-                translation_placeholders={"error": str(error)},
             ) from error
 
         if spa.info.mac_address != self.config_entry.unique_id:

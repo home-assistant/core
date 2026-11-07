@@ -93,9 +93,7 @@ async def test_set_target_temperature(
                 "Timeout occurred while connecting to Hot Spring HNA at 192.168.1.50: "
                 "no response within 10.0s"
             ),
-            "^Timed out while communicating with the Hot Spring API: Timeout occurred "
-            r"while connecting to Hot Spring HNA at 192\.168\.1\.50: no response "
-            r"within 10\.0s$",
+            "^Timed out while communicating with the Hot Spring API$",
             id="timeout",
         ),
         pytest.param(
@@ -103,9 +101,7 @@ async def test_set_target_temperature(
                 "Error occurred while communicating with Hot Spring HNA at "
                 "192.168.1.50: ServerDisconnectedError: Server disconnected"
             ),
-            "^An error occurred while communicating with the Hot Spring API: Error "
-            r"occurred while communicating with Hot Spring HNA at 192\.168\.1\.50: "
-            "ServerDisconnectedError: Server disconnected$",
+            "^An error occurred while communicating with the Hot Spring API$",
             id="connection_error",
         ),
         pytest.param(
@@ -113,9 +109,7 @@ async def test_set_target_temperature(
                 "Cannot send commands: SNA bridge is not connected. "
                 "The LoRA link between the HNA and the spa is down."
             ),
-            "^The spa is not connected to its Hot Spring home network adapter: Cannot "
-            r"send commands: SNA bridge is not connected\. The LoRA link between the "
-            r"HNA and the spa is down\.$",
+            "^The spa is not connected to its Hot Spring home network adapter$",
             id="not_ready",
         ),
         pytest.param(
@@ -123,7 +117,7 @@ async def test_set_target_temperature(
                 "Command failed: {'heater': {'control': {'temperatureABS': '38'}}}: "
                 "Unexpected response type from /spaManager"
             ),
-            "^Invalid response received from the Hot Spring API: Command failed: ",
+            "^Invalid response received from the Hot Spring API$",
             id="command_failed",
         ),
     ],
