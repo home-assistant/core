@@ -460,6 +460,44 @@ async def test_conversation_agent_model_options(
     ]
 
 
+@pytest.mark.usefixtures("mock_models")
+async def test_create_evaluation_entity(
+    hass: HomeAssistant,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating and reconfiguring an AI task evaluation entity."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_evaluate"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    assert schema["model"].config["options"] == CONVERSATION_MODEL_OPTIONS
+    assert schema["model"].config["custom_value"] is True
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_MODEL: "my-decision-model"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "my-decision-model"
+    assert result["data"] == {CONF_MODEL: "my-decision-model"}
+
+    subentry_id = get_subentry_id(mock_config_entry, "ai_task_evaluate")
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_MODEL: "gpt-4"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.subentries[subentry_id].data == {CONF_MODEL: "gpt-4"}
+
+
 @pytest.mark.parametrize(
     ("exception", "reason"),
     [
@@ -468,12 +506,14 @@ async def test_conversation_agent_model_options(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.parametrize("subentry_type", ["conversation", "ai_task_evaluate"])
 async def test_subentry_exceptions(
     hass: HomeAssistant,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     reason: str,
+    subentry_type: str,
 ) -> None:
     """Test subentry flow aborts on errors fetching models."""
     await setup_integration(hass, mock_config_entry)
@@ -484,7 +524,7 @@ async def test_subentry_exceptions(
         side_effect=exception,
     ):
         result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
+            (mock_config_entry.entry_id, subentry_type),
             context={"source": SOURCE_USER},
         )
 
@@ -556,7 +596,7 @@ async def test_reconfigure_conversation_agent_disable_llm_api(
     assert key.default() == []
 
 
-@pytest.mark.parametrize("subentry_type", ["conversation", "stt"])
+@pytest.mark.parametrize("subentry_type", ["ai_task_evaluate", "conversation", "stt"])
 async def test_reconfigure_entry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
