@@ -12,6 +12,7 @@ import jwt
 
 from homeassistant.components import webhook
 from homeassistant.components.homeassistant.exposed_entities import (
+    async_get_locked_entity_ids,
     async_listen_entity_updates,
     async_set_entity_locked,
     async_should_expose,
@@ -136,11 +137,7 @@ class GoogleConfig(AbstractConfig):
             )
         )
 
-        entity_ids = set(self.hass.states.async_entity_ids())
-        entity_ids.update(er.async_get(self.hass).entities)
-        entity_ids.update(self.entity_config)
-        for entity_id in entity_ids:
-            self._async_update_legacy_exposure(entity_id)
+        self._async_reconcile_all_exposure()
 
         if self._store.entity_settings_version < ENTITY_SETTINGS_VERSION:
             # Discovery needs the entity states
@@ -193,6 +190,7 @@ class GoogleConfig(AbstractConfig):
         entity_id = event.data["entity_id"]
 
         if event.data["action"] == "remove":
+            self._async_reconcile_exposure(entity_id)
             self.async_schedule_google_sync_all()
             return
 
@@ -260,6 +258,8 @@ class GoogleConfig(AbstractConfig):
                     translation_placeholders={"option": key},
                 )
         self.hass.data[DATA_CONFIG] = self._config = config
+        self._should_expose_by_default_cache.clear()
+        self._async_reconcile_all_exposure()
         self.async_update_report_state()
         return True
 
@@ -339,6 +339,28 @@ class GoogleConfig(AbstractConfig):
         result = domain_exposed_by_default and not auxiliary_entity
         self._should_expose_by_default_cache[cache_key] = result
         return result
+
+    @callback
+    def _async_reconcile_all_exposure(self) -> None:
+        """Set or release the YAML exposure of every known or locked entity."""
+        entity_ids = set(self.hass.states.async_entity_ids())
+        entity_ids.update(er.async_get(self.hass).entities)
+        entity_ids.update(self.entity_config)
+        entity_ids.update(async_get_locked_entity_ids(self.hass, DOMAIN))
+        for entity_id in entity_ids:
+            self._async_reconcile_exposure(entity_id)
+
+    @callback
+    def _async_reconcile_exposure(self, entity_id: str) -> None:
+        """Set the entity's YAML exposure, or release it if the entity is gone."""
+        if (
+            entity_id in self.entity_config
+            or self.hass.states.get(entity_id) is not None
+            or er.async_get(self.hass).async_get(entity_id) is not None
+        ):
+            self._async_update_legacy_exposure(entity_id)
+        else:
+            async_set_entity_locked(self.hass, DOMAIN, entity_id, None)
 
     @callback
     def _async_update_legacy_exposure(self, entity_id: str) -> None:

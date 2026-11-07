@@ -706,6 +706,71 @@ async def test_registry_rename_transfers_yaml_lock(
     mock_sync.assert_called_once_with("mock-user-id")
 
 
+async def test_registry_remove_releases_yaml_lock(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test removing a stateless registry entry releases its YAML lock."""
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "unique",
+        suggested_object_id="kitchen",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert exposed_entities.async_get_entity_locked(DOMAIN, entry.entity_id) is True
+
+    entity_registry.async_remove(entry.entity_id)
+    await hass.async_block_till_done()
+
+    assert exposed_entities.async_get_entity_locked(DOMAIN, entry.entity_id) is None
+
+
+async def test_reload_yaml_reconciles_locks(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test reloading YAML updates changed locks and releases removed ones."""
+    kitchen = entity_registry.async_get_or_create(
+        "light", "test", "kitchen", suggested_object_id="kitchen"
+    )
+    hass.states.async_set(kitchen.entity_id, "on")
+    hass.states.async_set("switch.outlet", "on")
+    config = GoogleConfig(
+        hass,
+        GOOGLE_ASSISTANT_SCHEMA(
+            {
+                "project_id": "1234",
+                "exposed_domains": ["light"],
+                "entity_config": {"sensor.gone": {"expose": True}},
+            }
+        ),
+    )
+    await config.async_initialize()
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert config.should_expose(kitchen.entity_id) is True
+    assert exposed_entities.async_get_entity_locked(DOMAIN, "sensor.gone") is True
+
+    with patch(
+        "homeassistant.components.google_assistant.http.async_integration_yaml_config",
+        return_value={
+            DOMAIN: GOOGLE_ASSISTANT_SCHEMA(
+                {
+                    "project_id": "1234",
+                    "exposed_domains": ["light", "switch"],
+                    "entity_config": {kitchen.entity_id: {"expose": False}},
+                }
+            )
+        },
+    ):
+        assert await config.async_reload_yaml()
+
+    assert config.should_expose(kitchen.entity_id) is False
+    assert config.should_expose("switch.outlet") is True
+    assert exposed_entities.async_get_entity_locked(DOMAIN, "sensor.gone") is None
+
+
 async def test_legacy_entity_removal_triggers_sync(hass: HomeAssistant) -> None:
     """Test removing a non-registry entity's state schedules a sync."""
     config = GoogleConfig(hass, DUMMY_CONFIG)

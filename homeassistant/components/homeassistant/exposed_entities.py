@@ -604,6 +604,17 @@ def async_set_entity_locked(
 
 
 @callback
+def async_get_locked_entity_ids(hass: HomeAssistant, assistant: str) -> set[str]:
+    """Return the IDs of entities with locked exposure for an assistant."""
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    return {
+        entity_id
+        for entity_id, locked in exposed_entities.locked_entities.items()
+        if assistant in locked
+    }
+
+
+@callback
 def async_get_assistant_settings(
     hass: HomeAssistant, assistant: str
 ) -> dict[str, Mapping[str, Any]]:
