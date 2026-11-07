@@ -609,12 +609,11 @@ class SonosDiscoveryManager:
             return False
         return device.disabled
 
-    async def _async_is_other_player_on_known_speaker(self, discovered_ip: str) -> bool:
-        """Return if the IP is still answered by the known speaker that holds it.
+    async def _async_should_defer_discovery(self, discovered_ip: str) -> bool:
+        """Return if discovery on this IP must not subscribe yet.
 
-        Another player announced there (e.g. the Arc's headphone zone) must not
-        replace that speaker's subscription. A new speaker that took over the
-        address (e.g. via DHCP) is not ignored.
+        A known speaker holding the IP must keep its subscription, so discovery is
+        deferred to a later message unless a different owner is confirmed.
         """
         known_uids = {
             speaker.uid
@@ -631,9 +630,9 @@ class SonosDiscoveryManager:
             ) as response:
                 description = await response.text()
         except (ClientError, TimeoutError):
-            return False
+            return True
         if not (match := _ROOT_UDN_RE.search(description)):
-            return False
+            return True
         return match.group(1) in known_uids
 
     async def _async_handle_discovery_message(
@@ -655,9 +654,9 @@ class SonosDiscoveryManager:
             elif uid not in self.data.discovered:
                 if self.is_device_invisible(discovered_ip):
                     return
-                if await self._async_is_other_player_on_known_speaker(discovered_ip):
+                if await self._async_should_defer_discovery(discovered_ip):
                     _LOGGER.debug(
-                        "Ignoring %s for %s, IP is still owned by a known speaker",
+                        "Deferring %s for %s, IP not confirmed to be a new speaker",
                         uid,
                         discovered_ip,
                     )

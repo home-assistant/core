@@ -865,8 +865,8 @@ async def test_no_exception_when_entry_unloaded_during_speaker_discovery(
             True,
             id="new_speaker_took_over_ip",
         ),
-        pytest.param("no udn", None, True, id="no_udn_in_description"),
-        pytest.param("", TimeoutError, True, id="request_fails"),
+        pytest.param("no udn", None, False, id="no_udn_in_description"),
+        pytest.param("", TimeoutError, False, id="request_fails"),
     ],
 )
 async def test_discovery_of_other_uid_on_known_speaker_ip(
@@ -878,7 +878,7 @@ async def test_discovery_of_other_uid_on_known_speaker_ip(
     exc: type[Exception] | None,
     expect_subscribe: bool,
 ) -> None:
-    """Test another uid on a known speaker's IP only subscribes if the owner changed."""
+    """Test another uid on a known speaker's IP subscribes only for a confirmed new owner."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
