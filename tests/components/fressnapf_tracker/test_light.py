@@ -168,12 +168,15 @@ async def test_turn_on_led_not_activatable(
     mock_api_client_coordinator: MagicMock,
     activatable_parameter: str,
 ) -> None:
-    """Test turning on the light when LED is not activatable raises."""
-    setattr(
-        mock_api_client_init.get_tracker.return_value.led_activatable,
-        activatable_parameter,
-        False,
-    )
+    """Test turning on the light when LED is not activatable raises.
+
+    The mock light is on, so it stays available and the service call reaches
+    the entity, which then explains why the flashlight cannot be activated.
+    """
+    led_activatable = mock_api_client_init.get_tracker.return_value.led_activatable
+    setattr(led_activatable, activatable_parameter, False)
+    # The API reports overall false as soon as one of the flags is false
+    led_activatable.overall = False
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
