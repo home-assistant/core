@@ -45,6 +45,8 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
                 | CoverEntityFeature.CLOSE_TILT
                 | CoverEntityFeature.SET_TILT_POSITION
             )
+        if static_info.supports_stop_tilt:
+            flags |= CoverEntityFeature.STOP_TILT
         self._attr_supported_features = flags
         self._attr_device_class = try_parse_enum(
             CoverDeviceClass, static_info.device_class
@@ -150,6 +152,14 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
             key=self._key,
             tilt=tilt_position / 100,
             device_id=self._static_info.device_id,
+        )
+
+    @convert_api_error_ha_error
+    @override
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the cover tilt."""
+        self._client.cover_command(
+            key=self._key, stop_tilt=True, device_id=self._static_info.device_id
         )
 
 
