@@ -21,8 +21,7 @@ class StatesManager:
         self._last_committed_id: dict[str, int | None] = {}
         self._last_reported: dict[int, float] = {}
         self._oldest_ts: float | None = None
-        self._linked_purge_before: float | None = None
-        self._linked_state_ids: set[int] = set()
+        self._linked_state_ids: dict[float, set[int]] = {}
 
     @property
     def oldest_ts(self) -> float | None:
@@ -67,13 +66,18 @@ class StatesManager:
         """Return the old states the purge before purge_before found linked so far.
 
         A purge runs over several calls, so they don't have to find the same
-        states again. This call is not thread-safe and must be called from the
+        states again, also when another purge runs in between. This call is
+        not thread-safe and must be called from the recorder thread.
+        """
+        return self._linked_state_ids.setdefault(purge_before, set())
+
+    def forget_linked_state_ids(self, purge_before: float) -> None:
+        """Forget the linked old states of a purge that has finished.
+
+        This call is not thread-safe and must be called from the
         recorder thread.
         """
-        if self._linked_purge_before != purge_before:
-            self._linked_purge_before = purge_before
-            self._linked_state_ids = set()
-        return self._linked_state_ids
+        self._linked_state_ids.pop(purge_before, None)
 
     def add_pending(self, entity_id: str, state: States) -> None:
         """Add a pending state.
