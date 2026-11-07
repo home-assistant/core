@@ -111,7 +111,7 @@ async def test_light_turn_on_and_off(
         turn_on=AsyncMock(),
         turn_off=AsyncMock(),
     )
-    manager._dev_list["bulbs"].extend((tunable_bulb, dimmable_bulb))
+    manager.devices.bulbs.extend((tunable_bulb, dimmable_bulb))
 
     with patch("homeassistant.components.vesync.PLATFORMS", [Platform.LIGHT]):
         await hass.config_entries.async_setup(config_entry.entry_id)
