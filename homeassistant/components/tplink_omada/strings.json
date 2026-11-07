@@ -82,6 +82,12 @@
           "pending": "Pending"
         }
       },
+      "lan_network": {
+        "name": "LAN {network_name}"
+      },
+      "lan_vlan": {
+        "name": "VLAN {network_name}"
+      },
       "mem_usage": {
         "name": "Memory usage"
       },

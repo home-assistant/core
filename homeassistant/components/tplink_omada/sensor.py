@@ -18,17 +18,20 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
-from .const import OmadaDeviceStatus
+from .const import DOMAIN, OmadaDeviceStatus
 from .coordinator import (
     OmadaControllerStatusCoordinator,
     OmadaDevicesCoordinator,
+    OmadaLanCoordinator,
     OmadaSwitchPortCoordinator,
 )
 from .entity import OmadaControllerEntity, OmadaDeviceEntity, get_switch_port_base_name
@@ -76,6 +79,8 @@ async def async_setup_entry(
     async_add_entities(
         [OmadaControllerStatusSensor(controller.controller_status_coordinator)]
     )
+
+    await async_setup_lan_sensors(hass, config_entry, async_add_entities)
 
     devices_coordinator = controller.devices_coordinator
 
@@ -260,3 +265,109 @@ class OmadaSwitchPortSensor(
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.update_func(self.coordinator.data[self._port_id])
+
+
+async def async_setup_lan_sensors(
+    hass: HomeAssistant,
+    config_entry: OmadaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Discover networks independently of existing device sensors."""
+    controller = config_entry.runtime_data
+    coordinator = OmadaLanCoordinator(
+        hass, config_entry, controller.omada_client, "LAN networks", 300
+    )
+    controller_mac = controller.controller_status_coordinator.data.mac
+    site_id = config_entry.data[CONF_SITE]
+    known: set[str] = set()
+
+    @callback
+    def discover() -> None:
+        if not coordinator.last_update_success or coordinator.data is None:
+            return
+        new_ids = coordinator.data.keys() - known
+        async_add_entities(
+            OmadaLanSensor(coordinator, network_id, controller_mac, site_id)
+            for network_id in sorted(new_ids)
+        )
+        known.update(new_ids)
+
+    config_entry.async_on_unload(coordinator.async_add_listener(discover))
+    # A LAN query failure must not block the other sensor entities.
+    await coordinator.async_refresh()
+    discover()
+
+
+class OmadaLanSensor(CoordinatorEntity[OmadaLanCoordinator], SensorEntity):
+    """Report a network's VLAN ID and optional LAN configuration."""
+
+    _attr_has_entity_name = True
+
+    _unrecorded_attributes = frozenset(
+        {"network_id", "network_name", "purpose", "gateway_subnet", "dhcp_enabled"}
+    )
+
+    def __init__(
+        self,
+        coordinator: OmadaLanCoordinator,
+        network_id: str,
+        controller_mac: str,
+        site_id: str,
+    ) -> None:
+        """Initialize using stable controller, site and network identifiers."""
+        super().__init__(coordinator)
+        self._network_id = network_id
+        self._update_network_name()
+        self._attr_unique_id = f"{controller_mac}_{site_id}_lan_{network_id}_vlan"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, controller_mac)})
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Refresh translated names when network configuration changes."""
+        self._update_network_name()
+        self.__dict__.pop("name", None)
+        self.__dict__.pop("_name_translation_key", None)
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_network_name(self) -> None:
+        """Prepare translated LAN or VLAN names from the current network."""
+        network = (self.coordinator.data or {}).get(self._network_id)
+        self._attr_translation_key = (
+            "lan_vlan" if network and network.vlan_id is not None else "lan_network"
+        )
+        self._attr_translation_placeholders = {
+            "network_name": network.name if network else self._network_id
+        }
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Mark removed networks and failed queries unavailable."""
+        return super().available and self._network_id in (self.coordinator.data or {})
+
+    @property
+    @override
+    def native_value(self) -> int | None:
+        """Return only the VLAN ID reported by the controller."""
+        network = (self.coordinator.data or {}).get(self._network_id)
+        return network.vlan_id if network else None
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, str | bool]:
+        """Return optional configuration without inventing missing values."""
+        network = (self.coordinator.data or {}).get(self._network_id)
+        if network is None:
+            return {}
+        attributes: dict[str, str | bool] = {
+            "network_id": network.id,
+            "network_name": network.name,
+            "purpose": network.purpose,
+        }
+        if network.gateway_subnet is not None:
+            attributes["gateway_subnet"] = network.gateway_subnet
+        if network.dhcp_enabled is not None:
+            attributes["dhcp_enabled"] = network.dhcp_enabled
+        return attributes

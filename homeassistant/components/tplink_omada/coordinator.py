@@ -21,6 +21,7 @@ from tplink_omada_client.devices import (
     OmadaSwitch,
 )
 from tplink_omada_client.exceptions import OmadaClientException
+from tplink_omada_client.networks import LanNetwork
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -322,3 +323,12 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         self._config_entry.async_create_background_task(
             self.hass, self.async_request_refresh(), "Omada Firmware Update Refresh"
         )
+
+
+class OmadaLanCoordinator(OmadaCoordinator[LanNetwork]):
+    """Read the configured LAN networks for one site."""
+
+    @override
+    async def poll_update(self) -> dict[str, LanNetwork]:
+        networks = await self.omada_client.get_lan_networks()
+        return {network.id: network for network in networks}
