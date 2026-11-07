@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import toggle_entity
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -211,3 +211,62 @@ def test_turned_on_with_bad_for_is_invalid() -> None:
                 "for": "later",
             }
         )
+
+
+@pytest.mark.parametrize("trigger", ["turned_on", "turned_off", "changed_states"])
+@pytest.mark.parametrize(
+    ("from_state", "to_state"),
+    [
+        pytest.param(STATE_UNAVAILABLE, STATE_OFF, id="unavailable_to_off"),
+        pytest.param(STATE_UNAVAILABLE, STATE_ON, id="unavailable_to_on"),
+        pytest.param(STATE_UNKNOWN, STATE_OFF, id="unknown_to_off"),
+        pytest.param(STATE_UNKNOWN, STATE_ON, id="unknown_to_on"),
+        pytest.param(STATE_OFF, STATE_UNAVAILABLE, id="off_to_unavailable"),
+        pytest.param(STATE_ON, STATE_UNAVAILABLE, id="on_to_unavailable"),
+    ],
+)
+async def test_does_not_fire_on_availability_change(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+    trigger: str,
+    from_state: str,
+    to_state: str,
+) -> None:
+    """Test triggers don't fire when an entity becomes available or unavailable."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "switch", "test", "5678", device_id=device_entry.id
+    )
+
+    hass.states.async_set(entry.entity_id, from_state)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": "switch",
+                        "device_id": device_entry.id,
+                        "entity_id": entry.entity_id,
+                        "type": trigger,
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set(entry.entity_id, to_state)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
