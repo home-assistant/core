@@ -251,3 +251,194 @@ def test_bad_fixture_autouse(
         ),
     ):
         walk_checker(linter, decorator_checker, root_node)
+
+
+# Pre-load so astroid can resolve the base classes in parsed snippets
+astroid.MANAGER.ast_from_module_name("homeassistant.helpers.update_coordinator")
+
+_INTEGRATION_MODULE = "homeassistant.components.pylint_test.sensor"
+
+
+@pytest.mark.parametrize(
+    ("code", "module_name"),
+    [
+        pytest.param(
+            """
+from homeassistant.core import callback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        pass
+""",
+            _INTEGRATION_MODULE,
+            id="callback",
+        ),
+        pytest.param(
+            """
+from homeassistant import core
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @core.callback
+    def _handle_coordinator_update(self) -> None:
+        pass
+""",
+            _INTEGRATION_MODULE,
+            id="core_callback",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    async def _handle_coordinator_update(self) -> None:
+        pass
+""",
+            _INTEGRATION_MODULE,
+            id="async_def",
+        ),
+        pytest.param(
+            """
+class MyClass:
+    def _handle_coordinator_update(self) -> None:
+        pass
+""",
+            _INTEGRATION_MODULE,
+            id="not_a_coordinator_entity",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    def setup(self) -> None:
+        def _handle_coordinator_update() -> None:
+            pass
+""",
+            _INTEGRATION_MODULE,
+            id="nested_function",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    def _handle_coordinator_update(self) -> None:
+        pass
+""",
+            "homeassistant.helpers.pylint_test",
+            id="outside_integration",
+        ),
+    ],
+)
+def test_good_callback_override(
+    linter: UnittestLinter,
+    decorator_checker: BaseChecker,
+    code: str,
+    module_name: str,
+) -> None:
+    """Test overrides of a @callback method that are not flagged."""
+    root_node = astroid.parse(code, module_name)
+
+    with assert_no_messages(linter):
+        walk_checker(linter, decorator_checker, root_node)
+
+
+@pytest.mark.parametrize(
+    ("code", "method", "base"),
+    [
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    def _handle_coordinator_update(self) -> None:
+        pass
+""",
+            "_handle_coordinator_update",
+            "BaseCoordinatorEntity",
+            id="plain_override",
+        ),
+        pytest.param(
+            """
+from typing import override
+
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @override
+    def _handle_coordinator_update(self) -> None:
+        pass
+""",
+            "_handle_coordinator_update",
+            "BaseCoordinatorEntity",
+            id="override_only",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyBaseEntity(CoordinatorEntity):
+    pass
+
+class MyEntity(MyBaseEntity):
+    def _handle_coordinator_update(self) -> None:
+        pass
+""",
+            "_handle_coordinator_update",
+            "BaseCoordinatorEntity",
+            id="indirect_subclass",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MyEntity(Entity):
+    def _async_write_ha_state(self) -> None:
+        pass
+""",
+            "_async_write_ha_state",
+            "Entity",
+            id="async_write_ha_state",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.weather import CoordinatorWeatherEntity
+
+class MyWeather(CoordinatorWeatherEntity):
+    def _async_forecast_daily(self) -> None:
+        pass
+""",
+            "_async_forecast_daily",
+            "CoordinatorWeatherEntity",
+            id="weather_forecast",
+        ),
+    ],
+)
+def test_bad_callback_override(
+    linter: UnittestLinter,
+    decorator_checker: BaseChecker,
+    code: str,
+    method: str,
+    base: str,
+) -> None:
+    """Test overrides of a @callback method without @callback."""
+    root_node = astroid.parse(code, _INTEGRATION_MODULE)
+    func_node = root_node.body[-1].body[0]
+
+    with assert_adds_messages(
+        linter,
+        MessageTest(
+            msg_id="home-assistant-callback-override-missing-decorator",
+            line=func_node.position.lineno,
+            node=func_node,
+            args=(method, base),
+            confidence=UNDEFINED,
+            col_offset=func_node.col_offset,
+            end_line=func_node.position.end_lineno,
+            end_col_offset=func_node.position.end_col_offset,
+        ),
+    ):
+        walk_checker(linter, decorator_checker, root_node)
