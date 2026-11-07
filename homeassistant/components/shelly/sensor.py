@@ -955,6 +955,48 @@ RPC_SENSORS: Final = {
         entity_class=RpcEnergyConsumedSensor,
         removal_condition=lambda _, status, key: status[key].get("ret_aenergy") is None,
     ),
+    "switch_on_time": RpcSensorDescription(
+        key="switch",
+        sub_key="counts",
+        translation_key="total_runtime",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        value=lambda status, _: status["on_time"],
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _, status, key: "on_time" not in status[key]["counts"],
+    ),
+    "switch_on_count": RpcSensorDescription(
+        key="switch",
+        sub_key="counts",
+        translation_key="switching_cycles",
+        value=lambda status, _: status["switch_on"],
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _, status, key: (
+            "switch_on" not in status[key]["counts"]
+        ),
+    ),
+    "switch_on_above_thr": RpcSensorDescription(
+        key="switch",
+        sub_key="counts",
+        translation_key="runtime_above_power_threshold",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        value=lambda status, _: status["on_above_thr"],
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _, status, key: (
+            "on_above_thr" not in status[key]["counts"]
+        ),
+    ),
     "energy_light": RpcSensorDescription(
         key="light",
         sub_key="aenergy",
