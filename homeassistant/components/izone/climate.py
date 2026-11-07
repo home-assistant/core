@@ -539,11 +539,6 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
         mode = self._state_to_pizone[hvac_mode]
         await self._async_run_and_update(self._zone.set_mode(mode))
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if on."""
-        return self._zone.mode is not Zone.Mode.CLOSE
-
     @override
     async def async_turn_on(self) -> None:
         """Turn device on (open zone)."""
