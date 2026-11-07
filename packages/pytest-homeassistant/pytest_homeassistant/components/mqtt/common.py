@@ -2606,11 +2606,20 @@ async def help_test_entity_disabled_by_default(
     entity_id = ent_registry.async_get_entity_id(domain, DOMAIN, "veryunique2")
     assert entity_id is not None and hass.states.get(entity_id) is not None
 
-    # Remove the enabled entity, both entities and the device should be removed
+    # Remove the enabled entity, the disabled entity keeps the device
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla2/config", "")
     await hass.async_block_till_done()
-    assert not ent_registry.async_get_entity_id(domain, DOMAIN, "veryunique1")
+    assert ent_registry.async_get_entity_id(domain, DOMAIN, "veryunique1")
     assert not ent_registry.async_get_entity_id(domain, DOMAIN, "veryunique2")
+    assert dev_registry.async_get_device_by_identifier(
+        ("mqtt", "helloworld"),
+        hass.config_entries.async_entries("mqtt")[0].entry_id,
+    )
+
+    # Remove the disabled entity, the device should be removed
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla1/config", "")
+    await hass.async_block_till_done()
+    assert not ent_registry.async_get_entity_id(domain, DOMAIN, "veryunique1")
     assert not dev_registry.async_get_device_by_identifier(
         ("mqtt", "helloworld"),
         hass.config_entries.async_entries("mqtt")[0].entry_id,

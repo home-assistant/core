@@ -514,6 +514,9 @@ async def async_remove_config_entry_device(
     """Remove MQTT config entry from a device."""
     from . import device_automation  # noqa: PLC0415
 
+    await discovery.async_clear_removed_device_discovery_topic(
+        hass, config_entry.entry_id, device_entry
+    )
     await device_automation.async_removed_from_device(hass, device_entry.id)
     return True
 
