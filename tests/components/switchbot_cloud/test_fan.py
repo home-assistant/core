@@ -1,6 +1,6 @@
 """Test for the Switchbot (Battery) Circulator Fan."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
 from pytest_homeassistant.common import (
@@ -394,3 +394,126 @@ async def test_air_purifier_controller(
         )
 
         mocked_send_command.assert_awaited_once_with(*expected_call_args)
+
+
+async def test_set_percentage_sends_int(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+) -> None:
+    """Test set percentage sends the speed as an integer."""
+    mock_list_devices.return_value = [BATTERY_CIRCULATOR_FAN_2_PRO_INFO]
+    mock_get_status.return_value = {"power": "on", "mode": "direct", "fanSpeed": "88"}
+    await configure_integration(hass)
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: "fan.device_1", ATTR_PERCENTAGE: 12},
+            blocking=True,
+        )
+    mock_send_command.assert_awaited_once_with(
+        "device-id-1",
+        switchbot_api.BatteryCirculatorFanCommands.SET_WIND_SPEED,
+        "command",
+        12,
+    )
+
+
+async def test_set_percentage_zero_turns_off(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+) -> None:
+    """Test set percentage to zero turns the fan off."""
+    mock_list_devices.return_value = [BATTERY_CIRCULATOR_FAN_2_PRO_INFO]
+    mock_get_status.return_value = {"power": "on", "mode": "direct", "fanSpeed": "88"}
+    await configure_integration(hass)
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: "fan.device_1", ATTR_PERCENTAGE: 0},
+            blocking=True,
+        )
+    mock_send_command.assert_awaited_once_with(
+        "device-id-1", switchbot_api.CommonCommands.OFF, "command", "default"
+    )
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_calls"),
+    [
+        (
+            {},
+            [
+                (switchbot_api.CommonCommands.ON, "command", "default"),
+                (
+                    switchbot_api.BatteryCirculatorFanCommands.SET_WIND_MODE,
+                    "command",
+                    "direct",
+                ),
+                (
+                    switchbot_api.BatteryCirculatorFanCommands.SET_WIND_SPEED,
+                    "command",
+                    88,
+                ),
+            ],
+        ),
+        (
+            {ATTR_PERCENTAGE: 12},
+            [
+                (switchbot_api.CommonCommands.ON, "command", "default"),
+                (
+                    switchbot_api.BatteryCirculatorFanCommands.SET_WIND_MODE,
+                    "command",
+                    "direct",
+                ),
+                (
+                    switchbot_api.BatteryCirculatorFanCommands.SET_WIND_SPEED,
+                    "command",
+                    12,
+                ),
+            ],
+        ),
+        (
+            {ATTR_PRESET_MODE: "baby"},
+            [
+                (switchbot_api.CommonCommands.ON, "command", "default"),
+                (
+                    switchbot_api.BatteryCirculatorFanCommands.SET_WIND_MODE,
+                    "command",
+                    "baby",
+                ),
+            ],
+        ),
+    ],
+)
+async def test_turn_on_with_percentage_and_preset_mode(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+    service_data: dict,
+    expected_calls: list[tuple],
+) -> None:
+    """Test turning on the fan uses the requested percentage and preset mode."""
+    mock_list_devices.return_value = [BATTERY_CIRCULATOR_FAN_2_PRO_INFO]
+    mock_get_status.return_value = {
+        "power": "off",
+        "mode": "direct",
+        "fanSpeed": "88",
+    }
+    await configure_integration(hass)
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_TURN_ON,
+            {**service_data, ATTR_ENTITY_ID: "fan.device_1"},
+            blocking=True,
+        )
+    assert mock_send_command.await_args_list == [
+        call("device-id-1", *expected_call) for expected_call in expected_calls
+    ]
