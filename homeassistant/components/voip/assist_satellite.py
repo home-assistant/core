@@ -1,7 +1,6 @@
 """Assist satellite entity for VoIP integration."""
 
 import asyncio
-from datetime import timedelta
 from enum import IntFlag
 from functools import partial
 import io
@@ -202,7 +201,16 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         if timer_info.name:
             message = f"{timer_info.name} finished"
         else:
-            message = f"{timedelta(seconds=timer_info.created_seconds)} timer finished"
+            hours, remainder = divmod(timer_info.created_seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            parts = []
+            if hours:
+                parts.append(f"{hours} hour")
+            if minutes:
+                parts.append(f"{minutes} minute")
+            if seconds or not parts:
+                parts.append(f"{seconds} second")
+            message = f"{' '.join(parts)} timer finished"
 
         async def announce_message():
             announcement = await self._resolve_announcement_media_id(message, None)
