@@ -32,7 +32,7 @@ requirements_test.txt @home-assistant/core
 /homeassistant/util/ @home-assistant/core
 /packages/hassfest/ @home-assistant/core
 /packages/pylint-home-assistant/ @home-assistant/core
-/packages/pytest-home-assistant/ @home-assistant/core
+/packages/pytest-homeassistant/ @home-assistant/core
 /script/ @home-assistant/core
 
 # Home Assistant Supervisor

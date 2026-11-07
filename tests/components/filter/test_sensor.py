@@ -191,6 +191,51 @@ async def test_from_config_entry_duration(
     assert state.state == "20.0"
 
 
+@pytest.mark.usefixtures("recorder_mock")
+async def test_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    filter_config_entry: MockConfigEntry,
+    sensor_entity_entry: er.RegistryEntry,
+) -> None:
+    """Test the filter sensor is linked to the source entity's device."""
+    assert await hass.config_entries.async_setup(filter_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    filter_entity = entity_registry.async_get("sensor.mock_title_my_filter")
+    assert filter_entity is not None
+    assert filter_entity.device_id == sensor_entity_entry.device_id
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    sensor_entity_entry: er.RegistryEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured filter sensor."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "filter",
+                "name": "test",
+                "unique_id": "filter_yaml",
+                "entity_id": sensor_entity_entry.entity_id,
+                "filters": [{"filter": "outlier", "window_size": 10, "radius": 4.0}],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    filter_entity = entity_registry.async_get("sensor.test")
+    assert filter_entity is not None
+    assert filter_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
+
+
 @pytest.mark.parametrize("missing", [True, False])
 async def test_chain_history(
     recorder_mock: Recorder,

@@ -2627,6 +2627,18 @@
       ],
       "supported_by": "splunk"
     },
+    "croma_infrared": {
+      "name": "Croma Infrared",
+      "integration_type": "device",
+      "categories": [
+        "media_entertainment.tv_streaming"
+      ],
+      "connectivity": [
+        "infrared"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "crownstone": {
       "name": "Crownstone",
       "integration_type": "hub",
@@ -2637,7 +2649,7 @@
         "cloud",
         "serial"
       ],
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_push"
     },
     "currencylayer": {
@@ -3307,6 +3319,15 @@
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
+    },
+    "e3dc": {
+      "name": "E3/DC",
+      "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "eafm": {
       "name": "Environment Agency Flood Gauges",
@@ -4038,6 +4059,9 @@
         "diy_makers.boards_hardware",
         "sensors.temperature_humidity"
       ],
+      "connectivity": [
+        "onewire"
+      ],
       "supported_by": "onewire"
     },
     "esphome": {
@@ -4504,7 +4528,7 @@
           "connectivity": [
             "network"
           ],
-          "name": "Flic"
+          "name": "Flic (legacy)"
         },
         "flic_button": {
           "integration_type": "device",
@@ -5274,6 +5298,12 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "glinet": {
+      "name": "GL.iNet",
+      "iot_standards": [
+        "matter"
+      ]
     },
     "globalcache": {
       "name": "Global Cach\u00e9",
@@ -6389,6 +6419,9 @@
           "iot_class": "assumed_state",
           "categories": [
             "lighting"
+          ],
+          "connectivity": [
+            "rf"
           ],
           "name": "Honeywell String Lights"
         }
@@ -7594,6 +7627,9 @@
       "integration_type": "device",
       "categories": [
         "plugs_switches"
+      ],
+      "connectivity": [
+        "rf"
       ],
       "config_flow": true,
       "iot_class": "assumed_state"
@@ -10240,6 +10276,9 @@
         "appliances_cleaning.cooking",
         "climate.fans_ventilation"
       ],
+      "connectivity": [
+        "rf"
+      ],
       "config_flow": true,
       "iot_class": "assumed_state"
     },
@@ -10600,6 +10639,9 @@
       "categories": [
         "diy_makers.boards_hardware",
         "sensors.temperature_humidity"
+      ],
+      "connectivity": [
+        "onewire"
       ],
       "config_flow": true,
       "iot_class": "local_polling"
@@ -11388,6 +11430,9 @@
       "categories": [
         "hubs_protocols.wireless_protocols",
         "diy_makers.boards_hardware"
+      ],
+      "connectivity": [
+        "rf"
       ],
       "config_flow": false,
       "iot_class": "local_push"
@@ -12267,6 +12312,9 @@
       "categories": [
         "plugs_switches"
       ],
+      "connectivity": [
+        "rf"
+      ],
       "config_flow": false,
       "iot_class": "assumed_state"
     },
@@ -12498,6 +12546,9 @@
         "hubs_protocols.wireless_protocols",
         "diy_makers.boards_hardware"
       ],
+      "connectivity": [
+        "rf"
+      ],
       "config_flow": false,
       "iot_class": "assumed_state"
     },
@@ -12506,6 +12557,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.wireless_protocols"
+      ],
+      "connectivity": [
+        "rf"
       ],
       "config_flow": true,
       "iot_class": "local_push"
@@ -14936,6 +14990,9 @@
           "categories": [
             "hubs_protocols.wireless_protocols"
           ],
+          "connectivity": [
+            "rf"
+          ],
           "name": "TellStick"
         }
       }
@@ -16391,6 +16448,9 @@
       "integration_type": "hub",
       "categories": [
         "hubs_protocols.wireless_protocols"
+      ],
+      "connectivity": [
+        "rf"
       ],
       "config_flow": false,
       "iot_class": "local_push"

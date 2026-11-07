@@ -24,6 +24,8 @@ from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 PARALLEL_UPDATES = 1
 MAX_UPDATE_WAIT = 150
+# The cloud reports the new firmware version a while after the update finishes
+UPDATE_REFRESH_DELAY = 120
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -137,6 +139,7 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
                 self.async_write_ha_state()
                 await asyncio.sleep(3)
                 counter += 1
+            await asyncio.sleep(UPDATE_REFRESH_DELAY)
 
         except (TimeoutError, LaMarzoccoError) as exc:
             raise HomeAssistantError(
