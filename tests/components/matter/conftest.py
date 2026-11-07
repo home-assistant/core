@@ -9,7 +9,7 @@ from matter_server.client.models.node import MatterEndpoint, MatterNode
 from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models import ServerInfoMessage
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, mock_component
 
 from homeassistant.components.matter import DOMAIN
 from homeassistant.components.matter.discovery import async_discover_entities
@@ -121,3 +121,26 @@ async def matter_node(
     return await setup_integration_with_node_fixture(
         hass, node_fixture, matter_client, attributes
     )
+
+
+@pytest.fixture(name="mock_bluetooth_loaded")
+def mock_bluetooth_loaded_fixture(hass: HomeAssistant) -> None:
+    """Mark the bluetooth integration as loaded for the BLE proxy gate."""
+    mock_component(hass, "bluetooth")
+
+
+@pytest.fixture(name="mock_ble_proxy")
+def mock_ble_proxy_fixture() -> Generator[tuple[MagicMock, MagicMock]]:
+    """Stub the BLE proxy created inside async_setup_entry.
+
+    Yields `(proxy, factory)` so tests can assert both the proxy lifecycle
+    (`connect`/`disconnect`) and the arguments passed to `create_matter_ble_proxy`.
+    """
+    proxy = MagicMock()
+    proxy.connect = AsyncMock()
+    proxy.disconnect = AsyncMock()
+    with patch(
+        "homeassistant.components.matter.ble_proxy.create_matter_ble_proxy",
+        return_value=proxy,
+    ) as factory:
+        yield proxy, factory
