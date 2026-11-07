@@ -6,7 +6,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
-from pythonxbox.api.provider.achievements.models import AchievementResponse
+from pythonxbox.api.provider.achievements.models import (
+    Achievement360Response,
+    AchievementResponse,
+)
 from pythonxbox.api.provider.catalog.models import CatalogResponse
 from pythonxbox.api.provider.gameclips.models import GameclipsResponse
 from pythonxbox.api.provider.people.models import PeopleResponse
@@ -205,6 +208,20 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         client.achievements.get_achievements_xboxone_gameprogress.return_value = (
             AchievementResponse(
                 **load_json_object_fixture("achievements_gameprogress.json", DOMAIN)
+            )
+        )
+        client.achievements.get_achievements_xboxone_recent_unlocks.return_value = (
+            AchievementResponse(
+                **load_json_object_fixture(
+                    "achievements_xboxone_recent_unlocks.json", DOMAIN
+                )
+            )
+        )
+        client.achievements.get_achievements_xbox360_recent_unlocks.return_value = (
+            Achievement360Response(
+                **load_json_object_fixture(
+                    "achievements_xbox360_recent_unlocks.json", DOMAIN
+                )
             )
         )
 

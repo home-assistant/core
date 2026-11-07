@@ -1,5 +1,6 @@
 """Diagnostics platform for the Xbox integration."""
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -55,6 +56,12 @@ async def async_get_config_entry_diagnostics(
             config_entry.runtime_data.presence.data.achievement_totals.items()
         )
     }
+    # Flattened instead of keyed by xuid, as dict keys are not redacted.
+    achievement_unlocks = [
+        asdict(unlock)
+        for unlocks in config_entry.runtime_data.achievements.data.values()
+        for unlock in unlocks
+    ]
 
     return {
         "consoles_status": consoles_status,
@@ -62,4 +69,5 @@ async def async_get_config_entry_diagnostics(
         "presence": presence,
         "title_info": title_info,
         "achievement_totals": achievement_totals,
+        "achievement_unlocks": achievement_unlocks,
     }

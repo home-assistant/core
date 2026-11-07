@@ -8,6 +8,11 @@
         "default": "mdi:account"
       }
     },
+    "event": {
+      "achievement_unlocked": {
+        "default": "mdi:trophy"
+      }
+    },
     "media_player": {
       "xbox": {
         "default": "mdi:microsoft-xbox"
