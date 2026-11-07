@@ -32,7 +32,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.template import Template, render_complex
-from homeassistant.helpers.trace import trace_path
+from homeassistant.helpers.trace import trace_path, trace_stack_cv, trace_stack_top
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -99,6 +99,42 @@ class DisabledConditionChecker(ConditionChecker):
     @override
     def needs_polling(self) -> bool:
         return False
+
+
+class TemplateEnabledConditionChecker(ConditionChecker):
+    """Condition checker whose enabled template uses the current run variables."""
+
+    def __init__(
+        self, hass: HomeAssistant, enabled: Template, checker: ConditionChecker
+    ) -> None:
+        """Initialize the checker with an already set up child condition."""
+        super().__init__(hass)
+        self._enabled = enabled
+        self._checker = checker
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool | None:
+        try:
+            enabled = self._enabled.async_render(kwargs.get("variables"), limited=True)
+        except TemplateError as err:
+            raise ConditionErrorMessage(
+                "enabled", f"Error rendering condition enabled template: {err}"
+            ) from err
+        if not enabled:
+            return None
+
+        # The wrapper and its child represent the same condition in the trace.
+        if trace_element := trace_stack_top(trace_stack_cv):
+            trace_element.reuse_by_child = True
+        return self._checker.async_check(**kwargs)
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        return await self._checker.async_track_changes(action)
+
+    @override
+    def _async_unload(self) -> None:
+        self._checker.async_unload()
 
 
 class CompoundConditionChecker(ConditionChecker):
