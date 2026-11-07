@@ -807,7 +807,9 @@ async def _async_get_supported_devices(hass: HomeAssistant) -> dict[str, str]:
     unsorted: dict[str, str] = {}
     for device_id in results:
         entry = dev_reg.async_get(device_id)
-        unsorted[device_id] = entry.name or device_id if entry else device_id
+        unsorted[device_id] = (
+            entry.name_by_user or entry.name or device_id if entry else device_id
+        )
     return dict(sorted(unsorted.items(), key=itemgetter(1)))
 
 

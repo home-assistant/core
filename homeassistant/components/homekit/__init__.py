@@ -621,7 +621,8 @@ class HomeKit:
         self, device: dr.DeviceEntry, device_triggers: list[dict[str, Any]]
     ) -> None:
         """Add device automation triggers to the bridge."""
-        if self._would_exceed_max_devices(device.name):
+        name = device.name_by_user or device.name
+        if self._would_exceed_max_devices(name):
             return
 
         assert self.aid_storage is not None
@@ -635,7 +636,7 @@ class HomeKit:
         trigger_accessory = DeviceTriggerAccessory(
             self.hass,
             self.driver,
-            device.name,
+            name,
             None,
             aid,
             config,
