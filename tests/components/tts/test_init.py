@@ -1921,10 +1921,22 @@ async def test_async_convert_audio_streaming_wav_is_unwrapped(
     """Test that a streaming WAV source is fed to ffmpeg as raw samples."""
     assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
 
+    input_closed = asyncio.Event()
+
+    async def read_stdout(*args) -> bytes:
+        await input_closed.wait()
+        return b""
+
+    async def wait_process() -> int:
+        await input_closed.wait()
+        return 0
+
     mock_process = MagicMock()
     mock_process.stdin.drain = AsyncMock()
-    mock_process.stdout.read = AsyncMock(return_value=b"")
-    mock_process.wait = AsyncMock(return_value=0)
+    mock_process.stdin.close.side_effect = input_closed.set
+    mock_process.stdout.read = AsyncMock(side_effect=read_stdout)
+    mock_process.stderr.read = AsyncMock(return_value=b"")
+    mock_process.wait = AsyncMock(side_effect=wait_process)
 
     with patch(
         "asyncio.create_subprocess_exec", return_value=mock_process
@@ -1968,10 +1980,22 @@ async def test_async_convert_audio_wav_fallback(
     """Test that audio which cannot be unwrapped is passed to ffmpeg as a WAV file."""
     assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
 
+    input_closed = asyncio.Event()
+
+    async def read_stdout(*args) -> bytes:
+        await input_closed.wait()
+        return b""
+
+    async def wait_process() -> int:
+        await input_closed.wait()
+        return 0
+
     mock_process = MagicMock()
     mock_process.stdin.drain = AsyncMock()
-    mock_process.stdout.read = AsyncMock(return_value=b"")
-    mock_process.wait = AsyncMock(return_value=0)
+    mock_process.stdin.close.side_effect = input_closed.set
+    mock_process.stdout.read = AsyncMock(side_effect=read_stdout)
+    mock_process.stderr.read = AsyncMock(return_value=b"")
+    mock_process.wait = AsyncMock(side_effect=wait_process)
 
     with patch(
         "asyncio.create_subprocess_exec", return_value=mock_process
@@ -2106,10 +2130,22 @@ async def test_async_convert_audio_streaming_wav_needs_ffmpeg(
     """Test that WAV audio in a different format is converted by ffmpeg."""
     assert await async_setup_component(hass, ffmpeg.DOMAIN, {})
 
+    input_closed = asyncio.Event()
+
+    async def read_stdout(*args) -> bytes:
+        await input_closed.wait()
+        return b""
+
+    async def wait_process() -> int:
+        await input_closed.wait()
+        return 0
+
     mock_process = MagicMock()
     mock_process.stdin.drain = AsyncMock()
-    mock_process.stdout.read = AsyncMock(return_value=b"")
-    mock_process.wait = AsyncMock(return_value=0)
+    mock_process.stdin.close.side_effect = input_closed.set
+    mock_process.stdout.read = AsyncMock(side_effect=read_stdout)
+    mock_process.stderr.read = AsyncMock(return_value=b"")
+    mock_process.wait = AsyncMock(side_effect=wait_process)
 
     with patch(
         "asyncio.create_subprocess_exec", return_value=mock_process
@@ -2168,6 +2204,7 @@ async def test_async_convert_audio_probe_size(
     mock_process = MagicMock()
     mock_process.stdin.drain = AsyncMock()
     mock_process.stdout.read = AsyncMock(return_value=b"")
+    mock_process.stderr.read = AsyncMock(return_value=b"")
     mock_process.wait = AsyncMock(return_value=0)
 
     with patch(
@@ -2221,6 +2258,7 @@ async def test_async_convert_audio_mp3_bitrate(
     mock_process = MagicMock()
     mock_process.stdin.drain = AsyncMock()
     mock_process.stdout.read = AsyncMock(return_value=b"")
+    mock_process.stderr.read = AsyncMock(return_value=b"")
     mock_process.wait = AsyncMock(return_value=0)
 
     with patch(
@@ -2561,6 +2599,7 @@ async def test_audio_stream_ffmpeg_input(
     mock_process = MagicMock()
     mock_process.stdin.drain = AsyncMock()
     mock_process.stdout.read = AsyncMock(side_effect=[b"mp3 audio", b""])
+    mock_process.stderr.read = AsyncMock(return_value=b"")
     mock_process.wait = AsyncMock(return_value=0)
 
     with patch(
