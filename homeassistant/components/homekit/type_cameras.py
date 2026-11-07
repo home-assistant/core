@@ -345,7 +345,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
 
         stream_address = config.get(CONF_STREAM_ADDRESS, driver.state.address)
 
-        self._recording_problem_logged = False
+        self._recording_problem: str | None = None
 
         self.secure_video = False
         self._recording_attributes: list[VideoAttributes] = []
@@ -750,9 +750,9 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         }
 
     def _log_recording_problem(self, message: str, *args: Any) -> None:
-        """Warn about a failed recording once until a recording succeeds."""
-        level = logging.DEBUG if self._recording_problem_logged else logging.WARNING
-        self._recording_problem_logged = True
+        """Warn about each kind of recording failure once until one succeeds."""
+        level = logging.DEBUG if message == self._recording_problem else logging.WARNING
+        self._recording_problem = message
         _LOGGER.log(level, message, self.entity_id, *args)
 
     @override
@@ -852,7 +852,7 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
                         return
                 sent_packets += 1
                 if sent_packets == RECORDING_FIRST_VIDEO_PACKET:
-                    self._recording_problem_logged = False
+                    self._recording_problem = None
                 yield packet
                 if packet.is_last:
                     return
@@ -895,15 +895,21 @@ class Camera(HomeDoorbellAccessory, PyhapCamera):  # type: ignore[misc]
         self, reader: asyncio.StreamReader, lines: deque[str]
     ) -> None:
         """Keep the last ffmpeg output lines of a recording."""
+        skip_line = False
         while True:
             try:
                 raw = await reader.readline()
             except ValueError:
-                # The reader dropped a line over its limit, the next one is intact.
+                # The reader dropped a line over its limit, the next read can be its
+                # tail, where a URL would no longer match the redaction.
                 lines.append("<line too long>")
+                skip_line = True
                 continue
             if not raw:
                 return
+            if skip_line:
+                skip_line = False
+                continue
             line = RECORDING_STDERR_URL.sub(b"<url>", raw.rstrip()).decode(
                 errors="replace"
             )

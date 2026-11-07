@@ -2048,11 +2048,10 @@ async def test_camera_secure_video_recording_problem_logged_once(
     recording_ffmpeg: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a failing camera warns once until a recording succeeds."""
+    """Test each kind of recording failure warns once until a recording succeeds."""
     acc = await _recording_camera(hass, run_driver)
-    message = "Failed to start recording ffmpeg"
 
-    def warnings() -> int:
+    def warnings(message: str) -> int:
         return sum(
             r.levelno == logging.WARNING and message in r.getMessage()
             for r in caplog.records
@@ -2062,13 +2061,22 @@ async def test_camera_secure_video_recording_problem_logged_once(
     with caplog.at_level(logging.DEBUG):
         await _collect(acc)
         await _collect(acc)
-        assert warnings() == 1
+        assert warnings("Failed to start recording ffmpeg") == 1
 
+        acc.config[CONF_STREAM_SOURCE] = None
+        with patch(
+            "homeassistant.components.camera.async_get_stream_source",
+            return_value=None,
+        ):
+            await _collect(acc)
+        assert warnings("Camera has no stream source") == 1
+
+        acc.config[CONF_STREAM_SOURCE] = "rtsp://cam"
         recording_ffmpeg.open.return_value = True
         await _collect(acc)
         recording_ffmpeg.open.return_value = False
         await _collect(acc)
-    assert warnings() == 2
+    assert warnings("Failed to start recording ffmpeg") == 2
 
 
 @pytest.mark.usefixtures("no_state_file", "recording_transport")
@@ -2294,16 +2302,21 @@ async def test_camera_secure_video_recording_long_stderr_line(
     recording_ffmpeg: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test an overlong ffmpeg output line does not stop reading stderr."""
-    stderr = _closed_pipe(b"x" * 2**17 + b"\nmore output\n")
+    """Test the tail of an overlong ffmpeg line is dropped, later lines are read."""
+    stderr = asyncio.StreamReader()
+    # The line arrives in chunks, so the reader drops it before its newline.
+    stderr.feed_data(b"rtsps://user:secret@cam" + b"x" * 2**17)
     _ffmpeg_output(recording_ffmpeg, _closed_pipe(INIT_SEGMENT + FRAGMENT), stderr)
     acc = await _recording_camera(hass, run_driver)
 
     with caplog.at_level(logging.DEBUG):
-        assert [packet.data for packet in await _collect(acc)] == [
-            INIT_SEGMENT,
-            FRAGMENT,
-            b"",
-        ]
-    assert stderr.at_eof()
+        recording = acc.handle_recording_stream(1)
+        assert (await anext(recording)).data == INIT_SEGMENT
+        stderr.feed_data(b"ret@cam:7441/token\nmore output\n")
+        stderr.feed_eof()
+        # Let the stderr reader catch up before the recording ends.
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        assert [packet.data async for packet in recording] == [FRAGMENT, b""]
     assert "Recording ffmpeg: more output" in caplog.text
+    assert "token" not in caplog.text
