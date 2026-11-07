@@ -1833,7 +1833,10 @@ async def _async_init_recorder_component(
     wait_setup: bool,
 ) -> None:
     """Initialize the recorder asynchronously."""
+    import probatio  # noqa: PLC0415
+
     from homeassistant.components import recorder  # noqa: PLC0415
+    from homeassistant.components.recorder import settings as recorder_settings  # noqa: PLC0415
 
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
@@ -1841,7 +1844,20 @@ async def _async_init_recorder_component(
         if recorder.CONF_COMMIT_INTERVAL not in config:
             config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
+    # Settings configured from the UI are passed as defaults instead of YAML,
+    # which would raise a deprecation repair issue in every test
+    settings = probatio.Schema(recorder_settings.SETTINGS_SCHEMA_DICT)(
+        {
+            key: config.pop(key)
+            for key in recorder_settings.DEFAULT_SETTINGS
+            if key in config
+        }
+    )
+
+    with (
+        patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
+        patch.dict(recorder_settings.DEFAULT_SETTINGS, settings),
+    ):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
         setup_task = asyncio.ensure_future(

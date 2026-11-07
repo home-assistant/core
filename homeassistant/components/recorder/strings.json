@@ -12,9 +12,17 @@
       "description": "Support for version {server_version} of {database_engine} is ending; the minimum supported version will be {min_version}. Please upgrade your database software and restart Home Assistant.",
       "title": "Update {database_engine} to {min_version} or later to continue using the recorder"
     },
+    "deprecated_yaml": {
+      "description": "Your recorder options {options} from `configuration.yaml` have been imported. These options are now configured from the UI.\n\nRemove these options from the `recorder:` block in your `configuration.yaml` and restart Home Assistant. The `db_url` option and the `include` and `exclude` filters stay in `configuration.yaml`.",
+      "title": "Recorder YAML options have moved to the UI"
+    },
     "maria_db_range_index_regression": {
       "description": "Older versions of MariaDB suffer from a significant performance regression when retrieving history data or purging the database. Update to MariaDB version {min_version} or later and restart Home Assistant. If you are using the MariaDB Core app, make sure to update it to the latest version.",
       "title": "Update MariaDB to {min_version} or later resolve a significant performance issue"
+    },
+    "yaml_still_present_after_migration": {
+      "description": "Your recorder options {options} in `configuration.yaml` have already been imported and are now ignored. Change these options from the UI instead.\n\nRemove these options from the `recorder:` block in your `configuration.yaml` and restart Home Assistant. The `db_url` option and the `include` and `exclude` filters stay in `configuration.yaml`.",
+      "title": "Recorder YAML options are ignored"
     }
   },
   "services": {

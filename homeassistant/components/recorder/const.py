@@ -1,7 +1,7 @@
 """Recorder constants."""
 
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.const import (
     EVENT_RECORDER_5MIN_STATISTICS_GENERATED,  # noqa: F401
@@ -16,7 +16,17 @@ if TYPE_CHECKING:
 
 DOMAIN = "recorder"
 
+CONF_AUTO_PURGE: Final = "auto_purge"
+CONF_AUTO_REPACK: Final = "auto_repack"
+CONF_COMMIT_INTERVAL: Final = "commit_interval"
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
+CONF_DB_MAX_RETRIES: Final = "db_max_retries"
+CONF_DB_RETRY_WAIT: Final = "db_retry_wait"
+CONF_PURGE_KEEP_DAYS: Final = "purge_keep_days"
+
+DEFAULT_COMMIT_INTERVAL = 5
+DEFAULT_DB_MAX_RETRIES = 10
+DEFAULT_DB_RETRY_WAIT = 3
 
 MAX_QUEUE_BACKLOG_MIN_VALUE = 65000
 MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG = 256 * 1024**2
