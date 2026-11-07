@@ -1,0 +1,12 @@
+{
+  "domain": "dobiss",
+  "name": "Dobiss",
+  "categories": ["lighting.lighting_systems"],
+  "codeowners": ["@koen-fermax"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/dobiss",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["dobiss-nxt-client==0.1.1"]
+}
