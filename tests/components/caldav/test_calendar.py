@@ -1929,6 +1929,19 @@ async def _ws_call(
             id="floating_new_wall_time",
         ),
         pytest.param(
+            AMERICA_NEW_YORK,
+            SINGLE_ICS,
+            "single",
+            "",
+            # The second 01:30 to 01:45 in New York, after clocks went back
+            {
+                "summary": "Dentist",
+                "dtstart": "2026-11-01T06:30:00+00:00",
+                "dtend": "2026-11-01T06:45:00+00:00",
+            },
+            id="single_in_repeated_hour",
+        ),
+        pytest.param(
             UTC,
             SERIES_ICS,
             "series",

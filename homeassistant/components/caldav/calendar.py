@@ -317,8 +317,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     ) -> None:
         """Change the fields of an event and save it."""
         item = self._get_event(uid)
-        calendar = item.icalendar_instance
-        series = _get_series(calendar)
+        series = _get_series(item.icalendar_instance)
         _check_whole_event(series, recurrence_id, recurrence_range)
         if _same_times(series, event):
             # Leave the stored times and their time zone as they are
@@ -342,12 +341,15 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         ):
             if key in event:
                 series.pop(key)
-                if event[key]:
-                    series.add(key, event[key])
-        if EVENT_START in event:
+                if value := event[key]:
+                    if isinstance(value, datetime):
+                        # A TZID time can't tell the two hours apart that
+                        # repeat when clocks go back, UTC can
+                        value = value.astimezone(UTC)
+                    series.add(key, value)
+        if EVENT_END in event:
             # DTEND replaces a DURATION
             series.pop("DURATION")
-            calendar.add_missing_timezones()
         # Otherwise save() merges just the first component into the stored
         # event when that one is an override
         item.save(only_this_recurrence=False)
