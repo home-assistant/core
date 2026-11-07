@@ -15684,6 +15684,9 @@
     "truenas_ce": {
       "name": "TrueNAS CE",
       "integration_type": "device",
+      "categories": [
+        "computers_network.nas_servers"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
