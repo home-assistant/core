@@ -27,6 +27,10 @@ from .coordinator import AemetConfigEntry
 
 API_KEY_URL = "https://opendata.aemet.es/centrodedescargas/altaUsuario"
 
+API_KEY_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
+
 OPTIONS_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_RADAR_UPDATES, default=False): bool,
@@ -120,9 +124,32 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema(
-                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
-            ),
+            data_schema=API_KEY_SCHEMA,
+            errors=errors,
+            description_placeholders={"api_key_url": API_KEY_URL},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user replace the API key."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            entry = self._get_reconfigure_entry()
+            errors = await self._async_validate_api_key(
+                user_input[CONF_API_KEY],
+                entry.data[CONF_LATITUDE],
+                entry.data[CONF_LONGITUDE],
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=API_KEY_SCHEMA,
             errors=errors,
             description_placeholders={"api_key_url": API_KEY_URL},
         )

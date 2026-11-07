@@ -14,6 +14,12 @@
         },
         "description": "The AEMET OpenData API key is no longer valid. AEMET API keys expire periodically, so you need to generate a new one at {api_key_url}"
       },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "Enter a new AEMET OpenData API key. AEMET API keys expire periodically, and you can generate a new one at {api_key_url}"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",

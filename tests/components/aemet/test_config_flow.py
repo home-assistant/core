@@ -249,3 +249,57 @@ async def test_reauth(hass: HomeAssistant, exception: Exception, error: str) -> 
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_API_KEY] == "new"
     mocked_aemet.select_coordinates.assert_awaited_once_with(40.30403754, -3.72935236)
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AuthError, "invalid_api_key"),
+        (AemetTimeout, "cannot_connect"),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant, exception: Exception, error: str
+) -> None:
+    """Test the reconfigure flow, including recovery from an API error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="40.30403754--3.72935236",
+        data={
+            CONF_API_KEY: "old",
+            CONF_LATITUDE: 40.30403754,
+            CONF_LONGITUDE: -3.72935236,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mocked_aemet = MagicMock()
+    mocked_aemet.select_coordinates.side_effect = exception
+
+    with patch(
+        "homeassistant.components.aemet.config_flow.AEMET",
+        return_value=mocked_aemet,
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "invalid"},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": error}
+
+        mocked_aemet.select_coordinates = AsyncMock()
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "new"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_API_KEY] == "new"
+    mocked_aemet.select_coordinates.assert_awaited_once_with(40.30403754, -3.72935236)
