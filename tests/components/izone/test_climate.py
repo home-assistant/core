@@ -570,24 +570,39 @@ async def test_refresh_failure_makes_entities_unavailable(
     assert hass.states.get(ZONE_ENTITY).state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("refresh_error", "connected"),
+    [
+        pytest.param(ConnectionError("offline"), True, id="bridge_unreachable"),
+        pytest.param(None, False, id="system_offline"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
-async def test_soft_fault_marks_entities_unavailable_until_reconnect(
+async def test_unavailable_logged_once_until_reconnect(
     hass: HomeAssistant,
     mock_controller: Mock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    refresh_error: Exception | None,
+    connected: bool,
 ) -> None:
-    """Successful refresh with connected=False marks entities unavailable."""
+    """Entities go unavailable with one log line, and one more on recovery."""
     assert hass.states.get(CONTROLLER_ENTITY).state == HVACMode.COOL
     assert hass.states.get(ZONE_ENTITY).state == HVACMode.HEAT_COOL
 
-    mock_controller.connected = False
-    freezer.tick(UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    mock_controller.refresh_all.side_effect = refresh_error
+    mock_controller.connected = connected
+    # Repeated failed polls must not log again.
+    for _ in range(3):
+        freezer.tick(UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
     assert hass.states.get(CONTROLLER_ENTITY).state == STATE_UNAVAILABLE
     assert hass.states.get(ZONE_ENTITY).state == STATE_UNAVAILABLE
+    assert caplog.text.count("Error fetching izone 000000001 data") == 1
 
+    mock_controller.refresh_all.side_effect = None
     mock_controller.connected = True
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
@@ -595,6 +610,11 @@ async def test_soft_fault_marks_entities_unavailable_until_reconnect(
 
     assert hass.states.get(CONTROLLER_ENTITY).state == HVACMode.COOL
     assert hass.states.get(ZONE_ENTITY).state == HVACMode.HEAT_COOL
+    assert (
+        "homeassistant.components.izone.coordinator",
+        logging.INFO,
+        "Fetching izone 000000001 data recovered",
+    ) in caplog.record_tuples
 
 
 @pytest.mark.parametrize(
