@@ -1068,12 +1068,12 @@ async def test_pv_aggregate_stays_on_the_inverter(
     assert entity_registry.async_get(entity_id).device_id == inverter.id
 
 
-async def test_only_wired_battery_packs_become_devices(
+async def test_only_wired_battery_strings_become_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test packs are counted by what answers, not by the register map."""
+    """Test strings are counted by what answers, not by the register map."""
     connection = MockModbusConnection()
     seed_hybrid_inverter(connection.for_unit(1))
     entry = MockConfigEntry(
@@ -1100,7 +1100,7 @@ async def test_only_wired_battery_packs_become_devices(
         if device.via_device_id == inverter.id and device.name.startswith("Battery")
     }
 
-    # The seed wires packs 1 and 3; the map allows 8, so the rest must not.
+    # The seed wires strings 1 and 3; the map allows 8, the rest must not.
     assert battery_names == {"Battery 1", "Battery 3"}
     assert (
         entity_registry.async_get_entity_id(
@@ -1113,7 +1113,7 @@ async def test_only_wired_battery_packs_become_devices(
         (DOMAIN, MOCK_HYBRID_SERIAL), entry.entry_id
     )
     assert inverter is not None
-    # A combined total is the inverter's, not any one pack's.
+    # A combined total is the inverter's, not any one string's.
     total_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_capacity_total"
     )
@@ -1160,16 +1160,16 @@ async def test_total_survives_a_torn_first_poll_after_reload(
     assert hass.states.get(entity_id).state == "1000.0"
 
 
-async def test_battery_pack_appears_once_its_block_answers(
+async def test_battery_string_appears_once_its_block_answers(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a pack whose block failed at setup is added when it recovers."""
+    """Test a string whose block failed at setup is added when it recovers."""
     connection = MockModbusConnection()
     unit = connection.for_unit(1)
     seed_hybrid_inverter(unit)
-    # Inside the battery_3_8 block, so pack 3 cannot be seen at setup.
+    # Inside the battery_3_8 block, so string 3 cannot be seen at setup.
     unit.fail_read(BATTERY_3_VOLTAGE_REGISTER, ModbusError("block busy"))
 
     entry = MockConfigEntry(
@@ -1194,7 +1194,7 @@ async def test_battery_pack_appears_once_its_block_answers(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # No reload: the coordinator's own listener notices the pack answering.
+    # No reload: the coordinator's own listener sees the string answering.
     entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == "51.5"
@@ -1225,13 +1225,13 @@ async def _setup_hybrid(
     [
         pytest.param({(DOMAIN, MOCK_HYBRID_SERIAL)}, False, id="inverter"),
         pytest.param(
-            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_1")}, False, id="wired_pack"
+            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_1")}, False, id="wired_string"
         ),
         pytest.param(
             {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_pv_string_2")}, False, id="pv_string"
         ),
         pytest.param(
-            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_9")}, True, id="pack_off_the_map"
+            {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_9")}, True, id="string_off_the_map"
         ),
         pytest.param(
             {(DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_x")}, True, id="unparseable_part"
@@ -1247,7 +1247,7 @@ async def _setup_hybrid(
         pytest.param({("other", MOCK_HYBRID_SERIAL)}, True, id="foreign_identifier"),
     ],
 )
-async def test_only_absent_battery_packs_can_be_removed(
+async def test_only_absent_battery_strings_can_be_removed(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
@@ -1270,12 +1270,12 @@ async def test_only_absent_battery_packs_can_be_removed(
     assert (device_registry.async_get(device.id) is None) is removable
 
 
-async def test_an_absent_pack_is_removable_while_the_entry_is_unloaded(
+async def test_an_absent_string_is_removable_while_the_entry_is_unloaded(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a pack whose liveness cannot be checked is taken on trust."""
+    """Test a string whose liveness cannot be checked is taken on trust."""
     assert await async_setup_component(hass, "config", {})
     connection = MockModbusConnection()
     seed_hybrid_inverter(connection.for_unit(1))
@@ -1294,14 +1294,14 @@ async def test_an_absent_pack_is_removable_while_the_entry_is_unloaded(
     assert device_registry.async_get(device.id) is None
 
 
-async def test_a_removed_pack_comes_back_without_a_restart(
+async def test_a_removed_string_comes_back_without_a_restart(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test removing a pack does not bar it from being added again."""
+    """Test removing a string does not bar it from being added again."""
     assert await async_setup_component(hass, "config", {})
     connection = MockModbusConnection()
     unit = connection.for_unit(1)
