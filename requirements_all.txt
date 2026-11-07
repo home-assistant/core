@@ -16,7 +16,7 @@ Adax-local==0.3.0
 DoorBirdPy==3.0.13
 
 # homeassistant.components.homekit
-HAP-python==5.1.0
+HAP-python==5.2.0
 
 # homeassistant.components.tasmota
 HATasmota==0.10.2
@@ -1248,7 +1248,7 @@ gps3==0.33.3
 grandstream-home-api==0.1.7
 
 # homeassistant.components.gree
-greeclimate==3.6.3
+greeclimate==3.6.4
 
 # homeassistant.components.greencell
 greencell_client==1.0.3

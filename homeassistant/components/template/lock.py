@@ -14,7 +14,7 @@ from homeassistant.components.lock import (
     LockState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CODE, CONF_NAME, CONF_STATE
+from homeassistant.const import ATTR_CODE, CONF_NAME, CONF_STATE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import config_validation as cv
@@ -26,7 +26,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as tcv
-from .const import DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -47,7 +47,7 @@ CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
 CONF_OPEN = "open"
 
-DEFAULT_NAME = "Template Lock"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.LOCK]
 DEFAULT_OPTIMISTIC = False
 
 SCRIPT_FIELDS = (
