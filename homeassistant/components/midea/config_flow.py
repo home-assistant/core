@@ -603,8 +603,10 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.found_device[CONF_TOKEN] = keys["token"]
                 self.found_device[CONF_KEY] = keys["key"]
                 self._clear_login_state()
+                # _check_key_from_cloud already connected with this token/key
                 return await self._async_create_midea_entry(
                     self._found_device_to_user_input(),
+                    validated=True,
                 )
             # v1/v2 device add without token/key, no cloud interaction needed
             self._clear_login_state()
@@ -644,6 +646,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_create_midea_entry(
         self,
         user_input: dict[str, Any],
+        *,
+        validated: bool = False,
     ) -> ConfigFlowResult:
         """Validate device connection with all the input and create the entry."""
         device_id = user_input[CONF_DEVICE_ID]
@@ -654,7 +658,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(str(device_id))
         self._abort_if_unique_id_configured()
 
-        connected = await _async_select_and_connect(
+        connected = validated or await _async_select_and_connect(
             device_id=device_id,
             device_type=user_input[CONF_TYPE],
             ip_address=user_input[CONF_IP_ADDRESS],
