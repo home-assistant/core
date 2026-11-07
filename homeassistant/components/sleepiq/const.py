@@ -14,6 +14,7 @@ FAVORITE_FIRMNESS = "favorite_firmness"
 ICON_EMPTY = "mdi:bed-empty"
 ICON_OCCUPIED = "mdi:bed"
 IS_IN_BED = "is_in_bed"
+RESPONSIVE_AIR = "responsive_air"
 SLEEP_NUMBER = "sleep_number"
 FOOT_WARMING_TIMER = "foot_warming_timer"
 FOOT_WARMER = "foot_warmer"
@@ -30,6 +31,7 @@ ENTITY_TYPES = {
     FAVORITE_FIRMNESS: "Favorite Firmness",
     PRESSURE: "Pressure",
     IS_IN_BED: "Is In Bed",
+    RESPONSIVE_AIR: "Responsive Air",
     SLEEP_NUMBER: "SleepNumber",
     FOOT_WARMING_TIMER: "Foot Warming Timer",
     FOOT_WARMER: "Foot Warmer",

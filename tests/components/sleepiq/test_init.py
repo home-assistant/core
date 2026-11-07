@@ -95,6 +95,16 @@ async def test_entry_setup_connection_error(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_responsive_air_support_timeout(
+    hass: HomeAssistant, mock_asyncsleepiq: MagicMock, mock_bed: MagicMock
+) -> None:
+    """Test a timeout while checking Responsive Air support retries setup."""
+    mock_bed.sleepers[0].has_responsive_air.side_effect = SleepIQTimeoutException
+    entry = await setup_platform(hass, None)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_update_interval(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test update interval."""
     await setup_platform(hass, "sensor")
@@ -140,6 +150,12 @@ async def test_api_timeout(hass: HomeAssistant, mock_asyncsleepiq) -> None:
             "number",
             LONGER_UPDATE_INTERVAL,
             id="favorite_firmness",
+        ),
+        pytest.param(
+            lambda client, bed: bed.sleepers[0].fetch_responsive_air,
+            "switch",
+            LONGER_UPDATE_INTERVAL,
+            id="responsive_air",
         ),
         pytest.param(
             lambda client, bed: bed.sleepers[0].fetch_sleep_data,

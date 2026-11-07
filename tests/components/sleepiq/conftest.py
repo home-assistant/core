@@ -73,6 +73,8 @@ def mock_bed() -> MagicMock:
     sleeper_l.in_bed = True
     sleeper_l.sleep_number = 40
     sleeper_l.fav_sleep_number = 50
+    sleeper_l.responsive_air = True
+    sleeper_l.has_responsive_air.return_value = True
     sleeper_l.pressure = 1000
     sleeper_l.sleeper_id = SLEEPER_L_ID
     sleeper_l.sleep_data = SleepData(
@@ -88,6 +90,8 @@ def mock_bed() -> MagicMock:
     sleeper_r.in_bed = False
     sleeper_r.sleep_number = 80
     sleeper_r.fav_sleep_number = 65
+    sleeper_r.responsive_air = False
+    sleeper_r.has_responsive_air.return_value = True
     sleeper_r.pressure = 1400
     sleeper_r.sleeper_id = SLEEPER_R_ID
     sleeper_r.sleep_data = SleepData(
