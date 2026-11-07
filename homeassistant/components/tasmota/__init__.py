@@ -31,6 +31,7 @@ from .const import (
     DATA_UNSUB,
     PLATFORMS,
 )
+from .coordinator import TasmotaLatestReleaseUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +63,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     tasmota_mqtt = TasmotaMQTTClient(_publish, _subscribe_topics, _unsubscribe_topics)
 
     device_registry = dr.async_get(hass)
+
+    entry.runtime_data = TasmotaLatestReleaseUpdateCoordinator(hass, entry)
 
     async def async_discover_device(config: TasmotaDeviceConfig, mac: str) -> None:
         """Discover and add a Tasmota device."""
