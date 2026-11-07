@@ -1,0 +1,41 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "Password for your account",
+          "username": "Email address for your account"
+        },
+        "description": "Don't have an account yet? [Register here]({register_url})"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_energy_price": {
+        "name": "Current energy price"
+      },
+      "next_energy_price": {
+        "name": "Next energy price"
+      },
+      "updated_at": {
+        "name": "Last updated"
+      },
+      "yesterdays_consumption": {
+        "name": "Yesterday's consumption"
+      }
+    }
+  }
+}

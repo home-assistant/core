@@ -16884,6 +16884,16 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "wws": {
+      "name": "WestfalenWIND \u00d6kostrom smart",
+      "integration_type": "service",
+      "categories": [
+        "energy.energy_prices",
+        "sensors"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "wyoming": {
       "name": "Wyoming Protocol",
       "integration_type": "service",
