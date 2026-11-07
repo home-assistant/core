@@ -7,12 +7,13 @@ from functools import partial
 from http import HTTPStatus
 from ipaddress import AddressValueError, IPv4Address
 import logging
+import re
 import socket
 import threading
 from typing import Any, cast
 from urllib.parse import urlparse
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientTimeout
 import probatio
 from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
@@ -31,6 +32,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     issue_registry as ir,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.service_info.ssdp import (
@@ -66,6 +68,8 @@ from .services import async_setup_services
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
+
+_ROOT_UDN_RE = re.compile(r"<UDN>uuid:(RINCON_\w+)</UDN>")
 
 CONF_ADVERTISE_ADDR = "advertise_addr"
 CONF_INTERFACE_ADDR = "interface_addr"
@@ -644,6 +648,32 @@ class SonosDiscoveryManager:
             return False
         return device.disabled
 
+    async def _async_should_defer_discovery(self, discovered_ip: str) -> bool:
+        """Return if discovery on this IP must not subscribe yet.
+
+        A known speaker holding the IP must keep its subscription, so discovery is
+        deferred to a later message unless a different owner is confirmed.
+        """
+        known_uids = {
+            speaker.uid
+            for speaker in self.data.discovered.values()
+            if speaker.available and speaker.soco.ip_address == discovered_ip
+        }
+        if not known_uids:
+            return False
+        session = async_get_clientsession(self.hass)
+        try:
+            async with session.get(
+                f"http://{discovered_ip}:1400/xml/device_description.xml",
+                timeout=ClientTimeout(total=5),
+            ) as response:
+                description = await response.text()
+        except ClientError, TimeoutError:
+            return True
+        if not (match := _ROOT_UDN_RE.search(description)):
+            return True
+        return match.group(1) in known_uids
+
     async def _async_handle_discovery_message(
         self,
         uid: str,
@@ -662,6 +692,13 @@ class SonosDiscoveryManager:
                 await self.async_subscribe_to_zone_updates(discovered_ip)
             elif uid not in self.data.discovered:
                 if self.is_device_invisible(discovered_ip):
+                    return
+                if await self._async_should_defer_discovery(discovered_ip):
+                    _LOGGER.debug(
+                        "Deferring %s for %s, IP not confirmed to be a new speaker",
+                        uid,
+                        discovered_ip,
+                    )
                     return
                 await self.async_subscribe_to_zone_updates(discovered_ip)
             elif boot_seqnum and boot_seqnum > self.data.boot_counts[uid]:

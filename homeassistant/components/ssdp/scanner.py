@@ -324,6 +324,8 @@ class Scanner:
 
         location = ssdp_device.location
         _, info_desc = self._description_cache.peek_description_dict(location)
+        if self._async_uncache_if_stale(ssdp_device, dst, location):
+            info_desc = None
         if info_desc is None:
             # Fetch info desc in separate task and process from there.
             self.hass.async_create_background_task(
@@ -424,6 +426,24 @@ class Scanner:
             ),
         )
 
+    @core_callback
+    def _async_uncache_if_stale(
+        self, ssdp_device: SsdpDevice, dst: str, location: str | None
+    ) -> bool:
+        """Uncache the description if it belongs to another root device."""
+        if TYPE_CHECKING:
+            assert self._description_cache is not None
+        if location is None or dst != _ROOT_DEVICE:
+            return False
+        _, info_desc = self._description_cache.peek_description_dict(location)
+        if info_desc is None or not _description_is_stale(ssdp_device, info_desc):
+            return False
+        _LOGGER.debug(
+            "SSDP: cached description for %s belongs to another device", location
+        )
+        self._description_cache.uncache_description(location)
+        return True
+
     async def _async_get_description_dict(
         self, location: str | None
     ) -> Mapping[str, str]:
@@ -479,6 +499,26 @@ class Scanner:
             if ssdp_device.udn == udn
         ]
 
+    async def _async_rediscover_with_lookup(self, ssdp_device: SsdpDevice) -> None:
+        """Fetch the description once and rediscover all targets of the device."""
+        info_desc = await self._async_get_description_dict(ssdp_device.location)
+        if info_desc:
+            self._async_rediscover_device(ssdp_device, info_desc)
+
+    @core_callback
+    def _async_rediscover_device(
+        self, ssdp_device: SsdpDevice, info_desc: Mapping[str, Any]
+    ) -> None:
+        """Replay all targets of the device with the given description."""
+        for dst in ssdp_device.all_combined_headers:
+            self._ssdp_listener_process_callback(
+                ssdp_device,
+                dst,
+                SsdpSource.SEARCH,
+                info_desc,
+                True,  # Skip integration callbacks
+            )
+
     @core_callback
     def _handle_config_entry_removed(
         self,
@@ -497,18 +537,22 @@ class Scanner:
             for ssdp_device in self._ssdp_devices:
                 if ssdp_device.udn != udn:
                     continue
-                for dst in ssdp_device.all_combined_headers:
-                    has_cached_desc, info_desc = cache.peek_description_dict(
-                        ssdp_device.location
+                if _ROOT_DEVICE in ssdp_device.all_combined_headers and (
+                    self._async_uncache_if_stale(
+                        ssdp_device, _ROOT_DEVICE, ssdp_device.location
                     )
-                    if has_cached_desc and info_desc:
-                        self._ssdp_listener_process_callback(
-                            ssdp_device,
-                            dst,
-                            SsdpSource.SEARCH,
-                            info_desc,
-                            True,  # Skip integration callbacks
-                        )
+                ):
+                    self.hass.async_create_background_task(
+                        self._async_rediscover_with_lookup(ssdp_device),
+                        name=f"ssdp_rediscover_lookup_{ssdp_device.location}",
+                        eager_start=True,
+                    )
+                    continue
+                has_cached_desc, info_desc = cache.peek_description_dict(
+                    ssdp_device.location
+                )
+                if has_cached_desc and info_desc:
+                    self._async_rediscover_device(ssdp_device, info_desc)
 
 
 def discovery_info_from_headers_and_description(
@@ -547,6 +591,19 @@ def discovery_info_from_headers_and_description(
         upnp=upnp_info,
         ssdp_all_locations=set(ssdp_device.locations),
     )
+
+
+_ROOT_DEVICE = "upnp:rootdevice"
+
+
+def _description_is_stale(
+    ssdp_device: SsdpDevice, info_desc: Mapping[str, Any]
+) -> bool:
+    """Return if the cached description is for a different root device."""
+    cached_udn = info_desc.get(_ATTR_UPNP_UDN)
+    if not cached_udn or not ssdp_device.udn:
+        return False
+    return str(cached_udn).lower() != ssdp_device.udn.lower()
 
 
 def _udn_from_usn(usn: str | None) -> str | None:
