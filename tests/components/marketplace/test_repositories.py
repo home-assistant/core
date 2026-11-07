@@ -868,6 +868,194 @@ async def test_repository_page_ignores_info_file(
     assert not get_documentation.called
 
 
+@pytest.mark.parametrize(
+    ("language", "expected_filename"),
+    [
+        pytest.param("de", "README.de.md", id="language"),
+        pytest.param("de-CH", "README.de.md", id="region"),
+        pytest.param("pt-BR", "README.pt-BR.md", id="region_file"),
+        pytest.param("pt", "README.pt-BR.md", id="language_of_region_file"),
+    ],
+)
+async def test_translated_readme(
+    marketplace: MarketplaceManager,
+    language: str,
+    expected_filename: str,
+) -> None:
+    """Test the README in the language is the best match in the tree."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = [
+        "README.md",
+        "README.de.md",
+        "README.pt-BR.md",
+        "docs/README.fr.md",
+    ]
+
+    with patch.object(
+        repository, "get_documentation", return_value="Translated"
+    ) as get_documentation:
+        assert await repository.async_get_translated_readme(language) == "Translated"
+
+    get_documentation.assert_called_once_with(filename=expected_filename, version=None)
+
+
+async def test_translated_readme_from_the_version_of_the_tree(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the README in the language comes from the version its tree is for."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    # 1.0.0 was selected while 2.0.0 is the latest release
+    repository.tree_ref = "1.0.0"
+    repository.data.last_version = "2.0.0"
+    url = (
+        f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/README.de.md"
+    )
+    response_mocker.add(url, mocked_response(url, content=b"1.0.0"))
+
+    assert await repository.async_get_translated_readme("de") == "1.0.0"
+
+
+async def test_translated_readme_not_utf8(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test a translated README that is not UTF-8 leaves README.md to show."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.data.last_version = "1.0.0"
+    url = (
+        f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/README.de.md"
+    )
+    response_mocker.add(url, mocked_response(url, content="Größe".encode("latin-1")))
+
+    assert await repository.async_get_translated_readme("de") == ""
+
+
+async def test_translated_readme_follows_the_installed_version(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the README in the language is fetched for the current version."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.data.installed = True
+    for version in ("1.0.0", "2.0.0"):
+        url = f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/{version}/README.de.md"
+        response_mocker.add(url, mocked_response(url, content=version.encode()))
+
+    repository.data.installed_version = "1.0.0"
+    assert await repository.async_get_translated_readme("de") == "1.0.0"
+    # As after an install from the catalog, which does not refresh the repository
+    repository.data.installed_version = "2.0.0"
+    assert await repository.async_get_translated_readme("de") == "2.0.0"
+
+
+async def test_translated_readme_named_by_the_installed_version(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the README in the language is named by the files of the installed version."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    # 2.0.0 renamed the translation of the installed 1.0.0
+    repository.tree_ref = "2.0.0"
+    repository.treefiles = ["README.md", "README.de-DE.md"]
+    repository.data.installed = True
+    repository.data.installed_version = "1.0.0"
+    url = (
+        f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/README.de.md"
+    )
+    response_mocker.add(url, mocked_response(url, content=b"1.0.0"), keep=True)
+
+    with patch.object(
+        repository,
+        "get_tree",
+        return_value=_tree(("README.md", False), ("README.de.md", False)),
+    ) as get_tree:
+        assert await repository.async_get_translated_readme("de") == "1.0.0"
+        assert await repository.async_get_translated_readme("de") == "1.0.0"
+
+    get_tree.assert_called_once_with("1.0.0")
+
+
+async def test_translated_readme_without_the_installed_tree(
+    marketplace: MarketplaceManager,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the files of the tree name the README when the installed ones are unknown."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.tree_ref = "2.0.0"
+    repository.treefiles = ["README.md", "README.de.md"]
+    repository.data.installed = True
+    repository.data.installed_version = "1.0.0"
+    url = (
+        f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/1.0.0/README.de.md"
+    )
+    response_mocker.add(url, mocked_response(url, content=b"1.0.0"), keep=True)
+
+    with patch.object(
+        repository, "get_tree", side_effect=GitHubAnonymousRateLimitError
+    ) as get_tree:
+        assert await repository.async_get_translated_readme("de") == "1.0.0"
+        assert await repository.async_get_translated_readme("de") == "1.0.0"
+
+    get_tree.assert_called_once_with("1.0.0")
+
+
+async def test_translated_readme_installed_without_translations(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test the installed version without translations costs one request."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.tree_ref = "2.0.0"
+    repository.treefiles = ["README.md"]
+    repository.data.installed = True
+    repository.data.installed_version = "1.0.0"
+
+    with (
+        patch.object(
+            repository, "get_tree", return_value=_tree(("README.md", False))
+        ) as get_tree,
+        patch.object(repository, "get_documentation") as get_documentation,
+    ):
+        assert await repository.async_get_translated_readme("de") == ""
+        assert await repository.async_get_translated_readme("de") == ""
+
+    get_tree.assert_called_once_with("1.0.0")
+    assert not get_documentation.called
+
+
+@pytest.mark.parametrize(
+    "treefiles",
+    [
+        pytest.param(["README.md", "docs/README.fr.md"], id="only_in_folder"),
+        pytest.param(["README.md", "README.de.md"], id="other_language"),
+        pytest.param([], id="without_tree"),
+    ],
+)
+async def test_translated_readme_missing(
+    marketplace: MarketplaceManager,
+    treefiles: list[str],
+) -> None:
+    """Test a repository without a README in the language costs no request."""
+    repository = Repository(marketplace)
+    repository.data.full_name = REPOSITORY_INTEGRATION
+    repository.treefiles = treefiles
+
+    with patch.object(repository, "get_documentation") as get_documentation:
+        assert await repository.async_get_translated_readme("fr") == ""
+
+    assert not get_documentation.called
+
+
 async def test_get_documentation_without_filename(
     marketplace: MarketplaceManager,
 ) -> None:

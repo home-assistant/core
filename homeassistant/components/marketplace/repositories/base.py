@@ -9,6 +9,7 @@ from functools import partial
 import io
 import os
 from pathlib import Path
+import re
 import shutil
 import tempfile
 from typing import TYPE_CHECKING, Any, Literal, override
@@ -26,7 +27,7 @@ import attr
 import probatio
 
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, language as language_util
 from homeassistant.util.json import json_loads_object
 
 from ..const import DOMAIN, MAX_ARCHIVE_MEMBERS, MAX_DOWNLOAD_SIZE, RELEASE_LIMIT
@@ -83,6 +84,12 @@ README_FILENAMES = (
     "README.MD",
     "README",
     "readme",
+)
+
+# A README in another language next to README.md, such as README.de.md or
+# README.pt-BR.md, named with the language tags of the translations
+TRANSLATED_README = re.compile(
+    r"readme\.([a-z]{2,3}(?:-[a-z0-9]+)*)\.md", re.IGNORECASE
 )
 
 TOPIC_FILTER = (
@@ -479,6 +486,8 @@ class Repository:
         # The ref the tree was fetched for, its files are downloaded from there
         self.tree_ref: str | None = None
         self.treefiles: list[str] = []
+        # The files of the installed version, when it is not the one of the tree
+        self._installed_treefiles: tuple[str, list[str] | None] | None = None
         self.ref: str | None = None
         self.logger = LOGGER
         # Two installs of one repository would write over each other's files
@@ -974,6 +983,73 @@ class Repository:
             ):
                 return content
         return ""
+
+    async def async_get_translated_readme(self, language: str) -> str:
+        """Get the README in the language, empty when the repository has none.
+
+        Only READMEs in the tree are used, so a repository without translations
+        costs no request. An installed version that is not the one of the tree
+        costs one request for its files, once per version. The best match of the
+        language wins, as for the languages of conversation agents. It is fetched
+        for every page, like the README after a restart, so it always matches the
+        version to install.
+        """
+        treefiles = self.treefiles
+        installed = self.data.installed_version or self.data.installed_commit
+        # An installed repository shows the README of the installed version,
+        # which can name its translations differently than the version of the tree
+        if (
+            self.data.installed
+            and installed is not None
+            and self.tree_ref is not None
+            and installed != self.tree_ref
+        ):
+            treefiles = await self._async_get_installed_treefiles(installed)
+
+        readmes = {
+            match.group(1): filename
+            for filename in treefiles
+            if (match := TRANSLATED_README.fullmatch(filename))
+        }
+        if not (languages := language_util.matches(language, readmes)):
+            return ""
+
+        filename = readmes[languages[0]]
+        # The file comes from the version whose files named it
+        version = installed if self.data.installed else self.tree_ref
+        try:
+            return (
+                await self.get_documentation(filename=filename, version=version) or ""
+            )
+        except UnicodeDecodeError:
+            # README.md is still there to show
+            self.logger.warning("%s %s is not UTF-8", self.string, filename)
+            return ""
+
+    async def _async_get_installed_treefiles(self, installed: str) -> list[str]:
+        """Return the files of the installed version, the tree's when unknown.
+
+        They are fetched once per version, also when that fails, so a rate limit
+        is not asked again on every page.
+        """
+        if (
+            self._installed_treefiles is None
+            or self._installed_treefiles[0] != installed
+        ):
+            files: list[str] | None
+            try:
+                tree = await self.get_tree(installed)
+            except MarketplaceError as exception:
+                self.logger.debug(
+                    "%s No tree for %s: %s", self.string, installed, exception
+                )
+                files = None
+            else:
+                files = [entry.path for entry in tree or []]
+            self._installed_treefiles = (installed, files)
+        if (files := self._installed_treefiles[1]) is None:
+            return self.treefiles
+        return files
 
     def remove(self) -> None:
         """Forget the repository, its files stay where they are."""
