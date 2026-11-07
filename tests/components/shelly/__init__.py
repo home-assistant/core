@@ -111,6 +111,28 @@ def inject_rpc_device_event(
     mock_rpc_device.mock_event()
 
 
+def inject_rpc_config_changed_event(
+    monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock, component: str
+) -> None:
+    """Inject a config_changed event of a component for rpc device."""
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": component,
+                    "event": "config_changed",
+                    "restart_required": False,
+                    "ts": 1668522399.2,
+                    "cfg_rev": 16,
+                },
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+
+
 async def mock_rest_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

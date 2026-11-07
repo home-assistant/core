@@ -49,6 +49,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from . import (
     MOCK_MAC,
     init_integration,
+    inject_rpc_config_changed_event,
     inject_rpc_device_event,
     mock_block_device_push_update_failure,
     mock_polling_rpc_update,
@@ -540,6 +541,106 @@ async def test_rpc_ui_cfg_change_update_error(
 
     assert entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.flow.async_progress()) == reauth_flows
+
+
+@pytest.mark.parametrize(
+    ("component", "update_method", "changed_key", "reloaded"),
+    [
+        pytest.param(
+            "switch:0",
+            "update_switch_config",
+            "in_locked",
+            False,
+            id="switch_input_lock",
+        ),
+        pytest.param(
+            "cover:0", "update_cover_config", "in_locked", False, id="cover_input_lock"
+        ),
+        pytest.param(
+            "switch:0", "update_switch_config", "name", True, id="switch_name"
+        ),
+        pytest.param("cover:0", "update_cover_config", "name", True, id="cover_name"),
+    ],
+)
+async def test_rpc_component_cfg_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    component: str,
+    update_method: str,
+    changed_key: str,
+    reloaded: bool,
+) -> None:
+    """Test a switch/cover config change only reloads for keys entities do not own."""
+    entity_id = "switch.test_name_test_switch_0"
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+    monkeypatch.setitem(mock_rpc_device.config[component], "in_locked", False)
+    await init_integration(hass, 2)
+
+    async def _update_config(_id: int) -> None:
+        monkeypatch.setitem(mock_rpc_device.config[component], changed_key, True)
+
+    monkeypatch.setattr(
+        mock_rpc_device, update_method, AsyncMock(side_effect=_update_config)
+    )
+
+    # A reload would turn the switch into a light
+    monkeypatch.setitem(
+        mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
+    )
+    inject_rpc_config_changed_event(monkeypatch, mock_rpc_device, component)
+    await hass.async_block_till_done()
+
+    getattr(mock_rpc_device, update_method).assert_awaited_once_with(0)
+
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (hass.states.get(entity_id) is None) is reloaded
+
+
+@pytest.mark.parametrize(
+    ("exception", "reauth_flows"),
+    [
+        pytest.param(DeviceConnectionError, 0, id="connection_error"),
+        pytest.param(RpcCallError(999), 0, id="rpc_call_error"),
+        pytest.param(InvalidAuthError, 1, id="invalid_auth"),
+    ],
+)
+async def test_rpc_component_cfg_change_update_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    exception: Exception,
+    reauth_flows: int,
+) -> None:
+    """Test a switch config change when fetching the updated config fails."""
+    entity_id = "switch.test_name_test_switch_0"
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+    monkeypatch.setattr(
+        mock_rpc_device, "update_switch_config", AsyncMock(side_effect=exception)
+    )
+    entry = await init_integration(hass, 2)
+
+    # A reload would turn the switch into a light
+    monkeypatch.setitem(
+        mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
+    )
+    inject_rpc_config_changed_event(monkeypatch, mock_rpc_device, "switch:0")
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(hass.config_entries.flow.async_progress()) == reauth_flows
+    assert hass.states.get(entity_id)
 
 
 async def test_rpc_reload_with_invalid_auth(

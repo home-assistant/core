@@ -77,6 +77,8 @@ from .utils import (
     get_host,
     get_http_port,
     get_rpc_device_wakeup_period,
+    get_rpc_key,
+    get_rpc_key_id,
     get_rpc_ws_url,
     get_shelly_manufacturer,
     get_shelly_model_name,
@@ -107,9 +109,20 @@ type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
 
 # Components whose config changes only affect entity state, so they are
 # refreshed on config_changed instead of reloading the entry
-RPC_CONFIG_UPDATERS: dict[str, Callable[[RpcDevice], Coroutine[Any, Any, None]]] = {
-    "plugs_ui": lambda device: device.update_plugs_ui_config(),
-    "powerstrip_ui": lambda device: device.update_powerstrip_ui_config(),
+RPC_CONFIG_UPDATERS: dict[
+    str, Callable[[RpcDevice, str], Coroutine[Any, Any, None]]
+] = {
+    "plugs_ui": lambda device, _: device.update_plugs_ui_config(),
+    "powerstrip_ui": lambda device, _: device.update_powerstrip_ui_config(),
+    "switch": lambda device, key: device.update_switch_config(get_rpc_key_id(key)),
+    "cover": lambda device, key: device.update_cover_config(get_rpc_key_id(key)),
+}
+
+# For these components only a change of the listed config keys is refreshed, a
+# change of any other key (like the channel name) reloads the entry
+RPC_COMPONENT_CONFIG_KEYS: dict[str, set[str]] = {
+    "switch": {"in_locked"},
+    "cover": {"in_locked"},
 }
 
 
@@ -651,8 +664,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
     async def _async_update_component_config(self, component: str) -> None:
         """Fetch the changed component config and update entities."""
+        component_type = get_rpc_key(component)[1]
+        state_keys = RPC_COMPONENT_CONFIG_KEYS.get(component_type)
+        old_config = dict(self.device.config.get(component, {}))
         try:
-            await RPC_CONFIG_UPDATERS[component](self.device)
+            await RPC_CONFIG_UPDATERS[component_type](self.device, component)
         except (DeviceConnectionError, RpcCallError) as err:
             LOGGER.debug(
                 "Error updating %s config for %s: %s", component, self.name, err
@@ -661,6 +677,24 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
             return
+
+        if state_keys is not None:
+            new_config = self.device.config.get(component, {})
+            changed_keys = {
+                key
+                for key in old_config.keys() | new_config.keys()
+                if old_config.get(key) != new_config.get(key)
+            }
+            if changed_keys - state_keys:
+                self.update_sleep_period()
+                LOGGER.info(
+                    "Config for %s changed, reloading entry in %s seconds",
+                    self.name,
+                    ENTRY_RELOAD_COOLDOWN,
+                )
+                self._debounced_reload.async_schedule_call()
+                return
+
         self.async_update_listeners()
 
     @callback
@@ -680,7 +714,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             for event_callback in self._event_listeners:
                 event_callback(event)
 
-            if event_type == "config_changed" and component in RPC_CONFIG_UPDATERS:
+            if (
+                event_type == "config_changed"
+                and component is not None
+                and get_rpc_key(component)[1] in RPC_CONFIG_UPDATERS
+            ):
                 self.config_entry.async_create_background_task(
                     self.hass,
                     self._async_update_component_config(component),
