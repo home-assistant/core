@@ -1,5 +1,6 @@
 """Test repairs for Wake on LAN."""
 
+import asyncio
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -12,9 +13,12 @@ from pytest_homeassistant.components.repairs import (
     start_repair_fix_flow,
 )
 from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import switch
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.wake_on_lan.const import DOMAIN
+from homeassistant.components.wake_on_lan.switch import WolSwitch
 from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -22,10 +26,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
     entity_registry as er,
+    issue_registry as ir,
     label_registry as lr,
 )
 from homeassistant.setup import async_setup_component
 
+ISSUE_ID = "migrate_to_template_00:01:02:03:04:05"
 FULL_CONFIG = {
     "platform": "wake_on_lan",
     "name": "Test",
@@ -85,43 +91,37 @@ def mock_yaml_config() -> Generator[MagicMock]:
         yield mock_load
 
 
-async def test_full_config(
+@pytest.mark.parametrize(
+    ("config", "entity_id", "description"),
+    [
+        pytest.param(FULL_CONFIG, "switch.test", "with_ping", id="full"),
+        pytest.param(MINIMAL_CONFIG, "switch.wake_on_lan", "no_ping", id="minimal"),
+        pytest.param(NO_HOST_CONFIG, "switch.test", "no_ping", id="no_host"),
+        pytest.param(NO_TURN_OFF_CONFIG, "switch.test", "with_ping", id="no_turn_off"),
+    ],
+)
+async def test_migrate(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     mock_yaml_config: MagicMock,
+    snapshot: SnapshotAssertion,
+    config: dict[str, Any],
+    entity_id: str,
+    description: str,
 ) -> None:
-    """Test fixing with a full config."""
+    """Test migrating a WOL switch to a Template switch."""
     assert await async_setup_component(hass, "repairs", {})
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {SWITCH_DOMAIN: FULL_CONFIG},
-    )
-    mock_yaml_config.return_value = {SWITCH_DOMAIN: FULL_CONFIG}
+    assert await async_setup_component(hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: config})
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: config}
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.test")
-    assert state
+    assert entity_registry.async_get(entity_id).platform == DOMAIN
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_ID)
 
-    ws_client = await hass_ws_client(hass)
     client = await hass_client()
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) > 0
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"].startswith("migrate_to_template"):
-            issue = i
-    assert issue is not None
-
-    data = await start_repair_fix_flow(client, DOMAIN, issue["issue_id"])
-
-    flow_id = data["flow_id"]
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
     assert data["description_placeholders"] == {"mac": "00-01-02-03-04-05"}
     assert data["step_id"] == "migrate"
 
@@ -129,413 +129,30 @@ async def test_full_config(
         "homeassistant.components.ping.helpers.async_ping",
         return_value=Host(address="10.10.10.10", packets_sent=10, rtts=[]),
     ):
-        data = await process_repair_fix_flow(client, flow_id, json={})
+        data = await process_repair_fix_flow(client, data["flow_id"], json={})
 
     assert data["type"] == FlowResultType.CREATE_ENTRY
+    assert data["description"] == description
     await hass.async_block_till_done()
 
     # Template switch takes over the entity ID of the WOL switch
-    assert entity_registry.async_get("switch.test").platform == "template"
-    assert hass.states.get("switch.test")
-
-    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"].startswith("migrate_to_template"):
-            issue = i
-    assert not issue
-
-    ping_config_entries = hass.config_entries.async_entries("ping")
-    assert ping_config_entries
-    ping_entities = entity_registry.entities.get_entries_for_config_entry_id(
-        ping_config_entries[0].entry_id
-    )
-    assert ping_entities
-    ping_entity = ping_entities[0].entity_id
-
-    ping_config_entry = ping_config_entries[0]
-    assert ping_config_entry.title == "somehostname.local"
-    assert ping_config_entry.options == {
-        "host": "somehostname.local",
-        "count": 5,
-        "consider_home": 180,
-    }
-
-    wol_config_entries = hass.config_entries.async_entries("wake_on_lan")
-    assert wol_config_entries
-    wol_entities = entity_registry.entities.get_entries_for_config_entry_id(
-        wol_config_entries[0].entry_id
-    )
-    assert wol_entities
-    wol_entity = wol_entities[0].entity_id
-
-    wol_config_entry = wol_config_entries[0]
-    assert wol_config_entry.title == "Wake on LAN 00:01:02:03:04:05"
-    assert wol_config_entry.options == {
-        "mac": "00:01:02:03:04:05",
-        "broadcast_address": "255.255.255.255",
-        "broadcast_port": 1,
-    }
-
-    template_config_entries = hass.config_entries.async_entries("template")
-    assert template_config_entries
-    template_entities = entity_registry.entities.get_entries_for_config_entry_id(
-        template_config_entries[0].entry_id
-    )
-    assert template_entities
-    assert template_entities[0].original_name == "Test"
-
-    template_config_entry = template_config_entries[0]
-    assert template_config_entry.title == "Test"
-    assert template_config_entry.options == {
-        "template_type": "switch",
-        "name": "Test",
-        "turn_on": [
-            {
-                "action": "button.press",
-                "target": {"entity_id": wol_entity},
-            }
-        ],
-        "value_template": "{{ is_state('" + ping_entity + "', 'on') }}",
-        "turn_off": [
-            {
-                "action": "input_number.increment",
-                "target": {"entity_id": "input_number.number"},
-            }
-        ],
-    }
-
-
-async def test_minimal_config(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
-    entity_registry: er.EntityRegistry,
-    mock_yaml_config: MagicMock,
-) -> None:
-    """Test fixing with minimal configuration."""
-    assert await async_setup_component(hass, "repairs", {})
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {SWITCH_DOMAIN: MINIMAL_CONFIG},
-    )
-    mock_yaml_config.return_value = {SWITCH_DOMAIN: MINIMAL_CONFIG}
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.wake_on_lan")
-    assert state
-
-    ws_client = await hass_ws_client(hass)
-    client = await hass_client()
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) > 0
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"].startswith("migrate_to_template"):
-            issue = i
-    assert issue is not None
-
-    data = await start_repair_fix_flow(client, DOMAIN, issue["issue_id"])
-
-    flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {"mac": "00-01-02-03-04-05"}
-    assert data["step_id"] == "migrate"
-
-    with patch(
-        "homeassistant.components.ping.helpers.async_ping",
-        return_value=Host(address="10.10.10.10", packets_sent=10, rtts=[]),
-    ):
-        data = await process_repair_fix_flow(client, flow_id, json={})
-
-    assert data["type"] == FlowResultType.CREATE_ENTRY
-    await hass.async_block_till_done()
-
-    # Template switch takes over the entity ID of the WOL switch
-    assert entity_registry.async_get("switch.wake_on_lan").platform == "template"
-    assert hass.states.get("switch.wake_on_lan")
-
-    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"].startswith("migrate_to_template"):
-            issue = i
-    assert not issue
-
-    wol_config_entries = hass.config_entries.async_entries("wake_on_lan")
-    assert wol_config_entries
-    wol_entities = entity_registry.entities.get_entries_for_config_entry_id(
-        wol_config_entries[0].entry_id
-    )
-    assert wol_entities
-    wol_entity = wol_entities[0].entity_id
-
-    wol_config_entry = wol_config_entries[0]
-    assert wol_config_entry.title == "Wake on LAN 00:01:02:03:04:05"
-    assert wol_config_entry.options == {
-        "mac": "00:01:02:03:04:05",
-    }
-
-    template_config_entries = hass.config_entries.async_entries("template")
-    assert template_config_entries
-    template_entities = entity_registry.entities.get_entries_for_config_entry_id(
-        template_config_entries[0].entry_id
-    )
-    assert template_entities
-    assert template_entities[0].original_name == "Wake on LAN"
-
-    template_config_entry = template_config_entries[0]
-    assert template_config_entry.title == "Wake on LAN"
-    assert template_config_entry.options == {
-        "template_type": "switch",
-        "name": "Wake on LAN",
-        "turn_on": [
-            {
-                "action": "button.press",
-                "target": {"entity_id": wol_entity},
-            }
-        ],
-    }
-
-
-async def test_no_host_config(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
-    entity_registry: er.EntityRegistry,
-    mock_yaml_config: MagicMock,
-) -> None:
-    """Test fixing with a no host configured."""
-    assert await async_setup_component(hass, "repairs", {})
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {SWITCH_DOMAIN: NO_HOST_CONFIG},
-    )
-    mock_yaml_config.return_value = {SWITCH_DOMAIN: NO_HOST_CONFIG}
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test")
-    assert state
-
-    ws_client = await hass_ws_client(hass)
-    client = await hass_client()
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) > 0
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"].startswith("migrate_to_template"):
-            issue = i
-    assert issue is not None
-
-    data = await start_repair_fix_flow(client, DOMAIN, issue["issue_id"])
-
-    flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {"mac": "00-01-02-03-04-05"}
-    assert data["step_id"] == "migrate"
-
-    with patch(
-        "homeassistant.components.ping.helpers.async_ping",
-        return_value=Host(address="10.10.10.10", packets_sent=10, rtts=[]),
-    ):
-        data = await process_repair_fix_flow(client, flow_id, json={})
-
-    assert data["type"] == FlowResultType.CREATE_ENTRY
-    await hass.async_block_till_done()
-
-    # Template switch takes over the entity ID of the WOL switch
-    assert entity_registry.async_get("switch.test").platform == "template"
-    assert hass.states.get("switch.test")
-
-    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"].startswith("migrate_to_template"):
-            issue = i
-    assert not issue
-
-    wol_config_entries = hass.config_entries.async_entries("wake_on_lan")
-    assert wol_config_entries
-    wol_entities = entity_registry.entities.get_entries_for_config_entry_id(
-        wol_config_entries[0].entry_id
-    )
-    assert wol_entities
-    wol_entity = wol_entities[0].entity_id
-
-    wol_config_entry = wol_config_entries[0]
-    assert wol_config_entry.title == "Wake on LAN 00:01:02:03:04:05"
-    assert wol_config_entry.options == {
-        "mac": "00:01:02:03:04:05",
-    }
-
-    template_config_entries = hass.config_entries.async_entries("template")
-    assert template_config_entries
-    template_entities = entity_registry.entities.get_entries_for_config_entry_id(
-        template_config_entries[0].entry_id
-    )
-    assert template_entities
-    assert template_entities[0].original_name == "Test"
-
-    template_config_entry = template_config_entries[0]
-    assert template_config_entry.title == "Test"
-    assert template_config_entry.options == {
-        "template_type": "switch",
-        "name": "Test",
-        "turn_on": [
-            {
-                "action": "button.press",
-                "target": {"entity_id": wol_entity},
-            }
-        ],
-        "turn_off": [
-            {
-                "action": "input_number.increment",
-                "target": {"entity_id": "input_number.number"},
-            }
-        ],
-    }
-
-
-async def test_no_turn_off_config(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
-    entity_registry: er.EntityRegistry,
-    mock_yaml_config: MagicMock,
-) -> None:
-    """Test fixing with no turn off action in config."""
-    assert await async_setup_component(hass, "repairs", {})
-    assert await async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {SWITCH_DOMAIN: NO_TURN_OFF_CONFIG},
-    )
-    mock_yaml_config.return_value = {SWITCH_DOMAIN: NO_TURN_OFF_CONFIG}
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.test")
-    assert state
-
-    ws_client = await hass_ws_client(hass)
-    client = await hass_client()
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) > 0
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"].startswith("migrate_to_template"):
-            issue = i
-    assert issue is not None
-
-    data = await start_repair_fix_flow(client, DOMAIN, issue["issue_id"])
-
-    flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {"mac": "00-01-02-03-04-05"}
-    assert data["step_id"] == "migrate"
-
-    with patch(
-        "homeassistant.components.ping.helpers.async_ping",
-        return_value=Host(address="10.10.10.10", packets_sent=10, rtts=[]),
-    ):
-        data = await process_repair_fix_flow(client, flow_id, json={})
-
-    assert data["type"] == FlowResultType.CREATE_ENTRY
-    await hass.async_block_till_done()
-
-    # Template switch takes over the entity ID of the WOL switch
-    assert entity_registry.async_get("switch.test").platform == "template"
-    assert hass.states.get("switch.test")
-
-    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"].startswith("migrate_to_template"):
-            issue = i
-    assert not issue
-
-    ping_config_entries = hass.config_entries.async_entries("ping")
-    assert ping_config_entries
-    ping_entities = entity_registry.entities.get_entries_for_config_entry_id(
-        ping_config_entries[0].entry_id
-    )
-    assert ping_entities
-    ping_entity = ping_entities[0].entity_id
-
-    ping_config_entry = ping_config_entries[0]
-    assert ping_config_entry.title == "somehostname.local"
-    assert ping_config_entry.options == {
-        "host": "somehostname.local",
-        "count": 5,
-        "consider_home": 180,
-    }
-
-    wol_config_entries = hass.config_entries.async_entries("wake_on_lan")
-    assert wol_config_entries
-    wol_entities = entity_registry.entities.get_entries_for_config_entry_id(
-        wol_config_entries[0].entry_id
-    )
-    assert wol_entities
-    wol_entity = wol_entities[0].entity_id
-
-    wol_config_entry = wol_config_entries[0]
-    assert wol_config_entry.title == "Wake on LAN 00:01:02:03:04:05"
-    assert wol_config_entry.options == {
-        "mac": "00:01:02:03:04:05",
-        "broadcast_address": "255.255.255.255",
-        "broadcast_port": 1,
-    }
-
-    template_config_entries = hass.config_entries.async_entries("template")
-    assert template_config_entries
-    template_entities = entity_registry.entities.get_entries_for_config_entry_id(
-        template_config_entries[0].entry_id
-    )
-    assert template_entities
-    assert template_entities[0].original_name == "Test"
-
-    template_config_entry = template_config_entries[0]
-    assert template_config_entry.title == "Test"
-    assert template_config_entry.options == {
-        "template_type": "switch",
-        "name": "Test",
-        "turn_on": [
-            {
-                "action": "button.press",
-                "target": {"entity_id": wol_entity},
-            }
-        ],
-        "value_template": "{{ is_state('" + ping_entity + "', 'on') }}",
-    }
+    assert entity_registry.async_get(entity_id).platform == "template"
+    assert hass.states.get(entity_id)
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_ID) is None
+    assert {
+        domain: [
+            {"title": entry.title, "options": dict(entry.options)}
+            for entry in hass.config_entries.async_entries(domain)
+        ]
+        for domain in ("ping", DOMAIN, "template")
+    } == snapshot
 
 
 async def test_input_entities_already_exist(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     mock_yaml_config: MagicMock,
 ) -> None:
     """Test fixing when matching ping and WOL entity already exist.
@@ -589,21 +206,11 @@ async def test_input_entities_already_exist(
     # button.wake_on_lan_00_01_02_03_04_05 - WOL config entry
     assert len(states) == 4
 
-    ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_ID)
 
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) > 0
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"].startswith("migrate_to_template"):
-            issue = i
-    assert issue is not None
-
-    data = await start_repair_fix_flow(client, DOMAIN, issue["issue_id"])
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {"mac": "00-01-02-03-04-05"}
@@ -618,15 +225,7 @@ async def test_input_entities_already_exist(
     assert entity_registry.async_get("switch.test").platform == "template"
     assert hass.states.get("switch.test")
 
-    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"].startswith("migrate_to_template"):
-            issue = i
-    assert not issue
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_ID) is None
 
     ping_config_entries = hass.config_entries.async_entries("ping")
     assert ping_config_entries
@@ -660,8 +259,8 @@ async def test_input_entities_already_exist(
 async def test_template_switch_already_exist(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     mock_yaml_config: MagicMock,
 ) -> None:
     """Test fixing when also template switch already exist."""
@@ -737,21 +336,11 @@ async def test_template_switch_already_exist(
     # switch.test_2 - Template switch
     assert len(states) == 5
 
-    ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_ID)
 
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) > 0
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"].startswith("migrate_to_template"):
-            issue = i
-    assert issue is not None
-
-    data = await start_repair_fix_flow(client, DOMAIN, issue["issue_id"])
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {"mac": "00-01-02-03-04-05"}
@@ -772,15 +361,7 @@ async def test_template_switch_already_exist(
     assert entity_registry.async_get("switch.test").platform == DOMAIN
     assert hass.states.get("switch.test")
 
-    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"].startswith("migrate_to_template"):
-            issue = i
-    assert not issue
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_ID) is None
 
     ping_config_entries = hass.config_entries.async_entries("ping")
     assert ping_config_entries
@@ -816,6 +397,7 @@ async def test_turn_off_action_not_json_serializable_when_validated(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
     mock_yaml_config: MagicMock,
 ) -> None:
     """Test the template switch gets the off action from the YAML configuration."""
@@ -833,11 +415,8 @@ async def test_turn_off_action_not_json_serializable_when_validated(
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-    issue_ids = {i["issue_id"] for i in msg["result"]["issues"]}
     # Issue is identified by the MAC so it does not depend on the validated config
-    assert "migrate_to_template_00:01:02:03:04:05" in issue_ids
+    assert issue_registry.async_get_issue(DOMAIN, ISSUE_ID)
 
     # Issue data only holds values that can be sent as JSON
     await ws_client.send_json(
@@ -845,7 +424,7 @@ async def test_turn_off_action_not_json_serializable_when_validated(
             "id": 2,
             "type": "repairs/get_issue_data",
             "domain": DOMAIN,
-            "issue_id": "migrate_to_template_00:01:02:03:04:05",
+            "issue_id": ISSUE_ID,
         }
     )
     msg = await ws_client.receive_json()
@@ -855,9 +434,7 @@ async def test_turn_off_action_not_json_serializable_when_validated(
         "name": "Test",
     }
 
-    data = await start_repair_fix_flow(
-        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
-    )
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
     data = await process_repair_fix_flow(client, data["flow_id"], json={})
 
     assert data["type"] == FlowResultType.CREATE_ENTRY
@@ -900,9 +477,7 @@ async def test_turn_off_action_lookup(
     await hass.async_block_till_done()
 
     client = await hass_client()
-    data = await start_repair_fix_flow(
-        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
-    )
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
     data = await process_repair_fix_flow(client, data["flow_id"], json={})
 
     assert data["type"] == FlowResultType.CREATE_ENTRY
@@ -927,9 +502,7 @@ async def test_read_configuration_fails(
     await hass.async_block_till_done()
 
     client = await hass_client()
-    data = await start_repair_fix_flow(
-        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
-    )
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
     data = await process_repair_fix_flow(client, data["flow_id"], json={})
 
     assert data["type"] == FlowResultType.ABORT
@@ -963,6 +536,7 @@ async def test_template_switch_takes_over_customized_entity(
         aliases=["Computer"],
         area_id=area.id,
         categories={"helpers": "category_id"},
+        device_class="outlet",
         icon="mdi:desktop-tower",
         labels={label.label_id},
         name="Office PC",
@@ -976,9 +550,7 @@ async def test_template_switch_takes_over_customized_entity(
     await hass.async_block_till_done()
 
     client = await hass_client()
-    data = await start_repair_fix_flow(
-        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
-    )
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
     data = await process_repair_fix_flow(client, data["flow_id"], json={})
 
     assert data["type"] == FlowResultType.CREATE_ENTRY
@@ -995,6 +567,7 @@ async def test_template_switch_takes_over_customized_entity(
     assert entity_entry.aliases == ["Computer"]
     assert entity_entry.area_id == area.id
     assert entity_entry.categories == {"helpers": "category_id"}
+    assert entity_entry.device_class == "outlet"
     assert entity_entry.icon == "mdi:desktop-tower"
     assert entity_entry.labels == {label.label_id}
     assert entity_entry.name == "Office PC"
@@ -1045,9 +618,7 @@ async def test_reuse_disabled_ping_entity(
     )
 
     client = await hass_client()
-    data = await start_repair_fix_flow(
-        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
-    )
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
     data = await process_repair_fix_flow(client, data["flow_id"], json={})
 
     assert data["type"] == FlowResultType.CREATE_ENTRY
@@ -1086,9 +657,7 @@ async def test_ping_entity_disabled_by_config_entry(
     )
 
     client = await hass_client()
-    data = await start_repair_fix_flow(
-        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
-    )
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
     data = await process_repair_fix_flow(client, data["flow_id"], json={})
 
     assert data["type"] == FlowResultType.ABORT
@@ -1114,9 +683,7 @@ async def test_import_already_configured_without_lookup_match(
     await hass.async_block_till_done()
 
     client = await hass_client()
-    data = await start_repair_fix_flow(
-        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
-    )
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
     data = await process_repair_fix_flow(client, data["flow_id"], json={})
 
     assert data["type"] == FlowResultType.ABORT
@@ -1153,12 +720,84 @@ async def test_template_switch_takes_over_disabled_entity(
     await hass.async_block_till_done()
 
     client = await hass_client()
-    data = await start_repair_fix_flow(
-        client, DOMAIN, "migrate_to_template_00:01:02:03:04:05"
-    )
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
     data = await process_repair_fix_flow(client, data["flow_id"], json={})
 
     assert data["type"] == FlowResultType.CREATE_ENTRY
     entity_entry = entity_registry.async_get("switch.test")
     assert entity_entry.platform == "template"
     assert entity_entry.disabled_by is expected_disabled_by
+
+
+DELAYED_OFF_CONFIG = {
+    "platform": "wake_on_lan",
+    "name": "Test",
+    "mac": "00-01-02-03-04-05",
+    "turn_off": [{"delay": "00:10:00"}],
+}
+
+
+async def test_take_over_entity_id_while_off_script_runs(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_yaml_config: MagicMock,
+) -> None:
+    """Test the entity ID is taken over while the WOL switch's off script runs.
+
+    Stopping the running script delays the removal of the old state.
+    """
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(
+        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: DELAYED_OFF_CONFIG}
+    )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: DELAYED_OFF_CONFIG}
+    await hass.async_block_till_done()
+    entity = hass.data[switch.DOMAIN].get_entity("switch.test")
+    assert isinstance(entity, WolSwitch)
+    assert entity._off_script is not None
+    hass.async_create_task(entity._off_script.async_run(context=None))
+    await asyncio.sleep(0)
+    assert entity._off_script.is_running
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+
+    assert data["type"] == FlowResultType.CREATE_ENTRY
+    assert entity_registry.async_get("switch.test").platform == "template"
+
+
+async def test_take_over_entity_id_old_state_not_removed(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_yaml_config: MagicMock,
+) -> None:
+    """Test the repair aborts when the old state is not removed in time."""
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(
+        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: NO_HOST_CONFIG}
+    )
+    mock_yaml_config.return_value = {SWITCH_DOMAIN: NO_HOST_CONFIG}
+    await hass.async_block_till_done()
+    never_set = asyncio.Event()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
+    with (
+        patch.object(
+            WolSwitch, "async_will_remove_from_hass", side_effect=never_set.wait
+        ),
+        patch("homeassistant.components.wake_on_lan.repairs.asyncio.sleep"),
+    ):
+        data = await process_repair_fix_flow(client, data["flow_id"], json={})
+
+    assert data["type"] == FlowResultType.ABORT
+    assert data["reason"] == "could_not_take_over_entity_id"
+    assert data["description_placeholders"] == {
+        "entity_id": "switch.test_2",
+        "old_entity_id": "switch.test",
+    }
+    never_set.set()
+    await hass.async_block_till_done()

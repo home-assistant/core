@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -162,8 +162,16 @@ class MigrateSwitchFlow(RepairsFlow):
         )
         if not template_entity_id:
             return self.async_abort(reason="could_not_get_template_entity")
-        if old_entity_id:
-            self._async_take_over_entity(entity_reg, old_entity_id, template_entity_id)
+        if old_entity_id and not await self._async_take_over_entity(
+            entity_reg, old_entity_id, template_entity_id
+        ):
+            return self.async_abort(
+                reason="could_not_take_over_entity_id",
+                description_placeholders={
+                    "entity_id": template_entity_id,
+                    "old_entity_id": old_entity_id,
+                },
+            )
 
         return self.async_create_entry(
             data={},
@@ -225,23 +233,33 @@ class MigrateSwitchFlow(RepairsFlow):
             await asyncio.sleep(1)
         return None
 
-    @callback
-    def _async_take_over_entity(
+    async def _async_take_over_entity(
         self,
         entity_reg: er.EntityRegistry,
         old_entity_id: str,
         new_entity_id: str,
-    ) -> None:
-        """Move entity ID and user customizations from the WOL to the Template switch."""
+    ) -> bool:
+        """Move entity ID and user customizations from the WOL to the Template switch.
+
+        Return False if the entity ID is still in use after the WOL switch is removed.
+        """
         if (old_entry := entity_reg.async_get(old_entity_id)) is None:
-            return
+            return True
         entity_reg.async_remove(old_entity_id)
+        # The WOL switch leaves the state machine only after its off script stopped
+        for _ in range(50):
+            if self.hass.states.async_available(old_entity_id):
+                break
+            await asyncio.sleep(0.1)
+        else:
+            return False
         entity_reg.async_update_entity(
             new_entity_id,
             new_entity_id=old_entity_id,
             aliases=old_entry.aliases,
             area_id=old_entry.area_id,
             categories=dict(old_entry.categories),
+            device_class=old_entry.device_class,
             icon=old_entry.icon,
             labels=set(old_entry.labels),
             name=old_entry.name,
@@ -258,6 +276,7 @@ class MigrateSwitchFlow(RepairsFlow):
         )
         for domain, options in old_entry.options.items():
             entity_reg.async_update_entity_options(old_entity_id, domain, options)
+        return True
 
     async def _async_get_raw_turn_off_action(self, mac: str) -> Any | None:
         """Return the unvalidated off action of the YAML switch for this MAC."""

@@ -5,12 +5,12 @@ from unittest.mock import patch
 import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.wake_on_lan.const import DOMAIN
 from homeassistant.components.wake_on_lan.services import SERVICE_SEND_MAGIC_PACKET
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 
@@ -107,11 +107,9 @@ async def test_send_magic_packet(hass: HomeAssistant) -> None:
 
 
 async def test_send_magic_packet_raise_repair(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test of send magic packet service call raises a repair."""
-    assert await async_setup_component(hass, "repairs", {})
     mac = "aa:bb:cc:dd:ee:ff"
     with patch("homeassistant.components.wake_on_lan.services.wakeonlan"):
         await async_setup_component(hass, DOMAIN, {})
@@ -122,17 +120,7 @@ async def test_send_magic_packet_raise_repair(
             blocking=True,
         )
 
-    ws_client = await hass_ws_client(hass)
-
-    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    assert len(msg["result"]["issues"]) > 0
-    issue = None
-    for i in msg["result"]["issues"]:
-        if i["issue_id"] == "wol_service_deprecated":
-            issue = i
-    assert issue is not None
-    assert issue["issue_id"] == "wol_service_deprecated"
-    assert issue["translation_key"] == "wol_service_deprecated"
+    issue = issue_registry.async_get_issue(DOMAIN, "wol_service_deprecated")
+    assert issue
+    assert issue.translation_key == "wol_service_deprecated"
+    assert issue.breaks_in_ha_version == "2027.6.0"

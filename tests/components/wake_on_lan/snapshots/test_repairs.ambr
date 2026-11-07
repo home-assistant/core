@@ -1,0 +1,163 @@
+# serializer version: 1
+# name: test_migrate[full]
+  dict({
+    'ping': list([
+      dict({
+        'options': dict({
+          'consider_home': 180,
+          'count': 5,
+          'host': 'somehostname.local',
+        }),
+        'title': 'somehostname.local',
+      }),
+    ]),
+    'template': list([
+      dict({
+        'options': dict({
+          'name': 'Test',
+          'template_type': <EntityPlatforms.SWITCH: 'switch'>,
+          'turn_off': list([
+            dict({
+              'action': 'input_number.increment',
+              'target': dict({
+                'entity_id': 'input_number.number',
+              }),
+            }),
+          ]),
+          'turn_on': list([
+            dict({
+              'action': 'button.press',
+              'target': dict({
+                'entity_id': 'button.wake_on_lan_00_01_02_03_04_05',
+              }),
+            }),
+          ]),
+          'value_template': "{{ is_state('binary_sensor.somehostname_local', 'on') }}",
+        }),
+        'title': 'Test',
+      }),
+    ]),
+    'wake_on_lan': list([
+      dict({
+        'options': dict({
+          'broadcast_address': '255.255.255.255',
+          'broadcast_port': 1,
+          'mac': '00:01:02:03:04:05',
+        }),
+        'title': 'Wake on LAN 00:01:02:03:04:05',
+      }),
+    ]),
+  })
+# ---
+# name: test_migrate[minimal]
+  dict({
+    'ping': list([
+    ]),
+    'template': list([
+      dict({
+        'options': dict({
+          'name': 'Wake on LAN',
+          'template_type': <EntityPlatforms.SWITCH: 'switch'>,
+          'turn_on': list([
+            dict({
+              'action': 'button.press',
+              'target': dict({
+                'entity_id': 'button.wake_on_lan_00_01_02_03_04_05',
+              }),
+            }),
+          ]),
+        }),
+        'title': 'Wake on LAN',
+      }),
+    ]),
+    'wake_on_lan': list([
+      dict({
+        'options': dict({
+          'mac': '00:01:02:03:04:05',
+        }),
+        'title': 'Wake on LAN 00:01:02:03:04:05',
+      }),
+    ]),
+  })
+# ---
+# name: test_migrate[no_host]
+  dict({
+    'ping': list([
+    ]),
+    'template': list([
+      dict({
+        'options': dict({
+          'name': 'Test',
+          'template_type': <EntityPlatforms.SWITCH: 'switch'>,
+          'turn_off': list([
+            dict({
+              'action': 'input_number.increment',
+              'target': dict({
+                'entity_id': 'input_number.number',
+              }),
+            }),
+          ]),
+          'turn_on': list([
+            dict({
+              'action': 'button.press',
+              'target': dict({
+                'entity_id': 'button.wake_on_lan_00_01_02_03_04_05',
+              }),
+            }),
+          ]),
+        }),
+        'title': 'Test',
+      }),
+    ]),
+    'wake_on_lan': list([
+      dict({
+        'options': dict({
+          'mac': '00:01:02:03:04:05',
+        }),
+        'title': 'Wake on LAN 00:01:02:03:04:05',
+      }),
+    ]),
+  })
+# ---
+# name: test_migrate[no_turn_off]
+  dict({
+    'ping': list([
+      dict({
+        'options': dict({
+          'consider_home': 180,
+          'count': 5,
+          'host': 'somehostname.local',
+        }),
+        'title': 'somehostname.local',
+      }),
+    ]),
+    'template': list([
+      dict({
+        'options': dict({
+          'name': 'Test',
+          'template_type': <EntityPlatforms.SWITCH: 'switch'>,
+          'turn_on': list([
+            dict({
+              'action': 'button.press',
+              'target': dict({
+                'entity_id': 'button.wake_on_lan_00_01_02_03_04_05',
+              }),
+            }),
+          ]),
+          'value_template': "{{ is_state('binary_sensor.somehostname_local', 'on') }}",
+        }),
+        'title': 'Test',
+      }),
+    ]),
+    'wake_on_lan': list([
+      dict({
+        'options': dict({
+          'broadcast_address': '255.255.255.255',
+          'broadcast_port': 1,
+          'mac': '00:01:02:03:04:05',
+        }),
+        'title': 'Wake on LAN 00:01:02:03:04:05',
+      }),
+    ]),
+  })
+# ---
