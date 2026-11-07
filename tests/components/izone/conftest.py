@@ -164,7 +164,6 @@ def create_mock_zone(
     zone.sensor_type = sensor_type
     zone.rf_signal = rf_signal
     zone.battery_level = battery_level
-    zone.is_on = True
     zone._zone_data = {
         "AirStreamDeviceUId": "000000001",
         "Id": 0,
