@@ -1,0 +1,96 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not provide actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: exempt
+    comment: The integration has no dependencies.
+  docs-actions:
+    status: exempt
+    comment: The integration does not provide actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities do not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: The API is public and needs no configuration.
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not provide actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: The API does not require authentication.
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: The service is a cloud API and cannot be discovered.
+  discovery:
+    status: exempt
+    comment: The service is a cloud API and cannot be discovered.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category:
+    status: exempt
+    comment: The only entity is the primary calendar.
+  entity-device-class:
+    status: exempt
+    comment: The calendar has no device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The only entity is the primary calendar.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The calendar uses the default icon.
+  reconfiguration-flow:
+    status: exempt
+    comment: The config entry has no data. Areas are reconfigured through subentries.
+  repair-issues:
+    status: exempt
+    comment: There is nothing a user can repair.
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: done
+  strict-typing: todo

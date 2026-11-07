@@ -1,0 +1,11 @@
+{
+  "domain": "open_home_foundation_events",
+  "name": "Open Home Foundation Events",
+  "codeowners": ["@joostlek"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/open_home_foundation_events",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "single_config_entry": true
+}
