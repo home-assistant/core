@@ -12,6 +12,7 @@ from fressnapftracker import (
     Tracker,
 )
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -123,6 +124,10 @@ async def async_remove_config_entry_device(
     device_entry: DeviceEntry,
 ) -> bool:
     """Allow removing a device only if its tracker is no longer in the account."""
+    if entry.state is not ConfigEntryState.LOADED:
+        # Without the loaded entry we cannot tell which trackers are still
+        # in the account, so no device is removed
+        return False
     serial_numbers = {
         coordinator.device.serialnumber for coordinator in entry.runtime_data
     }
