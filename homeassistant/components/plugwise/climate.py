@@ -103,8 +103,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     ) -> None:
         """Set up the Plugwise API."""
         super().__init__(coordinator, device_id)
-        # Legacy format, kept as migrating existing unique IDs is not worth the risk
-        self._attr_unique_id = f"{device_id}-climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
+
+        model_name = f"{self.device["model"]}".lower().replace(" ", "-")
+        self._attr_unique_id = f"{device_id}-{model_name}"
 
         self._api = coordinator.api
         gateway_id: str = self._api.gateway_id
