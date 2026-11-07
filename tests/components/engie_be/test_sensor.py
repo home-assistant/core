@@ -34,6 +34,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.engie_be import EngieBeHouseholdCoordinators
 from homeassistant.components.engie_be.const import (
+    CONTRACTS_RETRY_INTERVAL,
     DOMAIN,
     EPEX_SCAN_INTERVAL,
     PRICES_SCAN_INTERVAL,
@@ -60,6 +61,7 @@ from .conftest import (
     ELECTRICITY_EAN_2,
     OFFTAKE_INJECTION_EAN,
     OFFTAKE_ONLY_EAN,
+    build_contracts,
     build_epex_payload,
     build_epex_payload_with_gap,
     build_prices,
@@ -1580,6 +1582,37 @@ async def test_active_price_absent_while_tariff_unknown(
         _tou_entity_id(entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price")
         is None
     )
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_active_price_appears_when_retry_resolves_fixed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a classification retry that resolves to fixed adds the active price."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    client.async_get_tou_schedules.return_value = build_tou_schedules()
+    await setup_entry(hass, mock_config_entry)
+    assert (
+        _tou_entity_id(entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price")
+        is None
+    )
+
+    client.async_get_energy_contracts.side_effect = lambda _ban: build_contracts()
+    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    active_price_id = _tou_entity_id(
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_current_price"
+    )
+    assert active_price_id is not None
+    active_price = hass.states.get(active_price_id)
+    assert active_price is not None
+    assert active_price.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("frozen_afternoon")

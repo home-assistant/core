@@ -182,6 +182,8 @@ def _async_start_tariff_retry(
             return
         for ban, is_dynamic in zip(pending, results, strict=True):
             households[ban].is_dynamic = is_dynamic
+            if is_dynamic is False:
+                households[ban].tou.async_update_listeners()
         if any(results):
             await epex.async_request_refresh()
             if entry.state is not ConfigEntryState.LOADED:
