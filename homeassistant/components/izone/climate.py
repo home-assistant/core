@@ -36,8 +36,11 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from .const import DOMAIN
 from .coordinator import IZoneConfigEntry, IZoneCoordinator
 from .entity import IZoneCoordinatorEntity, zone_device_info
+from .services import IZoneService, async_create_deprecated_airflow_issue
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 _IZONE_FAN_TO_HA = {
     Controller.Fan.LOW: FAN_LOW,
@@ -513,10 +516,12 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
 
     async def async_set_airflow_min(self, airflow: int) -> None:
         """Set new airflow minimum."""
+        async_create_deprecated_airflow_issue(self.hass, IZoneService.AIRFLOW_MIN)
         await self._async_run_and_update(self._zone.set_airflow_min(airflow))
 
     async def async_set_airflow_max(self, airflow: int) -> None:
         """Set new airflow maximum."""
+        async_create_deprecated_airflow_issue(self.hass, IZoneService.AIRFLOW_MAX)
         await self._async_run_and_update(self._zone.set_airflow_max(airflow))
 
     @override
