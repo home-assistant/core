@@ -74,6 +74,48 @@ async_create_issue(hass, DOMAIN, "issue", data={CONF_HOST: host})
 """,
             id="other_keyword",
         ),
+        pytest.param(
+            """
+self.context["title_placeholders"] = {"name": name}
+""",
+            id="title_placeholders_literal",
+        ),
+        pytest.param(
+            """
+self.context["unique_id"] = {CONF_HOST: host}
+""",
+            id="other_subscript",
+        ),
+        pytest.param(
+            """
+data = {CONF_HOST: host}
+""",
+            id="other_variable",
+        ),
+        pytest.param(
+            """
+self.context.update({"title_placeholders": {"name": name}})
+""",
+            id="title_placeholders_entry_literal",
+        ),
+        pytest.param(
+            """
+self.context.update({"title_placeholders": placeholders})
+""",
+            id="title_placeholders_entry_not_a_dict",
+        ),
+        pytest.param(
+            """
+placeholders: dict[str, str]
+""",
+            id="annotation_without_value",
+        ),
+        pytest.param(
+            """
+EXTRA_PLACEHOLDERS = {ISSUE_KEY: {"url": url}, OTHER_ISSUE_KEY: URLS}
+""",
+            id="placeholders_by_translation_key",
+        ),
     ],
 )
 def test_no_warning(
@@ -129,6 +171,77 @@ self.async_show_form(description_placeholders={ConfigKeys.USERNAME: username})
             "ConfigKeys.USERNAME",
             id="other_enum",
         ),
+        pytest.param(
+            """
+self.context["title_placeholders"] = {CONF_NAME: name}
+""",
+            "CONF_NAME",
+            id="title_placeholders_subscript",
+        ),
+        pytest.param(
+            """
+self.context.update({"title_placeholders": {CONF_NAME: name}})
+""",
+            "CONF_NAME",
+            id="title_placeholders_entry",
+        ),
+        pytest.param(
+            """
+class Entity:
+    _attr_translation_placeholders: dict[str, str] = {CONF_NAME: "name"}
+""",
+            "CONF_NAME",
+            id="placeholders_annotated_class_attribute",
+        ),
+        pytest.param(
+            """
+self._attr_translation_placeholders = {CONF_NAME: name}
+""",
+            "CONF_NAME",
+            id="placeholders_attribute",
+        ),
+        pytest.param(
+            """
+self.context["title_placeholders"] = placeholders = {CONF_NAME: name}
+""",
+            "CONF_NAME",
+            id="chained_assignment",
+        ),
+        pytest.param(
+            """
+placeholders = {CONF_HOST: host}
+""",
+            "CONF_HOST",
+            id="placeholders_variable",
+        ),
+        pytest.param(
+            """
+EXTRA_PLACEHOLDERS = {"issue": {CONF_HOST: host}}
+""",
+            "CONF_HOST",
+            id="placeholders_by_translation_key",
+        ),
+        pytest.param(
+            """
+self.async_show_form(description_placeholders={CONF_HOST: host, **{"name": name}})
+""",
+            "CONF_HOST",
+            id="unpacked_dict_literal",
+        ),
+        pytest.param(
+            """
+self._description_placeholders = {CONF_HOST: host}
+""",
+            "CONF_HOST",
+            id="private_placeholders_attribute",
+        ),
+        pytest.param(
+            """
+self.async_show_form(error_placeholders={CONF_HOST: host})
+""",
+            "CONF_HOST",
+            id="other_placeholders_keyword",
+        ),
     ],
 )
 def test_warning(
@@ -139,7 +252,12 @@ def test_warning(
 ) -> None:
     """Test cases that should trigger a warning."""
     root_node = astroid.parse(code, "homeassistant.components.test_int.config_flow")
-    key_node = next(root_node.nodes_of_class(nodes.Dict)).items[0][0]
+    key_node = next(
+        dict_key
+        for dict_node in root_node.nodes_of_class(nodes.Dict)
+        for dict_key, _ in dict_node.items
+        if dict_key.as_string() == key
+    )
     with assert_adds_messages(
         linter,
         MessageTest(

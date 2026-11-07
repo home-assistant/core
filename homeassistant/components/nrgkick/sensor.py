@@ -247,6 +247,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda data: get_nested_dict_value(data.info, "network", "rssi"),
     ),
     # INFO - Cellular (optional, only if cellular module is available)
@@ -637,6 +638,7 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
     NRGkickSensorEntityDescription(
         key="charging_rate",
         translation_key="charging_rate",
+        device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: get_nested_dict_value(

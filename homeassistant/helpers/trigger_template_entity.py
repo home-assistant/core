@@ -1,5 +1,6 @@
 """TemplateEntity utility class."""
 
+from collections.abc import Mapping
 import itertools
 import logging
 from typing import Any, override
@@ -242,7 +243,9 @@ class TriggerBaseEntity(Entity):
         """Set unique id."""
         self._unique_id = unique_id
 
-    def _template_variables(self, run_variables: dict[str, Any] | None = None) -> dict:
+    def _template_variables(
+        self, run_variables: Mapping[str, Any] | None = None
+    ) -> dict:
         """Render template variables."""
         return {
             "this": TemplateStateFromEntityId(self.hass, self.entity_id),
