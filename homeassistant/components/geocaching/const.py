@@ -9,6 +9,9 @@ from geocachingapi.models import GeocachingApiEnvironment
 from .models import GeocachingOAuthApiUrls
 
 DOMAIN: Final = "geocaching"
+SUBENTRY_TYPE_TRACKED_CACHE: Final = "tracked_cache"
+
+MAX_TRACKED_CACHES: Final = 50
 LOGGER = logging.getLogger(__package__)
 UPDATE_INTERVAL = timedelta(hours=1)
 
