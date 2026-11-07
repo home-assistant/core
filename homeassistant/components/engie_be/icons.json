@@ -265,16 +265,16 @@
         "default": "mdi:cash-clock"
       },
       "epex_high_today_hour": {
-        "default": "mdi:cash-multiple"
+        "default": "mdi:trending-up"
       },
       "epex_high_today_quarter_hour": {
-        "default": "mdi:cash-multiple"
+        "default": "mdi:trending-up"
       },
       "epex_low_today_hour": {
-        "default": "mdi:cash-minus"
+        "default": "mdi:trending-down"
       },
       "epex_low_today_quarter_hour": {
-        "default": "mdi:cash-minus"
+        "default": "mdi:trending-down"
       },
       "epex_next_hour": {
         "default": "mdi:cash-fast"
@@ -343,28 +343,92 @@
         "default": "mdi:meter-gas"
       },
       "grid_injection_slot": {
-        "default": "mdi:timetable"
+        "default": "mdi:transmission-tower",
+        "state": {
+          "day": "mdi:weather-sunny",
+          "exclusive_night": "mdi:weather-night",
+          "offpeak": "mdi:weather-night",
+          "peak": "mdi:flash",
+          "superoffpeak": "mdi:weather-sunny",
+          "weekend": "mdi:calendar-today"
+        }
       },
       "grid_injection_slot_with_ean": {
-        "default": "mdi:timetable"
+        "default": "mdi:transmission-tower",
+        "state": {
+          "day": "mdi:weather-sunny",
+          "exclusive_night": "mdi:weather-night",
+          "offpeak": "mdi:weather-night",
+          "peak": "mdi:flash",
+          "superoffpeak": "mdi:weather-sunny",
+          "weekend": "mdi:calendar-today"
+        }
       },
       "grid_offtake_slot": {
-        "default": "mdi:timetable"
+        "default": "mdi:transmission-tower",
+        "state": {
+          "day": "mdi:weather-sunny",
+          "exclusive_night": "mdi:weather-night",
+          "offpeak": "mdi:weather-night",
+          "peak": "mdi:flash",
+          "superoffpeak": "mdi:weather-sunny",
+          "weekend": "mdi:calendar-today"
+        }
       },
       "grid_offtake_slot_with_ean": {
-        "default": "mdi:timetable"
+        "default": "mdi:transmission-tower",
+        "state": {
+          "day": "mdi:weather-sunny",
+          "exclusive_night": "mdi:weather-night",
+          "offpeak": "mdi:weather-night",
+          "peak": "mdi:flash",
+          "superoffpeak": "mdi:weather-sunny",
+          "weekend": "mdi:calendar-today"
+        }
       },
       "tou_injection_slot": {
-        "default": "mdi:timetable"
+        "default": "mdi:flash",
+        "state": {
+          "day": "mdi:weather-sunny",
+          "exclusive_night": "mdi:weather-night",
+          "offpeak": "mdi:weather-night",
+          "peak": "mdi:flash",
+          "superoffpeak": "mdi:weather-sunny",
+          "weekend": "mdi:calendar-today"
+        }
       },
       "tou_injection_slot_with_ean": {
-        "default": "mdi:timetable"
+        "default": "mdi:flash",
+        "state": {
+          "day": "mdi:weather-sunny",
+          "exclusive_night": "mdi:weather-night",
+          "offpeak": "mdi:weather-night",
+          "peak": "mdi:flash",
+          "superoffpeak": "mdi:weather-sunny",
+          "weekend": "mdi:calendar-today"
+        }
       },
       "tou_offtake_slot": {
-        "default": "mdi:timetable"
+        "default": "mdi:flash",
+        "state": {
+          "day": "mdi:weather-sunny",
+          "exclusive_night": "mdi:weather-night",
+          "offpeak": "mdi:weather-night",
+          "peak": "mdi:flash",
+          "superoffpeak": "mdi:weather-sunny",
+          "weekend": "mdi:calendar-today"
+        }
       },
       "tou_offtake_slot_with_ean": {
-        "default": "mdi:timetable"
+        "default": "mdi:flash",
+        "state": {
+          "day": "mdi:weather-sunny",
+          "exclusive_night": "mdi:weather-night",
+          "offpeak": "mdi:weather-night",
+          "peak": "mdi:flash",
+          "superoffpeak": "mdi:weather-sunny",
+          "weekend": "mdi:calendar-today"
+        }
       }
     }
   }

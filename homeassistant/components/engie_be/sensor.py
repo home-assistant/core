@@ -24,6 +24,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -49,7 +50,7 @@ if TYPE_CHECKING:
 
 PARALLEL_UPDATES = 0
 
-_UNIT = "EUR/kWh"
+_UNIT = f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}"
 _SLOT_CODE_SUFFIXES = {
     "total_hours": "",
     "peak": "_peak",
@@ -450,7 +451,7 @@ class EngieBeTouSlotSensor(EngieBeTouEntity):
         self._attr_translation_key = translation_key
         if placeholders:
             self._attr_translation_placeholders = placeholders
-        self._attr_unique_id = f"{ban}_{ean}_{prefix}_{direction}_slot"
+        self._attr_unique_id = f"{ban}_{ean}_{direction}_{prefix}_slot"
 
     def _direction_schedule(self) -> TouDirectionSchedule | None:
         """Return the schedule this sensor tracks."""

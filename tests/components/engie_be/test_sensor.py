@@ -1299,7 +1299,7 @@ async def test_tou_entities(
     await setup_entry(hass, mock_config_entry)
 
     supplier_offtake_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_offtake_slot"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_tou_slot"
     )
     assert supplier_offtake_id is not None
     supplier_offtake = hass.states.get(supplier_offtake_id)
@@ -1317,7 +1317,7 @@ async def test_tou_entities(
     ]
 
     supplier_injection_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_injection_slot"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_tou_slot"
     )
     assert supplier_injection_id is not None
     supplier_injection = hass.states.get(supplier_injection_id)
@@ -1325,7 +1325,7 @@ async def test_tou_entities(
     assert supplier_injection.state == "peak"
 
     grid_offtake_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_grid_offtake_slot"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_grid_slot"
     )
     assert grid_offtake_id is not None
     grid_offtake = hass.states.get(grid_offtake_id)
@@ -1335,7 +1335,7 @@ async def test_tou_entities(
 
     assert (
         _tou_entity_id(
-            entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_grid_injection_slot"
+            entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_grid_slot"
         )
         is None
     )
@@ -1401,17 +1401,17 @@ async def test_tou_boundary_updates(
     assert client.async_get_tou_schedules.call_count == 1
 
     supplier_offtake_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_offtake_slot"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_tou_slot"
     )
     assert hass.states.get(supplier_offtake_id).state == "exclusive_night"
 
     supplier_injection_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_injection_slot"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_tou_slot"
     )
     assert hass.states.get(supplier_injection_id).state == "offpeak"
 
     grid_offtake_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_grid_offtake_slot"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_grid_slot"
     )
     assert hass.states.get(grid_offtake_id).state == "offpeak"
 
@@ -1448,10 +1448,10 @@ async def test_tou_single_rate_schedules_create_no_entities(
     await setup_entry(hass, mock_config_entry)
 
     for unique_id in (
-        f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_offtake_slot",
-        f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_injection_slot",
-        f"{BAN}_{OFFTAKE_INJECTION_EAN}_grid_offtake_slot",
-        f"{BAN}_{OFFTAKE_INJECTION_EAN}_grid_injection_slot",
+        f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_tou_slot",
+        f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_tou_slot",
+        f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_grid_slot",
+        f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_grid_slot",
         f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price",
         f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_current_price",
     ):
@@ -1472,7 +1472,7 @@ async def test_tou_dynamic_household_has_no_active_price(
 
     assert (
         _tou_entity_id(
-            entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_offtake_slot"
+            entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_tou_slot"
         )
         is not None
     )
@@ -1592,7 +1592,7 @@ async def test_tou_schedules_failure_degrades_entities(
     await setup_entry(hass, mock_config_entry)
 
     supplier_offtake_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_offtake_slot"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_tou_slot"
     )
     assert hass.states.get(supplier_offtake_id).state == "peak"
     active_price_id = _tou_entity_id(
@@ -1623,7 +1623,7 @@ async def test_tou_entities_created_despite_prices_failure(
     await setup_entry(hass, mock_config_entry)
 
     supplier_offtake_id = _tou_entity_id(
-        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_offtake_slot"
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_tou_slot"
     )
     assert supplier_offtake_id is not None
     assert hass.states.get(supplier_offtake_id).state == "peak"
@@ -1650,7 +1650,7 @@ async def test_active_price_absent_while_tariff_unknown(
 
     assert (
         _tou_entity_id(
-            entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_offtake_slot"
+            entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_tou_slot"
         )
         is not None
     )
@@ -1756,14 +1756,14 @@ async def test_tou_entities_with_ean_suffix_for_duplicate_type(
     await setup_entry(hass, mock_config_entry)
 
     for unique_id, suffix in (
-        (f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_offtake_slot", "0002"),
-        (f"{BAN}_{OFFTAKE_INJECTION_EAN}_tou_injection_slot", "0002"),
-        (f"{BAN}_{OFFTAKE_INJECTION_EAN}_grid_offtake_slot", "0002"),
+        (f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_tou_slot", "0002"),
+        (f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_tou_slot", "0002"),
+        (f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_grid_slot", "0002"),
         (f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price", "0002"),
         (f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_current_price", "0002"),
-        (f"{BAN}_{ELECTRICITY_EAN_2}_tou_offtake_slot", "0003"),
-        (f"{BAN}_{ELECTRICITY_EAN_2}_tou_injection_slot", "0003"),
-        (f"{BAN}_{ELECTRICITY_EAN_2}_grid_offtake_slot", "0003"),
+        (f"{BAN}_{ELECTRICITY_EAN_2}_offtake_tou_slot", "0003"),
+        (f"{BAN}_{ELECTRICITY_EAN_2}_injection_tou_slot", "0003"),
+        (f"{BAN}_{ELECTRICITY_EAN_2}_offtake_grid_slot", "0003"),
         (f"{BAN}_{ELECTRICITY_EAN_2}_offtake_current_price", "0003"),
         (f"{BAN}_{ELECTRICITY_EAN_2}_injection_current_price", "0003"),
     ):

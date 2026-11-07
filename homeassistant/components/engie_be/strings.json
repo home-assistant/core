@@ -391,73 +391,73 @@
       "grid_injection_slot": {
         "name": "Grid operator injection slot",
         "state": {
-          "day": "Day",
-          "exclusive_night": "Exclusive night",
-          "offpeak": "Off-peak",
-          "peak": "Peak",
-          "superoffpeak": "Super off-peak",
-          "total_hours": "Total hours",
-          "weekend": "Weekend"
+          "day": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::day%]",
+          "exclusive_night": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::exclusive_night%]",
+          "offpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::offpeak%]",
+          "peak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::peak%]",
+          "superoffpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::superoffpeak%]",
+          "total_hours": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::total_hours%]",
+          "weekend": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::weekend%]"
         }
       },
       "grid_injection_slot_with_ean": {
         "name": "Grid operator injection slot ({ean_suffix})",
         "state": {
-          "day": "Day",
-          "exclusive_night": "Exclusive night",
-          "offpeak": "Off-peak",
-          "peak": "Peak",
-          "superoffpeak": "Super off-peak",
-          "total_hours": "Total hours",
-          "weekend": "Weekend"
+          "day": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::day%]",
+          "exclusive_night": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::exclusive_night%]",
+          "offpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::offpeak%]",
+          "peak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::peak%]",
+          "superoffpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::superoffpeak%]",
+          "total_hours": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::total_hours%]",
+          "weekend": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::weekend%]"
         }
       },
       "grid_offtake_slot": {
         "name": "Grid operator offtake slot",
         "state": {
-          "day": "Day",
-          "exclusive_night": "Exclusive night",
-          "offpeak": "Off-peak",
-          "peak": "Peak",
-          "superoffpeak": "Super off-peak",
-          "total_hours": "Total hours",
-          "weekend": "Weekend"
+          "day": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::day%]",
+          "exclusive_night": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::exclusive_night%]",
+          "offpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::offpeak%]",
+          "peak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::peak%]",
+          "superoffpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::superoffpeak%]",
+          "total_hours": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::total_hours%]",
+          "weekend": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::weekend%]"
         }
       },
       "grid_offtake_slot_with_ean": {
         "name": "Grid operator offtake slot ({ean_suffix})",
         "state": {
-          "day": "Day",
-          "exclusive_night": "Exclusive night",
-          "offpeak": "Off-peak",
-          "peak": "Peak",
-          "superoffpeak": "Super off-peak",
-          "total_hours": "Total hours",
-          "weekend": "Weekend"
+          "day": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::day%]",
+          "exclusive_night": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::exclusive_night%]",
+          "offpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::offpeak%]",
+          "peak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::peak%]",
+          "superoffpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::superoffpeak%]",
+          "total_hours": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::total_hours%]",
+          "weekend": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::weekend%]"
         }
       },
       "tou_injection_slot": {
         "name": "Supplier injection slot",
         "state": {
-          "day": "Day",
-          "exclusive_night": "Exclusive night",
-          "offpeak": "Off-peak",
-          "peak": "Peak",
-          "superoffpeak": "Super off-peak",
-          "total_hours": "Total hours",
-          "weekend": "Weekend"
+          "day": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::day%]",
+          "exclusive_night": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::exclusive_night%]",
+          "offpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::offpeak%]",
+          "peak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::peak%]",
+          "superoffpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::superoffpeak%]",
+          "total_hours": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::total_hours%]",
+          "weekend": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::weekend%]"
         }
       },
       "tou_injection_slot_with_ean": {
         "name": "Supplier injection slot ({ean_suffix})",
         "state": {
-          "day": "Day",
-          "exclusive_night": "Exclusive night",
-          "offpeak": "Off-peak",
-          "peak": "Peak",
-          "superoffpeak": "Super off-peak",
-          "total_hours": "Total hours",
-          "weekend": "Weekend"
+          "day": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::day%]",
+          "exclusive_night": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::exclusive_night%]",
+          "offpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::offpeak%]",
+          "peak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::peak%]",
+          "superoffpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::superoffpeak%]",
+          "total_hours": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::total_hours%]",
+          "weekend": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::weekend%]"
         }
       },
       "tou_offtake_slot": {
@@ -475,13 +475,13 @@
       "tou_offtake_slot_with_ean": {
         "name": "Supplier offtake slot ({ean_suffix})",
         "state": {
-          "day": "Day",
-          "exclusive_night": "Exclusive night",
-          "offpeak": "Off-peak",
-          "peak": "Peak",
-          "superoffpeak": "Super off-peak",
-          "total_hours": "Total hours",
-          "weekend": "Weekend"
+          "day": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::day%]",
+          "exclusive_night": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::exclusive_night%]",
+          "offpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::offpeak%]",
+          "peak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::peak%]",
+          "superoffpeak": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::superoffpeak%]",
+          "total_hours": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::total_hours%]",
+          "weekend": "[%key:component::engie_be::entity::sensor::tou_offtake_slot::state::weekend%]"
         }
       }
     }

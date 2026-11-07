@@ -2029,7 +2029,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_offtake_slot',
-    'unique_id': '000000000001_541448820000000002_ID1_grid_offtake_slot',
+    'unique_id': '000000000001_541448820000000002_ID1_offtake_grid_slot',
     'unit_of_measurement': None,
   })
 # ---
@@ -2192,7 +2192,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tou_injection_slot',
-    'unique_id': '000000000001_541448820000000002_ID1_tou_injection_slot',
+    'unique_id': '000000000001_541448820000000002_ID1_injection_tou_slot',
     'unit_of_measurement': None,
   })
 # ---
@@ -2355,7 +2355,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tou_offtake_slot',
-    'unique_id': '000000000001_541448820000000002_ID1_tou_offtake_slot',
+    'unique_id': '000000000001_541448820000000002_ID1_offtake_tou_slot',
     'unit_of_measurement': None,
   })
 # ---
