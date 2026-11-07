@@ -91,9 +91,11 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return if device is on."""
-        return self.coordinator.data.get(METRIC_KEY_MODE) == MODE_ON
+        if (mode := self.coordinator.data.get(METRIC_KEY_MODE)) is None:
+            return None
+        return mode == MODE_ON
 
     @property
     @override
@@ -174,7 +176,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if not self.is_on:
+        if self.is_on is False:
             return
 
         update_needed = await self._async_set_power(False)
