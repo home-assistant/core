@@ -101,13 +101,13 @@
         "name": "Air quality"
       },
       "cook_set_temp": {
-        "name": "Cooking set temperature"
+        "name": "Basket {basket} cooking set temperature"
       },
       "cook_set_time": {
-        "name": "Cooking set time"
+        "name": "Basket {basket} cooking set time"
       },
       "cook_status": {
-        "name": "Cooking status",
+        "name": "Basket {basket} cooking status",
         "state": {
           "appointing": "Appointing",
           "cooking": "Cooking",
@@ -126,7 +126,7 @@
         "name": "Current power"
       },
       "current_temp": {
-        "name": "Current temperature"
+        "name": "Basket {basket} current temperature"
       },
       "current_voltage": {
         "name": "Current voltage"
@@ -147,7 +147,7 @@
         "name": "Filter lifetime"
       },
       "preheat_set_time": {
-        "name": "Preheating set time"
+        "name": "Basket {basket} preheating set time"
       }
     },
     "switch": {

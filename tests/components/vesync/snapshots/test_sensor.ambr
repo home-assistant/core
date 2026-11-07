@@ -839,7 +839,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_cooking_current_temperature',
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_basket_1_current_temperature',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -847,7 +847,7 @@
       'labels': set({
       }),
       'name': None,
-      'object_id_base': 'Current temperature',
+      'object_id_base': 'Basket 1 current temperature',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 1,
@@ -855,7 +855,7 @@
       }),
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
-      'original_name': 'Current temperature',
+      'original_name': 'Basket 1 current temperature',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -879,7 +879,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_set_temperature',
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_basket_1_cooking_set_temperature',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -887,7 +887,7 @@
       'labels': set({
       }),
       'name': None,
-      'object_id_base': 'Cooking set temperature',
+      'object_id_base': 'Basket 1 cooking set temperature',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 1,
@@ -895,7 +895,7 @@
       }),
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
-      'original_name': 'Cooking set temperature',
+      'original_name': 'Basket 1 cooking set temperature',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -917,7 +917,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_set_time',
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_basket_1_cooking_set_time',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -925,7 +925,7 @@
       'labels': set({
       }),
       'name': None,
-      'object_id_base': 'Cooking set time',
+      'object_id_base': 'Basket 1 cooking set time',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -933,7 +933,7 @@
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
-      'original_name': 'Cooking set time',
+      'original_name': 'Basket 1 cooking set time',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -955,7 +955,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_cooking_preheating_set_time',
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_basket_1_preheating_set_time',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -963,7 +963,7 @@
       'labels': set({
       }),
       'name': None,
-      'object_id_base': 'Preheating set time',
+      'object_id_base': 'Basket 1 preheating set time',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -971,7 +971,7 @@
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
-      'original_name': 'Preheating set time',
+      'original_name': 'Basket 1 preheating set time',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -1007,7 +1007,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_status',
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_basket_1_cooking_status',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -1015,12 +1015,12 @@
       'labels': set({
       }),
       'name': None,
-      'object_id_base': 'Cooking status',
+      'object_id_base': 'Basket 1 cooking status',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
-      'original_name': 'Cooking status',
+      'original_name': 'Basket 1 cooking status',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -1031,42 +1031,42 @@
     }),
   ])
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_set_temperature]
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_basket_1_cooking_set_temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Cooking set temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Basket 1 cooking set temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_set_temperature',
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_basket_1_cooking_set_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '180',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_set_time]
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_basket_1_cooking_set_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Cooking set time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Basket 1 cooking set time',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_set_time',
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_basket_1_cooking_set_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '900',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_status]
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_basket_1_cooking_status]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Cooking status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Basket 1 cooking status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'cooking_end',
         'cooking',
@@ -1082,38 +1082,38 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_status',
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_basket_1_cooking_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'cooking',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_current_temperature]
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_basket_1_current_temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Current temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Basket 1 current temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_cooking_current_temperature',
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_basket_1_current_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '17',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_preheating_set_time]
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_basket_1_preheating_set_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Preheating set time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Cooking Basket 1 preheating set time',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_cooking_preheating_set_time',
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_basket_1_preheating_set_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1169,7 +1169,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_standby_current_temperature',
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_basket_1_current_temperature',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -1177,7 +1177,7 @@
       'labels': set({
       }),
       'name': None,
-      'object_id_base': 'Current temperature',
+      'object_id_base': 'Basket 1 current temperature',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 1,
@@ -1185,7 +1185,7 @@
       }),
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
-      'original_name': 'Current temperature',
+      'original_name': 'Basket 1 current temperature',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -1209,7 +1209,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_set_temperature',
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_basket_1_cooking_set_temperature',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -1217,7 +1217,7 @@
       'labels': set({
       }),
       'name': None,
-      'object_id_base': 'Cooking set temperature',
+      'object_id_base': 'Basket 1 cooking set temperature',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 1,
@@ -1225,7 +1225,7 @@
       }),
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
-      'original_name': 'Cooking set temperature',
+      'original_name': 'Basket 1 cooking set temperature',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -1247,7 +1247,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_set_time',
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_basket_1_cooking_set_time',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -1255,7 +1255,7 @@
       'labels': set({
       }),
       'name': None,
-      'object_id_base': 'Cooking set time',
+      'object_id_base': 'Basket 1 cooking set time',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -1263,7 +1263,7 @@
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
-      'original_name': 'Cooking set time',
+      'original_name': 'Basket 1 cooking set time',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -1285,7 +1285,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_standby_preheating_set_time',
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_basket_1_preheating_set_time',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -1293,7 +1293,7 @@
       'labels': set({
       }),
       'name': None,
-      'object_id_base': 'Preheating set time',
+      'object_id_base': 'Basket 1 preheating set time',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -1301,7 +1301,7 @@
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
-      'original_name': 'Preheating set time',
+      'original_name': 'Basket 1 preheating set time',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -1337,7 +1337,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_status',
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_basket_1_cooking_status',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -1345,12 +1345,12 @@
       'labels': set({
       }),
       'name': None,
-      'object_id_base': 'Cooking status',
+      'object_id_base': 'Basket 1 cooking status',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
       'original_icon': None,
-      'original_name': 'Cooking status',
+      'original_name': 'Basket 1 cooking status',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -1361,42 +1361,42 @@
     }),
   ])
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_set_temperature]
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_basket_1_cooking_set_temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Standby Cooking set temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Standby Basket 1 cooking set temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_set_temperature',
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_basket_1_cooking_set_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_set_time]
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_basket_1_cooking_set_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Standby Cooking set time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Standby Basket 1 cooking set time',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_set_time',
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_basket_1_cooking_set_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_status]
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_basket_1_cooking_status]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Standby Cooking status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Standby Basket 1 cooking status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'cooking_end',
         'cooking',
@@ -1412,38 +1412,38 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_status',
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_basket_1_cooking_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'standby',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_current_temperature]
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_basket_1_current_temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Standby Current temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Standby Basket 1 current temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_standby_current_temperature',
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_basket_1_current_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_preheating_set_time]
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_basket_1_preheating_set_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Standby Preheating set time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CS158-AF Air Fryer Standby Basket 1 preheating set time',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_standby_preheating_set_time',
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_basket_1_preheating_set_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
