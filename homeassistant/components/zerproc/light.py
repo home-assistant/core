@@ -1,5 +1,4 @@
 """Zerproc light platform."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import timedelta
 import logging
@@ -34,14 +33,12 @@ async def discover_entities(hass: HomeAssistant) -> list[ZerprocLight]:
 
     # Filter out already discovered lights
     new_lights = [
-        light
-        for light in lights
-        if light.address not in hass.data[DOMAIN][DATA_ADDRESSES]
+        light for light in lights if light.address not in hass.data[DATA_ADDRESSES]
     ]
 
     entities = []
     for light in new_lights:
-        hass.data[DOMAIN][DATA_ADDRESSES].add(light.address)
+        hass.data[DATA_ADDRESSES].add(light.address)
         entities.append(ZerprocLight(light))
 
     return entities
@@ -71,7 +68,7 @@ async def async_setup_entry(
     hass.async_create_task(discover())
 
     # Perform recurring discovery of new devices
-    hass.data[DOMAIN][DATA_DISCOVERY_SUBSCRIPTION] = async_track_time_interval(
+    hass.data[DATA_DISCOVERY_SUBSCRIPTION] = async_track_time_interval(
         hass, discover, DISCOVERY_INTERVAL
     )
 
