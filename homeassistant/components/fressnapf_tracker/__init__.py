@@ -15,6 +15,7 @@ from fressnapftracker import (
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -114,3 +115,19 @@ async def async_unload_entry(
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    entry: FressnapfTrackerConfigEntry,
+    device_entry: DeviceEntry,
+) -> bool:
+    """Allow removing a device only if its tracker is no longer in the account."""
+    serial_numbers = {
+        coordinator.device.serialnumber for coordinator in entry.runtime_data
+    }
+    return not any(
+        identifier in serial_numbers
+        for domain, identifier in device_entry.identifiers
+        if domain == DOMAIN
+    )
