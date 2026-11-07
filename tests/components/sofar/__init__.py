@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from modbus_connection import ModbusError
+from modbus_connection import IllegalDataAddressError
 from modbus_connection.mock import MockModbusUnit
 
 from homeassistant.components.sofar.const import (
@@ -101,7 +101,7 @@ def deny_charge_cutoff(unit: MockModbusUnit) -> None:
 
 def refuse_battery_config_mask(unit: MockModbusUnit) -> None:
     """Seed a model that publishes no battery config mask."""
-    unit.fail_read(0x1040, ModbusError("illegal data address"))
+    unit.fail_read(0x1040, IllegalDataAddressError())
 
 
 def declare_pv_in_masks(unit: MockModbusUnit) -> None:
