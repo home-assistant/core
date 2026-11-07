@@ -97,3 +97,36 @@ def is_in_subentry_flow(node: nodes.NodeNG) -> bool:
                         return True
         current = current.parent
     return False
+
+
+def get_flow_type(class_node: nodes.ClassDef) -> str | None:
+    """Determine flow type from a class definition."""
+    for base in class_node.bases:
+        match base:
+            case nodes.Name(name=name):
+                if "SubentryFlow" in name:
+                    return "subentry"
+                if "OptionsFlow" in name:
+                    return "options"
+                if "ConfigFlow" in name or name == "FlowHandler":
+                    return "config"
+            case nodes.Attribute(attrname=name):
+                if "SubentryFlow" in name:
+                    return "subentry"
+                if "OptionsFlow" in name:
+                    return "options"
+                if "ConfigFlow" in name or name == "FlowHandler":
+                    return "config"
+
+    try:
+        for ancestor in class_node.ancestors():
+            if "SubentryFlow" in ancestor.name:
+                return "subentry"
+            if "OptionsFlow" in ancestor.name:
+                return "options"
+            if "ConfigFlow" in ancestor.name:
+                return "config"
+    except astroid.exceptions.InferenceError:
+        pass
+
+    return None
