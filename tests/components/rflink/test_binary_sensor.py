@@ -113,7 +113,7 @@ async def test_deprecated_config(
         },
     }
 
-    _, _, _, disconnect_callback = await mock_rflink(
+    _, _, _, _ = await mock_rflink(
         hass, CONFIG_DEPRECATED, DOMAIN, monkeypatch, old_yaml=True
     )
 
@@ -125,9 +125,13 @@ async def test_deprecated_config(
         learn_more_url="https://www.home-assistant.io/integrations/rflink/#migrating-from-legacy-configuration-format",
     )
 
-    disconnect_callback()  # disconnect to prevent failure from second 'mock_rflink'
-    mock_create_issue.reset_mock()
 
+async def test_supported_config(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    mock_create_issue: MagicMock,
+) -> None:
+    """Test that supported config creates an issue."""
     _, _, _, _ = await mock_rflink(hass, CONFIG, DOMAIN, monkeypatch)
 
     mock_create_issue.assert_not_called()
