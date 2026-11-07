@@ -23,9 +23,18 @@ async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationSe
 
 async def async_get_description_placeholders(hass: HomeAssistant) -> dict[str, str]:
     """Return description placeholders for the credentials dialog."""
+    developer_dashboard_url = "https://developer.home-connect.com/"
+    applications_url = "https://developer.home-connect.com/applications"
+    register_application_url = "https://developer.home-connect.com/application/add"
+
+    if hass.config.country == "CN":
+        developer_dashboard_url = developer_dashboard_url.replace(".com", ".cn")
+        applications_url = applications_url.replace(".com", ".cn")
+        register_application_url = register_application_url.replace(".com", ".cn")
+
     return {
-        "developer_dashboard_url": "https://developer.home-connect.com/",
-        "applications_url": "https://developer.home-connect.com/applications",
-        "register_application_url": "https://developer.home-connect.com/application/add",
+        "developer_dashboard_url": developer_dashboard_url,
+        "applications_url": applications_url,
+        "register_application_url": register_application_url,
         "redirect_url": "https://my.home-assistant.io/redirect/oauth",
     }
