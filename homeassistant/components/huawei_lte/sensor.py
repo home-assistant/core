@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import ipaddress
 import logging
+import math
 import re
 from typing import override
 
@@ -62,6 +63,20 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
             except ValueError:
                 pass
     return value, unit
+
+
+def format_freq_khz(value: StateType) -> tuple[StateType, UnitOfFrequency]:
+    """Format a frequency value for which source is in kHz."""
+    if value is None:
+        return None, UnitOfFrequency.MEGAHERTZ
+    try:
+        result = float(str(value).strip().removesuffix("kHz").strip()) / 1000
+    except ValueError:
+        return None, UnitOfFrequency.MEGAHERTZ
+    return (
+        result if math.isfinite(result) else None,
+        UnitOfFrequency.MEGAHERTZ,
+    )
 
 
 def format_freq_mhz(value: StateType) -> tuple[StateType, UnitOfFrequency]:
@@ -279,6 +294,12 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 }.get(str(x), "mdi:signal"),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
+            "ncgi": HuaweiSensorEntityDescription(
+                key="ncgi",
+                translation_key="ncgi",
+                format_fn=lambda value: (value, None),
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
             "nei_cellid": HuaweiSensorEntityDescription(
                 key="nei_cellid",
                 translation_key="nei_cellid",
@@ -304,6 +325,14 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 translation_key="nrdlbandwidth",
                 # https://en.wikipedia.org/wiki/5G_NR_frequency_bands, arbitrary
                 icon_fn=lambda x: bandwidth_icon((33, 66), x),
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrdlfreq": HuaweiSensorEntityDescription(
+                key="nrdlfreq",
+                translation_key="nrdlfreq",
+                format_fn=format_freq_khz,
+                suggested_display_precision=3,
+                device_class=SensorDeviceClass.FREQUENCY,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "nrdlmcs": HuaweiSensorEntityDescription(
@@ -370,6 +399,14 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 # https://en.wikipedia.org/wiki/5G_NR_frequency_bands, arbitrary
                 icon_fn=lambda x: bandwidth_icon((33, 66), x),
                 suggested_display_precision=0,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "nrulfreq": HuaweiSensorEntityDescription(
+                key="nrulfreq",
+                translation_key="nrulfreq",
+                format_fn=format_freq_khz,
+                suggested_display_precision=3,
+                device_class=SensorDeviceClass.FREQUENCY,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "nrulmcs": HuaweiSensorEntityDescription(
@@ -444,6 +481,11 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "sc": HuaweiSensorEntityDescription(
                 key="sc",
                 translation_key="sc",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            ),
+            "scc_pci": HuaweiSensorEntityDescription(
+                key="scc_pci",
+                translation_key="scc_pci",
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "sinr": HuaweiSensorEntityDescription(
