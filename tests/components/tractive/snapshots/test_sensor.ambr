@@ -57,6 +57,74 @@
     'state': '150',
   })
 # ---
+# name: test_sensor[sensor.test_pet_bark_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'calculating_baseline',
+        'elevated',
+        'infrequent',
+        'normal',
+        'not_enough_data_today',
+        'not_synced_yet',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tractive', 'pet_id_123')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_pet_bark_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bark status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Bark status',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bark_status',
+    'unique_id': 'pet_id_123_bark_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_bark_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Pet Bark status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'calculating_baseline',
+        'elevated',
+        'infrequent',
+        'normal',
+        'not_enough_data_today',
+        'not_synced_yet',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_bark_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_synced_yet',
+  })
+# ---
 # name: test_sensor[sensor.test_pet_daily_goal-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -284,6 +352,210 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '122',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_resting_heart_rate_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'calculating_baseline',
+        'elevated',
+        'infrequent',
+        'normal',
+        'not_enough_data_today',
+        'not_synced_yet',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tractive', 'pet_id_123')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_pet_resting_heart_rate_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Resting heart rate status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Resting heart rate status',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'resting_heart_rate_status',
+    'unique_id': 'pet_id_123_resting_heart_rate_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_resting_heart_rate_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Pet Resting heart rate status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'calculating_baseline',
+        'elevated',
+        'infrequent',
+        'normal',
+        'not_enough_data_today',
+        'not_synced_yet',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_resting_heart_rate_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_resting_respiratory_rate_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'calculating_baseline',
+        'elevated',
+        'infrequent',
+        'normal',
+        'not_enough_data_today',
+        'not_synced_yet',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tractive', 'pet_id_123')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_pet_resting_respiratory_rate_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Resting respiratory rate status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Resting respiratory rate status',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'resting_respiratory_rate_status',
+    'unique_id': 'pet_id_123_resting_respiratory_rate_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_resting_respiratory_rate_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Pet Resting respiratory rate status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'calculating_baseline',
+        'elevated',
+        'infrequent',
+        'normal',
+        'not_enough_data_today',
+        'not_synced_yet',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_resting_respiratory_rate_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'elevated',
+  })
+# ---
+# name: test_sensor[sensor.test_pet_scratch_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'calculating_baseline',
+        'elevated',
+        'infrequent',
+        'normal',
+        'not_enough_data_today',
+        'not_synced_yet',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tractive', 'pet_id_123')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_pet_scratch_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Scratch status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Scratch status',
+    'platform': 'tractive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'scratch_status',
+    'unique_id': 'pet_id_123_scratch_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.test_pet_scratch_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Pet Scratch status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'calculating_baseline',
+        'elevated',
+        'infrequent',
+        'normal',
+        'not_enough_data_today',
+        'not_synced_yet',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_pet_scratch_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_enough_data_today',
   })
 # ---
 # name: test_sensor[sensor.test_pet_weight-entry]

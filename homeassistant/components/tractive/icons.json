@@ -17,6 +17,9 @@
       "activity_time": {
         "default": "mdi:clock-time-eight-outline"
       },
+      "bark_status": {
+        "default": "mdi:dog-side"
+      },
       "daily_goal": {
         "default": "mdi:flag-checkered"
       },
@@ -28,6 +31,15 @@
       },
       "rest_time": {
         "default": "mdi:clock-time-eight-outline"
+      },
+      "resting_heart_rate_status": {
+        "default": "mdi:heart-pulse"
+      },
+      "resting_respiratory_rate_status": {
+        "default": "mdi:lungs"
+      },
+      "scratch_status": {
+        "default": "mdi:paw"
       },
       "tracker_state": {
         "default": "mdi:radar"
