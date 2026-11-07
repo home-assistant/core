@@ -112,7 +112,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '2.0',
   })
 # ---
 # name: test_meter_channel_child_devices[cz_dhto3y4uachr1wll][sensor.meter_channel_1_current-entry]

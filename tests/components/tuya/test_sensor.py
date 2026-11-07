@@ -73,12 +73,25 @@ async def test_camera_pet_feeder(
     mock_device: CustomerDevice,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    notification_helper: TuyaNotificationHelper,
 ) -> None:
     """Test pet feeder sensors on a camera (sp) device."""
     # The feeder datapoints are only provided by a quirk
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    # The last amount shows the latest feed report, not a running total
+    entity_id = "sensor.8zrzjldq07tlxnlv_last_amount"
+    await notification_helper.async_send_device_update(
+        mock_device, {"feed_report": 2}, {"feed_report": 1000}
+    )
+    await notification_helper.async_send_device_update(
+        mock_device, {"feed_report": 1}, {"feed_report": 1100}
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == 1
 
 
 @pytest.mark.parametrize(

@@ -14,6 +14,7 @@ from tuya_device_handlers.definition.sensor import (
 )
 from tuya_device_handlers.device_wrapper.common import (
     DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
     DPCodeTypeInformationWrapper,
 )
 from tuya_device_handlers.device_wrapper.sensor import (
@@ -1446,6 +1447,8 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.FEED_REPORT,
             translation_key="last_amount",
             state_class=SensorStateClass.MEASUREMENT,
+            # Show the latest report instead of accumulating "sum" reports
+            wrapper_class=(DPCodeIntegerWrapper,),
         ),
         TuyaSensorEntityDescription(
             key=DPCode.FOOD_STORAGE_STATUS,
