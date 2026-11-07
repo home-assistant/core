@@ -245,6 +245,7 @@ FLOWS = {
         "exicom_spin_ble",
         "ezviz",
         "faa_delays",
+        "famn",
         "fastdotcom",
         "feedreader",
         "fibaro",

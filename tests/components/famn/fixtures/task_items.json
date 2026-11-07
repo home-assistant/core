@@ -1,0 +1,30 @@
+[
+  {
+    "id": "8c7f0a11-3d2e-4c5b-9a8f-1b2c3d4e5001",
+    "taskListId": "3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1001",
+    "title": "Take out the trash",
+    "description": "Bins are picked up Wednesday morning",
+    "sortOrder": 1,
+    "nextOccurrence": "2026-08-12T18:00:00Z",
+    "recurringRule": "FREQ=WEEKLY;BYDAY=TU"
+  },
+  {
+    "id": "8c7f0a11-3d2e-4c5b-9a8f-1b2c3d4e5002",
+    "taskListId": "3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1001",
+    "title": "Vacuum the living room",
+    "sortOrder": 2,
+    "dueDate": "2026-08-13T16:00:00Z"
+  },
+  {
+    "id": "8c7f0a11-3d2e-4c5b-9a8f-1b2c3d4e5003",
+    "taskListId": "3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1002",
+    "title": "Water the plants",
+    "sortOrder": 1
+  },
+  {
+    "id": "8c7f0a11-3d2e-4c5b-9a8f-1b2c3d4e5004",
+    "taskListId": "3f5b1c26-9a5b-4a41-9b3e-2c1a9b0f1003",
+    "title": "Call the plumber",
+    "sortOrder": 1
+  }
+]
