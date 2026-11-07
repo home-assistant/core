@@ -1,6 +1,5 @@
 """Support for Meteo-France weather service."""
 
-import logging
 import time
 from typing import override
 
@@ -23,7 +22,6 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 from homeassistant.const import (
-    CONF_MODE,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
@@ -46,8 +44,6 @@ from .const import (
 )
 from .coordinator import MeteoFranceConfigEntry, MeteoFranceForecastUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def format_condition(condition: str, force_day: bool = False) -> str:
     """Return condition from dict CONDITION_MAP."""
@@ -67,20 +63,7 @@ async def async_setup_entry(
     """Set up the Meteo-France weather platform."""
     coordinator = entry.runtime_data.forecast_coordinator
 
-    async_add_entities(
-        [
-            MeteoFranceWeather(
-                coordinator,
-                entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
-            )
-        ],
-        True,
-    )
-    _LOGGER.debug(
-        "Weather entity (%s) added for %s",
-        entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
-        coordinator.data.position["name"],
-    )
+    async_add_entities([MeteoFranceWeather(coordinator)], True)
 
 
 class MeteoFranceWeather(
@@ -89,6 +72,8 @@ class MeteoFranceWeather(
     """Representation of a weather condition."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_pressure_unit = UnitOfPressure.HPA
@@ -97,13 +82,9 @@ class MeteoFranceWeather(
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
 
-    def __init__(
-        self, coordinator: MeteoFranceForecastUpdateCoordinator, mode: str
-    ) -> None:
+    def __init__(self, coordinator: MeteoFranceForecastUpdateCoordinator) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
-        self._attr_name = self.coordinator.data.position["name"]
-        self._mode = mode
         pos = self.coordinator.data.position
         self._attr_unique_id = f"{pos['lat']},{pos['lon']}"
 
@@ -127,7 +108,7 @@ class MeteoFranceWeather(
             identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
-            name=self.coordinator.name,
+            name=self.coordinator.data.position["name"],
         )
 
     @property

@@ -127,6 +127,7 @@ def ws_get_prefs(
         probatio.Optional("energy_sources"): ENERGY_SOURCE_SCHEMA,
         probatio.Optional("device_consumption"): [DEVICE_CONSUMPTION_SCHEMA],
         probatio.Optional("device_consumption_water"): [DEVICE_CONSUMPTION_SCHEMA],
+        probatio.Optional("device_consumption_gas"): [DEVICE_CONSUMPTION_SCHEMA],
     }
 )
 @websocket_api.async_response
