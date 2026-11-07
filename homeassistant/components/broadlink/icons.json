@@ -1,0 +1,7 @@
+{
+  "services": {
+    "list_commands": {
+      "service": "mdi:format-list-bulleted"
+    }
+  }
+}

@@ -10,6 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import BROADLINK_DATA, DOMAIN, BroadlinkData
 from .device import BroadlinkDevice
 from .heartbeat import BroadlinkHeartbeat
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -17,6 +18,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Broadlink integration."""
     hass.data[BROADLINK_DATA] = BroadlinkData()
+    async_setup_services(hass)
     return True
 
 
