@@ -913,12 +913,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 TemplateStateBase,
                 LoopContext,
                 AsyncLoopContext,
+                Namespace,
             ),
         ):
             return attr[0] != "_"
-
-        if isinstance(obj, Namespace):
-            return True
 
         return super().is_safe_attribute(obj, attr, value)
 

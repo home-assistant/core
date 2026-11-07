@@ -576,6 +576,22 @@ def test_jinja_namespace(hass: HomeAssistant) -> None:
     assert test_template.async_render() == "another value"
 
 
+async def test_jinja_namespace_private_attributes_blocked(hass: HomeAssistant) -> None:
+    """Test that underscore and dunder attributes on a namespace are not exposed."""
+    with pytest.raises(TemplateError):
+        render(hass, "{% set ns = namespace() %}{{ ns.__class__ }}", strict=True)
+
+    with pytest.raises(TemplateError):
+        render(
+            hass,
+            "{% set ns = namespace() %}{% set ns._secret = 'x' %}{{ ns._secret }}",
+            strict=True,
+        )
+
+    # A dunder value is not leaked when rendering non-strict.
+    assert render(hass, "{% set ns = namespace() %}{{ ns.__class__ }}") == ""
+
+
 @pytest.mark.parametrize(
     ("rounded", "with_unit", "output1_1", "output1_2", "output2_1", "output2_2"),
     [
