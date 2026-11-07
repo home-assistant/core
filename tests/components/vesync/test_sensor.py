@@ -226,3 +226,51 @@ async def test_air_quality_sensors_registered_for_other_models(
             )
             is not None
         ), f"Sensor not registered for device with supported attributes: {key}"
+
+
+async def test_optional_air_quality_sensors_absent_when_values_missing(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    manager,
+    fan,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test optional sensors are not created when device values are missing."""
+    fan.cid = "missingvalues"
+    fan.sub_device_no = 0
+    fan.device_name = "Purifier Without Optional Values"
+    fan.device_type = "LAP-C341S-WEU"
+    fan.fan_levels = [1, 2, 3]
+    fan.state = SimpleNamespace(
+        connection_status="online",
+        device_status="on",
+        fan_level=1,
+        mode="manual",
+        aqi=None,
+        carbon_filter_life=None,
+        pre_filter_life=None,
+        filter_remain_day=None,
+        filter_life=None,
+        air_quality_string=None,
+        pm1=None,
+        pm10=None,
+        pm25=None,
+    )
+
+    manager._dev_list["fans"].append(fan)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for key in (
+        "aqi",
+        "carbon-filter-life",
+        "pre-filter-life",
+        "filter-remaining-days",
+    ):
+        assert (
+            entity_registry.async_get_entity_id(
+                SENSOR_DOMAIN, "vesync", f"missingvalues0-{key}"
+            )
+            is None
+        ), f"Sensor unexpectedly registered without a value: {key}"
