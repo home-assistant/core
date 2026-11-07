@@ -2,6 +2,9 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.rainforest_eagle.const import (
     CONF_CLOUD_ID,
@@ -16,6 +19,34 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+
+def _mock_reconfigure_entry(
+    hass: HomeAssistant, title: str = "abcdef"
+) -> MockConfigEntry:
+    """Add a mock config entry for reconfigure tests."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=title,
+        unique_id="abcdef",
+        data={
+            CONF_TYPE: TYPE_EAGLE_200,
+            CONF_HOST: "192.168.1.55",
+            CONF_CLOUD_ID: "abcdef",
+            CONF_INSTALL_CODE: "123456",
+            CONF_HARDWARE_ADDRESS: "meter-1",
+            "extra_data": "preserved",
+        },
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+def _meter(hardware_address: str, connection_status: str) -> MagicMock:
+    """Return a meter as reported by EagleHub.get_device_list."""
+    return MagicMock(
+        hardware_address=hardware_address, connection_status=connection_status
+    )
 
 
 async def _async_configure_success(
@@ -40,6 +71,32 @@ async def _async_configure_success(
                 CONF_CLOUD_ID: "abcdef",
                 CONF_INSTALL_CODE: "123456",
                 CONF_HOST: "192.168.1.55",
+            },
+        )
+        await hass.async_block_till_done()
+    return result
+
+
+async def _async_reconfigure_success(
+    hass: HomeAssistant, flow_id: str
+) -> ConfigFlowResult:
+    """Configure the reconfigure step with a connected EAGLE-200 meter."""
+    with (
+        patch(
+            "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+            return_value=(TYPE_EAGLE_200, "meter-2"),
+        ),
+        patch(
+            "homeassistant.components.rainforest_eagle.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "654321",
+                CONF_HOST: "192.168.1.56",
             },
         )
         await hass.async_block_till_done()
@@ -230,6 +287,42 @@ async def test_form_eagle_100(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_already_configured(hass: HomeAssistant) -> None:
+    """Test setup aborts when Cloud ID is already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="abcdef",
+        unique_id="abcdef",
+        data={
+            CONF_TYPE: TYPE_EAGLE_200,
+            CONF_HOST: "rainforest-eagle.local",
+            CONF_CLOUD_ID: "abcdef",
+            CONF_INSTALL_CODE: "123456",
+            CONF_HARDWARE_ADDRESS: "meter-1",
+        },
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+    ) as mock_get_type:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "123456",
+                CONF_HOST: "192.168.1.55",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_get_type.assert_not_called()
+
+
 async def test_form_unknown_device_type(hass: HomeAssistant) -> None:
     """Test flow when device type cannot be determined."""
 
@@ -382,3 +475,312 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     result = await _async_configure_success(hass, result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reconfigure_form(hass: HomeAssistant) -> None:
+    """Test reconfigure shows the form."""
+    entry = _mock_reconfigure_entry(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+
+async def test_reconfigure_eagle_200(hass: HomeAssistant) -> None:
+    """Test reconfigure updates an EAGLE-200 entry."""
+    entry = _mock_reconfigure_entry(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+            return_value=(TYPE_EAGLE_200, "meter-2"),
+        ),
+        patch(
+            "homeassistant.components.rainforest_eagle.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "654321",
+                CONF_HOST: "192.168.1.56",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_TYPE: TYPE_EAGLE_200,
+        CONF_HOST: "192.168.1.56",
+        CONF_CLOUD_ID: "abcdef",
+        CONF_INSTALL_CODE: "654321",
+        CONF_HARDWARE_ADDRESS: "meter-2",
+        "extra_data": "preserved",
+    }
+
+
+async def test_reconfigure_eagle_100(hass: HomeAssistant) -> None:
+    """Test reconfigure updates an EAGLE-100 entry."""
+    entry = _mock_reconfigure_entry(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+            return_value=(TYPE_EAGLE_100, None),
+        ),
+        patch(
+            "homeassistant.components.rainforest_eagle.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "654321",
+                CONF_HOST: "192.168.1.56",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_TYPE: TYPE_EAGLE_100,
+        CONF_HOST: "192.168.1.56",
+        CONF_CLOUD_ID: "abcdef",
+        CONF_INSTALL_CODE: "654321",
+        CONF_HARDWARE_ADDRESS: None,
+        "extra_data": "preserved",
+    }
+
+
+@pytest.mark.parametrize(
+    ("initial_title", "expected_title"),
+    [
+        pytest.param("abcdef", "different", id="generated_title_follows_cloud_id"),
+        pytest.param("Garage eagle", "Garage eagle", id="custom_title_is_kept"),
+    ],
+)
+async def test_reconfigure_changes_cloud_id(
+    hass: HomeAssistant, initial_title: str, expected_title: str
+) -> None:
+    """Test reconfigure moves the unique ID and title when the Cloud ID changes."""
+    entry = _mock_reconfigure_entry(hass, title=initial_title)
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+            return_value=(TYPE_EAGLE_200, "meter-2"),
+        ),
+        patch(
+            "homeassistant.components.rainforest_eagle.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "different",
+                CONF_INSTALL_CODE: "654321",
+                CONF_HOST: "192.168.1.56",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.unique_id == "different"
+    assert entry.title == expected_title
+    assert entry.data == {
+        CONF_TYPE: TYPE_EAGLE_200,
+        CONF_HOST: "192.168.1.56",
+        CONF_CLOUD_ID: "different",
+        CONF_INSTALL_CODE: "654321",
+        CONF_HARDWARE_ADDRESS: "meter-2",
+        "extra_data": "preserved",
+    }
+
+
+async def test_reconfigure_duplicate_unique_id(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts when Cloud ID belongs to another entry."""
+    entry = _mock_reconfigure_entry(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="different",
+        unique_id="different",
+        data={
+            CONF_TYPE: TYPE_EAGLE_200,
+            CONF_HOST: "192.168.1.57",
+            CONF_CLOUD_ID: "different",
+            CONF_INSTALL_CODE: "111111",
+            CONF_HARDWARE_ADDRESS: "meter-3",
+        },
+    ).add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+    ) as mock_get_type:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "different",
+                CONF_INSTALL_CODE: "654321",
+                CONF_HOST: "192.168.1.56",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_get_type.assert_not_called()
+    assert entry.unique_id == "abcdef"
+    assert entry.data == {
+        CONF_TYPE: TYPE_EAGLE_200,
+        CONF_HOST: "192.168.1.55",
+        CONF_CLOUD_ID: "abcdef",
+        CONF_INSTALL_CODE: "123456",
+        CONF_HARDWARE_ADDRESS: "meter-1",
+        "extra_data": "preserved",
+    }
+
+
+@pytest.mark.parametrize(
+    ("eagle_type", "hardware_address", "error"),
+    [
+        (None, None, "unknown_device_type"),
+        (TYPE_EAGLE_200, None, "no_meters_connected"),
+        ("UNSUPPORTED_DEVICE_TYPE", None, "unsupported_device_type"),
+    ],
+)
+async def test_reconfigure_device_type_errors(
+    hass: HomeAssistant,
+    eagle_type: str | None,
+    hardware_address: str | None,
+    error: str,
+) -> None:
+    """Test reconfigure handles device type errors."""
+    entry = _mock_reconfigure_entry(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+        return_value=(eagle_type, hardware_address),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "654321",
+                CONF_HOST: "192.168.1.56",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    result = await _async_reconfigure_success(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (CannotConnect, "cannot_connect"),
+        (InvalidAuth, "invalid_auth"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reconfigure_connection_errors(
+    hass: HomeAssistant, side_effect: type[Exception], error: str
+) -> None:
+    """Test reconfigure handles connection errors."""
+    entry = _mock_reconfigure_entry(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "654321",
+                CONF_HOST: "192.168.1.56",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    result = await _async_reconfigure_success(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.parametrize(
+    ("new_cloud_id", "meters", "expected_hardware_address"),
+    [
+        pytest.param(
+            "abcdef",
+            [_meter("meter-2", "Connected"), _meter("meter-1", "Connected")],
+            "meter-1",
+            id="keeps_configured_meter",
+        ),
+        pytest.param(
+            "abcdef",
+            [_meter("meter-1", "Not Joined"), _meter("meter-2", "Connected")],
+            "meter-2",
+            id="falls_back_when_configured_meter_unavailable",
+        ),
+        pytest.param(
+            "fedcba",
+            [_meter("meter-2", "Connected"), _meter("meter-1", "Connected")],
+            "meter-2",
+            id="other_cloud_id_ignores_configured_meter",
+        ),
+    ],
+)
+async def test_reconfigure_meter_selection(
+    hass: HomeAssistant,
+    new_cloud_id: str,
+    meters: list[MagicMock],
+    expected_hardware_address: str,
+) -> None:
+    """Test reconfigure prefers the configured meter over the first connected one."""
+    entry = _mock_reconfigure_entry(hass)
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch("aioeagle.EagleHub.get_device_list", return_value=meters),
+        patch(
+            "homeassistant.components.rainforest_eagle.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: new_cloud_id,
+                CONF_INSTALL_CODE: "654321",
+                CONF_HOST: "192.168.1.56",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_CLOUD_ID] == new_cloud_id
+    assert entry.data[CONF_HARDWARE_ADDRESS] == expected_hardware_address

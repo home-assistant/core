@@ -12,6 +12,17 @@
       "unsupported_device_type": "This type of Rainforest Eagle device is not supported."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "cloud_id": "Cloud ID",
+          "host": "[%key:common::config_flow::data::host%]",
+          "install_code": "Installation code"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Rainforest gateway."
+        },
+        "description": "Your existing entities are kept as long as the Cloud ID and the detected meter stay the same.\n\nHome Assistant identifies this device by its Cloud ID, and its entities by the Cloud ID and meter address. Changing the Cloud ID creates a new device and new entities, while a different detected meter creates new entities on the existing device.\n\nIf you are replacing the Rainforest Eagle device, we recommend removing this integration and adding it again."
+      },
       "user": {
         "data": {
           "cloud_id": "Cloud ID",
