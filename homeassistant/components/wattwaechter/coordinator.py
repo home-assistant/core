@@ -64,7 +64,13 @@ class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
             LEGACY_MODEL_IDS.get(model, model) if model else None
         )
         self.mac: str = config_entry.data[CONF_MAC]
-        self.fw_version: str | None = config_entry.data.get(CONF_FW_VERSION)
+        # The entry only stores the version from the initial setup.
+        device = dr.async_get(hass).async_get_device_by_identifier(
+            (DOMAIN, self.device_id), config_entry.entry_id
+        )
+        self.fw_version: str | None = (
+            device.sw_version if device else None
+        ) or config_entry.data.get(CONF_FW_VERSION)
 
         super().__init__(
             hass,
@@ -121,7 +127,7 @@ class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
             ota = None
 
         if system is not None:
-            self._async_update_device_model(system)
+            self._async_update_device_info(system)
 
         return WattwaechterData(meter=data, system=system, ota=ota)
 
@@ -137,17 +143,20 @@ class WattwaechterCoordinator(DataUpdateCoordinator[WattwaechterData]):
         )
         return model, model_id
 
-    def _async_update_device_model(self, system: SystemInfo) -> None:
-        """Update the registered model after a medium change or late system info."""
+    def _async_update_device_info(self, system: SystemInfo) -> None:
+        """Update the registered device after a firmware update, a medium change or late system info."""
+        if fw_version := system.get_value("esp", "os_version"):
+            self.fw_version = fw_version
         model, model_id = self.device_model(system)
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device_by_identifier(
             (DOMAIN, self.device_id), self.config_entry.entry_id
         )
-        if device is not None and (device.model, device.model_id) != (
-            model,
-            model_id,
-        ):
+        if device is not None and (
+            device.model,
+            device.model_id,
+            device.sw_version,
+        ) != (model, model_id, self.fw_version):
             device_registry.async_update_device(
-                device.id, model=model, model_id=model_id
+                device.id, model=model, model_id=model_id, sw_version=self.fw_version
             )
