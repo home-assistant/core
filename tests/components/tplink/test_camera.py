@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp.test_utils import make_mocked_request
 from freezegun.api import FrozenDateTimeFactory
-from kasa import Module
+from kasa import Module, StreamResolution
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.typing import WebSocketGenerator
@@ -203,6 +203,156 @@ async def test_camera_image(
         mock_get_image.assert_called_once()
 
         assert msg in caplog.text
+
+
+def _rtsp_url(
+    _credentials: object, stream_resolution: StreamResolution = StreamResolution.SD
+) -> str:
+    """Return an RTSP url that identifies the requested stream resolution."""
+    return f"rtsp://{IP_ADDRESS3}/{stream_resolution}"
+
+
+@pytest.mark.parametrize(
+    ("width", "height", "expected_resolution"),
+    [
+        (None, None, StreamResolution.SD),
+        (320, 180, StreamResolution.SD),
+        (640, 360, StreamResolution.SD),
+        (1920, 1080, StreamResolution.HD),
+        (1920, None, StreamResolution.HD),
+        (None, 1080, StreamResolution.HD),
+        (320, 1080, StreamResolution.HD),
+    ],
+)
+async def test_camera_image_stream_resolution(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+    width: int | None,
+    height: int | None,
+    expected_resolution: StreamResolution,
+) -> None:
+    """Test the still image is taken from the stream matching the requested size."""
+    mock_device = _mocked_device(
+        modules=[Module.Camera],
+        alias="my_camera",
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+    )
+    mock_device.modules[Module.Camera].stream_rtsp_url.side_effect = _rtsp_url
+
+    await setup_platform_for_device(
+        hass, mock_camera_config_entry, Platform.CAMERA, mock_device
+    )
+
+    with patch(
+        "homeassistant.components.ffmpeg.async_get_image",
+        return_value=SMALLEST_VALID_JPEG_BYTES,
+    ) as mock_get_image:
+        image = await async_get_image(
+            hass, "camera.my_camera_live_view", width=width, height=height
+        )
+
+    assert image.content == SMALLEST_VALID_JPEG_BYTES
+    mock_get_image.assert_called_once_with(
+        hass,
+        f"rtsp://{IP_ADDRESS3}/{expected_resolution}",
+        width=width,
+        height=height,
+    )
+
+
+async def test_camera_image_cache_per_resolution(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the SD and HD still images are cached independently."""
+    mock_device = _mocked_device(
+        modules=[Module.Camera],
+        alias="my_camera",
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+    )
+    mock_device.modules[Module.Camera].stream_rtsp_url.side_effect = _rtsp_url
+
+    await setup_platform_for_device(
+        hass, mock_camera_config_entry, Platform.CAMERA, mock_device
+    )
+
+    sd_image = SMALLEST_VALID_JPEG_BYTES
+    hd_image = SMALLEST_VALID_JPEG_BYTES + b"\x00"
+
+    async def _get_image(_hass, video_url, **__):
+        return hd_image if video_url.endswith(StreamResolution.HD) else sd_image
+
+    entity_id = "camera.my_camera_live_view"
+    with patch(
+        "homeassistant.components.ffmpeg.async_get_image", side_effect=_get_image
+    ) as mock_get_image:
+        # The SD image is cached, but must not answer an HD request
+        image = await async_get_image(hass, entity_id, width=320, height=180)
+        assert image.content == sd_image
+        assert mock_get_image.call_count == 1
+
+        image = await async_get_image(hass, entity_id, width=1920, height=1080)
+        assert image.content == hd_image
+        assert mock_get_image.call_count == 2
+
+        # Both are now served from their own cache
+        image = await async_get_image(hass, entity_id, width=320, height=180)
+        assert image.content == sd_image
+        image = await async_get_image(hass, entity_id, width=1920, height=1080)
+        assert image.content == hd_image
+        assert mock_get_image.call_count == 2
+
+        # Both caches expire after the interval
+        freezer.tick(TPLinkCameraEntity.IMAGE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        await async_get_image(hass, entity_id, width=320, height=180)
+        await async_get_image(hass, entity_id, width=1920, height=1080)
+        assert mock_get_image.call_count == 4
+
+
+async def test_camera_image_cache_per_requested_size(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+) -> None:
+    """Test a still scaled for a small request is not served to a larger one."""
+    mock_device = _mocked_device(
+        modules=[Module.Camera],
+        alias="my_camera",
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+    )
+    mock_device.modules[Module.Camera].stream_rtsp_url.side_effect = _rtsp_url
+
+    await setup_platform_for_device(
+        hass, mock_camera_config_entry, Platform.CAMERA, mock_device
+    )
+
+    small_image = SMALLEST_VALID_JPEG_BYTES
+    large_image = SMALLEST_VALID_JPEG_BYTES + b"\x00"
+
+    async def _get_image(_hass, _video_url, *, width, **__):
+        return small_image if width == 800 else large_image
+
+    entity_id = "camera.my_camera_live_view"
+    with patch(
+        "homeassistant.components.ffmpeg.async_get_image", side_effect=_get_image
+    ) as mock_get_image:
+        image = await async_get_image(hass, entity_id, width=800, height=450)
+        assert image.content == small_image
+        assert mock_get_image.call_count == 1
+
+        image = await async_get_image(hass, entity_id, width=1920, height=1080)
+        assert image.content == large_image
+        assert mock_get_image.call_count == 2
+
+        image = await async_get_image(hass, entity_id, width=800, height=450)
+        assert image.content == small_image
+        assert mock_get_image.call_count == 2
 
 
 async def test_no_camera_image_when_streaming(
