@@ -35,6 +35,7 @@ from .queries import (
     find_legacy_detached_states_and_attributes_to_purge,
     find_legacy_event_state_and_attributes_and_data_ids_to_purge,
     find_legacy_row,
+    find_linked_old_state_ids,
     find_short_term_statistics_to_purge,
     find_states_to_purge,
     find_statistics_runs_to_purge,
@@ -63,6 +64,9 @@ def purge_old_data(
 ) -> bool:
     """Purge events and states older than purge_before.
 
+    The current state of each recorded entity and the old state of each state
+    that is not purged yet are kept, see _purge_states_and_attributes_ids.
+
     Cleans up an timeframe of an hour, based on the oldest record.
     """
     _LOGGER.debug(
@@ -73,6 +77,8 @@ def purge_old_data(
         # Purge a max of max_bind_vars, based on the oldest states or events record
         has_more_to_purge = False
         if instance.use_legacy_events_index and _purging_legacy_format(session):
+            # Does not keep any states, this only runs until the rows from
+            # before schema 28 are gone
             _LOGGER.debug(
                 "Purge running in legacy format as there are states with event_id"
                 " remaining"
@@ -196,8 +202,9 @@ def _purge_states_and_attributes_ids(
     # max_bind_vars
     attributes_ids_batch: set[int] = set()
     max_bind_vars = instance.max_bind_vars
-    # Keep the current state of each recorded entity so the next state change
-    # can link its old_state_id to it, the logbook needs that link
+    # The logbook only shows a state change that links to its old state, so
+    # keep the current state of each recorded entity and the old state of
+    # each state that is not purged yet
     keep_state_ids = instance.states_manager.committed_state_ids()
     for _ in range(states_batch_size):
         state_ids, attributes_ids = _select_state_attributes_ids_to_purge(
@@ -206,7 +213,11 @@ def _purge_states_and_attributes_ids(
         if not state_ids:
             has_remaining_state_ids_to_purge = False
             break
-        _purge_state_ids(instance, session, state_ids)
+        linked_state_ids = _select_linked_old_state_ids(
+            session, purge_before, state_ids
+        )
+        keep_state_ids |= linked_state_ids
+        _purge_state_ids(instance, session, state_ids - linked_state_ids)
         attributes_ids_batch = attributes_ids_batch | attributes_ids
 
     _purge_unused_attributes_ids(instance, session, attributes_ids_batch)
@@ -273,6 +284,19 @@ def _select_state_attributes_ids_to_purge(
         len(attributes_ids),
     )
     return state_ids, attributes_ids
+
+
+def _select_linked_old_state_ids(
+    session: Session, purge_before: datetime, state_ids: set[int]
+) -> set[int]:
+    """Return the state ids that are the old_state of a state not purged yet."""
+    linked_state_ids = set(
+        session.execute(
+            find_linked_old_state_ids(purge_before.timestamp(), state_ids)
+        ).scalars()
+    )
+    _LOGGER.debug("Keeping %s states that newer states link to", len(linked_state_ids))
+    return linked_state_ids
 
 
 def _select_event_data_ids_to_purge(

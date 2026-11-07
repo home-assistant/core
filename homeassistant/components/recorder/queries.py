@@ -4,7 +4,6 @@ from collections.abc import Collection, Iterable
 from datetime import datetime
 
 from sqlalchemy import and_, bindparam, delete, func, lambda_stmt, select, update
-from sqlalchemy.orm import aliased
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
@@ -21,8 +20,6 @@ from .db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
-
-NEXT_STATE = aliased(States, name="next_state")
 
 
 def select_event_type_ids(event_types: tuple[str, ...]) -> Select:
@@ -289,25 +286,14 @@ def find_states_to_purge(
 ) -> Select:
     """Find states to purge, except the states in keep_state_ids.
 
-    States that are the old_state of a state that is not purged are kept
-    too, the logbook needs that link to show the state change.
-
-    This query is intentionally not a lambda statement since keep_state_ids
-    changes on every call.
+    Not a lambda statement: keep_state_ids is rendered inline since it can
+    exceed max_bind_vars and a NOT IN cannot be chunked, and a plain select
+    avoids the lambda analysis overhead.
     """
     return (
         select(States.state_id, States.attributes_id)
         .filter(States.last_updated_ts < purge_before)
         .filter(
-            ~select(NEXT_STATE.state_id)
-            .where(
-                NEXT_STATE.old_state_id == States.state_id,
-                NEXT_STATE.last_updated_ts >= purge_before,
-            )
-            .exists()
-        )
-        .filter(
-            # Rendered inline since there can be more ids than max_bind_vars
             States.state_id.not_in(
                 bindparam(
                     "keep_state_ids",
@@ -318,6 +304,19 @@ def find_states_to_purge(
             )
         )
         .limit(max_bind_vars)
+    )
+
+
+def find_linked_old_state_ids(
+    purge_before: float, state_ids: Iterable[int]
+) -> StatementLambdaElement:
+    """Find which of state_ids are the old_state of a state not purged yet."""
+    return lambda_stmt(
+        lambda: (
+            select(States.old_state_id)
+            .filter(States.old_state_id.in_(state_ids))
+            .filter(States.last_updated_ts >= purge_before)
+        )
     )
 
 

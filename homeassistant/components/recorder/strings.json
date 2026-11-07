@@ -64,7 +64,7 @@
           "name": "Apply filter"
         },
         "keep_days": {
-          "description": "Number of days to keep the data in the database. Starting today, counting backward. A value of `7` means that everything older than a week will be purged.",
+          "description": "Number of days to keep the data in the database. Starting today, counting backward. A value of `7` means that everything older than a week will be purged, except the latest state of each entity.",
           "name": "Days to keep"
         },
         "repack": {

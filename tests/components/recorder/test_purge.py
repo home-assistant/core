@@ -2530,3 +2530,52 @@ async def test_purge_keeps_old_state_of_states_in_retention_window(
     # Once the "on" change is outside the window, the old "off" is purged too
     assert purge_old_data(recorder_mock, now - timedelta(days=1), repack=False)
     assert _states() == [("on", False), ("off", True)]
+
+
+async def test_purge_service_keeps_latest_state(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test the purge action keeps the latest state of each entity."""
+    with freeze_time(dt_util.utcnow() - timedelta(days=1)):
+        hass.states.async_set("sensor.one", "1")
+        hass.states.async_set("sensor.one", "2")
+        hass.states.async_set("sensor.two", "1")
+        await async_wait_recording_done(hass)
+
+    await hass.services.async_call(
+        DOMAIN, RecorderService.PURGE, {RecorderServiceArgument.KEEP_DAYS: 0}
+    )
+    await hass.async_block_till_done()
+    await async_wait_purge_done(hass)
+
+    with session_scope(hass=hass) as session:
+        states = (
+            session.query(StatesMeta.entity_id, States.state)
+            .join(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .order_by(States.state_id)
+        )
+        assert states.all() == [("sensor.one", "2"), ("sensor.two", "1")]
+
+
+async def test_purge_entity_removed_while_recording_disabled(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test purge removes an entity that was removed while recording was off."""
+    with freeze_time(dt_util.utcnow() - timedelta(days=11)):
+        hass.states.async_set("sensor.removed", "1")
+        await async_wait_recording_done(hass)
+
+    await hass.services.async_call(DOMAIN, RecorderService.DISABLE, blocking=True)
+    await async_wait_recording_done(hass)
+    hass.states.async_remove("sensor.removed")
+    await async_wait_recording_done(hass)
+    await hass.services.async_call(DOMAIN, RecorderService.ENABLE, blocking=True)
+    await async_wait_recording_done(hass)
+
+    finished = purge_old_data(
+        recorder_mock, dt_util.utcnow() - timedelta(days=10), repack=False
+    )
+    assert finished
+
+    with session_scope(hass=hass) as session:
+        assert session.query(States).count() == 0
