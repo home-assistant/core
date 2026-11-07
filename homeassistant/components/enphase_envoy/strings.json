@@ -59,7 +59,7 @@
         },
         "data_description": {
           "host": "The hostname or IP address of your Enphase Envoy gateway.",
-          "no_solar_mode": "Enable this option if your Envoy has no solar inverters. This will prevent time-outs during integration load.",
+          "no_solar_mode": "Enable this option if your Envoy has no solar inverters to avoid production data time-outs during integration load. Do not enable it if you have Enphase AC Batteries (ACB), as it disables collection of their power data.",
           "password": "Blank or Enphase Cloud password",
           "token": "Go to the [Enphase login]({enphase_url}) to get a new token. Current token lifetime: {token_life} days.",
           "use_manual_token": "If your Enphase Cloud account has multi-factor authentication enabled, check this option to add or update your token manually.",
