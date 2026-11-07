@@ -17,6 +17,9 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 APP_SERVER_URL = "http://127.0.0.1:8090/"
 
+# What Agent DVR answers when it refuses a request, e.g. with Protect API on
+REFUSED = '{"error": "This server is protected"}'
+
 HASSIO_DISCOVERY = HassioServiceInfo(
     config={"addon": "Agent DVR", "host": "127.0.0.1", "port": 8090},
     name="Agent DVR",
@@ -106,6 +109,42 @@ async def test_connection_error(
     aioclient_mock.get(
         "http://example.local:8090/command.cgi?cmd=getObjects",
         text=await async_load_fixture(hass, "objects.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "example.local", CONF_PORT: 8090},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_server_refuses(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test a server that refuses the request, e.g. with Protect API on."""
+    aioclient_mock.get(
+        "http://example.local:8090/command.cgi?cmd=getStatus",
+        text=REFUSED,
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "example.local", CONF_PORT: 8090},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://example.local:8090/command.cgi?cmd=getStatus",
+        text=await async_load_fixture(hass, "status.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
@@ -219,11 +258,19 @@ async def test_user_flow_with_hassio_discovery_in_progress(
     assert not hass.config_entries.flow.async_progress()
 
 
+@pytest.mark.parametrize(
+    "response",
+    [
+        {"text": ""},
+        {"text": REFUSED, "headers": {"Content-Type": CONTENT_TYPE_JSON}},
+    ],
+    ids=["unreachable", "refused"],
+)
 async def test_hassio_discovery_cannot_connect(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, response: dict
 ) -> None:
-    """Test discovery aborts when the Agent DVR app can't be reached."""
-    aioclient_mock.get(f"{APP_SERVER_URL}command.cgi?cmd=getStatus", text="")
+    """Test discovery aborts when the Agent DVR app's server can't be used."""
+    aioclient_mock.get(f"{APP_SERVER_URL}command.cgi?cmd=getStatus", **response)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_HASSIO}, data=HASSIO_DISCOVERY

@@ -1,9 +1,8 @@
 """Config flow to configure Agent devices."""
 
-from contextlib import suppress
 from typing import Any, override
 
-from agent import AgentConnectionError, AgentError
+from agent import AgentError
 from agent.a import Agent
 import probatio
 
@@ -36,13 +35,15 @@ class AgentFlowHandler(ConfigFlow, domain=DOMAIN):
             generate_url(host, port), async_get_clientsession(self.hass)
         )
 
-        with suppress(AgentConnectionError, AgentError):
+        try:
             await agent_client.update()
-
-        await agent_client.close()
-
-        if not agent_client.is_available:
+        except AgentError:
+            # Also raised when the server refuses the request, for example
+            # with Protect API turned on; it then has no status to read.
             return None
+        finally:
+            await agent_client.close()
+
         return agent_client
 
     @override
