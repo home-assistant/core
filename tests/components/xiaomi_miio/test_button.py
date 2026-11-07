@@ -1,6 +1,6 @@
 """The tests for the xiaomi_miio button component."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -11,6 +11,7 @@ from homeassistant.components.xiaomi_miio.const import (
     DOMAIN,
     MODELS_VACUUM,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE,
@@ -21,6 +22,8 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import TEST_MAC
@@ -76,6 +79,79 @@ async def test_vacuum_button_press(hass: HomeAssistant) -> None:
     state = hass.states.get(f"{entity_id}_reset_side_brush")
     assert state
     assert state.state == pressed_at.isoformat()
+
+
+async def test_reconfigure_entry_without_unique_id_keeps_registry_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test reconfiguring a loaded entry without unique ID keeps its entity and device IDs."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        title="test_vacuum",
+        data={
+            CONF_FLOW_TYPE: CONF_DEVICE,
+            CONF_HOST: "192.168.1.100",
+            CONF_TOKEN: "12345678901234567890123456789012",
+            CONF_MODEL: MODELS_VACUUM[0],
+            CONF_MAC: None,
+        },
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_ids_before = {
+        entry.entity_id: entry.unique_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+    }
+    assert (
+        entity_ids_before["button.test_vacuum_reset_main_brush"]
+        == "reset_vacuum_main_brush_None"
+    )
+    device_identifiers_before = [
+        device.identifiers
+        for device in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        )
+    ]
+    assert device_identifiers_before == [{(DOMAIN, None)}]
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=Mock(mac_address=TEST_MAC, model=MODELS_VACUUM[0]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.101",
+                CONF_TOKEN: "abcdefabcdefabcdefabcdefabcdefab",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id is None
+    assert {
+        entry.entity_id: entry.unique_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+    } == entity_ids_before
+    assert [
+        device.identifiers
+        for device in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        )
+    ] == device_identifiers_before
+    assert hass.states.get("button.test_vacuum_reset_main_brush")
 
 
 async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
