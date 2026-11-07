@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DATA_QUERY_LOCKS, DOMAIN
+from .const import DATA_QUERY_LOCKS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,10 +47,9 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
         # The Conexa SMGW is not able to handle multiple concurrent requests
         # so we need a host specific lock to serialize the requests.
         # This lock pool is shared across config entries, so it cannot use runtime_data.
-        domain_data = hass.data.setdefault(DOMAIN, {})  # pylint: disable=home-assistant-use-runtime-data
-        self._query_lock: Lock = domain_data.setdefault(
-            DATA_QUERY_LOCKS, {}
-        ).setdefault(entry.data[CONF_HOST], Lock())
+        self._query_lock = hass.data.setdefault(DATA_QUERY_LOCKS, {}).setdefault(
+            entry.data[CONF_HOST], Lock()
+        )
 
     async def async_init(self) -> None:
         """Asynchronous Initialization and registering the update schedule."""

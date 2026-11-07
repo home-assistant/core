@@ -40,8 +40,7 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
         # The Conexa SMGW is not able to handle multiple concurrent requests
         # so we need a host specific lock to serialize the requests.
         # This lock pool is shared across config entries, so it cannot use runtime_data.
-        domain_data = self.hass.data.setdefault(DOMAIN, {})  # pylint: disable=home-assistant-use-runtime-data
-        query_lock: Lock = domain_data.setdefault(DATA_QUERY_LOCKS, {}).setdefault(
+        query_lock = self.hass.data.setdefault(DATA_QUERY_LOCKS, {}).setdefault(
             host, Lock()
         )
         async with query_lock:
