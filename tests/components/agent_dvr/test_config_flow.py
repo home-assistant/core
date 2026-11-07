@@ -5,14 +5,41 @@ from pytest_homeassistant.common import async_load_fixture
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.agent_dvr.const import DOMAIN, SERVER_URL
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from . import init_integration
+from . import create_entry, init_integration
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+APP_SERVER_URL = "http://127.0.0.1:8090/"
+
+HASSIO_DISCOVERY = HassioServiceInfo(
+    config={"addon": "Agent DVR", "host": "127.0.0.1", "port": 8090},
+    name="Agent DVR",
+    slug="a910219e_agentdvr",
+    uuid="1234",
+)
+
+
+@pytest.fixture
+async def mock_agent_app(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Mock the Agent DVR server run by the Agent DVR app."""
+    aioclient_mock.get(
+        f"{APP_SERVER_URL}command.cgi?cmd=getStatus",
+        text=await async_load_fixture(hass, "status.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
+        f"{APP_SERVER_URL}command.cgi?cmd=getObjects",
+        text=await async_load_fixture(hass, "objects.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -126,3 +153,58 @@ async def test_full_user_flow_implementation(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries[0].unique_id == "c0715bba-c2d0-48ef-9e3e-bc81c9ea4447"
+
+
+@pytest.mark.usefixtures("mock_agent_app")
+async def test_hassio_discovery(hass: HomeAssistant) -> None:
+    """Test the Agent DVR app is set up after confirming its discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_HASSIO}, data=HASSIO_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+    assert result["description_placeholders"] == {"addon": "Agent DVR"}
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "DESKTOP"
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 8090,
+        SERVER_URL: APP_SERVER_URL,
+    }
+    assert result["result"].unique_id == "c0715bba-c2d0-48ef-9e3e-bc81c9ea4447"
+
+
+@pytest.mark.usefixtures("mock_agent_app")
+async def test_hassio_discovery_already_configured(hass: HomeAssistant) -> None:
+    """Test discovery updates a server that was already added by hand."""
+    entry = create_entry(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_HASSIO}, data=HASSIO_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 8090,
+        SERVER_URL: APP_SERVER_URL,
+    }
+
+
+async def test_hassio_discovery_cannot_connect(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test discovery aborts when the Agent DVR app can't be reached."""
+    aioclient_mock.get(f"{APP_SERVER_URL}command.cgi?cmd=getStatus", text="")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_HASSIO}, data=HASSIO_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
