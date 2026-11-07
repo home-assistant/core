@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Enter your Tank Utility account credentials."
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring Tank Utility using YAML is deprecated.\n\nHome Assistant could not reach Tank Utility while importing your configuration. Please verify your internet connection and try setting up Tank Utility via the UI.",
+      "title": "Tank Utility YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring Tank Utility using YAML is deprecated.\n\nThe credentials in your YAML were rejected. Please verify your credentials and configure Tank Utility via the UI.",
+      "title": "Tank Utility YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring Tank Utility using YAML is deprecated.\n\nAn unexpected error occurred while importing your configuration. Please configure Tank Utility via the UI.",
+      "title": "Tank Utility YAML configuration import failed"
+    }
+  }
+}
