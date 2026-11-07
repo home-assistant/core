@@ -26,7 +26,7 @@ from homeassistant.components.media_source import (
     async_get_media_image,
     async_resolve_media,
 )
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_LOCKED, ATTR_NAME
+from homeassistant.const import ATTR_NAME, CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -39,39 +39,14 @@ from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import MediaSelector
 
 from .const import (
-    ATTR_ACCOUNT_NAME,
-    ATTR_ATTRIBUTION_DOMAINS,
-    ATTR_AVATAR,
-    ATTR_AVATAR_DESCRIPTION,
     ATTR_AVATAR_MIME_TYPE,
-    ATTR_BOT,
-    ATTR_CONTENT_WARNING,
-    ATTR_DELETE_AVATAR,
-    ATTR_DELETE_HEADER,
-    ATTR_DISCOVERABLE,
-    ATTR_DISPLAY_NAME,
-    ATTR_DURATION,
-    ATTR_FIELDS,
     ATTR_FOCUS_X,
     ATTR_FOCUS_Y,
-    ATTR_HEADER,
-    ATTR_HEADER_DESCRIPTION,
     ATTR_HEADER_MIME_TYPE,
-    ATTR_HIDE_NOTIFICATIONS,
-    ATTR_IDEMPOTENCY_KEY,
-    ATTR_IN_REPLY_TO,
-    ATTR_LANGUAGE,
-    ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_SOURCE,
-    ATTR_MEDIA_WARNING,
-    ATTR_NOTE,
-    ATTR_QUOTE_APPROVAL_POLICY,
-    ATTR_QUOTED_STATUS,
-    ATTR_STATUS,
     ATTR_THUMBNAIL,
     ATTR_VALUE,
-    ATTR_VISIBILITY,
     DOMAIN,
     LOGGER,
 )
@@ -99,33 +74,73 @@ class QuoteApprovalPolicy(StrEnum):
     NOBODY = "nobody"
 
 
-SERVICE_GET_ACCOUNT = "get_account"
+class MastodonService(StrEnum):
+    """Store keys for Mastodon services."""
+
+    GET_ACCOUNT = "get_account"
+    MUTE_ACCOUNT = "mute_account"
+    UNMUTE_ACCOUNT = "unmute_account"
+    POST = "post"
+    UPDATE_PROFILE = "update_profile"
+
+
+class MastodonServiceArgument(StrEnum):
+    """Store keys for Mastodon service arguments."""
+
+    ACCOUNT_NAME = "account_name"
+    DURATION = "duration"
+    HIDE_NOTIFICATIONS = "hide_notifications"
+    STATUS = "status"
+    VISIBILITY = "visibility"
+    QUOTE_APPROVAL_POLICY = "quote_approval_policy"
+    IDEMPOTENCY_KEY = "idempotency_key"
+    CONTENT_WARNING = "content_warning"
+    LANGUAGE = "language"
+    MEDIA = "media"
+    MEDIA_DESCRIPTION = "media_description"
+    MEDIA_WARNING = "media_warning"
+    IN_REPLY_TO = "in_reply_to"
+    QUOTED_STATUS = "quoted_status"
+    DISPLAY_NAME = "display_name"
+    NOTE = "note"
+    AVATAR = "avatar"
+    AVATAR_DESCRIPTION = "avatar_description"
+    DELETE_AVATAR = "delete_avatar"
+    HEADER = "header"
+    HEADER_DESCRIPTION = "header_description"
+    DELETE_HEADER = "delete_header"
+    LOCKED = "locked"
+    BOT = "bot"
+    DISCOVERABLE = "discoverable"
+    FIELDS = "fields"
+    ATTRIBUTION_DOMAINS = "attribution_domains"
+
+
 SERVICE_GET_ACCOUNT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-        probatio.Required(ATTR_ACCOUNT_NAME): str,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+        probatio.Required(MastodonServiceArgument.ACCOUNT_NAME): str,
     }
 )
-SERVICE_MUTE_ACCOUNT = "mute_account"
 SERVICE_MUTE_ACCOUNT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-        probatio.Required(ATTR_ACCOUNT_NAME): str,
-        probatio.Optional(ATTR_DURATION): probatio.All(
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+        probatio.Required(MastodonServiceArgument.ACCOUNT_NAME): str,
+        probatio.Optional(MastodonServiceArgument.DURATION): probatio.All(
             cv.positive_time_period,
             probatio.Range(max=timedelta(seconds=MAX_DURATION_SECONDS)),
         ),
-        probatio.Optional(ATTR_HIDE_NOTIFICATIONS, default=True): bool,
+        probatio.Optional(
+            MastodonServiceArgument.HIDE_NOTIFICATIONS, default=True
+        ): bool,
     }
 )
-SERVICE_UNMUTE_ACCOUNT = "unmute_account"
 SERVICE_UNMUTE_ACCOUNT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-        probatio.Required(ATTR_ACCOUNT_NAME): str,
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+        probatio.Required(MastodonServiceArgument.ACCOUNT_NAME): str,
     }
 )
-SERVICE_POST = "post"
 SCHEMA_MEDIA = probatio.Schema(
     {
         probatio.Required(ATTR_MEDIA_SOURCE): MediaSelector(
@@ -145,55 +160,58 @@ SCHEMA_MEDIA = probatio.Schema(
 )
 SERVICE_POST_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-        probatio.Required(ATTR_STATUS): str,
-        probatio.Optional(ATTR_VISIBILITY): probatio.All(
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+        probatio.Required(MastodonServiceArgument.STATUS): str,
+        probatio.Optional(MastodonServiceArgument.VISIBILITY): probatio.All(
             probatio.In([x.lower() for x in StatusVisibility]),
             probatio.Coerce(StatusVisibility),
         ),
-        probatio.Optional(ATTR_QUOTE_APPROVAL_POLICY): probatio.All(
+        probatio.Optional(MastodonServiceArgument.QUOTE_APPROVAL_POLICY): probatio.All(
             probatio.In([x.lower() for x in QuoteApprovalPolicy]),
             probatio.Coerce(QuoteApprovalPolicy),
         ),
-        probatio.Optional(ATTR_IDEMPOTENCY_KEY): probatio.All(
+        probatio.Optional(MastodonServiceArgument.IDEMPOTENCY_KEY): probatio.All(
             str, probatio.Length(min=4)
         ),
-        probatio.Optional(ATTR_CONTENT_WARNING): str,
-        probatio.Optional(ATTR_LANGUAGE): str,
-        probatio.Optional(ATTR_MEDIA): probatio.Any(
+        probatio.Optional(MastodonServiceArgument.CONTENT_WARNING): str,
+        probatio.Optional(MastodonServiceArgument.LANGUAGE): str,
+        probatio.Optional(MastodonServiceArgument.MEDIA): probatio.Any(
             probatio.All(probatio.EnsureList(), probatio.Length(max=4), [SCHEMA_MEDIA]),
             str,
         ),
-        probatio.Optional(ATTR_MEDIA_DESCRIPTION): str,
-        probatio.Optional(ATTR_MEDIA_WARNING): bool,
-        probatio.Optional(ATTR_IN_REPLY_TO): str,
-        probatio.Optional(ATTR_QUOTED_STATUS): str,
+        probatio.Optional(MastodonServiceArgument.MEDIA_DESCRIPTION): str,
+        probatio.Optional(MastodonServiceArgument.MEDIA_WARNING): bool,
+        probatio.Optional(MastodonServiceArgument.IN_REPLY_TO): str,
+        probatio.Optional(MastodonServiceArgument.QUOTED_STATUS): str,
     }
 )
 
-SERVICE_UPDATE_PROFILE = "update_profile"
 SERVICE_UPDATE_PROFILE_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-        probatio.Optional(ATTR_DISPLAY_NAME): str,
-        probatio.Optional(ATTR_NOTE): str,
-        probatio.Exclusive(ATTR_AVATAR, ATTR_AVATAR): MediaSelector(
-            {"accept": ["image/*"]}
-        ),
-        probatio.Optional(ATTR_AVATAR_DESCRIPTION): str,
-        probatio.Exclusive(ATTR_DELETE_AVATAR, ATTR_AVATAR): cv.boolean,
-        probatio.Exclusive(ATTR_HEADER, ATTR_HEADER): MediaSelector(
-            {"accept": ["image/*"]}
-        ),
-        probatio.Optional(ATTR_HEADER_DESCRIPTION): str,
-        probatio.Exclusive(ATTR_DELETE_HEADER, ATTR_HEADER): cv.boolean,
-        probatio.Optional(ATTR_LOCKED): bool,
-        probatio.Optional(ATTR_BOT): bool,
-        probatio.Optional(ATTR_DISCOVERABLE): bool,
-        probatio.Optional(ATTR_FIELDS): probatio.All(
+        probatio.Required(CommonServiceArgument.CONFIG_ENTRY_ID): str,
+        probatio.Optional(MastodonServiceArgument.DISPLAY_NAME): str,
+        probatio.Optional(MastodonServiceArgument.NOTE): str,
+        probatio.Exclusive(
+            MastodonServiceArgument.AVATAR, MastodonServiceArgument.AVATAR
+        ): MediaSelector({"accept": ["image/*"]}),
+        probatio.Optional(MastodonServiceArgument.AVATAR_DESCRIPTION): str,
+        probatio.Exclusive(
+            MastodonServiceArgument.DELETE_AVATAR, MastodonServiceArgument.AVATAR
+        ): cv.boolean,
+        probatio.Exclusive(
+            MastodonServiceArgument.HEADER, MastodonServiceArgument.HEADER
+        ): MediaSelector({"accept": ["image/*"]}),
+        probatio.Optional(MastodonServiceArgument.HEADER_DESCRIPTION): str,
+        probatio.Exclusive(
+            MastodonServiceArgument.DELETE_HEADER, MastodonServiceArgument.HEADER
+        ): cv.boolean,
+        probatio.Optional(MastodonServiceArgument.LOCKED): bool,
+        probatio.Optional(MastodonServiceArgument.BOT): bool,
+        probatio.Optional(MastodonServiceArgument.DISCOVERABLE): bool,
+        probatio.Optional(MastodonServiceArgument.FIELDS): probatio.All(
             probatio.EnsureList(), probatio.Length(max=4), [dict[str, str]]
         ),
-        probatio.Optional(ATTR_ATTRIBUTION_DOMAINS): probatio.All(
+        probatio.Optional(MastodonServiceArgument.ATTRIBUTION_DOMAINS): probatio.All(
             probatio.EnsureList(), [str]
         ),
     }
@@ -205,33 +223,33 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Mastodon integration."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_ACCOUNT,
+        MastodonService.GET_ACCOUNT,
         _async_get_account,
         schema=SERVICE_GET_ACCOUNT_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_MUTE_ACCOUNT,
+        MastodonService.MUTE_ACCOUNT,
         _async_mute_account,
         schema=SERVICE_MUTE_ACCOUNT_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_UNMUTE_ACCOUNT,
+        MastodonService.UNMUTE_ACCOUNT,
         _async_unmute_account,
         schema=SERVICE_UNMUTE_ACCOUNT_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_POST,
+        MastodonService.POST,
         _async_post,
         schema=SERVICE_POST_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_UPDATE_PROFILE,
+        MastodonService.UPDATE_PROFILE,
         _async_update_profile,
         schema=SERVICE_UPDATE_PROFILE_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
@@ -258,11 +276,11 @@ async def _async_account_lookup(
 async def _async_get_account(call: ServiceCall) -> ServiceResponse:
     """Get account information."""
     entry: MastodonConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     client = entry.runtime_data.client
 
-    account_name: str = call.data[ATTR_ACCOUNT_NAME]
+    account_name: str = call.data[MastodonServiceArgument.ACCOUNT_NAME]
 
     try:
         account = await _async_account_lookup(call.hass, client, account_name)
@@ -279,15 +297,15 @@ async def _async_get_account(call: ServiceCall) -> ServiceResponse:
 async def _async_mute_account(call: ServiceCall) -> ServiceResponse:
     """Mute account."""
     entry: MastodonConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     client = entry.runtime_data.client
 
-    account_name: str = call.data[ATTR_ACCOUNT_NAME]
-    hide_notifications: bool = call.data[ATTR_HIDE_NOTIFICATIONS]
+    account_name: str = call.data[MastodonServiceArgument.ACCOUNT_NAME]
+    hide_notifications: bool = call.data[MastodonServiceArgument.HIDE_NOTIFICATIONS]
     duration: int | None = None
-    if call.data.get(ATTR_DURATION) is not None:
-        td: timedelta = call.data[ATTR_DURATION]
+    if call.data.get(MastodonServiceArgument.DURATION) is not None:
+        td: timedelta = call.data[MastodonServiceArgument.DURATION]
         duration_seconds = td.total_seconds()
 
         if not isfinite(duration_seconds) or duration_seconds > MAX_DURATION_SECONDS:
@@ -321,11 +339,11 @@ async def _async_mute_account(call: ServiceCall) -> ServiceResponse:
 async def _async_unmute_account(call: ServiceCall) -> ServiceResponse:
     """Unmute account."""
     entry: MastodonConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     client = entry.runtime_data.client
 
-    account_name: str = call.data[ATTR_ACCOUNT_NAME]
+    account_name: str = call.data[MastodonServiceArgument.ACCOUNT_NAME]
 
     try:
         account = await _async_account_lookup(call.hass, client, account_name)
@@ -346,20 +364,22 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
     """Post a status."""
 
     entry: MastodonConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        call.hass, DOMAIN, call.data[CommonServiceArgument.CONFIG_ENTRY_ID]
     )
     client = entry.runtime_data.client
 
-    status: str = call.data[ATTR_STATUS]
+    status: str = call.data[MastodonServiceArgument.STATUS]
 
-    visibility: str | None = call.data.get(ATTR_VISIBILITY)
-    quote_approval_policy: str | None = call.data.get(ATTR_QUOTE_APPROVAL_POLICY)
-    idempotency_key: str | None = call.data.get(ATTR_IDEMPOTENCY_KEY)
-    spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
-    language: str | None = call.data.get(ATTR_LANGUAGE)
+    visibility: str | None = call.data.get(MastodonServiceArgument.VISIBILITY)
+    quote_approval_policy: str | None = call.data.get(
+        MastodonServiceArgument.QUOTE_APPROVAL_POLICY
+    )
+    idempotency_key: str | None = call.data.get(MastodonServiceArgument.IDEMPOTENCY_KEY)
+    spoiler_text: str | None = call.data.get(MastodonServiceArgument.CONTENT_WARNING)
+    language: str | None = call.data.get(MastodonServiceArgument.LANGUAGE)
 
     media_path: str | None = None
-    media: list[dict[str, Any]] | str = call.data.get(ATTR_MEDIA, [])
+    media: list[dict[str, Any]] | str = call.data.get(MastodonServiceArgument.MEDIA, [])
     if isinstance(media, str):
         async_deprecated_media_path(call.hass)
         media_path, media = media, []
@@ -416,10 +436,12 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             }
         )
 
-    media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
-    media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
-    in_reply_to: str | None = call.data.get(ATTR_IN_REPLY_TO)
-    quoted_status: str | None = call.data.get(ATTR_QUOTED_STATUS)
+    media_description: str | None = call.data.get(
+        MastodonServiceArgument.MEDIA_DESCRIPTION
+    )
+    media_warning: str | None = call.data.get(MastodonServiceArgument.MEDIA_WARNING)
+    in_reply_to: str | None = call.data.get(MastodonServiceArgument.IN_REPLY_TO)
+    quoted_status: str | None = call.data.get(MastodonServiceArgument.QUOTED_STATUS)
 
     response = await call.hass.async_add_executor_job(
         partial(
@@ -511,26 +533,28 @@ async def _async_update_profile(call: ServiceCall) -> ServiceResponse | None:
     params = dict(call.data.copy())
 
     entry: MastodonConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, params.pop(ATTR_CONFIG_ENTRY_ID)
+        call.hass, DOMAIN, params.pop(CommonServiceArgument.CONFIG_ENTRY_ID)
     )
     client = entry.runtime_data.client
 
-    if avatar := params.pop(ATTR_AVATAR, None):
-        params[ATTR_AVATAR], params[ATTR_AVATAR_MIME_TYPE] = await _resolve_media(
-            call.hass, avatar
-        )
-    if header := params.pop(ATTR_HEADER, None):
-        params[ATTR_HEADER], params[ATTR_HEADER_MIME_TYPE] = await _resolve_media(
-            call.hass, header
-        )
-    if fields := params.get(ATTR_FIELDS):
-        params[ATTR_FIELDS] = [
+    if avatar := params.pop(MastodonServiceArgument.AVATAR, None):
+        (
+            params[MastodonServiceArgument.AVATAR],
+            params[ATTR_AVATAR_MIME_TYPE],
+        ) = await _resolve_media(call.hass, avatar)
+    if header := params.pop(MastodonServiceArgument.HEADER, None):
+        (
+            params[MastodonServiceArgument.HEADER],
+            params[ATTR_HEADER_MIME_TYPE],
+        ) = await _resolve_media(call.hass, header)
+    if fields := params.get(MastodonServiceArgument.FIELDS):
+        params[MastodonServiceArgument.FIELDS] = [
             (field[ATTR_NAME].strip(), field[ATTR_VALUE].strip())
             for field in fields
             if field[ATTR_NAME].strip()
         ]
-    delete_avatar = params.pop("delete_avatar", False)
-    delete_header = params.pop("delete_header", False)
+    delete_avatar = params.pop(MastodonServiceArgument.DELETE_AVATAR, False)
+    delete_header = params.pop(MastodonServiceArgument.DELETE_HEADER, False)
     try:
 
         def _update_profile() -> Any:
