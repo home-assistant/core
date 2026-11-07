@@ -1,5 +1,6 @@
 """Plugwise platform for Home Assistant Core."""
 
+from functools import partial
 from typing import Any
 
 from homeassistant.const import Platform
@@ -12,7 +13,12 @@ from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 
 async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> None:
     """Set up Plugwise components from a config entry."""
-    await er.async_migrate_entries(hass, entry.entry_id, async_migrate_entity_entry)
+    device_registry = dr.async_get(hass)
+    await er.async_migrate_entries(
+        hass,
+        entry.entry_id,
+        partial(async_migrate_entity_entry, device_registry=device_registry),
+    )
 
     coordinator = PlugwiseDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -20,7 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
 
     entry.runtime_data = coordinator
 
-    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, str(coordinator.api.gateway_id))},
@@ -40,12 +45,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) ->
 
 
 @callback
-def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None:
+def async_migrate_entity_entry(
+    entry: er.RegistryEntry, *, device_registry: dr.DeviceRegistry
+) -> dict[str, Any] | None:
     """Migrate Plugwise entity entries.
 
-    Migrates old unique ID's from old binary_sensors and
-    switches to the new unique ID's.
+    Migrate old unique IDs from climate, binary sensor, sensor, and switch entities.
     """
+    if (
+        entry.domain == Platform.CLIMATE
+        and entry.unique_id.endswith("-climate")
+        and entry.device_id
+        and (device := device_registry.async_get(entry.device_id))
+        and device.model
+    ):
+        model_name = device.model.lower().replace(" ", "-")
+        return {
+            "new_unique_id": f"{entry.unique_id.removesuffix('-climate')}-{model_name}"
+        }
     if entry.domain == Platform.BINARY_SENSOR and entry.unique_id.endswith(
         "-slave_boiler_state"
     ):
