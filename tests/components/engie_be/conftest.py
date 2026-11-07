@@ -207,6 +207,7 @@ def build_tou_schedules(
     supplier_tou: bool = True,
     network_tou: bool = True,
     with_second_meter: bool = False,
+    with_supplier_injection: bool = True,
 ) -> TouSchedulesResponse:
     """Build a tou-schedules response for the electricity EAN of the fixtures.
 
@@ -221,9 +222,13 @@ def build_tou_schedules(
         (peak, night) if supplier_tou else (flat,),
         "exclusive_night" if supplier_tou else None,
     )
-    supplier_injection = _every_day(
-        (peak, offpeak) if supplier_tou else (flat,),
-        "peak" if supplier_tou else None,
+    supplier_injection = (
+        _every_day(
+            (peak, offpeak) if supplier_tou else (flat,),
+            "peak" if supplier_tou else None,
+        )
+        if with_supplier_injection
+        else None
     )
     dgo_offtake = _every_day(
         (peak, offpeak) if network_tou else (flat,),

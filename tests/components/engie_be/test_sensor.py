@@ -1934,6 +1934,38 @@ async def test_injection_price_unavailable_when_injection_prices_drop(
     assert hass.states.get(offtake_price_id).state != STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_injection_price_unavailable_when_injection_schedule_drops(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the injection price goes unavailable when its direction schedule disappears."""
+    client = mock_engie_client.return_value
+    client.async_get_tou_schedules.return_value = build_tou_schedules()
+    await setup_entry(hass, mock_config_entry)
+
+    injection_price_id = _tou_entity_id(
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_injection_current_price"
+    )
+    offtake_price_id = _tou_entity_id(
+        entity_registry, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_current_price"
+    )
+    assert float(hass.states.get(injection_price_id).state) == pytest.approx(0.05)
+
+    client.async_get_tou_schedules.return_value = build_tou_schedules(
+        with_supplier_injection=False
+    )
+    freezer.tick(PRICES_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(injection_price_id).state == STATE_UNAVAILABLE
+    assert float(hass.states.get(offtake_price_id).state) == pytest.approx(0.18)
+
+
 def _two_period_prices(
     first_valid_to: date,
     second_valid_from: date,
