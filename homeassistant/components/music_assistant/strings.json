@@ -506,6 +506,10 @@
           "description": "Enable radio mode to auto-generate a playlist based on the selection.",
           "name": "Enable radio mode"
         },
+        "shuffle": {
+          "description": "Play the content shuffled. Turn off to play it in order. If not set, the current shuffle setting of the queue is kept.",
+          "name": "Shuffle"
+        },
         "start_item": {
           "description": "Item to start playback from, instead of the first one. Use `latest` to play a podcast from its newest episode, or give the URI, ID or part of the name (at least 3 characters) of the track or episode to start from.",
           "name": "Start item"
