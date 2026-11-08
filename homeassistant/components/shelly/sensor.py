@@ -1552,6 +1552,14 @@ RPC_SENSORS: Final = {
         value=lambda status, _: status["level"],
         options=["dark", "twilight", "bright"],
     ),
+    "fan_hum": RpcSensorDescription(
+        key="fan",
+        sub_key="hum",
+        translation_key="humidity_level",
+        device_class=SensorDeviceClass.ENUM,
+        value=lambda status, _: status["level"],
+        options=["low", "medium", "high", "very_high"],
+    ),
     "number_average_temperature": RpcSensorDescription(
         key="number",
         sub_key="value",
