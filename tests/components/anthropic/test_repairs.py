@@ -997,6 +997,65 @@ async def test_repair_flow_model_options(
 
 
 @pytest.mark.parametrize(
+    ("model", "expected_max_tokens"),
+    [
+        pytest.param("claude-haiku-4-5-20251001", 6000, id="exact_dated_model"),
+        pytest.param("claude-haiku-4-5", 2048, id="alias"),
+    ],
+)
+async def test_repair_flow_model_lookup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    model: str,
+    expected_max_tokens: int,
+) -> None:
+    """Prefer exact snapshot metadata while preserving alias fallback."""
+    entry = _make_entry(
+        hass,
+        title="Claude",
+        api_key="key",
+        subentries_data=[
+            {
+                "data": {
+                    CONF_CHAT_MODEL: "claude-3-7-sonnet-20250219",
+                    CONF_MAX_TOKENS: 6000,
+                },
+                "subentry_type": "conversation",
+                "title": "Conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.runtime_data.client.models.list.return_value = AsyncPage(
+        data=[
+            _copy_model_info("claude-haiku-4-5").model_copy(
+                update={"id": "claude-haiku-4-5-20251101", "max_tokens": 2048}
+            ),
+            _copy_model_info("claude-haiku-4-5").model_copy(
+                update={"max_tokens": 8192}
+            ),
+        ],
+        has_more=False,
+    )
+    retrieve = entry.runtime_data.client.models.retrieve = AsyncMock()
+    issue_id = await _setup_repairs(hass, entry)
+    client = await hass_client()
+
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    result = await process_repair_fix_flow(
+        client,
+        result["flow_id"],
+        json={CONF_CHAT_MODEL: model},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    subentry = _get_subentry(entry, "conversation")
+    assert subentry.data[CONF_CHAT_MODEL] == model
+    assert subentry.data[CONF_MAX_TOKENS] == expected_max_tokens
+    retrieve.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
     "cached_model_count",
     [
         pytest.param(1, id="listed_model"),

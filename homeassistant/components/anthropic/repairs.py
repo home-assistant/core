@@ -202,22 +202,21 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                 translation_domain=DOMAIN, translation_key="subentry_not_found"
             )
 
+        model_id = user_input[CONF_CHAT_MODEL]
         updated_data = {
             **subentry.data,
-            CONF_CHAT_MODEL: user_input[CONF_CHAT_MODEL],
+            CONF_CHAT_MODEL: model_id,
         }
-        alias = model_alias(user_input[CONF_CHAT_MODEL])
-        model_info = next(
-            (
-                model
-                for model in (self._model_list_cache or {}).get(entry.entry_id, [])
-                if model_alias(model.id) == alias
-            ),
-            None,
-        )
+        models = (self._model_list_cache or {}).get(entry.entry_id, [])
+        model_info = next((model for model in models if model.id == model_id), None)
+        if model_info is None:
+            alias = model_alias(model_id)
+            model_info = next(
+                (model for model in models if model_alias(model.id) == alias), None
+            )
         if model_info is None:
             model_info = await entry.runtime_data.client.models.retrieve(
-                user_input[CONF_CHAT_MODEL], timeout=10.0
+                model_id, timeout=10.0
             )
         if model_info.lifecycle != "active":
             return False

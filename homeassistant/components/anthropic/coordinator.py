@@ -159,16 +159,13 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
     @callback
     def get_model_info(self, model_id: str) -> tuple[anthropic.types.ModelInfo, bool]:
         """Get model info for a given model ID."""
-        # First try: exact name match
         for model in self.data or []:
             if model.id == model_id:
                 return model, True
-        # Second try: match by alias
         alias = model_alias(model_id)
         for model in self.data or []:
             if model_alias(model.id) == alias:
                 return model, True
-        # Model not found, return safe defaults
         return anthropic.types.ModelInfo(
             type="model",
             id=model_id,
