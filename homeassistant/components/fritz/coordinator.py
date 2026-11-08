@@ -710,6 +710,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         new_device = False
         hosts = await self._async_update_hosts_info()
+        self._mesh_topology_raw = None
 
         if not self.fritz_status.device_has_mesh_support or (
             self._options

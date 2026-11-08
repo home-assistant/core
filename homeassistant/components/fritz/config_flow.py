@@ -86,7 +86,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._port: int | None = None
         self._username: str = ""
         self._model: str = ""
-        self._allow_mesh_info_non_admin: bool = DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN
 
     async def async_fritz_tools_init(self) -> str | None:
         """Initialize FRITZ!Box Tools class."""
@@ -172,7 +171,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
                 CONF_OLD_DISCOVERY: DEFAULT_CONF_OLD_DISCOVERY,
                 CONF_FEATURE_DEVICE_TRACKING: self._feature_device_discovery,
-                CONF_ALLOW_MESH_INFO_NON_ADMIN: self._allow_mesh_info_non_admin,
+                CONF_ALLOW_MESH_INFO_NON_ADMIN: DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN,
             },
         )
 

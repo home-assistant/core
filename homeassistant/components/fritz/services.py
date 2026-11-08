@@ -24,6 +24,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
     Unauthorized,
+    UnknownUser,
 )
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
@@ -168,16 +169,16 @@ async def _async_dial(service_call: ServiceCall) -> None:
 
 async def _async_get_mesh_info(service_call: ServiceCall) -> ServiceResponse:
     """Return the most recent mesh info for targeted config entry."""
-    _, target_entry = async_get_device_and_config_entry(
-        service_call.hass, DOMAIN, service_call.data["device_id"]
-    )
     hass = service_call.hass
-    user_id = service_call.context.user_id
-    if user_id is not None:
-        user = await hass.auth.async_get_user(user_id)
-        is_admin = user is not None and user.is_admin
-    else:
-        is_admin = True
+    _, target_entry = async_get_device_and_config_entry(
+        hass, DOMAIN, service_call.data["device_id"]
+    )
+
+    is_admin = True
+    if (user_id := service_call.context.user_id) is not None:
+        if (user := await hass.auth.async_get_user(user_id)) is None:
+            raise UnknownUser(context=service_call.context)  # pylint: disable=home-assistant-exception-not-translated
+        is_admin = user.is_admin
     allow_non_admin = target_entry.options.get(
         CONF_ALLOW_MESH_INFO_NON_ADMIN, DEFAULT_CONF_ALLOW_MESH_INFO_NON_ADMIN
     )
@@ -186,7 +187,6 @@ async def _async_get_mesh_info(service_call: ServiceCall) -> ServiceResponse:
         raise Unauthorized(
             context=service_call.context,
             permission="call_service",
-            user_id=service_call.context.user_id,
         )
 
     avm_wrapper = target_entry.runtime_data

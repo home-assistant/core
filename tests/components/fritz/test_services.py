@@ -552,24 +552,40 @@ async def test_get_mesh_info_non_admin_not_allowed(
         )
 
 
+@pytest.mark.parametrize(
+    ("allow_non_admin", "group_id"),
+    [
+        pytest.param(True, GROUP_ID_READ_ONLY, id="non_admin_allowed"),
+        pytest.param(False, GROUP_ID_ADMIN, id="admin_always_allowed"),
+        # No user simulates an automation or internal call.
+        pytest.param(False, None, id="internal_call_always_allowed"),
+    ],
+)
 @pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
-async def test_get_mesh_info_non_admin_allowed(
+async def test_get_mesh_info_allowed(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    allow_non_admin: bool,
+    group_id: str | None,
 ) -> None:
-    """Test that non-admin access to get_mesh_info succeeds if allowed."""
+    """Test get_mesh_info succeeds for permitted callers."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_USER_DATA,
-        options={CONF_ALLOW_MESH_INFO_NON_ADMIN: True},
+        options={CONF_ALLOW_MESH_INFO_NON_ADMIN: allow_non_admin},
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
-    read_only_group = await hass.auth.async_get_group(GROUP_ID_READ_ONLY)
-    non_admin_user = MockUser(groups=[read_only_group]).add_to_hass(hass)
+    user_id = (
+        MockUser(groups=[await hass.auth.async_get_group(group_id)])
+        .add_to_hass(hass)
+        .id
+        if group_id
+        else None
+    )
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
@@ -582,80 +598,7 @@ async def test_get_mesh_info_non_admin_allowed(
         {"device_id": device.id},
         blocking=True,
         return_response=True,
-        context=Context(user_id=non_admin_user.id),
-    )
-    assert result == {
-        "mesh_topology": MOCK_MESH_DATA,
-        "hosts_attributes": MOCK_HOST_ATTRIBUTES_DATA,
-    }
-
-
-@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
-async def test_get_mesh_info_admin_always_allowed(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test that admin users can always call get_mesh_info regardless of the option."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_USER_DATA,
-        options={CONF_ALLOW_MESH_INFO_NON_ADMIN: False},
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.LOADED
-
-    admin_group = await hass.auth.async_get_group(GROUP_ID_ADMIN)
-    admin_user = MockUser(groups=[admin_group]).add_to_hass(hass)
-
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
-    )
-    assert device
-
-    result = await hass.services.async_call(
-        DOMAIN,
-        FritzService.GET_MESH_INFO,
-        {"device_id": device.id},
-        blocking=True,
-        return_response=True,
-        context=Context(user_id=admin_user.id),
-    )
-    assert result == {
-        "mesh_topology": MOCK_MESH_DATA,
-        "hosts_attributes": MOCK_HOST_ATTRIBUTES_DATA,
-    }
-
-
-@pytest.mark.usefixtures("fc_class_mock", "fh_class_mock", "fs_class_mock")
-async def test_get_mesh_info_internal_call_always_allowed(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test that internal calls (no user_id) are always permitted."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_USER_DATA,
-        options={CONF_ALLOW_MESH_INFO_NON_ADMIN: False},
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.LOADED
-
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
-    )
-    assert device
-
-    # No context / no user_id simulates an automation or internal call.
-    result = await hass.services.async_call(
-        DOMAIN,
-        FritzService.GET_MESH_INFO,
-        {"device_id": device.id},
-        blocking=True,
-        return_response=True,
+        context=Context(user_id=user_id),
     )
     assert result == {
         "mesh_topology": MOCK_MESH_DATA,

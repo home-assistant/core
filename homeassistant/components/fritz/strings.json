@@ -36,7 +36,6 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "allow_mesh_info_non_admin": "[%key:component::fritz::common::data_description_allow_mesh_info_non_admin%]",
           "feature_device_tracking": "[%key:component::fritz::common::data_description_feature_device_tracking%]",
           "password": "[%key:component::fritz::common::data_description_password%]",
           "ssl": "[%key:component::fritz::common::data_description_ssl%]",
@@ -73,7 +72,6 @@
       },
       "user": {
         "data": {
-          "allow_mesh_info_non_admin": "[%key:component::fritz::common::data_allow_mesh_info_non_admin%]",
           "feature_device_tracking": "[%key:component::fritz::common::data_feature_device_tracking%]",
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -82,7 +80,6 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "allow_mesh_info_non_admin": "[%key:component::fritz::common::data_description_allow_mesh_info_non_admin%]",
           "feature_device_tracking": "[%key:component::fritz::common::data_description_feature_device_tracking%]",
           "host": "[%key:component::fritz::common::data_description_host%]",
           "password": "[%key:component::fritz::common::data_description_password%]",
@@ -207,9 +204,6 @@
     },
     "service_mesh_info_no_mesh_support": {
       "message": "The device does not support mesh networking."
-    },
-    "service_mesh_info_not_permitted": {
-      "message": "Non-admin users are not permitted to call the get mesh info service. An admin can allow this in the integration options."
     },
     "service_mesh_info_slave_node": {
       "message": "This device is a mesh satellite and cannot provide the mesh topology."
