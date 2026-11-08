@@ -13,7 +13,13 @@ from python_qube_heatpump import (
 
 from homeassistant.components import zeroconf
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -111,37 +117,26 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
         # The record also carries the panel version, which changes with a
         # firmware update; a changed version reloads the entry
         sw_version = _sw_version_data(device)
-        # The controller answers on each advertised IP and its mDNS hostname
-        controller_hosts = {_host_key(str(ip)) for ip in discovery_info.ip_addresses}
-        controller_hosts.add(_host_key(discovery_info.hostname))
 
-        entry = self.hass.config_entries.async_entry_for_domain_unique_id(
-            DOMAIN, device.uuid
-        )
-        if (
-            entry is not None
-            and _host_key(entry.data.get(CONF_HOST, "")) in controller_hosts
-        ):
-            # This controller under another of its names; keep that host
-            self._abort_if_unique_id_configured(updates=sw_version)
+        if entry := self._async_entry_of_controller(discovery_info, device.uuid):
+            # Keep the configured host. Entries created without mDNS adopt the
+            # uuid, unless another entry has it (two Qubes can share one).
+            owner = self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, device.uuid
+            )
+            if self.hass.config_entries.async_update_entry(
+                entry,
+                unique_id=entry.unique_id or (None if owner else device.uuid),
+                data={**entry.data, **sw_version},
+            ) and entry.state in (
+                ConfigEntryState.LOADED,
+                ConfigEntryState.SETUP_RETRY,
+            ):
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return self.async_abort(reason="already_configured")
         if await self._async_uuid_of_other_qube(device.uuid, host):
             return self.async_abort(reason="already_configured")
         self._abort_if_unique_id_configured(updates={CONF_HOST: host, **sw_version})
-
-        # Entries created without mDNS have no unique id yet; adopt the one
-        # whose host is this controller
-        for entry in self._async_current_entries(include_ignore=False):
-            if (
-                entry.unique_id is None
-                and _host_key(entry.data[CONF_HOST]) in controller_hosts
-            ):
-                return self.async_update_reload_and_abort(
-                    entry,
-                    unique_id=device.uuid,
-                    data_updates=sw_version,
-                    reason="already_configured",
-                    reload_even_if_entry_is_unchanged=False,
-                )
 
         self._host = host
         self._device = device
@@ -199,6 +194,23 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(HOST_SCHEMA, entry.data),
             errors=errors,
         )
+
+    def _async_entry_of_controller(
+        self, discovery_info: ZeroconfServiceInfo, uuid: str
+    ) -> ConfigEntry | None:
+        """Return the entry configured on the announcing controller, if any.
+
+        An advertised IP identifies the controller. Every Qube announces the
+        same hostname and two can share a uuid, so the hostname only counts
+        when no entry uses one of the addresses. An entry keyed on another
+        uuid is a different controller.
+        """
+        addresses = {_host_key(str(ip)) for ip in discovery_info.ip_addresses}
+        entries = self._async_current_entries(include_ignore=False)
+        for names in (addresses, {_host_key(discovery_info.hostname)}):
+            if matched := [e for e in entries if _host_key(e.data[CONF_HOST]) in names]:
+                return next((e for e in matched if e.unique_id in (None, uuid)), None)
+        return None
 
     async def _async_uuid_of_other_qube(self, uuid: str, host: str) -> bool:
         """Return True when the entry keyed on ``uuid`` is another Qube.

@@ -15,11 +15,12 @@ from homeassistant.components.hr_energy_qube.const import (
     DOMAIN,
     MDNS_LOOKUP_TIMEOUT,
 )
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import DEVICE_INFO, async_shared_connections, setup_integration
@@ -425,16 +426,37 @@ async def test_zeroconf_updates_sw_version(
 
 
 @pytest.mark.parametrize(
-    ("other_host", "answering"),
+    ("other_host", "other_unique_id", "answering", "other_data"),
     [
-        pytest.param(None, ("192.168.5.100",), id="old_address_answers"),
-        pytest.param("192.168.5.208", (), id="address_of_other_entry"),
+        pytest.param(None, None, ("192.168.5.100",), None, id="old_address_answers"),
+        pytest.param(
+            "192.168.5.208",
+            None,
+            (),
+            {CONF_HOST: "192.168.5.208", CONF_PORT: 502, CONF_SW_VERSION: "4.1.00"},
+            id="address_of_other_entry",
+        ),
+        pytest.param(
+            "192.168.5.208",
+            "0001000000000002",
+            (),
+            {CONF_HOST: "192.168.5.208", CONF_PORT: 502},
+            id="address_of_entry_with_other_uuid",
+        ),
     ],
 )
 async def test_zeroconf_other_qube_with_the_same_uuid(
-    hass: HomeAssistant, other_host: str | None, answering: tuple[str, ...]
+    hass: HomeAssistant,
+    other_host: str | None,
+    other_unique_id: str | None,
+    answering: tuple[str, ...],
+    other_data: dict[str, Any] | None,
 ) -> None:
-    """Test an announcement from another Qube with the same uuid moves nothing."""
+    """Test an announcement from another Qube with the same uuid moves nothing.
+
+    An entry without a uuid on the announced address is that Qube and only
+    gets its panel version.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.5.100", CONF_PORT: 502},
@@ -442,9 +464,12 @@ async def test_zeroconf_other_qube_with_the_same_uuid(
     )
     entry.add_to_hass(hass)
     if other_host:
-        MockConfigEntry(
-            domain=DOMAIN, data={CONF_HOST: other_host, CONF_PORT: 502}
-        ).add_to_hass(hass)
+        other = MockConfigEntry(
+            domain=DOMAIN,
+            data={CONF_HOST: other_host, CONF_PORT: 502},
+            unique_id=other_unique_id,
+        )
+        other.add_to_hass(hass)
 
     with patch_answering_hosts(*answering):
         result = await hass.config_entries.flow.async_init(
@@ -454,9 +479,62 @@ async def test_zeroconf_other_qube_with_the_same_uuid(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data == {CONF_HOST: "192.168.5.100", CONF_PORT: 502}
+    if other_host:
+        assert other.data == other_data
+        assert other.unique_id == other_unique_id
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_hostname_shared_with_another_qube(hass: HomeAssistant) -> None:
+    """Test the shared hostname does not match while an entry has the address."""
+    by_name = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "qube.local", CONF_PORT: 502, CONF_SW_VERSION: "4.0.00"},
+        unique_id=DEVICE_INFO.uuid,
+    )
+    by_name.add_to_hass(hass)
+    by_address = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "192.168.5.208", CONF_PORT: 502}
+    )
+    by_address.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert by_name.data[CONF_SW_VERSION] == "4.0.00"
+    assert by_address.data[CONF_SW_VERSION] == "4.1.00"
+    assert by_address.unique_id is None
+
+
+async def test_zeroconf_new_version_reloads_entry(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a firmware update seen by discovery reloads the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.5.208", CONF_PORT: 502, CONF_SW_VERSION: "4.0.00"},
+        unique_id=DEVICE_INFO.uuid,
+    )
+    await setup_integration(hass, entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert entry.state is ConfigEntryState.LOADED
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "4.1.00"
+
+
 @pytest.mark.parametrize(
     "host",
     [
