@@ -14,7 +14,12 @@ from systembridgeconnector.exceptions import (
 from systembridgeconnector.models.modules import GetData, Module
 from systembridgeconnector.websocket_client import WebSocketClient
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -203,10 +208,18 @@ class SystemBridgeConfigFlow(
             return self.async_abort(reason="unknown")
 
         # Check if already configured
-        await self.async_set_unique_id(uuid)
+        entry = await self.async_set_unique_id(uuid)
         updates = {CONF_HOST: host}
         if (port := properties.get("port")) is not None:
             updates[CONF_PORT] = port
+        # The host announces itself on startup and wake. A changed host or
+        # port reloads the entry instead
+        if (
+            entry is not None
+            and entry.state is ConfigEntryState.LOADED
+            and entry.data == {**entry.data, **updates}
+        ):
+            entry.runtime_data.async_reconnect_now()
         self._abort_if_unique_id_configured(updates=updates)
 
         self._name = host

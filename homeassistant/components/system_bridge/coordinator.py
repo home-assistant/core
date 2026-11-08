@@ -28,7 +28,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -192,6 +192,17 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             "System Bridge WebSocket close",
         )
 
+    @callback
+    def async_reconnect_now(self) -> None:
+        """Reconnect without waiting out the backoff, as the host is back."""
+        self._reconnect_delay = UPDATE_INTERVAL
+        self._reconnect_after = None
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self.async_request_refresh(),
+            "System Bridge reconnect",
+        )
+
     async def _listen_for_data(self) -> None:
         """Listen for events from the WebSocket."""
         try:
@@ -249,7 +260,12 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 and (wait := self._reconnect_after - dt_util.utcnow()) > timedelta()
             ):
                 raise UpdateFailed(
-                    f"Waiting for {self.title} to sleep or shut down",
+                    translation_domain=DOMAIN,
+                    translation_key="waiting_for_sleep",
+                    translation_placeholders={
+                        "title": self.title,
+                        "host": self._host,
+                    },
                     retry_after=wait.total_seconds(),
                 )
             await self.check_websocket_connected()
@@ -295,7 +311,12 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                     self._reconnect_delay * 2, MAX_UPDATE_INTERVAL
                 )
                 raise UpdateFailed(
-                    f"Connection lost while registering for {self.title}",
+                    translation_domain=DOMAIN,
+                    translation_key="connection_lost",
+                    translation_placeholders={
+                        "title": self.title,
+                        "host": self._host,
+                    },
                     retry_after=self._reconnect_delay.total_seconds(),
                 )
 
