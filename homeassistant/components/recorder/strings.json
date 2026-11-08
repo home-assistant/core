@@ -41,7 +41,7 @@
       "description": "Retrieves history data for entities within a specific time period.",
       "fields": {
         "allow_truncation": {
-          "description": "Allow truncating the returned history if the number of records exceeds the maximum limit.",
+          "description": "Truncate the returned history to the first 1,000 records per entity instead of raising an error when the limit is exceeded.",
           "name": "Allow truncation"
         },
         "end_time": {
