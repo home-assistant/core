@@ -27,9 +27,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> N
         if (ns := entry.data.get(CONF_NO_SOLAR, False))
         else EnvoyOptions(0)
     )
-    s = f"{EnvoyOptions.V2_ACB_MODE.name} {EnvoyOptions.NO_SOLAR.name if ns else ''}"
+    option_names = [EnvoyOptions.V2_ACB_MODE.name]
+    if ns:
+        option_names.append(EnvoyOptions.NO_SOLAR.name)
+
     _LOGGER.debug(
-        "Using options: %s for Envoy %s", s, entry.data.get(CONF_NAME, entry.title)
+        "Using options: %s for Envoy %s", " ".join(option_names), entry.data[CONF_NAME]
     )
 
     session = async_create_clientsession(hass, verify_ssl=False)

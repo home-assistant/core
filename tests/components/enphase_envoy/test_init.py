@@ -1185,7 +1185,7 @@ async def test_init_no_solar(
     # load will fail as mock is incomplete
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
-    # verify class instantatiation was called with expected parameters
+    # verify class instantiation was called with expected parameters
     args, kwargs = mocked_envoy.call_args
     assert args[0] == "1.1.1.1"
     assert kwargs["envoy_options"] == EnvoyOptions.NO_SOLAR | EnvoyOptions.V2_ACB_MODE
@@ -1213,11 +1213,11 @@ async def test_init_no_solar(
     # load will fail as mock is incomplete
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
-    # verify class instantatiation was called with expected parameters
+    # verify class instantiation was called with expected parameters
     args, kwargs = mocked_envoy.call_args
     assert args[0] == "1.1.1.1"
     assert kwargs["envoy_options"] == EnvoyOptions.V2_ACB_MODE
     assert (
-        f"Using options: {EnvoyOptions.V2_ACB_MODE.name}  for Envoy Envoy 1234"
+        f"Using options: {EnvoyOptions.V2_ACB_MODE.name} for Envoy Envoy 1234"
         in caplog.text
     )

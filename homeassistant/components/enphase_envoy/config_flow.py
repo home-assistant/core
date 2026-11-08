@@ -98,8 +98,15 @@ async def validate_input(
     options = EnvoyOptions.V2_ACB_MODE | (
         EnvoyOptions.NO_SOLAR if no_solar_mode else EnvoyOptions(0)
     )
-    s = f"{EnvoyOptions.V2_ACB_MODE.name} {EnvoyOptions.NO_SOLAR.name if no_solar_mode else ''}"
-    _LOGGER.debug("Validating Envoy with host: %s and options: %s", host, s)
+    option_names = [EnvoyOptions.V2_ACB_MODE.name]
+    if no_solar_mode:
+        option_names.append(EnvoyOptions.NO_SOLAR.name)
+
+    _LOGGER.debug(
+        "Validating Envoy with host: %s and options: %s",
+        host,
+        " ".join(option_names),
+    )
 
     envoy = Envoy(
         host, async_get_clientsession(hass, verify_ssl=False), envoy_options=options

@@ -1248,7 +1248,7 @@ async def test_reconfigure_to_no_solar_on(
     assert config_entry.data[CONF_NO_SOLAR]
 
 
-async def test_reauth_manaual_token_switch_to_no_solar_on(
+async def test_reauth_manual_token_switch_to_no_solar_on(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
@@ -1359,7 +1359,7 @@ async def test_form_configure_no_solar_on(
     assert kwargs["envoy_options"] == EnvoyOptions.V2_ACB_MODE
 
     assert (
-        f"Validating Envoy with host: 1.1.1.1 and options: {EnvoyOptions.V2_ACB_MODE.name} "
+        f"Validating Envoy with host: 1.1.1.1 and options: {EnvoyOptions.V2_ACB_MODE.name}"
         in caplog.text
     )
 
@@ -1384,6 +1384,6 @@ async def test_form_configure_no_solar_on(
     assert kwargs["envoy_options"] == EnvoyOptions.V2_ACB_MODE
 
     assert (
-        f"Validating Envoy with host: 1.1.1.1 and options: {EnvoyOptions.V2_ACB_MODE.name} "
+        f"Validating Envoy with host: 1.1.1.1 and options: {EnvoyOptions.V2_ACB_MODE.name}"
         in caplog.text
     )
