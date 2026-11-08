@@ -45,7 +45,9 @@ PRESET_MODE_TO_PRESET: dict[int, str] = {
 HVAC_STATE_TO_HVAC_ACTION: dict[HvacState, HVACAction] = {
     HvacState.IDLE: HVACAction.IDLE,
     HvacState.HEATING: HVACAction.HEATING,
-    HvacState.OFF: HVACAction.OFF,
+    # Thermostats also report "off" when they're on but not heating, e.g. when
+    # the target is reached; the device is only off in the off mode
+    HvacState.OFF: HVACAction.IDLE,
 }
 
 
@@ -136,6 +138,8 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
         # During a holiday the heating state field carries the holiday mode
         if self.device.holiday_active or self.device.hvac_state is None:
             return None
+        if self.hvac_mode is HVACMode.OFF:
+            return HVACAction.OFF
         try:
             return HVAC_STATE_TO_HVAC_ACTION[HvacState(self.device.hvac_state)]
         except ValueError:

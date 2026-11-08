@@ -415,28 +415,31 @@ async def test_holiday_locks_controls(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("hvac_state", "hvac_action"),
+    ("preset_mode", "hvac_state", "hvac_action"),
     [
-        (0, HVACAction.IDLE),
-        (1, HVACAction.HEATING),
-        (2, HVACAction.OFF),
-        (7, None),
-        (None, None),
+        (PresetMode.MANUAL, 0, HVACAction.IDLE),
+        (PresetMode.MANUAL, 1, HVACAction.HEATING),
+        (PresetMode.MANUAL, 2, HVACAction.IDLE),
+        (PresetMode.MANUAL, 7, None),
+        (PresetMode.MANUAL, None, None),
+        (PresetMode.OFF, 0, HVACAction.OFF),
+        (PresetMode.OFF, 2, HVACAction.OFF),
     ],
 )
 async def test_hvac_action(
     hass: HomeAssistant,
     mock_fenix_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    preset_mode: PresetMode,
     hvac_state: int | None,
     hvac_action: HVACAction | None,
 ) -> None:
-    """Test the heating state is mapped to the HVAC action."""
+    """Test the heating state is idle unless the thermostat is off."""
     await _set_devices(
         hass,
         mock_fenix_client,
         freezer,
-        dataclasses.replace(DEVICE, hvac_state=hvac_state),
+        dataclasses.replace(DEVICE, preset_mode=preset_mode, hvac_state=hvac_state),
     )
 
     # Home Assistant omits the attribute when the action is unknown
