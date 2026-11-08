@@ -339,7 +339,7 @@
       "message": "The text-to-speech entity {entity_id} is not available."
     },
     "username_not_supported": {
-      "message": "Running this action as a given user requires Music Assistant server version {min_version} or later."
+      "message": "Running this action as a given user requires a newer Music Assistant server version."
     }
   },
   "issues": {

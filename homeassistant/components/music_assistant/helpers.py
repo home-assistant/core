@@ -15,7 +15,7 @@ from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import service
 
-from .const import DASHBOARD_ID_PREFIX, DOMAIN, IMPERSONATION_SERVER_VERSION
+from .const import DASHBOARD_ID_PREFIX, DOMAIN
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
@@ -90,7 +90,6 @@ def acting_user(
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="username_not_supported",
-                translation_placeholders={"min_version": IMPERSONATION_SERVER_VERSION},
             )
         return username
     return user_from_context(context) if supported else None
