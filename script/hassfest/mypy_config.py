@@ -51,6 +51,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
             "explicit-override",
             "ignore-without-code",
             "redundant-self",
+            "truthy-bool",
             "truthy-iterable",
         ]
     ),
