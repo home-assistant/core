@@ -217,8 +217,8 @@ async def test_remove_stale_device(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    active = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    active = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), mock_config_entry.entry_id
     )
     assert active is not None
     assert not await _remove_device(ws_client, active.id, mock_config_entry.entry_id)
