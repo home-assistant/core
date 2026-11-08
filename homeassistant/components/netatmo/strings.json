@@ -76,8 +76,8 @@
       }
     },
     "number": {
-      "temperature_offset": {
-        "name": "Temperature offset"
+      "true_temperature": {
+        "name": "True temperature"
       }
     },
     "select": {
@@ -166,6 +166,9 @@
     },
     "homes_unavailable": {
       "message": "Could not fetch the homes from the Netatmo API."
+    },
+    "measured_temperature_unknown": {
+      "message": "The current measured temperature for {name} is unknown, so it cannot be calibrated."
     },
     "missing_scopes": {
       "message": "The Netatmo token is missing the required scopes: {scopes}."

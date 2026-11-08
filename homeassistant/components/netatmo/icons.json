@@ -19,8 +19,8 @@
       }
     },
     "number": {
-      "temperature_offset": {
-        "default": "mdi:thermometer-plus"
+      "true_temperature": {
+        "default": "mdi:thermometer-check"
       }
     },
     "sensor": {
