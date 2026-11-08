@@ -23,6 +23,7 @@ from astroid import nodes
 from pylint.checkers import BaseChecker, utils
 from pylint.lint import PyLinter
 
+from pylint_home_assistant.helpers.ast_utils import get_flow_type
 from pylint_home_assistant.helpers.module_info import get_module_platform
 from pylint_home_assistant.helpers.translations import load_translations
 
@@ -255,39 +256,6 @@ def _find_enclosing_class(node: nodes.Call) -> nodes.ClassDef | None:
     return None
 
 
-def _get_flow_type(class_node: nodes.ClassDef) -> str | None:
-    """Determine flow type from a class definition."""
-    for base in class_node.bases:
-        match base:
-            case nodes.Name(name=name):
-                if "SubentryFlow" in name:
-                    return "subentry"
-                if "OptionsFlow" in name:
-                    return "options"
-                if "ConfigFlow" in name or name == "FlowHandler":
-                    return "config"
-            case nodes.Attribute(attrname=name):
-                if "SubentryFlow" in name:
-                    return "subentry"
-                if "OptionsFlow" in name:
-                    return "options"
-                if "ConfigFlow" in name or name == "FlowHandler":
-                    return "config"
-
-    try:
-        for ancestor in class_node.ancestors():
-            if "SubentryFlow" in ancestor.name:
-                return "subentry"
-            if "OptionsFlow" in ancestor.name:
-                return "options"
-            if "ConfigFlow" in ancestor.name:
-                return "config"
-    except _InferenceError:
-        pass
-
-    return None
-
-
 def _resolve_subentry_types(module: nodes.Module, handler_class_name: str) -> list[str]:
     """Resolve subentry type names for a handler class."""
     subentry_types: list[str] = []
@@ -295,7 +263,7 @@ def _resolve_subentry_types(module: nodes.Module, handler_class_name: str) -> li
     for node in module.body:
         if not isinstance(node, nodes.ClassDef):
             continue
-        if _get_flow_type(node) != "config":
+        if get_flow_type(node) != "config":
             continue
 
         for method in node.mymethods():
@@ -383,7 +351,7 @@ class ConfigFlowTranslationsChecker(BaseChecker):
         if class_node is None:
             return
 
-        flow_type = _get_flow_type(class_node)
+        flow_type = get_flow_type(class_node)
 
         if flow_type == "config":
             self._check_flow(

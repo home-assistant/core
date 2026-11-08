@@ -176,6 +176,7 @@ Every check has a code following the
 | `W7454` | [`home-assistant-sequential-add-entities`](#w7454-home-assistant-sequential-add-entities) | Sequential `async_add_entities` calls should be grouped |
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
+| `W7464` | [`home-assistant-use-reauth-reconfigure-entry-helper`](#w7464-home-assistant-use-reauth-reconfigure-entry-helper) | Reauth and reconfigure steps should use `self._get_reauth_entry()` / `self._get_reconfigure_entry()` |
 
 ## `home_assistant_logger` checker
 
@@ -1526,6 +1527,27 @@ Check the `step_id` parameter for all calls to `async_show_form`,
 `async_external_step`, `async_show_progress` and `async_show_menu`.
 The `step_id` parameter should be same as the method it is in.
 For example: `step_id="user"` should be used in `async_step_user`
+
+## `home_assistant_reauth_reconfigure_entry_helper` checker
+
+Detects reauth and reconfigure steps of a config flow that look up their
+config entry from the flow context.
+
+### `W7464`: `home-assistant-use-reauth-reconfigure-entry-helper`
+
+In `async_step_reauth*` and `async_step_reconfigure*` methods of a config flow,
+use `self._get_reauth_entry()` or `self._get_reconfigure_entry()` instead of
+passing `self.context["entry_id"]` to `hass.config_entries.async_get_entry` or
+`async_get_known_entry`. The helpers return the entry without an `Optional`
+and raise if the flow was not started for reauth or reconfigure.
+
+```python
+# Bad
+entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+
+# Good
+entry = self._get_reauth_entry()
+```
 
 
 ## `home_assistant_flow_start_helpers` checker
