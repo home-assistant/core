@@ -1,6 +1,6 @@
 """Music Assistant select platform."""
 
-from typing import Final, override
+from typing import TYPE_CHECKING, Final, override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.dsp import DSPConfig, DSPConfigPreset
@@ -38,7 +38,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Music Assistant Select Entities (Player Options) from Config Entry."""
     mass = entry.runtime_data.mass
-    assert mass.server_info  # for type checking
+    if TYPE_CHECKING:
+        assert mass.server_info is not None
     # older servers drop the preset when DSP is switched, so they get no preset select
     dsp_presets: list[DSPConfigPreset] | None = (
         await mass.config.get_dsp_preset()
