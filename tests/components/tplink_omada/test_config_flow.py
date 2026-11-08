@@ -13,7 +13,10 @@ from tplink_omada_client.exceptions import (
 )
 
 from homeassistant.components.tplink_omada.config_flow import create_omada_client
-from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.components.tplink_omada.const import (
+    CONF_SHOW_ONLY_ADOPTED_DEVICES,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -55,6 +58,7 @@ async def test_form_single_site(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Omada Controller (Display Name)"
     assert result["data"] == MOCK_ENTRY_DATA
+    assert result["options"] == {CONF_SHOW_ONLY_ADOPTED_DEVICES: True}
     assert result["result"].unique_id == "12345_SiteId"
     assert len(mock_setup_entry.mock_calls) == 1
 

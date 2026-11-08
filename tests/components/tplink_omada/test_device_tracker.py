@@ -9,7 +9,10 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client.clients import OmadaConnectedClient
 
-from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.components.tplink_omada.const import (
+    CONF_SHOW_ONLY_ADOPTED_DEVICES,
+    DOMAIN,
+)
 from homeassistant.components.tplink_omada.coordinator import POLL_CLIENTS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -70,6 +73,31 @@ async def test_device_scanner_created(
     entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity == snapshot
+
+
+async def test_adopted_devices_only_detaches_client_tracker(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Keep the tracker settings while removing its client device."""
+    entity_id = "device_tracker.banana"
+    tracker = entity_registry.async_get(entity_id)
+    assert tracker is not None
+    device_id = tracker.device_id
+    assert device_id is not None
+
+    hass.config_entries.async_update_entry(
+        init_integration, options={CONF_SHOW_ONLY_ADOPTED_DEVICES: True}
+    )
+    assert await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    tracker = entity_registry.async_get(entity_id)
+    assert tracker is not None
+    assert tracker.device_id is None
+    assert device_registry.async_get(device_id) is None
 
 
 async def test_device_scanner_update_to_away_nulls_properties(

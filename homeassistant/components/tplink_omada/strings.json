@@ -1,4 +1,17 @@
 {
+  "options": {
+    "step": {
+      "init": {
+        "title": "Omada device tracking",
+        "data": {
+          "show_only_adopted_devices": "Show only adopted Omada devices"
+        },
+        "data_description": {
+          "show_only_adopted_devices": "Stop tracking Wi-Fi clients for this site. Automations using their presence will lose updates while this is enabled."
+        }
+      }
+    }
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",

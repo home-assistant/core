@@ -15,17 +15,23 @@ from tplink_omada_client.exceptions import (
     OmadaClientException,
     UnsupportedControllerVersion,
 )
+import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
 )
 
-from .const import DOMAIN
+from .const import CONF_SHOW_ONLY_ADOPTED_DEVICES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,10 +97,42 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> HubInfo:
     return HubInfo(controller_id, name, sites)
 
 
+class OmadaOptionsFlow(OptionsFlowWithReload):
+    """Configure client tracking for the Omada site."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure whether Wi-Fi clients appear as devices."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="", data={**self.config_entry.options, **user_input}
+            )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_SHOW_ONLY_ADOPTED_DEVICES,
+                        default=self.config_entry.options.get(
+                            CONF_SHOW_ONLY_ADOPTED_DEVICES, False
+                        ),
+                    ): bool
+                }
+            ),
+        )
+
+
 class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TP-Link Omada."""
 
     VERSION = 2
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OmadaOptionsFlow:
+        """Get the options flow for the site."""
+        return OmadaOptionsFlow()
 
     def __init__(self) -> None:
         """Create the config flow for a new integration."""
@@ -159,7 +197,11 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
         ).name
         display_name = f"{self._controller_name} ({site_name})"
 
-        return self.async_create_entry(title=display_name, data=self._omada_opts)
+        return self.async_create_entry(
+            title=display_name,
+            data=self._omada_opts,
+            options={CONF_SHOW_ONLY_ADOPTED_DEVICES: True},
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
