@@ -104,6 +104,9 @@ class AuthPhase:
                 await process_wrong_login(self._request)
                 raise Disconnect
 
+            self._hass.auth.async_log_access_token_usage(
+                refresh_token, self._request.remote
+            )
             conn = ActiveConnection(
                 self._logger,
                 self._hass,

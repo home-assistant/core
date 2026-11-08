@@ -15,7 +15,6 @@ from pytrafikverket import (
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -33,6 +32,7 @@ from homeassistant.helpers.selector import (
     TimeSelector,
 )
 
+from . import TVTrainConfigEntry
 from .const import CONF_FILTER_PRODUCT, CONF_FROM, CONF_TIME, CONF_TO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,7 +108,7 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TVTrainConfigEntry,
     ) -> TVTrainOptionsFlowHandler:
         """Get the options flow for this handler."""
         return TVTrainOptionsFlowHandler()

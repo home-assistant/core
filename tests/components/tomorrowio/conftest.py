@@ -1,6 +1,7 @@
 """Configure py.test."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
@@ -35,5 +36,12 @@ def tomorrowio_config_entry_update_fixture() -> Generator[AsyncMock]:
         ) as mock_num_api_requests,
     ):
         mock_max_requests_per_day.return_value = 100
-        mock_num_api_requests.return_value = 2
+        # Like the library, the request count is 0 until a call has been made
+        mock_num_api_requests.return_value = 0
+
+        def _update(*args: Any, **kwargs: Any) -> dict[str, Any]:
+            mock_num_api_requests.return_value = 2
+            return mock_update.return_value
+
+        mock_update.side_effect = _update
         yield mock_update

@@ -78,6 +78,7 @@ from .utils import (
     get_http_port,
     get_rpc_device_wakeup_period,
     get_rpc_ws_url,
+    get_shelly_manufacturer,
     get_shelly_model_name,
     is_rpc_ble_scanner_supported,
     update_device_fw_info,
@@ -103,6 +104,13 @@ class ShellyEntryData:
 
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
+
+# Components whose config changes only affect entity state, so they are
+# refreshed on config_changed instead of reloading the entry
+RPC_CONFIG_UPDATERS: dict[str, Callable[[RpcDevice], Coroutine[Any, Any, None]]] = {
+    "plugs_ui": lambda device: device.update_plugs_ui_config(),
+    "powerstrip_ui": lambda device: device.update_powerstrip_ui_config(),
+}
 
 
 class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
@@ -193,7 +201,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             name=self.name,
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
             identifiers={(DOMAIN, self.mac)},
-            manufacturer="Shelly",
+            manufacturer=get_shelly_manufacturer(self.device),
             model=self.model_name,
             model_id=self.model,
             sw_version=self.sw_version,
@@ -551,6 +559,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._ota_reboot_deadline: datetime | None = None
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._connect_task: asyncio.Task | None = None
+        self._initialized_callbacks: list[CALLBACK_TYPE] = []
 
     @cached_property
     def bluetooth_source(self) -> str:
@@ -597,6 +606,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         return True
 
     @callback
+    def async_on_initialized(self, initialized_callback: CALLBACK_TYPE) -> None:
+        """Run a callback once, the next time the device is initialized."""
+        self._initialized_callbacks.append(initialized_callback)
+
+    @callback
     def async_subscribe_ota_events(
         self, ota_event_callback: Callable[[dict[str, Any]], None]
     ) -> CALLBACK_TYPE:
@@ -635,6 +649,20 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
         return _unsubscribe
 
+    async def _async_update_component_config(self, component: str) -> None:
+        """Fetch the changed component config and update entities."""
+        try:
+            await RPC_CONFIG_UPDATERS[component](self.device)
+        except (DeviceConnectionError, RpcCallError) as err:
+            LOGGER.debug(
+                "Error updating %s config for %s: %s", component, self.name, err
+            )
+            return
+        except InvalidAuthError:
+            await self.async_shutdown_device_and_start_reauth()
+            return
+        self.async_update_listeners()
+
     @callback
     def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:
         """Handle device events."""
@@ -652,8 +680,13 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             for event_callback in self._event_listeners:
                 event_callback(event)
 
-            # Plug LED settings do not change any entity, so they need no reload
-            if event_type == "config_changed" and component == "plugs_ui":
+            if event_type == "config_changed" and component in RPC_CONFIG_UPDATERS:
+                self.config_entry.async_create_background_task(
+                    self.hass,
+                    self._async_update_component_config(component),
+                    "rpc device component config update",
+                    eager_start=True,
+                )
                 continue
 
             if event_type in ("component_added", "component_removed", "config_changed"):
@@ -848,6 +881,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self.config_entry.async_create_background_task(
                 self.hass, self._async_connected(), "rpc device init", eager_start=True
             )
+            for initialized_callback in self._initialized_callbacks:
+                initialized_callback()
+            self._initialized_callbacks.clear()
             # Make sure entities are marked available
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.DISCONNECTED:
