@@ -170,7 +170,6 @@ class _DeviceInfoMapping:
 
     def __getitem__(self, key: str) -> Any:
         """Return the value of a set field."""
-        raise TypeError("Probe: DeviceInfo mapping access (__getitem__)")
         # Also backs `.get()`, `dict()` and `**device_info` unpacking
         if key in self._field_set:
             value = getattr(self, key)
@@ -180,7 +179,6 @@ class _DeviceInfoMapping:
 
     def __setitem__(self, key: str, value: Any) -> None:
         """Set the value of a field."""
-        raise TypeError("Probe: DeviceInfo mapping access (__setitem__)")
         # Integrations fill a device info in after building it
         if key not in self._field_set:
             raise KeyError(f"'{key}' is not a valid {type(self).__name__} field")
@@ -191,7 +189,6 @@ class _DeviceInfoMapping:
 
     def __contains__(self, key: object) -> bool:
         """Return if a field is set."""
-        raise TypeError("Probe: DeviceInfo mapping access (__contains__)")
         # Integrations test for a field: `"name" in device_info`
         return (
             isinstance(key, str)
@@ -219,12 +216,11 @@ class _DeviceInfoMapping:
     def __repr__(self) -> str:
         """Return the representation, listing the set fields only."""
         # The generated repr would spell out Undefined for every unset field
-        set_fields = ", ".join(f"{key}={value!r}" for key, value in self.as_dict().items())
+        set_fields = ", ".join(f"{key}={value!r}" for key, value in self.items())
         return f"{type(self).__name__}({set_fields})"
 
     def keys(self) -> tuple[str, ...]:
         """Return the names of the set fields."""
-        raise TypeError("Probe: DeviceInfo mapping access (keys)")
         # Required, together with __getitem__, for `**device_info` unpacking
         return tuple(
             key for key in self._field_names if getattr(self, key) is not Undefined
@@ -232,7 +228,6 @@ class _DeviceInfoMapping:
 
     def items(self) -> tuple[tuple[str, Any], ...]:
         """Return the set fields as key-value pairs."""
-        raise TypeError("Probe: DeviceInfo mapping access (items)")
         return tuple(self.as_dict().items())
 
     def as_dict(self) -> dict[str, Any]:
@@ -248,14 +243,12 @@ class _DeviceInfoMapping:
 
     def get(self, key: str, default: Any = None) -> Any:
         """Return the value of a field, or default if the field is not set."""
-        raise TypeError("Probe: DeviceInfo mapping access (get)")
         if key in self._field_set and (value := getattr(self, key)) is not Undefined:
             return value
         return default
 
     def update(self, other: _DeviceInfoLike) -> None:
         """Set the fields another device info or mapping has set."""
-        raise TypeError("Probe: DeviceInfo mapping access (update)")
         # Integrations merge fields in with `device_info.update(...)`
         for key, value in other.items():
             self[key] = value
@@ -336,6 +329,19 @@ class ChildDeviceInfo(_DeviceInfoMapping):
     suggested_area: str | Undefined | None = Undefined
     translation_key: str | Undefined | None = Undefined
     translation_placeholders: Mapping[str, str] | Undefined | None = Undefined
+
+
+def _probe_mapping_access(name: str) -> Any:
+    """Return a method refusing dict-style access, to find its remaining users."""
+
+    def refuse(*args: Any, **kwargs: Any) -> Any:
+        raise TypeError(f"Probe: DeviceInfo mapping access ({name})")
+
+    return refuse
+
+
+for _name in ("__getitem__", "__setitem__", "__contains__", "keys", "get", "update"):
+    setattr(_DeviceInfoMapping, _name, _probe_mapping_access(_name))
 
 
 class _EventDeviceRegistryUpdatedData_Create(TypedDict):
