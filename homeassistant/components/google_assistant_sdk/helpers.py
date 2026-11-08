@@ -194,8 +194,8 @@ class GoogleAssistantSDKAudioView(HomeAssistantView):
     """Google Assistant SDK view to serve audio responses."""
 
     requires_auth = True
-    url = "/api/google_assistant_sdk/audio/{filename}"
-    name = "api:google_assistant_sdk:audio"
+    url = f"/api/{DOMAIN}/audio/{{filename}}"
+    name = f"api:{DOMAIN}:audio"
 
     def __init__(self, mem_storage: InMemoryStorage) -> None:
         """Initialize GoogleAssistantSDKView."""
