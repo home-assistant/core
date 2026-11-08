@@ -46,8 +46,9 @@ class NetatmoRoomTrueTemperatureNumber(NetatmoRoomEntity, RestoreNumber):
     offset, in the `offset` attribute, for use in your own templates or
     automations. Nothing is sent to the thermostat, valve, or Netatmo's cloud.
 
-    Until calibrated, it tracks the room's measured temperature so it starts
-    from a sensible value.
+    Once calibrated, it keeps tracking the room's measured temperature plus
+    that offset, so it reflects the corrected temperature as the room's
+    reading changes rather than freezing at the value you entered.
     """
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -59,7 +60,7 @@ class NetatmoRoomTrueTemperatureNumber(NetatmoRoomEntity, RestoreNumber):
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_mode = NumberMode.BOX
     _attr_native_value: float | None = None
-    _calibrated = False
+    _offset: float | None = None
 
     def __init__(self, room: NetatmoRoom) -> None:
         """Initialize the number entity."""
@@ -82,26 +83,26 @@ class NetatmoRoomTrueTemperatureNumber(NetatmoRoomEntity, RestoreNumber):
         """Entity created."""
         await super().async_added_to_hass()
 
-        if (
-            last_data := await self.async_get_last_number_data()
-        ) is not None and last_data.native_value is not None:
-            self._attr_native_value = last_data.native_value
-            self._calibrated = True
-
         if (last_state := await self.async_get_last_state()) is not None and (
             offset := last_state.attributes.get(ATTR_OFFSET)
         ) is not None:
+            self._offset = offset
             self._attr_extra_state_attributes[ATTR_OFFSET] = offset
 
-        self.async_write_ha_state()
+        self.async_update_callback()
 
     @callback
     @override
     def async_update_callback(self) -> None:
-        """Track the room's measured temperature until it has been calibrated."""
-        if not self._calibrated:
-            self._attr_native_value = self.device.therm_measured_temperature
-            self.async_write_ha_state()
+        """Track the room's measured temperature, corrected by the offset once calibrated."""
+        measured_temperature = self.device.therm_measured_temperature
+        if measured_temperature is None:
+            return
+        if self._offset is not None:
+            self._attr_native_value = round(measured_temperature + self._offset, 1)
+        else:
+            self._attr_native_value = measured_temperature
+        self.async_write_ha_state()
 
     @override
     async def async_set_native_value(self, value: float) -> None:
@@ -114,9 +115,7 @@ class NetatmoRoomTrueTemperatureNumber(NetatmoRoomEntity, RestoreNumber):
                 translation_placeholders={"name": self.device.name},
             )
 
-        self._attr_extra_state_attributes[ATTR_OFFSET] = round(
-            value - measured_temperature, 1
-        )
+        self._offset = round(value - measured_temperature, 1)
+        self._attr_extra_state_attributes[ATTR_OFFSET] = self._offset
         self._attr_native_value = value
-        self._calibrated = True
         self.async_write_ha_state()

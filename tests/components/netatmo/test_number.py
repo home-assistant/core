@@ -4,10 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    mock_restore_cache_with_extra_data,
-)
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netatmo.coordinator import HOME
@@ -16,7 +13,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform, UnitOfTemperature
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -79,11 +76,11 @@ async def test_true_temperature_default_and_calibrate(
     )
 
 
-async def test_true_temperature_tracks_measured_until_calibrated(
+async def test_true_temperature_tracks_corrected_measured_temperature(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test the entity keeps following the measured temperature until calibrated."""
+    """Test the entity keeps following the room's (corrected) measured temperature."""
     new_measured_temperature = 23.4
     apply_new_temperature = False
 
@@ -128,6 +125,25 @@ async def test_true_temperature_tracks_measured_until_calibrated(
     assert hass.states.get(TRUE_TEMPERATURE_ENTITY).state == str(
         new_measured_temperature
     )
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: TRUE_TEMPERATURE_ENTITY, ATTR_VALUE: 20.0},
+        blocking=True,
+    )
+    offset = round(20.0 - new_measured_temperature, 1)
+    assert hass.states.get(TRUE_TEMPERATURE_ENTITY).attributes["offset"] == offset
+
+    # The raw measured temperature changes again after calibration: the entity
+    # should keep tracking it, corrected by the stored offset, not freeze.
+    new_measured_temperature = 25.0
+    await data_handler.async_fetch_data(f"{HOME}-{HOME_ID}")
+
+    assert hass.states.get(TRUE_TEMPERATURE_ENTITY).state == str(
+        round(new_measured_temperature + offset, 1)
+    )
+    assert hass.states.get(TRUE_TEMPERATURE_ENTITY).attributes["offset"] == offset
 
 
 async def test_true_temperature_unknown_measured_temperature(
@@ -178,21 +194,10 @@ async def test_true_temperature_restored(
     config_entry: MockConfigEntry,
     netatmo_auth: AsyncMock,
 ) -> None:
-    """Test the entered temperature and computed offset are restored across restarts."""
-    mock_restore_cache_with_extra_data(
+    """Test the computed offset is restored and re-applied to the live measured temperature."""
+    mock_restore_cache(
         hass,
-        (
-            (
-                State(TRUE_TEMPERATURE_ENTITY, "20.0", attributes={"offset": -1.5}),
-                {
-                    "native_max_value": 40.0,
-                    "native_min_value": 0.0,
-                    "native_step": 0.1,
-                    "native_unit_of_measurement": UnitOfTemperature.CELSIUS,
-                    "native_value": 20.0,
-                },
-            ),
-        ),
+        (State(TRUE_TEMPERATURE_ENTITY, "20.0", attributes={"offset": -1.5}),),
     )
 
     with selected_platforms([Platform.NUMBER]):
@@ -200,5 +205,5 @@ async def test_true_temperature_restored(
         await hass.async_block_till_done()
 
     state = hass.states.get(TRUE_TEMPERATURE_ENTITY)
-    assert state.state == "20.0"
     assert state.attributes["offset"] == -1.5
+    assert state.state == str(round(LIVINGROOM_MEASURED_TEMPERATURE + -1.5, 1))
