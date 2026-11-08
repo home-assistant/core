@@ -401,26 +401,49 @@ async def test_legacy_notify_service_error(
     assert e.value.translation_placeholders == {"error": "Title is required"}
 
 
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client", "legacy_notify")
+async def test_legacy_notify_service_removed_on_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the legacy notify service is removed when the entry unloads."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(NOTIFY_DOMAIN, "system_bridge_hostname")
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.services.has_service(NOTIFY_DOMAIN, "system_bridge_hostname")
+
+
 @pytest.mark.usefixtures("mock_version", "legacy_notify")
-async def test_legacy_notify_service_unloaded(
+async def test_legacy_notify_service_reload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_websocket_client: AsyncMock,
 ) -> None:
-    """Test the legacy notify service doesn't use the connection after unload."""
+    """Test the legacy notify service uses the new connection after a reload."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
-    with pytest.raises(HomeAssistantError) as e:
-        await hass.services.async_call(
-            NOTIFY_DOMAIN,
-            "system_bridge_hostname",
-            {ATTR_MESSAGE: "World"},
-            blocking=True,
-        )
+    old_coordinator = mock_config_entry.runtime_data
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert e.value.translation_key == "entry_not_loaded"
-    assert e.value.translation_placeholders == {"entry_id": mock_config_entry.entry_id}
-    mock_websocket_client.send_notification.assert_not_awaited()
+    assert mock_config_entry.runtime_data is not old_coordinator
+    old_websocket_client = AsyncMock()
+    old_coordinator.websocket_client = old_websocket_client
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        "system_bridge_hostname",
+        {ATTR_MESSAGE: "World"},
+        blocking=True,
+    )
+
+    old_websocket_client.send_notification.assert_not_awaited()
+    mock_websocket_client.send_notification.assert_awaited_once()
