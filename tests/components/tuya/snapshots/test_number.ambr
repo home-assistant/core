@@ -1512,6 +1512,66 @@
     'state': '0.1',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.hps_illuminance_sensor_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 19.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'qcabsghrsph')]>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.hps_illuminance_sensor_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity',
+    'unique_id': 'tuya.qcabsghrsphsensitivity',
+    'unit_of_measurement': 'x',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.hps_illuminance_sensor_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HPS Illuminance Sensor Sensitivity',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 19.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'x',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.hps_illuminance_sensor_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.human_presence_office_far_detection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

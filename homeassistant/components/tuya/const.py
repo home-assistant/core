@@ -767,6 +767,7 @@ class DPCode(StrEnum):
     HUMIDITY_OUTDOOR_3 = "humidity_outdoor_3"  # Outdoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
+    ILLUMINANCE_VALUE = "illuminance_value"
     INSTALLATION_HEIGHT = "installation_height"
     INVERTER_OUTPUT_POWER = "inverter_output_power"
     IPC_AUTO_SIREN = "ipc_auto_siren"

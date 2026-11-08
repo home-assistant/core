@@ -49,6 +49,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    LIGHT_LUX,
     EntityCategory,
     UnitOfDensity,
     UnitOfElectricCurrent,
@@ -770,6 +771,15 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         ),
         *BATTERY_SENSORS,
+    ),
+    DeviceCategory.HPS: (
+        TuyaSensorEntityDescription(
+            key=DPCode.ILLUMINANCE_VALUE,
+            translation_key="illuminance",
+            device_class=SensorDeviceClass.ILLUMINANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=LIGHT_LUX,
+        ),
     ),
     DeviceCategory.HWSB: (
         TuyaSensorEntityDescription(
