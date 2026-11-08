@@ -93,7 +93,7 @@ class LocalTodoOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose how to manage the categories."""
-        if not self._categories:
+        if not await self._async_known_categories():
             return await self.async_step_categories()
         return self.async_show_menu(
             step_id="init", menu_options=["categories", "rename_category"]
@@ -104,20 +104,21 @@ class LocalTodoOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Add and remove the categories of the To-do list."""
         errors: dict[str, str] = {}
+        known = await self._async_known_categories()
         if user_input is not None:
             stripped = (category.strip() for category in user_input[CONF_CATEGORIES])
             categories = list(dict.fromkeys(filter(None, stripped)))
             if any("," in category for category in categories):
                 errors[CONF_CATEGORIES] = "invalid_category"
             else:
-                removed = set(self._categories) - set(categories)
+                removed = set(known) - set(categories)
                 await self._async_change_categories(categories, dict.fromkeys(removed))
                 return self.async_create_entry(data={CONF_CATEGORIES: categories})
 
         return self.async_show_form(
             step_id="categories",
             data_schema=self.add_suggested_values_to_schema(
-                CATEGORIES_SCHEMA, user_input or self.config_entry.options
+                CATEGORIES_SCHEMA, user_input or {CONF_CATEGORIES: known}
             ),
             errors=errors,
         )
@@ -126,24 +127,27 @@ class LocalTodoOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Rename a category, keeping its items in it."""
-        categories = self._categories
+        known = await self._async_known_categories()
         errors: dict[str, str] = {}
         if user_input is not None:
             category = user_input[CONF_CATEGORY]
             new_name = user_input[CONF_NEW_NAME].strip()
             if not new_name or "," in new_name:
                 errors[CONF_NEW_NAME] = "invalid_category"
-            elif new_name != category and new_name in categories:
+            elif new_name != category and new_name in known:
                 errors[CONF_NEW_NAME] = "category_exists"
             else:
-                categories[categories.index(category)] = new_name
+                categories = [
+                    new_name if declared == category else declared
+                    for declared in self._categories
+                ]
                 await self._async_change_categories(categories, {category: new_name})
                 return self.async_create_entry(data={CONF_CATEGORIES: categories})
 
         schema = probatio.Schema(
             {
                 probatio.Required(CONF_CATEGORY): SelectSelector(
-                    SelectSelectorConfig(options=categories)
+                    SelectSelectorConfig(options=known)
                 ),
                 probatio.Required(CONF_NEW_NAME): TextSelector(),
             }
@@ -153,6 +157,18 @@ class LocalTodoOptionsFlow(OptionsFlow):
             data_schema=self.add_suggested_values_to_schema(schema, user_input),
             errors=errors,
         )
+
+    async def _async_known_categories(self) -> list[str]:
+        """Return the declared categories, then the other ones used by items."""
+        if self.config_entry.state is ConfigEntryState.LOADED and (
+            entity := self.config_entry.runtime_data.entity
+        ):
+            used = [item.category for item in entity.todo_items or () if item.category]
+        else:
+            used = await get_store(
+                self.hass, self.config_entry
+            ).async_get_item_categories()
+        return list(dict.fromkeys([*self._categories, *used]))
 
     async def _async_change_categories(
         self, categories: list[str], changes: Mapping[str, str | None]

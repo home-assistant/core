@@ -29,6 +29,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -1404,6 +1405,70 @@ async def _keep_entry_loaded(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Leave the entry loaded."""
+
+
+@pytest.mark.parametrize(
+    "prepare_entry",
+    [
+        pytest.param(_keep_entry_loaded, id="loaded"),
+        pytest.param(_unload_entry, id="not_loaded"),
+    ],
+)
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_options_offer_item_categories(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    prepare_entry: Callable[
+        [HomeAssistant, MockConfigEntry], Coroutine[Any, Any, None]
+    ],
+) -> None:
+    """Test categories used by items are offered even when they aren't declared."""
+    await prepare_entry(hass, config_entry)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "categories"}
+    )
+    schema = result["data_schema"].schema
+    suggested = next(iter(schema)).description["suggested_value"]
+    assert suggested == ["Fresh produce", "Grocery"]
+
+
+@pytest.mark.parametrize(
+    ("change_categories", "expected_options", "expected_categories"),
+    [
+        pytest.param(
+            _remove_fresh_produce,
+            ["Grocery", "Household"],
+            [[], ["Grocery"], []],
+            id="remove",
+        ),
+        pytest.param(
+            _rename_fresh_produce,
+            [],
+            [["Produce"], ["Grocery"], []],
+            id="rename",
+        ),
+    ],
+)
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_change_undeclared_category(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ws_get_items: WsGetItemsType,
+    change_categories: Callable[[HomeAssistant, str], Coroutine[Any, Any, None]],
+    expected_options: list[str],
+    expected_categories: list[list[str]],
+) -> None:
+    """Test a category only used by items can be renamed or removed."""
+    await change_categories(hass, config_entry.entry_id)
+
+    assert config_entry.options == {"categories": expected_options}
+    assert await _stored_categories(hass, config_entry) == expected_categories
 
 
 @pytest.mark.parametrize(

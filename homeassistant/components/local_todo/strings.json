@@ -35,7 +35,7 @@
           "categories": "Categories"
         },
         "data_description": {
-          "categories": "Categories available for the items of this list. Removing a category leaves its items without a category: to keep its items, use \"Rename a category\" instead."
+          "categories": "Categories available for the items of this list, including the ones already used by items. Removing a category leaves its items without a category: to keep its items, use \"Rename a category\" instead."
         },
         "description": "Define how the items of this to-do list can be grouped."
       },
