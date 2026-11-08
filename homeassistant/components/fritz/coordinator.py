@@ -23,9 +23,13 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import StateType
@@ -748,15 +752,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     self.mesh_wifi_uplink = True
 
                 if dr.format_mac(int_mac) == self.mac:
-                    try:
-                        self.mesh_role = MeshRoles(node["mesh_role"])
-                    except ValueError:
-                        LOGGER.debug(
-                            "Unsupported mesh role '%s' reported for %s",
-                            node["mesh_role"],
-                            node["device_name"],
-                        )
-                        self.mesh_role = MeshRoles.UNKNOWN
+                    self._async_update_mesh_role(node["mesh_role"])
 
         # second get all client devices
         for node in topology.get("nodes", []):
@@ -788,6 +784,33 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     new_device = True
 
         await self.async_send_signal_device_update(new_device)
+
+    @callback
+    def _async_update_mesh_role(self, reported_role: str) -> None:
+        """Update the mesh role of the box and raise an issue if it is unknown."""
+        try:
+            self.mesh_role = MeshRoles(reported_role)
+        except ValueError:
+            self.mesh_role = MeshRoles.UNKNOWN
+
+        issue_id = f"unknown_mesh_role_{self.config_entry.entry_id}"
+        if self.mesh_role is not MeshRoles.UNKNOWN:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            return
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="unknown_mesh_role",
+            translation_placeholders={
+                "title": self.config_entry.title,
+                "mesh_role": reported_role,
+                "firmware": self.current_firmware,
+            },
+        )
 
     async def async_trigger_firmware_update(self) -> bool:
         """Trigger firmware update."""

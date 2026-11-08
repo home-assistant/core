@@ -203,6 +203,12 @@
       "message": "Error while updating the data: {error}"
     }
   },
+  "issues": {
+    "unknown_mesh_role": {
+      "description": "The FRITZ!Box {title} (FRITZ!OS {firmware}) reports `{mesh_role}` as its own mesh role instead of master, repeater (slave) or none. This usually indicates a problem on the device itself, for example after a FRITZ!OS update.\n\nHome Assistant continues to set up all features for this device, but some of them, like device tracking of mesh clients, may not work as expected.\n\nTo resolve this:\n1. Open the FRITZ!Box user interface and check under **Home Network > Mesh** that the mesh overview shows this device with its expected role.\n2. Restart the FRITZ!Box.\n3. If the problem persists, check for a FRITZ!OS update or contact AVM support.\n\nThis issue is removed automatically once the FRITZ!Box reports a valid mesh role again.",
+      "title": "{title} reports an unknown mesh role"
+    }
+  },
   "options": {
     "step": {
       "init": {

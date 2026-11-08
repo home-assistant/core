@@ -43,7 +43,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from .conftest import FritzConnectionMock, FritzServiceMock
 from .const import (
@@ -184,20 +188,22 @@ async def test_no_connection(
 
 
 @pytest.mark.parametrize(
-    ("reported_role", "expected_role"),
+    ("reported_role", "expected_role", "issue_created"),
     [
-        pytest.param("master", MeshRoles.MASTER, id="master"),
-        pytest.param("unknown", MeshRoles.UNKNOWN, id="unknown"),
-        pytest.param("future_role", MeshRoles.UNKNOWN, id="unsupported"),
+        pytest.param("master", MeshRoles.MASTER, False, id="master"),
+        pytest.param("unknown", MeshRoles.UNKNOWN, True, id="unknown"),
+        pytest.param("future_role", MeshRoles.UNKNOWN, True, id="unsupported"),
     ],
 )
 async def test_mesh_role(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
     reported_role: str,
     expected_role: MeshRoles,
+    issue_created: bool,
 ) -> None:
     """Test mesh role of the box, including unknown and unsupported roles."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
@@ -212,6 +218,73 @@ async def test_mesh_role(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data.mesh_role is expected_role
+    assert (
+        issue_registry.async_get_issue(DOMAIN, f"unknown_mesh_role_{entry.entry_id}")
+        is not None
+    ) is issue_created
+
+
+async def test_unknown_mesh_role_issue(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test unknown mesh role issue is removed once a valid role is reported."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    issue_id = f"unknown_mesh_role_{entry.entry_id}"
+
+    mesh_data = deepcopy(MOCK_MESH_DATA)
+    mesh_data["nodes"][0]["mesh_role"] = "unknown"
+    fh_class_mock.get_mesh_topology.return_value = mesh_data
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+    assert issue.translation_placeholders == {
+        "title": entry.title,
+        "mesh_role": "unknown",
+        "firmware": "7.29",
+    }
+
+    fh_class_mock.get_mesh_topology.return_value = MOCK_MESH_DATA
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.runtime_data.mesh_role is MeshRoles.MASTER
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_unknown_mesh_role_issue_removed_with_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test unknown mesh role issue is removed together with the config entry."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    issue_id = f"unknown_mesh_role_{entry.entry_id}"
+
+    mesh_data = deepcopy(MOCK_MESH_DATA)
+    mesh_data["nodes"][0]["mesh_role"] = "unknown"
+    fh_class_mock.get_mesh_topology.return_value = mesh_data
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_no_software_version(

@@ -9,7 +9,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -95,3 +95,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> No
         hass.data.pop(FRITZ_DATA_KEY)
 
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> None:
+    """Remove FRITZ!Box Tools config entry."""
+    ir.async_delete_issue(hass, DOMAIN, f"unknown_mesh_role_{entry.entry_id}")
