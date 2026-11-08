@@ -1,6 +1,9 @@
 """Test slack notifications."""
 
-from unittest.mock import AsyncMock
+import errno
+import os
+from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -8,10 +11,11 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components import notify
 from homeassistant.components.slack import DOMAIN
+from homeassistant.components.slack.const import ATTR_FILE, ATTR_PATH
 from homeassistant.components.slack.notify import ATTR_THREAD_TS
 from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import CONF_DATA, TEAM_ID, mock_connection
 
@@ -135,3 +139,53 @@ async def test_invalid_message_data(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "invalid_message_data"
     mock_fn.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("error_no", "translation_key"),
+    [
+        pytest.param(errno.ENOENT, "os_read_not_found", id="not_found"),
+        pytest.param(errno.EACCES, "os_read_permission_denied", id="permission"),
+        pytest.param(errno.EISDIR, "os_read_is_directory", id="is_directory"),
+        pytest.param(errno.EIO, "os_read_error", id="fallback"),
+    ],
+)
+async def test_local_file_read_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    tmp_path: Path,
+    error_no: int,
+    translation_key: str,
+) -> None:
+    """Tests that a local file read error raises and uploads nothing."""
+    await _async_setup_notify_service(hass, aioclient_mock, CONF_DATA)
+    client = hass.config_entries.async_entries(DOMAIN)[0].runtime_data.client
+    client.conversations_list = AsyncMock(
+        return_value={"channels": [{"name": "test_channel", "id": "C1"}]}
+    )
+    client.files_upload_v2 = AsyncMock()
+    hass.config.allowlist_external_dirs = {str(tmp_path)}
+    file_path = str(tmp_path / "file.jpg")
+    Path(file_path).write_bytes(b"jpg")
+
+    with (
+        patch(
+            "homeassistant.components.slack.utils.aiofiles.open",
+            side_effect=OSError(error_no, os.strerror(error_no)),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            notify.DOMAIN,
+            SERVICE_NAME,
+            {
+                notify.ATTR_MESSAGE: "test",
+                notify.ATTR_DATA: {ATTR_FILE: {ATTR_PATH: file_path}},
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == "homeassistant"
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": file_path}
+    client.files_upload_v2.assert_not_called()
