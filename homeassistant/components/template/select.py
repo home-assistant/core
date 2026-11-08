@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass
 import logging
 from typing import TYPE_CHECKING, Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -13,7 +13,7 @@ from homeassistant.components.select import (
     SelectEntityCapabilityAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_OPTIONS, CONF_STATE
+from homeassistant.const import CONF_NAME, CONF_OPTIONS, CONF_STATE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -23,8 +23,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
-from .const import DOMAIN
+from . import validators as tcv
+from .const import DEFAULT_NAMES, DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -43,15 +44,15 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SELECT_OPTION = "select_option"
 
-DEFAULT_NAME = "Template Select"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.SELECT]
 
 SCRIPT_FIELDS = (CONF_SELECT_OPTION,)
 
-SELECT_COMMON_SCHEMA = vol.Schema(
+SELECT_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS): cv.template,
-        vol.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_STATE): cv.template,
+        probatio.Required(CONF_OPTIONS): cv.template,
+        probatio.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_STATE): cv.template,
     }
 )
 

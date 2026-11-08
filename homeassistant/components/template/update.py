@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.update import (
     DEVICE_CLASSES_SCHEMA,
@@ -14,7 +14,7 @@ from homeassistant.components.update import (
     UpdateEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -24,8 +24,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
-from .const import DOMAIN
+from . import validators as tcv
+from .const import DEFAULT_NAMES, DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -41,7 +42,7 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Template Update"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.UPDATE]
 
 ATTR_BACKUP = "backup"
 ATTR_SPECIFIC_VERSION = "specific_version"
@@ -59,19 +60,19 @@ CONF_UPDATE_PERCENTAGE = "update_percentage"
 
 SCRIPT_FIELDS = (CONF_INSTALL,)
 
-UPDATE_COMMON_SCHEMA = vol.Schema(
+UPDATE_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_BACKUP, default=False): cv.boolean,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_IN_PROGRESS): cv.template,
-        vol.Optional(CONF_INSTALL): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_INSTALLED_VERSION): cv.template,
-        vol.Required(CONF_LATEST_VERSION): cv.template,
-        vol.Optional(CONF_RELEASE_SUMMARY): cv.template,
-        vol.Optional(CONF_RELEASE_URL): cv.template,
-        vol.Optional(CONF_SPECIFIC_VERSION, default=False): cv.boolean,
-        vol.Optional(CONF_TITLE): cv.template,
-        vol.Optional(CONF_UPDATE_PERCENTAGE): cv.template,
+        probatio.Optional(CONF_BACKUP, default=False): cv.boolean,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_IN_PROGRESS): cv.template,
+        probatio.Optional(CONF_INSTALL): cv.SCRIPT_SCHEMA,
+        probatio.Required(CONF_INSTALLED_VERSION): cv.template,
+        probatio.Required(CONF_LATEST_VERSION): cv.template,
+        probatio.Optional(CONF_RELEASE_SUMMARY): cv.template,
+        probatio.Optional(CONF_RELEASE_URL): cv.template,
+        probatio.Optional(CONF_SPECIFIC_VERSION, default=False): cv.boolean,
+        probatio.Optional(CONF_TITLE): cv.template,
+        probatio.Optional(CONF_UPDATE_PERCENTAGE): cv.template,
     }
 )
 

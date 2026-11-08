@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.powerfox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -13,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import MOCK_DIRECT_HOST
-
-from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=MOCK_DIRECT_HOST,

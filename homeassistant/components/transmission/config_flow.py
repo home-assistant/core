@@ -3,22 +3,20 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from transmission_rpc.error import (
     TransmissionAuthError,
     TransmissionConnectError,
     TransmissionError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PATH,
     CONF_PORT,
@@ -41,16 +39,17 @@ from .const import (
     MIN_REQUIRED_TRANSMISSION_VERSION,
     SUPPORTED_ORDER_MODES,
 )
+from .coordinator import TransmissionConfigEntry
 from .helpers import create_version
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PATH, default=DEFAULT_PATH): str,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PATH, default=DEFAULT_PATH): str,
+        probatio.Optional(CONF_USERNAME): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
@@ -65,7 +64,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TransmissionConfigEntry,
     ) -> TransmissionOptionsFlowHandler:
         """Get the options flow for this handler."""
         return TransmissionOptionsFlowHandler()
@@ -79,7 +78,10 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match(
-                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+                {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
             )
             try:
                 api = await get_api(self.hass, user_input)
@@ -138,20 +140,20 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             description_placeholders={
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
-                CONF_NAME: reauth_entry.title,
+                "username": reauth_entry.data[CONF_USERNAME],
+                "name": reauth_entry.title,
             },
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
         )
 
 
-class TransmissionOptionsFlowHandler(OptionsFlow):
+class TransmissionOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Transmission client options."""
 
     async def async_step_init(
@@ -162,14 +164,18 @@ class TransmissionOptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_LIMIT,
                 default=self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT),
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=500)),
-            vol.Optional(
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=500)),
+            probatio.Optional(
                 CONF_ORDER,
                 default=self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER),
-            ): vol.All(vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES.keys())),
+            ): probatio.All(
+                probatio.Coerce(str), probatio.In(SUPPORTED_ORDER_MODES.keys())
+            ),
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=probatio.Schema(options)
+        )

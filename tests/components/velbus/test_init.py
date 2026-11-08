@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from velbusaio.exceptions import VelbusConnectionFailed
 
@@ -20,8 +21,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
 from .const import PORT_TCP
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_connection_failed(
@@ -272,7 +271,7 @@ async def test_remove_config_entry_device(
     stale_device_after = device_registry.async_get(stale_device.id)
     assert (
         stale_device_after is None
-        or config_entry.entry_id not in stale_device_after.config_entries
+        or stale_device_after.config_entry_id != config_entry.entry_id
     )
 
 
@@ -305,7 +304,7 @@ async def test_remove_config_entry_device_detaches_subdevices(
 
     sub_device_after = device_registry.async_get(sub_device.id)
     assert sub_device_after is None or (
-        config_entry.entry_id not in sub_device_after.config_entries
+        sub_device_after.config_entry_id != config_entry.entry_id
         and sub_device_after.via_device_id is None
     )
 

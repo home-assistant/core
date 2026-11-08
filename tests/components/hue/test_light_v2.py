@@ -1,15 +1,14 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
 
+from typing import Any
 from unittest.mock import Mock
 
-from homeassistant.components.light import (
-    ATTR_EFFECT,
-    DOMAIN as LIGHT_DOMAIN,
-    ColorMode,
-)
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
+import pytest
+
+from homeassistant.components.light import ColorMode
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import color as color_util
 from homeassistant.util.json import JsonArrayType
 
@@ -248,27 +247,118 @@ async def test_light_turn_on_service(
     )
     assert mock_bridge_v2.mock_requests[9]["json"]["timed_effects"]["duration"] == 6000
 
-    # test enabling effect should ignore color temperature
-    await hass.services.async_call(
-        "light",
-        "turn_on",
-        {"entity_id": test_light_id, "effect": "candle", "color_temp_kelvin": 2000},
-        blocking=True,
-    )
-    assert len(mock_bridge_v2.mock_requests) == 11
-    assert mock_bridge_v2.mock_requests[10]["json"]["effects"]["effect"] == "candle"
-    assert "color_temperature" not in mock_bridge_v2.mock_requests[10]["json"]
 
-    # test enabling effect should ignore xy color
+@pytest.mark.parametrize(
+    ("entity_id", "resource_id", "effect_status", "service_data", "expected_json"),
+    [
+        pytest.param(
+            "light.hue_light_with_color_and_color_temperature_1",
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "no_effect",
+            {"effect": "candle", "xy_color": [0.123, 0.456]},
+            {
+                "on": {"on": True},
+                "color": {"xy": {"x": 0.123, "y": 0.456}},
+                "effects_v2": {
+                    "action": {
+                        "effect": "candle",
+                        "parameters": {"color": {"xy": {"x": 0.123, "y": 0.456}}},
+                    }
+                },
+            },
+            id="effect_with_xy_color",
+        ),
+        pytest.param(
+            "light.hue_light_with_color_and_color_temperature_1",
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "no_effect",
+            {"effect": "fire", "color_temp_kelvin": 2500},
+            {
+                "on": {"on": True},
+                "color_temperature": {"mirek": 400},
+                "effects_v2": {
+                    "action": {
+                        "effect": "fire",
+                        "parameters": {"color_temperature": {"mirek": 400}},
+                    }
+                },
+            },
+            id="effect_with_color_temp",
+        ),
+        pytest.param(
+            "light.hue_light_with_color_and_color_temperature_1",
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "no_effect",
+            {"effect": "candle"},
+            {"on": {"on": True}, "effects": {"effect": "candle"}},
+            id="effect_without_color",
+        ),
+        pytest.param(
+            "light.hue_light_with_color_and_color_temperature_1",
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "candle",
+            {"effect": "off", "xy_color": [0.123, 0.456]},
+            {
+                "on": {"on": True},
+                "color": {"xy": {"x": 0.123, "y": 0.456}},
+                "effects_v2": {
+                    "action": {
+                        "effect": "no_effect",
+                        "parameters": {"color": {"xy": {"x": 0.123, "y": 0.456}}},
+                    }
+                },
+            },
+            id="effect_off_with_xy_color",
+        ),
+        pytest.param(
+            "light.hue_light_with_color_and_color_temperature_1",
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "no_effect",
+            {"xy_color": [0.123, 0.456]},
+            {"on": {"on": True}, "color": {"xy": {"x": 0.123, "y": 0.456}}},
+            id="xy_color_without_effect",
+        ),
+        pytest.param(
+            "light.test_room_hue_light_with_color_temperature_only",
+            "3a6710fa-4474-4eba-b533-5e6e72968feb",
+            "no_effect",
+            {"effect": "sunrise", "color_temp_kelvin": 2500, "transition": 6},
+            {
+                "on": {"on": True},
+                "timed_effects": {"effect": "sunrise", "duration": 6000},
+            },
+            id="timed_effect_ignores_color_temp",
+        ),
+    ],
+)
+async def test_light_turn_on_effect(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    entity_id: str,
+    resource_id: str,
+    effect_status: str,
+    service_data: dict[str, Any],
+    expected_json: dict[str, Any],
+) -> None:
+    """Test the request sent when turning on a light with an effect and/or color."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {"id": resource_id, "type": "light", "effects": {"status": effect_status}},
+    )
+    await hass.async_block_till_done()
+
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": test_light_id, "effect": "candle", "xy_color": [0.123, 0.123]},
+        {"entity_id": entity_id, **service_data},
         blocking=True,
     )
-    assert len(mock_bridge_v2.mock_requests) == 12
-    assert mock_bridge_v2.mock_requests[11]["json"]["effects"]["effect"] == "candle"
-    assert "xy_color" not in mock_bridge_v2.mock_requests[11]["json"]
+
+    assert len(mock_bridge_v2.mock_requests) == 1
+    assert mock_bridge_v2.mock_requests[0]["json"] == expected_json
 
 
 async def test_light_turn_off_service(
@@ -1013,62 +1103,69 @@ async def test_grouped_lights(
         )
 
 
-async def test_light_turn_on_service_deprecation(
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("light.hue_light_with_color_and_color_temperature_1", id="light"),
+        pytest.param("light.test_zone", id="grouped_light"),
+    ],
+)
+async def test_light_with_zero_mirek(
     hass: HomeAssistant,
     mock_bridge_v2: Mock,
     v2_resources_test_data: JsonArrayType,
-    issue_registry: ir.IssueRegistry,
+    entity_id: str,
 ) -> None:
-    """Test calling the turn on service on a light."""
-    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    """Test lights don't crash when the bridge reports zero mirek values.
 
-    test_light_id = "light.test_room_hue_light_with_color_temperature_only"
-
-    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
-
-    event = {
-        "id": "3a6710fa-4474-4eba-b533-5e6e72968feb",
-        "type": "light",
-        "effects": {"status": "candle"},
-    }
-    mock_bridge_v2.api.emit_event("update", event)
-    await hass.async_block_till_done()
-
-    # test disable effect
-    # it should send a request with effect set to "no_effect"
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: test_light_id,
-            ATTR_EFFECT: "None",
-        },
-        blocking=True,
-    )
-    assert mock_bridge_v2.mock_requests[0]["json"]["effects"]["effect"] == "no_effect"
-
-
-async def test_light_with_zero_mirek(
-    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
-) -> None:
-    """Test light doesn't crash when bridge reports zero mirek values.
+    A light may report both a zeroed mirek schema and a zeroed current mirek,
+    each of which used to reach a mired -> kelvin conversion unguarded.
 
     Regression test for https://github.com/home-assistant/core/issues/116258
+    and https://github.com/home-assistant/core/issues/181168
     """
     # Patch the fixture data to have zero mirek values before loading
     for resource in v2_resources_test_data:
         if resource.get("type") == "light" and "color_temperature" in resource:
+            resource["color_temperature"]["mirek"] = 0
+            resource["color_temperature"]["mirek_valid"] = True
             resource["color_temperature"]["mirek_schema"]["mirek_minimum"] = 0
             resource["color_temperature"]["mirek_schema"]["mirek_maximum"] = 0
-            break
 
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
     # Should not raise ZeroDivisionError during setup
     await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
-    test_light = hass.states.get("light.hue_light_with_color_and_color_temperature_1")
+    test_light = hass.states.get(entity_id)
     assert test_light is not None
     # Should fall back to defaults instead of crashing
     assert test_light.attributes["max_color_temp_kelvin"] == 6535
     assert test_light.attributes["min_color_temp_kelvin"] == 2000
+    # A zeroed mirek is not a usable color temperature, so it is not reported
+    assert test_light.attributes["color_temp_kelvin"] is None
+
+
+async def test_light_with_null_mirek(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test a color temperature only light doesn't crash without a mirek value."""
+    for resource in v2_resources_test_data:
+        if resource["id"] == "3a6710fa-4474-4eba-b533-5e6e72968feb":
+            resource["on"]["on"] = True
+            resource["color_temperature"]["mirek"] = None
+            resource["color_temperature"]["mirek_valid"] = False
+            break
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    test_light = hass.states.get(
+        "light.test_room_hue_light_with_color_temperature_only"
+    )
+    assert test_light is not None
+    assert test_light.state == "on"
+    assert test_light.attributes["color_mode"] == ColorMode.COLOR_TEMP
+    # Falls back instead of converting the missing mirek value
+    assert test_light.attributes["color_temp_kelvin"] == 5800

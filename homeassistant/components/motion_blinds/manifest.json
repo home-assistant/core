@@ -1,8 +1,10 @@
 {
   "domain": "motion_blinds",
   "name": "Motionblinds",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@starkillerOG"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["network"],
   "dhcp": [
     {
@@ -22,5 +24,5 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["motionblinds"],
-  "requirements": ["motionblinds==0.6.30"]
+  "requirements": ["motionblinds==0.6.31"]
 }

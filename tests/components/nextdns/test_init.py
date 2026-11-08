@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tenacity import RetryError
 
 from homeassistant.components.nextdns.const import (
@@ -21,8 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(
@@ -147,9 +146,10 @@ async def test_migrate_entry_v1_to_v2(
         (DOMAIN, "xyz12"), mock_config_entry_v1.entry_id
     )
     assert device is not None
-    assert device.config_entries_subentries == {
-        mock_config_entry_v1.entry_id: {subentry.subentry_id}
-    }
+    assert (device.config_entry_id, device.config_subentry_id) == (
+        mock_config_entry_v1.entry_id,
+        subentry.subentry_id,
+    )
 
     # Verify entity was migrated and linked to subentry
     entity_entry = entity_registry.async_get("sensor.nextdns_xyz12_dns_queries")
@@ -240,13 +240,13 @@ async def test_migrate_entry_v1_to_v2_merge_same_api_key(
         (DOMAIN, "abc11"), entry1.entry_id
     )
     assert device_abc is not None
-    assert entry1.entry_id in device_abc.config_entries
+    assert device_abc.config_entry_id == entry1.entry_id
 
     device_def = device_registry.async_get_device_by_identifier(
         (DOMAIN, "def22"), entry1.entry_id
     )
     assert device_def is not None
-    assert entry1.entry_id in device_def.config_entries
+    assert device_def.config_entry_id == entry1.entry_id
 
     # Verify entities from both entries were migrated to entry1
     entity_entry_1 = entity_registry.async_get("sensor.nextdns_profile_one_dns_queries")

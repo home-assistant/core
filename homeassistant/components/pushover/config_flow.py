@@ -3,22 +3,22 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from pushover_complete import BadAPIRequestError, PushoverAPI
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_USER_KEY, DEFAULT_NAME, DOMAIN
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
         # Name field is no longer allowed in config flow schemas
         # pylint: disable-next=home-assistant-config-flow-name-field
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_USER_KEY): str,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+        probatio.Required(CONF_USER_KEY): str,
     }
 )
 
@@ -42,15 +42,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class PushBulletConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for pushover integration."""
 
-    _reauth_entry: ConfigEntry | None
-
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -58,8 +53,9 @@ class PushBulletConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
-        if user_input is not None and self._reauth_entry:
-            user_input = {**self._reauth_entry.data, **user_input}
+        if user_input is not None:
+            reauth_entry = self._get_reauth_entry()
+            user_input = {**reauth_entry.data, **user_input}
             self._async_abort_entries_match(
                 {
                     CONF_USER_KEY: user_input[CONF_USER_KEY],
@@ -69,16 +65,16 @@ class PushBulletConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await validate_input(self.hass, user_input)
             if not errors:
                 self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=user_input
+                    reauth_entry, data=user_input
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
             errors=errors,

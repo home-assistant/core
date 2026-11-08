@@ -9,11 +9,12 @@ from sofar_modbus.modern.device import SofarInverter
 from sofar_modbus.modern.enums import ChargerUseMode, EpsControlMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SofarConfigEntry
-from .entity import SofarEntity, SofarEntityDescription
+from .entity import SofarEntity, SofarEntityDescription, async_remove_unserved_entities
 
 PARALLEL_UPDATES = 1
 
@@ -28,6 +29,7 @@ class SofarSelectEntityDescription(SelectEntityDescription, SofarEntityDescripti
     """Describe a Sofar select entity."""
 
     options_enum: type[IntEnum]
+    value_fn: Callable[[SofarInverter], IntEnum | None]
     write_fn: Callable[[SofarInverter, int], Awaitable[None]]
 
 
@@ -38,7 +40,10 @@ SELECT_DESCRIPTIONS: tuple[SofarSelectEntityDescription, ...] = (
         translation_key="charger_use_mode",
         options=_enum_options(ChargerUseMode),
         options_enum=ChargerUseMode,
-        write_fn=lambda device, value: device.charger.write("charger_use_mode", value),
+        value_fn=lambda device: device.charger.charger_use_mode,
+        write_fn=lambda device, value: device.charger.async_write_mode(
+            ChargerUseMode(value)
+        ),
     ),
     SofarSelectEntityDescription(
         key="eps_control",
@@ -46,6 +51,7 @@ SELECT_DESCRIPTIONS: tuple[SofarSelectEntityDescription, ...] = (
         translation_key="eps_control",
         options=_enum_options(EpsControlMode),
         options_enum=EpsControlMode,
+        value_fn=lambda device: device.eps.eps_control,
         write_fn=lambda device, value: device.eps.async_write_control(
             EpsControlMode(value)
         ),
@@ -58,7 +64,8 @@ async def async_setup_entry(
     entry: SofarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Sofar Inverter Modbus select platform."""
+    """Set up the Sofar select platform."""
+    async_remove_unserved_entities(hass, entry, Platform.SELECT, SELECT_DESCRIPTIONS)
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
     async_add_entities(
@@ -77,8 +84,7 @@ class SofarSelect(SofarEntity, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Return the currently selected option."""
-        component = getattr(self.coordinator.device, self.entity_description.component)
-        value: IntEnum | None = getattr(component, self.entity_description.key)
+        value = self.entity_description.value_fn(self.coordinator.device)
         return value.name.lower() if value is not None else None
 
     @override

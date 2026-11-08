@@ -4,10 +4,8 @@ import logging
 
 from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.helpers import is_valid_warning_department
-from requests import RequestException
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import METEO_FRANCE_DATA, PLATFORMS
 from .coordinator import (
@@ -21,7 +19,7 @@ from .coordinator import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) -> None:
     """Set up a Meteo-France account from a config entry."""
     if (departments_with_alert := hass.data.get(METEO_FRANCE_DATA)) is None:
         departments_with_alert = hass.data[METEO_FRANCE_DATA] = set()
@@ -32,21 +30,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
     coordinator_rain = None
     coordinator_alert = None
 
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator_forecast.async_refresh()
-
-    if not coordinator_forecast.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator_forecast.async_config_entry_first_refresh()
 
     # Check rain forecast.
     coordinator_rain = MeteoFranceRainUpdateCoordinator(hass, entry, client)
-    try:
-        await coordinator_rain._async_refresh(log_failures=False)  # noqa: SLF001
-    except RequestException:
-        _LOGGER.warning(
-            "1 hour rain forecast not available: %s is not in covered zone",
-            entry.title,
-        )
+    await coordinator_rain._async_refresh(log_failures=False)  # noqa: SLF001
 
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(
@@ -85,8 +73,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
             entry.title,
         )
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
     if coordinator_rain and not coordinator_rain.last_update_success:
         coordinator_rain = None
     if coordinator_alert and not coordinator_alert.last_update_success:
@@ -99,12 +85,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: MeteoFranceConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     if entry.runtime_data.alert_coordinator:
         department = entry.runtime_data.forecast_coordinator.data.position.get("dept")
@@ -117,16 +101,6 @@ async def async_unload_entry(
             department,
         )
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        if not hass.data[METEO_FRANCE_DATA]:
-            hass.data.pop(METEO_FRANCE_DATA)
-
-    return unload_ok
-
-
-async def _async_update_listener(
-    hass: HomeAssistant, entry: MeteoFranceConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    if not hass.data[METEO_FRANCE_DATA]:
+        hass.data.pop(METEO_FRANCE_DATA)

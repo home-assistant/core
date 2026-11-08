@@ -3,13 +3,13 @@
   'Unable to import test_domain: bla'
 # ---
 # name: test_component_config_error_processing[exception_info_list1-bla-messages1-True-config_validation_err]
-  'Invalid config for integration test_domain at configuration.yaml, line 140: bla'
+  'Invalid config for integration test_domain at error_processing.yaml, line 6: bla'
 # ---
 # name: test_component_config_error_processing[exception_info_list2-bla at 'path'-messages2-False-config_validation_err]
-  "Invalid config for integration test_domain at configuration.yaml, line 140: bla at 'path'"
+  "Invalid config for integration test_domain at error_processing.yaml, line 5: bla at 'path'"
 # ---
 # name: test_component_config_error_processing[exception_info_list3-bla at 'path'-messages3-False-platform_config_validation_err]
-  "Invalid config for test_domain from integration test_domain at file configuration.yaml, line 140: bla at 'path'. Check the logs for more information"
+  "Invalid config for test_domain from integration test_domain at file error_processing.yaml, line 5: bla at 'path'. Check the logs for more information"
 # ---
 # name: test_component_config_error_processing[exception_info_list4-bla-messages4-False-platform_component_load_err]
   'Platform error: test_domain - bla'

@@ -5,15 +5,16 @@ import logging
 from typing import Any, override
 
 from azure.eventhub.exceptions import EventHubError
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
 
+from . import AzureEventHubConfigEntry
 from .client import AzureEventHubClient
 from .const import (
     CONF_EVENT_HUB_CON_STRING,
@@ -33,30 +34,30 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-BASE_SCHEMA = vol.Schema(
+BASE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EVENT_HUB_INSTANCE_NAME): str,
-        vol.Optional(CONF_USE_CONN_STRING, default=False): bool,
+        probatio.Required(CONF_EVENT_HUB_INSTANCE_NAME): str,
+        probatio.Optional(CONF_USE_CONN_STRING, default=False): bool,
     }
 )
 
-CONN_STRING_SCHEMA = vol.Schema(
+CONN_STRING_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EVENT_HUB_CON_STRING): str,
+        probatio.Required(probatio.Secret(CONF_EVENT_HUB_CON_STRING)): str,
     }
 )
 
-SAS_SCHEMA = vol.Schema(
+SAS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EVENT_HUB_NAMESPACE): str,
-        vol.Required(CONF_EVENT_HUB_SAS_POLICY): str,
-        vol.Required(CONF_EVENT_HUB_SAS_KEY): str,
+        probatio.Required(CONF_EVENT_HUB_NAMESPACE): str,
+        probatio.Required(CONF_EVENT_HUB_SAS_POLICY): str,
+        probatio.Required(probatio.Secret(CONF_EVENT_HUB_SAS_KEY)): str,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_SEND_INTERVAL): int,
+        probatio.Required(CONF_SEND_INTERVAL): int,
     }
 )
 OPTIONS_FLOW = {
@@ -92,7 +93,7 @@ class AEHConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: AzureEventHubConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

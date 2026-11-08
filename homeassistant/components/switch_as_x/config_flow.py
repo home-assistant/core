@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_ENTITY_ID, Platform
 from homeassistant.helpers import entity_registry as er, selector
@@ -26,13 +26,15 @@ TARGET_DOMAIN_OPTIONS = [
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+                probatio.Required(CONF_ENTITY_ID): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=Platform.SWITCH),
                 ),
-                vol.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
-                vol.Required(CONF_TARGET_DOMAIN): selector.SelectSelector(
+                probatio.Optional(
+                    CONF_INVERT, default=False
+                ): selector.BooleanSelector(),
+                probatio.Required(CONF_TARGET_DOMAIN): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=TARGET_DOMAIN_OPTIONS, translation_key="target_domain"
                     ),
@@ -44,7 +46,7 @@ CONFIG_FLOW = {
 
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
-        vol.Schema({vol.Required(CONF_INVERT): selector.BooleanSelector()})
+        probatio.Schema({probatio.Required(CONF_INVERT): selector.BooleanSelector()})
     ),
 }
 

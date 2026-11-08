@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 from typing import override
 
 from homematicip.base.channel_event import ChannelEvent
@@ -15,6 +16,10 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import HomematicipGenericEntity
@@ -102,6 +107,7 @@ class HomematicipChannelEvent(HomematicipGenericEntity, EventEntity):
             use_description_name=description.is_multi_channel,
         )
         self.entity_description = description
+        self._channel_event_signal: str | None = None
         if description.is_multi_channel:
             self._attr_translation_placeholders = {"channel": str(channel.index)}
 
@@ -110,8 +116,21 @@ class HomematicipChannelEvent(HomematicipGenericEntity, EventEntity):
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        channel = self.get_channel_or_raise()
-        channel.add_on_channel_event_handler(self._async_handle_event)
+        # homematicip can't remove channel event handlers, so register a
+        # forwarder once and (un)subscribe the entity through the dispatcher.
+        if self._channel_event_signal is None:
+            self._channel_event_signal = (
+                f"homematicip_cloud_channel_event_{self.unique_id}"
+            )
+            channel = self.get_channel_or_raise()
+            channel.add_on_channel_event_handler(
+                partial(async_dispatcher_send, self.hass, self._channel_event_signal)
+            )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._channel_event_signal, self._async_handle_event
+            )
+        )
 
     @callback
     def _async_handle_event(self, *args, **kwargs) -> None:

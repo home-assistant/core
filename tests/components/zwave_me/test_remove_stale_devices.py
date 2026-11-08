@@ -4,14 +4,13 @@ from unittest.mock import patch
 import uuid
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zwave_me_ws import ZWaveMeData
 
 from homeassistant.components.zwave_me.const import DOMAIN, ZWaveMePlatform
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 DEFAULT_DEVICE_INFO = ZWaveMeData(
     id="DummyDevice",

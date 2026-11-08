@@ -9,7 +9,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
+from .const import DOMAIN
 from .device import async_create_device
 
 
@@ -134,7 +134,7 @@ class DemoSwitch(SwitchEntity):
                 name=device_name,
             )
             if via_device_id is not None:
-                self._attr_device_info["via_device_id"] = via_device_id
+                self._attr_device_info.via_device_id = via_device_id
         self._attr_name = entity_name
 
     @override

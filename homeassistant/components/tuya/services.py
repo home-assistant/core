@@ -3,12 +3,12 @@
 from enum import StrEnum
 from typing import Any
 
+import probatio
 from tuya_device_handlers.device_wrapper.service_feeder_schedule import (
     FeederSchedule,
     get_feeder_schedule_wrapper,
 )
 from tuya_sharing import CustomerDevice, Manager
-import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
@@ -19,12 +19,12 @@ from .const import DOMAIN
 
 DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
-FEEDING_ENTRY_SCHEMA = vol.Schema(
+FEEDING_ENTRY_SCHEMA = probatio.Schema(
     {
-        vol.Optional("days"): [vol.In(DAYS)],
-        vol.Required("time"): str,
-        vol.Required("portion"): int,
-        vol.Required("enabled"): bool,
+        probatio.Optional("days"): [probatio.In(DAYS)],
+        probatio.Required("time"): str,
+        probatio.Required("portion"): int,
+        probatio.Required("enabled"): bool,
     }
 )
 
@@ -137,9 +137,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         Service.GET_FEEDER_MEAL_PLAN,
         async_get_feeder_meal_plan,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): str,
+                probatio.Required(ATTR_DEVICE_ID): str,
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -149,10 +149,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         Service.SET_FEEDER_MEAL_PLAN,
         async_set_feeder_meal_plan,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): str,
-                vol.Required("meal_plan"): vol.All(
+                probatio.Required(ATTR_DEVICE_ID): str,
+                probatio.Required("meal_plan"): probatio.All(
                     list,
                     [FEEDING_ENTRY_SCHEMA],
                 ),

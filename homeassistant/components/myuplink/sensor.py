@@ -291,6 +291,8 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
             self.entity_description = entity_description
         else:
             self._attr_native_unit_of_measurement = device_point.parameter_unit
+        if device_point.category.lower() == "energy log":
+            self._attr_entity_registry_enabled_default = False
 
     @property
     @override

@@ -3,9 +3,9 @@
 import logging
 from typing import Any, override
 
+import probatio
 from tesla_wall_connector import WallConnector
 from tesla_wall_connector.exceptions import WallConnectorError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -45,9 +45,9 @@ class TeslaWallConnectorOptionsFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SPLIT_PHASE,
                         default=self.config_entry.options.get(
                             CONF_SPLIT_PHASE, DEFAULT_SPLIT_PHASE
@@ -129,8 +129,8 @@ class TeslaWallConnectorConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         self.context["title_placeholders"] = {
-            CONF_HOST: self.ip_address,
-            WALLCONNECTOR_SERIAL_NUMBER: serial_number,
+            "host": self.ip_address,
+            "serial_number": serial_number,
         }
         return await self.async_step_user()
 
@@ -139,10 +139,10 @@ class TeslaWallConnectorConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=self.ip_address): str,
-                vol.Optional(
+                probatio.Required(CONF_HOST, default=self.ip_address): str,
+                probatio.Optional(
                     CONF_SPLIT_PHASE, default=DEFAULT_SPLIT_PHASE
                 ): BooleanSelector(),
             }
@@ -176,5 +176,36 @@ class TeslaWallConnectorConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Wall Connector host."""
+        errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        data_schema = probatio.Schema({probatio.Required(CONF_HOST): str})
+
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except WallConnectorError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(info[WALLCONNECTOR_SERIAL_NUMBER])
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema, user_input or reconfigure_entry.data
+            ),
             errors=errors,
         )

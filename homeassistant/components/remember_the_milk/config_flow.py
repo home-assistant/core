@@ -5,11 +5,10 @@ from collections.abc import Mapping
 from typing import Any, override
 
 from aiortm import AioRTMClient, AioRTMError, Auth, AuthError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -25,16 +24,16 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_LIST_ID, CONF_SHARED_SECRET, DOMAIN, LOGGER, SUBENTRY_TYPE_LIST
-from .coordinator import RememberTheMilkData
+from .coordinator import RememberTheMilkConfigEntry, RememberTheMilkData
 
 TOKEN_TIMEOUT_SEC = 30
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Required(CONF_SHARED_SECRET): TextSelector(
+        probatio.Required(probatio.Secret(CONF_SHARED_SECRET)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -49,7 +48,7 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
     @classmethod
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: RememberTheMilkConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_LIST: ListSubentryFlowHandler}
@@ -186,7 +185,7 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
             )
         return await self.async_step_user()
 
@@ -263,7 +262,7 @@ class ListSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_NAME): TextSelector()}),
+            data_schema=probatio.Schema({probatio.Required(CONF_NAME): TextSelector()}),
             errors=errors,
         )
 
@@ -299,7 +298,7 @@ class ListSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_NAME): TextSelector()}),
+                probatio.Schema({probatio.Required(CONF_NAME): TextSelector()}),
                 {CONF_NAME: subentry.title},
             ),
             errors=errors,

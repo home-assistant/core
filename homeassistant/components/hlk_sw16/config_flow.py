@@ -5,7 +5,7 @@ from typing import Any, override
 
 from hlk_sw16 import create_hlk_sw16_connection
 from hlk_sw16.protocol import SW16Client
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -20,10 +20,10 @@ from .const import (
 )
 from .errors import CannotConnect
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
+        probatio.Required(CONF_HOST): str,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Coerce(int),
     }
 )
 
@@ -73,7 +73,15 @@ class SW16FlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
-        return await self.async_step_user(import_data)
+        self._async_abort_entries_match(
+            {CONF_HOST: import_data[CONF_HOST], CONF_PORT: import_data[CONF_PORT]}
+        )
+        try:
+            await validate_input(self.hass, import_data)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        address = f"{import_data[CONF_HOST]}:{import_data[CONF_PORT]}"
+        return self.async_create_entry(title=address, data=import_data)
 
     @override
     async def async_step_user(
@@ -87,10 +95,11 @@ class SW16FlowHandler(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await validate_input(self.hass, user_input)
-                address = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-                return self.async_create_entry(title=address, data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            else:
+                address = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+                return self.async_create_entry(title=address, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

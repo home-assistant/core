@@ -12,8 +12,10 @@ from pyblu import Input, Player, Preset, Status, SyncStatus
 from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ class BluesoundData:
 type BluesoundConfigEntry = ConfigEntry[BluesoundRuntimeData]
 
 
-def cancel_task(task: asyncio.Task) -> Callable[[], Coroutine[None, None, None]]:
+def cancel_task(task: asyncio.Task[None]) -> Callable[[], Coroutine[None, None, None]]:
     """Cancel a task."""
 
     async def _cancel_task() -> None:
@@ -79,9 +81,16 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
 
     @override
     async def _async_setup(self) -> None:
-        preset = await self.player.presets()
-        inputs = await self.player.inputs()
-        status = await self.player.status()
+        try:
+            preset = await self.player.presets()
+            inputs = await self.player.inputs()
+            status = await self.player.status()
+        except PlayerUnreachableError as ex:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="player_unreachable",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
 
         self.async_set_updated_data(
             BluesoundData(
@@ -114,6 +123,14 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
     async def _async_update_data(self) -> BluesoundData:
         return self.data
 
+    @override
+    @callback
+    def async_set_updated_data(self, data: BluesoundData) -> None:
+        # The polling loops bypass _async_refresh, which normally logs recovery.
+        if not self.last_update_success:
+            self.logger.info("Fetching %s data recovered", self.name)
+        super().async_set_updated_data(data)
+
     async def _poll_presets_and_inputs_loop(self) -> None:
         while True:
             await asyncio.sleep(PRESET_AND_INPUTS_INTERVAL.total_seconds())
@@ -129,8 +146,6 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
                 )
             except PlayerUnreachableError as ex:
                 self.async_set_update_error(ex)
-            except asyncio.CancelledError:
-                return
             except Exception as ex:  # noqa: BLE001 - this loop should never stop
                 self.async_set_update_error(ex)
 
@@ -150,8 +165,6 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
             except PlayerUnreachableError as ex:
                 self.async_set_update_error(ex)
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT.total_seconds())
-            except asyncio.CancelledError:
-                return
             except Exception as ex:  # noqa: BLE001 - this loop should never stop
                 self.async_set_update_error(ex)
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT.total_seconds())
@@ -172,8 +185,6 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
             except PlayerUnreachableError as ex:
                 self.async_set_update_error(ex)
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT.total_seconds())
-            except asyncio.CancelledError:
-                raise
             except Exception as ex:  # noqa: BLE001 - this loop should never stop
                 self.async_set_update_error(ex)
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT.total_seconds())

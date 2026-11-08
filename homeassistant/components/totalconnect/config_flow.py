@@ -3,23 +3,21 @@
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from total_connect_client.client import TotalConnectClient
 from total_connect_client.exceptions import AuthenticationError
-import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_LOCATION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.typing import VolDictType
 
 from .const import AUTO_BYPASS, CODE_REQUIRED, CONF_USERCODES, DOMAIN
+from .coordinator import TotalConnectConfigEntry
 
-PASSWORD_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+PASSWORD_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 
 class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -63,8 +61,11 @@ class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.client = client
                 return await self.async_step_locations()
 
-        data_schema = vol.Schema(
-            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+        data_schema = probatio.Schema(
+            {
+                probatio.Required(CONF_USERNAME): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+            }
         )
 
         return self.async_show_form(
@@ -116,14 +117,14 @@ class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             if self.usercodes[location_id] is None:
                 location_for_user = str(location_id)
                 location_codes[
-                    vol.Required(
+                    probatio.Required(
                         CONF_USERCODES,
                         default="0000",
                     )
                 ] = str
                 break
 
-        data_schema = vol.Schema(location_codes)
+        data_schema = probatio.Schema(location_codes)
         return self.async_show_form(
             step_id="locations",
             data_schema=data_schema,
@@ -186,7 +187,7 @@ class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TotalConnectConfigEntry,
     ) -> TotalConnectOptionsFlowHandler:
         """Get options flow."""
         return TotalConnectOptionsFlowHandler()
@@ -204,13 +205,13 @@ class TotalConnectOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         AUTO_BYPASS,
                         default=self.config_entry.options.get(AUTO_BYPASS, False),
                     ): bool,
-                    vol.Required(
+                    probatio.Required(
                         CODE_REQUIRED,
                         default=self.config_entry.options.get(CODE_REQUIRED, False),
                     ): bool,

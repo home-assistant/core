@@ -25,6 +25,7 @@ from aioimmich.server.models import (
 from aioimmich.tags.models import ImmichTag
 from aioimmich.users.models import ImmichUserObject
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.immich.const import DOMAIN
 from homeassistant.components.media_source import PlayMedia
@@ -48,14 +49,12 @@ from .const import (
     MOCK_TAGS_ASSETS,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.immich.async_setup_entry", return_value=True
+        "homeassistant.components.immich.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -74,6 +73,7 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="e7ef5713-9dab-4bd4-b899-715b0ca4379e",
         title="Someone",
+        entry_id="01JIMMICH00000000000000000",
     )
 
 

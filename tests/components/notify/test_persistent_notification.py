@@ -1,11 +1,11 @@
 """The tests for the notify.persistent_notification service."""
 
+from pytest_homeassistant.common import async_get_persistent_notifications
+
 from homeassistant.components import notify
 from homeassistant.components.persistent_notification import DOMAIN as PN_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_get_persistent_notifications
 
 
 async def test_async_send_message(hass: HomeAssistant) -> None:

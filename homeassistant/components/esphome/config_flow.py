@@ -20,7 +20,7 @@ from aioesphomeapi import (
     wifi_mac_to_bluetooth_mac,
 )
 import aiohttp
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import BluetoothScanningMode
@@ -29,7 +29,6 @@ from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -102,8 +101,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reauth_entry: ConfigEntry
-    _reconfig_entry: ConfigEntry
+    _reauth_entry: ESPHomeConfigEntry
+    _reconfig_entry: ESPHomeConfigEntry
 
     def __init__(self) -> None:
         """Initialize flow."""
@@ -118,7 +117,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # The ESPHome name as per its config
         self._device_name: str | None = None
         self._device_mac: str | None = None
-        self._entry_with_name_conflict: ConfigEntry | None = None
+        self._entry_with_name_conflict: ESPHomeConfigEntry | None = None
 
     async def _async_step_user_base(
         self, user_input: dict[str, Any] | None = None, error: str | None = None
@@ -129,8 +128,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._async_try_fetch_device_info()
 
         fields: dict[Any, type] = OrderedDict()
-        fields[vol.Required(CONF_HOST, default=self._host or vol.UNDEFINED)] = str
-        fields[vol.Optional(CONF_PORT, default=self._port or DEFAULT_PORT)] = int
+        fields[
+            probatio.Required(CONF_HOST, default=self._host or probatio.UNDEFINED)
+        ] = str
+        fields[probatio.Optional(CONF_PORT, default=self._port or DEFAULT_PORT)] = int
 
         errors = {}
         if error is not None:
@@ -138,7 +139,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(fields),
+            data_schema=probatio.Schema(fields),
             errors=errors,
         )
 
@@ -235,7 +236,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_NOISE_PSK): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_NOISE_PSK): str}),
             errors=errors,
             description_placeholders={"name": self._async_get_human_readable_name()},
         )
@@ -659,7 +660,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_abort_wrong_device(
-        self, entry: ConfigEntry, expected_mac: str, actual_mac: str
+        self, entry: ESPHomeConfigEntry, expected_mac: str, actual_mac: str
     ) -> ConfigFlowResult:
         """Abort flow because a different device was found at the IP address."""
         assert self._host is not None
@@ -774,7 +775,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="encryption_key",
-            data_schema=vol.Schema({vol.Required(CONF_NOISE_PSK): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_NOISE_PSK): str}),
             errors=errors,
             description_placeholders={"name": self._async_get_human_readable_name()},
         )
@@ -782,7 +783,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_get_human_readable_name(self) -> str:
         """Return a human readable name for the entry."""
-        entry: ConfigEntry | None = None
+        entry: ESPHomeConfigEntry | None = None
         if self.source == SOURCE_REAUTH:
             entry = self._reauth_entry
         elif self.source == SOURCE_RECONFIGURE:
@@ -817,7 +818,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="authenticate",
-            data_schema=vol.Schema({vol.Required("password"): str}),
+            data_schema=probatio.Schema({probatio.Required("password"): str}),
             description_placeholders={"name": self._async_get_human_readable_name()},
             errors=errors,
         )
@@ -1017,27 +1018,27 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         options = self.config_entry.options
         schema: dict[Any, Any] = {
-            vol.Required(
+            probatio.Required(
                 CONF_ALLOW_SERVICE_CALLS,
                 default=options.get(
                     CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
                 ),
             ): bool,
-            vol.Required(
+            probatio.Required(
                 CONF_SUBSCRIBE_LOGS,
                 default=options.get(CONF_SUBSCRIBE_LOGS, False),
             ): bool,
         }
         if _entry_has_bluetooth_scanner(self.config_entry):
             schema[
-                vol.Required(
+                probatio.Required(
                     CONF_BLUETOOTH_SCANNING_MODE,
                     default=options.get(
                         CONF_BLUETOOTH_SCANNING_MODE, DEFAULT_BLUETOOTH_SCANNING_MODE
                     ),
                 )
             ] = _BLUETOOTH_SCANNING_MODE_SELECTOR
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))
+        return self.async_show_form(step_id="init", data_schema=probatio.Schema(schema))
 
 
 @callback

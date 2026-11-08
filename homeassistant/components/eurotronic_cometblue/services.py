@@ -1,10 +1,11 @@
 """Comet Blue services."""
 
 from datetime import time, timedelta
+from enum import StrEnum
 import logging
 from typing import Final, TypedDict, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_TEMPERATURE
@@ -27,7 +28,6 @@ from .entity import CometBlueBluetoothEntity
 LOGGER = logging.getLogger(__name__)
 
 
-ATTR_SCHEDULE: Final = "schedule"
 ATTR_MONDAY: Final = "monday"
 ATTR_TUESDAY: Final = "tuesday"
 ATTR_WEDNESDAY: Final = "wednesday"
@@ -35,7 +35,6 @@ ATTR_THURSDAY: Final = "thursday"
 ATTR_FRIDAY: Final = "friday"
 ATTR_SATURDAY: Final = "saturday"
 ATTR_SUNDAY: Final = "sunday"
-ATTR_DATA: Final = "data"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
 ATTR_FROM: Final = "from"
@@ -51,6 +50,40 @@ ATTR_ALL_DAYS: Final = [
     ATTR_SUNDAY,
 ]
 
+
+class CometBlueService(StrEnum):
+    """Store keys for Eurotronic Comet Blue services."""
+
+    GET_SCHEDULE = "get_schedule"
+    SET_SCHEDULE = "set_schedule"
+    SET_HOLIDAY = "set_holiday"
+
+
+class CometBlueServiceArgument(StrEnum):
+    """Store keys for Eurotronic Comet Blue service arguments."""
+
+    MONDAY = "monday"
+    TUESDAY = "tuesday"
+    WEDNESDAY = "wednesday"
+    THURSDAY = "thursday"
+    FRIDAY = "friday"
+    SATURDAY = "saturday"
+    SUNDAY = "sunday"
+    FROM = "from"
+    TO = "to"
+    TEMPERATURE = "temperature"
+
+
+_SCHEDULE_DAYS: Final = (
+    CometBlueServiceArgument.MONDAY,
+    CometBlueServiceArgument.TUESDAY,
+    CometBlueServiceArgument.WEDNESDAY,
+    CometBlueServiceArgument.THURSDAY,
+    CometBlueServiceArgument.FRIDAY,
+    CometBlueServiceArgument.SATURDAY,
+    CometBlueServiceArgument.SUNDAY,
+)
+
 ScheduleEntry = TypedDict(
     "ScheduleEntry",
     {
@@ -64,14 +97,13 @@ ScheduleEntry = TypedDict(
 def _validate_half_precision(value: float) -> float:
     """Return True if the value is a half precision float."""
 
-    try:
-        r = value % 0.5
-        if r != 0:
-            raise ServiceValidationError(
-                f"value {value} is not a half precision float, remainder is {r}"
-            )
-    except TypeError as err:
-        raise ServiceValidationError(f"value {value} is not a float") from err
+    r = value % 0.5
+    if r != 0:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_half_precision",
+            translation_placeholders={"value": str(value), "remainder": str(r)},
+        )
     return value
 
 
@@ -97,18 +129,32 @@ def _validate_cometblue_schedule(
         end = entry.get(ATTR_TO)
 
         if start is None or end is None:
-            raise ServiceValidationError("Missing from/to in entry")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_schedule_times",
+            )
 
         # Check if the start time of the current event is before the end time of the current event
         if start >= end:
             raise ServiceValidationError(
-                f"Invalid time range {i}, {start} is after {end}"
+                translation_domain=DOMAIN,
+                translation_key="invalid_schedule_time_range",
+                translation_placeholders={
+                    "index": str(i),
+                    "start": str(start),
+                    "end": str(end),
+                },
             )
 
         # Check if the from time of the event is after the to time of the previous event
         if previous_to is not None and previous_to > start:
             raise ServiceValidationError(
-                f"Overlapping times found in schedule, {start} is earlier than previous entry {previous_to} ends"
+                translation_domain=DOMAIN,
+                translation_key="overlapping_schedule_times",
+                translation_placeholders={
+                    "start": str(start),
+                    "previous_end": str(previous_to),
+                },
             )
 
         normalized_schedule[f"{ATTR_START}{i}"] = start
@@ -118,27 +164,27 @@ def _validate_cometblue_schedule(
     return normalized_schedule
 
 
-SCHEDULE_ENTRY_SCHEMA = vol.Schema(
+SCHEDULE_ENTRY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_FROM): cv.time,
-        vol.Optional(ATTR_TO): cv.time,
+        probatio.Optional(ATTR_FROM): cv.time,
+        probatio.Optional(ATTR_TO): cv.time,
     },
-    extra=vol.REMOVE_EXTRA,
+    extra=probatio.REMOVE_EXTRA,
 )
-SCHEDULE_DAY_SCHEMA = vol.All(
+SCHEDULE_DAY_SCHEMA = probatio.All(
     [SCHEDULE_ENTRY_SCHEMA],
-    vol.Length(max=4),
+    probatio.Length(max=4),
     _validate_cometblue_schedule,
 )
 SERVICE_SCHEDULE_SCHEMA = {
-    vol.Optional(day): SCHEDULE_DAY_SCHEMA for day in ATTR_ALL_DAYS
+    probatio.Optional(day): SCHEDULE_DAY_SCHEMA for day in _SCHEDULE_DAYS
 }
 SERVICE_HOLIDAY_SCHEMA = {
-    vol.Required(ATTR_FROM): cv.datetime,
-    vol.Required(ATTR_TO): cv.datetime,
-    vol.Required(ATTR_TEMPERATURE): vol.All(
-        vol.Coerce(float),
-        vol.Range(min=MIN_TEMP, max=MAX_TEMP),
+    probatio.Required(CometBlueServiceArgument.FROM): cv.datetime,
+    probatio.Required(CometBlueServiceArgument.TO): cv.datetime,
+    probatio.Required(CometBlueServiceArgument.TEMPERATURE): probatio.All(
+        probatio.Coerce(float),
+        probatio.Range(min=MIN_TEMP, max=MAX_TEMP),
         _validate_half_precision,
     ),
 }
@@ -181,12 +227,12 @@ async def set_schedule(
     LOGGER.info(
         "Setting schedule for %s (%s) on days: %s",
         entity.entity_id,
-        entity.coordinator.device.device.address,
+        entity.coordinator.address,
         ", ".join(
-            day for day in ATTR_ALL_DAYS if service_call.data.get(day) is not None
+            day for day in _SCHEDULE_DAYS if service_call.data.get(day) is not None
         ),
     )
-    for day in ATTR_ALL_DAYS:
+    for day in _SCHEDULE_DAYS:
         LOGGER.debug(
             "Settings schedule for %s: %s",
             day,
@@ -195,7 +241,7 @@ async def set_schedule(
     values = {
         day: {k: v.strftime("%H:%M") for k, v in sched.items()}
         for day, sched in service_call.data.items()
-        if sched is not None and day in ATTR_ALL_DAYS
+        if sched is not None and day in _SCHEDULE_DAYS
     }
     await entity.coordinator.send_command(
         entity.coordinator.device.set_weekdays_async,
@@ -208,30 +254,33 @@ async def set_holiday(
 ) -> None:
     """Service call to update the holiday time on the device."""
     # ceil the start time to the next full hour
-    away_start = service_call.data[ATTR_FROM].replace(
+    away_start = service_call.data[CometBlueServiceArgument.FROM].replace(
         minute=0, second=0, microsecond=0
     ) + timedelta(hours=1)
 
     if away_start < dt_util.naive_now():
         raise ServiceValidationError(
-            "Start date (ceiled to next hour) must be in the future"
+            translation_domain=DOMAIN,
+            translation_key="holiday_start_not_future",
         )
 
     LOGGER.info(
         "Setting holiday for %s (%s) until %s with temperature %s",
         entity.entity_id,
-        entity.coordinator.device.device.address,
-        service_call.data[ATTR_TO],
-        service_call.data[ATTR_TEMPERATURE],
+        entity.coordinator.address,
+        service_call.data[CometBlueServiceArgument.TO],
+        service_call.data[CometBlueServiceArgument.TEMPERATURE],
     )
     await entity.coordinator.send_command(
         entity.coordinator.device.set_holiday_async,
         {
             "number": 1,
             "values": {
-                ATTR_START: service_call.data[ATTR_FROM],
-                ATTR_END: service_call.data[ATTR_TO],
-                ATTR_TEMPERATURE: service_call.data[ATTR_TEMPERATURE],
+                ATTR_START: service_call.data[CometBlueServiceArgument.FROM],
+                ATTR_END: service_call.data[CometBlueServiceArgument.TO],
+                ATTR_TEMPERATURE: service_call.data[
+                    CometBlueServiceArgument.TEMPERATURE
+                ],
             },
         },
     )
@@ -244,7 +293,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "get_schedule",
+        CometBlueService.GET_SCHEDULE,
         entity_domain=CLIMATE_DOMAIN,
         schema=None,
         supports_response=SupportsResponse.ONLY,
@@ -253,7 +302,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "set_schedule",
+        CometBlueService.SET_SCHEDULE,
         entity_domain=CLIMATE_DOMAIN,
         schema=cv.make_entity_service_schema(SERVICE_SCHEDULE_SCHEMA),
         supports_response=SupportsResponse.NONE,
@@ -262,7 +311,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        "set_holiday",
+        CometBlueService.SET_HOLIDAY,
         entity_domain=CLIMATE_DOMAIN,
         schema=cv.make_entity_service_schema(SERVICE_HOLIDAY_SCHEMA),
         supports_response=SupportsResponse.NONE,

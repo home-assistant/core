@@ -4,14 +4,13 @@ from typing import override
 
 from yarl import URL
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api import PterodactylData
+from .api import PterodactylGameServer, PterodactylGameServerData
 from .const import DOMAIN
-from .coordinator import PterodactylCoordinator
+from .coordinator import PterodactylConfigEntry, PterodactylCoordinator
 
 MANUFACTURER = "Pterodactyl"
 
@@ -24,21 +23,21 @@ class PterodactylEntity(CoordinatorEntity[PterodactylCoordinator]):
     def __init__(
         self,
         coordinator: PterodactylCoordinator,
-        identifier: str,
-        config_entry: ConfigEntry,
+        game_server: PterodactylGameServer,
+        config_entry: PterodactylConfigEntry,
     ) -> None:
         """Initialize base entity."""
         super().__init__(coordinator)
 
-        self.identifier = identifier
+        self.game_server = game_server
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, identifier)},
+            identifiers={(DOMAIN, game_server.identifier)},
             manufacturer=MANUFACTURER,
             name=self.game_server_data.name,
             model=self.game_server_data.name,
             model_id=self.game_server_data.uuid,
             configuration_url=str(
-                URL(config_entry.data[CONF_URL]) / "server" / identifier
+                URL(config_entry.data[CONF_URL]) / "server" / game_server.identifier
             ),
         )
 
@@ -46,9 +45,11 @@ class PterodactylEntity(CoordinatorEntity[PterodactylCoordinator]):
     @override
     def available(self) -> bool:
         """Return binary sensor availability."""
-        return super().available and self.identifier in self.coordinator.data
+        return (
+            super().available and self.game_server.identifier in self.coordinator.data
+        )
 
     @property
-    def game_server_data(self) -> PterodactylData:
+    def game_server_data(self) -> PterodactylGameServerData:
         """Return game server data."""
-        return self.coordinator.data[self.identifier]
+        return self.coordinator.data[self.game_server.identifier]

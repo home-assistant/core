@@ -7,7 +7,7 @@ from pathlib import Path
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 from homeassistant.util import package
 
 from . import util
@@ -24,6 +24,21 @@ from .network import Network, async_get_loaded_network, async_get_network
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = [
+    "DOMAIN",
+    "MDNS_TARGET_IP",
+    "Adapter",
+    "async_get_adapters",
+    "async_get_announce_addresses",
+    "async_get_enabled_source_ips",
+    "async_get_enabled_source_ips_from_adapters",
+    "async_get_ipv4_broadcast_addresses",
+    "async_get_loaded_adapters",
+    "async_get_source_ip",
+    "async_only_default_interface_enabled",
+    "async_reload_adapters",
+]
 
 
 def _check_docker_without_host_networking() -> bool:
@@ -51,8 +66,14 @@ def async_get_loaded_adapters(hass: HomeAssistant) -> list[Adapter]:
     return async_get_loaded_network(hass).adapters
 
 
+async def async_reload_adapters(hass: HomeAssistant) -> None:
+    """Reload the network adapters."""
+    network = await async_get_network(hass)
+    await network.async_reload_adapters()
+
+
 async def async_get_source_ip(
-    hass: HomeAssistant, target_ip: str | UndefinedType = UNDEFINED
+    hass: HomeAssistant, target_ip: str | Undefined = Undefined
 ) -> str:
     """Get the source ip for a target ip."""
     adapters = await async_get_adapters(hass)
@@ -61,7 +82,7 @@ async def async_get_source_ip(
         if adapter["enabled"] and (ipv4s := adapter["ipv4"]):
             all_ipv4s.extend([ipv4["address"] for ipv4 in ipv4s])
 
-    if target_ip is UNDEFINED:
+    if target_ip is Undefined:
         source_ip = (
             util.async_get_source_ip(PUBLIC_TARGET_IP)
             or util.async_get_source_ip(MDNS_TARGET_IP)
