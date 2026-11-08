@@ -748,7 +748,15 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     self.mesh_wifi_uplink = True
 
                 if dr.format_mac(int_mac) == self.mac:
-                    self.mesh_role = MeshRoles(node["mesh_role"])
+                    try:
+                        self.mesh_role = MeshRoles(node["mesh_role"])
+                    except ValueError:
+                        LOGGER.debug(
+                            "Unsupported mesh role '%s' reported for %s",
+                            node["mesh_role"],
+                            node["device_name"],
+                        )
+                        self.mesh_role = MeshRoles.UNKNOWN
 
         # second get all client devices
         for node in topology.get("nodes", []):

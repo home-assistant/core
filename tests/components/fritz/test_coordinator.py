@@ -23,6 +23,7 @@ from homeassistant.components.fritz.const import (
     DEFAULT_SSL,
     DOMAIN,
     SCAN_INTERVAL,
+    MeshRoles,
 )
 from homeassistant.components.fritz.coordinator import (
     FRITZ_DATA_KEY,
@@ -48,6 +49,7 @@ from .conftest import FritzConnectionMock, FritzServiceMock
 from .const import (
     MOCK_HOST_FRITZBOX,
     MOCK_HOST_PRINTER,
+    MOCK_MESH_DATA,
     MOCK_SERIAL_NUMBER,
     MOCK_STATUS_DEVICE_INFO_DATA,
     MOCK_USER_DATA,
@@ -179,6 +181,37 @@ async def test_no_connection(
             f"Unable to establish a connection with {MOCK_USER_DATA[CONF_HOST]}"
             in caplog.text
         )
+
+
+@pytest.mark.parametrize(
+    ("reported_role", "expected_role"),
+    [
+        pytest.param("master", MeshRoles.MASTER, id="master"),
+        pytest.param("unknown", MeshRoles.UNKNOWN, id="unknown"),
+        pytest.param("future_role", MeshRoles.UNKNOWN, id="unsupported"),
+    ],
+)
+async def test_mesh_role(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+    reported_role: str,
+    expected_role: MeshRoles,
+) -> None:
+    """Test mesh role of the box, including unknown and unsupported roles."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    mesh_data = deepcopy(MOCK_MESH_DATA)
+    mesh_data["nodes"][0]["mesh_role"] = reported_role
+    fh_class_mock.get_mesh_topology.return_value = mesh_data
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.mesh_role is expected_role
 
 
 async def test_no_software_version(
