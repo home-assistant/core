@@ -569,7 +569,7 @@ async def async_setup_entry(
                 part = E3dcPart(kind=part_kind.kind, slot=slot, numbered=numbered)
                 added_parts[part_kind.kind, slot] = part
                 entities.extend(
-                    E3dcPartSensor(coordinator, description, part)
+                    E3dcPartSensor(coordinator, description, part, part_kind)
                     for description in part_kind.sensors
                 )
             if numbered:
@@ -626,10 +626,19 @@ class E3dcPartSensor(E3dcEntity, SensorEntity):
         coordinator: E3dcDataUpdateCoordinator,
         entity_description: E3dcPartSensorDescription,
         part: E3dcPart,
+        part_kind: _PartKind,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entity_description, part)
         self._slot = part.slot
+        self._present_fn = part_kind.present_fn
+
+    @property
+    @override
+    def available(self) -> bool:
+        return super().available and self._slot in self._present_fn(
+            self.coordinator.device
+        )
 
     @property
     @override

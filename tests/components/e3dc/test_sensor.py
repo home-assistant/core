@@ -15,7 +15,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.e3dc.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -353,6 +353,43 @@ async def test_part_added_when_reported(
         for _, identifier in device.identifiers
     }
     assert parts == names
+
+
+@pytest.mark.parametrize(
+    ("setup_holding", "holding", "entity_id"),
+    [
+        pytest.param({}, {40109: 0}, "sensor.power_meter_power", id="power_meter"),
+        pytest.param(
+            {41034 + 18: 2302},
+            {41034 + 18: 0},
+            "sensor.inverter_2_active_power_l1",
+            id="inverter",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_part_unavailable_when_gone(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_unit: MockModbusUnit,
+    mock_config_entry: MockConfigEntry,
+    setup_holding: dict[int, int | list[int]],
+    holding: dict[int, int | list[int]],
+    entity_id: str,
+) -> None:
+    """Test a part's sensors become unavailable once the meter is removed or the inverter disconnects."""
+    seed(mock_unit, setup_holding)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    seed(mock_unit, holding)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("mock_get_unit")

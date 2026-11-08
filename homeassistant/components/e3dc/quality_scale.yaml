@@ -61,7 +61,10 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: done
+  dynamic-devices:
+    status: todo
+    comment: |
+      Wallboxes and inverter slots that don't answer during setup are only found on reload.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
