@@ -84,10 +84,7 @@ AUTH_ERROR_INDICATIONS: Final = (
 # A device answers a request for an unknown SNMPv3 context with a report PDU
 # carrying the snmpUnknownContexts counter. pysnmp raises errind.noSuchContext
 # on the agent side only, so a manager sees the report's OID instead.
-UNKNOWN_CONTEXT_MARKERS: Final = (
-    "1.3.6.1.6.3.12.1.5",  # snmpUnknownContexts
-    "snmpUnknownContexts",
-)
+UNKNOWN_CONTEXT_OID_PREFIX: Final = "1.3.6.1.6.3.12.1.5"  # snmpUnknownContexts
 
 # Any indication which means the credentials are not accepted, so reauthenticating
 # can fix it.

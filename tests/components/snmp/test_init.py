@@ -241,6 +241,25 @@ async def test_walk_error_makes_entry_not_ready(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_walk_unknown_context_stops_the_entry(hass: HomeAssistant) -> None:
+    """Test that a missing SNMPv3 context fails setup instead of being retried."""
+
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        yield errind.ReportPduReceived("1.3.6.1.6.3.12.1.5.0"), None, None, []
+
+    entry = mock_entry()
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.snmp.client.bulk_walk_cmd",
+        side_effect=mock_walk,
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_walk_errstatus(hass: HomeAssistant) -> None:
     """Test that errstatus during walk makes the entry retry."""
     entry = mock_entry()

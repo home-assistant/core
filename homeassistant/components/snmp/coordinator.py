@@ -10,9 +10,10 @@ from pysnmp.smi.error import WrongValueError
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .client import SnmpClient, SnmpWalkError
+from .client import SnmpClient, SnmpUnknownContext, SnmpWalkError
 from .const import CONF_BASEOID, DEFAULT_SCAN_INTERVAL, DOMAIN, IP_INDEXED_MAC_OIDS
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,6 +142,11 @@ class SnmpDeviceTrackerCoordinator(DataUpdateCoordinator[dict[str, str | None]])
                     continue
 
                 devices[mac] = _ip_address_from_oid(oid.asTuple())
+        except SnmpUnknownContext as err:
+            # Polling again can not create a context the device does not have
+            raise ConfigEntryError(
+                "The SNMPv3 context does not exist on the device"
+            ) from err
         except WrongValueError as err:
             # The credentials were validated at setup, so an unconvertible value is
             # a device or MIB problem rather than a wrong key: retry instead of reauth.

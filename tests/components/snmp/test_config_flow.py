@@ -455,16 +455,21 @@ async def test_subentry_flow_invalid_oid(hass: HomeAssistant) -> None:
     [
         pytest.param(errind.wrongDigest, {"base": "invalid_auth"}, id="auth_error"),
         pytest.param(
-            PySnmpError("walk failed"), {"baseoid": "cannot_connect"}, id="walk_error"
+            errind.ReportPduReceived("1.3.6.1.6.3.12.1.5.0"),
+            {"base": "invalid_context"},
+            id="unknown_context",
+        ),
+        pytest.param(
+            PySnmpError("walk failed"), {"base": "cannot_connect"}, id="walk_error"
         ),
     ],
 )
-async def test_subentry_flow_unreadable_oid(
+async def test_subentry_flow_walk_failure(
     hass: HomeAssistant,
     errindication: errind.ErrorIndication | PySnmpError,
     expected_errors: dict[str, str],
 ) -> None:
-    """Test that an OID the device cannot read is rejected."""
+    """Test that a device level failure is not reported on the Base OID field."""
     entry = mock_entry(baseoid=None)
     entry.add_to_hass(hass)
 

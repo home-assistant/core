@@ -35,7 +35,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .client import SnmpClient, SnmpWalkError
+from .client import SnmpClient, SnmpUnknownContext, SnmpWalkError
 from .const import (
     AUTH_ERROR_INDICATIONS,
     CONF_AUTH_KEY,
@@ -468,7 +468,7 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
                 user_input[CONF_BASEOID]
             )
             if error:
-                errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
+                errors[CONF_BASEOID if error == "invalid_oid" else "base"] = error
             else:
                 return self.async_create_entry(
                     title=baseoid,
@@ -494,7 +494,7 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
                 user_input[CONF_BASEOID]
             )
             if error:
-                errors["base" if error == "invalid_auth" else CONF_BASEOID] = error
+                errors[CONF_BASEOID if error == "invalid_oid" else "base"] = error
             else:
                 # The same table written differently, so nothing to switch to
                 if baseoid == subentry.data[CONF_BASEOID]:
@@ -582,6 +582,8 @@ class SnmpDeviceTrackerSubentryFlow(ConfigSubentryFlow):
                     macs.add(mac)
         except ConfigEntryAuthFailed:
             return "invalid_auth", normalized, set()
+        except SnmpUnknownContext:
+            return "invalid_context", normalized, set()
         except PySnmpError, SnmpWalkError:
             return "cannot_connect", normalized, set()
         return None, normalized, macs

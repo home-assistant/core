@@ -85,6 +85,7 @@
       "error": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "invalid_context": "The SNMPv3 context name was not found on this device",
         "invalid_oid": "The OID could not be resolved. Enter the OID of a column which lists MAC addresses, for example 1.3.6.1.2.1.4.22.1.2."
       },
       "initiate_flow": {
@@ -118,7 +119,7 @@
   },
   "issues": {
     "deprecated_yaml_device_tracker": {
-      "description": "The {integration_title} device tracker configured through YAML is deprecated and will be removed in Home Assistant Core 2027.5.\n\nRemove the `snmp` device tracker from your `configuration.yaml`, remove the devices tracked by SNMP (matched by MAC address) from `known_devices.yaml`, and restart Home Assistant.\n\nThen set up the SNMP integration from the UI and enable the device tracker entities you want to use. Their entity IDs can be changed to the ones you used before.",
+      "description": "The {integration_title} device tracker configured through YAML is deprecated and will be removed in Home Assistant Core 2027.5. To move it to the user interface:\n\n1. Remove the `snmp` device tracker from your `configuration.yaml`.\n2. Remove the devices tracked by SNMP from `known_devices.yaml`. They have `track: true`; match them on their `mac` field, because their keys are device IDs.\n3. Restart Home Assistant.\n4. Add the SNMP integration and enter the Base OID of the table which lists the connected devices. The device trackers it creates are disabled until you enable them.",
       "title": "The {integration_title} device tracker YAML configuration is being removed"
     }
   },

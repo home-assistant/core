@@ -520,9 +520,6 @@ async def test_ip_extraction_oid_too_short(
     [
         pytest.param(errind.requestTimedOut, id="timeout"),
         pytest.param(PySnmpError("Some error"), id="exception"),
-        pytest.param(
-            errind.ReportPduReceived("1.3.6.1.6.3.12.1.5.0"), id="unknown_context"
-        ),
     ],
 )
 async def test_walk_errindication(
@@ -572,6 +569,49 @@ async def test_walk_errindication(
 
         # The entity becomes unavailable once the failures pile up
         await _async_advance_poll(hass, freezer, polls=MAX_CONSECUTIVE_FAILURES - 1)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_walk_unknown_context_makes_the_entity_unavailable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_coordinator_entry: MockConfigEntry,
+    enable_tracker: Callable[[str], None],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a missing SNMPv3 context fails the poll instead of being retried."""
+    mac_bytes = binascii.unhexlify("001122334455")
+    oid = Mock()
+    oid.asTuple.return_value = (1, 192, 168, 1, 1)
+
+    walks = 0
+
+    async def mock_walk(*args: Any, **kwargs: Any) -> AsyncIterator[Any]:
+        """Yield the MAC once, then report the missing context on every poll."""
+        nonlocal walks
+        walks += 1
+        if walks == 1:
+            yield None, None, None, [(oid, OctetString(mac_bytes))]
+        else:
+            yield errind.ReportPduReceived("1.3.6.1.6.3.12.1.5.0"), None, None, []
+
+    enable_tracker(MAC)
+
+    with patch(
+        "homeassistant.components.snmp.client.bulk_walk_cmd",
+        side_effect=mock_walk,
+    ):
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = _tracker_entity_id(entity_registry, mock_coordinator_entry, MAC)
+        assert entity_id is not None
+
+        # Polling again can not create the context, so no retrying window
+        await _async_advance_poll(hass, freezer)
 
     state = hass.states.get(entity_id)
     assert state is not None
