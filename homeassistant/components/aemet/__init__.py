@@ -75,6 +75,7 @@ async def async_update_options(hass: HomeAssistant, entry: AemetConfigEntry) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    async_dismiss_api_key_reminder(hass, entry)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> None:
