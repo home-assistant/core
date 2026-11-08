@@ -150,9 +150,59 @@ def test_scale_jpeg_camera_image_preserves_exif(
         "homeassistant.components.camera.img_util.TurboJPEG", return_value=turbo_jpeg
     ):
         TurboJPEGSingleton()
-        jpeg_bytes = scale_jpeg_camera_image(Image("image/jpeg", original), 1230, 921)
+        jpeg_bytes = scale_jpeg_camera_image(Image("image/jpeg", original), 600, 400)
 
     assert jpeg_bytes == expected
+
+
+def _exif_app1(tiff: bytes) -> bytes:
+    """Build an EXIF APP1 segment around a TIFF structure."""
+    payload = b"Exif\x00\x00" + tiff
+    return b"\xff\xe1" + (len(payload) + 2).to_bytes(2, "big") + payload
+
+
+ORIENTATION_6_LITTLE_ENDIAN = (
+    b"II\x2a\x00\x08\x00\x00\x00"  # little endian TIFF header, IFD at offset 8
+    b"\x01\x00"  # one IFD entry
+    b"\x12\x01\x03\x00\x01\x00\x00\x00\x06\x00\x00\x00"  # orientation 6
+    b"\x00\x00\x00\x00"  # no next IFD
+)
+
+
+@pytest.mark.parametrize(
+    ("exif_app1", "scaling_factor"),
+    [
+        # Orientation 6: the 1600x1200 image is displayed as 1200x1600
+        (EXIF_APP1, (1, 2)),
+        (_exif_app1(ORIENTATION_6_LITTLE_ENDIAN), (1, 2)),
+        # Orientation 1 and missing or unreadable orientation keep the stored size
+        (_exif_app1(EXIF_PAYLOAD[6:].replace(b"\x00\x06", b"\x00\x01", 1)), (3, 8)),
+        (b"", (3, 8)),
+        (_exif_app1(b"XX" + EXIF_PAYLOAD[8:]), (3, 8)),
+        (_exif_app1(EXIF_PAYLOAD[6:14]), (3, 8)),
+        (_exif_app1(b"MM\x00\x2a\x00\x00\x00\x08\x00\x00"), (3, 8)),
+    ],
+)
+def test_scale_jpeg_camera_image_uses_exif_orientation(
+    exif_app1: bytes, scaling_factor: tuple[int, int]
+) -> None:
+    """Test the scaling factor is chosen for the displayed orientation."""
+    _clear_turbojpeg_singleton()
+
+    turbo_jpeg = mock_turbo_jpeg(first_width=1600, first_height=1200)
+    turbo_jpeg.scale_with_quality.return_value = SCALED
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEG", return_value=turbo_jpeg
+    ):
+        TurboJPEGSingleton()
+        scale_jpeg_camera_image(
+            Image("image/jpeg", SOI + exif_app1 + SOS + b"image"), 600, 400
+        )
+
+    assert (
+        turbo_jpeg.scale_with_quality.call_args.kwargs["scaling_factor"]
+        == scaling_factor
+    )
 
 
 def test_turbojpeg_load_failure(

@@ -1,6 +1,7 @@
 """Image processing for cameras."""
 
 import logging
+import struct
 from typing import TYPE_CHECKING, Literal, cast
 
 from turbojpeg import TurboJPEG
@@ -21,6 +22,9 @@ _JPEG_SOS = 0xDA
 # Markers without a length field: TEM and RST0-RST7
 _JPEG_STANDALONE_MARKERS = {0x01, *range(0xD0, 0xD8)}
 _EXIF_HEADER = b"Exif\x00\x00"
+_EXIF_ORIENTATION_TAG = 0x0112
+# EXIF orientations that rotate the image by 90 or 270 degrees
+_EXIF_TRANSPOSED_ORIENTATIONS = {5, 6, 7, 8}
 
 
 def _find_exif_segment(jpeg: bytes) -> bytes | None:
@@ -46,6 +50,29 @@ def _find_exif_segment(jpeg: bytes) -> bytes | None:
         if marker == _JPEG_APP1 and jpeg[pos + 4 : pos + 10] == _EXIF_HEADER:
             return jpeg[pos:end] if end <= len(jpeg) else None
         pos = end
+    return None
+
+
+def _exif_orientation(exif_segment: bytes) -> int | None:
+    """Return the orientation tag of an EXIF APP1 segment, or None if not found."""
+    tiff = exif_segment[10:]
+    if tiff[:2] == b"II":
+        byte_order = "<"
+    elif tiff[:2] == b"MM":
+        byte_order = ">"
+    else:
+        return None
+    try:
+        ifd_offset = struct.unpack_from(f"{byte_order}I", tiff, 4)[0]
+        entries = struct.unpack_from(f"{byte_order}H", tiff, ifd_offset)[0]
+        for idx in range(entries):
+            tag, _, _, value = struct.unpack_from(
+                f"{byte_order}HHIH", tiff, ifd_offset + 2 + idx * 12
+            )
+            if tag == _EXIF_ORIENTATION_TAG:
+                return int(value)
+    except struct.error:
+        return None
     return None
 
 
@@ -96,6 +123,14 @@ def scale_jpeg_camera_image(cam_image: Image, width: int, height: int) -> bytes:
     except OSError:
         return cam_image.content
 
+    exif_segment = _find_exif_segment(cam_image.content)
+    if (
+        exif_segment
+        and _exif_orientation(exif_segment) in _EXIF_TRANSPOSED_ORIENTATIONS
+    ):
+        # The requested size refers to the displayed (rotated) image
+        current_width, current_height = current_height, current_width
+
     scaling_factor = find_supported_scaling_factor(
         current_width, current_height, width, height
     )
@@ -114,7 +149,7 @@ def scale_jpeg_camera_image(cam_image: Image, width: int, height: int) -> bytes:
     # the orientation tag still applies to the scaled image; otherwise a
     # rotated camera image is shown upright or sideways depending on whether
     # it was scaled.
-    if exif_segment := _find_exif_segment(cam_image.content):
+    if exif_segment:
         return _insert_exif_segment(scaled, exif_segment)
     return scaled
 
