@@ -198,7 +198,11 @@ async def test_already_configured_by_unique_id(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data == {CONF_HOST: "1.2.3.4", CONF_PORT: 502}
+    assert entry.data == {
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: 502,
+        CONF_SW_VERSION: "4.1.00",
+    }
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -224,7 +228,11 @@ async def test_second_qube_with_the_same_uuid(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_HOST: "192.168.5.208", CONF_PORT: 502}
+    assert result["data"] == {
+        CONF_HOST: "192.168.5.208",
+        CONF_PORT: 502,
+        CONF_SW_VERSION: "4.1.00",
+    }
     assert result["result"].unique_id is None
     assert entry.data == {CONF_HOST: "192.168.5.100", CONF_PORT: 502}
 
@@ -448,6 +456,7 @@ async def test_zeroconf_other_qube_with_the_same_uuid(
     assert entry.data == {CONF_HOST: "192.168.5.100", CONF_PORT: 502}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     "host",
     [
@@ -461,7 +470,7 @@ async def test_zeroconf_other_qube_with_the_same_uuid(
 async def test_zeroconf_sets_unique_id_on_existing_entry(
     hass: HomeAssistant, host: str
 ) -> None:
-    """Test an entry created without mDNS adopts the discovered uuid."""
+    """Test an entry created without mDNS adopts the uuid and panel version."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: host, CONF_PORT: 502})
     entry.add_to_hass(hass)
     discovery = replace(
@@ -476,7 +485,40 @@ async def test_zeroconf_sets_unique_id_on_existing_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.unique_id == DEVICE_INFO.uuid
-    assert entry.data == {CONF_HOST: host, CONF_PORT: 502}
+    assert entry.data == {CONF_HOST: host, CONF_PORT: 502, CONF_SW_VERSION: "4.1.00"}
+
+
+@pytest.mark.parametrize(
+    "host",
+    [
+        pytest.param("qube.local", id="hostname"),
+        pytest.param("fd00::208", id="secondary_address"),
+    ],
+)
+async def test_zeroconf_updates_sw_version_keeping_host(
+    hass: HomeAssistant, host: str
+) -> None:
+    """Test an entry on another name of the controller gets the version only."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: host, CONF_PORT: 502, CONF_SW_VERSION: "4.0.00"},
+        unique_id=DEVICE_INFO.uuid,
+    )
+    entry.add_to_hass(hass)
+    discovery = replace(
+        ZEROCONF_DISCOVERY,
+        ip_addresses=[ip_address("192.168.5.208"), ip_address("fd00::208")],
+    )
+
+    # The configured host still answers, which alone looks like another Qube
+    with patch_answering_hosts(host):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {CONF_HOST: host, CONF_PORT: 502, CONF_SW_VERSION: "4.1.00"}
 
 
 async def test_zeroconf_other_entry_without_unique_id(

@@ -41,6 +41,11 @@ async def _async_validate_device(hass: HomeAssistant, host: str) -> str | None:
         return "cannot_connect"
 
 
+def _host_key(host: str) -> str:
+    """Return a host in the form the mDNS record lists it."""
+    return host.lower().rstrip(".")
+
+
 def _sw_version_data(device: QubeDeviceInfo | None) -> dict[str, str]:
     """Return the entry data for the panel version in the mDNS record."""
     if device is None or not device.software_version:
@@ -77,12 +82,16 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                 device = await async_get_device_info(
                     host, aiozc, timeout=MDNS_LOOKUP_TIMEOUT
                 )
+                # The lookup matched this host, so the record and its panel
+                # version belong to it even when another Qube has the uuid
+                self._device = device
                 if device and not await self._async_uuid_of_other_qube(
                     device.uuid, host
                 ):
                     await self.async_set_unique_id(device.uuid)
-                    self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-                    self._device = device
+                    self._abort_if_unique_id_configured(
+                        updates={CONF_HOST: host, **_sw_version_data(device)}
+                    )
                 return self._async_create_qube_entry(host)
 
         return self.async_show_form(
@@ -99,25 +108,40 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         host = discovery_info.host
         await self.async_set_unique_id(device.uuid)
-        if await self._async_uuid_of_other_qube(device.uuid, host):
-            return self.async_abort(reason="already_configured")
         # The record also carries the panel version, which changes with a
         # firmware update; a changed version reloads the entry
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: host, **_sw_version_data(device)}
+        sw_version = _sw_version_data(device)
+        # The controller answers on each advertised IP and its mDNS hostname
+        controller_hosts = {_host_key(str(ip)) for ip in discovery_info.ip_addresses}
+        controller_hosts.add(_host_key(discovery_info.hostname))
+
+        entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, device.uuid
         )
+        if (
+            entry is not None
+            and _host_key(entry.data.get(CONF_HOST, "")) in controller_hosts
+        ):
+            # This controller under another of its names; keep that host
+            self._abort_if_unique_id_configured(updates=sw_version)
+        if await self._async_uuid_of_other_qube(device.uuid, host):
+            return self.async_abort(reason="already_configured")
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host, **sw_version})
 
         # Entries created without mDNS have no unique id yet; adopt the one
-        # whose host is this controller (any advertised IP or the mDNS hostname)
-        controller_hosts = {str(ip) for ip in discovery_info.ip_addresses}
-        controller_hosts.add(discovery_info.hostname.lower().rstrip("."))
+        # whose host is this controller
         for entry in self._async_current_entries(include_ignore=False):
-            configured_host = entry.data[CONF_HOST].lower().rstrip(".")
-            if entry.unique_id is None and configured_host in controller_hosts:
-                self.hass.config_entries.async_update_entry(
-                    entry, unique_id=device.uuid
+            if (
+                entry.unique_id is None
+                and _host_key(entry.data[CONF_HOST]) in controller_hosts
+            ):
+                return self.async_update_reload_and_abort(
+                    entry,
+                    unique_id=device.uuid,
+                    data_updates=sw_version,
+                    reason="already_configured",
+                    reload_even_if_entry_is_unchanged=False,
                 )
-                return self.async_abort(reason="already_configured")
 
         self._host = host
         self._device = device
