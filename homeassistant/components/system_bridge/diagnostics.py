@@ -73,14 +73,16 @@ async def async_get_config_entry_diagnostics(
         )
 
     listen_task = coordinator.listen_task
-    listening = listen_task is not None and not listen_task.done()
-    last_exception = coordinator.last_exception
 
     bundle: dict[str, Any] | None = None
     missing_reason: str | None = None
     # Responses only arrive through the listener, so without it the request
     # would wait for the connector's timeout
-    if not coordinator.websocket_client.connected or not listening:
+    if (
+        not coordinator.websocket_client.connected
+        or listen_task is None
+        or listen_task.done()
+    ):
         missing_reason = "not_connected"
     else:
         try:
@@ -96,12 +98,15 @@ async def async_get_config_entry_diagnostics(
             # Error text can hold addresses or device names the app doesn't mask
             bundle = async_redact_data(asdict(app_diagnostics), {"error", "last_error"})
 
+    # The connection can drop during the request, so read its state afterwards
+    listen_task = coordinator.listen_task
+    last_exception = coordinator.last_exception
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "last_update_success": coordinator.last_update_success,
         "connection": {
             "websocket_connected": coordinator.websocket_client.connected,
-            "listening": listening,
+            "listening": listen_task is not None and not listen_task.done(),
             # The message can contain the host, so only the type is kept
             "last_exception": (
                 type(last_exception).__name__ if last_exception else None

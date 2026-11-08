@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -121,3 +122,31 @@ async def test_diagnostics_app_bundle_missing(
     )
 
     assert diagnostics["app"] == {"bundle": None, "missing_reason": missing_reason}
+
+
+async def test_diagnostics_connection_lost_during_request(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    listening_integration: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test the connection state is read after the app's bundle is requested."""
+    listen_task = listening_integration.runtime_data.listen_task
+    assert listen_task is not None
+
+    async def get_diagnostics() -> None:
+        mock_websocket_client.connected = False
+        listen_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await listen_task
+        raise ConnectionClosedException("Connection is closed")
+
+    mock_websocket_client.get_diagnostics.side_effect = get_diagnostics
+
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, listening_integration
+    )
+
+    assert diagnostics["connection"]["websocket_connected"] is False
+    assert diagnostics["connection"]["listening"] is False
+    assert diagnostics["app"] == {"bundle": None, "missing_reason": "not_connected"}
