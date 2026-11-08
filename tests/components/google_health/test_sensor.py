@@ -9,6 +9,7 @@ from google_health_api.const import HealthApiScope
 from google_health_api.model import (
     SLEEP,
     ListPairedDevicesResult,
+    StageSummary,
     _ListPairedDevicesModel,
 )
 import pytest
@@ -21,7 +22,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_health.const import DOMAIN
 from homeassistant.components.google_health.coordinator import DEVICE_POLLING_INTERVAL
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.unit_system import (
@@ -103,9 +104,17 @@ async def test_sensor_empty_sleep(
 
     assert await integration_setup()
 
-    time_asleep_state = hass.states.get("sensor.google_health_time_asleep")
-    assert time_asleep_state is not None
-    assert time_asleep_state.state == "unknown"
+    for entity_id in (
+        "sensor.google_health_time_asleep",
+        "sensor.google_health_sleep_start_time",
+        "sensor.google_health_sleep_end_time",
+        "sensor.google_health_rem_sleep",
+        "sensor.google_health_deep_sleep",
+        "sensor.google_health_light_sleep",
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNKNOWN
 
 
 async def test_sensor_in_progress_sleep(
@@ -120,29 +129,65 @@ async def test_sensor_in_progress_sleep(
 
     assert await integration_setup()
 
-    time_asleep_state = hass.states.get("sensor.google_health_time_asleep")
-    assert time_asleep_state is not None
-    assert time_asleep_state.state == "7.0"
+    for entity_id, expected in (
+        ("sensor.google_health_time_asleep", "7.0"),
+        ("sensor.google_health_time_awake", "1.0"),
+        ("sensor.google_health_time_in_bed", "8.0"),
+        ("sensor.google_health_time_to_fall_asleep", "15"),
+        ("sensor.google_health_time_after_waking_up", "10"),
+        ("sensor.google_health_sleep_start_time", "2026-08-15T22:00:00+00:00"),
+        ("sensor.google_health_sleep_end_time", "2026-08-16T06:00:00+00:00"),
+        ("sensor.google_health_rem_sleep", "1.5"),
+        ("sensor.google_health_deep_sleep", "1.5"),
+        ("sensor.google_health_light_sleep", "4.0"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected
 
-    time_awake_state = hass.states.get("sensor.google_health_time_awake")
-    assert time_awake_state is not None
-    assert time_awake_state.state == "1.0"
 
-    time_in_bed_state = hass.states.get("sensor.google_health_time_in_bed")
-    assert time_in_bed_state is not None
-    assert time_in_bed_state.state == "8.0"
+@pytest.mark.parametrize(
+    ("stages_summary", "expected_states"),
+    [
+        pytest.param(
+            None,
+            {
+                "sensor.google_health_rem_sleep": STATE_UNKNOWN,
+                "sensor.google_health_deep_sleep": STATE_UNKNOWN,
+                "sensor.google_health_light_sleep": STATE_UNKNOWN,
+            },
+            id="no_stages_summary",
+        ),
+        pytest.param(
+            [StageSummary(type="LIGHT", minutes=240, count=24)],
+            {
+                "sensor.google_health_rem_sleep": STATE_UNKNOWN,
+                "sensor.google_health_deep_sleep": STATE_UNKNOWN,
+                "sensor.google_health_light_sleep": "4.0",
+            },
+            id="partial_stages_summary",
+        ),
+    ],
+)
+async def test_sensor_sleep_missing_stages(
+    hass: HomeAssistant,
+    mock_google_health_client: AsyncMock,
+    integration_setup: Callable[[], Awaitable[bool]],
+    stages_summary: list[StageSummary] | None,
+    expected_states: dict[str, str],
+) -> None:
+    """Test sleep stage sensors when stages summary is missing or partial."""
+    sleep_result = _list_fixture("sleep.json", SLEEP)
+    assert sleep_result.data_points[0].data.summary is not None
+    sleep_result.data_points[0].data.summary.stages_summary = stages_summary
+    mock_google_health_client.sleep.list.return_value = sleep_result
 
-    time_to_fall_asleep_state = hass.states.get(
-        "sensor.google_health_time_to_fall_asleep"
-    )
-    assert time_to_fall_asleep_state is not None
-    assert time_to_fall_asleep_state.state == "15"
+    assert await integration_setup()
 
-    time_after_wakeup_state = hass.states.get(
-        "sensor.google_health_time_after_waking_up"
-    )
-    assert time_after_wakeup_state is not None
-    assert time_after_wakeup_state.state == "10"
+    for entity_id, expected_state in expected_states.items():
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected_state
 
 
 async def test_sensor_only_in_progress_sleep(
