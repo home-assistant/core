@@ -1086,6 +1086,7 @@ async def test_update_source_while_waiting_to_retry(
         )
         quit_event = stream._thread_quit = RetryWaitQuitEvent()
         await stream.start()
+        thread = stream._thread
         # The stop is in a finally: a failure would otherwise leave the worker
         # in its hour-long wait, and the test run could not end
         try:
@@ -1098,7 +1099,7 @@ async def test_update_source_while_waiting_to_retry(
             assert worker.sources == [STREAM_SOURCE, STREAM_SOURCE + "-updated-source"]
         finally:
             await stream.stop()
-        assert stream._thread is None
+        assert not thread.is_alive()
 
 
 async def test_stop_while_waiting_to_retry_with_update_pending(
@@ -1121,6 +1122,7 @@ async def test_stop_while_waiting_to_retry_with_update_pending(
         quit_event = stream._thread_quit = RetryWaitQuitEvent()
         quit_event.release.clear()
         await stream.start()
+        thread = stream._thread
         # As above: whatever fails, the worker is released and stopped
         try:
             assert await hass.async_add_executor_job(
@@ -1130,17 +1132,17 @@ async def test_stop_while_waiting_to_retry_with_update_pending(
             # The update ends the wait, and the worker is held there until the
             # stop is pending
             stream.update_source(STREAM_SOURCE + "-updated-source")
+            # The task starts eagerly: stop() has set _stopping and waits for
+            # the worker before this returns
             stop_task = hass.async_create_task(stream.stop())
-            async with asyncio.timeout(TIMEOUT):
-                while not stream._stopping:
-                    await asyncio.sleep(0)
+            assert stream._stopping
             quit_event.release.set()
             async with asyncio.timeout(TIMEOUT):
                 await stop_task
         finally:
             quit_event.release.set()
             await stream.stop()
-        assert stream._thread is None
+        assert not thread.is_alive()
         assert worker.sources == [STREAM_SOURCE]
 
 
