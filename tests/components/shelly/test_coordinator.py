@@ -519,16 +519,28 @@ async def test_rpc_cfg_change_refresh(
             {"component": "sys", "event": "config_changed", "ts": 1668522399.2},
             id="unsupported_component",
         ),
+        pytest.param(
+            {"component": "switch:1", "event": "component_added", "ts": 1668522399.2},
+            id="component_added",
+        ),
+        pytest.param(
+            {
+                "component": "switch:0",
+                "event": "component_removed",
+                "ts": 1668522399.2,
+            },
+            id="component_removed",
+        ),
     ],
 )
-async def test_rpc_cfg_change_reload_without_refresh(
+async def test_rpc_reload_without_refresh(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     event: dict[str, Any],
 ) -> None:
-    """Test RPC config change reloads the entry without a refresh."""
+    """Test RPC config or component change reloads the entry without a refresh."""
     await init_integration(hass, 2)
 
     inject_rpc_device_event(
