@@ -502,7 +502,7 @@ aiounifi==98
 aiousbwatcher==1.1.2
 
 # homeassistant.components.vitesy
-aiovitesy==1.4.4
+aiovitesy==1.4.8
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.8.0
