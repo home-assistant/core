@@ -192,13 +192,13 @@ async def test_dsp_preset_select(
     )
     assert config.apply_dsp_preset.call_args == call("00:00:00:00:00:01", "party")
 
-    # the select follows the config the server reports
+    # the select follows the config the server reports, also while DSP is off
     await trigger_subscription_callback(
         hass,
         music_assistant_client,
         EventType.PLAYER_DSP_CONFIG_UPDATED,
         "00:00:00:00:00:01",
-        DSPConfig(enabled=True, preset_id="party").to_dict(),
+        DSPConfig(enabled=False, preset_id="party").to_dict(),
     )
     state = hass.states.get(entity_id)
     assert state

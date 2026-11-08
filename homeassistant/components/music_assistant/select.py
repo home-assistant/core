@@ -39,7 +39,7 @@ async def async_setup_entry(
     """Set up Music Assistant Select Entities (Player Options) from Config Entry."""
     mass = entry.runtime_data.mass
     assert mass.server_info  # for type checking
-    # older servers lack the preset command, so their players get no preset select
+    # older servers drop the preset when DSP is switched, so they get no preset select
     dsp_presets: list[DSPConfigPreset] | None = (
         await mass.config.get_dsp_preset()
         if mass.server_info.schema_version >= PLAYER_SETTINGS_SCHEMA_VERSION
@@ -197,8 +197,8 @@ class MusicAssistantDspPresetSelect(MusicAssistantEntity, SelectEntity):
     @property
     @override
     def current_option(self) -> str | None:
-        """Return the preset the player uses, if its DSP is on."""
-        if self._dsp_config is None or not self._dsp_config.enabled:
+        """Return the preset of the player's DSP settings, also while DSP is off."""
+        if self._dsp_config is None:
             return None
         return next(
             (
