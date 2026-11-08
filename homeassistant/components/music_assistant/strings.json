@@ -330,7 +330,7 @@
       "message": "The username {username} does not exist on the Music Assistant server."
     },
     "no_active_queue": {
-      "message": "The player has no active queue."
+      "message": "The player is not playing from a Music Assistant queue."
     },
     "server_too_old": {
       "message": "This action requires Music Assistant server version 2.11 or later."
