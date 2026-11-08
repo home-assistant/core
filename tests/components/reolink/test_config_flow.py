@@ -51,6 +51,8 @@ from .conftest import (
     TEST_BC_PORT,
     TEST_HOST,
     TEST_HOST2,
+    TEST_HOST3,
+    TEST_HOST4,
     TEST_MAC,
     TEST_MAC2,
     TEST_MAC_CAM,
@@ -714,8 +716,15 @@ async def test_dhcp_ip_update(
     if attr is not None:
         setattr(reolink_host, attr, value)
 
-    with patch(
-        "homeassistant.components.reolink.config_flow.DHCP_NEW_IP_RETRY_INTERVAL", 0
+    with (
+        patch(
+            "homeassistant.components.reolink.config_flow.DHCP_NEW_IP_RETRY_INTERVAL",
+            0,
+        ),
+        patch(
+            "homeassistant.components.reolink.config_flow.async_discovered_service_info",
+            return_value=[dhcp_data],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
@@ -867,8 +876,15 @@ async def test_dhcp_ip_update_if_connected_but_moved(
         None,
     ]
 
-    with patch(
-        "homeassistant.components.reolink.config_flow.DHCP_NEW_IP_RETRY_INTERVAL", 0
+    with (
+        patch(
+            "homeassistant.components.reolink.config_flow.DHCP_NEW_IP_RETRY_INTERVAL",
+            0,
+        ),
+        patch(
+            "homeassistant.components.reolink.config_flow.async_discovered_service_info",
+            return_value=[dhcp_data],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
@@ -882,6 +898,96 @@ async def test_dhcp_ip_update_if_connected_but_moved(
 
     await hass.async_block_till_done()
     assert config_entry.data[CONF_HOST] == TEST_HOST2
+
+
+async def test_dhcp_ip_update_follows_newer_ip_while_retrying(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    reolink_host_class: MagicMock,
+    reolink_host: MagicMock,
+) -> None:
+    """Test dhcp probes the newest IP DHCP reported while waiting to retry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
+            CONF_BC_ONLY: False,
+            CONF_UID: TEST_UID,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # ensure the last_update_succes is False for the device_coordinator.
+    reolink_host.get_states.side_effect = ReolinkError("Test error")
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    dhcp_cache = [
+        DhcpServiceInfo(
+            ip=TEST_HOST2, hostname="Reolink", macaddress=DHCP_FORMATTED_MAC
+        )
+    ]
+
+    async def dhcp_update(ip: str) -> None:
+        """Report a newer IP, as DHCP does while the first flow is in progress."""
+        dhcp_cache[0] = DhcpServiceInfo(
+            ip=ip, hostname="Reolink", macaddress=DHCP_FORMATTED_MAC
+        )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_cache[0]
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_in_progress"
+
+    probed: list[str] = []
+
+    async def get_state(cmd: str) -> None:
+        probed.append(reolink_host_class.call_args[0][0])
+        if len(probed) == 1:
+            # The camera moves twice before its API is up at the first new IP.
+            await dhcp_update(TEST_HOST3)
+            await dhcp_update(TEST_HOST4)
+            raise ReolinkError("Test error")
+
+    reolink_host.get_state.side_effect = get_state
+
+    with (
+        patch(
+            "homeassistant.components.reolink.config_flow.DHCP_NEW_IP_RETRY_INTERVAL",
+            0,
+        ),
+        patch(
+            "homeassistant.components.reolink.config_flow.async_discovered_service_info",
+            return_value=dhcp_cache,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_cache[0]
+        )
+
+    assert probed == [TEST_HOST2, TEST_HOST4]
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    await hass.async_block_till_done()
+    assert config_entry.data[CONF_HOST] == TEST_HOST4
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
