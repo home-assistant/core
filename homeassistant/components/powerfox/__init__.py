@@ -67,7 +67,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) ->
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: PowerfoxConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: PowerfoxConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Allow removing a device that is no longer part of the Powerfox account."""
     try:

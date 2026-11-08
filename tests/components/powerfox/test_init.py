@@ -234,6 +234,10 @@ async def test_device_without_data_joins_later(
 
     assert hass.states.get(GAS_ENTITY_ID)
 
+    # The listener used while waiting is gone, so unloading must not remove it again.
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
 
 async def test_device_connection_error_retries_setup(
     hass: HomeAssistant,
