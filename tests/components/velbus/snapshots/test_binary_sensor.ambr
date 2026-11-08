@@ -24,7 +24,7 @@
     'object_id_base': 'ButtonOn',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'ButtonOn',
     'platform': 'velbus',
@@ -39,7 +39,6 @@
 # name: test_entities[binary_sensor.bedroom_kid_1_buttonon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom kid 1 ButtonOn',
     }),
     'context': <ANY>,

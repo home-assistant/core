@@ -4,10 +4,7 @@ from typing import override
 
 from velbusaio.channels import Button as VelbusButton
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -32,8 +29,6 @@ async def async_setup_entry(
 
 class VelbusBinarySensor(VelbusEntity, BinarySensorEntity):
     """Representation of a Velbus Binary Sensor."""
-
-    _attr_device_class = BinarySensorDeviceClass.OPENING
 
     _channel: VelbusButton
 

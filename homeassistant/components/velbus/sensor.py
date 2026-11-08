@@ -8,13 +8,18 @@ from velbusaio.channels import ButtonCounter, SensorNumber, Temperature
 from velbusaio.properties import LightValue
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import LIGHT_LUX, UnitOfEnergy, UnitOfPower, UnitOfVolume
+from homeassistant.const import (
+    LIGHT_LUX,
+    UnitOfEnergy,
+    UnitOfLength,
+    UnitOfPower,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -106,15 +111,15 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
     ),
 }
 
-
-def _device_class_for_unit(unit: str | None) -> SensorDeviceClass | None:
-    """Return a sensor device class when the unit maps to a known device class."""
-    if unit is None:
-        return None
-    for device_class, units in DEVICE_CLASS_UNITS.items():
-        if unit in units:
-            return device_class
-    return None
+# Units mapped to a single sensor device class (skip ambiguous units such as % or ppm).
+_MEASUREMENT_UNIT_DEVICE_CLASSES: dict[str, SensorDeviceClass] = {
+    "illuminance": SensorDeviceClass.ILLUMINANCE,
+    LIGHT_LUX: SensorDeviceClass.ILLUMINANCE,
+    UnitOfLength.METERS: SensorDeviceClass.DISTANCE,
+    UnitOfLength.CENTIMETERS: SensorDeviceClass.DISTANCE,
+    UnitOfLength.MILLIMETERS: SensorDeviceClass.DISTANCE,
+    UnitOfLength.KILOMETERS: SensorDeviceClass.DISTANCE,
+}
 
 
 async def async_setup_entry(
@@ -168,12 +173,13 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         if is_counter:
             self._attr_name = f"{self._attr_name}-counter"
 
-        if description.key == "measurement":
-            unit = self._attr_native_unit_of_measurement
+        if description.key == "measurement" and (
+            unit := self._attr_native_unit_of_measurement
+        ):
             if unit == "illuminance":
                 self._attr_native_unit_of_measurement = LIGHT_LUX
                 unit = LIGHT_LUX
-            if (device_class := _device_class_for_unit(unit)) is not None:
+            if (device_class := _MEASUREMENT_UNIT_DEVICE_CLASSES.get(unit)) is not None:
                 self._attr_device_class = device_class
 
     @property
