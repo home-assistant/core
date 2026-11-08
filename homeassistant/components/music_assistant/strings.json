@@ -333,13 +333,13 @@
       "message": "The player is not playing from a Music Assistant queue."
     },
     "server_too_old": {
-      "message": "This action requires Music Assistant server version 2.11 or later."
+      "message": "This action requires a newer Music Assistant server version."
     },
     "tts_entity_not_available": {
       "message": "The text-to-speech entity {entity_id} is not available."
     },
     "username_not_supported": {
-      "message": "Running this action as a given user requires Music Assistant server version 2.11 or later."
+      "message": "Running this action as a given user requires Music Assistant server version {min_version} or later."
     }
   },
   "issues": {

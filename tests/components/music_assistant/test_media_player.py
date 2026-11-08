@@ -1556,6 +1556,7 @@ async def test_media_player_get_queue_action_username_on_older_server(
             return_response=True,
         )
     assert err.value.translation_key == "username_not_supported"
+    assert err.value.translation_placeholders == {"min_version": "2.11"}
     music_assistant_client.send_command.assert_not_called()
 
 

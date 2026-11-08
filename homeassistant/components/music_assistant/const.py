@@ -11,6 +11,8 @@ DEFAULT_NAME = "Music Assistant"
 AUTH_SCHEMA_VERSION = 28
 # Schema version where hassio discovery support was added
 HASSIO_DISCOVERY_SCHEMA_VERSION = 28
+# Music Assistant release that introduced the client's IMPERSONATION_SCHEMA_VERSION
+IMPERSONATION_SERVER_VERSION = "2.11"
 
 # The official Music Assistant Home Assistant app
 APP_SLUG = "d5369777_music_assistant"
