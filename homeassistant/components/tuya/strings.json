@@ -51,6 +51,12 @@
       "cover_off": {
         "name": "Cover off"
       },
+      "ct_direction1": {
+        "name": "CT 1 direction"
+      },
+      "ct_direction2": {
+        "name": "CT 2 direction"
+      },
       "defrost": {
         "name": "Defrost"
       },
@@ -963,6 +969,9 @@
       "power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
       },
+      "power_factor": {
+        "name": "[%key:component::sensor::entity_component::power_factor::name%]"
+      },
       "precipitation_intensity": {
         "name": "[%key:component::sensor::entity_component::precipitation_intensity::name%]"
       },
@@ -977,6 +986,9 @@
       },
       "pv_channel_power": {
         "name": "PV channel {index} power"
+      },
+      "reactive_power": {
+        "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
       },
       "remaining_time": {
         "name": "Remaining time"
