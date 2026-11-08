@@ -18,14 +18,14 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_CATEGORIES,
+    ATTR_CATEGORY,
     ATTR_DESCRIPTION,
     ATTR_DUE,
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
     ATTR_ITEM,
     ATTR_RENAME,
-    ATTR_SECTION,
-    ATTR_SECTIONS,
     ATTR_STATUS,
     DATA_COMPONENT,
     DOMAIN,
@@ -45,14 +45,14 @@ PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = dt.timedelta(seconds=60)
 
 __all__ = [
+    "ATTR_CATEGORIES",
+    "ATTR_CATEGORY",
     "ATTR_DESCRIPTION",
     "ATTR_DUE",
     "ATTR_DUE_DATE",
     "ATTR_DUE_DATETIME",
     "ATTR_ITEM",
     "ATTR_RENAME",
-    "ATTR_SECTION",
-    "ATTR_SECTIONS",
     "ATTR_STATUS",
     "DOMAIN",
     "ENTITY_ID_FORMAT",

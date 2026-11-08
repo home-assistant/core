@@ -191,7 +191,7 @@ async def test_complete_item_intent(
                 uid="1",
                 status=TodoItemStatus.NEEDS_ACTION,
                 description="Belgian",
-                section="Drinks",
+                category="Drinks",
             ),
             TodoItem(summary="Wine", uid="2", status=TodoItemStatus.NEEDS_ACTION),
         ]
@@ -221,7 +221,7 @@ async def test_complete_item_intent(
     assert entity1.items[0].status == TodoItemStatus.COMPLETED
     # Completing an item keeps its other fields
     assert entity1.items[0].description == "Belgian"
-    assert entity1.items[0].section == "Drinks"
+    assert entity1.items[0].category == "Drinks"
 
 
 async def test_complete_item_intent_errors(

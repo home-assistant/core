@@ -4,6 +4,6 @@ DOMAIN = "local_todo"
 
 CONF_TODO_LIST_NAME = "todo_list_name"
 CONF_STORAGE_KEY = "storage_key"
-CONF_SECTIONS = "sections"
-CONF_SECTION = "section"
+CONF_CATEGORIES = "categories"
+CONF_CATEGORY = "category"
 CONF_NEW_NAME = "new_name"

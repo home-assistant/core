@@ -24,9 +24,9 @@ from homeassistant.util import slugify
 
 from . import LocalTodoConfigEntry, get_store
 from .const import (
+    CONF_CATEGORIES,
+    CONF_CATEGORY,
     CONF_NEW_NAME,
-    CONF_SECTION,
-    CONF_SECTIONS,
     CONF_STORAGE_KEY,
     CONF_TODO_LIST_NAME,
     DOMAIN,
@@ -40,9 +40,9 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     }
 )
 
-SECTIONS_SCHEMA = probatio.Schema(
+CATEGORIES_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(CONF_SECTIONS, default=[]): TextSelector(
+        probatio.Optional(CONF_CATEGORIES, default=[]): TextSelector(
             TextSelectorConfig(multiple=True)
         ),
     }
@@ -86,86 +86,86 @@ class LocalTodoOptionsFlow(OptionsFlow):
     config_entry: LocalTodoConfigEntry
 
     @property
-    def _sections(self) -> list[str]:
-        return list(self.config_entry.options.get(CONF_SECTIONS, []))
+    def _categories(self) -> list[str]:
+        return list(self.config_entry.options.get(CONF_CATEGORIES, []))
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose how to manage the sections."""
-        if not self._sections:
-            return await self.async_step_sections()
+        """Choose how to manage the categories."""
+        if not self._categories:
+            return await self.async_step_categories()
         return self.async_show_menu(
-            step_id="init", menu_options=["sections", "rename_section"]
+            step_id="init", menu_options=["categories", "rename_category"]
         )
 
-    async def async_step_sections(
+    async def async_step_categories(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Add, remove and order the sections of the To-do list."""
+        """Add and remove the categories of the To-do list."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            stripped = (section.strip() for section in user_input[CONF_SECTIONS])
-            sections = list(dict.fromkeys(filter(None, stripped)))
-            if any("," in section for section in sections):
-                errors[CONF_SECTIONS] = "invalid_section"
+            stripped = (category.strip() for category in user_input[CONF_CATEGORIES])
+            categories = list(dict.fromkeys(filter(None, stripped)))
+            if any("," in category for category in categories):
+                errors[CONF_CATEGORIES] = "invalid_category"
             else:
-                removed = set(self._sections) - set(sections)
-                await self._async_change_sections(sections, dict.fromkeys(removed))
-                return self.async_create_entry(data={CONF_SECTIONS: sections})
+                removed = set(self._categories) - set(categories)
+                await self._async_change_categories(categories, dict.fromkeys(removed))
+                return self.async_create_entry(data={CONF_CATEGORIES: categories})
 
         return self.async_show_form(
-            step_id="sections",
+            step_id="categories",
             data_schema=self.add_suggested_values_to_schema(
-                SECTIONS_SCHEMA, user_input or self.config_entry.options
+                CATEGORIES_SCHEMA, user_input or self.config_entry.options
             ),
             errors=errors,
         )
 
-    async def async_step_rename_section(
+    async def async_step_rename_category(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Rename a section, keeping its items in it."""
-        sections = self._sections
+        """Rename a category, keeping its items in it."""
+        categories = self._categories
         errors: dict[str, str] = {}
         if user_input is not None:
-            section = user_input[CONF_SECTION]
+            category = user_input[CONF_CATEGORY]
             new_name = user_input[CONF_NEW_NAME].strip()
             if not new_name or "," in new_name:
-                errors[CONF_NEW_NAME] = "invalid_section"
-            elif new_name != section and new_name in sections:
-                errors[CONF_NEW_NAME] = "section_exists"
+                errors[CONF_NEW_NAME] = "invalid_category"
+            elif new_name != category and new_name in categories:
+                errors[CONF_NEW_NAME] = "category_exists"
             else:
-                sections[sections.index(section)] = new_name
-                await self._async_change_sections(sections, {section: new_name})
-                return self.async_create_entry(data={CONF_SECTIONS: sections})
+                categories[categories.index(category)] = new_name
+                await self._async_change_categories(categories, {category: new_name})
+                return self.async_create_entry(data={CONF_CATEGORIES: categories})
 
         schema = probatio.Schema(
             {
-                probatio.Required(CONF_SECTION): SelectSelector(
-                    SelectSelectorConfig(options=sections)
+                probatio.Required(CONF_CATEGORY): SelectSelector(
+                    SelectSelectorConfig(options=categories)
                 ),
                 probatio.Required(CONF_NEW_NAME): TextSelector(),
             }
         )
         return self.async_show_form(
-            step_id="rename_section",
+            step_id="rename_category",
             data_schema=self.add_suggested_values_to_schema(schema, user_input),
             errors=errors,
         )
 
-    async def _async_change_sections(
-        self, sections: list[str], changes: Mapping[str, str | None]
+    async def _async_change_categories(
+        self, categories: list[str], changes: Mapping[str, str | None]
     ) -> None:
-        """Apply section changes to the list before saving the options."""
+        """Apply category changes to the list before saving the options."""
         if self.config_entry.state is ConfigEntryState.LOADED:
             data = self.config_entry.runtime_data
             if data.entity is not None:
-                await data.entity.async_change_sections(sections, changes)
+                await data.entity.async_change_categories(categories, changes)
                 return
             # The entity is disabled: enabling it reloads the entry from disk
             store = data.store
         else:
             store = get_store(self.hass, self.config_entry)
         if changes:
-            await store.async_change_sections(changes)
+            await store.async_change_categories(changes)

@@ -11,7 +11,7 @@ from propcache.api import cached_property
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.entity import Entity
 
-from .const import ATTR_SECTIONS, TodoItemStatus
+from .const import ATTR_CATEGORIES, TodoItemStatus
 
 
 @dataclasses.dataclass
@@ -36,8 +36,8 @@ class TodoItem:
     completed: dt.datetime | None = None
     """The date and time that a to-do item was marked completed."""
 
-    section: str | None = None
-    """The name of the section (group, category) the item belongs to, if any."""
+    category: str | None = None
+    """The category the item belongs to, if any (RFC 5545 CATEGORIES)."""
 
 
 _TODO_ITEM_FIELD_NAMES: tuple[str, ...] = tuple(
@@ -58,17 +58,17 @@ def serialize_todo_item(item: TodoItem) -> dict[str, Any]:
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "todo_items",
-    "todo_sections",
+    "todo_categories",
 }
 
 
 class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """An entity that represents a To-do list."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_SECTIONS})
+    _entity_component_unrecorded_attributes = frozenset({ATTR_CATEGORIES})
 
     _attr_todo_items: list[TodoItem] | None = None
-    _attr_todo_sections: list[str] | None = None
+    _attr_todo_categories: list[str] | None = None
     _update_listeners: list[Callable[[list[TodoItem] | None], None]] | None = None
     _last_broadcast_items: list[TodoItem] | None = None
 
@@ -85,9 +85,9 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @override
     def capability_attributes(self) -> dict[str, list[str]] | None:
         """Return capability attributes."""
-        if (sections := self.todo_sections) is None:
+        if (categories := self.todo_categories) is None:
             return None
-        return {ATTR_SECTIONS: sections}
+        return {ATTR_CATEGORIES: categories}
 
     @cached_property
     def todo_items(self) -> list[TodoItem] | None:
@@ -95,12 +95,12 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_todo_items
 
     @cached_property
-    def todo_sections(self) -> list[str] | None:
-        """Return the sections of the To-do list, in display order.
+    def todo_categories(self) -> list[str] | None:
+        """Return the categories offered by the To-do list, in no particular order.
 
-        Items may also have a section that is not in this list.
+        Items may also have a category that is not in this list.
         """
-        return self._attr_todo_sections
+        return self._attr_todo_categories
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""

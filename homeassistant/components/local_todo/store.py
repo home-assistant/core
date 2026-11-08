@@ -33,13 +33,13 @@ def parse_calendar(ics: str) -> tuple[Calendar, bool]:
         return IcsCalendarStream.calendar_from_ics(repaired_ics), True
 
 
-def change_sections(calendar: Calendar, changes: Mapping[str, str | None]) -> bool:
-    """Rename sections of the items, or clear them when mapped to None."""
+def change_categories(calendar: Calendar, changes: Mapping[str, str | None]) -> bool:
+    """Rename categories of the items, or clear them when mapped to None."""
     changed = False
     for todo in calendar.todos:
         if todo.categories and todo.categories[0] in changes:
-            new_section = changes[todo.categories[0]]
-            todo.categories = [new_section] if new_section else []
+            new_category = changes[todo.categories[0]]
+            todo.categories = [new_category] if new_category else []
             changed = True
     return changed
 
@@ -81,17 +81,17 @@ class LocalTodoListStore:
         """Persist the calendar to storage."""
         self._path.write_text(ics_content, encoding="utf-8")
 
-    async def async_change_sections(self, changes: Mapping[str, str | None]) -> None:
-        """Rename sections of the items, or clear them when mapped to None."""
+    async def async_change_categories(self, changes: Mapping[str, str | None]) -> None:
+        """Rename categories of the items, or clear them when mapped to None."""
         async with self._lock:
-            await self._hass.async_add_executor_job(self._change_sections, changes)
+            await self._hass.async_add_executor_job(self._change_categories, changes)
 
-    def _change_sections(self, changes: Mapping[str, str | None]) -> None:
-        """Rename sections of the items, or clear them when mapped to None."""
+    def _change_categories(self, changes: Mapping[str, str | None]) -> None:
+        """Rename categories of the items, or clear them when mapped to None."""
         if not (ics := self._load()):
             return
         calendar, _ = parse_calendar(ics)
-        if change_sections(calendar, changes):
+        if change_categories(calendar, changes):
             try:
                 self._store(IcsCalendarStream.calendar_to_ics(calendar))
             except OSError as err:

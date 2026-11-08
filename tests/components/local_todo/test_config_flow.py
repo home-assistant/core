@@ -64,82 +64,90 @@ async def test_duplicate_todo_list_name(
     assert result2["reason"] == "already_configured"
 
 
-async def test_options_flow_sections(
+async def test_options_flow_categories(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test the sections are set from the options flow."""
+    """Test the categories are set from the options flow."""
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "sections"
+    assert result["step_id"] == "categories"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {"sections": ["Fresh, produce"]},
+        {"categories": ["Fresh, produce"]},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"sections": "invalid_section"}
+    assert result["errors"] == {"categories": "invalid_category"}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {"sections": [" Fresh produce ", "Grocery", "", "Fresh produce", "Household"]},
+        {
+            "categories": [
+                " Fresh produce ",
+                "Grocery",
+                "",
+                "Fresh produce",
+                "Household",
+            ]
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        "sections": ["Fresh produce", "Grocery", "Household"]
+        "categories": ["Fresh produce", "Grocery", "Household"]
     }
 
 
-@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery"]])
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery"]])
 async def test_options_flow_menu(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test the options flow offers a menu when sections exist."""
+    """Test the options flow offers a menu when categories exist."""
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.MENU
-    assert result["menu_options"] == ["sections", "rename_section"]
+    assert result["menu_options"] == ["categories", "rename_category"]
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "sections"}
+        result["flow_id"], {"next_step_id": "categories"}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "sections"
+    assert result["step_id"] == "categories"
 
 
-@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery"]])
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery"]])
 @pytest.mark.parametrize(
     ("new_name", "error"),
     [
-        pytest.param(" ", "invalid_section", id="empty"),
-        pytest.param("Fruits, vegetables", "invalid_section", id="comma"),
-        pytest.param("Grocery", "section_exists", id="exists"),
+        pytest.param(" ", "invalid_category", id="empty"),
+        pytest.param("Fruits, vegetables", "invalid_category", id="comma"),
+        pytest.param("Grocery", "category_exists", id="exists"),
     ],
 )
-async def test_options_flow_rename_section_errors(
+async def test_options_flow_rename_category_errors(
     hass: HomeAssistant, config_entry: MockConfigEntry, new_name: str, error: str
 ) -> None:
-    """Test renaming a section validates the new name."""
+    """Test renaming a category validates the new name."""
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "rename_section"}
+        result["flow_id"], {"next_step_id": "rename_category"}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "rename_section"
+    assert result["step_id"] == "rename_category"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"section": "Fresh produce", "new_name": new_name}
+        result["flow_id"], {"category": "Fresh produce", "new_name": new_name}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"new_name": error}
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"section": "Fresh produce", "new_name": "Produce"}
+        result["flow_id"], {"category": "Fresh produce", "new_name": "Produce"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {"sections": ["Produce", "Grocery"]}
+    assert config_entry.options == {"categories": ["Produce", "Grocery"]}

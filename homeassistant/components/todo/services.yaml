@@ -46,10 +46,10 @@ add_item:
       example: "A more complete description of the to-do item than that provided by the summary."
       selector:
         text:
-    section:
+    category:
       filter:
         supported_features:
-          - todo.TodoListEntityFeature.SET_SECTION_ON_ITEM
+          - todo.TodoListEntityFeature.SET_CATEGORY_ON_ITEM
       example: "Fresh produce"
       selector:
         text:
@@ -98,10 +98,10 @@ update_item:
       example: "A more complete description of the to-do item than that provided by the summary."
       selector:
         text:
-    section:
+    category:
       filter:
         supported_features:
-          - todo.TodoListEntityFeature.SET_SECTION_ON_ITEM
+          - todo.TodoListEntityFeature.SET_CATEGORY_ON_ITEM
       example: "Fresh produce"
       selector:
         text:

@@ -17,12 +17,12 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.local_todo import get_store
 from homeassistant.components.local_todo.store import LocalTodoListStore
 from homeassistant.components.todo import (
+    ATTR_CATEGORY,
     ATTR_DESCRIPTION,
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
     ATTR_ITEM,
     ATTR_RENAME,
-    ATTR_SECTION,
     ATTR_STATUS,
     DOMAIN as TODO_DOMAIN,
     TodoServices,
@@ -143,10 +143,10 @@ async def test_add_item_write_error(
         ({ATTR_DESCRIPTION: ""}, {**EXPECTED_ADD_ITEM, "description": ""}),
         ({ATTR_DESCRIPTION: None}, EXPECTED_ADD_ITEM),
         (
-            {ATTR_SECTION: "Fresh produce"},
-            {**EXPECTED_ADD_ITEM, "section": "Fresh produce"},
+            {ATTR_CATEGORY: "Fresh produce"},
+            {**EXPECTED_ADD_ITEM, "category": "Fresh produce"},
         ),
-        ({ATTR_SECTION: None}, EXPECTED_ADD_ITEM),
+        ({ATTR_CATEGORY: None}, EXPECTED_ADD_ITEM),
         (
             {ATTR_ITEM: "测试主卧清扫"},
             {**EXPECTED_ADD_ITEM, "summary": "测试主卧清扫"},
@@ -316,8 +316,8 @@ EXPECTED_UPDATE_ITEM = {
             "1",
         ),
         (
-            {ATTR_SECTION: "Fresh produce"},
-            {**EXPECTED_UPDATE_ITEM, "section": "Fresh produce"},
+            {ATTR_CATEGORY: "Fresh produce"},
+            {**EXPECTED_UPDATE_ITEM, "category": "Fresh produce"},
             "1",
         ),
     ],
@@ -1149,7 +1149,7 @@ async def test_crlf_description_preserved_on_reload(
     assert "Repaired malformed iCalendar file" not in caplog.text
 
 
-SECTIONS_ICS = textwrap.dedent(
+CATEGORIES_ICS = textwrap.dedent(
     """\
         BEGIN:VCALENDAR
         PRODID:-//homeassistant.io//local_todo 2.0//EN
@@ -1192,10 +1192,10 @@ async def _stored_categories(
 
 
 @pytest.mark.parametrize(
-    ("item_data", "expected_section", "expected_categories"),
+    ("item_data", "expected_category", "expected_categories"),
     [
         pytest.param(
-            {ATTR_SECTION: "Household"}, "Household", ["Household"], id="change"
+            {ATTR_CATEGORY: "Household"}, "Household", ["Household"], id="change"
         ),
         pytest.param(
             {ATTR_STATUS: "completed"},
@@ -1203,22 +1203,22 @@ async def _stored_categories(
             ["Fresh produce"],
             id="unrelated_update",
         ),
-        pytest.param({ATTR_SECTION: None}, None, [], id="clear"),
+        pytest.param({ATTR_CATEGORY: None}, None, [], id="clear"),
     ],
 )
-@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
 @pytest.mark.usefixtures("setup_integration")
-async def test_update_section_categories(
+async def test_update_category_stored_as_categories(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
-    expected_section: str | None,
+    expected_category: str | None,
     expected_categories: list[str],
 ) -> None:
-    """Test the section is stored as the only category of the item."""
+    """Test the category is stored as the only category of the item."""
     items = await ws_get_items()
-    assert items[0]["section"] == "Fresh produce"
+    assert items[0]["category"] == "Fresh produce"
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -1229,7 +1229,7 @@ async def test_update_section_categories(
     )
 
     items = await ws_get_items()
-    assert items[0].get("section") == expected_section
+    assert items[0].get("category") == expected_category
     assert (await _stored_categories(hass, config_entry))[0] == expected_categories
 
 
@@ -1240,91 +1240,91 @@ async def test_update_section_categories(
         pytest.param(TodoServices.UPDATE_ITEM, {ATTR_ITEM: "Apples"}, id="update"),
     ],
 )
-@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
 @pytest.mark.usefixtures("setup_integration")
-async def test_section_with_comma(
+async def test_category_with_comma(
     hass: HomeAssistant, service: TodoServices, item_data: dict[str, Any]
 ) -> None:
-    """Test a section can't contain a comma, as it doesn't survive a reload."""
+    """Test a category can't contain a comma, as it doesn't survive a reload."""
     with pytest.raises(ServiceValidationError, match="can't contain a comma"):
         await hass.services.async_call(
             TODO_DOMAIN,
             service,
-            {**item_data, ATTR_SECTION: "Fruits, vegetables"},
+            {**item_data, ATTR_CATEGORY: "Fruits, vegetables"},
             target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
 
 @pytest.mark.parametrize(
-    ("sections", "expected_sections"),
+    ("categories", "expected_categories"),
     [
         pytest.param(
             ["Fresh produce", "Grocery", "Household"],
             ["Fresh produce", "Grocery", "Household"],
-            id="sections",
+            id="categories",
         ),
         pytest.param([], None, id="empty"),
         pytest.param(None, None, id="no_options"),
     ],
 )
 @pytest.mark.usefixtures("setup_integration")
-async def test_sections_attribute(
-    hass: HomeAssistant, expected_sections: list[str] | None
+async def test_categories_attribute(
+    hass: HomeAssistant, expected_categories: list[str] | None
 ) -> None:
-    """Test the sections attribute comes from the options."""
+    """Test the categories attribute comes from the options."""
     state = hass.states.get(TEST_ENTITY)
     assert state
-    assert state.attributes.get("sections") == expected_sections
+    assert state.attributes.get("categories") == expected_categories
 
 
-async def _set_sections(
-    hass: HomeAssistant, entry_id: str, sections: list[str]
+async def _set_categories(
+    hass: HomeAssistant, entry_id: str, categories: list[str]
 ) -> None:
-    """Set the sections with the options flow."""
+    """Set the categories with the options flow."""
     result = await hass.config_entries.options.async_init(entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "sections"}
+        result["flow_id"], {"next_step_id": "categories"}
     )
     await hass.config_entries.options.async_configure(
-        result["flow_id"], {"sections": sections}
+        result["flow_id"], {"categories": categories}
     )
     await hass.async_block_till_done()
 
 
 async def _remove_fresh_produce(hass: HomeAssistant, entry_id: str) -> None:
-    """Remove the Fresh produce section with the options flow."""
-    await _set_sections(hass, entry_id, ["Grocery", "Household"])
+    """Remove the Fresh produce category with the options flow."""
+    await _set_categories(hass, entry_id, ["Grocery", "Household"])
 
 
 async def _rename_fresh_produce(hass: HomeAssistant, entry_id: str) -> None:
-    """Rename the Fresh produce section to Produce with the options flow."""
+    """Rename the Fresh produce category to Produce with the options flow."""
     result = await hass.config_entries.options.async_init(entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {"next_step_id": "rename_section"}
+        result["flow_id"], {"next_step_id": "rename_category"}
     )
     await hass.config_entries.options.async_configure(
-        result["flow_id"], {"section": "Fresh produce", "new_name": "Produce"}
+        result["flow_id"], {"category": "Fresh produce", "new_name": "Produce"}
     )
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
-@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
 @pytest.mark.usefixtures("setup_integration")
-async def test_remove_section(
+async def test_remove_category(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     ws_get_items: WsGetItemsType,
 ) -> None:
-    """Test removing a section leaves its items without a section."""
+    """Test removing a category leaves its items without a category."""
     await _remove_fresh_produce(hass, config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
-    assert state.attributes["sections"] == ["Grocery", "Household"]
+    assert state.attributes["categories"] == ["Grocery", "Household"]
     items = await ws_get_items()
-    assert {item["summary"]: item.get("section") for item in items} == {
+    assert {item["summary"]: item.get("category") for item in items} == {
         "Apples": None,
         "Pasta": "Grocery",
         "Soap": None,
@@ -1333,7 +1333,7 @@ async def test_remove_section(
 
 
 @pytest.mark.parametrize(
-    ("change_sections", "expected_options", "expected_categories"),
+    ("change_categories", "expected_options", "expected_categories"),
     [
         pytest.param(
             _remove_fresh_produce,
@@ -1349,41 +1349,41 @@ async def test_remove_section(
         ),
     ],
 )
-@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
-@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
 @pytest.mark.usefixtures("setup_integration")
-async def test_section_change_entry_not_loaded(
+async def test_category_change_entry_not_loaded(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    change_sections: Callable[[HomeAssistant, str], Coroutine[Any, Any, None]],
+    change_categories: Callable[[HomeAssistant, str], Coroutine[Any, Any, None]],
     expected_options: list[str],
     expected_categories: list[list[str]],
 ) -> None:
     """Test items are updated even when the entry isn't loaded."""
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    await change_sections(hass, config_entry.entry_id)
+    await change_categories(hass, config_entry.entry_id)
 
-    assert config_entry.options == {"sections": expected_options}
+    assert config_entry.options == {"categories": expected_options}
     assert await _stored_categories(hass, config_entry) == expected_categories
 
 
-@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
-@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
 @pytest.mark.usefixtures("setup_integration")
-async def test_rename_section(
+async def test_rename_category(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     ws_get_items: WsGetItemsType,
 ) -> None:
-    """Test renaming a section keeps its items in it."""
+    """Test renaming a category keeps its items in it."""
     await _rename_fresh_produce(hass, config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
-    assert state.attributes["sections"] == ["Produce", "Grocery", "Household"]
+    assert state.attributes["categories"] == ["Produce", "Grocery", "Household"]
     items = await ws_get_items()
-    assert {item["summary"]: item.get("section") for item in items} == {
+    assert {item["summary"]: item.get("category") for item in items} == {
         "Apples": "Produce",
         "Pasta": "Grocery",
         "Soap": None,
@@ -1413,10 +1413,10 @@ async def _keep_entry_loaded(
         pytest.param(_unload_entry, id="not_loaded"),
     ],
 )
-@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
-@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
 @pytest.mark.usefixtures("setup_integration")
-async def test_remove_section_write_error(
+async def test_remove_category_write_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     prepare_entry: Callable[
@@ -1435,17 +1435,17 @@ async def test_remove_section_write_error(
         await _remove_fresh_produce(hass, config_entry.entry_id)
 
     assert config_entry.options == {
-        "sections": ["Fresh produce", "Grocery", "Household"]
+        "categories": ["Fresh produce", "Grocery", "Household"]
     }
 
 
-@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
-@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
 @pytest.mark.usefixtures("setup_integration")
-async def test_item_save_after_section_change(
+async def test_item_save_after_category_change(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test saving an item doesn't bring back a renamed section."""
+    """Test saving an item doesn't bring back a renamed category."""
     await _rename_fresh_produce(hass, config_entry.entry_id)
 
     await hass.services.async_call(
@@ -1463,15 +1463,15 @@ async def test_item_save_after_section_change(
     ]
 
 
-@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
-@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
 @pytest.mark.usefixtures("setup_integration")
-async def test_subscription_after_section_change(
+async def test_subscription_after_category_change(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test item subscriptions keep receiving updates after a section change."""
+    """Test item subscriptions keep receiving updates after a category change."""
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {"type": "todo/item/subscribe", "entity_id": TEST_ENTITY}
@@ -1479,17 +1479,17 @@ async def test_subscription_after_section_change(
     msg = await client.receive_json()
     assert msg["success"]
     msg = await client.receive_json()
-    assert msg["event"]["items"][0]["section"] == "Fresh produce"
+    assert msg["event"]["items"][0]["category"] == "Fresh produce"
 
     await _rename_fresh_produce(hass, config_entry.entry_id)
 
     msg = await client.receive_json()
-    assert msg["event"]["items"][0]["section"] == "Produce"
+    assert msg["event"]["items"][0]["category"] == "Produce"
 
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
-        {ATTR_ITEM: "Pears", ATTR_SECTION: "Produce"},
+        {ATTR_ITEM: "Pears", ATTR_CATEGORY: "Produce"},
         target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
@@ -1504,7 +1504,7 @@ async def test_subscription_after_section_change(
 
 
 @pytest.mark.parametrize(
-    ("change_sections", "expected_options", "expected_categories"),
+    ("change_categories", "expected_options", "expected_categories"),
     [
         pytest.param(
             _remove_fresh_produce,
@@ -1520,13 +1520,13 @@ async def test_subscription_after_section_change(
         ),
     ],
 )
-@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
-@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
-async def test_section_change_entity_disabled(
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
+async def test_category_change_entity_disabled(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    change_sections: Callable[[HomeAssistant, str], Coroutine[Any, Any, None]],
+    change_categories: Callable[[HomeAssistant, str], Coroutine[Any, Any, None]],
     expected_options: list[str],
     expected_categories: list[list[str]],
 ) -> None:
@@ -1543,13 +1543,13 @@ async def test_section_change_entity_disabled(
     await hass.async_block_till_done()
     assert config_entry.runtime_data.entity is None
 
-    await change_sections(hass, config_entry.entry_id)
+    await change_categories(hass, config_entry.entry_id)
 
-    assert config_entry.options == {"sections": expected_options}
+    assert config_entry.options == {"categories": expected_options}
     assert await _stored_categories(hass, config_entry) == expected_categories
 
 
-LEGACY_CRLF_SECTIONS_ICS = (
+LEGACY_CRLF_CATEGORIES_ICS = (
     "BEGIN:VCALENDAR\n"
     "PRODID:-//homeassistant.io//local_todo 2.0//EN\n"
     "VERSION:2.0\n"
@@ -1566,27 +1566,27 @@ LEGACY_CRLF_SECTIONS_ICS = (
 )
 
 
-@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
-@pytest.mark.parametrize("ics_content", [LEGACY_CRLF_SECTIONS_ICS])
-async def test_remove_section_legacy_file_entry_not_loaded(
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [LEGACY_CRLF_CATEGORIES_ICS])
+async def test_remove_category_legacy_file_entry_not_loaded(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test sections can be removed from a malformed legacy file not loaded yet."""
+    """Test categories can be removed from a malformed legacy file not loaded yet."""
     config_entry.add_to_hass(hass)
 
     await _remove_fresh_produce(hass, config_entry.entry_id)
 
-    assert config_entry.options == {"sections": ["Grocery", "Household"]}
+    assert config_entry.options == {"categories": ["Grocery", "Household"]}
     assert await _stored_categories(hass, config_entry) == [[]]
 
 
-@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
-@pytest.mark.parametrize("ics_content", [SECTIONS_ICS])
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
 @pytest.mark.usefixtures("setup_integration")
-async def test_section_change_write_error_keeps_items(
+async def test_category_change_write_error_keeps_items(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test a failed section change isn't saved by a later item change."""
+    """Test a failed category change isn't saved by a later item change."""
     with (
         patch.object(
             LocalTodoListStore, "_store", side_effect=OSError(errno.EIO, "Error")
@@ -1610,20 +1610,20 @@ async def test_section_change_write_error_keeps_items(
     ]
 
 
-@pytest.mark.parametrize("sections", [["Fresh produce", "Grocery", "Household"]])
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery", "Household"]])
 @pytest.mark.usefixtures("setup_integration")
-async def test_sections_attribute_follows_options(
+async def test_categories_attribute_follows_options(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test reordering or clearing sections updates the loaded list."""
-    await _set_sections(
+    """Test reordering or clearing categories updates the loaded list."""
+    await _set_categories(
         hass, config_entry.entry_id, ["Household", "Fresh produce", "Grocery"]
     )
     state = hass.states.get(TEST_ENTITY)
     assert state
-    assert state.attributes["sections"] == ["Household", "Fresh produce", "Grocery"]
+    assert state.attributes["categories"] == ["Household", "Fresh produce", "Grocery"]
 
-    await _set_sections(hass, config_entry.entry_id, [])
+    await _set_categories(hass, config_entry.entry_id, [])
     state = hass.states.get(TEST_ENTITY)
     assert state
-    assert "sections" not in state.attributes
+    assert "categories" not in state.attributes

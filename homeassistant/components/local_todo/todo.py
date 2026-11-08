@@ -24,8 +24,8 @@ from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util
 
 from . import LocalTodoConfigEntry, LocalTodoData
-from .const import CONF_SECTIONS, CONF_TODO_LIST_NAME, DOMAIN
-from .store import LocalTodoListStore, change_sections, parse_calendar
+from .const import CONF_CATEGORIES, CONF_TODO_LIST_NAME, DOMAIN
+from .store import LocalTodoListStore, change_categories, parse_calendar
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ async def async_setup_entry(
         calendar,
         name,
         unique_id=config_entry.entry_id,
-        sections=list(config_entry.options.get(CONF_SECTIONS, [])),
+        categories=list(config_entry.options.get(CONF_CATEGORIES, [])),
     )
     async_add_entities([entity], True)
 
@@ -109,12 +109,12 @@ async def async_setup_entry(
 
 def _convert_item(item: TodoItem) -> Todo:
     """Convert a HomeAssistant TodoItem to an ical Todo."""
-    if item.section and "," in item.section:
+    if item.category and "," in item.category:
         # ical splits CATEGORIES on commas when reading, even escaped ones
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="invalid_section",
-            translation_placeholders={"section": item.section},
+            translation_key="invalid_category",
+            translation_placeholders={"category": item.category},
         )
     todo = Todo()
     if item.uid:
@@ -127,7 +127,7 @@ def _convert_item(item: TodoItem) -> Todo:
     if todo.due and not isinstance(todo.due, dt.datetime):
         todo.due += dt.timedelta(days=1)
     todo.description = item.description
-    todo.categories = [item.section] if item.section else []
+    todo.categories = [item.category] if item.category else []
     return todo
 
 
@@ -143,7 +143,7 @@ class LocalTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
-        | TodoListEntityFeature.SET_SECTION_ON_ITEM
+        | TodoListEntityFeature.SET_CATEGORY_ON_ITEM
     )
     _attr_should_poll = False
 
@@ -153,7 +153,7 @@ class LocalTodoListEntity(TodoListEntity):
         calendar: Calendar,
         name: str,
         unique_id: str,
-        sections: list[str],
+        categories: list[str],
     ) -> None:
         """Initialize LocalTodoListEntity."""
         self._data = data
@@ -162,35 +162,35 @@ class LocalTodoListEntity(TodoListEntity):
         self._calendar_lock = asyncio.Lock()
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._attr_todo_sections = sections or None
+        self._attr_todo_categories = categories or None
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Let the options flow change the sections of the loaded list."""
+        """Let the options flow change the categories of the loaded list."""
         self._data.entity = self
 
     @override
     async def async_will_remove_from_hass(self) -> None:
-        """Stop receiving section changes."""
+        """Stop receiving category changes."""
         self._data.entity = None
 
-    async def async_change_sections(
-        self, sections: list[str], changes: Mapping[str, str | None]
+    async def async_change_categories(
+        self, categories: list[str], changes: Mapping[str, str | None]
     ) -> None:
-        """Set the sections, renaming or clearing them on the items."""
+        """Set the categories, renaming or clearing them on the items."""
         async with self._calendar_lock:
             previous = [todo.categories for todo in self._calendar.todos]
-            if change_sections(self._calendar, changes):
+            if change_categories(self._calendar, changes):
                 try:
                     await self.async_save()
                 except HomeAssistantError:
                     # Keep the items consistent with the options, left unchanged
-                    for todo, categories in zip(
+                    for todo, item_categories in zip(
                         self._calendar.todos, previous, strict=True
                     ):
-                        todo.categories = categories
+                        todo.categories = item_categories
                     raise
-        self._attr_todo_sections = sections or None
+        self._attr_todo_categories = categories or None
         await self.async_update_ha_state(force_refresh=True)
 
     def _new_todo_store(self) -> TodoStore:
@@ -213,7 +213,7 @@ class LocalTodoListEntity(TodoListEntity):
                     due=due,
                     description=item.description,
                     completed=item.completed,
-                    section=next(iter(item.categories), None),
+                    category=next(iter(item.categories), None),
                 )
             )
         self._attr_todo_items = todo_items

@@ -12,9 +12,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    ATTR_CATEGORY,
     ATTR_DESCRIPTION,
     ATTR_DUE,
-    ATTR_SECTION,
     DATA_COMPONENT,
     DOMAIN,
     TodoItemStatus,
@@ -67,12 +67,12 @@ TODO_ITEM_FIELDS = [
         required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
     ),
     TodoItemFieldDescription(
-        service_field=TodoServiceArgument.SECTION,
+        service_field=TodoServiceArgument.CATEGORY,
         validation=probatio.Any(
             probatio.All(cv.string, str.strip, _empty_to_none), None
         ),
-        todo_item_field=ATTR_SECTION,
-        required_feature=TodoListEntityFeature.SET_SECTION_ON_ITEM,
+        todo_item_field=ATTR_CATEGORY,
+        required_feature=TodoListEntityFeature.SET_CATEGORY_ON_ITEM,
     ),
 ]
 

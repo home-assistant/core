@@ -58,6 +58,10 @@
     "add_item": {
       "description": "Adds a new to-do list item.",
       "fields": {
+        "category": {
+          "description": "The category the to-do item belongs to.",
+          "name": "Category"
+        },
         "description": {
           "description": "A more complete description of the to-do item than provided by the item name.",
           "name": "Description"
@@ -73,10 +77,6 @@
         "item": {
           "description": "The name that represents the to-do item.",
           "name": "Item name"
-        },
-        "section": {
-          "description": "The section (group or category) the to-do item belongs to.",
-          "name": "Section"
         }
       },
       "name": "Add to-do list item"
@@ -108,6 +108,10 @@
     "update_item": {
       "description": "Updates an existing to-do list item based on its name or UID.",
       "fields": {
+        "category": {
+          "description": "The category the to-do item belongs to. Leave empty to remove the item from its category.",
+          "name": "[%key:component::todo::services::add_item::fields::category::name%]"
+        },
         "description": {
           "description": "[%key:component::todo::services::add_item::fields::description::description%]",
           "name": "[%key:component::todo::services::add_item::fields::description::name%]"
@@ -127,10 +131,6 @@
         "rename": {
           "description": "The new name for the to-do item",
           "name": "Rename item"
-        },
-        "section": {
-          "description": "The section (group or category) the to-do item belongs to. Leave empty to remove the item from its section.",
-          "name": "[%key:component::todo::services::add_item::fields::section::name%]"
         },
         "status": {
           "description": "A status for the to-do item.",

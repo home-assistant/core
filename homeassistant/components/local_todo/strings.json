@@ -14,8 +14,8 @@
     }
   },
   "exceptions": {
-    "invalid_section": {
-      "message": "Section \"{section}\" can't contain a comma"
+    "invalid_category": {
+      "message": "Category \"{category}\" can't contain a comma"
     },
     "item_not_found": {
       "message": "Item \"{uid}\" not found in to-do list {entity_id}"
@@ -26,36 +26,36 @@
   },
   "options": {
     "error": {
-      "invalid_section": "Sections can't be empty or contain a comma.",
-      "section_exists": "A section with this name already exists."
+      "category_exists": "A category with this name already exists.",
+      "invalid_category": "Categories can't be empty or contain a comma."
     },
     "step": {
-      "init": {
-        "menu_options": {
-          "rename_section": "Rename a section",
-          "sections": "Manage sections"
-        },
-        "title": "Sections"
-      },
-      "rename_section": {
+      "categories": {
         "data": {
-          "new_name": "New name",
-          "section": "Section"
+          "categories": "Categories"
         },
         "data_description": {
-          "new_name": "Items of this section are moved to the new name.",
-          "section": "The section to rename."
-        },
-        "description": "Rename a section of this to-do list."
-      },
-      "sections": {
-        "data": {
-          "sections": "Sections"
-        },
-        "data_description": {
-          "sections": "Sections (groups or categories) available for the items of this list, in display order. Removing a section leaves its items without a section: to keep its items, use \"Rename a section\" instead."
+          "categories": "Categories available for the items of this list. Removing a category leaves its items without a category: to keep its items, use \"Rename a category\" instead."
         },
         "description": "Define how the items of this to-do list can be grouped."
+      },
+      "init": {
+        "menu_options": {
+          "categories": "Manage categories",
+          "rename_category": "Rename a category"
+        },
+        "title": "Categories"
+      },
+      "rename_category": {
+        "data": {
+          "category": "Category",
+          "new_name": "New name"
+        },
+        "data_description": {
+          "category": "The category to rename.",
+          "new_name": "Items of this category are moved to the new name."
+        },
+        "description": "Rename a category of this to-do list."
       }
     }
   },
