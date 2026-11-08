@@ -1,7 +1,8 @@
 """Tests for Victron Remote Monitoring forecast day boundaries."""
 
+import datetime as dt
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from zoneinfo import ZoneInfo
 
 from freezegun.api import FrozenDateTimeFactory
@@ -294,3 +295,38 @@ async def test_missing_forecast_series(
 
     assert getattr(store, missing_field) is None
     assert getattr(store, present_field) is not None
+    assert getattr(store, f"{missing_field}_wh") == {}
+    assert getattr(store, f"{present_field}_wh")
+
+
+async def test_hourly_points_drop_non_numeric_and_sort(
+    hass: HomeAssistant,
+    mock_vrm_client: AsyncMock,
+) -> None:
+    """Sort numeric hourly points and skip samples that are not numbers."""
+    await hass.config.async_set_time_zone("UTC")
+    stats = mock_vrm_client.installations.stats.return_value
+    solar = stats["solar_yield"]
+    original = list(solar.records)
+    base = original[0][0]
+    solar.records = [
+        (base + 5 * 3600, None),
+        (base + 3 * 3600, "nope"),
+        (base + 2 * 3600, 7),
+        (base + 4 * 3600, True),
+        *reversed(original),
+        (base + 6 * 3600, False),
+    ]
+
+    store = await get_forecast(mock_vrm_client, 123456)
+
+    kept = [original[0], original[1], (base + 2 * 3600, 7), *original[2:]]
+    assert store.solar is solar
+    assert store.consumption is stats["consumption"]
+    assert list(store.solar_wh.items()) == [
+        (dt.datetime.fromtimestamp(timestamp, dt.UTC), float(value))
+        for timestamp, value in kept
+    ]
+    assert list(store.consumption_wh) == [
+        dt.datetime.fromtimestamp(timestamp, dt.UTC) for timestamp, _value in original
+    ]

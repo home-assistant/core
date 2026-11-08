@@ -98,5 +98,30 @@
         "name": "Highest peak time - Yesterday"
       }
     }
+  },
+  "exceptions": {
+    "end_before_start": {
+      "message": "The end time must be after the start time."
+    }
+  },
+  "services": {
+    "get_forecast": {
+      "description": "Returns the cached hourly solar production and consumption forecast for a Victron Remote Monitoring entry. Values are watt-hours.",
+      "fields": {
+        "config_entry": {
+          "description": "The Victron Remote Monitoring configuration entry to query.",
+          "name": "Victron Remote Monitoring entry"
+        },
+        "end": {
+          "description": "Latest hour to return (exclusive). If omitted, the response includes the rest of the cached forecast.",
+          "name": "End"
+        },
+        "start": {
+          "description": "Earliest hour to return (inclusive). If omitted, the response begins at the start of the cached forecast.",
+          "name": "Start"
+        }
+      },
+      "name": "Get forecast"
+    }
   }
 }
