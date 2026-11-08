@@ -2,18 +2,13 @@
 
 from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, contextmanager
-from itertools import count
-from typing import Any, cast
+from typing import Any
 
 from aiohttp.test_utils import make_mocked_request
 from aiohttp.web import Request
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
-from pytest_homeassistant.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.auth.models import RefreshToken
 from homeassistant.components.debug_console.const import (
@@ -91,44 +86,13 @@ async def setup_integration(
 
 
 @pytest.fixture
-def frontend_ws_client(
-    hass: HomeAssistant,
-    aiohttp_client: ClientSessionGenerator,
-    socket_enabled: None,
-) -> WebSocketGenerator:
-    """Create a signed-in frontend session with a same-origin browser token."""
-
-    async def create_client(user: MockUser) -> MockHAClientWebSocket:
-        client = await aiohttp_client(hass.http.app)
-        origin = str(client.make_url("/").origin())
-        hass.config.internal_url = origin
-        token = await hass.auth.async_create_refresh_token(user, f"{origin}/")
-        websocket = await client.ws_connect("/api/websocket", origin=origin)
-        assert (await websocket.receive_json())["type"] == "auth_required"
-        await websocket.send_json(
-            {"type": "auth", "access_token": hass.auth.async_create_access_token(token)}
-        )
-        assert (await websocket.receive_json())["type"] == "auth_ok"
-
-        message_ids = count(1)
-        wrapped = cast(MockHAClientWebSocket, websocket)
-        wrapped.client = client
-        wrapped.send_json_auto_id = lambda data: websocket.send_json(
-            {"id": next(message_ids), **data}
-        )
-        return wrapped
-
-    return create_client
-
-
-@pytest.fixture
 async def websocket_client(
+    hass: HomeAssistant,
     setup_integration: None,
-    hass_admin_user: MockUser,
-    frontend_ws_client: WebSocketGenerator,
+    hass_ws_client: WebSocketGenerator,
 ) -> MockHAClientWebSocket:
-    """Create a frontend websocket client with the Debug console set up."""
-    return await frontend_ws_client(hass_admin_user)
+    """Create a websocket client, with the Debug console set up."""
+    return await hass_ws_client(hass)
 
 
 @pytest.fixture

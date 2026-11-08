@@ -647,9 +647,8 @@ async def test_local_schema_has_no_session_parameter(api: llm.APIInstance) -> No
 @pytest.mark.usefixtures("setup_mcp_server")
 async def test_mcp_python_requires_ui_consent(
     hass: HomeAssistant,
-    hass_admin_user: MockUser,
     hass_client: ClientSessionGenerator,
-    frontend_ws_client: WebSocketGenerator,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """A listed tool executes after UI consent without refreshing the MCP list."""
     client = await hass_client()
@@ -688,9 +687,9 @@ async def test_mcp_python_requires_ui_consent(
     assert hass.states.get("sensor.unsafe") is None
     assert not hass.data[DATA_MCP_SESSIONS]
 
-    frontend = await frontend_ws_client(hass_admin_user)
-    await frontend.send_json_auto_id({"type": "debug_console/warning/accept"})
-    assert (await frontend.receive_json())["success"]
+    websocket = await hass_ws_client(hass)
+    await websocket.send_json_auto_id({"type": "debug_console/warning/accept"})
+    assert (await websocket.receive_json())["success"]
     response = await client.post(
         MCP_API,
         headers={"accept": CONTENT_TYPE_JSON},
@@ -731,15 +730,15 @@ async def test_mcp_python_requires_ui_consent(
 @pytest.mark.parametrize("mcp_read_only", [pytest.param(True, id="read-only")])
 @pytest.mark.usefixtures("setup_mcp_server")
 async def test_mcp_read_only_hides_python(
-    hass_admin_user: MockUser,
+    hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    frontend_ws_client: WebSocketGenerator,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Read-only MCP configuration excludes arbitrary Python even after consent."""
     client = await hass_client()
-    frontend = await frontend_ws_client(hass_admin_user)
-    await frontend.send_json_auto_id({"type": "debug_console/warning/accept"})
-    assert (await frontend.receive_json())["success"]
+    websocket = await hass_ws_client(hass)
+    await websocket.send_json_auto_id({"type": "debug_console/warning/accept"})
+    assert (await websocket.receive_json())["success"]
     response = await client.post(
         MCP_API,
         headers={"accept": CONTENT_TYPE_JSON},

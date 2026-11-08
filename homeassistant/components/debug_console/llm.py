@@ -26,7 +26,7 @@ from .session import SessionNotFoundError, async_llm_session, async_mcp_session
 
 
 class ExecutePythonTool(Tool):
-    """Execute Python inside Home Assistant after explicit frontend consent."""
+    """Execute Python inside Home Assistant after the user accepts the warning."""
 
     name = "debug_console__repl"
     title = "Python REPL"
@@ -89,7 +89,7 @@ class ExecutePythonTool(Tool):
                         "Python execution requires the user to accept the Debug console "
                         "warning in Settings > Tools > Debug console. Ask the user to "
                         "accept it in the Home Assistant UI, then retry this tool. "
-                        "An agent cannot grant consent. See "
+                        "This tool cannot accept the warning. See "
                         "https://www.home-assistant.io/integrations/debug_console"
                     )
                 },

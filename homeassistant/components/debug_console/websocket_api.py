@@ -6,15 +6,12 @@ from typing import Any
 
 import probatio
 
-from homeassistant.auth.models import TOKEN_TYPE_NORMAL
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import (
     ActiveConnection,
     WebSocketCommandHandler,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.http import current_request
-from homeassistant.helpers.network import is_hass_url
 
 from .completion import async_complete, signature_hint
 from .execution import async_execute, is_incomplete
@@ -94,26 +91,6 @@ async def handle_warning_accept(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Store that the user accepted the warning."""
-    request = current_request.get()
-    token_id = connection.refresh_token_id
-    token = hass.auth.async_get_refresh_token(token_id) if token_id else None
-    if (
-        request is None
-        or token is None
-        or token.token_type != TOKEN_TYPE_NORMAL
-        or token.client_id is None
-        or not is_hass_url(hass, token.client_id)
-        or token.client_id.rstrip("/") != str(request.url.origin())
-        or request.headers.get("Origin") != str(request.url.origin())
-    ):
-        connection.send_error(
-            msg["id"],
-            websocket_api.ERR_UNAUTHORIZED,
-            "Accept the Debug console warning in a signed-in browser "
-            "at a configured Home Assistant URL",
-        )
-        return
-
     await async_accept_warning(hass, connection.user.id)
     connection.send_result(msg["id"])
 

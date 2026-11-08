@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockUser, async_fire_time_changed
+from pytest_homeassistant.common import CLIENT_ID, MockUser, async_fire_time_changed
 from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.debug_console.const import SESSION_TIMEOUT
@@ -168,7 +168,6 @@ async def test_session_shared_by_connections(
 async def test_sessions_separated(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    frontend_ws_client: WebSocketGenerator,
 ) -> None:
     """Test sessions are separated by session ID and by user."""
     client = await hass_ws_client(hass)
@@ -184,7 +183,10 @@ async def test_sessions_separated(
     other_user = await hass.auth.async_create_user(
         "Other admin", group_ids=["system-admin"]
     )
-    other_client = await frontend_ws_client(other_user)
+    refresh_token = await hass.auth.async_create_refresh_token(other_user, CLIENT_ID)
+    other_client = await hass_ws_client(
+        hass, hass.auth.async_create_access_token(refresh_token)
+    )
     await other_client.send_json_auto_id({"type": "debug_console/warning/accept"})
     assert (await other_client.receive_json())["success"]
     result = await async_execute(other_client, "secret")
