@@ -192,11 +192,10 @@ class HueBLELight(LightEntity):
 
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
-            if effect != EFFECT_OFF:
-                _LOGGER.debug("Setting effect of %s to %s", self.name, effect)
-                brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
-                await self._async_set_effect(effect, brightness, kwargs)  # type: ignore[arg-type]
-                return
+            brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
+            _LOGGER.debug("Setting effect of %s to %s", self.name, effect)
+            await self._async_set_effect(effect, brightness, kwargs)  # type: ignore[arg-type]
+            return
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
