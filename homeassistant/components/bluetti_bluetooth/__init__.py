@@ -3,7 +3,7 @@
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import BluettiBtConfigEntry, PollingCoordinator
+from .coordinator import BluettiBluetoothCoordinator, BluettiBtConfigEntry
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -13,7 +13,7 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: BluettiBtConfigEntry) -> None:
     """Set up Bluetti Bluetooth from a config entry."""
 
-    coordinator = PollingCoordinator(hass, entry)
+    coordinator = BluettiBluetoothCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

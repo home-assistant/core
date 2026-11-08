@@ -1,5 +1,6 @@
 """Coordinator for Bluetti BT integration."""
 
+import asyncio
 from datetime import timedelta
 from enum import Enum
 import logging
@@ -17,10 +18,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_ENCRYPTION, DOMAIN
 
-type BluettiBtConfigEntry = ConfigEntry[PollingCoordinator]
+type BluettiBtConfigEntry = ConfigEntry[BluettiBluetoothCoordinator]
 
 
-class PollingCoordinator(DataUpdateCoordinator):
+class BluettiBluetoothCoordinator(DataUpdateCoordinator):
     """Polling coordinator."""
 
     config_entry: BluettiBtConfigEntry
@@ -61,6 +62,7 @@ class PollingCoordinator(DataUpdateCoordinator):
                 use_encryption=config_entry.data.get(CONF_ENCRYPTION),
             ),
             ble_device=ble_device,
+            lock=asyncio.Lock(),
         )
 
     @override

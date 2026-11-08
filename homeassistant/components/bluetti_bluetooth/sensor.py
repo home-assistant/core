@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_SERIAL, DOMAIN, ENTITY_DETAILS_MAPPING, DetailsMapping
-from .coordinator import BluettiBtConfigEntry, PollingCoordinator
+from .coordinator import BluettiBluetoothCoordinator, BluettiBtConfigEntry
 
 
 async def async_setup_entry(
@@ -54,7 +54,7 @@ class BluettiSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: PollingCoordinator,
+        coordinator: BluettiBluetoothCoordinator,
         device_info: DeviceInfo,
         field_name: str,
         details: DetailsMapping,
