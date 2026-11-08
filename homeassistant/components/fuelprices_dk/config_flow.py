@@ -8,7 +8,6 @@ import probatio
 from pybraendstofpriser import Braendstofpriser
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -17,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 
+from . import FuelpricesDkConfigEntry
 from .const import CONF_COMPANY, CONF_STATION, DOMAIN, WEBSITE_URL
 
 
@@ -38,7 +38,7 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: FuelpricesDkConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {"station": FuelpricesDkStationSubentryFlow}
@@ -207,15 +207,12 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = _get_api_error_key(exc)
 
             if not errors:
-                entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
+                entry = self._get_reauth_entry()
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={CONF_API_KEY: user_input[CONF_API_KEY]},
                 )
-                if entry is not None:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data={CONF_API_KEY: user_input[CONF_API_KEY]},
-                    )
-                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(

@@ -12,7 +12,7 @@ from homeassistant.components.button import (
     ButtonEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS
+from homeassistant.const import CONF_DEVICE_CLASS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as tcv
-from .const import CONF_PRESS, DOMAIN
+from .const import CONF_PRESS, DEFAULT_NAMES, DOMAIN
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
@@ -32,7 +32,7 @@ from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Template Button"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.BUTTON]
 DEFAULT_OPTIMISTIC = False
 
 SCRIPT_FIELDS = (CONF_PRESS,)

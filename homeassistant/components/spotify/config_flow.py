@@ -53,7 +53,7 @@ class SpotifyFlowHandler(
             self.logger.exception("Error while connecting to Spotify")
             return self.async_abort(reason="connection_error")
 
-        name = current_user.display_name
+        name = current_user.display_name or current_user.user_id
 
         await self.async_set_unique_id(current_user.user_id)
 

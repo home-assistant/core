@@ -175,7 +175,9 @@ class ProfileEndpoints:
 
 
 @callback
-def async_suggest_profile(hass: HomeAssistant, active: DownloadProfile) -> None:
+def async_suggest_profile(
+    hass: HomeAssistant, entry_id: str, active: DownloadProfile
+) -> None:
     """Suggest a profile meant for the country of the user, if there is one."""
     country = hass.config.country
 
@@ -183,19 +185,20 @@ def async_suggest_profile(hass: HomeAssistant, active: DownloadProfile) -> None:
         if profile.id == active.id or country not in profile.countries:
             continue
 
-        async_create_profile_suggestion(hass, profile)
+        async_create_profile_suggestion(hass, entry_id, profile)
 
 
 @callback
 def async_create_profile_suggestion(
-    hass: HomeAssistant, profile: DownloadProfile
+    hass: HomeAssistant, entry_id: str, profile: DownloadProfile
 ) -> None:
     """Create the issue that suggests a profile."""
     ir.async_create_issue(
         hass,
         DOMAIN,
         f"{PROFILE_ISSUE_PREFIX}{profile.id}",
-        data={"profile": profile.id},
+        config_entry_id=entry_id,
+        data={"entry_id": entry_id, "profile": profile.id},
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key="download_profile",

@@ -12,9 +12,8 @@ from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElkM1ConfigEntry
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
-from .models import ELKM1Data
+from .models import ElkM1ConfigEntry, ELKM1Data
 
 _LOGGER = logging.getLogger(__name__)
 

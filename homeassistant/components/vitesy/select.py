@@ -2,6 +2,7 @@
 
 from typing import override
 
+from aiovitesy.const import SHELFY_MODES
 from aiovitesy.exceptions import VitesyError
 
 from homeassistant.components.select import SelectEntity
@@ -14,8 +15,6 @@ from .coordinator import VitesyConfigEntry, VitesyDataUpdateCoordinator, support
 from .entity import VitesyEntity
 
 PARALLEL_UPDATES = 1
-
-# Raw AWS IoT shadow values for Shelfy, not program catalogue ids.
 
 
 async def async_setup_entry(
@@ -36,7 +35,7 @@ class VitesyModeSelect(VitesyEntity, SelectEntity):
     """Select for the operating mode of a Vitesy device."""
 
     _attr_translation_key = "mode"
-    _attr_options = ["eco", "shelf", "boost"]
+    _attr_options = list(SHELFY_MODES)
 
     def __init__(
         self, coordinator: VitesyDataUpdateCoordinator, device_id: str

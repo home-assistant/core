@@ -78,6 +78,7 @@ from .utils import (
     get_http_port,
     get_rpc_device_wakeup_period,
     get_rpc_ws_url,
+    get_shelly_manufacturer,
     get_shelly_model_name,
     is_rpc_ble_scanner_supported,
     update_device_fw_info,
@@ -200,7 +201,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             name=self.name,
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
             identifiers={(DOMAIN, self.mac)},
-            manufacturer="Shelly",
+            manufacturer=get_shelly_manufacturer(self.device),
             model=self.model_name,
             model_id=self.model,
             sw_version=self.sw_version,
@@ -558,6 +559,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._ota_reboot_deadline: datetime | None = None
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._connect_task: asyncio.Task | None = None
+        self._initialized_callbacks: list[CALLBACK_TYPE] = []
 
     @cached_property
     def bluetooth_source(self) -> str:
@@ -602,6 +604,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self.update_interval = timedelta(seconds=update_interval)
 
         return True
+
+    @callback
+    def async_on_initialized(self, initialized_callback: CALLBACK_TYPE) -> None:
+        """Run a callback once, the next time the device is initialized."""
+        self._initialized_callbacks.append(initialized_callback)
 
     @callback
     def async_subscribe_ota_events(
@@ -874,6 +881,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self.config_entry.async_create_background_task(
                 self.hass, self._async_connected(), "rpc device init", eager_start=True
             )
+            for initialized_callback in self._initialized_callbacks:
+                initialized_callback()
+            self._initialized_callbacks.clear()
             # Make sure entities are marked available
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.DISCONNECTED:
