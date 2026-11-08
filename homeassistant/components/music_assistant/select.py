@@ -14,9 +14,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
-from .const import PLAYER_SETTINGS_SCHEMA_VERSION
 from .entity import MusicAssistantEntity, MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
+
+PLAYER_SETTINGS_SCHEMA_VERSION: Final = 101
 
 PLAYER_OPTIONS_SELECT: Final[dict[str, bool]] = {
     # translation_key: enabled_by_default
