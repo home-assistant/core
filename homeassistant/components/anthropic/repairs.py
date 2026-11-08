@@ -4,7 +4,6 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING, cast
 
 import anthropic
-from anthropic.resources.messages.messages import DEPRECATED_MODELS
 import probatio
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
@@ -91,8 +90,6 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             model
             for model in self._model_list_cache[entry.entry_id]
             if model.lifecycle == "active"
-            and model_alias(model.id) not in DEPRECATED_MODELS
-            and model.id not in DEPRECATED_MODELS
         ]
         model_list: list[SelectOptionDict] = [
             {"label": model.display_name, "value": model_alias(model.id)}
@@ -223,12 +220,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             model_info = await entry.runtime_data.client.models.retrieve(
                 user_input[CONF_CHAT_MODEL], timeout=10.0
             )
-        if (
-            model_info.lifecycle != "active"
-            or user_input[CONF_CHAT_MODEL] in DEPRECATED_MODELS
-            or model_info.id in DEPRECATED_MODELS
-            or model_alias(model_info.id) in DEPRECATED_MODELS
-        ):
+        if model_info.lifecycle != "active":
             return False
         reconcile_model_options(updated_data, model_info)
 
