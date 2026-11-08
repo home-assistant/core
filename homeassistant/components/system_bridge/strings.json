@@ -3,8 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "unique_id_mismatch": "The identifier does not match the previous identifier",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unsupported_version": "Your version of System Bridge is not supported. Please upgrade to the latest version."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -324,6 +323,9 @@
     }
   },
   "exceptions": {
+    "action_failed": {
+      "message": "Failed to run {action}: {error}"
+    },
     "audio_control_failed": {
       "message": "Failed to control audio device {name}: {error}"
     },
@@ -338,6 +340,9 @@
     },
     "display_control_failed": {
       "message": "Failed to control display {display_id}: {error}"
+    },
+    "entry_not_loaded": {
+      "message": "System Bridge entry {entry_id} isn't loaded"
     },
     "media_control_failed": {
       "message": "Failed to control the media player: {error}"

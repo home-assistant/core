@@ -1,17 +1,28 @@
 """Service registration for System Bridge integration."""
 
+from collections.abc import Awaitable
 from dataclasses import asdict
 import logging
 from typing import Any
 
 import probatio
+from systembridgeconnector.const import EventType
+from systembridgeconnector.exceptions import ConnectionClosedException
 from systembridgeconnector.models.keyboard_key import KeyboardKey
 from systembridgeconnector.models.keyboard_text import KeyboardText
 from systembridgeconnector.models.modules.processes import Process
 from systembridgeconnector.models.open_path import OpenPath
 from systembridgeconnector.models.open_url import OpenUrl
+from systembridgeconnector.models.response import Response
 
-from homeassistant.const import CONF_COMMAND, CONF_ID, CONF_NAME, CONF_PATH, CONF_URL
+from homeassistant.const import (
+    CONF_COMMAND,
+    CONF_HOST,
+    CONF_ID,
+    CONF_NAME,
+    CONF_PATH,
+    CONF_URL,
+)
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -19,7 +30,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
@@ -71,7 +82,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.ONLY,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         "open_path",
         handle_open_path,
@@ -84,7 +96,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.OPTIONAL,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         "power_command",
         handle_power_command,
@@ -97,7 +110,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.OPTIONAL,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         "open_url",
         handle_open_url,
@@ -110,7 +124,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.OPTIONAL,
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         "send_keypress",
         handle_send_keypress,
@@ -126,7 +141,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         },
     )
 
-    hass.services.async_register(
+    service.async_register_admin_service(
+        hass,
         DOMAIN,
         "send_text",
         handle_send_text,
@@ -193,50 +209,92 @@ async def handle_get_processes_by_name(
     }
 
 
+async def _async_send_command(
+    coordinator: SystemBridgeDataUpdateCoordinator,
+    action: str,
+    command: Awaitable[Response],
+) -> ServiceResponse:
+    """Send a command to the bridge, raising on a closed connection or an error."""
+    try:
+        response = await command
+    except (ConnectionClosedException, ConnectionResetError) as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={
+                "title": coordinator.config_entry.title,
+                "host": coordinator.config_entry.data[CONF_HOST],
+            },
+        ) from e
+    if response.type == EventType.ERROR:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="action_failed",
+            translation_placeholders={
+                "action": action,
+                "error": response.message or "",
+            },
+        )
+    return asdict(response)
+
+
 async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
     """Handle the open path service call."""
     _LOGGER.debug("Open path: %s", service_call.data)
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    response = await coordinator.websocket_client.open_path(
-        OpenPath(path=service_call.data[CONF_PATH])
+    return await _async_send_command(
+        coordinator,
+        service_call.service,
+        coordinator.websocket_client.open_path(
+            OpenPath(path=service_call.data[CONF_PATH])
+        ),
     )
-    return asdict(response)
 
 
 async def handle_power_command(service_call: ServiceCall) -> ServiceResponse:
     """Handle the power command service call."""
     _LOGGER.debug("Power command: %s", service_call.data)
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    response = await getattr(
-        coordinator.websocket_client,
-        POWER_COMMAND_MAP[service_call.data[CONF_COMMAND]],
-    )()
-    return asdict(response)
+    return await _async_send_command(
+        coordinator,
+        service_call.service,
+        getattr(
+            coordinator.websocket_client,
+            POWER_COMMAND_MAP[service_call.data[CONF_COMMAND]],
+        )(),
+    )
 
 
 async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
     """Handle the open url service call."""
     _LOGGER.debug("Open URL: %s", service_call.data)
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    response = await coordinator.websocket_client.open_url(
-        OpenUrl(url=service_call.data[CONF_URL])
+    return await _async_send_command(
+        coordinator,
+        service_call.service,
+        coordinator.websocket_client.open_url(OpenUrl(url=service_call.data[CONF_URL])),
     )
-    return asdict(response)
 
 
 async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
     """Handle the send_keypress service call."""
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    response = await coordinator.websocket_client.keyboard_keypress(
-        KeyboardKey(key=service_call.data[CONF_KEY])
+    return await _async_send_command(
+        coordinator,
+        service_call.service,
+        coordinator.websocket_client.keyboard_keypress(
+            KeyboardKey(key=service_call.data[CONF_KEY])
+        ),
     )
-    return asdict(response)
 
 
 async def handle_send_text(service_call: ServiceCall) -> ServiceResponse:
     """Handle the send_text service call."""
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    response = await coordinator.websocket_client.keyboard_text(
-        KeyboardText(text=service_call.data[CONF_TEXT])
+    return await _async_send_command(
+        coordinator,
+        service_call.service,
+        coordinator.websocket_client.keyboard_text(
+            KeyboardText(text=service_call.data[CONF_TEXT])
+        ),
     )
-    return asdict(response)

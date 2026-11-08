@@ -366,8 +366,6 @@ ATTR_FRIENDLY_NAME: Final = "friendly_name"
 # A picture to represent entity
 ATTR_ENTITY_PICTURE: Final = "entity_picture"
 
-ATTR_IDENTIFIERS: Final = "identifiers"
-
 # Icon to use in the frontend
 ATTR_ICON: Final = "icon"
 
@@ -387,16 +385,19 @@ ATTR_LOCATION: Final = "location"
 
 ATTR_MODE: Final = "mode"
 
-ATTR_CONFIGURATION_URL: Final = "configuration_url"
-ATTR_CONNECTIONS: Final = "connections"
-ATTR_DEFAULT_NAME: Final = "default_name"
-ATTR_MANUFACTURER: Final = "manufacturer"
-ATTR_MODEL: Final = "model"
-ATTR_MODEL_ID: Final = "model_id"
-ATTR_SERIAL_NUMBER: Final = "serial_number"
-ATTR_SUGGESTED_AREA: Final = "suggested_area"
-ATTR_SW_VERSION: Final = "sw_version"
-ATTR_HW_VERSION: Final = "hw_version"
+_DEPRECATED_ATTR_CONFIGURATION_URL = DeprecatedConstant(
+    "configuration_url", None, "2027.12"
+)
+_DEPRECATED_ATTR_CONNECTIONS = DeprecatedConstant("connections", None, "2027.12")
+_DEPRECATED_ATTR_DEFAULT_NAME = DeprecatedConstant("default_name", None, "2027.12")
+_DEPRECATED_ATTR_HW_VERSION = DeprecatedConstant("hw_version", None, "2027.12")
+_DEPRECATED_ATTR_IDENTIFIERS = DeprecatedConstant("identifiers", None, "2027.12")
+_DEPRECATED_ATTR_MANUFACTURER = DeprecatedConstant("manufacturer", None, "2027.12")
+_DEPRECATED_ATTR_MODEL = DeprecatedConstant("model", None, "2027.12")
+_DEPRECATED_ATTR_MODEL_ID = DeprecatedConstant("model_id", None, "2027.12")
+_DEPRECATED_ATTR_SERIAL_NUMBER = DeprecatedConstant("serial_number", None, "2027.12")
+_DEPRECATED_ATTR_SUGGESTED_AREA = DeprecatedConstant("suggested_area", None, "2027.12")
+_DEPRECATED_ATTR_SW_VERSION = DeprecatedConstant("sw_version", None, "2027.12")
 _DEPRECATED_ATTR_VIA_DEVICE = DeprecatedConstant(
     "via_device", "via_device_id", "2027.8"
 )
