@@ -7,6 +7,7 @@ from powerfox import (
     Powerfox,
     PowerfoxAuthenticationError,
     PowerfoxConnectionError,
+    PowerfoxNoDataError,
 )
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
@@ -45,6 +46,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="connection_error",
+        ) from err
+    except PowerfoxNoDataError as err:
+        await client.close()
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="no_devices",
         ) from err
 
     coordinators: list[
