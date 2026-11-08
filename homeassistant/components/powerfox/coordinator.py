@@ -1,5 +1,6 @@
 """Coordinator for Powerfox integration."""
 
+from datetime import timedelta
 from typing import override
 
 from powerfox import (
@@ -19,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import DEVICE_LIST_SCAN_INTERVAL, DOMAIN, LOGGER, SCAN_INTERVAL
 
 type PowerfoxCoordinator = (
     PowerfoxDataUpdateCoordinator | PowerfoxReportDataUpdateCoordinator
@@ -27,8 +28,8 @@ type PowerfoxCoordinator = (
 type PowerfoxConfigEntry = ConfigEntry[list[PowerfoxCoordinator]]
 
 
-class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
-    """Base coordinator handling shared Powerfox logic."""
+class PowerfoxApiCoordinator[T](DataUpdateCoordinator[T]):
+    """Base coordinator handling errors shared by all Powerfox API calls."""
 
     config_entry: PowerfoxConfigEntry
 
@@ -37,18 +38,17 @@ class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
         hass: HomeAssistant,
         config_entry: PowerfoxConfigEntry,
         client: Powerfox,
-        device: Device,
+        update_interval: timedelta,
     ) -> None:
-        """Initialize shared Powerfox coordinator."""
+        """Initialize shared Powerfox API coordinator."""
         super().__init__(
             hass,
             LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=update_interval,
         )
         self.client = client
-        self.device = device
 
     @override
     async def _async_update_data(self) -> T:
@@ -65,6 +65,55 @@ class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
             ) from err
+
+    async def _async_fetch_data(self) -> T:
+        """Fetch data from the Powerfox API."""
+        raise NotImplementedError
+
+
+class PowerfoxDeviceListCoordinator(PowerfoxApiCoordinator[list[Device]]):
+    """Coordinator tracking the devices of a Powerfox account."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: PowerfoxConfigEntry,
+        client: Powerfox,
+    ) -> None:
+        """Initialize the device list coordinator."""
+        super().__init__(hass, config_entry, client, DEVICE_LIST_SCAN_INTERVAL)
+
+    @override
+    async def _async_fetch_data(self) -> list[Device]:
+        """Fetch the device list from the Powerfox API."""
+        try:
+            return await self.client.all_devices()
+        except PowerfoxNoDataError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_devices",
+            ) from err
+
+
+class PowerfoxBaseCoordinator[T](PowerfoxApiCoordinator[T]):
+    """Base coordinator handling shared Powerfox device logic."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: PowerfoxConfigEntry,
+        client: Powerfox,
+        device: Device,
+    ) -> None:
+        """Initialize shared Powerfox device coordinator."""
+        super().__init__(hass, config_entry, client, SCAN_INTERVAL)
+        self.device = device
+
+    @override
+    async def _async_update_data(self) -> T:
+        """Fetch device data and normalize device specific Powerfox errors."""
+        try:
+            return await super()._async_update_data()
         except PowerfoxNoDataError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -77,10 +126,6 @@ class PowerfoxBaseCoordinator[T](DataUpdateCoordinator[T]):
                 translation_key="privacy_error",
                 translation_placeholders={"device_name": self.device.name},
             ) from err
-
-    async def _async_fetch_data(self) -> T:
-        """Fetch data from the Powerfox API."""
-        raise NotImplementedError
 
 
 class PowerfoxDataUpdateCoordinator(PowerfoxBaseCoordinator[Poweropti]):
