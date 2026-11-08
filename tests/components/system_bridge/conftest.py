@@ -181,6 +181,12 @@ def mock_websocket_client(
             message="Notification sent",
             data={"id": 1},
         )
+        websocket_client.dismiss_notification.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.NOTIFICATION_DISMISSED,
+            message="Notification dismissed",
+            data={},
+        )
         # Trigger callback when listener is registered
         websocket_client.listen.side_effect = mock_data_listener
 

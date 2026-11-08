@@ -118,6 +118,19 @@ send_message:
       example: /home/user/Documents
       selector:
         text:
+dismiss_message:
+  target:
+    entity:
+      domain: notify
+      integration: system_bridge
+  fields:
+    id:
+      required: true
+      example: 12
+      selector:
+        number:
+          min: 1
+          mode: box
 send_keypress:
   fields:
     bridge:

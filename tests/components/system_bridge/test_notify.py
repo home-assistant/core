@@ -10,7 +10,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
-from systembridgeconnector.models.notification import Notification, NotificationButton
+from systembridgeconnector.models.notification import (
+    Notification,
+    NotificationButton,
+    NotificationDismissRequest,
+)
 from systembridgeconnector.models.response import Response
 
 from homeassistant.components.notify import (
@@ -424,3 +428,113 @@ async def test_legacy_notify_service_unloaded(
     assert e.value.translation_key == "entry_not_loaded"
     assert e.value.translation_placeholders == {"entry_id": mock_config_entry.entry_id}
     mock_websocket_client.send_notification.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_dismiss_message(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: AsyncMock,
+) -> None:
+    """Test dismissing a message with the system_bridge.dismiss_message action."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "dismiss_message",
+        {ATTR_ENTITY_ID: "notify.hostname", "id": 12},
+        blocking=True,
+    )
+
+    mock_websocket_client.dismiss_notification.assert_awaited_once_with(
+        NotificationDismissRequest(id=12)
+    )
+
+
+@pytest.mark.usefixtures("mock_version")
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key", "placeholders"),
+    [
+        pytest.param(
+            ConnectionClosedException,
+            "connection_failed",
+            {"title": "TestSystem", "host": "127.0.0.1"},
+            id="connection_closed",
+        ),
+        pytest.param(
+            [
+                Response(
+                    id=FIXTURE_REQUEST_ID,
+                    type=EventType.ERROR,
+                    subtype="BAD_REQUEST",
+                    message="Dismissing notifications isn't supported",
+                    data={},
+                )
+            ],
+            "action_failed",
+            {
+                "action": "dismiss_message",
+                "error": "Dismissing notifications isn't supported",
+            },
+            id="error_response",
+        ),
+    ],
+)
+async def test_dismiss_message_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: AsyncMock,
+    side_effect: type[Exception] | list[Response],
+    translation_key: str,
+    placeholders: dict[str, str],
+) -> None:
+    """Test dismissing a message that fails raises."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_websocket_client.dismiss_notification.side_effect = side_effect
+
+    with pytest.raises(HomeAssistantError) as e:
+        await hass.services.async_call(
+            DOMAIN,
+            "dismiss_message",
+            {ATTR_ENTITY_ID: "notify.hostname", "id": 12},
+            blocking=True,
+        )
+
+    assert e.value.translation_key == translation_key
+    assert e.value.translation_placeholders == placeholders
+
+
+@pytest.mark.usefixtures("mock_version")
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param({}, id="no_id"),
+        pytest.param({"id": 0}, id="zero_id"),
+        pytest.param({"id": "abc"}, id="not_a_number"),
+    ],
+)
+async def test_dismiss_message_invalid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: AsyncMock,
+    data: dict[str, Any],
+) -> None:
+    """Test the system_bridge.dismiss_message action rejects invalid data."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "dismiss_message",
+            {ATTR_ENTITY_ID: "notify.hostname", **data},
+            blocking=True,
+        )
+
+    mock_websocket_client.dismiss_notification.assert_not_awaited()

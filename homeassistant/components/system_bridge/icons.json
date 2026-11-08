@@ -219,6 +219,9 @@
     }
   },
   "services": {
+    "dismiss_message": {
+      "service": "mdi:message-badge-outline"
+    },
     "get_process_by_id": {
       "service": "mdi:console"
     },

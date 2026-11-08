@@ -6,7 +6,11 @@ from typing import Any, override
 
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
-from systembridgeconnector.models.notification import Notification, NotificationButton
+from systembridgeconnector.models.notification import (
+    Notification,
+    NotificationButton,
+    NotificationDismissRequest,
+)
 from systembridgeconnector.models.response import Response
 
 from homeassistant.components.notify import (
@@ -28,6 +32,7 @@ from .const import DOMAIN
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .entity import SystemBridgeEntity
 from .issue import async_deprecated_notify_action_call
+from .services import SystemBridgeService, async_send_command
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,6 +136,16 @@ class SystemBridgeNotifyEntity(SystemBridgeEntity, NotifyEntity):
         # Versions before 5.20.0 don't reply with the id
         data = response.data if isinstance(response.data, dict) else {}
         return {"id": data.get("id")}
+
+    async def system_bridge_dismiss_message(self, id: int) -> None:
+        """Dismiss a message via the system_bridge.dismiss_message action."""
+        await async_send_command(
+            self.coordinator,
+            SystemBridgeService.DISMISS_MESSAGE,
+            self.coordinator.websocket_client.dismiss_notification(
+                NotificationDismissRequest(id=id)
+            ),
+        )
 
 
 async def async_get_service(

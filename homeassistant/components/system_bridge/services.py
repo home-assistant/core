@@ -58,6 +58,7 @@ class SystemBridgeService(StrEnum):
     """Store keys for System Bridge notify entity services."""
 
     SEND_MESSAGE = "send_message"
+    DISMISS_MESSAGE = "dismiss_message"
 
 
 class SystemBridgeServiceArgument(StrEnum):
@@ -66,6 +67,7 @@ class SystemBridgeServiceArgument(StrEnum):
     BUTTONS = "buttons"
     DURATION = "duration"
     ICON = "icon"
+    ID = "id"
     MESSAGE = "message"
     PATH = "path"
     SOUND = "sound"
@@ -124,6 +126,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         },
         func="system_bridge_send_message",
         supports_response=SupportsResponse.OPTIONAL,
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SystemBridgeService.DISMISS_MESSAGE,
+        entity_domain=NOTIFY_DOMAIN,
+        schema={
+            probatio.Required(SystemBridgeServiceArgument.ID): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1)
+            ),
+        },
+        func="system_bridge_dismiss_message",
     )
 
     hass.services.async_register(
@@ -279,7 +293,7 @@ async def handle_get_processes_by_name(
     }
 
 
-async def _async_send_command(
+async def async_send_command(
     coordinator: SystemBridgeDataUpdateCoordinator,
     action: str,
     command: Awaitable[Response],
@@ -312,7 +326,7 @@ async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
     """Handle the open path service call."""
     _LOGGER.debug("Open path: %s", service_call.data)
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    return await _async_send_command(
+    return await async_send_command(
         coordinator,
         service_call.service,
         coordinator.websocket_client.open_path(
@@ -325,7 +339,7 @@ async def handle_power_command(service_call: ServiceCall) -> ServiceResponse:
     """Handle the power command service call."""
     _LOGGER.debug("Power command: %s", service_call.data)
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    return await _async_send_command(
+    return await async_send_command(
         coordinator,
         service_call.service,
         getattr(
@@ -339,7 +353,7 @@ async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
     """Handle the open url service call."""
     _LOGGER.debug("Open URL: %s", service_call.data)
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    return await _async_send_command(
+    return await async_send_command(
         coordinator,
         service_call.service,
         coordinator.websocket_client.open_url(OpenUrl(url=service_call.data[CONF_URL])),
@@ -349,7 +363,7 @@ async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
 async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
     """Handle the send_keypress service call."""
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    return await _async_send_command(
+    return await async_send_command(
         coordinator,
         service_call.service,
         coordinator.websocket_client.keyboard_keypress(
@@ -361,7 +375,7 @@ async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
 async def handle_send_text(service_call: ServiceCall) -> ServiceResponse:
     """Handle the send_text service call."""
     coordinator = _get_coordinator(service_call.hass, service_call.data[CONF_BRIDGE])
-    return await _async_send_command(
+    return await async_send_command(
         coordinator,
         service_call.service,
         coordinator.websocket_client.keyboard_text(
