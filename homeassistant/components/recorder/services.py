@@ -305,6 +305,13 @@ async def _async_handle_get_history_service(
 
     formatted_result: JsonObjectType = {}
     for entity_id, history_states_with_dups in result.items():
+        has_start_state = bool(
+            history_states_with_dups
+            and history_states_with_dups[0].last_updated_timestamp
+            == start_time.timestamp()
+        )
+        in_window_count = len(history_states_with_dups) - (1 if has_start_state else 0)
+
         # Remove consecutive states that are the same, this can occur due to restarts
         history_states: list[State] = []
         for index, state in enumerate(history_states_with_dups):
@@ -315,7 +322,10 @@ async def _async_handle_get_history_service(
                 continue
             history_states.append(state)
 
-        is_truncated = len(history_states) > MAX_GET_HISTORY_RECORDS
+        is_truncated = (
+            in_window_count == MAX_GET_HISTORY_RECORDS + 1
+            or len(history_states) > MAX_GET_HISTORY_RECORDS
+        )
         if is_truncated:
             if not allow_truncation:
                 raise ServiceValidationError(

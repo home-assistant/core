@@ -1533,6 +1533,85 @@ async def test_get_history_service_max_records_exceeded(
     assert exc_info.value.translation_key == "max_records_exceeded"
 
 
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_history_service_max_records_with_duplicate_states(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test max records truncation detection when duplicate consecutive states exist."""
+    monkeypatch.setattr(
+        "homeassistant.components.recorder.services.MAX_GET_HISTORY_RECORDS", 3
+    )
+
+    times: list[tuple[datetime, float | str]] = [
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-07 23:00:00")), "unknown"),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-07 23:30:00")), "unknown"),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00")), 0.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00")), 1.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00")), 2.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00")), 3.0),
+    ]
+    now = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 04:00:00"))
+
+    for time, value in times:
+        hass.states.async_set(
+            entity_id="sensor.sensor",
+            new_state=value,
+            timestamp=time.timestamp(),
+            force_update=True,
+        )
+    await async_recorder_block_till_done(hass)
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    with (
+        patch("homeassistant.util.dt.utcnow", return_value=now),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            "recorder",
+            "get_history",
+            {
+                "start_time": "2023-05-08 05:00:00Z",
+                "entity_id": ["sensor.sensor"],
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "max_records_exceeded"
+
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        result = await hass.services.async_call(
+            "recorder",
+            "get_history",
+            {
+                "start_time": "2023-05-08 05:00:00Z",
+                "entity_id": ["sensor.sensor"],
+                "allow_truncation": True,
+            },
+            return_response=True,
+            blocking=True,
+        )
+        assert result == {
+            "history": {
+                "sensor.sensor": [
+                    {
+                        "start": "2023-05-08T06:00:00+00:00",
+                        "end": "2023-05-08T07:00:00+00:00",
+                        "state": "unknown",
+                    },
+                    {
+                        "start": "2023-05-08T07:00:00+00:00",
+                        "end": "2023-05-08T08:00:00+00:00",
+                        "state": "0.0",
+                    },
+                ]
+            }
+        }
+
+
 @pytest.mark.parametrize(
     ("service_args", "expected_result"),
     [
