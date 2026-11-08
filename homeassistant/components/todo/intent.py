@@ -1,5 +1,6 @@
 """Intents for the todo integration."""
 
+import dataclasses
 from typing import override
 
 import probatio
@@ -125,11 +126,7 @@ class ListCompleteItemIntentHandler(ListBaseIntentHandler):
 
         # Mark as completed
         await target_list.async_update_todo_item(
-            TodoItem(
-                uid=matching_item.uid,
-                summary=matching_item.summary,
-                status=TodoItemStatus.COMPLETED,
-            )
+            dataclasses.replace(matching_item, status=TodoItemStatus.COMPLETED)
         )
 
 
