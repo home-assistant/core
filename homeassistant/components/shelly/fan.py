@@ -18,6 +18,7 @@ from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import get_device_entry_gen, get_rpc_channel_name
 
@@ -65,6 +66,7 @@ class RpcShellyFan(ShellyRpcAttributeEntity, FanEntity):
     """Entity that controls a fan on RPC based Shelly devices."""
 
     entity_description: RpcFanDescription
+    _id: int
     _attr_preset_modes = [MODE_AUTO, MODE_MANUAL]
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
@@ -104,6 +106,7 @@ class RpcShellyFan(ShellyRpcAttributeEntity, FanEntity):
         """Return the current preset mode."""
         return str(self.status["mode"])
 
+    @rpc_call
     @override
     async def async_turn_on(
         self,
@@ -120,38 +123,33 @@ class RpcShellyFan(ShellyRpcAttributeEntity, FanEntity):
             await self.async_turn_off()
             return
 
-        params: dict[str, Any] = {"id": self._id, "mode": MODE_MANUAL, "on": True}
-        if percentage is not None:
-            params["speed"] = percentage
+        await self.coordinator.device.fan_set(
+            self._id, MODE_MANUAL, on=True, speed=percentage
+        )
 
-        await self.call_rpc("Fan.Set", params)
-
+    @rpc_call
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        await self.call_rpc(
-            "Fan.Set", {"id": self._id, "mode": MODE_MANUAL, "on": False}
-        )
+        await self.coordinator.device.fan_set(self._id, MODE_MANUAL, on=False)
 
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         await self.async_turn_on(percentage=percentage)
 
+    @rpc_call
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         if preset_mode == MODE_AUTO:
-            await self.call_rpc("Fan.Set", {"id": self._id, "mode": MODE_AUTO})
+            await self.coordinator.device.fan_set(self._id, MODE_AUTO)
             return
 
         # Keep the current output when leaving auto mode
-        params: dict[str, Any] = {
-            "id": self._id,
-            "mode": MODE_MANUAL,
-            "on": self.is_on,
-        }
-        if self.is_on:
-            params["speed"] = self.status["speed"]
-
-        await self.call_rpc("Fan.Set", params)
+        await self.coordinator.device.fan_set(
+            self._id,
+            MODE_MANUAL,
+            on=self.is_on,
+            speed=self.status["speed"] if self.is_on else None,
+        )
