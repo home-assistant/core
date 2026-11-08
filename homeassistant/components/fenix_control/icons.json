@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:circle-medium",
+            "state": {
+              "away": "mdi:snowflake",
+              "boost": "mdi:fire",
+              "home": "mdi:clock-outline"
+            }
+          }
+        }
+      }
+    }
+  }
+}

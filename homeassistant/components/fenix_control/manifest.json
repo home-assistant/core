@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pyfenixcontrol"],
   "quality_scale": "bronze",
-  "requirements": ["pyfenixcontrol==0.3.0"]
+  "requirements": ["pyfenixcontrol==0.4.0"]
 }

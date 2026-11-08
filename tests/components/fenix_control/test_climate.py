@@ -18,6 +18,8 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
@@ -103,43 +105,75 @@ async def test_set_temperature(
         blocking=True,
     )
 
-    mock_fenix_client.set_target_temperature.assert_awaited_once_with(DEVICE_ID, 21.5)
+    mock_fenix_client.set_setpoint.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.MANUAL, 21.5
+    )
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_TEMPERATURE] == 21.5
     assert state.state == HVACMode.HEAT
 
 
+# The active setpoint (21.0) differs from the defrost and boost setpoints, which
+# have their own ranges (TFT thermostats report 1.94-15 °C for frost protection)
+SETPOINT_DEVICE = dataclasses.replace(
+    DEVICE,
+    active_target_temperature=21.0,
+    defrost_temperature=7.0,
+    boost_temperature=24.0,
+    target_temperature_range=(5.0, 35.0),
+    defrost_temperature_range=((35.5 - 32) * 5 / 9, 15.0),
+    boost_temperature_range=(5.0, 35.0),
+)
+
+
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    ("preset_mode", "setpoint"),
+    ("preset_mode", "setpoint", "min_temp", "max_temp"),
     [
-        (PresetMode.PROGRAM, 20.0),
-        (PresetMode.DEFROST, 7.0),
-        (PresetMode.BOOST, 24.0),
+        (PresetMode.PROGRAM, 21.0, 5.0, 35.0),
+        (PresetMode.DEFROST, 7.0, 2.0, 15.0),
+        (PresetMode.BOOST, 24.0, 5.0, 35.0),
     ],
 )
-async def test_target_is_active_setpoint(
+async def test_target_outside_manual(
     hass: HomeAssistant,
     mock_fenix_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     preset_mode: PresetMode,
     setpoint: float,
+    min_temp: float,
+    max_temp: float,
 ) -> None:
-    """Test program, defrost and boost show the setpoint the thermostat uses."""
+    """Test program, defrost and boost show their setpoint and range."""
     await _set_devices(
         hass,
         mock_fenix_client,
         freezer,
-        dataclasses.replace(
-            DEVICE, preset_mode=int(preset_mode), active_target_temperature=setpoint
-        ),
+        dataclasses.replace(SETPOINT_DEVICE, preset_mode=int(preset_mode)),
     )
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_TEMPERATURE] == setpoint
+    assert state.attributes[ATTR_MIN_TEMP] == min_temp
+    assert state.attributes[ATTR_MAX_TEMP] == max_temp
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
         & ClimateEntityFeature.TARGET_TEMPERATURE
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_in_program(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a new target in program mode switches the thermostat to manual."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(SETPOINT_DEVICE, preset_mode=int(PresetMode.PROGRAM)),
     )
 
     await hass.services.async_call(
@@ -149,10 +183,107 @@ async def test_target_is_active_setpoint(
         blocking=True,
     )
 
-    mock_fenix_client.set_target_temperature.assert_called_once_with(DEVICE_ID, 21.5)
+    mock_fenix_client.set_setpoint.assert_called_once_with(
+        DEVICE_ID, PresetMode.MANUAL, 21.5
+    )
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 21.5
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("preset_mode", "preset", "temperature"),
+    [
+        (PresetMode.DEFROST, PRESET_AWAY, 8.0),
+        (PresetMode.BOOST, PRESET_BOOST, 23.0),
+    ],
+)
+async def test_set_temperature_keeps_defrost_and_boost(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    preset_mode: PresetMode,
+    preset: str,
+    temperature: float,
+) -> None:
+    """Test defrost and boost get a new setpoint and keep their mode."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(SETPOINT_DEVICE, preset_mode=int(preset_mode)),
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
+        blocking=True,
+    )
+
+    mock_fenix_client.set_setpoint.assert_called_once_with(
+        DEVICE_ID, preset_mode, temperature
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.AUTO
+    assert state.attributes[ATTR_PRESET_MODE] == preset
+    assert state.attributes[ATTR_TEMPERATURE] == temperature
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_outside_device_range(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a target outside the device's range is rejected before sending."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(SETPOINT_DEVICE, preset_mode=int(PresetMode.DEFROST)),
+    )
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 16.0},
+            blocking=True,
+        )
+
+    mock_fenix_client.set_setpoint.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("device_range", "min_temp", "max_temp"),
+    [
+        ((10.000001, 30.0), 10.0, 30.0),  # WiFi Box manual range
+        ((10.1, 10.4), 5.0, 35.0),  # no step inside: default range
+        (None, 5.0, 35.0),
+    ],
+)
+async def test_manual_range_follows_device(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    device_range: tuple[float, float] | None,
+    min_temp: float,
+    max_temp: float,
+) -> None:
+    """Test the manual range is the device's, rounded to the step."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(DEVICE, target_temperature_range=device_range),
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MIN_TEMP] == min_temp
+    assert state.attributes[ATTR_MAX_TEMP] == max_temp
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -219,7 +350,9 @@ async def test_set_temperature_with_hvac_mode(
         blocking=True,
     )
 
-    mock_fenix_client.set_target_temperature.assert_awaited_once_with(DEVICE_ID, 21.5)
+    mock_fenix_client.set_setpoint.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.MANUAL, 21.5
+    )
     mock_fenix_client.set_preset_mode.assert_awaited_once_with(DEVICE_ID, preset_mode)
     state = hass.states.get(ENTITY_ID)
     assert state.state == hvac_mode
@@ -241,7 +374,9 @@ async def test_set_temperature_with_heat_mode(
         blocking=True,
     )
 
-    mock_fenix_client.set_target_temperature.assert_awaited_once_with(DEVICE_ID, 21.5)
+    mock_fenix_client.set_setpoint.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.MANUAL, 21.5
+    )
     mock_fenix_client.set_preset_mode.assert_not_called()
     assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
 
@@ -264,7 +399,7 @@ async def test_set_temperature_with_unsupported_hvac_mode(
         )
 
     assert exc_info.value.translation_key == "unsupported_hvac_mode"
-    mock_fenix_client.set_target_temperature.assert_not_called()
+    mock_fenix_client.set_setpoint.assert_not_called()
     mock_fenix_client.set_preset_mode.assert_not_called()
 
 
@@ -397,7 +532,7 @@ async def test_set_preset_mode(
         pytest.param(
             SERVICE_SET_TEMPERATURE,
             {ATTR_TEMPERATURE: 21.0},
-            "set_target_temperature",
+            "set_setpoint",
             "set_temperature_failed",
             id="temperature",
         ),

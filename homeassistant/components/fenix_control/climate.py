@@ -1,6 +1,7 @@
 """Climate platform for the FENIX Control integration."""
 
 import dataclasses
+import math
 from typing import Any, override
 
 from pyfenixcontrol import Device, FenixControlError, HvacState, PresetMode
@@ -46,6 +47,16 @@ PRESET_MODE_TO_PRESET: dict[int, str] = {
 SETPOINT_PRESET_MODES: frozenset[int] = frozenset(
     {PresetMode.PROGRAM, PresetMode.DEFROST, PresetMode.BOOST}
 )
+# Device fields with the setpoint of the modes that keep their mode when it changes;
+# in the other modes a new target sets the manual target
+OWN_SETPOINT_FIELDS: dict[int, str] = {
+    PresetMode.DEFROST: "defrost_temperature",
+    PresetMode.BOOST: "boost_temperature",
+}
+
+DEFAULT_MIN_TEMP = 5.0
+DEFAULT_MAX_TEMP = 35.0
+TEMPERATURE_STEP = 0.5
 
 HVAC_STATE_TO_HVAC_ACTION: dict[HvacState, HVACAction] = {
     HvacState.IDLE: HVACAction.IDLE,
@@ -73,12 +84,11 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
     """A FENIX TFT Wi-Fi thermostat."""
 
     _attr_name = None
+    _attr_translation_key = "thermostat"
     _attr_hvac_modes = list(HVAC_MODE_TO_PRESET_MODE)
     _attr_preset_modes = list(PRESET_TO_PRESET_MODE)
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_min_temp = 5.0
-    _attr_max_temp = 35.0
-    _attr_target_temperature_step = 0.5
+    _attr_target_temperature_step = TEMPERATURE_STEP
 
     def __init__(self, coordinator: FenixControlCoordinator, device_id: str) -> None:
         """Initialize the thermostat."""
@@ -109,12 +119,53 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
     def native_target_temperature(self) -> float | None:
         """Return the temperature the thermostat regulates to.
 
-        Manual mode has its own target; program, defrost and boost report the
-        setpoint they currently use.
+        Manual, defrost and boost have their own setpoints; the program reports
+        the setpoint it currently uses.
         """
-        if self.device.preset_mode in SETPOINT_PRESET_MODES:
-            return self.device.active_target_temperature
+        match self.device.preset_mode:
+            case PresetMode.DEFROST:
+                return self.device.defrost_temperature
+            case PresetMode.BOOST:
+                return self.device.boost_temperature
+            case PresetMode.PROGRAM:
+                return self.device.active_target_temperature
         return self.device.target_temperature
+
+    def _setpoint_range(self) -> tuple[float, float]:
+        """Return the range the device accepts for the setpoint a change sets.
+
+        Defrost and boost have their own ranges; in the other modes a change sets
+        the manual target. The bounds are rounded inwards to the step.
+        """
+        match self.device.preset_mode:
+            case PresetMode.DEFROST:
+                device_range = self.device.defrost_temperature_range
+            case PresetMode.BOOST:
+                device_range = self.device.boost_temperature_range
+            case _:
+                device_range = self.device.target_temperature_range
+        if device_range is None:
+            return DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP
+        # Round first: the Fahrenheit conversion leaves tiny errors (10.000001)
+        low = math.ceil(round(device_range[0], 2) / TEMPERATURE_STEP) * TEMPERATURE_STEP
+        high = (
+            math.floor(round(device_range[1], 2) / TEMPERATURE_STEP) * TEMPERATURE_STEP
+        )
+        if low > high:
+            return DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP
+        return low, high
+
+    @property
+    @override
+    def min_temp(self) -> float:
+        """Return the lowest target the device accepts in the current mode."""
+        return self._setpoint_range()[0]
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the highest target the device accepts in the current mode."""
+        return self._setpoint_range()[1]
 
     @property
     @override
@@ -180,13 +231,16 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
             self.device.preset_mode == PresetMode.MANUAL
             or self.device.preset_mode in SETPOINT_PRESET_MODES
         ):
-            # Setting a temperature switches the thermostat to manual
             return features | ClimateEntityFeature.TARGET_TEMPERATURE
         return features
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set the target temperature; this switches the thermostat to manual."""
+        """Set the target temperature.
+
+        Defrost and boost keep their mode and get a new setpoint; in the other
+        modes, or with an HVAC mode given, the thermostat switches to manual.
+        """
         temperature: float = kwargs[ATTR_TEMPERATURE]
         hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
         if hvac_mode is not None and hvac_mode not in self.hvac_modes:
@@ -195,18 +249,20 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
                 translation_key="unsupported_hvac_mode",
                 translation_placeholders={"hvac_mode": hvac_mode},
             )
+        mode = self.device.preset_mode
+        if hvac_mode is not None or mode not in OWN_SETPOINT_FIELDS:
+            mode = int(PresetMode.MANUAL)
         try:
-            await self.coordinator.client.set_target_temperature(
-                self._device_id, temperature
+            await self.coordinator.client.set_setpoint(
+                self._device_id, PresetMode(mode), temperature
             )
         except FenixControlError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_temperature_failed",
             ) from err
-        self._update_device(
-            target_temperature=temperature, preset_mode=int(PresetMode.MANUAL)
-        )
+        field = OWN_SETPOINT_FIELDS.get(mode, "target_temperature")
+        self._update_device(**{field: temperature, "preset_mode": mode})
         # The temperature command already selects manual (heat) mode
         if hvac_mode is not None and hvac_mode != HVACMode.HEAT:
             await self.async_set_hvac_mode(hvac_mode)
