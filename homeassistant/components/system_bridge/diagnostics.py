@@ -3,6 +3,12 @@
 from dataclasses import asdict
 from typing import Any
 
+from systembridgeconnector.exceptions import (
+    BadRequestException,
+    ConnectionClosedException,
+    ConnectionErrorException,
+)
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -67,18 +73,40 @@ async def async_get_config_entry_diagnostics(
         )
 
     listen_task = coordinator.listen_task
+    listening = listen_task is not None and not listen_task.done()
     last_exception = coordinator.last_exception
+
+    bundle: dict[str, Any] | None = None
+    missing_reason: str | None = None
+    # Responses only arrive through the listener, so without it the request
+    # would wait for the connector's timeout
+    if not coordinator.websocket_client.connected or not listening:
+        missing_reason = "not_connected"
+    else:
+        try:
+            app_diagnostics = await coordinator.websocket_client.get_diagnostics()
+        except ConnectionClosedException:
+            missing_reason = "not_connected"
+        except ConnectionErrorException:
+            missing_reason = "timeout"
+        except BadRequestException:
+            # Backends from before the request answer it with an error
+            missing_reason = "not_supported"
+        else:
+            # Error text can hold addresses or device names the app doesn't mask
+            bundle = async_redact_data(asdict(app_diagnostics), {"error", "last_error"})
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "last_update_success": coordinator.last_update_success,
         "connection": {
             "websocket_connected": coordinator.websocket_client.connected,
-            "listening": listen_task is not None and not listen_task.done(),
+            "listening": listening,
             # The message can contain the host, so only the type is kept
             "last_exception": (
                 type(last_exception).__name__ if last_exception else None
             ),
         },
         "data": async_redact_data(data, TO_REDACT),
+        "app": {"bundle": bundle, "missing_reason": missing_reason},
     }
