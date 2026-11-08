@@ -1064,12 +1064,6 @@ fints==3.1.0
 # homeassistant.components.fish_audio
 fish-audio-sdk==1.1.0
 
-# homeassistant.components.fitbit
-fitbit-web-api==2.13.5
-
-# homeassistant.components.fitbit
-fitbit==0.3.1
-
 # homeassistant.components.fivem
 fivem-api==0.1.2
 
