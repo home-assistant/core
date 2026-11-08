@@ -45,6 +45,9 @@ class NetatmoRoomTrueTemperatureNumber(NetatmoRoomEntity, RestoreNumber):
     against the room's current measured temperature to compute and store an
     offset, in the `offset` attribute, for use in your own templates or
     automations. Nothing is sent to the thermostat, valve, or Netatmo's cloud.
+
+    Until calibrated, it tracks the room's measured temperature so it starts
+    from a sensible value.
     """
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -56,6 +59,7 @@ class NetatmoRoomTrueTemperatureNumber(NetatmoRoomEntity, RestoreNumber):
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_mode = NumberMode.BOX
     _attr_native_value: float | None = None
+    _calibrated = False
 
     def __init__(self, room: NetatmoRoom) -> None:
         """Initialize the number entity."""
@@ -71,6 +75,7 @@ class NetatmoRoomTrueTemperatureNumber(NetatmoRoomEntity, RestoreNumber):
             last_data := await self.async_get_last_number_data()
         ) is not None and last_data.native_value is not None:
             self._attr_native_value = last_data.native_value
+            self._calibrated = True
 
         if (last_state := await self.async_get_last_state()) is not None and (
             offset := last_state.attributes.get(ATTR_OFFSET)
@@ -82,7 +87,10 @@ class NetatmoRoomTrueTemperatureNumber(NetatmoRoomEntity, RestoreNumber):
     @callback
     @override
     def async_update_callback(self) -> None:
-        """Nothing to sync; the calibration is only kept locally in Home Assistant."""
+        """Track the room's measured temperature until it has been calibrated."""
+        if not self._calibrated:
+            self._attr_native_value = self.device.therm_measured_temperature
+            self.async_write_ha_state()
 
     @override
     async def async_set_native_value(self, value: float) -> None:
@@ -99,4 +107,5 @@ class NetatmoRoomTrueTemperatureNumber(NetatmoRoomEntity, RestoreNumber):
             value - measured_temperature, 1
         )
         self._attr_native_value = value
+        self._calibrated = True
         self.async_write_ha_state()

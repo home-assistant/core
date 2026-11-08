@@ -58,7 +58,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '21.5',
   })
 # ---
 # name: test_entity[number.cocina_cocina_true_temperature-entry]
@@ -120,7 +120,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '27',
   })
 # ---
 # name: test_entity[number.corridor_corridor_true_temperature-entry]
@@ -182,7 +182,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '22',
   })
 # ---
 # name: test_entity[number.entrada_entrada_true_temperature-entry]
@@ -244,7 +244,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '24.5',
   })
 # ---
 # name: test_entity[number.livingroom_livingroom_true_temperature-entry]
@@ -306,6 +306,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '19.8',
   })
 # ---

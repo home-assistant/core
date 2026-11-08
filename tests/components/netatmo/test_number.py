@@ -10,6 +10,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.netatmo.coordinator import HOME
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -55,13 +56,13 @@ async def test_true_temperature_default_and_calibrate(
     config_entry: MockConfigEntry,
     netatmo_auth: AsyncMock,
 ) -> None:
-    """Test the entity starts unset and stores the computed offset once calibrated."""
+    """Test the entity tracks the measured temperature and stores the offset once calibrated."""
     with selected_platforms([Platform.NUMBER]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get(TRUE_TEMPERATURE_ENTITY)
-    assert state.state == "unknown"
+    assert state.state == str(LIVINGROOM_MEASURED_TEMPERATURE)
     assert "offset" not in state.attributes
 
     await hass.services.async_call(
@@ -75,6 +76,49 @@ async def test_true_temperature_default_and_calibrate(
     assert state.state == "20.0"
     assert state.attributes["offset"] == round(
         20.0 - LIVINGROOM_MEASURED_TEMPERATURE, 1
+    )
+
+
+async def test_true_temperature_tracks_measured_until_calibrated(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the entity keeps following the measured temperature until calibrated."""
+    new_measured_temperature = 23.4
+
+    def set_measured_temperature(payload: dict[str, Any]) -> None:
+        body = payload.get("body")
+        if not isinstance(body, dict):
+            return
+        home = body.get("home")
+        if not isinstance(home, dict) or home.get("id") != HOME_ID:
+            return
+        for room in home.get("rooms", []):
+            if room["id"] == LIVINGROOM_ROOM_ID:
+                room["therm_measured_temperature"] = new_measured_temperature
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        return await fake_post_request(
+            hass, *args, msg_callback=set_measured_temperature, **kwargs
+        )
+
+    with (
+        selected_platforms([Platform.NUMBER]),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    data_handler = config_entry.runtime_data
+    await data_handler.async_fetch_data(f"{HOME}-{HOME_ID}")
+
+    assert hass.states.get(TRUE_TEMPERATURE_ENTITY).state == str(
+        new_measured_temperature
     )
 
 
