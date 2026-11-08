@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -121,7 +121,7 @@ async def async_unload_entry(
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     entry: FressnapfTrackerConfigEntry,
-    device_entry: DeviceEntry,
+    device_entry: AnyDeviceEntry,
 ) -> bool:
     """Allow removing a device only if its tracker is no longer in the account."""
     if entry.state is not ConfigEntryState.LOADED:
