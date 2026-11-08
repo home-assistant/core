@@ -6,7 +6,7 @@
     "max_records_exceeded": {
       "message": "Query for `{entity_id}` exceeded the maximum of {max_records} records"
     },
-    "start_time_before_now": {
+    "start_time_in_future": {
       "message": "Start time must be in the past"
     }
   },

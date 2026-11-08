@@ -284,7 +284,7 @@ async def _async_handle_get_history_service(
     if start_time > dt_util.utcnow():
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="start_time_before_now",
+            translation_key="start_time_in_future",
         )
 
     if end_time and end_time < start_time:

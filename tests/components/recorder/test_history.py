@@ -1440,7 +1440,7 @@ async def test_get_history_service_missing_mandatory_keys(
                 "entity_id": ["sensor.sensor"],
                 "start_time": "2026-02-03 07:00:00Z",
             },
-            "start_time_before_now",
+            "start_time_in_future",
             id="start_time_in_future",
         ),
         pytest.param(
