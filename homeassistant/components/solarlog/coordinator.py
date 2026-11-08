@@ -152,6 +152,7 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
         try:
             await self.solarlog.update_device_list()
             inverter_data = await self.solarlog.update_inverter_data()
+            battery_data = await self.solarlog.update_battery_data()
         except SolarLogAuthenticationError as ex:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -166,6 +167,9 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
         _LOGGER.debug("Device data successfully updated")
 
         self.data = inverter_data
+        self.config_entry.runtime_data.basic_data_coordinator.data.battery_data = (
+            battery_data
+        )
 
         self._async_add_remove_devices(inverter_data)
 

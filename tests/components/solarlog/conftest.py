@@ -5,7 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
-from solarlog_cli.solarlog_models import EnergyData, InverterData, SolarlogData
+from solarlog_cli.solarlog_models import (
+    BatteryData,
+    EnergyData,
+    InverterData,
+    SolarlogData,
+)
 
 from homeassistant.components.solarlog.const import CONF_HAS_PWD, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TIMEOUT
@@ -45,6 +50,9 @@ def mock_solarlog_connector():
     mock_solarlog_api.test_extended_data_available.return_value = True
     mock_solarlog_api.update_basic_data.return_value = SolarlogData.from_dict(
         load_json_object_fixture("solarlog_data.json", DOMAIN)
+    )
+    mock_solarlog_api.update_battery_data.return_value = BatteryData(
+        charge_power=50, discharge_power=0, level=45, voltage=50
     )
     mock_solarlog_api.update_device_list.return_value = {
         0: InverterData(name="Inverter 1", enabled=True),

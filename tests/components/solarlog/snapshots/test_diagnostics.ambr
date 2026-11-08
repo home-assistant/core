@@ -28,10 +28,10 @@
     'solarlog_data': dict({
       'alternator_loss': 2.0,
       'battery_data': dict({
-        'charge_power': 1074.0,
-        'discharge_power': 0.0,
-        'level': 79.0,
-        'voltage': 0,
+        'charge_power': 50,
+        'discharge_power': 0,
+        'level': 45,
+        'voltage': 50,
       }),
       'capacity': 85.5,
       'consumption_ac': 54.87,
