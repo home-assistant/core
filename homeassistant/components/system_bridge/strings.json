@@ -572,7 +572,7 @@
       "name": "Send keyboard keypress"
     },
     "send_message": {
-      "description": "Sends a notification to the computer, with options `notify.send_message` doesn't have.",
+      "description": "Sends a notification to the computer, with options `notify.send_message` doesn't have. Only administrators can use it.",
       "fields": {
         "buttons": {
           "description": "Up to 3 buttons to show on the notification. Pressing one reports its ID. Linux and Windows only.",
@@ -591,7 +591,7 @@
           "name": "Message"
         },
         "path": {
-          "description": "File or folder on the computer to open when the notification is clicked. Anyone who can use this notify entity can choose what opens. Can't be used with URL.",
+          "description": "File or folder on the computer to open when the notification is clicked. Can't be used with URL.",
           "name": "[%key:common::config_flow::data::path%]"
         },
         "sound": {
@@ -607,7 +607,7 @@
           "name": "Urgency"
         },
         "url": {
-          "description": "URL to open on the computer when the notification is clicked. Anyone who can use this notify entity can choose what opens. Can't be used with path.",
+          "description": "URL to open on the computer when the notification is clicked. Can't be used with path.",
           "name": "[%key:common::config_flow::data::url%]"
         }
       },

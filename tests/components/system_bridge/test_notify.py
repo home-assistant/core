@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import MockConfigEntry, MockUser, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
@@ -24,8 +24,8 @@ from homeassistant.components.notify import (
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.discovery import async_load_platform
 
@@ -313,6 +313,30 @@ async def test_system_bridge_send_message_invalid(
             {ATTR_ENTITY_ID: "notify.hostname", **data},
             blocking=True,
             return_response=True,
+        )
+
+    mock_websocket_client.send_notification.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_system_bridge_send_message_requires_admin(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: AsyncMock,
+) -> None:
+    """Test the system_bridge.send_message action needs an admin user."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message",
+            {ATTR_ENTITY_ID: "notify.hostname", ATTR_MESSAGE: "World"},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
         )
 
     mock_websocket_client.send_notification.assert_not_awaited()
