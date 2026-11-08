@@ -54,17 +54,18 @@ class ChirpStackConfigFlow(ConfigFlow, domain=DOMAIN):
             network_id="validation",
         )
         try:
-            yield connection
-        except (grpc.RpcError, AuthenticationError, ConnectionUnavailable) as error:
-            failure = connection_error(error)
-            if isinstance(failure, AuthenticationError):
-                errors["base"] = "invalid_auth"
-            elif isinstance(failure, HTTP2Error):
-                errors["base"] = "http2_error"
-            elif isinstance(failure, TLSCertificateError):
-                errors["base"] = "tls_certificate_error"
-            else:
-                errors["base"] = "cannot_connect"
+            try:
+                yield connection
+            except grpc.RpcError as error:
+                raise connection_error(error) from error
+        except AuthenticationError:
+            errors["base"] = "invalid_auth"
+        except HTTP2Error:
+            errors["base"] = "http2_error"
+        except TLSCertificateError:
+            errors["base"] = "tls_certificate_error"
+        except ConnectionUnavailable:
+            errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected error communicating with ChirpStack")
             errors["base"] = "unknown"
