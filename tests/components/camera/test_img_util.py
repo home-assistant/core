@@ -79,42 +79,80 @@ def test_scale_jpeg_camera_image() -> None:
     assert jpeg_bytes == EMPTY_16_12_JPEG
 
 
-def _jpeg_with_exif_orientation(orientation: int, fill_bytes: int = 0) -> bytes:
-    """Build a minimal JPEG header with an EXIF orientation tag."""
-    tiff = (
-        b"MM\x00\x2a\x00\x00\x00\x08"  # big endian TIFF header, IFD at offset 8
-        b"\x00\x01"  # one IFD entry
-        b"\x01\x12\x00\x03\x00\x00\x00\x01"  # orientation, SHORT, count 1
-        + orientation.to_bytes(2, "big")
-        + b"\x00\x00"
-        + b"\x00\x00\x00\x00"  # no next IFD
-    )
-    payload = b"Exif\x00\x00" + tiff
-    app1 = b"\xff\xe1" + (len(payload) + 2).to_bytes(2, "big") + payload
-    return b"\xff\xd8" + b"\xff" * fill_bytes + app1 + b"\xff\xda\x00\x02image-data"
+SOI = b"\xff\xd8"
+SOS = b"\xff\xda\x00\x02"
+JFIF_APP0 = b"\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
+EXIF_PAYLOAD = (
+    b"Exif\x00\x00"
+    b"MM\x00\x2a\x00\x00\x00\x08"  # big endian TIFF header, IFD at offset 8
+    b"\x00\x01"  # one IFD entry
+    b"\x01\x12\x00\x03\x00\x00\x00\x01\x00\x06\x00\x00"  # orientation 6
+    b"\x00\x00\x00\x00"  # no next IFD
+)
+EXIF_APP1 = b"\xff\xe1" + (len(EXIF_PAYLOAD) + 2).to_bytes(2, "big") + EXIF_PAYLOAD
+SCALED = SOI + JFIF_APP0 + SOS + b"scaled"
 
 
-@pytest.mark.parametrize("fill_bytes", [0, 2])
-def test_scale_jpeg_camera_image_preserves_exif(fill_bytes: int) -> None:
+@pytest.mark.parametrize(
+    ("original", "scaled", "expected"),
+    [
+        # EXIF is copied behind the JFIF APP0 segment of the scaled image
+        (
+            SOI + EXIF_APP1 + SOS + b"image",
+            SCALED,
+            SOI + JFIF_APP0 + EXIF_APP1 + SOS + b"scaled",
+        ),
+        # Fill bytes before a marker are skipped
+        (
+            SOI + b"\xff\xff" + EXIF_APP1 + SOS + b"image",
+            SCALED,
+            SOI + JFIF_APP0 + EXIF_APP1 + SOS + b"scaled",
+        ),
+        # Markers without a length field (TEM) are skipped
+        (
+            SOI + b"\xff\x01" + EXIF_APP1 + SOS + b"image",
+            SCALED,
+            SOI + JFIF_APP0 + EXIF_APP1 + SOS + b"scaled",
+        ),
+        # EXIF after another APP segment is found
+        (
+            SOI + JFIF_APP0 + EXIF_APP1 + SOS + b"image",
+            SCALED,
+            SOI + JFIF_APP0 + EXIF_APP1 + SOS + b"scaled",
+        ),
+        # Scaled image without APP0 gets EXIF right after SOI
+        (
+            SOI + EXIF_APP1 + SOS + b"image",
+            SOI + SOS + b"scaled",
+            SOI + EXIF_APP1 + SOS + b"scaled",
+        ),
+        # No EXIF in the source image
+        (SOI + JFIF_APP0 + SOS + b"image", SCALED, SCALED),
+        # Header ends without a start of scan
+        (SOI, SCALED, SCALED),
+        # Invalid segment length
+        (SOI + b"\xff\xe1\x00\x01" + SOS + b"image", SCALED, SCALED),
+        # Truncated EXIF segment
+        (SOI + EXIF_APP1[:-4], SCALED, SCALED),
+        # Scaled data is not a JPEG
+        (SOI + EXIF_APP1 + SOS + b"image", b"not-a-jpeg", b"not-a-jpeg"),
+    ],
+)
+def test_scale_jpeg_camera_image_preserves_exif(
+    original: bytes, scaled: bytes, expected: bytes
+) -> None:
     """Test scaling keeps the EXIF segment so the orientation still applies."""
     _clear_turbojpeg_singleton()
 
-    original = _jpeg_with_exif_orientation(6, fill_bytes)
-    exif_segment = original[2 + fill_bytes : original.index(b"\xff\xda")]
-    jfif_app0 = b"\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
-    scaled_without_exif = b"\xff\xd8" + jfif_app0 + b"\xff\xda\x00\x02scaled"
-
     turbo_jpeg = mock_turbo_jpeg(first_width=1600, first_height=1200)
-    turbo_jpeg.scale_with_quality.return_value = scaled_without_exif
+    turbo_jpeg.scale_with_quality.return_value = scaled
     with patch(
         "homeassistant.components.camera.img_util.TurboJPEG", return_value=turbo_jpeg
     ):
         TurboJPEGSingleton()
         jpeg_bytes = scale_jpeg_camera_image(Image("image/jpeg", original), 1230, 921)
 
-    assert jpeg_bytes == (
-        b"\xff\xd8" + jfif_app0 + exif_segment + b"\xff\xda\x00\x02scaled"
-    )
+    assert jpeg_bytes == expected
 
 
 def test_turbojpeg_load_failure(

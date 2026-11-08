@@ -18,6 +18,8 @@ _JPEG_SOI = b"\xff\xd8"
 _JPEG_APP0 = 0xE0
 _JPEG_APP1 = 0xE1
 _JPEG_SOS = 0xDA
+# Markers without a length field: TEM and RST0-RST7
+_JPEG_STANDALONE_MARKERS = {0x01, *range(0xD0, 0xD8)}
 _EXIF_HEADER = b"Exif\x00\x00"
 
 
@@ -32,6 +34,9 @@ def _find_exif_segment(jpeg: bytes) -> bytes | None:
             pos += 1
             continue
         marker = jpeg[pos + 1]
+        if marker in _JPEG_STANDALONE_MARKERS:
+            pos += 2
+            continue
         if marker == _JPEG_SOS:
             return None
         length = int.from_bytes(jpeg[pos + 2 : pos + 4], "big")
