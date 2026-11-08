@@ -5,7 +5,7 @@ rules:
     comment: This integration does not provide additional actions.
   appropriate-polling: done
   brands: done
-  common-modules: todo
+  common-modules: done
   config-flow: todo
   config-flow-test-coverage: todo
   dependency-transparency: done
@@ -57,7 +57,7 @@ rules:
     status: exempt
     comment: This integration is a cloud service and does not support discovery.
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: todo
   docs-supported-devices:
     status: exempt
