@@ -87,8 +87,6 @@ class LGDevice(MediaPlayerEntity):
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
-        | MediaPlayerEntityFeature.TURN_ON
-        | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SELECT_SOUND_MODE
         | MediaPlayerEntityFeature.PLAY
@@ -166,10 +164,14 @@ class LGDevice(MediaPlayerEntity):
                 self._function = data["i_curr_func"]
             if "b_powerstatus" in data:
                 self._device_on = data["b_powerstatus"]
-                if data["b_powerstatus"]:
-                    self._attr_state = MediaPlayerState.ON
-                else:
+                if not data["b_powerstatus"]:
                     self._attr_state = MediaPlayerState.OFF
+                # Reported again on reconnections, which must not end playback
+                elif self._attr_state not in (
+                    MediaPlayerState.PLAYING,
+                    MediaPlayerState.PAUSED,
+                ):
+                    self._attr_state = MediaPlayerState.ON
         elif response["msg"] == "FUNC_VIEW_INFO":
             if "i_curr_func" in data:
                 self._function = data["i_curr_func"]
@@ -228,6 +230,21 @@ class LGDevice(MediaPlayerEntity):
             self._attr_media_title = data["s_title"].strip() or None
         if "b_support_play_ctrl" in data:
             self._support_play_control = data["b_support_play_ctrl"]
+
+    @property
+    @override
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported.
+
+        Models that do not report their power state also ignore the power key.
+        """
+        if self._client.reports_power:
+            return (
+                self._attr_supported_features
+                | MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
+            )
+        return self._attr_supported_features
 
     @property
     @override

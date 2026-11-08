@@ -41,6 +41,7 @@ def mock_client() -> Generator[AsyncMock]:
     ):
         client = client_class.return_value
         client.connected = True
+        client.reports_power = True
         client.__aenter__.return_value = client
         set_answers(
             client,

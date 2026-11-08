@@ -19,10 +19,12 @@ from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEntityFeature,
     MediaPlayerState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_TURN_OFF,
@@ -310,6 +312,77 @@ async def test_state_follows_a_reported_power_status(
     callback = find_update_callback(mock_client)
     send_power_status(callback, powered_on)
     send_play_info(callback, 0)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("reports_power", "power_control"),
+    [
+        pytest.param(True, True, id="reported"),
+        pytest.param(False, False, id="not_reported"),
+        pytest.param(None, False, id="unknown"),
+    ],
+)
+async def test_power_control_offered_only_when_power_is_reported(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    reports_power: bool | None,
+    power_control: bool,
+) -> None:
+    """Test that models that do not report their power state get no power control."""
+    mock_client.reports_power = reports_power
+    await setup_integration(hass, mock_config_entry)
+
+    features = hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES]
+
+    assert bool(features & MediaPlayerEntityFeature.TURN_ON) is power_control
+    assert bool(features & MediaPlayerEntityFeature.TURN_OFF) is power_control
+
+
+async def test_power_control_offered_once_power_is_known(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that power control appears once the client learns it is reported."""
+    mock_client.reports_power = None
+    await setup_integration(hass, mock_config_entry)
+
+    mock_client.reports_power = True
+    send_power_status(find_update_callback(mock_client), True)
+    await hass.async_block_till_done()
+
+    features = hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES]
+    assert features & MediaPlayerEntityFeature.TURN_OFF
+
+
+@pytest.mark.parametrize(
+    ("play_ctrl", "expected_state"),
+    [
+        pytest.param(0, MediaPlayerState.PLAYING, id="playing"),
+        pytest.param(1, MediaPlayerState.PAUSED, id="paused"),
+    ],
+)
+async def test_power_reported_again_keeps_playback_state(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    play_ctrl: int,
+    expected_state: MediaPlayerState,
+) -> None:
+    """Test that a power status reported again, as after a reconnection, keeps playback."""
+    await setup_integration(hass, mock_config_entry)
+    callback = find_update_callback(mock_client)
+    send_power_status(callback, True)
+    callback(
+        {"msg": "PLAY_INFO", "data": {"i_stream_type": 1, "i_play_ctrl": play_ctrl}}
+    )
+    await hass.async_block_till_done()
+
+    send_power_status(callback, True)
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == expected_state
