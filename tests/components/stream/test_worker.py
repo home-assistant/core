@@ -1102,6 +1102,8 @@ async def test_update_source_while_waiting_to_retry(
             stream.update_source(STREAM_SOURCE + "-updated-source")
             assert await hass.async_add_executor_job(worker.restarted.wait, TIMEOUT)
             assert worker.sources == [STREAM_SOURCE, STREAM_SOURCE + "-updated-source"]
+            # The restart took the request, so the new run does not inherit it
+            assert not stream._fast_restart_once
         finally:
             await stream.stop()
         assert not thread.is_alive()
