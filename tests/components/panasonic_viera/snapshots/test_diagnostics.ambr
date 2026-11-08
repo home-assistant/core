@@ -4,13 +4,16 @@
     'device_info': None,
     'entry': dict({
       'data': dict({
+        'app_id': '**REDACTED**',
         'device_info': dict({
           'UDN': '**REDACTED**',
           'friendlyName': 'Panasonic Viera TV',
           'manufacturer': 'Panasonic',
           'modelNumber': 'Panasonic Viera',
         }),
+        'encryption_key': '**REDACTED**',
         'host': '**REDACTED**',
+        'mac': '**REDACTED**',
         'name': 'Panasonic Viera TV',
         'port': 55000,
         'turn_on_action': '**REDACTED**',
@@ -72,13 +75,16 @@
     }),
     'entry': dict({
       'data': dict({
+        'app_id': '**REDACTED**',
         'device_info': dict({
           'UDN': '**REDACTED**',
           'friendlyName': 'Panasonic Viera TV',
           'manufacturer': 'Panasonic',
           'modelNumber': 'Panasonic Viera',
         }),
+        'encryption_key': '**REDACTED**',
         'host': '**REDACTED**',
+        'mac': '**REDACTED**',
         'name': 'Panasonic Viera TV',
         'port': 55000,
         'turn_on_action': '**REDACTED**',
@@ -136,13 +142,16 @@
     }),
     'entry': dict({
       'data': dict({
+        'app_id': '**REDACTED**',
         'device_info': dict({
           'UDN': '**REDACTED**',
           'friendlyName': 'Panasonic Viera TV',
           'manufacturer': 'Panasonic',
           'modelNumber': 'Panasonic Viera',
         }),
+        'encryption_key': '**REDACTED**',
         'host': '**REDACTED**',
+        'mac': '**REDACTED**',
         'name': 'Panasonic Viera TV',
         'port': 55000,
         'turn_on_action': '**REDACTED**',

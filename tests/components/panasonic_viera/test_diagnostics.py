@@ -16,9 +16,10 @@ from homeassistant.components.panasonic_viera.const import (
     CONF_ON_ACTION,
     DOMAIN,
 )
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_CONFIG_DATA, MOCK_DEVICE_INFO, MOCK_MAC
+from .conftest import MOCK_CONFIG_DATA, MOCK_DEVICE_INFO, MOCK_ENCRYPTION_DATA, MOCK_MAC
 
 # A turn-on action as imported from YAML, which may carry a SecureOn password
 MOCK_ON_ACTION = [
@@ -85,6 +86,8 @@ async def test_diagnostics(
         unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
         data={
             **MOCK_CONFIG_DATA,
+            **MOCK_ENCRYPTION_DATA,
+            CONF_MAC: MOCK_MAC,
             CONF_ON_ACTION: MOCK_ON_ACTION,
             ATTR_DEVICE_INFO: MOCK_DEVICE_INFO,
         },
