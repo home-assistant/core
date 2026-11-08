@@ -179,6 +179,12 @@
     "firmware_update_failed": {
       "message": "Firmware update failed for {device_name}."
     },
+    "firmware_version_already_installed": {
+      "message": "Firmware version {version} is already installed on {device_name}."
+    },
+    "firmware_version_not_found": {
+      "message": "Firmware version {version} is not available for {device_name}."
+    },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
     },

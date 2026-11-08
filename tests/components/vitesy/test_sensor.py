@@ -30,6 +30,7 @@ POWER_LEVEL = "sensor.kitchen_shelfy_power_level"
 NATEDE_TEMPERATURE = "sensor.living_room_natede_temperature"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -125,6 +126,7 @@ async def test_air_quality_score_without_value(
         ),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_unknown_on_invalid_value(
     hass: HomeAssistant,
     mock_vitesy_client: AsyncMock,
@@ -228,3 +230,18 @@ async def test_reading_sensor_follows_reported_value(
     await hass.async_block_till_done()
 
     assert hass.states.get(NATEDE_TEMPERATURE).state == STATE_UNKNOWN
+
+
+async def test_last_update_disabled_by_default(
+    hass: HomeAssistant,
+    mock_vitesy_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the last update sensor is disabled by default."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(LAST_UPDATE) is None
+    entry = entity_registry.async_get(LAST_UPDATE)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
