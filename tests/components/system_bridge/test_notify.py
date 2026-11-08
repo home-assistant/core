@@ -481,11 +481,13 @@ async def test_legacy_notify_service_reload(
 
 
 @pytest.mark.usefixtures("mock_version", "mock_websocket_client", "legacy_notify")
+@pytest.mark.parametrize("owner_first", [True, False], ids=["owner", "other"])
 async def test_legacy_notify_service_shared_hostname(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    owner_first: bool,
 ) -> None:
-    """Test unloading an entry keeps another entry's action with the same name."""
+    """Test unloading an entry keeps the action for another with the same name."""
     other_entry = MockConfigEntry(
         title="Other",
         domain=DOMAIN,
@@ -502,12 +504,25 @@ async def test_legacy_notify_service_shared_hostname(
     await hass.async_block_till_done()
 
     assert other_entry.state is ConfigEntryState.LOADED
-    await hass.config_entries.async_unload(other_entry.entry_id)
+    first, second = (
+        (mock_config_entry, other_entry)
+        if owner_first
+        else (other_entry, mock_config_entry)
+    )
+    await hass.config_entries.async_unload(first.entry_id)
     await hass.async_block_till_done()
 
     assert hass.services.has_service(NOTIFY_DOMAIN, "system_bridge_hostname")
+    second.runtime_data.websocket_client = AsyncMock()
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        "system_bridge_hostname",
+        {ATTR_MESSAGE: "World"},
+        blocking=True,
+    )
+    second.runtime_data.websocket_client.send_notification.assert_awaited_once()
 
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.config_entries.async_unload(second.entry_id)
     await hass.async_block_till_done()
 
     assert not hass.services.has_service(NOTIFY_DOMAIN, "system_bridge_hostname")
@@ -519,22 +534,21 @@ async def test_legacy_notify_service_unloaded_during_setup(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the legacy action isn't registered once its entry has unloaded."""
+    discovery_info = {
+        CONF_NAME: "system_bridge_hostname",
+        CONF_ENTITY_ID: mock_config_entry.entry_id,
+    }
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    service = await async_get_service(
-        hass,
-        {},
-        {
-            CONF_NAME: "system_bridge_hostname",
-            CONF_ENTITY_ID: mock_config_entry.entry_id,
-        },
-    )
+    service = await async_get_service(hass, {}, discovery_info)
     assert service is not None
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    assert await async_get_service(hass, {}, discovery_info) is None
 
     await service.async_setup(hass, "system_bridge_hostname", "system_bridge_hostname")
     await service.async_register_services()
