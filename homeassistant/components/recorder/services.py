@@ -146,7 +146,7 @@ SERVICE_GET_HISTORY_SCHEMA = probatio.Schema(
     }
 )
 
-MAX_GET_HISTORY_RECORDS = 1000
+MAX_GET_HISTORY_RECORDS_PER_ENTITY = 1000
 
 
 async def _async_handle_purge_service(service: ServiceCall) -> None:
@@ -261,7 +261,7 @@ def _get_history(
                 entity_id=entity_id,
                 no_attributes=True,
                 descending=False,
-                limit=MAX_GET_HISTORY_RECORDS + 1,
+                limit=MAX_GET_HISTORY_RECORDS_PER_ENTITY + 1,
                 include_start_time_state=True,
             )
         )
@@ -281,7 +281,8 @@ async def _async_handle_get_history_service(
         else None
     )
 
-    if start_time > dt_util.utcnow():
+    now = dt_util.utcnow()
+    if start_time > now:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="start_time_in_future",
@@ -323,8 +324,8 @@ async def _async_handle_get_history_service(
             history_states.append(state)
 
         is_truncated = (
-            in_window_count == MAX_GET_HISTORY_RECORDS + 1
-            or len(history_states) > MAX_GET_HISTORY_RECORDS
+            in_window_count == MAX_GET_HISTORY_RECORDS_PER_ENTITY + 1
+            or len(history_states) > MAX_GET_HISTORY_RECORDS_PER_ENTITY
         )
         if is_truncated:
             if not allow_truncation:
@@ -333,10 +334,10 @@ async def _async_handle_get_history_service(
                     translation_key="max_records_exceeded",
                     translation_placeholders={
                         "entity_id": entity_id,
-                        "max_records": str(MAX_GET_HISTORY_RECORDS),
+                        "max_records": str(MAX_GET_HISTORY_RECORDS_PER_ENTITY),
                     },
                 )
-            history_states = history_states[: MAX_GET_HISTORY_RECORDS + 1]
+            history_states = history_states[: MAX_GET_HISTORY_RECORDS_PER_ENTITY + 1]
 
         formatted_history_states: JsonArrayType = []
 
@@ -344,7 +345,7 @@ async def _async_handle_get_history_service(
             if index == len(history_states) - 1:
                 if is_truncated:
                     continue
-                end = end_time or dt_util.utcnow()
+                end = min(end_time, now) if end_time else now
             else:
                 end = dt_util.utc_from_timestamp(
                     history_states[index + 1].last_updated_timestamp

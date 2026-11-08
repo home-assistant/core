@@ -1237,6 +1237,30 @@ async def test_get_last_state_changes_with_non_existent_entity_ids_returns_empty
             },
             id="point_in_time_same_start_and_end",
         ),
+        pytest.param(
+            {
+                "start_time": "2023-05-08 09:30:00Z",
+                "end_time": "2023-05-09 00:00:00Z",
+                "entity_id": ["sensor.total_energy_import1"],
+            },
+            {
+                "history": {
+                    "sensor.total_energy_import1": [
+                        {
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:30:00+00:00",
+                            "state": "2.0",
+                        },
+                        {
+                            "end": "2023-05-08T11:00:00+00:00",
+                            "start": "2023-05-08T10:00:00+00:00",
+                            "state": "3.0",
+                        },
+                    ],
+                }
+            },
+            id="end_time_in_future_capped_at_now",
+        ),
     ],
 )
 @pytest.mark.usefixtures("recorder_mock")
@@ -1492,7 +1516,8 @@ async def test_get_history_service_max_records_exceeded(
 ) -> None:
     """Test the get_history service raises when max records is exceeded by default."""
     monkeypatch.setattr(
-        "homeassistant.components.recorder.services.MAX_GET_HISTORY_RECORDS", 3
+        "homeassistant.components.recorder.services.MAX_GET_HISTORY_RECORDS_PER_ENTITY",
+        3,
     )
 
     times: list[tuple[datetime, float | str]] = [
@@ -1540,7 +1565,8 @@ async def test_get_history_service_max_records_with_duplicate_states(
 ) -> None:
     """Test max records truncation detection when duplicate consecutive states exist."""
     monkeypatch.setattr(
-        "homeassistant.components.recorder.services.MAX_GET_HISTORY_RECORDS", 3
+        "homeassistant.components.recorder.services.MAX_GET_HISTORY_RECORDS_PER_ENTITY",
+        3,
     )
 
     times: list[tuple[datetime, float | str]] = [
@@ -1750,7 +1776,8 @@ async def test_get_history_service_max_records(
     """Test the get_history service."""
 
     monkeypatch.setattr(
-        "homeassistant.components.recorder.services.MAX_GET_HISTORY_RECORDS", 3
+        "homeassistant.components.recorder.services.MAX_GET_HISTORY_RECORDS_PER_ENTITY",
+        3,
     )
 
     assert hass.config.time_zone == "US/Pacific"
