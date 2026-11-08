@@ -95,6 +95,10 @@ class PowerfoxDeviceListCoordinator(PowerfoxApiCoordinator[list[Device]]):
             ) from err
 
 
+class PowerfoxDeviceDataUnavailable(UpdateFailed):
+    """Raised when Powerfox provides no data for a device."""
+
+
 class PowerfoxBaseCoordinator[T](PowerfoxApiCoordinator[T]):
     """Base coordinator handling shared Powerfox device logic."""
 
@@ -115,13 +119,13 @@ class PowerfoxBaseCoordinator[T](PowerfoxApiCoordinator[T]):
         try:
             return await super()._async_update_data()
         except PowerfoxNoDataError as err:
-            raise UpdateFailed(
+            raise PowerfoxDeviceDataUnavailable(
                 translation_domain=DOMAIN,
                 translation_key="no_data_error",
                 translation_placeholders={"device_name": self.device.name},
             ) from err
         except PowerfoxPrivacyError as err:
-            raise UpdateFailed(
+            raise PowerfoxDeviceDataUnavailable(
                 translation_domain=DOMAIN,
                 translation_key="privacy_error",
                 translation_placeholders={"device_name": self.device.name},
