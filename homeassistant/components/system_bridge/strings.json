@@ -338,6 +338,9 @@
     "connection_failed": {
       "message": "A connection error occurred for {title} ({host})"
     },
+    "connection_lost": {
+      "message": "Connection lost while registering for {title}"
+    },
     "display_control_failed": {
       "message": "Failed to control display {display_id}: {error}"
     },
@@ -370,6 +373,9 @@
     },
     "unsupported_version": {
       "message": "You are not running a supported version of System Bridge for {title} ({host}). Please upgrade to the latest version"
+    },
+    "waiting_for_sleep": {
+      "message": "Waiting for {title} to sleep or shut down"
     }
   },
   "issues": {
