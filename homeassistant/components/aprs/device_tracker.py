@@ -15,8 +15,6 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_TIMEOUT,
@@ -37,6 +35,8 @@ ATTR_COURSE = "course"
 ATTR_COMMENT = "comment"
 ATTR_FROM = "from"
 ATTR_FORMAT = "format"
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
 ATTR_OBJECT_NAME = "object_name"
 ATTR_POS_AMBIGUITY = "posambiguity"
 ATTR_SPEED = "speed"

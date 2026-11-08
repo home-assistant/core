@@ -1,5 +1,6 @@
 """Support for the MaryTTS service."""
 
+from enum import StrEnum
 from typing import Any, override
 
 import probatio
@@ -17,9 +18,16 @@ from homeassistant.helpers import config_validation as cv
 CONF_VOICE = "voice"
 CONF_CODEC = "codec"
 
+
+class MaryTTSTextToSpeechOption(StrEnum):
+    """Store keys for the MaryTTS text-to-speech options."""
+
+    EFFECT = "effect"
+
+
 SUPPORT_LANGUAGES = MaryTTS.supported_locales()
 SUPPORT_CODEC = MaryTTS.supported_codecs()
-SUPPORT_OPTIONS = [CONF_EFFECT]
+SUPPORT_OPTIONS: list[str] = [MaryTTSTextToSpeechOption.EFFECT]
 SUPPORT_EFFECTS = MaryTTS.supported_effects().keys()
 
 DEFAULT_HOST = "localhost"
@@ -86,7 +94,7 @@ class MaryTTSProvider(Provider):
     @override
     def default_options(self) -> dict[str, Any]:
         """Return dict include default options."""
-        return {CONF_EFFECT: self._effects}
+        return {MaryTTSTextToSpeechOption.EFFECT: self._effects}
 
     @property
     @override
@@ -99,7 +107,7 @@ class MaryTTSProvider(Provider):
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS from MaryTTS."""
-        effects = options[CONF_EFFECT]
+        effects = options[MaryTTSTextToSpeechOption.EFFECT]
 
         data = self._mary.speak(message, effects)
         audiotype = MAP_MARYTTS_CODEC[self._mary.codec]

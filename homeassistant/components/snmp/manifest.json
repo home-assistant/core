@@ -5,8 +5,9 @@
     "computers_network.monitoring",
     "presence_location.network_presence"
   ],
-  "codeowners": ["@nmaggioni", "@IsaccoBenedetti"],
+  "codeowners": ["@IsaccoBenedetti"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/snmp",
   "integration_type": "hub",
   "iot_class": "local_polling",

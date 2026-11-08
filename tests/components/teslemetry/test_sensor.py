@@ -23,6 +23,7 @@ from homeassistant.components.homeassistant import (
 from homeassistant.components.teslemetry.const import DOMAIN, ENERGY_HISTORY_FIELDS
 from homeassistant.components.teslemetry.coordinator import (
     LOCAL_COMPONENTS_INTERVAL,
+    LOCAL_STATUS_INTERVAL,
     VEHICLE_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -51,6 +52,7 @@ from .const import (
     LIVE_STATUS,
     METADATA,
     POWERWALL_COMPONENTS,
+    POWERWALL_STATUS,
     PRODUCTS,
     SITE_INFO,
     VEHICLE_DATA_ALT,
@@ -1577,3 +1579,166 @@ async def test_local_sensors_poll_failure(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
+
+
+LOCAL_STATUS_KEYS = ("conductor_power", "solar_rgm_power")
+
+
+def _local_status_entity_ids(entity_registry: er.EntityRegistry) -> dict[str, str]:
+    """Return the entity ids of the local status sensors by key."""
+    return {
+        key: entity_id
+        for key in LOCAL_STATUS_KEYS
+        if (
+            entity_id := entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, f"{SITE_ID}-{key}"
+            )
+        )
+    }
+
+
+def _without_meter(location: str) -> dict[str, Any]:
+    """Return the gateway status without a meter aggregate location."""
+    data = deepcopy(POWERWALL_STATUS)
+    data["control"]["meterAggregates"] = [
+        meter
+        for meter in data["control"]["meterAggregates"]
+        if meter["location"] != location
+    ]
+    return data
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_local_status_sensors(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a paired energy site creates the local status sensors."""
+    await setup_paired_platform(hass, [Platform.SENSOR])
+
+    entity_ids = _local_status_entity_ids(entity_registry)
+    assert entity_ids.keys() == set(LOCAL_STATUS_KEYS)
+    for entity_id in entity_ids.values():
+        assert entity_registry.async_get(entity_id) == snapshot(
+            name=f"{entity_id}-entry"
+        )
+        assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state")
+
+
+async def test_local_status_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the local status sensors are disabled by default."""
+    await setup_paired_platform(hass, [Platform.SENSOR])
+
+    entity_ids = _local_status_entity_ids(entity_registry)
+    assert entity_ids.keys() == set(LOCAL_STATUS_KEYS)
+    for entity_id in entity_ids.values():
+        assert (entry := entity_registry.async_get(entity_id))
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_local_status_sensors_unpaired(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_status: AsyncMock,
+) -> None:
+    """Test an energy site without local pairing creates no local sensors."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_powerwall_status.assert_not_called()
+    assert not _local_status_entity_ids(entity_registry)
+
+
+@pytest.mark.parametrize(
+    ("location", "missing"),
+    [
+        pytest.param("SOLAR_RGM", "solar_rgm_power", id="solar_rgm"),
+        pytest.param("CONDUCTOR", "conductor_power", id="conductor"),
+    ],
+)
+async def test_local_status_sensors_missing_signal(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_status: AsyncMock,
+    location: str,
+    missing: str,
+) -> None:
+    """Test a meter absent from the first refresh skips its sensor."""
+    mock_powerwall_status.side_effect = None
+    mock_powerwall_status.return_value = _without_meter(location)
+
+    await setup_paired_platform(hass, [Platform.SENSOR])
+
+    assert _local_status_entity_ids(entity_registry).keys() == set(
+        LOCAL_STATUS_KEYS
+    ) - {missing}
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_local_status_sensors_first_refresh_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_status: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensors from a failed first local refresh recover without a reload."""
+    mock_powerwall_status.side_effect = PowerwallConnectionError("offline")
+
+    entry = await setup_paired_platform(hass, [Platform.SENSOR])
+
+    assert entry.state is ConfigEntryState.LOADED
+    entity_ids = _local_status_entity_ids(entity_registry)
+    assert entity_ids.keys() == set(LOCAL_STATUS_KEYS)
+    for entity_id in entity_ids.values():
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNAVAILABLE
+
+    mock_powerwall_status.side_effect = None
+    mock_powerwall_status.return_value = POWERWALL_STATUS
+    freezer.tick(LOCAL_STATUS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_ids["solar_rgm_power"]))
+    assert state.state == "2.84"
+    assert (state := hass.states.get(entity_ids["conductor_power"]))
+    assert state.state == "0.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_local_status_sensors_poll_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_powerwall_status: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed local poll makes the sensors unavailable until it recovers."""
+    await setup_paired_platform(hass, [Platform.SENSOR])
+    entity_ids = _local_status_entity_ids(entity_registry)
+    assert entity_ids.keys() == set(LOCAL_STATUS_KEYS)
+    entity_id = entity_ids["solar_rgm_power"]
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2.84"
+
+    mock_powerwall_status.side_effect = PowerwallConnectionError("offline")
+    freezer.tick(LOCAL_STATUS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids.values():
+        assert (state := hass.states.get(entity_id))
+        assert state.state == STATE_UNAVAILABLE
+
+    status = deepcopy(POWERWALL_STATUS)
+    status["control"]["meterAggregates"][4]["realPowerW"] = 1500
+    mock_powerwall_status.side_effect = None
+    mock_powerwall_status.return_value = status
+    freezer.tick(LOCAL_STATUS_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_ids["solar_rgm_power"]))
+    assert state.state == "1.5"

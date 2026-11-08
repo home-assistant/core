@@ -19,26 +19,38 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
+    ATTR_PRESET_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
+    PRESET_ECO,
+    PRESET_NONE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.components.izone.climate import ATTR_CONTROL_ZONE_SOURCE
-from homeassistant.components.izone.const import ATTR_AIRFLOW, DOMAIN
+from homeassistant.components.izone.const import DOMAIN
 from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
-from homeassistant.components.izone.services import (
-    IZONE_SERVICE_AIRFLOW_MAX,
-    IZONE_SERVICE_AIRFLOW_MIN,
+from homeassistant.components.izone.services import IZoneService, IZoneServiceArgument
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
+import homeassistant.helpers.issue_registry as ir
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
 from .conftest import create_mock_controller, create_mock_zone
@@ -112,6 +124,75 @@ async def test_set_controller_temperature_when_controller_owns(
     )
 
     mock_controller.set_temp_setpoint.assert_awaited_once_with(23.5)
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(CONTROLLER_ENTITY, id="controller"),
+        pytest.param(ZONE_ENTITY, id="zone"),
+    ],
+)
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_set_temperature_rejects_off_step_setpoint(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+    entity_id: str,
+) -> None:
+    """In-range setpoints that are not multiples of 0.5 raise before reaching pizone."""
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 24.3},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "invalid_temperature_step"
+    mock_controller.set_temp_setpoint.assert_not_awaited()
+    mock_zones[0].set_temp_setpoint.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(CONTROLLER_ENTITY, id="controller"),
+        pytest.param(ZONE_ENTITY, id="zone"),
+    ],
+)
+@pytest.mark.usefixtures("mock_create_discovery")
+async def test_set_temperature_normalizes_fahrenheit_setpoint(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+    entity_id: str,
+) -> None:
+    """Fahrenheit conversion noise is snapped to the 0.5 °C step."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_controller.control_setpoint_owner = mock_controller
+    mock_controller.control_setpoint = mock_controller.temp_setpoint
+    await setup_integration(hass, mock_config_entry)
+    setters = {
+        CONTROLLER_ENTITY: mock_controller.set_temp_setpoint,
+        ZONE_ENTITY: mock_zones[0].set_temp_setpoint,
+    }
+
+    # 74.3 °F converts to 23.499999999999996 °C.
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 74.3},
+        blocking=True,
+    )
+
+    setters[entity_id].assert_awaited_once_with(23.5)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -200,6 +281,145 @@ async def test_set_zone_mode(
         blocking=True,
     )
     zone.set_mode.assert_awaited_once_with(Zone.Mode.CLOSE)
+
+
+@pytest.mark.parametrize(
+    ("mock_zones", "service", "expected_mode"),
+    [
+        pytest.param(
+            [create_mock_zone(index=0, name="Living Room")],
+            SERVICE_TURN_ON,
+            Zone.Mode.AUTO,
+            id="turn_on_auto_zone",
+        ),
+        pytest.param(
+            [create_mock_zone(index=0, name="Living Room", zone_type=Zone.Type.OPCL)],
+            SERVICE_TURN_ON,
+            Zone.Mode.OPEN,
+            id="turn_on_open_close_zone",
+        ),
+        pytest.param(
+            [create_mock_zone(index=0, name="Living Room")],
+            SERVICE_TURN_OFF,
+            Zone.Mode.CLOSE,
+            id="turn_off",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_zone_turn_on_off(
+    hass: HomeAssistant,
+    mock_zones: list[Mock],
+    service: str,
+    expected_mode: Zone.Mode,
+) -> None:
+    """Turning a zone on uses its type's open mode; turning it off closes it."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: ZONE_ENTITY},
+        blocking=True,
+    )
+    mock_zones[0].set_mode.assert_awaited_once_with(expected_mode)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_controller_turn_on(
+    hass: HomeAssistant,
+    mock_controller: Mock,
+) -> None:
+    """Turning the controller on switches the system on."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: CONTROLLER_ENTITY},
+        blocking=True,
+    )
+    mock_controller.set_on.assert_awaited_once_with(True)
+
+
+@pytest.mark.parametrize(
+    ("preset_mode", "expected_free_air"),
+    [
+        pytest.param(PRESET_ECO, True, id="eco"),
+        pytest.param(PRESET_NONE, False, id="none"),
+    ],
+)
+async def test_set_preset_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    preset_mode: str,
+    expected_free_air: bool,
+) -> None:
+    """The eco preset switches free air on, and none switches it off."""
+    mock_controller.free_air_enabled = True
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: CONTROLLER_ENTITY, ATTR_PRESET_MODE: preset_mode},
+        blocking=True,
+    )
+    mock_controller.set_free_air.assert_awaited_once_with(expected_free_air)
+
+
+@pytest.mark.parametrize(
+    "mock_controller",
+    [create_mock_controller(free_air_enabled=True, free_air=True, zones_total=1)],
+)
+async def test_free_air_shows_fan_only(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_controller: Mock,
+    mock_zones: list[Mock],
+) -> None:
+    """Free air shows as fan only with the eco preset, and only off/fan only remain."""
+    mock_controller.zones = mock_zones
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(CONTROLLER_ENTITY)
+    assert state is not None
+    assert state.state == HVACMode.FAN_ONLY
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, HVACMode.FAN_ONLY]
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_ECO
+
+
+@pytest.mark.parametrize(
+    ("zone_mode", "expected_hvac_mode", "has_target_temperature"),
+    [
+        pytest.param(Zone.Mode.AUTO, HVACMode.HEAT_COOL, True, id="auto"),
+        pytest.param(Zone.Mode.OPEN, HVACMode.FAN_ONLY, False, id="open"),
+        pytest.param(Zone.Mode.CLOSE, HVACMode.OFF, False, id="close"),
+    ],
+)
+async def test_auto_zone_target_temperature_follows_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_discovery: AsyncMock,
+    mock_zones: list[Mock],
+    zone_mode: Zone.Mode,
+    expected_hvac_mode: HVACMode,
+    has_target_temperature: bool,
+) -> None:
+    """An auto zone only offers a setpoint while it is in auto mode."""
+    mock_zones[0].mode = zone_mode
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ZONE_ENTITY)
+    assert state is not None
+    assert state.state == expected_hvac_mode
+    assert (
+        bool(
+            state.attributes[ATTR_SUPPORTED_FEATURES]
+            & ClimateEntityFeature.TARGET_TEMPERATURE
+        )
+        is has_target_temperature
+    )
+    assert (ATTR_TEMPERATURE in state.attributes) is has_target_temperature
 
 
 async def test_target_temperature_when_controller_owns(
@@ -366,6 +586,13 @@ async def test_control_zone_source_unmatched_owner(
     assert entity.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
 
 
+@pytest.mark.parametrize(
+    "disabled_by",
+    [
+        pytest.param(None, id="enabled_zone"),
+        pytest.param(er.RegistryEntryDisabler.USER, id="disabled_zone"),
+    ],
+)
 async def test_control_zone_source_follows_entity_id_rename(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -374,8 +601,16 @@ async def test_control_zone_source_follows_entity_id_rename(
     mock_zones: list[Mock],
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    disabled_by: er.RegistryEntryDisabler | None,
 ) -> None:
     """Source tracks the zone climate entity_id after a rename."""
+    entity_registry.async_get_or_create(
+        CLIMATE_DOMAIN,
+        DOMAIN,
+        "000000001_z1",
+        suggested_object_id="living_room",
+        disabled_by=disabled_by,
+    )
     mock_controller.control_setpoint_owner = mock_zones[0]
     mock_controller.control_setpoint = mock_zones[0].temp_setpoint
     await setup_integration(hass, mock_config_entry)
@@ -483,24 +718,39 @@ async def test_refresh_failure_makes_entities_unavailable(
     assert hass.states.get(ZONE_ENTITY).state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("refresh_error", "connected"),
+    [
+        pytest.param(ConnectionError("offline"), True, id="bridge_unreachable"),
+        pytest.param(None, False, id="system_offline"),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
-async def test_soft_fault_marks_entities_unavailable_until_reconnect(
+async def test_unavailable_logged_once_until_reconnect(
     hass: HomeAssistant,
     mock_controller: Mock,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    refresh_error: Exception | None,
+    connected: bool,
 ) -> None:
-    """Successful refresh with connected=False marks entities unavailable."""
+    """Entities go unavailable with one log line, and one more on recovery."""
     assert hass.states.get(CONTROLLER_ENTITY).state == HVACMode.COOL
     assert hass.states.get(ZONE_ENTITY).state == HVACMode.HEAT_COOL
 
-    mock_controller.connected = False
-    freezer.tick(UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    mock_controller.refresh_all.side_effect = refresh_error
+    mock_controller.connected = connected
+    # Repeated failed polls must not log again.
+    for _ in range(3):
+        freezer.tick(UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
     assert hass.states.get(CONTROLLER_ENTITY).state == STATE_UNAVAILABLE
     assert hass.states.get(ZONE_ENTITY).state == STATE_UNAVAILABLE
+    assert caplog.text.count("Error fetching izone 000000001 data") == 1
 
+    mock_controller.refresh_all.side_effect = None
     mock_controller.connected = True
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
@@ -508,6 +758,11 @@ async def test_soft_fault_marks_entities_unavailable_until_reconnect(
 
     assert hass.states.get(CONTROLLER_ENTITY).state == HVACMode.COOL
     assert hass.states.get(ZONE_ENTITY).state == HVACMode.HEAT_COOL
+    assert (
+        "homeassistant.components.izone.coordinator",
+        logging.INFO,
+        "Fetching izone 000000001 data recovered",
+    ) in caplog.record_tuples
 
 
 @pytest.mark.parametrize(
@@ -843,12 +1098,45 @@ async def test_command_connection_error_recovers_on_coordinator_refresh(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
+    ("service", "setter"),
+    [
+        pytest.param(IZoneService.AIRFLOW_MIN, "set_airflow_min", id="min"),
+        pytest.param(IZoneService.AIRFLOW_MAX, "set_airflow_max", id="max"),
+    ],
+)
+async def test_deprecated_airflow_action_still_works_and_raises_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_zones: list[Mock],
+    service: str,
+    setter: str,
+) -> None:
+    """Deprecated airflow actions still set the limit and raise a repair issue."""
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {
+            CommonServiceArgument.ENTITY_ID: ZONE_ENTITY,
+            IZoneServiceArgument.AIRFLOW: 40,
+        },
+        blocking=True,
+    )
+
+    getattr(mock_zones[0], setter).assert_awaited_once_with(40)
+    issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_action_{service}")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_placeholders == {"action": f"{DOMAIN}.{service}"}
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
     ("service", "airflow"),
     [
-        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 41, id="min-int"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 41, id="max-int"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MIN, 40.9, id="min-float"),
-        pytest.param(IZONE_SERVICE_AIRFLOW_MAX, 40.9, id="max-float"),
+        pytest.param(IZoneService.AIRFLOW_MIN, 41, id="min-int"),
+        pytest.param(IZoneService.AIRFLOW_MAX, 41, id="max-int"),
+        pytest.param(IZoneService.AIRFLOW_MIN, 40.9, id="min-float"),
+        pytest.param(IZoneService.AIRFLOW_MAX, 40.9, id="max-float"),
     ],
 )
 async def test_airflow_rejects_non_multiples_of_five(
@@ -862,9 +1150,42 @@ async def test_airflow_rejects_non_multiples_of_five(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ZONE_ENTITY, ATTR_AIRFLOW: airflow},
+            {
+                CommonServiceArgument.ENTITY_ID: ZONE_ENTITY,
+                IZoneServiceArgument.AIRFLOW: airflow,
+            },
             blocking=True,
         )
 
+    mock_zones[0].set_airflow_min.assert_not_called()
+    mock_zones[0].set_airflow_max.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "service",
+    [
+        pytest.param(IZoneService.AIRFLOW_MIN, id="min"),
+        pytest.param(IZoneService.AIRFLOW_MAX, id="max"),
+    ],
+)
+async def test_airflow_rejects_controller(
+    hass: HomeAssistant,
+    mock_zones: list[Mock],
+    service: str,
+) -> None:
+    """Airflow services reject the controller entity."""
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                CommonServiceArgument.ENTITY_ID: CONTROLLER_ENTITY,
+                IZoneServiceArgument.AIRFLOW: 40,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "airflow_zone_only"
     mock_zones[0].set_airflow_min.assert_not_called()
     mock_zones[0].set_airflow_max.assert_not_called()

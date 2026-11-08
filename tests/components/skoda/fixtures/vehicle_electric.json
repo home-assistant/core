@@ -3,6 +3,7 @@
     "name": "Enyaq Coupé",
     "vin": "TMBJM7NP2M1TMP511",
     "licensePlate": "EL107FP",
+    "renderUrl": "https://iprenders.blob.core.windows.net/base5azs22200218/enyaq_side1080.png",
     "odometer": {
       "mileageInKm": 9618,
       "carCapturedTimestamp": "2024-01-10T11:55:00Z"
@@ -72,6 +73,23 @@
       "state": "OFF",
       "durationInSeconds": 1200,
       "carCapturedTimestamp": "2024-01-10T11:55:00Z"
-    }
+    },
+    "operations": [
+      {
+        "name": "startCharging"
+      },
+      {
+        "name": "stopCharging"
+      },
+      {
+        "name": "setChargingLimit"
+      },
+      {
+        "name": "startAirConditioning"
+      },
+      {
+        "name": "stopAirConditioning"
+      }
+    ]
   }
 }

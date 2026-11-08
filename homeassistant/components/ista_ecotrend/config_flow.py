@@ -8,7 +8,7 @@ import probatio
 from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -138,8 +138,8 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             ),
             description_placeholders={
-                CONF_NAME: reauth_entry.title,
-                CONF_EMAIL: reauth_entry.data[CONF_EMAIL],
+                "name": reauth_entry.title,
+                "email": reauth_entry.data[CONF_EMAIL],
             },
             errors=errors,
         )

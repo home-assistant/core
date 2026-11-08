@@ -92,7 +92,7 @@ PIPELINE_DATA = {
             "id": "12345",
             "language": "language_1",
             "name": "Home Assistant Cloud",
-            "stt_engine": "stt.home_assistant_cloud",
+            "stt_engine": "stt.home_assistant_link",
             "stt_language": "language_1",
             "tts_engine": "cloud",
             "tts_language": "language_1",
@@ -189,7 +189,7 @@ async def test_google_actions_sync_fails(
 
 
 @pytest.mark.parametrize(
-    "entity_id", ["stt.home_assistant_cloud", "tts.home_assistant_cloud"]
+    "entity_id", ["stt.home_assistant_link", "tts.home_assistant_link"]
 )
 @pytest.mark.usefixtures("setup_cloud")
 async def test_login_view_missing_entity(
@@ -287,9 +287,9 @@ async def test_login_view_create_pipeline(
     assert await req.json() == {"success": True}
     create_pipeline_mock.assert_awaited_once_with(
         hass,
-        stt_engine_id="stt.home_assistant_cloud",
-        tts_engine_id="tts.home_assistant_cloud",
-        pipeline_name="Home Assistant Cloud",
+        stt_engine_id="stt.home_assistant_link",
+        tts_engine_id="tts.home_assistant_link",
+        pipeline_name="Home Assistant Link",
     )
 
 
@@ -323,9 +323,9 @@ async def test_auto_login_creates_pipeline(
 
     create_pipeline_mock.assert_awaited_once_with(
         hass,
-        stt_engine_id="stt.home_assistant_cloud",
-        tts_engine_id="tts.home_assistant_cloud",
-        pipeline_name="Home Assistant Cloud",
+        stt_engine_id="stt.home_assistant_link",
+        tts_engine_id="tts.home_assistant_link",
+        pipeline_name="Home Assistant Link",
     )
 
 

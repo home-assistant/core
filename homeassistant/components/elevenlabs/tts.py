@@ -4,6 +4,7 @@ import asyncio
 from collections import deque
 from collections.abc import AsyncGenerator, Mapping
 import contextlib
+from enum import StrEnum
 import logging
 from typing import Any, override
 
@@ -13,14 +14,14 @@ from elevenlabs.types import Model, Voice as ElevenLabsVoice, VoiceSettings
 from sentence_stream import SentenceBoundaryDetector
 
 from homeassistant.components.tts import (
-    ATTR_VOICE,
+    TextToSpeechCommonOption,
     TextToSpeechEntity,
     TTSAudioRequest,
     TTSAudioResponse,
     TtsAudioType,
     Voice,
 )
-from homeassistant.const import ATTR_MODEL, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -44,6 +45,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 6
+
+
+class ElevenLabsTextToSpeechOption(StrEnum):
+    """Store keys for the ElevenLabs text-to-speech options."""
+
+    MODEL = "model"
 
 
 def to_voice_settings(options: Mapping[str, Any]) -> VoiceSettings:
@@ -85,7 +92,10 @@ async def async_setup_entry(
 class ElevenLabsTTSEntity(TextToSpeechEntity):
     """The ElevenLabs API entity."""
 
-    _attr_supported_options = [ATTR_VOICE, ATTR_MODEL]
+    _attr_supported_options = [
+        TextToSpeechCommonOption.VOICE,
+        ElevenLabsTextToSpeechOption.MODEL,
+    ]
     _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
     _attr_translation_key = "elevenlabs_tts"
@@ -146,8 +156,8 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         """Load tts audio file from the engine."""
         _LOGGER.debug("Getting TTS audio for %s", message)
         _LOGGER.debug("Options: %s", options)
-        voice_id = options.get(ATTR_VOICE, self._default_voice_id)
-        model = options.get(ATTR_MODEL, self._model.model_id)
+        voice_id = options.get(TextToSpeechCommonOption.VOICE, self._default_voice_id)
+        model = options.get(ElevenLabsTextToSpeechOption.MODEL, self._model.model_id)
         try:
             audio = self._client.text_to_speech.convert(
                 text=message,
@@ -184,8 +194,12 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         sentences_complete = False
 
         language_code: str | None = request.language
-        voice_id = request.options.get(ATTR_VOICE, self._default_voice_id)
-        model = request.options.get(ATTR_MODEL, self._model.model_id)
+        voice_id = request.options.get(
+            TextToSpeechCommonOption.VOICE, self._default_voice_id
+        )
+        model = request.options.get(
+            ElevenLabsTextToSpeechOption.MODEL, self._model.model_id
+        )
 
         use_request_ids = model not in MODELS_PREVIOUS_INFO_NOT_SUPPORTED
         previous_request_ids: deque[str] = deque(maxlen=MAX_REQUEST_IDS)

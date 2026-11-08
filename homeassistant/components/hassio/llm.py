@@ -4,14 +4,27 @@ from datetime import UTC, datetime, timedelta
 import math
 from typing import override
 
+from aiohasupervisor import SupervisorError
+
 from homeassistant.components.llm import LLMTools
 from homeassistant.components.system_log.llm import SystemLogGetLogsTool  # pylint: disable=home-assistant-component-root-import
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.llm import LLM_API_HOME_ASSISTANT, LLMContext
+from homeassistant.helpers.llm import (
+    LLM_API_HOME_ASSISTANT,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+    ToolInput,
+    ToolResult,
+)
 
-from .const import DATA_ADDONS_LIST, DATA_COMPONENT, DOMAIN
-from .handler import HassioAPIError
+from .const import DATA_ADDONS_LIST, DOMAIN
+from .handler import (
+    HassioAPIError,
+    get_supervisor_client,
+    get_supervisor_passthrough_client,
+)
 
 APP_SOURCE_PREFIX = "app:"
 
@@ -37,6 +50,53 @@ def _journal_time(time: datetime) -> str:
         microseconds=1
     )
     return f"{microseconds // 1_000_000}.{microseconds % 1_000_000:06d}"
+
+
+class SupervisorGetAppsTool(Tool):
+    """LLM tool listing installed apps from the Supervisor."""
+
+    name = "hassio__get_apps"
+    title = "Get installed apps"
+    description = (
+        "List installed Home Assistant apps (formerly add-ons), including their "
+        "names, slugs, installed and latest available versions, update availability, "
+        "and running state. Use this to check which version of an app is installed "
+        "or whether it is running. To read an app's logs, use hassio__get_logs "
+        "with source app:<slug>."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the currently installed apps and their versions."""
+        supervisor = get_supervisor_client(hass)
+        try:
+            apps = await supervisor.addons.list()
+        except SupervisorError as err:
+            raise HomeAssistantError("Could not list installed apps") from err
+
+        return ToolResult(
+            data={
+                "apps": [
+                    {
+                        "name": app.name,
+                        "slug": app.slug,
+                        "installed_version": app.version,
+                        "latest_version": app.version_latest,
+                        "update_available": app.update_available,
+                        "state": app.state.value,
+                    }
+                    for app in sorted(
+                        apps, key=lambda app: (app.name.casefold(), app.slug)
+                    )
+                ]
+            }
+        )
 
 
 class SupervisorGetLogsTool(SystemLogGetLogsTool):
@@ -74,8 +134,10 @@ class SupervisorGetLogsTool(SystemLogGetLogsTool):
             command = f"/addons/{source.removeprefix(APP_SOURCE_PREFIX)}/logs"
         else:
             command = f"/{source}/logs"
+
+        supervisor = get_supervisor_passthrough_client(hass)
         try:
-            text: str = await hass.data[DATA_COMPONENT].send_command(
+            text: str = await supervisor.send_command(
                 command,
                 method="get",
                 return_text=True,
@@ -105,4 +167,4 @@ def async_get_tools(
         return None
 
     apps = {app.slug: app.name for app in hass.data.get(DATA_ADDONS_LIST) or []}
-    return LLMTools(tools=[SupervisorGetLogsTool(apps)])
+    return LLMTools(tools=[SupervisorGetLogsTool(apps), SupervisorGetAppsTool()])

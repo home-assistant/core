@@ -14,7 +14,7 @@ from homeassistant.const import (
     UnitOfRatio,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PooldoseConfigEntry
@@ -163,6 +163,7 @@ class PooldoseNumber(PooldoseEntity, NumberEntity):
         super().__init__(coordinator, serial_number, device_info, description, "number")
         self._async_update_attrs()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
