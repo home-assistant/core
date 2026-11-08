@@ -1495,57 +1495,60 @@ async def test_media_player_get_queue_action_items(
 
 
 @pytest.mark.parametrize(
-    ("schema_version", "username", "expected_user"),
+    ("schema_version", "extra_data", "expected_user", "expected_schema"),
     [
-        pytest.param(101, "john", "john", id="given_user"),
-        pytest.param(101, None, "calling_user", id="calling_user"),
-        pytest.param(100, None, None, id="older_server"),
+        pytest.param(101, {ATTR_USERNAME: "john"}, "john", 101, id="given_user"),
+        pytest.param(
+            101,
+            {},
+            {"provider": "homeassistant", "user_id": "ha_user_1", "required": False},
+            101,
+            id="calling_user",
+        ),
+        pytest.param(100, {}, None, None, id="older_server"),
     ],
 )
 async def test_media_player_get_queue_action_user(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
     schema_version: int,
-    username: str | None,
-    expected_user: str | None,
+    extra_data: dict[str, Any],
+    expected_user: str | dict[str, Any] | None,
+    expected_schema: int | None,
 ) -> None:
     """Test the queue items are requested as a user only where the server supports it."""
     music_assistant_client.server_info.schema_version = schema_version
     await setup_integration_from_fixtures(hass, music_assistant_client)
     music_assistant_client.send_command.return_value = []
-    user = MockUser(is_owner=True).add_to_hass(hass)
-    service_data = {ATTR_ENTITY_ID: "media_player.test_group_player_1", ATTR_LIMIT: 5}
-    if username is not None:
-        service_data[ATTR_USERNAME] = username
+    MockUser(id="ha_user_1", is_owner=True).add_to_hass(hass)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_QUEUE,
-        service_data,
+        {ATTR_ENTITY_ID: "media_player.test_group_player_1", ATTR_LIMIT: 5}
+        | extra_data,
         blocking=True,
         return_response=True,
-        context=Context(user_id=user.id),
+        context=Context(user_id="ha_user_1"),
     )
     sent = music_assistant_client.send_command.call_args.kwargs
-    if expected_user == "calling_user":
-        assert sent["user"] == {
-            "provider": "homeassistant",
-            "user_id": user.id,
-            "required": False,
-        }
-    else:
-        assert sent.get("user") == expected_user
-    assert sent["require_schema"] == (None if expected_user is None else 101)
+    assert sent.get("user") == expected_user
+    assert sent["require_schema"] == expected_schema
 
 
 @pytest.mark.parametrize(
-    ("username", "translation_key"),
-    [("john", "username_not_supported"), (None, "server_too_old")],
+    ("extra_data", "translation_key", "sent"),
+    [
+        # a username is refused before anything is sent
+        ({ATTR_USERNAME: "john"}, "username_not_supported", False),
+        ({}, "server_too_old", True),
+    ],
 )
 async def test_media_player_get_queue_action_older_server(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
-    username: str | None,
+    extra_data: dict[str, Any],
     translation_key: str,
+    sent: bool,
 ) -> None:
     """Test get_queue on a server that can't act as a user or lacks the command."""
     music_assistant_client.server_info.schema_version = 100
@@ -1553,16 +1556,17 @@ async def test_media_player_get_queue_action_older_server(
         "Command requires schema 101"
     )
     await setup_integration_from_fixtures(hass, music_assistant_client)
-    data = {ATTR_ENTITY_ID: "media_player.test_group_player_1", ATTR_LIMIT: 5}
-    if username:
-        data[ATTR_USERNAME] = username
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
-            DOMAIN, SERVICE_GET_QUEUE, data, blocking=True, return_response=True
+            DOMAIN,
+            SERVICE_GET_QUEUE,
+            {ATTR_ENTITY_ID: "media_player.test_group_player_1", ATTR_LIMIT: 5}
+            | extra_data,
+            blocking=True,
+            return_response=True,
         )
     assert err.value.translation_key == translation_key
-    # a username is refused before anything is sent
-    assert music_assistant_client.send_command.called is (username is None)
+    assert music_assistant_client.send_command.called is sent
 
 
 async def test_media_player_get_queue_action_no_active_queue(
