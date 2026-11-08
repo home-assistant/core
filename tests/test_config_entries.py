@@ -1,7 +1,7 @@
 """Test the config manager."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import timedelta
 from ipaddress import ip_address
@@ -4307,6 +4307,81 @@ async def test_entry_reload_error(
     assert len(async_setup_entry.mock_calls) == 0
 
     assert entry.state is state
+
+
+@pytest.mark.parametrize(
+    ("disabled_by", "action"),
+    [
+        pytest.param(
+            config_entries.ConfigEntryDisabler.USER,
+            lambda manager, entry: manager.async_set_disabled_by(entry.entry_id, None),
+            id="enable",
+        ),
+        pytest.param(
+            None,
+            lambda manager, entry: manager.async_reload(entry.entry_id),
+            id="reload",
+        ),
+    ],
+)
+async def test_entry_retries_failed_component_setup(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    disabled_by: config_entries.ConfigEntryDisabler | None,
+    action: Callable[
+        [config_entries.ConfigEntries, config_entries.ConfigEntry], Awaitable[bool]
+    ],
+) -> None:
+    """Test enabling or reloading an entry retries a failed component setup."""
+    entry = MockConfigEntry(domain="comp", disabled_by=disabled_by)
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(side_effect=[False, True])
+    async_setup_entry = AsyncMock(return_value=None)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp", async_setup=async_setup, async_setup_entry=async_setup_entry
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    # The component fails to set up, as it may at startup
+    assert not await async_setup_component(hass, "comp", {})
+    assert len(async_setup.mock_calls) == 1
+    assert len(async_setup_entry.mock_calls) == 0
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    assert await action(manager, entry)
+    assert len(async_setup.mock_calls) == 2
+    assert len(async_setup_entry.mock_calls) == 1
+    assert "comp" in hass.config.components
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+async def test_entry_add_retries_failed_component_setup(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test adding an entry retries a failed component setup."""
+    async_setup = AsyncMock(side_effect=[False, True])
+    async_setup_entry = AsyncMock(return_value=None)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp", async_setup=async_setup, async_setup_entry=async_setup_entry
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    # The component fails to set up, as it may at startup
+    assert not await async_setup_component(hass, "comp", {})
+    assert len(async_setup.mock_calls) == 1
+
+    entry = MockConfigEntry(domain="comp")
+    await manager.async_add(entry)
+    assert len(async_setup.mock_calls) == 2
+    assert len(async_setup_entry.mock_calls) == 1
+    assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
 async def test_entry_disable_succeed(

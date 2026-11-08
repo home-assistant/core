@@ -12,6 +12,7 @@ from pytest_homeassistant.common import (
     MockModule,
     MockPlatform,
     assert_setup_component,
+    async_get_persistent_notifications,
     mock_integration,
     mock_platform,
 )
@@ -308,6 +309,127 @@ async def test_component_not_installed_if_requirement_fails(
         assert not await setup.async_setup_component(hass, "comp", {})
 
     assert "comp" not in hass.config.components
+
+
+async def test_clear_failed_setup(hass: HomeAssistant) -> None:
+    """Test a failed setup is only retried after it is cleared."""
+    mock_setup = AsyncMock(side_effect=[False, True])
+    mock_integration(hass, MockModule("comp", async_setup=mock_setup))
+    mock_integration(
+        hass, MockModule("comp_other", async_setup=AsyncMock(return_value=False))
+    )
+
+    assert not await setup.async_setup_component(hass, "comp", {})
+    assert not await setup.async_setup_component(hass, "comp_other", {})
+    # The failure is cached
+    assert not await setup.async_setup_component(hass, "comp", {})
+    assert len(mock_setup.mock_calls) == 1
+    notifications = async_get_persistent_notifications(hass)
+    assert " - comp (" in notifications["invalid_config"]["message"]
+    assert " - comp_other (" in notifications["invalid_config"]["message"]
+
+    setup.async_clear_failed_setup(hass, "comp")
+    assert set(hass.data[setup._DATA_SETUP]) == {"comp_other"}
+    notifications = async_get_persistent_notifications(hass)
+    assert " - comp (" not in notifications["invalid_config"]["message"]
+    assert " - comp_other (" in notifications["invalid_config"]["message"]
+    # Already cleared, and never set up
+    setup.async_clear_failed_setup(hass, "comp")
+    setup.async_clear_failed_setup(hass, "comp_unknown")
+    assert set(hass.data[setup._DATA_SETUP]) == {"comp_other"}
+
+    assert await setup.async_setup_component(hass, "comp", {})
+    assert len(mock_setup.mock_calls) == 2
+    assert "comp" in hass.config.components
+    # Nothing to clear for a loaded component
+    setup.async_clear_failed_setup(hass, "comp")
+    assert "comp" in hass.config.components
+    assert set(hass.data[setup._DATA_SETUP]) == {"comp_other"}
+
+    setup.async_clear_failed_setup(hass, "comp_other")
+    assert not hass.data[setup._DATA_SETUP]
+    assert "invalid_config" not in async_get_persistent_notifications(hass)
+
+
+async def test_clear_failed_setup_in_progress(hass: HomeAssistant) -> None:
+    """Test a setup in progress is not cleared."""
+    setup_started = asyncio.Event()
+    setup_stall = asyncio.Event()
+
+    async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return False
+
+    mock_setup = AsyncMock(side_effect=async_setup)
+    mock_integration(hass, MockModule("comp", async_setup=mock_setup))
+
+    setup_task = asyncio.create_task(setup.async_setup_component(hass, "comp", {}))
+    await setup_started.wait()
+    setup_future = hass.data[setup._DATA_SETUP]["comp"]
+    setup.async_clear_failed_setup(hass, "comp")
+    assert hass.data[setup._DATA_SETUP]["comp"] is setup_future
+    setup_stall.set()
+
+    assert await setup_task is False
+    assert len(mock_setup.mock_calls) == 1
+    setup.async_clear_failed_setup(hass, "comp")
+    assert "comp" not in hass.data[setup._DATA_SETUP]
+
+
+async def test_clear_failed_setup_retries_requirements(hass: HomeAssistant) -> None:
+    """Test requirements which failed to install are retried after clearing."""
+    hass.config.skip_pip = False
+    mock_integration(hass, MockModule("comp", requirements=["package==0.0.1"]))
+
+    with patch(
+        "homeassistant.util.package.install_package", return_value=False
+    ) as mock_install:
+        assert not await setup.async_setup_component(hass, "comp", {})
+    assert len(mock_install.mock_calls) == 3
+
+    setup.async_clear_failed_setup(hass, "comp")
+
+    with patch(
+        "homeassistant.util.package.install_package", return_value=True
+    ) as mock_install:
+        assert await setup.async_setup_component(hass, "comp", {})
+    assert len(mock_install.mock_calls) == 1
+    assert "comp" in hass.config.components
+
+
+async def test_clear_failed_setup_dependencies(hass: HomeAssistant) -> None:
+    """Test failed dependencies are retried along with the component."""
+    mock_setup_dep2 = AsyncMock(side_effect=[False, True])
+    mock_integration(hass, MockModule("dep2", async_setup=mock_setup_dep2))
+    mock_setup_dep = AsyncMock(return_value=True)
+    mock_integration(
+        hass, MockModule("dep", async_setup=mock_setup_dep, dependencies=["dep2"])
+    )
+    mock_setup = AsyncMock(return_value=True)
+    mock_integration(
+        hass, MockModule("comp", async_setup=mock_setup, dependencies=["dep"])
+    )
+
+    assert not await setup.async_setup_component(hass, "comp", {})
+    assert len(mock_setup_dep2.mock_calls) == 1
+    assert len(mock_setup_dep.mock_calls) == 0
+    assert len(mock_setup.mock_calls) == 0
+    notifications = async_get_persistent_notifications(hass)
+    assert " - dep2 (" in notifications["invalid_config"]["message"]
+    assert {"comp", "dep", "dep2"} <= hass.data[setup._DATA_SETUP].keys()
+
+    setup.async_clear_failed_setup(hass, "comp")
+    assert not {"comp", "dep", "dep2"} & hass.data[setup._DATA_SETUP].keys()
+    assert "invalid_config" not in async_get_persistent_notifications(hass)
+
+    assert await setup.async_setup_component(hass, "comp", {})
+    assert len(mock_setup_dep2.mock_calls) == 2
+    assert len(mock_setup_dep.mock_calls) == 1
+    assert len(mock_setup.mock_calls) == 1
+    assert "dep2" in hass.config.components
+    assert "dep" in hass.config.components
+    assert "comp" in hass.config.components
 
 
 async def test_component_not_setup_twice_if_loaded_during_other_setup(

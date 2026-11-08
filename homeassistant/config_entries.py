@@ -82,6 +82,7 @@ from .helpers.typing import ConfigType, DiscoveryInfoType, NoEventData, Undefine
 from .loader import async_suggest_report_issue
 from .setup import (
     SetupPhases,
+    async_clear_failed_setup,
     async_pause_setup,
     async_process_deps_reqs,
     async_setup_component,
@@ -2583,7 +2584,9 @@ class ConfigEntries:
             else:
                 await entry.async_setup(self.hass)
         else:
-            # Setting up the component will set up all its config entries
+            # Setting up the component will set up all its config entries,
+            # a component which failed to set up before is retried
+            async_clear_failed_setup(self.hass, entry.domain)
             result = await async_setup_component(
                 self.hass, entry.domain, self._hass_config
             )
@@ -2671,7 +2674,8 @@ class ConfigEntries:
             # If the component is not loaded, just load it as
             # the config entry will be loaded as well. We need
             # to do this before holding the lock to avoid a
-            # deadlock.
+            # deadlock. A component which failed to set up before is retried.
+            async_clear_failed_setup(self.hass, entry.domain)
             await async_setup_component(self.hass, entry.domain, self._hass_config)
             return entry.state is ConfigEntryState.LOADED
 

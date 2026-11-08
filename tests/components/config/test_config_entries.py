@@ -2356,25 +2356,42 @@ async def test_enable_entry_setup_fails(
     mock_setup_entry.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("retry_result", "require_restart", "expected_state", "setup_entry_calls"),
+    [
+        pytest.param(
+            False, True, core_ce.ConfigEntryState.NOT_LOADED, 0, id="fails_again"
+        ),
+        pytest.param(True, False, core_ce.ConfigEntryState.LOADED, 1, id="succeeds"),
+    ],
+)
 async def test_enable_entry_component_setup_fails(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    retry_result: bool,
+    require_restart: bool,
+    expected_state: core_ce.ConfigEntryState,
+    setup_entry_calls: int,
 ) -> None:
-    """Test enabling an entry whose integration fails setup requires a restart."""
+    """Test enabling an entry whose integration failed to set up retries the setup."""
     assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
+    mock_setup = AsyncMock(side_effect=[False, retry_result])
     mock_setup_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
             "comp",
-            async_setup=AsyncMock(return_value=False),
+            async_setup=mock_setup,
             async_setup_entry=mock_setup_entry,
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
     entry = MockConfigEntry(domain="comp", disabled_by=core_ce.ConfigEntryDisabler.USER)
     entry.add_to_hass(hass)
+    # The integration fails to set up, as it may at startup
+    assert not await async_setup_component(hass, "comp", {})
 
     with mock_config_flow("comp", ConfigFlow):
         await ws_client.send_json(
@@ -2388,11 +2405,11 @@ async def test_enable_entry_component_setup_fails(
         response = await ws_client.receive_json()
 
     assert response["success"]
-    # A failed integration setup is not retried until Home Assistant restarts
-    assert response["result"] == {"require_restart": True}
+    assert response["result"] == {"require_restart": require_restart}
     assert entry.disabled_by is None
-    assert entry.state is core_ce.ConfigEntryState.NOT_LOADED
-    mock_setup_entry.assert_not_called()
+    assert entry.state is expected_state
+    assert len(mock_setup.mock_calls) == 2
+    assert len(mock_setup_entry.mock_calls) == setup_entry_calls
 
 
 async def test_disable_entry_nonexisting(

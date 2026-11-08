@@ -49,6 +49,8 @@ ATTR_COMPONENT: Final = "component"
 #   being setup and the Task is the `_async_setup_component` helper.
 # - Tasks are removed from _DATA_SETUP if setup was successful, that is,
 #   the task returned True.
+# - The finished task of a failed setup is removed by `async_clear_failed_setup`,
+#   so that the next `async_setup_component` call retries the setup.
 _DATA_SETUP: HassKey[dict[str, asyncio.Future[bool]]] = HassKey("setup_tasks")
 
 # _DATA_SETUP_DONE is a dict, indicating components which will be setup:
@@ -99,12 +101,23 @@ def async_notify_setup_error(
 
     This method must be run in the event loop.
     """
-    from .components import persistent_notification  # noqa: PLC0415
-
     if (errors := hass.data.get(_DATA_PERSISTENT_ERRORS)) is None:
         errors = hass.data[_DATA_PERSISTENT_ERRORS] = {}
 
     errors[component] = errors.get(component) or display_link
+    _async_update_setup_error_notification(hass, errors)
+
+
+@callback
+def _async_update_setup_error_notification(
+    hass: HomeAssistant, errors: dict[str, str | None]
+) -> None:
+    """Create, update or dismiss the persistent notification."""
+    from .components import persistent_notification  # noqa: PLC0415
+
+    if not errors:
+        persistent_notification.async_dismiss(hass, "invalid_config")
+        return
 
     message = "The following integrations and platforms could not be set up:\n\n"
 
@@ -136,6 +149,46 @@ def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) 
     setup_done_futures.update(
         {domain: hass.loop.create_future() for domain in domains - old_domains}
     )
+
+
+@core.callback
+def async_clear_failed_setup(hass: core.HomeAssistant, domain: str) -> None:
+    """Forget that a domain and its dependencies failed to set up.
+
+    The next setup attempt retries a forgotten setup.
+    """
+    if not (setup_futures := hass.data.get(_DATA_SETUP)):
+        return
+
+    # Also clear failed dependency setups, a cached one would fail the domain again
+    domains = {domain}
+    pending = [domain]
+    while pending:
+        with contextlib.suppress(loader.IntegrationNotLoaded):
+            integration = loader.async_get_loaded_integration(hass, pending.pop())
+            dependencies = set(integration.dependencies) - domains
+            domains |= dependencies
+            pending.extend(dependencies)
+
+    cleared: set[str] = set()
+    for name in domains:
+        setup_future = setup_futures.get(name)
+        # A done future is always a failed setup, an unfinished one is still in progress
+        if setup_future is None or not setup_future.done():
+            continue
+        del setup_futures[name]
+        cleared.add(name)
+
+    if not cleared:
+        return
+
+    # Clear the install failure history, it otherwise blocks reinstalling requirements
+    requirements.async_clear_install_history(hass)
+    errors = hass.data.get(_DATA_PERSISTENT_ERRORS, {})
+    if errors.keys() & cleared:
+        for name in cleared:
+            errors.pop(name, None)
+        _async_update_setup_error_notification(hass, errors)
 
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
