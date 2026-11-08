@@ -1,7 +1,7 @@
 {
   "exceptions": {
     "end_time_before_start_time": {
-      "message": "End time must be greater or equal to start time"
+      "message": "End time must be greater than or equal to start time"
     },
     "start_time_before_now": {
       "message": "Start time must be in the past"
@@ -41,17 +41,16 @@
           "description": "The end time for the history query. If omitted, returns all history from start time onward.",
           "name": "End time"
         },
-
-        "history_ids": {
-          "description": "The entity IDs or history IDs to return history for.",
-          "name": "History IDs"
+        "entity_id": {
+          "description": "The entity IDs to return history for.",
+          "name": "Entities"
         },
         "start_time": {
           "description": "The start time for the history query.",
           "name": "Start time"
         }
       },
-      "name": "Get history"
+      "name": "Get Recorder history"
     },
     "get_statistics": {
       "description": "Retrieves statistics data for entities within a specific time period.",

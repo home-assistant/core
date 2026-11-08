@@ -124,7 +124,7 @@ get_history:
       selector:
         datetime:
 
-    history_ids:
+    entity_id:
       required: true
       example:
         - sensor.hvac_action

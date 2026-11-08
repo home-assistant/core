@@ -1141,17 +1141,18 @@ async def test_get_last_state_changes_with_non_existent_entity_ids_returns_empty
 @pytest.mark.parametrize(
     ("service_args", "expected_result"),
     [
-        (
+        pytest.param(
             {
                 "start_time": "2023-05-08 07:00:00Z",
-                "history_ids": ["sensor.i_dont_exist"],
+                "entity_id": ["sensor.i_dont_exist"],
             },
             {"history": {}},
+            id="nonexistent_entity",
         ),
-        (
+        pytest.param(
             {
                 "start_time": "2023-05-08 06:30:00Z",
-                "history_ids": [
+                "entity_id": [
                     "sensor.total_energy_import1",
                     "sensor.total_energy_import2",
                 ],
@@ -1214,6 +1215,26 @@ async def test_get_last_state_changes_with_non_existent_entity_ids_returns_empty
                     ],
                 }
             },
+            id="multiple_entities",
+        ),
+        pytest.param(
+            {
+                "start_time": "2023-05-08 08:30:00Z",
+                "end_time": "2023-05-08 08:30:00Z",
+                "entity_id": ["sensor.total_energy_import1"],
+            },
+            {
+                "history": {
+                    "sensor.total_energy_import1": [
+                        {
+                            "end": "2023-05-08T08:30:00+00:00",
+                            "start": "2023-05-08T08:30:00+00:00",
+                            "state": "1.0",
+                        },
+                    ],
+                }
+            },
+            id="point_in_time_same_start_and_end",
         ),
     ],
 )
@@ -1228,7 +1249,7 @@ async def test_get_history_service(
 
     assert hass.config.time_zone == "US/Pacific"
 
-    times: list[tuple[datetime, float]] = [
+    times: list[tuple[datetime, float | str]] = [
         (dt_util.as_utc(dt_util.parse_datetime("2023-05-07 23:00:00")), "unknown"),
         (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00")), 0.0),
         (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00")), 1.0),
@@ -1273,20 +1294,117 @@ async def test_get_history_service(
         )
 
 
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_history_service_attribute_changes_and_duplicate_states(
+    hass: HomeAssistant,
+) -> None:
+    """Test attribute-only updates are filtered in SQL and forced duplicate states are merged."""
+    entity_id = "sensor.test_attr_and_dup"
+    t0 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 07:00:00Z"))
+    t1_attr = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 07:15:00Z"))
+    t2_forced = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 07:30:00Z"))
+    t3_changed = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 08:00:00Z"))
+    end_time = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 09:00:00Z"))
+
+    hass.states.async_set(
+        entity_id, "0.0", {"attr": "initial"}, timestamp=t0.timestamp()
+    )
+    # Attribute-only update: last_changed != last_updated in DB, so SQL filters it out
+    hass.states.async_set(
+        entity_id, "0.0", {"attr": "updated"}, timestamp=t1_attr.timestamp()
+    )
+    # Forced update (or restart): last_changed == last_updated in DB with identical state string
+    hass.states.async_set(
+        entity_id,
+        "0.0",
+        {"attr": "updated"},
+        force_update=True,
+        timestamp=t2_forced.timestamp(),
+    )
+    hass.states.async_set(
+        entity_id, "1.0", {"attr": "final"}, timestamp=t3_changed.timestamp()
+    )
+    await async_recorder_block_till_done(hass)
+
+    def _fetch_db_states() -> list[States]:
+        with session_scope(hass=hass, read_only=True) as session:
+            states = list(session.query(States).order_by(States.last_updated_ts))
+            session.expunge_all()
+            return states
+
+    db_states = await recorder.get_instance(hass).async_add_executor_job(
+        _fetch_db_states
+    )
+    assert len(db_states) == 4
+    assert db_states[0].last_changed_ts is None
+    assert db_states[1].last_changed_ts == t0.timestamp()
+    assert db_states[1].last_updated_ts == t1_attr.timestamp()
+    assert db_states[2].last_changed_ts is None
+    assert db_states[3].last_changed_ts is None
+
+    # Verify SQL query in state_changes_during_period already excludes the t1_attr
+    # attribute-only row, while still returning the t2_forced duplicate state row
+    raw_states = await recorder.get_instance(hass).async_add_executor_job(
+        history.state_changes_during_period,
+        hass,
+        dt_util.as_utc(dt_util.parse_datetime("2023-05-08 06:30:00Z")),
+        end_time,
+        entity_id,
+        True,
+    )
+    assert [s.last_updated for s in raw_states[entity_id]] == [
+        t0,
+        t2_forced,
+        t3_changed,
+    ]
+
+    with patch("homeassistant.util.dt.utcnow", return_value=end_time):
+        result = await hass.services.async_call(
+            "recorder",
+            "get_history",
+            {
+                "start_time": "2023-05-08 06:30:00Z",
+                "end_time": "2023-05-08 09:00:00Z",
+                "entity_id": [entity_id],
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+    assert result == {
+        "history": {
+            entity_id: [
+                {
+                    "start": "2023-05-08T07:00:00+00:00",
+                    "end": "2023-05-08T08:00:00+00:00",
+                    "state": "0.0",
+                },
+                {
+                    "start": "2023-05-08T08:00:00+00:00",
+                    "end": "2023-05-08T09:00:00+00:00",
+                    "state": "1.0",
+                },
+            ]
+        }
+    }
+
+
 @pytest.mark.parametrize(
     ("service_args", "missing_key"),
     [
-        (
+        pytest.param(
             {
-                "history_ids": ["sensor.sensor"],
+                "entity_id": ["sensor.sensor"],
             },
             "start_time",
+            id="missing_start_time",
         ),
-        (
+        pytest.param(
             {
                 "start_time": "2023-05-08 07:00:00Z",
             },
-            "history_ids",
+            "entity_id",
+            id="missing_entity_id",
         ),
     ],
 )
@@ -1316,24 +1434,27 @@ async def test_get_history_service_missing_mandatory_keys(
 @pytest.mark.parametrize(
     ("service_args", "error_key"),
     [
-        (
+        pytest.param(
             {
-                "history_ids": ["sensor.sensor"],
+                "entity_id": ["sensor.sensor"],
                 "start_time": "2026-02-03 07:00:00Z",
             },
             "start_time_before_now",
+            id="start_time_in_future",
         ),
-        (
+        pytest.param(
             {
-                "history_ids": ["sensor.sensor"],
+                "entity_id": ["sensor.sensor"],
                 "start_time": "2026-02-01 07:00:00Z",
                 "end_time": "2026-01-01 07:00:00Z",
             },
             "end_time_before_start_time",
+            id="end_time_before_start_time",
         ),
     ],
 )
 @pytest.mark.freeze_time("2026-02-01 08:00:00-00:00")
+@pytest.mark.usefixtures("recorder_mock")
 async def test_get_history_service_invalid_times(
     hass: HomeAssistant,
     service_args: dict[str, Any],
@@ -1361,7 +1482,7 @@ async def test_get_history_service_invalid_times(
         (
             {
                 "start_time": "2023-05-08 06:30:00Z",
-                "history_ids": [
+                "entity_id": [
                     "sensor.sensor",
                 ],
             },
@@ -1392,7 +1513,6 @@ async def test_get_history_service_invalid_times(
 @pytest.mark.usefixtures("recorder_mock")
 async def test_get_history_service_max_records(
     hass: HomeAssistant,
-    hass_read_only_user: MockUser,
     service_args: dict[str, Any],
     expected_result: dict[str, Any],
     monkeypatch: pytest.MonkeyPatch,
@@ -1405,7 +1525,7 @@ async def test_get_history_service_max_records(
 
     assert hass.config.time_zone == "US/Pacific"
 
-    times: list[tuple[datetime, float]] = [
+    times: list[tuple[datetime, float | str]] = [
         (dt_util.as_utc(dt_util.parse_datetime("2023-05-07 23:00:00")), "unknown"),
         (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00")), 0.0),
         (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00")), 1.0),

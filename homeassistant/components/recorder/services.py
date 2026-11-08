@@ -1,6 +1,6 @@
 """Support for recorder services."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import cast
 
@@ -31,13 +31,12 @@ from .history import state_changes_during_period
 from .statistics import statistics_during_period
 from .tasks import PurgeEntitiesTask, PurgeTask
 
-SERVICE_GET_HISTORY = "get_history"
-
 class RecorderService(StrEnum):
     """Store keys for recorder services."""
 
     DISABLE = "disable"
     ENABLE = "enable"
+    GET_HISTORY = "get_history"
     GET_STATISTICS = "get_statistics"
     PURGE = "purge"
     PURGE_ENTITIES = "purge_entities"
@@ -136,11 +135,9 @@ SERVICE_GET_STATISTICS_SCHEMA = probatio.Schema(
 
 SERVICE_GET_HISTORY_SCHEMA = probatio.Schema(
     {
-        probatio.Required("start_time"): cv.datetime,
-        probatio.Optional("end_time"): cv.datetime,
-        probatio.Required("history_ids"): probatio.All(
-            probatio.EnsureList(), [cv.string]
-        ),
+        probatio.Required(RecorderServiceArgument.START_TIME): cv.datetime,
+        probatio.Optional(RecorderServiceArgument.END_TIME): cv.datetime,
+        probatio.Required(CommonServiceArgument.ENTITY_ID): cv.entity_ids,
     }
 )
 
@@ -241,14 +238,49 @@ async def _async_handle_get_statistics_service(
     return {"statistics": formatted_result}
 
 
+def _get_history(
+    hass: HomeAssistant,
+    start_time: datetime,
+    end_time: datetime | None,
+    entity_ids: list[str],
+) -> tuple[dict[str, list[State]], set[str]]:
+    """Fetch history states for entities in a single executor job."""
+    result: dict[str, list[State]] = {}
+    incomplete_results: set[str] = set()
+
+    for entity_id in entity_ids:
+        result.update(
+            state_changes_during_period(
+                hass,
+                start_time,
+                end_time,
+                entity_id=entity_id,
+                no_attributes=True,
+                descending=False,
+                limit=MAX_GET_HISTORY_RECORDS,
+                include_start_time_state=True,
+            )
+        )
+
+        if (
+            entity_id in result
+            and len(result[entity_id]) == MAX_GET_HISTORY_RECORDS + 1
+        ):
+            incomplete_results.add(entity_id)
+
+    return result, incomplete_results
+
+
 async def _async_handle_get_history_service(
     service: ServiceCall,
 ) -> ServiceResponse:
     """Handle calls to the get_history service."""
     hass = service.hass
-    start_time = dt_util.as_utc(service.data["start_time"])
+    start_time = dt_util.as_utc(service.data[RecorderServiceArgument.START_TIME])
     end_time = (
-        dt_util.as_utc(service.data["end_time"]) if "end_time" in service.data else None
+        dt_util.as_utc(service.data[RecorderServiceArgument.END_TIME])
+        if RecorderServiceArgument.END_TIME in service.data
+        else None
     )
 
     if start_time > dt_util.utcnow():
@@ -263,35 +295,17 @@ async def _async_handle_get_history_service(
             translation_key="end_time_before_start_time",
         )
 
-    history_ids = service.data["history_ids"]
-    # Note that the state_changes_during_period specifically returns the LazyState subclass
-    result: dict[str, list[State]] = {}
-
-    incomplete_results: set[str] = set()
-
-    for history_id in history_ids:
-        result.update(
-            await hass.data[DATA_INSTANCE].async_add_executor_job(
-                state_changes_during_period,
-                hass,
-                start_time,
-                end_time,
-                history_id,
-                True,
-                False,
-                MAX_GET_HISTORY_RECORDS,
-                True,
-            )
-        )
-
-        if (
-            history_id in result
-            and len(result[history_id]) == MAX_GET_HISTORY_RECORDS + 1
-        ):
-            incomplete_results.add(history_id)
+    entity_ids: list[str] = service.data[CommonServiceArgument.ENTITY_ID]
+    result, incomplete_results = await hass.data[DATA_INSTANCE].async_add_executor_job(
+        _get_history,
+        hass,
+        start_time,
+        end_time,
+        entity_ids,
+    )
 
     formatted_result: JsonObjectType = {}
-    for history_id, history_states_with_dups in result.items():
+    for entity_id, history_states_with_dups in result.items():
         # Remove consecutive states that are the same, this can occur due to restarts
         history_states: list[State] = []
         for index, state in enumerate(history_states_with_dups):
@@ -306,7 +320,7 @@ async def _async_handle_get_history_service(
 
         for index, state in enumerate(history_states):
             if index == len(history_states) - 1:
-                if history_id in incomplete_results:
+                if entity_id in incomplete_results:
                     continue
                 end = end_time or dt_util.utcnow()
             else:
@@ -323,7 +337,7 @@ async def _async_handle_get_history_service(
 
             formatted_history_states.append(formatted_state)
 
-        formatted_result[history_id] = formatted_history_states
+        formatted_result[entity_id] = formatted_history_states
 
     return {"history": formatted_result}
 
@@ -375,7 +389,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_GET_HISTORY,
+        RecorderService.GET_HISTORY,
         _async_handle_get_history_service,
         schema=SERVICE_GET_HISTORY_SCHEMA,
         supports_response=SupportsResponse.ONLY,
