@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, _Call, call
 
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import pytest
@@ -106,40 +106,40 @@ async def test_rpc_fan_state(
 
 
 @pytest.mark.parametrize(
-    ("service", "service_data", "expected_params"),
+    ("service", "service_data", "expected_call"),
     [
-        (SERVICE_TURN_ON, {}, {"id": 0, "mode": "manual", "on": True}),
+        (SERVICE_TURN_ON, {}, call(0, "manual", on=True, speed=None)),
         (
             SERVICE_TURN_ON,
             {ATTR_PERCENTAGE: 30},
-            {"id": 0, "mode": "manual", "on": True, "speed": 30},
+            call(0, "manual", on=True, speed=30),
         ),
         (
             SERVICE_TURN_ON,
             {ATTR_PERCENTAGE: 0},
-            {"id": 0, "mode": "manual", "on": False},
+            call(0, "manual", on=False),
         ),
-        (SERVICE_TURN_ON, {ATTR_PRESET_MODE: "auto"}, {"id": 0, "mode": "auto"}),
+        (SERVICE_TURN_ON, {ATTR_PRESET_MODE: "auto"}, call(0, "auto")),
         (
             SERVICE_TURN_ON,
             {ATTR_PRESET_MODE: "manual"},
-            {"id": 0, "mode": "manual", "on": True},
+            call(0, "manual", on=True, speed=None),
         ),
-        (SERVICE_TURN_OFF, {}, {"id": 0, "mode": "manual", "on": False}),
+        (SERVICE_TURN_OFF, {}, call(0, "manual", on=False)),
         (
             SERVICE_SET_PERCENTAGE,
             {ATTR_PERCENTAGE: 80},
-            {"id": 0, "mode": "manual", "on": True, "speed": 80},
+            call(0, "manual", on=True, speed=80),
         ),
         (
             SERVICE_SET_PERCENTAGE,
             {ATTR_PERCENTAGE: 0},
-            {"id": 0, "mode": "manual", "on": False},
+            call(0, "manual", on=False),
         ),
         (
             SERVICE_SET_PRESET_MODE,
             {ATTR_PRESET_MODE: "auto"},
-            {"id": 0, "mode": "auto"},
+            call(0, "auto"),
         ),
     ],
 )
@@ -148,7 +148,7 @@ async def test_rpc_fan_services(
     mock_fan_device: Mock,
     service: str,
     service_data: dict[str, Any],
-    expected_params: dict[str, Any],
+    expected_call: _Call,
 ) -> None:
     """Test RPC fan services."""
     await init_integration(hass, 2)
@@ -160,14 +160,14 @@ async def test_rpc_fan_services(
         blocking=True,
     )
 
-    mock_fan_device.call_rpc.assert_called_once_with("Fan.Set", expected_params)
+    assert mock_fan_device.fan_set.call_args_list == [expected_call]
 
 
 @pytest.mark.parametrize(
-    ("is_on", "expected_params"),
+    ("is_on", "expected_call"),
     [
-        (True, {"id": 0, "mode": "manual", "on": True, "speed": 70}),
-        (False, {"id": 0, "mode": "manual", "on": False}),
+        (True, call(0, "manual", on=True, speed=70)),
+        (False, call(0, "manual", on=False, speed=None)),
     ],
 )
 async def test_rpc_fan_set_preset_manual(
@@ -175,7 +175,7 @@ async def test_rpc_fan_set_preset_manual(
     mock_fan_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     is_on: bool,
-    expected_params: dict[str, Any],
+    expected_call: _Call,
 ) -> None:
     """Test switching an RPC fan from auto to manual keeps its current output."""
     await init_integration(hass, 2)
@@ -192,7 +192,7 @@ async def test_rpc_fan_set_preset_manual(
         blocking=True,
     )
 
-    mock_fan_device.call_rpc.assert_called_once_with("Fan.Set", expected_params)
+    assert mock_fan_device.fan_set.call_args_list == [expected_call]
 
 
 @pytest.mark.parametrize(
@@ -217,7 +217,7 @@ async def test_rpc_fan_exc(
     """Test RPC fan with exception."""
     await init_integration(hass, 2)
 
-    mock_fan_device.call_rpc.side_effect = exception
+    mock_fan_device.fan_set.side_effect = exception
 
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
