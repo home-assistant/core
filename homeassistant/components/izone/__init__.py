@@ -3,6 +3,7 @@
 import pizone
 import probatio
 
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_EXCLUDE, CONF_HOST, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
@@ -19,37 +20,35 @@ from .discovery import (
     async_discover_all_endpoints,
     async_discover_endpoint,
     async_ensure_discovery,
+    async_note_integration_discovery,
     async_stop_discovery,
 )
 from .services import async_setup_services
 
 PLATFORMS = [Platform.CLIMATE, Platform.NUMBER, Platform.SENSOR]
 
+# YAML is unsupported; the raw ``izone:`` block is kept only for legacy migration.
 CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: probatio.Schema(
-            {
-                probatio.Optional(CONF_EXCLUDE, default=[]): probatio.All(
-                    probatio.EnsureList(), [cv.string]
-                )
-            }
+        probatio.Optional(DOMAIN): probatio.Any(
+            None, probatio.Schema({}, extra=probatio.ALLOW_EXTRA)
         )
     },
     extra=probatio.ALLOW_EXTRA,
 )
+EXCLUDE_SCHEMA = probatio.All(probatio.EnsureList(), [cv.string])
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the iZone component config."""
     async_setup_services(hass)
+    # Pre-2026.8 HomeKit discovery ignores; they never migrate and match nothing.
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.source == SOURCE_IGNORE and entry.unique_id == DOMAIN:
+            await hass.config_entries.async_remove(entry.entry_id)
     if DOMAIN in config:
-        # YAML is unsupported; ``exclude`` is kept only to migrate legacy entries.
         hass.data[DATA_CONFIG] = config[DOMAIN]
-        if not any(
-            entry.unique_id == DOMAIN
-            for entry in hass.config_entries.async_entries(DOMAIN)
-        ):
-            _async_create_yaml_issue(hass)
+        _async_maybe_create_yaml_issue(hass)
 
     return True
 
@@ -156,23 +155,21 @@ async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> N
                     translation_key="discovery_failed_legacy",
                 ) from err
 
-            excluded_uids: set[str] = (
-                set(conf[CONF_EXCLUDE])
-                if (conf := hass.data.get(DATA_CONFIG))
-                else set()
-            )
+            excluded_uids = _excluded_uids(hass)
             configured_uids = {
                 config_entry.unique_id
                 for config_entry in hass.config_entries.async_entries(DOMAIN)
                 if config_entry.entry_id != entry.entry_id
                 and config_entry.unique_id not in (None, DOMAIN)
             }
-            eligible = [
-                endpoint
-                for endpoint in endpoints.values()
-                if endpoint.uid not in excluded_uids
-                and endpoint.uid not in configured_uids
-            ]
+            eligible: list[pizone.ControllerEndpoint] = []
+            for endpoint in endpoints.values():
+                if endpoint.uid in configured_uids:
+                    continue
+                if endpoint.uid in excluded_uids:
+                    async_note_integration_discovery(hass, endpoint)
+                else:
+                    eligible.append(endpoint)
 
             if not eligible:
                 raise ConfigEntryNotReady(
@@ -226,9 +223,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> N
             title=title,
             data=data,
         )
-        # Raised only once ``exclude`` is no longer needed for migration.
-        if legacy_domain_entry and DATA_CONFIG in hass.data:
-            _async_create_yaml_issue(hass)
+        _async_maybe_create_yaml_issue(hass)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> None:
@@ -242,8 +237,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> No
 
 
 @callback
-def _async_create_yaml_issue(hass: HomeAssistant) -> None:
-    """Ask the user to remove the unsupported YAML configuration."""
+def _excluded_uids(hass: HomeAssistant) -> set[str]:
+    """Return the legacy YAML ``exclude`` UIDs, ignoring malformed values."""
+    conf = hass.data.get(DATA_CONFIG)
+    if not isinstance(conf, dict):
+        return set()
+    try:
+        return set(EXCLUDE_SCHEMA(conf.get(CONF_EXCLUDE, [])))
+    except probatio.Invalid:
+        return set()
+
+
+@callback
+def _async_maybe_create_yaml_issue(hass: HomeAssistant) -> None:
+    """Ask the user to remove the YAML once no legacy entry still needs it."""
+    if DATA_CONFIG not in hass.data or any(
+        entry.unique_id == DOMAIN
+        for entry in hass.config_entries.async_entries(DOMAIN, include_ignore=False)
+    ):
+        return
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
