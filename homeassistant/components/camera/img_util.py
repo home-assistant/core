@@ -14,6 +14,41 @@ _LOGGER = logging.getLogger(__name__)
 
 JPEG_QUALITY = 75
 
+_JPEG_SOI = b"\xff\xd8"
+_JPEG_APP0 = 0xE0
+_JPEG_APP1 = 0xE1
+_JPEG_SOS = 0xDA
+_EXIF_HEADER = b"Exif\x00\x00"
+
+
+def _find_exif_segment(jpeg: bytes) -> bytes | None:
+    """Return the complete EXIF APP1 segment of a JPEG, or None if there is none."""
+    if not jpeg.startswith(_JPEG_SOI):
+        return None
+    pos = 2
+    while pos + 4 <= len(jpeg) and jpeg[pos] == 0xFF:
+        marker = jpeg[pos + 1]
+        if marker == _JPEG_SOS:
+            return None
+        length = int.from_bytes(jpeg[pos + 2 : pos + 4], "big")
+        if length < 2:
+            return None
+        end = pos + 2 + length
+        if marker == _JPEG_APP1 and jpeg[pos + 4 : pos + 10] == _EXIF_HEADER:
+            return jpeg[pos:end] if end <= len(jpeg) else None
+        pos = end
+    return None
+
+
+def _insert_exif_segment(jpeg: bytes, exif_segment: bytes) -> bytes:
+    """Insert an EXIF APP1 segment after SOI and an optional JFIF APP0 segment."""
+    if not jpeg.startswith(_JPEG_SOI):
+        return jpeg
+    pos = 2
+    if len(jpeg) >= pos + 4 and jpeg[pos] == 0xFF and jpeg[pos + 1] == _JPEG_APP0:
+        pos += 2 + int.from_bytes(jpeg[pos + 2 : pos + 4], "big")
+    return jpeg[:pos] + exif_segment + jpeg[pos:]
+
 
 def find_supported_scaling_factor(
     current_width: int, current_height: int, target_width: int, target_height: int
@@ -58,7 +93,7 @@ def scale_jpeg_camera_image(cam_image: Image, width: int, height: int) -> bytes:
     if scaling_factor is None:
         return cam_image.content
 
-    return cast(
+    scaled = cast(
         bytes,
         turbo_jpeg.scale_with_quality(
             cam_image.content,
@@ -66,6 +101,13 @@ def scale_jpeg_camera_image(cam_image: Image, width: int, height: int) -> bytes:
             quality=JPEG_QUALITY,
         ),
     )
+    # TurboJPEG drops all APP segments when re-encoding. Keep the EXIF data so
+    # the orientation tag still applies to the scaled image; otherwise a
+    # rotated camera image is shown upright or sideways depending on whether
+    # it was scaled.
+    if exif_segment := _find_exif_segment(cam_image.content):
+        return _insert_exif_segment(scaled, exif_segment)
+    return scaled
 
 
 class TurboJPEGSingleton:

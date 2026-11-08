@@ -79,6 +79,43 @@ def test_scale_jpeg_camera_image() -> None:
     assert jpeg_bytes == EMPTY_16_12_JPEG
 
 
+def _jpeg_with_exif_orientation(orientation: int) -> bytes:
+    """Build a minimal JPEG header with an EXIF orientation tag."""
+    tiff = (
+        b"MM\x00\x2a\x00\x00\x00\x08"  # big endian TIFF header, IFD at offset 8
+        b"\x00\x01"  # one IFD entry
+        b"\x01\x12\x00\x03\x00\x00\x00\x01"  # orientation, SHORT, count 1
+        + orientation.to_bytes(2, "big")
+        + b"\x00\x00"
+        + b"\x00\x00\x00\x00"  # no next IFD
+    )
+    payload = b"Exif\x00\x00" + tiff
+    app1 = b"\xff\xe1" + (len(payload) + 2).to_bytes(2, "big") + payload
+    return b"\xff\xd8" + app1 + b"\xff\xda\x00\x02image-data"
+
+
+def test_scale_jpeg_camera_image_preserves_exif() -> None:
+    """Test scaling keeps the EXIF segment so the orientation still applies."""
+    _clear_turbojpeg_singleton()
+
+    original = _jpeg_with_exif_orientation(6)
+    exif_segment = original[2 : original.index(b"\xff\xda")]
+    jfif_app0 = b"\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
+    scaled_without_exif = b"\xff\xd8" + jfif_app0 + b"\xff\xda\x00\x02scaled"
+
+    turbo_jpeg = mock_turbo_jpeg(first_width=1600, first_height=1200)
+    turbo_jpeg.scale_with_quality.return_value = scaled_without_exif
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEG", return_value=turbo_jpeg
+    ):
+        TurboJPEGSingleton()
+        jpeg_bytes = scale_jpeg_camera_image(Image("image/jpeg", original), 1230, 921)
+
+    assert jpeg_bytes == (
+        b"\xff\xd8" + jfif_app0 + exif_segment + b"\xff\xda\x00\x02scaled"
+    )
+
+
 def test_turbojpeg_load_failure(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
