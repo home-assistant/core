@@ -41,11 +41,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: LibreSyncConfigEntry) ->
     # The module is asked alongside the connection, so a hub that is down waits
     # no longer, and an entry added before the config flow refused these hubs
     # stops retrying.
-    connected, info = await asyncio.gather(
-        client.async_connect(timeout=CONNECT_TIMEOUT),
-        async_query_lssdp(host),
-        return_exceptions=True,
-    )
+    try:
+        connected, info = await asyncio.gather(
+            client.async_connect(timeout=CONNECT_TIMEOUT),
+            async_query_lssdp(host),
+            return_exceptions=True,
+        )
+    except asyncio.CancelledError:
+        # The connection may have opened while the query was still pending.
+        await client.async_disconnect()
+        raise
     if isinstance(info, BaseException):
         await client.async_disconnect()
         raise info

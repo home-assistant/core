@@ -1,5 +1,6 @@
 """Tests for the LibreSync integration setup."""
 
+import asyncio
 from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock
 
@@ -134,3 +135,29 @@ async def test_connect_error_propagates(
     mock_client.async_connect.side_effect = RuntimeError("boom")
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_cancelled_setup_disconnects(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    mock_lssdp: AsyncMock,
+) -> None:
+    """Test a setup cancelled after the connection opened disconnects it."""
+    pending = asyncio.Event()
+
+    async def never_answers(host: str) -> None:
+        pending.set()
+        await asyncio.Event().wait()
+
+    mock_lssdp.side_effect = never_answers
+    mock_config_entry.add_to_hass(hass)
+    setup = hass.async_create_task(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
+    )
+    await pending.wait()
+    mock_client.async_connect.assert_awaited_once()
+    setup.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await setup
+    mock_client.async_disconnect.assert_awaited_once()
