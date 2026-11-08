@@ -340,11 +340,11 @@ async def test_browse_media_uses_media_source(
 
 
 @pytest.mark.parametrize(
-    ("device_state", "expected_state"),
+    ("device_state", "expected_state", "expected_title", "expected_artist"),
     [
-        (DeviceState.Playing, MediaPlayerState.PLAYING),
-        (DeviceState.Paused, MediaPlayerState.OFF),
-        (DeviceState.Idle, MediaPlayerState.OFF),
+        (DeviceState.Playing, MediaPlayerState.PLAYING, "Song", "Artist"),
+        (DeviceState.Paused, MediaPlayerState.OFF, None, None),
+        (DeviceState.Idle, MediaPlayerState.OFF, None, None),
     ],
 )
 async def test_state_while_power_off(
@@ -352,6 +352,8 @@ async def test_state_while_power_off(
     mock_atv: AsyncMock,
     device_state: DeviceState,
     expected_state: MediaPlayerState,
+    expected_title: str | None,
+    expected_artist: str | None,
 ) -> None:
     """A device that reports power off but is playing (AirPlay audio) is playing."""
     mock_atv.power.power_state = PowerState.Off
@@ -364,6 +366,5 @@ async def test_state_while_power_off(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == expected_state
-    if expected_state is MediaPlayerState.PLAYING:
-        assert state.attributes["media_title"] == "Song"
-        assert state.attributes["media_artist"] == "Artist"
+    assert state.attributes.get("media_title") == expected_title
+    assert state.attributes.get("media_artist") == expected_artist
