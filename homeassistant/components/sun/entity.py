@@ -14,7 +14,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNSET,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import event
+from homeassistant.helpers import event, translation
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import (
@@ -24,6 +24,7 @@ from homeassistant.helpers.sun import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    DOMAIN,
     ELEVATION_ASTRONOMICAL,
     ELEVATION_CIVIL,
     ELEVATION_HORIZON,
@@ -126,6 +127,14 @@ class Sun(Entity):
     async def async_added_to_hass(self) -> None:
         """Update after entity has been added."""
         await super().async_added_to_hass()
+        # The entity is added directly to the entity component, which does not
+        # load entity name translations
+        translations = await translation.async_get_translations(
+            self.hass, self.hass.config.language, "entity", {DOMAIN}
+        )
+        self._attr_name = translations.get(
+            f"component.{DOMAIN}.entity.{DOMAIN}.sun.name", self._attr_name
+        )
         self.update_location(initial=True)
 
     @callback

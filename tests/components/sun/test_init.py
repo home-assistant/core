@@ -12,7 +12,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components import sun
 from homeassistant.components.sun import entity
 from homeassistant.components.sun.const import SunEntityStateAttribute
-from homeassistant.const import EVENT_STATE_CHANGED, Platform
+from homeassistant.const import ATTR_FRIENDLY_NAME, EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -254,6 +254,24 @@ async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get(entity.ENTITY_ID) is None
+
+
+async def test_sun_name_translated(hass: HomeAssistant) -> None:
+    """Test the sun entity name follows the system language."""
+    hass.config.language = "nl"
+    config_entry = MockConfigEntry(domain=sun.DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_translations",
+        return_value={"component.sun.entity.sun.sun.name": "Zon"},
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity.ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Zon"
 
 
 async def test_cleanup_deprecated_solar_rising(
