@@ -2567,3 +2567,36 @@ async def test_rpc_last_command_source_sensor(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == f"123456789ABC-{component}:0-{component}_source"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+async def test_rpc_fan_light_sensor(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC fan light level sensor."""
+    monkeypatch.setattr(mock_rpc_device, "config", {"fan:0": {"id": 0}})
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "status",
+        {"fan:0": {"id": 0, "light": {"active": False, "level": "twilight"}}},
+    )
+    entity_id = f"{SENSOR_DOMAIN}.test_name_illuminance_level"
+    await init_integration(hass, 4)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "twilight"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes["options"] == ["dark", "twilight", "bright"]
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-fan:0-fan_light"
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "fan:0", "light", {"level": "bright"}
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "bright"
