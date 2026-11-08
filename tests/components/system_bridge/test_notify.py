@@ -333,6 +333,8 @@ async def test_system_bridge_send_message_requires_admin(
     mock_websocket_client: AsyncMock,
 ) -> None:
     """Test the system_bridge.send_message action needs an admin user."""
+    # Control of every entity, so only the admin check can refuse the call
+    hass_read_only_user.mock_policy({"entities": {"all": {"control": True}}})
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
