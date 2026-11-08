@@ -280,7 +280,12 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                     self._reconnect_delay * 2, MAX_UPDATE_INTERVAL
                 )
                 raise UpdateFailed(
-                    f"Connection error occurred for {self.title}: {exception}",
+                    translation_domain=DOMAIN,
+                    translation_key="connection_failed",
+                    translation_placeholders={
+                        "title": self.title,
+                        "host": self._host,
+                    },
                     retry_after=self._reconnect_delay.total_seconds(),
                 ) from exception
 
