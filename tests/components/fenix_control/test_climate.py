@@ -121,7 +121,7 @@ SETPOINT_DEVICE = dataclasses.replace(
     defrost_temperature=7.0,
     boost_temperature=24.0,
     target_temperature_range=(5.0, 35.0),
-    defrost_temperature_range=((35.5 - 32) * 5 / 9, 15.0),
+    defrost_temperature_range=(1.94, 15.0),
     boost_temperature_range=(5.0, 35.0),
 )
 
