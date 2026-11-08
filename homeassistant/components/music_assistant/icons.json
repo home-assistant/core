@@ -7,7 +7,7 @@
     },
     "switch": {
       "queue_autoplay": {
-        "default": "mdi:playlist-play"
+        "default": "mdi:infinity"
       },
       "queue_crossfade": {
         "default": "mdi:set-center"
