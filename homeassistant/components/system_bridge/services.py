@@ -85,6 +85,22 @@ URGENCIES = ["low", "normal", "critical"]
 CLICK_ACTION = "click_action"
 
 
+def _whole_number(value: Any) -> int:
+    """Validate a whole number, which Coerce(int) would truncate a fraction to."""
+    if isinstance(value, bool):
+        raise probatio.Invalid("expected a whole number")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError:
+            pass
+    raise probatio.Invalid("expected a whole number")
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for System Bridge integration."""
@@ -136,7 +152,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=NOTIFY_DOMAIN,
         schema={
             probatio.Required(SystemBridgeServiceArgument.ID): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=1)
+                _whole_number, probatio.Range(min=1)
             ),
         },
         func="system_bridge_dismiss_message",

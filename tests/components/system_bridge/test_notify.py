@@ -563,6 +563,8 @@ async def test_dismiss_message_exception(
         pytest.param({}, id="no_id"),
         pytest.param({"id": 0}, id="zero_id"),
         pytest.param({"id": "abc"}, id="not_a_number"),
+        pytest.param({"id": 12.5}, id="fraction"),
+        pytest.param({"id": True}, id="boolean"),
     ],
 )
 async def test_dismiss_message_invalid(
