@@ -2,11 +2,12 @@
 
 from collections.abc import Generator
 from dataclasses import replace
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
+from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
 from systembridgeconnector.models.modules import Module
 
 from homeassistant.config_entries import ConfigEntryState
@@ -55,16 +56,14 @@ async def test_binary_sensor_platform(
 @pytest.mark.usefixtures("init_integration")
 async def test_session_lock(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
     locked: bool | None,
     expected_state: str,
 ) -> None:
     """Test the session lock is on when unlocked, as the lock device class expects."""
-    coordinator = mock_config_entry.runtime_data
+    callback = mock_websocket_client.listen.call_args.kwargs["callback"]
 
-    await coordinator.async_handle_module(
-        Module.SYSTEM, replace(coordinator.data.system, locked=locked)
-    )
+    await callback(Module.SYSTEM, replace(FIXTURE_SYSTEM, locked=locked))
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("binary_sensor.hostname_session_lock"))
