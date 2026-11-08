@@ -51,13 +51,11 @@ def mock_solarlog_connector():
     mock_solarlog_api.update_basic_data.return_value = SolarlogData.from_dict(
         load_json_object_fixture("solarlog_data.json", DOMAIN)
     )
-    mock_solarlog_api.update_battery_data.return_value = BatteryData.from_dict(
-        {
-            "charge_power": 50.0,
-            "discharge_power": 0.0,
-            "level": 45.0,
-            "voltage": 50.0,
-        }
+    mock_solarlog_api.update_battery_data.return_value = BatteryData(
+        charge_power=50.0,
+        discharge_power=0.0,
+        level=45.0,
+        voltage=50.0,
     )
     mock_solarlog_api.update_device_list.return_value = {
         0: InverterData(name="Inverter 1", enabled=True),
