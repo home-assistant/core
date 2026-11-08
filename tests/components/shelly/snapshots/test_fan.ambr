@@ -8,6 +8,7 @@
     'capabilities': dict({
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
+        'manual',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -46,9 +47,10 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
-      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'manual',
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
+        'manual',
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),

@@ -307,7 +307,8 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "auto": "[%key:common::state::auto%]"
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
             }
           }
         }

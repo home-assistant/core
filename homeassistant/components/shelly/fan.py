@@ -65,7 +65,7 @@ class RpcShellyFan(ShellyRpcAttributeEntity, FanEntity):
     """Entity that controls a fan on RPC based Shelly devices."""
 
     entity_description: RpcFanDescription
-    _attr_preset_modes = [MODE_AUTO]
+    _attr_preset_modes = [MODE_AUTO, MODE_MANUAL]
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
         | FanEntityFeature.TURN_ON
@@ -100,9 +100,9 @@ class RpcShellyFan(ShellyRpcAttributeEntity, FanEntity):
 
     @property
     @override
-    def preset_mode(self) -> str | None:
+    def preset_mode(self) -> str:
         """Return the current preset mode."""
-        return MODE_AUTO if self.status["mode"] == MODE_AUTO else None
+        return str(self.status["mode"])
 
     @override
     async def async_turn_on(
@@ -112,7 +112,7 @@ class RpcShellyFan(ShellyRpcAttributeEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        if preset_mode is not None:
+        if preset_mode == MODE_AUTO:
             await self.async_set_preset_mode(preset_mode)
             return
 
@@ -141,4 +141,17 @@ class RpcShellyFan(ShellyRpcAttributeEntity, FanEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        await self.call_rpc("Fan.Set", {"id": self._id, "mode": MODE_AUTO})
+        if preset_mode == MODE_AUTO:
+            await self.call_rpc("Fan.Set", {"id": self._id, "mode": MODE_AUTO})
+            return
+
+        # Keep the current output when leaving auto mode
+        params: dict[str, Any] = {
+            "id": self._id,
+            "mode": MODE_MANUAL,
+            "on": self.is_on,
+        }
+        if self.is_on:
+            params["speed"] = self.status["speed"]
+
+        await self.call_rpc("Fan.Set", params)

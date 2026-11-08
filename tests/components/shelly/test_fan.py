@@ -74,8 +74,8 @@ async def test_rpc_fan(
         "expected_preset",
     ),
     [
-        ("manual", False, 14, STATE_OFF, 0, None),
-        ("manual", True, 50, STATE_ON, 50, None),
+        ("manual", False, 14, STATE_OFF, 0, "manual"),
+        ("manual", True, 50, STATE_ON, 50, "manual"),
         ("auto", True, 70, STATE_ON, 70, "auto"),
         ("auto", False, 70, STATE_OFF, 0, "auto"),
     ],
@@ -89,7 +89,7 @@ async def test_rpc_fan_state(
     speed: int,
     expected_state: str,
     expected_percentage: int,
-    expected_preset: str | None,
+    expected_preset: str,
 ) -> None:
     """Test RPC fan state."""
     await init_integration(hass, 2)
@@ -120,6 +120,11 @@ async def test_rpc_fan_state(
             {"id": 0, "mode": "manual", "on": False},
         ),
         (SERVICE_TURN_ON, {ATTR_PRESET_MODE: "auto"}, {"id": 0, "mode": "auto"}),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_PRESET_MODE: "manual"},
+            {"id": 0, "mode": "manual", "on": True},
+        ),
         (SERVICE_TURN_OFF, {}, {"id": 0, "mode": "manual", "on": False}),
         (
             SERVICE_SET_PERCENTAGE,
@@ -152,6 +157,38 @@ async def test_rpc_fan_services(
         FAN_DOMAIN,
         service,
         {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        blocking=True,
+    )
+
+    mock_fan_device.call_rpc.assert_called_once_with("Fan.Set", expected_params)
+
+
+@pytest.mark.parametrize(
+    ("is_on", "expected_params"),
+    [
+        (True, {"id": 0, "mode": "manual", "on": True, "speed": 70}),
+        (False, {"id": 0, "mode": "manual", "on": False}),
+    ],
+)
+async def test_rpc_fan_set_preset_manual(
+    hass: HomeAssistant,
+    mock_fan_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    is_on: bool,
+    expected_params: dict[str, Any],
+) -> None:
+    """Test switching an RPC fan from auto to manual keeps its current output."""
+    await init_integration(hass, 2)
+
+    mutate_rpc_device_status(monkeypatch, mock_fan_device, "fan:0", "mode", "auto")
+    mutate_rpc_device_status(monkeypatch, mock_fan_device, "fan:0", "on", is_on)
+    mutate_rpc_device_status(monkeypatch, mock_fan_device, "fan:0", "speed", 70)
+    mock_fan_device.mock_update()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: "manual"},
         blocking=True,
     )
 
