@@ -642,8 +642,7 @@ async def test_component_setup_failing_dependency(
         "Setup failed for dependencies: ['dep']" in caplog.text
     ) is not expected_result
     assert (
-        "Setting up 'comp' without after dependency 'dep', which failed to set up"
-        in caplog.text
+        "Ignoring failed after dependency 'dep' of 'comp'" in caplog.text
     ) is expected_result
 
 

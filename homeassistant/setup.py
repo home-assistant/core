@@ -253,10 +253,10 @@ async def _async_process_dependencies(
         if domain not in after_dependencies:
             failed.append(domain)
             continue
-        _LOGGER.warning(
-            "Setting up '%s' without after dependency '%s', which failed to set up",
-            integration.domain,
+        _LOGGER.debug(
+            "Ignoring failed after dependency '%s' of '%s'",
             domain,
+            integration.domain,
         )
 
     if failed:
