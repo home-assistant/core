@@ -10,6 +10,7 @@ from e3dc_ess_modbus import (
     E3dcPowerStation,
     EmergencyPowerStatus,
     InverterMode,
+    PowerMeterReading,
     PowerMeterType,
     SgReadyStatus,
 )
@@ -76,6 +77,26 @@ def _has_additional_feeder(device: E3dcPowerStation) -> bool:
     )
 
 
+def _grid_meter(device: E3dcPowerStation) -> PowerMeterReading | None:
+    """The power meter at the grid connection point, if one is configured."""
+    return next(
+        (
+            meter
+            for meter in device.power_meter_readings.values()
+            if meter.meter_type is PowerMeterType.ROOT
+        ),
+        None,
+    )
+
+
+def _grid_phase_power(phase: str) -> Callable[[E3dcPowerStation], StateType]:
+    """Read the power on ``phase`` at the grid connection point."""
+    get = attrgetter(f"power_{phase}")
+    return lambda device: (
+        get(meter) if (meter := _grid_meter(device)) is not None else None
+    )
+
+
 def _power(
     key: str,
     value_fn: Callable[[E3dcPowerStation], int | None],
@@ -106,6 +127,21 @@ SENSORS: tuple[E3dcSensorDescription, ...] = (
     ),
     _power("house_power", lambda device: device.power.house_power),
     _power("grid_power", lambda device: device.power.grid_power),
+    *(
+        E3dcSensorDescription(
+            key=f"grid_power_{phase}",
+            translation_key="grid_power_phase",
+            translation_placeholders={"phase": phase.upper()},
+            component="power_meters",
+            device_class=SensorDeviceClass.POWER,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+            value_fn=_grid_phase_power(phase),
+            exists_fn=lambda device: _grid_meter(device) is not None,
+        )
+        for phase in PHASES
+    ),
     _power(
         "additional_power",
         lambda device: device.power.additional_power,
@@ -456,11 +492,14 @@ INVERTER_SENSORS: tuple[E3dcPartSensorDescription, ...] = (
 
 
 def _installed_meters(device: E3dcPowerStation) -> list[int]:
-    """The power meter slots with a meter configured."""
+    """The power meter slots with a meter configured, other than the grid connection point.
+
+    The power station's own sensors cover the meter at the grid connection point.
+    """
     return [
         number
         for number, meter in device.power_meter_readings.items()
-        if meter.is_installed
+        if meter.is_installed and meter.meter_type is not PowerMeterType.ROOT
     ]
 
 
@@ -507,17 +546,23 @@ async def async_setup_entry(
         if description.component in served and description.exists_fn(device)
     )
 
-    added: set[E3dcPart] = set()
+    added: set[tuple[str, int]] = set()
 
     @callback
     def _async_add_parts() -> None:
         """Add a part's sensors the first time the power station reports it."""
         entities: list[E3dcPartSensor] = []
         for part_kind in PARTS:
-            for number in part_kind.present_fn(device):
-                if (part := (part_kind.kind, number)) in added:
+            slots = list(part_kind.present_fn(device))
+            # Number a part while the power station has another one of its kind
+            numbered = len(slots) > 1 or any(
+                kind == part_kind.kind for kind, _ in added
+            )
+            for slot in slots:
+                if (part_kind.kind, slot) in added:
                     continue
-                added.add(part)
+                added.add((part_kind.kind, slot))
+                part = E3dcPart(kind=part_kind.kind, slot=slot, numbered=numbered)
                 entities.extend(
                     E3dcPartSensor(coordinator, description, part)
                     for description in part_kind.sensors
@@ -560,11 +605,11 @@ class E3dcPartSensor(E3dcEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entity_description, part)
-        self._number = part[1]
+        self._slot = part.slot
 
     @property
     @override
     def native_value(self) -> StateType:
         return _state(
-            self.entity_description.value_fn(self.coordinator.device, self._number)
+            self.entity_description.value_fn(self.coordinator.device, self._slot)
         )

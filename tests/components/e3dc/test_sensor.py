@@ -82,13 +82,19 @@ async def test_all_entities(
         ),
         pytest.param(
             {40138: int32_words(-500)},
-            "sensor.power_meter_0_power",
-            "-800",
+            "sensor.e3_dc_s10_x_grid_power_l1",
+            "-500",
+            id="grid_meter",
+        ),
+        pytest.param(
+            {40144: int32_words(200)},
+            "sensor.power_meter_power",
+            "400",
             id="power_meters",
         ),
         pytest.param(
             {41006: int32_words(2000)},
-            "sensor.inverter_0_active_power_l1",
+            "sensor.e3_dc_s10_x_inverter_active_power_l1",
             "2000",
             id="inverters",
         ),
@@ -127,6 +133,15 @@ async def test_sensor_follows_poll(
             {40109: 0},
             ["sensor.e3_dc_s10_x_additional_feeder_power"],
             id="no_additional_feeder",
+        ),
+        pytest.param(
+            {40105: 0},
+            [
+                "sensor.e3_dc_s10_x_grid_power_l1",
+                "sensor.e3_dc_s10_x_grid_power_l2",
+                "sensor.e3_dc_s10_x_grid_power_l3",
+            ],
+            id="no_grid_meter",
         ),
         pytest.param(
             {40084: 0},
@@ -184,7 +199,10 @@ async def test_optional_hardware_missing(
         pytest.param(40202, BATTERY_LIMIT_SENSORS, id="no_battery_limits"),
         pytest.param(
             41000,
-            ["sensor.inverter_0_active_power_l1", "sensor.inverter_0_dc_power_1"],
+            [
+                "sensor.e3_dc_s10_x_inverter_active_power_l1",
+                "sensor.e3_dc_s10_x_inverter_dc_power_1",
+            ],
             id="no_inverters",
         ),
     ],
@@ -209,26 +227,66 @@ async def test_block_missing_from_firmware(
         assert entity_registry.async_get(entity_id) is None
 
 
+@pytest.mark.parametrize(
+    ("holding", "devices"),
+    [
+        pytest.param(
+            {},
+            {
+                "power_meter_2": ("Power meter", "via"),
+                "inverter_1": ("Inverter", "child"),
+            },
+            id="one_of_each",
+        ),
+        pytest.param(
+            {40113: 4, 41034 + 18: 2302},
+            {
+                "power_meter_2": ("Power meter 2", "via"),
+                "power_meter_3": ("Power meter 3", "via"),
+                "inverter_1": ("Inverter 1", "child"),
+                "inverter_2": ("Inverter 2", "via"),
+            },
+            id="several",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_get_unit")
 async def test_part_devices(
-    device_registry: dr.DeviceRegistry, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_unit: MockModbusUnit,
+    mock_config_entry: MockConfigEntry,
+    holding: dict[int, int | list[int]],
+    devices: dict[str, tuple[str, str]],
 ) -> None:
-    """Test each power meter and inverter gets a device under the power station."""
+    """Test the power meters and inverters get devices, numbered if there are several.
+
+    The power station's own inverter is a part of its device, the others are
+    connected through it. The meter at the grid connection point gets no device.
+    """
+    seed(mock_unit, holding)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     station = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MOCK_SERIAL), init_integration.entry_id
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
     )
+    connected = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    children = dr.async_entries_for_parent_device(device_registry, station.id)
     parts = {
-        device.name: device.identifiers
-        for device in dr.async_entries_for_config_entry(
-            device_registry, init_integration.entry_id
+        identifier.removeprefix(f"{MOCK_SERIAL}_"): (device.name, relation)
+        for relation, entries in (
+            ("via", [d for d in connected if d.via_device_id == station.id]),
+            ("child", children),
         )
-        if device.via_device_id == station.id
+        for device in entries
+        for _, identifier in device.identifiers
     }
 
-    assert parts == {
-        "Power meter 0": {(DOMAIN, f"{MOCK_SERIAL}_power_meter_0")},
-        "Power meter 1": {(DOMAIN, f"{MOCK_SERIAL}_power_meter_1")},
-        "Inverter 0": {(DOMAIN, f"{MOCK_SERIAL}_inverter_0")},
-    }
+    assert parts == devices
 
 
 @pytest.mark.parametrize(
@@ -236,12 +294,12 @@ async def test_part_devices(
     [
         pytest.param(
             {40113: 2, 40150: int32_words(300)},
-            "sensor.power_meter_2_power",
+            "sensor.power_meter_3_power",
             id="power_meter",
         ),
         pytest.param(
             {41034 + 18: 2302, 41034 + 6: int32_words(1200)},
-            "sensor.inverter_1_active_power_l1",
+            "sensor.inverter_2_active_power_l1",
             id="inverter",
         ),
     ],

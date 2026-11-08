@@ -69,21 +69,21 @@ def seed_power_station(unit: MockModbusUnit) -> None:
             40084: 2,  # Emergency power not active
             40085: 0b0000100,  # EMS status: emergency power ready
             40088: 0b1,  # Wallbox 0 available
-            40105: 1,  # Power meter 0 at the grid connection point
-            40106: 0xFED4,  # Power meter 0 power L1, -300 W
-            40107: 0xFF38,  # Power meter 0 power L2, -200 W
-            40108: 0xFF9C,  # Power meter 0 power L3, -100 W
-            40109: 2,  # Power meter 1 measures an additional feeder
-            40110: 100,  # Power meter 1 power L1, in W
-            40111: 100,  # Power meter 1 power L2, in W
-            40112: 100,  # Power meter 1 power L3, in W
+            40105: 1,  # Power meter slot 0 at the grid connection point
+            40106: 0xFED4,  # Power meter slot 0 power L1, -300 W
+            40107: 0xFF38,  # Power meter slot 0 power L2, -200 W
+            40108: 0xFF9C,  # Power meter slot 0 power L3, -100 W
+            40109: 2,  # Power meter slot 1 measures an additional feeder
+            40110: 100,  # Power meter slot 1 power L1, in W
+            40111: 100,  # Power meter slot 1 power L2, in W
+            40112: 100,  # Power meter slot 1 power L3, in W
             40137: 1,  # SG Ready status
-            40138: int32_words(-300),  # Power meter 0 power L1, 32 bit
-            40140: int32_words(-200),  # Power meter 0 power L2, 32 bit
-            40142: int32_words(-100),  # Power meter 0 power L3, 32 bit
-            40144: int32_words(100),  # Power meter 1 power L1, 32 bit
-            40146: int32_words(100),  # Power meter 1 power L2, 32 bit
-            40148: int32_words(100),  # Power meter 1 power L3, 32 bit
+            40138: int32_words(-300),  # Power meter slot 0 power L1, 32 bit
+            40140: int32_words(-200),  # Power meter slot 0 power L2, 32 bit
+            40142: int32_words(-100),  # Power meter slot 0 power L3, 32 bit
+            40144: int32_words(100),  # Power meter slot 1 power L1, 32 bit
+            40146: int32_words(100),  # Power meter slot 1 power L2, 32 bit
+            40148: int32_words(100),  # Power meter slot 1 power L3, 32 bit
             40194: 30,  # Active power failsafe timeout, in s
             40196: 30,  # Reactive power failsafe timeout, in s
             40201: 0,  # Inverter mode: normal

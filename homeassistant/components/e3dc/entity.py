@@ -1,16 +1,33 @@
 """Base entity for E3/DC devices."""
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import E3dcDataUpdateCoordinator
 
-# A part of the power station with its own device, as (device translation key, slot)
-type E3dcPart = tuple[str, int]
+
+@dataclass(frozen=True, kw_only=True)
+class E3dcPart:
+    """A power meter or inverter of the power station, with its own device."""
+
+    kind: str  # The device translation key, e.g. 'inverter'
+    slot: int  # E3/DC counts the slots from 0
+    numbered: bool  # False while the power station has only one part of this kind
+
+    @property
+    def number(self) -> int:
+        """The part's number, counted from 1."""
+        return self.slot + 1
+
+    @property
+    def built_in(self) -> bool:
+        """Whether this is the power station's own inverter."""
+        return self.kind == "inverter" and self.slot == 0
 
 
 class E3dcEntity(CoordinatorEntity[E3dcDataUpdateCoordinator]):
@@ -32,15 +49,33 @@ class E3dcEntity(CoordinatorEntity[E3dcDataUpdateCoordinator]):
             assert serial is not None
         if part is None:
             prefix = serial
-            device_info = coordinator.device_info
+            self._attr_device_info = coordinator.device_info
         else:
-            kind, number = part
-            prefix = f"{serial}_{kind}_{number}"
-            device_info = DeviceInfo(
-                identifiers={(DOMAIN, prefix)},
-                translation_key=kind,
-                translation_placeholders={"number": str(number)},
-                via_device_id=coordinator.station_device_id,
-            )
+            prefix = f"{serial}_{part.kind}_{part.number}"
+            self._attr_device_info = _part_device_info(coordinator, part, prefix)
         self._attr_unique_id = f"{prefix}_{entity_description.key}"
-        self._attr_device_info = device_info
+
+
+def _part_device_info(
+    coordinator: E3dcDataUpdateCoordinator, part: E3dcPart, identifier: str
+) -> DeviceInfo | ChildDeviceInfo:
+    """A part of the power station, or a device connected through it."""
+    if part.numbered:
+        translation_key = f"numbered_{part.kind}"
+        placeholders: dict[str, str] | None = {"number": str(part.number)}
+    else:
+        translation_key = part.kind
+        placeholders = None
+    if part.built_in:
+        return ChildDeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            parent_device_id=coordinator.station_device_id,
+            translation_key=translation_key,
+            translation_placeholders=placeholders,
+        )
+    return DeviceInfo(
+        identifiers={(DOMAIN, identifier)},
+        translation_key=translation_key,
+        translation_placeholders=placeholders,
+        via_device_id=coordinator.station_device_id,
+    )
