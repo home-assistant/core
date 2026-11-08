@@ -1247,6 +1247,16 @@ TYPED_CONFIG_CASES = [
         id="fan_percentage",
     ),
     pytest.param(
+        Platform.FAN,
+        FanKnxConfig,
+        {"ga_switch": {"write": "1/2/3"}},
+        {
+            "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+            "sync_state": True,
+        },
+        id="fan_switch_only",
+    ),
+    pytest.param(
         Platform.LIGHT,
         LightKnxConfig,
         {
@@ -1268,6 +1278,18 @@ TYPED_CONFIG_CASES = [
             "sync_state": True,
         },
         id="light_single_address",
+    ),
+    pytest.param(
+        Platform.LIGHT,
+        LightKnxConfig,
+        {"ga_switch": {"write": "1/2/3"}},
+        {
+            "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+            "color_temp_min": 2700,
+            "color_temp_max": 6000,
+            "sync_state": True,
+        },
+        id="light_switch_only",
     ),
     pytest.param(
         Platform.LIGHT,
@@ -1452,6 +1474,67 @@ def test_typed_config_storage_roundtrip(
     ]
     assert reloaded == validated
     assert to_storage_dict(reloaded) == stored
+
+
+@pytest.mark.parametrize(
+    ("platform", "config_type", "knx_stored", "null_keys"),
+    [
+        pytest.param(
+            Platform.LIGHT,
+            LightKnxConfig,
+            {
+                "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+                "ga_brightness": None,
+                "ga_color_temp": None,
+                "color_temp_min": 2700,
+                "color_temp_max": 6000,
+                "color": None,
+                "sync_state": True,
+            },
+            ["ga_brightness", "ga_color_temp", "color"],
+            id="light",
+        ),
+        pytest.param(
+            Platform.FAN,
+            FanKnxConfig,
+            {
+                "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
+                "speed": None,
+                "ga_oscillation": None,
+                "sync_state": True,
+            },
+            ["speed", "ga_oscillation"],
+            id="fan",
+        ),
+    ],
+)
+def test_null_optional_keys_load_and_are_dropped(
+    platform: Platform,
+    config_type: type,
+    knx_stored: dict[str, Any],
+    null_keys: list[str],
+) -> None:
+    """Test unset optional keys stored as `null` load and are rendered without them.
+
+    Storage written by 2026.11.0 holds unset group addresses and group selects
+    as `null`. The frontend reads those as unset; a re-render drops them.
+    """
+    stored = {
+        "entity": {"name": "test", "device_info": None, "entity_category": None},
+        "knx": knx_stored,
+    }
+    validated = validate_entity_data({CONF_PLATFORM: platform, CONF_DATA: stored})[
+        CONF_DATA
+    ]
+    assert isinstance(validated.knx, config_type)
+    assert all(getattr(validated.knx, key) is None for key in null_keys)
+
+    rendered = to_storage_dict(validated)
+    assert rendered["entity"] == {"name": "test"}
+    assert not set(null_keys) & rendered["knx"].keys()
+    assert rendered["knx"] == {
+        key: value for key, value in knx_stored.items() if value is not None
+    }
 
 
 @pytest.mark.parametrize(
