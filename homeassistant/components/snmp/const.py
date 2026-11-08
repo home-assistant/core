@@ -93,10 +93,12 @@ INVALID_CREDENTIAL_INDICATIONS: Final = (
     *AUTH_ERROR_INDICATIONS,
 )
 
-# MAC columns of IP-indexed tables, where the row index ends with the device
-# IPv4 address. Tables indexed by the MAC (e.g. bridge forwarding tables) use the
-# same OID suffix for something else.
+# MAC columns of IP-indexed tables, where the row index is the interface index
+# followed by the device IPv4 address. RFC 1213 indexes atEntry by a NetworkAddress,
+# a CHOICE whose type sub-identifier is part of the instance OID on some agents, so
+# that table allows one index component more. Tables indexed by the MAC (e.g. bridge
+# forwarding tables) use the same OID suffix for something else.
 IP_INDEXED_MAC_OIDS: Final = (
-    (1, 3, 6, 1, 2, 1, 4, 22, 1, 2),  # ipNetToMediaPhysAddress (ARP)
-    (1, 3, 6, 1, 2, 1, 3, 1, 1, 2),  # atPhysAddress (RFC 1213 ARP)
+    ((1, 3, 6, 1, 2, 1, 4, 22, 1, 2), False),  # ipNetToMediaPhysAddress (ARP)
+    ((1, 3, 6, 1, 2, 1, 3, 1, 1, 2), True),  # atPhysAddress (RFC 1213 ARP)
 )

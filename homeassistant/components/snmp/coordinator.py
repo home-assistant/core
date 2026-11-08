@@ -72,14 +72,16 @@ def _ip_address_from_oid(oid: tuple[int, ...]) -> str | None:
     address in the row index. In tables indexed by the MAC the trailing
     components of the OID mean something else.
     """
-    for prefix in IP_INDEXED_MAC_OIDS:
-        # The row index is the interface index plus the four address octets
-        if oid[: len(prefix)] != prefix or len(oid) != len(prefix) + 5:
+    for prefix, has_address_family in IP_INDEXED_MAC_OIDS:
+        if oid[: len(prefix)] != prefix:
             continue
-        octets = oid[-4:]
-        if any(not 0 <= octet <= 255 for octet in octets):
+        index = oid[len(prefix) :]
+        # 1 is the internet family of RFC 1213's NetworkAddress choice
+        if has_address_family and len(index) == 6 and index[1] == 1:
+            index = (index[0], *index[2:])
+        if len(index) != 5 or any(not 0 <= octet <= 255 for octet in index[-4:]):
             return None
-        return ".".join(map(str, octets))
+        return ".".join(map(str, index[-4:]))
     return None
 
 

@@ -437,6 +437,23 @@ async def test_mac_normalization(
             id="rfc1213_arp_row",
         ),
         pytest.param(
+            # Some agents include the NetworkAddress choice type in the index
+            (*LEGACY_ARP_MAC_OID, 1, 1, 192, 168, 1, 12),
+            "192.168.1.12",
+            id="rfc1213_network_address_choice",
+        ),
+        pytest.param(
+            (*LEGACY_ARP_MAC_OID, 1, 2, 192, 168, 1, 12),
+            None,
+            id="rfc1213_not_an_internet_address",
+        ),
+        pytest.param(
+            # ipNetToMediaTable indexes by a plain IpAddress
+            (*ARP_MAC_OID, 1, 1, 192, 168, 1, 12),
+            None,
+            id="ip_net_to_media_extra_component",
+        ),
+        pytest.param(
             # Bridge forwarding tables are indexed by the MAC, not by an IP
             (1, 3, 6, 1, 2, 1, 17, 4, 3, 1, 1, 0, 26, 43, 60, 77, 94),
             None,
@@ -451,8 +468,8 @@ async def test_ip_extraction(
     entity_registry: er.EntityRegistry,
     mock_coordinator_entry: MockConfigEntry,
     enable_tracker: Callable[[str], None],
-    oid_tuple: tuple,
-    expected_ip: str,
+    oid_tuple: tuple[int, ...],
+    expected_ip: str | None,
 ) -> None:
     """Test IP address extraction from OID suffix."""
     mac_bytes = binascii.unhexlify("001122334455")
