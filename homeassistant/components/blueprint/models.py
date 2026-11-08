@@ -23,6 +23,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, ca
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.field_visibility import get_hidden_fields
 from homeassistant.util import yaml as yaml_util
+from homeassistant.util.file import safe_join
 
 from .const import (
     BLUEPRINT_FOLDER,
@@ -247,12 +248,18 @@ class DomainBlueprints:
         async with self._load_lock:
             self._blueprints = {}
 
+    def _blueprint_file(self, blueprint_path: str) -> pathlib.Path:
+        """Return the path of a blueprint file in the blueprint folder."""
+        try:
+            return safe_join(self.blueprint_folder, blueprint_path)
+        except ValueError as err:
+            raise FailedToLoad(self.domain, blueprint_path, err) from err
+
     def _load_blueprint(self, blueprint_path: str) -> Blueprint:
         """Load a blueprint."""
+        path = self._blueprint_file(blueprint_path)
         try:
-            blueprint_data = yaml_util.load_yaml_dict(
-                self.blueprint_folder / blueprint_path
-            )
+            blueprint_data = yaml_util.load_yaml_dict(path)
         except FileNotFoundError as err:
             raise FailedToLoad(
                 self.domain,
@@ -352,7 +359,7 @@ class DomainBlueprints:
         """Remove a blueprint file."""
         if self._blueprint_in_use(self.hass, blueprint_path):
             raise BlueprintInUse(self.domain, blueprint_path)
-        path = self.blueprint_folder / blueprint_path
+        path = self._blueprint_file(blueprint_path)
         await self.hass.async_add_executor_job(path.unlink)
         self._blueprints[blueprint_path] = None
 
@@ -364,9 +371,7 @@ class DomainBlueprints:
         Returns true if the action overrides an existing blueprint.
         """
 
-        path = pathlib.Path(
-            self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_path)
-        )
+        path = self._blueprint_file(blueprint_path)
         exists = path.exists()
 
         if not allow_override and exists:

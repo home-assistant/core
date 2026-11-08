@@ -688,3 +688,39 @@ async def test_substituting_blueprint_inputs_incomplete_input_2(
         "code": "unknown_error",
         "message": "No substitution found for input blah",
     }
+
+
+@pytest.mark.parametrize(
+    ("command", "extra", "suffix"),
+    [
+        ("blueprint/delete", {}, ""),
+        (
+            "blueprint/save",
+            {
+                "yaml": "blueprint: {name: x, domain: automation}",
+                "allow_override": True,
+            },
+            ".yaml",
+        ),
+    ],
+)
+async def test_path_outside_blueprint_folder(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    tmp_path: Path,
+    command: str,
+    extra: dict[str, Any],
+    suffix: str,
+) -> None:
+    """Test that delete and save reject an absolute path outside the blueprint folder."""
+    target = tmp_path / "outside"
+    Path(f"{target}{suffix}").write_text("keep", encoding="utf8")
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": command, "path": str(target), "domain": "automation", **extra}
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert Path(f"{target}{suffix}").read_text(encoding="utf8") == "keep"

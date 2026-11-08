@@ -7,7 +7,12 @@ from unittest.mock import patch
 import py
 import pytest
 
-from homeassistant.util.file import WriteError, write_utf8_file, write_utf8_file_atomic
+from homeassistant.util.file import (
+    WriteError,
+    safe_join,
+    write_utf8_file,
+    write_utf8_file_atomic,
+)
 
 
 @pytest.mark.parametrize("func", [write_utf8_file, write_utf8_file_atomic])
@@ -108,3 +113,46 @@ def test_write_utf8_file_atomic_fails(tmpdir: py.path.local) -> None:
         write_utf8_file_atomic(test_file, '{"some":"data"}', False)
 
     assert not os.path.exists(test_file)
+
+
+@pytest.mark.parametrize(
+    ("base", "parts", "expected"),
+    [
+        pytest.param("/base", ("a",), "/base/a", id="single"),
+        pytest.param("/base", ("a/b.yaml",), "/base/a/b.yaml", id="nested"),
+        pytest.param("/base", ("a", "b"), "/base/a/b", id="multiple_parts"),
+        pytest.param("/base", ("a/b/../../c",), "/base/c", id="dotdot_inside"),
+        pytest.param("/base", ("../base/x",), "/base/x", id="dotdot_back_into_base"),
+        pytest.param(Path("/base"), ("a",), "/base/a", id="path_base"),
+        pytest.param("/base", ("...",), "/base/...", id="three_dots"),
+        pytest.param("/base", ("%2e%2e",), "/base/%2e%2e", id="percent_encoded"),
+        pytest.param("/base", ("..\\x",), "/base/..\\x", id="backslash"),
+        pytest.param("/base", ("~",), "/base/~", id="tilde"),
+        pytest.param("/base", ("",), "/base", id="empty_returns_base"),
+        pytest.param("/base", (".",), "/base", id="dot_returns_base"),
+    ],
+)
+def test_safe_join(base: str | Path, parts: tuple[str, ...], expected: str) -> None:
+    """Test that safe_join returns the path in the base folder."""
+    assert safe_join(base, *parts) == Path(expected)
+
+
+@pytest.mark.parametrize(
+    ("base", "parts"),
+    [
+        pytest.param("/base", ("../x",), id="parent"),
+        pytest.param("/base", ("..",), id="parent_only"),
+        pytest.param("/base", ("a/../../x",), id="nested_escape"),
+        pytest.param("/base", ("/etc/passwd",), id="absolute"),
+        pytest.param("/base", ("a", "/etc", "b"), id="later_absolute"),
+        pytest.param("/base", ("../base2/x",), id="sibling_same_prefix"),
+        pytest.param("/base", ("a\0b",), id="nul"),
+        pytest.param(".", ("../x",), id="relative_base_dot"),
+        pytest.param("", ("../x",), id="relative_base_empty"),
+        pytest.param("..", ("../x",), id="relative_base_parent"),
+    ],
+)
+def test_safe_join_outside_base(base: str | Path, parts: tuple[str, ...]) -> None:
+    """Test that safe_join raises an error for a path outside the base folder."""
+    with pytest.raises(ValueError, match="outside the base folder"):
+        safe_join(base, *parts)

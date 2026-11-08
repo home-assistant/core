@@ -387,6 +387,21 @@ async def test_domain_blueprints_get_blueprint_errors(
         await domain_bps.async_get_blueprint("non-existing-path")
 
 
+async def test_domain_blueprints_get_blueprint_outside_folder(
+    domain_bps: models.DomainBlueprints,
+) -> None:
+    """Test that a path outside the blueprint folder fails before the file loads."""
+    with (
+        patch.object(models.yaml_util, "load_yaml_dict") as mock_load,
+        pytest.raises(errors.FailedToLoad) as exc_info,
+    ):
+        await domain_bps.async_get_blueprint("/outside.yaml")
+
+    mock_load.assert_not_called()
+    assert isinstance(exc_info.value.__cause__, ValueError)
+    assert str(exc_info.value).count("Failed to load blueprint") == 1
+
+
 async def test_domain_blueprints_caching(domain_bps: models.DomainBlueprints) -> None:
     """Test domain blueprints cache blueprints."""
     obj = object()

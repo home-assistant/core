@@ -2,6 +2,7 @@
 
 import logging
 import os
+from pathlib import Path
 import tempfile
 
 from atomicwrites import AtomicWriter
@@ -13,6 +14,18 @@ _LOGGER = logging.getLogger(__name__)
 
 class WriteError(HomeAssistantError):
     """Error writing the data."""
+
+
+def safe_join(base: str | Path, *parts: str) -> Path:
+    """Join parts to base and raise ValueError if the result is outside base.
+
+    This function does not follow symlinks. Open the path that it returns.
+    """
+    base_path = Path(os.path.abspath(base))
+    path = Path(os.path.abspath(os.path.join(base_path, *parts)))
+    if "\0" in str(path) or not path.is_relative_to(base_path):
+        raise ValueError("The path is outside the base folder")
+    return path
 
 
 def write_utf8_file_atomic(
