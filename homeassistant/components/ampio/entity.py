@@ -90,11 +90,11 @@ class AmpioEntity(Entity):
             parent_device_id=parent_device_id,
         )
         if obj.name:
-            device_info["name"] = obj.name
+            device_info.name = obj.name
             self._attr_name = None
         else:
-            device_info["translation_key"] = "object"
-            device_info["translation_placeholders"] = {"id": str(obj.id)}
+            device_info.translation_key = "object"
+            device_info.translation_placeholders = {"id": str(obj.id)}
         self._attr_device_info = device_info
 
     @override
