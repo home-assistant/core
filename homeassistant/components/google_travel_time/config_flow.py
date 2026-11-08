@@ -33,6 +33,7 @@ from .const import (
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_ROUTING_PREFERENCE,
     CONF_UNITS,
     DEFAULT_NAME,
     DEPARTURE_TIME,
@@ -54,6 +55,7 @@ from .schemas import (
     TRAFFIC_MODEL_SELECTOR,
     TRANSIT_MODE_SELECTOR,
     TRANSIT_ROUTING_PREFERENCE_SELECTOR,
+    TRAVEL_ROUTING_PREFERENCE_SELECTOR,
     UNITS_SELECTOR,
 )
 
@@ -71,6 +73,9 @@ OPTIONS_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_AVOID): AVOID_SELECTOR,
         probatio.Optional(CONF_TRAFFIC_MODEL): TRAFFIC_MODEL_SELECTOR,
         probatio.Optional(CONF_TRANSIT_MODE): TRANSIT_MODE_SELECTOR,
+        probatio.Optional(
+            CONF_TRAVEL_ROUTING_PREFERENCE
+        ): TRAVEL_ROUTING_PREFERENCE_SELECTOR,
         probatio.Optional(
             CONF_TRANSIT_ROUTING_PREFERENCE
         ): TRANSIT_ROUTING_PREFERENCE_SELECTOR,
@@ -104,29 +109,44 @@ class GoogleOptionsFlow(OptionsFlow):
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is not None:
-            time_type = user_input.pop(CONF_TIME_TYPE)
-            if time := user_input.pop(CONF_TIME, None):
-                if time_type == ARRIVAL_TIME:
-                    user_input[CONF_ARRIVAL_TIME] = time
-                else:
-                    user_input[CONF_DEPARTURE_TIME] = time
-            return self.async_create_entry(
-                title="",
-                data=user_input,
-            )
-
-        options = self.config_entry.options.copy()
-        if CONF_ARRIVAL_TIME in self.config_entry.options:
-            options[CONF_TIME_TYPE] = ARRIVAL_TIME
-            options[CONF_TIME] = self.config_entry.options[CONF_ARRIVAL_TIME]
+        errors = {}
+        if user_input is None:
+            user_input = self.config_entry.options.copy()
+            if CONF_ARRIVAL_TIME in self.config_entry.options:
+                user_input[CONF_TIME_TYPE] = ARRIVAL_TIME
+                user_input[CONF_TIME] = self.config_entry.options[CONF_ARRIVAL_TIME]
+            else:
+                user_input[CONF_TIME_TYPE] = DEPARTURE_TIME
+                user_input[CONF_TIME] = self.config_entry.options.get(
+                    CONF_DEPARTURE_TIME, ""
+                )
         else:
-            options[CONF_TIME_TYPE] = DEPARTURE_TIME
-            options[CONF_TIME] = self.config_entry.options.get(CONF_DEPARTURE_TIME, "")
+            routing_preference = user_input.get(
+                CONF_TRAVEL_ROUTING_PREFERENCE, "traffic_aware_optimal"
+            )
+            if (
+                routing_preference != "traffic_aware_optimal"
+                and user_input.get(CONF_TRAFFIC_MODEL) is not None
+            ):
+                errors["base"] = "traffic_model_not_allowed"
+
+            if not errors:
+                time_type = user_input.pop(CONF_TIME_TYPE)
+                if time := user_input.pop(CONF_TIME, None):
+                    if time_type == ARRIVAL_TIME:
+                        user_input[CONF_ARRIVAL_TIME] = time
+                    else:
+                        user_input[CONF_DEPARTURE_TIME] = time
+
+                return self.async_create_entry(
+                    title="",
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self.add_suggested_values_to_schema(OPTIONS_SCHEMA, options),
+            data_schema=self.add_suggested_values_to_schema(OPTIONS_SCHEMA, user_input),
+            errors=errors,
         )
 
 
