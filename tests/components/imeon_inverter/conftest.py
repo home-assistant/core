@@ -74,7 +74,7 @@ def mock_async_setup_entry() -> Generator[AsyncMock]:
     """Fixture for mocking async_setup_entry."""
     with patch(
         "homeassistant.components.imeon_inverter.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 

@@ -234,7 +234,7 @@ def vizio_invalid_pin_failure_fixture() -> Generator[None]:
 @pytest.fixture(name="vizio_bypass_setup")
 def vizio_bypass_setup_fixture() -> Generator[None]:
     """Mock component setup."""
-    with patch("homeassistant.components.vizio.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.vizio.async_setup_entry", return_value=None):
         yield
 
 

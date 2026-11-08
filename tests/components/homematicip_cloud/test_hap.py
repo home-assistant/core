@@ -9,6 +9,7 @@ from homematicip.connection.rest_connection import RestResult
 from homematicip.exceptions.connection_exceptions import (
     HmipAuthenticationError,
     HmipConnectionError,
+    HmipThrottlingError,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -191,6 +192,84 @@ async def test_hap_create_exception(
         pytest.raises(ConfigEntryNotReady),
     ):
         await hap.async_setup()
+
+
+async def test_hap_setup_waits_out_a_cloud_throttle() -> None:
+    """A setup retry during a 429 cooldown does not touch the cloud."""
+    hass = Mock()
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"},
+    )
+    hap = HomematicipHAP(hass, entry)
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.throttle_cooldown_remaining",
+            return_value=601.0,
+        ),
+        patch.object(hap, "get_hap") as get_hap,
+        pytest.raises(ConfigEntryNotReady) as err,
+    ):
+        async with entry.setup_lock:
+            await hap.async_setup()
+
+    assert not get_hap.mock_calls
+    assert err.value.translation_key == "cloud_throttled"
+    assert err.value.translation_placeholders == {"minutes": "11"}
+    assert err.value.retry_after == 601.0
+
+
+async def test_hap_setup_reports_a_cloud_throttle() -> None:
+    """A 429 on the state download names the cooldown instead of a bare retry."""
+    hass = Mock()
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"},
+    )
+    hap = HomematicipHAP(hass, entry)
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.throttle_cooldown_remaining",
+            side_effect=[0.0, 900.0],
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+            return_value=ConnectionContext(),
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state_async",
+            side_effect=HmipThrottlingError,
+        ),
+        pytest.raises(ConfigEntryNotReady) as err,
+    ):
+        async with entry.setup_lock:
+            await hap.async_setup()
+
+    assert err.value.translation_key == "cloud_throttled"
+    assert err.value.translation_placeholders == {"minutes": "15"}
+    assert err.value.retry_after == 900.0
+
+
+async def test_hap_setup_retries_a_cloud_throttle_without_cooldown() -> None:
+    """A 429 the library did not record still ends in a plain setup retry."""
+    hass = Mock()
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"},
+    )
+    hap = HomematicipHAP(hass, entry)
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.throttle_cooldown_remaining",
+            return_value=0.0,
+        ),
+        patch.object(hap, "get_hap", side_effect=HmipThrottlingError),
+        pytest.raises(ConfigEntryNotReady) as err,
+    ):
+        async with entry.setup_lock:
+            await hap.async_setup()
+
+    assert err.value.translation_key is None
 
 
 async def test_hap_setup_auth_error_starts_reauth(

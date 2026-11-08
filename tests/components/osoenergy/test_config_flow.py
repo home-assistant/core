@@ -32,7 +32,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
             return_value=TEST_USER_EMAIL,
         ),
         patch(
-            "homeassistant.components.osoenergy.async_setup_entry", return_value=True
+            "homeassistant.components.osoenergy.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -148,7 +148,7 @@ async def test_user_flow_invalid_subscription_key(hass: HomeAssistant) -> None:
             return_value=TEST_USER_EMAIL,
         ),
         patch(
-            "homeassistant.components.osoenergy.async_setup_entry", return_value=True
+            "homeassistant.components.osoenergy.async_setup_entry", return_value=None
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -188,7 +188,7 @@ async def test_user_flow_exception_on_subscription_key_check(
             return_value=TEST_USER_EMAIL,
         ),
         patch(
-            "homeassistant.components.osoenergy.async_setup_entry", return_value=True
+            "homeassistant.components.osoenergy.async_setup_entry", return_value=None
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

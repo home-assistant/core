@@ -54,5 +54,5 @@ def patch_async_setup_entry():
     """Patch the async entry setup of Dremel 3D Printer."""
     return patch(
         "homeassistant.components.dremel_3d_printer.async_setup_entry",
-        return_value=True,
+        return_value=None,
     )

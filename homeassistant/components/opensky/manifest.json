@@ -4,6 +4,7 @@
   "categories": ["vehicles_transport.flights"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/opensky",
   "integration_type": "service",
   "iot_class": "cloud_polling",

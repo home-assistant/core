@@ -6,10 +6,11 @@ import re
 import shlex
 import sys
 import tempfile
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.common import MockUser, async_capture_events
 
 from homeassistant.components import shell_command
 from homeassistant.components.shell_command import DOMAIN
@@ -361,3 +362,67 @@ async def test_repair_issue_on_reload_service_reload(
         )
     issue = issue_registry.async_get_issue(shell_command.DOMAIN, "reserved_reload")
     assert issue is not None
+
+
+async def test_reload_keeps_ignored_reserved_reload_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, hass_admin_user: MockUser
+) -> None:
+    """Test reload keeps a still valid ignored issue instead of re-creating it."""
+    config = {shell_command.DOMAIN: {"reload": "echo should not work"}}
+    await async_setup_component(hass, shell_command.DOMAIN, config)
+    await hass.async_block_till_done()
+    ir.async_ignore_issue(hass, shell_command.DOMAIN, "reserved_reload", True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(
+            shell_command.DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+
+    issue = issue_registry.async_get_issue(shell_command.DOMAIN, "reserved_reload")
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    assert events == []
+
+
+@pytest.mark.parametrize(
+    "load_yaml_patch",
+    [
+        pytest.param({"side_effect": HomeAssistantError("bad yaml")}, id="yaml_error"),
+        pytest.param(
+            {"return_value": {shell_command.DOMAIN: ["not", "a", "dict"]}},
+            id="invalid_config",
+        ),
+    ],
+)
+async def test_failed_reload_keeps_reserved_reload_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_admin_user: MockUser,
+    load_yaml_patch: dict[str, Any],
+) -> None:
+    """Test a failed reload does not delete the issue."""
+    config = {shell_command.DOMAIN: {"reload": "echo should not work"}}
+    await async_setup_component(hass, shell_command.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        **load_yaml_patch,
+    ):
+        await hass.services.async_call(
+            shell_command.DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+
+    assert issue_registry.async_get_issue(shell_command.DOMAIN, "reserved_reload")

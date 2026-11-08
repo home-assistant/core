@@ -36,7 +36,7 @@ def _patch_success() -> Generator[None]:
             "homeassistant.components.emonitor.config_flow.Emonitor.async_get_status",
             return_value=_mock_emonitor(),
         ),
-        patch("homeassistant.components.emonitor.async_setup_entry", return_value=True),
+        patch("homeassistant.components.emonitor.async_setup_entry", return_value=None),
     ):
         yield
 
@@ -57,7 +57,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.emonitor.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -158,7 +158,7 @@ async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.emonitor.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -241,7 +241,7 @@ async def test_user_unique_id_already_exists(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.emonitor.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(

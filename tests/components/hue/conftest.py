@@ -246,7 +246,7 @@ def create_config_entry(
 
 async def setup_component(hass: HomeAssistant) -> None:
     """Mock setup Hue component."""
-    with patch.object(hue, "async_setup_entry", return_value=True):
+    with patch.object(hue, "async_setup_entry", return_value=None):
         assert (
             await async_setup_component(
                 hass,

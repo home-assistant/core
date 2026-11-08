@@ -2,11 +2,13 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, override
+import math
+from typing import TYPE_CHECKING, Any, override
 
 from pizone import Controller, Zone
 
 from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -25,16 +27,20 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
 
-from .const import ATTR_AIRFLOW, DOMAIN
+from .const import DOMAIN
 from .coordinator import IZoneConfigEntry, IZoneCoordinator
-from .entity import IZoneCoordinatorEntity
+from .entity import IZoneCoordinatorEntity, zone_device_info
+from .services import IZoneService, async_create_deprecated_airflow_issue
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 _IZONE_FAN_TO_HA = {
     Controller.Fan.LOW: FAN_LOW,
@@ -43,6 +49,22 @@ _IZONE_FAN_TO_HA = {
     Controller.Fan.TOP: FAN_TOP,
     Controller.Fan.AUTO: FAN_AUTO,
 }
+
+ATTR_CONTROL_ZONE_SOURCE = "control_zone_source"
+
+
+def _normalize_setpoint(temp: float) -> float:
+    """Snap a setpoint to the bridge's 0.5 °C step, rejecting off-step values."""
+    # The climate service only enforces min/max, not the step. Unit conversion
+    # leaves float noise (74.3 °F -> 23.499999999999996 °C), so allow a tolerance.
+    rounded = round(temp / PRECISION_HALVES) * PRECISION_HALVES
+    if not math.isclose(temp, rounded, abs_tol=1e-6):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_temperature_step",
+            translation_placeholders={"value": f"{temp:g}"},
+        )
+    return rounded
 
 
 async def async_setup_entry(
@@ -71,32 +93,13 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
         controller = coordinator.controller
         self._unknown_fan_logged = False
         self._unknown_mode_logged = False
+        self._unexpected_control_zone_logged = False
 
         self._attr_supported_features = (
             ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
-
-        # Typically, iZone will automatically set the controller's target
-        # temperature; but there are situations where Home Assistant should be
-        # allowed to set it:
-        #
-        # 1. The controller is in RAS mode (i.e., not in master/slave mode).
-        # 2. The controller is in master mode, but the control zone is set to
-        #    zone 13 (i.e., the master unit itself), or an invalid zone
-        #    (greater than the total number of zones). In this case, the
-        #    master unit is controlling the temperature directly.
-        # 3. Any of the zones do not have a temperature sensor
-        if (
-            controller.ras_mode == "RAS"
-            or (
-                controller.ras_mode == "master"
-                and controller.zone_ctrl > controller.zones_total
-            )
-            or any(zone.temp_current is None for zone in controller.zones)
-        ):
-            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         self._state_to_pizone = {
             HVACMode.COOL: Controller.Mode.COOL,
@@ -127,9 +130,23 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
 
     @property
     @override
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return supported features.
+
+        TARGET_TEMPERATURE follows live ownership: writable only when the
+        controller owns the unit target (return-air / unit CTS). When a zone
+        owns control, omit it so a late set cannot race onto the wrong zone.
+        """
+        features = self._attr_supported_features
+        if self.controller.control_setpoint_owner is self.controller:
+            return features | ClimateEntityFeature.TARGET_TEMPERATURE
+        return features
+
+    @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the optional state attributes."""
-        return {
+        data: dict[str, Any] = {
             "supply_temperature": show_temp(
                 self.hass,
                 self.supply_temperature,
@@ -154,6 +171,30 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
                 PRECISION_HALVES,
             ),
         }
+        # Same idea as person.source: which zone climate is driving the unit.
+        if (source := self.control_zone_source) is not None:
+            data[ATTR_CONTROL_ZONE_SOURCE] = source
+        return data
+
+    @property
+    def control_zone_source(self) -> str | None:
+        """Return the zone climate entity_id driving the unit, if any.
+
+        Omitted when the controller owns control (unit return-air sensor) or
+        when no matching zone owner exists.
+        """
+        owner = self.controller.control_setpoint_owner
+        if not isinstance(owner, Zone):
+            return None
+        zone_device = self.zones.get(owner)
+        if zone_device is None:
+            return None
+        if TYPE_CHECKING:
+            assert zone_device.unique_id is not None
+        # A zone disabled at load never sees registry renames on its entity_id.
+        return er.async_get(self.hass).async_get_entity_id(
+            CLIMATE_DOMAIN, DOMAIN, zone_device.unique_id
+        )
 
     @property
     @override
@@ -207,21 +248,53 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
     @property
     @override
     def native_current_temperature(self) -> float | None:
-        """Return the current temperature."""
+        """Return the current temperature.
+
+        Follows the active control zone's room sensor when an AUTO zone owns
+        control; otherwise the unit return-air (or supply in free air / eco).
+
+        A non-climate (CONST/OPCL) control zone, or an AUTO zone without a
+        room reading, is unexpected device behaviour — report unknown and log
+        once so it can be investigated.
+        """
         if self.controller.free_air:
             return self.controller.temp_supply
+        owner = self.controller.control_setpoint_owner
+        if isinstance(owner, Zone):
+            if owner.type is Zone.Type.AUTO and owner.temp_current is not None:
+                return owner.temp_current
+            if not self._unexpected_control_zone_logged:
+                _LOGGER.warning(
+                    "Unexpected iZone control zone on controller %s: "
+                    "zone index %s type %s temp %s; current temperature "
+                    "unavailable. The bridge is not expected to select a "
+                    "non-climate zone (or an AUTO zone without a room sensor) "
+                    "as CtrlZone. Please open an issue at "
+                    "https://github.com/home-assistant/core/issues "
+                    "and attach diagnostics",
+                    self.controller.device_uid,
+                    owner.index,
+                    owner.type.value,
+                    owner.temp_current,
+                )
+                self._unexpected_control_zone_logged = True
+            return None
         return self.controller.temp_return
 
+    def _active_control_zone(self) -> Zone | None:
+        """Return the pizone zone currently driving the unit, if any."""
+        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+            return None
+        owner = self.controller.control_setpoint_owner
+        return owner if isinstance(owner, Zone) else None
+
     @property
-    def control_zone_name(self):
+    def control_zone_name(self) -> str | None:
         """Return the zone that currently controls the AC unit.
 
         Only relevant if target temp not set by controller.
         """
-        if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
-            return None
-        zone_ctrl = self.controller.zone_ctrl
-        zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
+        zone = self._active_control_zone()
         if zone is None:
             return None
         return zone.name
@@ -232,13 +305,9 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
 
         Only relevant if target temp not set by controller.
         """
-        if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return None
-        zone_ctrl = self.controller.zone_ctrl
-        zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
-        if zone is None:
-            return None
-        return zone.native_target_temperature
+        return self.controller.control_setpoint
 
     @property
     @override
@@ -247,9 +316,9 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
 
         Either from control zone or master unit.
         """
-        if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return self.controller.temp_setpoint
-        return self.control_zone_setpoint
+        return self.controller.control_setpoint
 
     @property
     def supply_temperature(self) -> float | None:
@@ -297,10 +366,8 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if not self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
-            self.async_schedule_update_ha_state(True)
-            return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            temp = _normalize_setpoint(temp)
             await self._async_run_and_update(self.controller.set_temp_setpoint(temp))
 
     @override
@@ -333,6 +400,18 @@ class ControllerDevice(IZoneCoordinatorEntity, ClimateEntity):
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self._async_run_and_update(self.controller.set_on(True))
+
+    async def async_set_airflow_min(self, airflow: int) -> None:
+        """Reject airflow minimum, which only applies to zones."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="airflow_zone_only"
+        )
+
+    async def async_set_airflow_max(self, airflow: int) -> None:
+        """Reject airflow maximum, which only applies to zones."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="airflow_zone_only"
+        )
 
 
 class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
@@ -370,20 +449,7 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
             }
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_unique_id = f"{controller_entity.unique_id}_z{zone.index + 1}"
-        assert controller_entity.unique_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, controller_entity.unique_id, zone.index)  # type:ignore[arg-type]
-            },
-            manufacturer="IZone",
-            model=zone.type.name.title(),
-            name=zone.name.title(),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, controller_entity.unique_id),
-                config_entry_id=coordinator.config_entry.entry_id,
-            ),
-        )
+        self._attr_device_info = zone_device_info(coordinator, zone)
 
     @property
     @override
@@ -445,24 +511,21 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
         """Return the maximum air flow."""
         return self._zone.airflow_max
 
-    async def async_set_airflow_min(self, **kwargs):
+    async def async_set_airflow_min(self, airflow: int) -> None:
         """Set new airflow minimum."""
-        await self._async_run_and_update(
-            self._zone.set_airflow_min(int(kwargs[ATTR_AIRFLOW]))
-        )
+        async_create_deprecated_airflow_issue(self.hass, IZoneService.AIRFLOW_MIN)
+        await self._async_run_and_update(self._zone.set_airflow_min(airflow))
 
-    async def async_set_airflow_max(self, **kwargs):
+    async def async_set_airflow_max(self, airflow: int) -> None:
         """Set new airflow maximum."""
-        await self._async_run_and_update(
-            self._zone.set_airflow_max(int(kwargs[ATTR_AIRFLOW]))
-        )
+        async_create_deprecated_airflow_issue(self.hass, IZoneService.AIRFLOW_MAX)
+        await self._async_run_and_update(self._zone.set_airflow_max(airflow))
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if self._zone.mode is not Zone.Mode.AUTO:
-            return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            temp = _normalize_setpoint(temp)
             await self._async_run_and_update(self._zone.set_temp_setpoint(temp))
 
     @override
@@ -470,11 +533,6 @@ class ZoneDevice(IZoneCoordinatorEntity, ClimateEntity):
         """Set new target operation mode."""
         mode = self._state_to_pizone[hvac_mode]
         await self._async_run_and_update(self._zone.set_mode(mode))
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if on."""
-        return self._zone.mode is not Zone.Mode.CLOSE
 
     @override
     async def async_turn_on(self) -> None:

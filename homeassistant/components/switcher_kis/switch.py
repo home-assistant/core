@@ -135,7 +135,6 @@ class SwitcherShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):
 
     _attr_device_class = SwitchDeviceClass.SWITCH
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:lock-open"
     _cover_id: int
 
     def __init__(

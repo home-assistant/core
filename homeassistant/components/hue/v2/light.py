@@ -1,6 +1,6 @@
 """Support for Hue lights."""
 
-from functools import partial
+import asyncio
 from typing import Any, override
 
 from aiohue import HueBridgeV2
@@ -26,13 +26,13 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.util import color as color_util
 
 from ..bridge import HueBridge, HueConfigEntry
-from ..const import DOMAIN
 from .entity import HueBaseEntity
 from .helpers import (
+    hue_brightness_to_ha,
     normalize_hue_brightness,
     normalize_hue_colortemp,
     normalize_hue_transition,
@@ -41,9 +41,23 @@ from .helpers import (
 FALLBACK_MIN_MIREDS = 153  # hue default for most lights
 FALLBACK_MAX_MIREDS = 500  # hue default for most lights
 FALLBACK_KELVIN = 5800  # halfway
+GRADIENT_COALESCE_DELAY = 0.1  # seconds to collect concurrent segment writes
 
-# HA 2025.4 replaced the deprecated effect "None" with HA default "off"
-DEPRECATED_EFFECT_NONE = "None"
+
+def gradient_segment_unique_id(resource: Light, number: int) -> str:
+    """Return the unique id of a gradient segment entity."""
+    return f"{resource.id}_segment_{number}"
+
+
+def gradient_point_color(resource: Light, index: int) -> tuple[float, float]:
+    """Return the color of a gradient point.
+
+    Falls back to the color of the whole light, which is what the bridge
+    reports while no gradient is active.
+    """
+    points = resource.gradient.points
+    xy = points[index].color.xy if index < len(points) else resource.color.xy
+    return (xy.x, xy.y)
 
 
 async def async_setup_entry(
@@ -55,15 +69,27 @@ async def async_setup_entry(
     bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
     controller: LightsController = api.lights
-    make_light_entity = partial(HueLight, bridge, controller)
+
+    def make_light_entities(resource: Light) -> list[HueBaseEntity]:
+        """Create the light entity plus a segment entity per gradient point."""
+        entities: list[HueBaseEntity] = [HueLight(bridge, controller, resource)]
+        if resource.gradient is not None:
+            writer = HueGradientWriter(bridge, controller, resource)
+            entities.extend(
+                HueGradientSegmentLight(bridge, controller, resource, writer, number)
+                for number in range(1, resource.gradient.points_capable + 1)
+            )
+        return entities
 
     @callback
     def async_add_light(event_type: EventType, resource: Light) -> None:
         """Add Hue Light."""
-        async_add_entities([make_light_entity(resource)])
+        async_add_entities(make_light_entities(resource))
 
     # add all current items in controller
-    async_add_entities(make_light_entity(light) for light in controller)
+    async_add_entities(
+        entity for light in controller for entity in make_light_entities(light)
+    )
     # register listener for new lights
     config_entry.async_on_unload(
         controller.subscribe(async_add_light, event_filter=EventType.RESOURCE_ADDED)
@@ -121,14 +147,21 @@ class HueLight(HueBaseEntity, LightEntity):
         if len(self._attr_effect_list) > 0:
             self._attr_effect_list.insert(0, EFFECT_OFF)
             self._attr_supported_features |= LightEntityFeature.EFFECT
+        if (gradient := resource.gradient) is not None:
+            self.group = IntegrationSpecificGroup(
+                self,
+                [
+                    gradient_segment_unique_id(resource, number)
+                    for number in range(1, gradient.points_capable + 1)
+                ],
+            )
 
     @property
     @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         if dimming := self.resource.dimming:
-            # Hue uses a range of [0, 100] to control brightness.
-            return round((dimming.brightness / 100) * 255)
+            return hue_brightness_to_ha(dimming.brightness)
         return None
 
     @property
@@ -259,23 +292,6 @@ class HueLight(HueBaseEntity, LightEntity):
         self._color_temp_active = color_temp is not None
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
-        if effect_str == DEPRECATED_EFFECT_NONE:
-            # deprecated effect "None" is now "off"
-            effect_str = EFFECT_OFF
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_effect_none",
-                breaks_in_ha_version="2025.10.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_effect_none",
-            )
-            self.logger.warning(
-                "Detected deprecated effect 'None' in %s, use 'off' instead. "
-                "This will stop working in HA 2025.10",
-                self.entity_id,
-            )
         if effect_str == EFFECT_OFF:
             # ignore effect if set to "off" and we have no effect active
             # the special effect "off" is only used to stop an active effect
@@ -290,9 +306,9 @@ class HueLight(HueBaseEntity, LightEntity):
                 if transition is None:
                     # a transition is required for timed effect, default to 10 minutes
                     transition = 600000
-            # we need to clear color values if an effect is applied
-            color_temp = None
-            xy_color = None
+                # timed effects have no color parameters
+                color_temp = None
+                xy_color = None
 
         if flash is not None:
             await self.async_set_flash(flash)
@@ -345,3 +361,182 @@ class HueLight(HueBaseEntity, LightEntity):
             id=self.resource.id,
             short=flash == FLASH_SHORT,
         )
+
+
+# pylint: disable-next=home-assistant-enforce-class-module
+class HueGradientSegmentLight(HueBaseEntity, LightEntity):
+    """One color point of a Hue gradient light.
+
+    On/off and brightness apply to the whole light, as the Hue API has no
+    per-point control for them. Segments are hidden by default.
+    """
+
+    entity_description = LightEntityDescription(
+        key="hue_gradient_segment",
+        translation_key="gradient_segment",
+        has_entity_name=True,
+    )
+    _attr_color_mode = ColorMode.XY
+    _attr_supported_color_modes = {ColorMode.XY}
+    _attr_supported_features = LightEntityFeature.TRANSITION
+    # area and device targets skip hidden entities, so whole-room commands
+    # reach only the main light instead of fanning out to every segment
+    _attr_entity_registry_visible_default = False
+
+    def __init__(
+        self,
+        bridge: HueBridge,
+        controller: LightsController,
+        resource: Light,
+        writer: HueGradientWriter,
+        number: int,
+    ) -> None:
+        """Initialize the segment light."""
+        super().__init__(bridge, controller, resource)
+        self.resource = resource
+        self._writer = writer
+        self._index = number - 1
+        self._attr_unique_id = gradient_segment_unique_id(resource, number)
+        self._attr_translation_placeholders = {"segment": str(number)}
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if the light is on."""
+        return self.resource.on.on
+
+    @property
+    @override
+    def brightness(self) -> int | None:
+        """Return the brightness of the light between 0..255."""
+        if dimming := self.resource.dimming:
+            return hue_brightness_to_ha(dimming.brightness)
+        return None
+
+    @property
+    @override
+    def xy_color(self) -> tuple[float, float]:
+        """Return the xy color of this segment."""
+        return gradient_point_color(self.resource, self._index)
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on, setting the color of this segment when given."""
+        point = None
+        if (xy_color := kwargs.get(ATTR_XY_COLOR)) is not None:
+            point = (self._index, xy_color)
+        await self._writer.async_set_state(
+            on=True,
+            brightness=normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS)),
+            transition=normalize_hue_transition(kwargs.get(ATTR_TRANSITION)),
+            point=point,
+        )
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+        await self._writer.async_set_state(
+            on=False,
+            brightness=None,
+            transition=normalize_hue_transition(kwargs.get(ATTR_TRANSITION)),
+        )
+
+    @callback
+    @override
+    def on_update(self) -> None:
+        """Handle a state update of the light reported by the bridge."""
+        self._writer.resource_updated()
+
+
+class HueGradientWriter:
+    """Write the state of the segments of a gradient light to the bridge.
+
+    The segments share one light resource, so writes to several segments at
+    the same time are merged into a single request. Colors are sent as the
+    full list of gradient points.
+    """
+
+    def __init__(
+        self, bridge: HueBridge, controller: LightsController, resource: Light
+    ) -> None:
+        """Initialize the writer."""
+        self._bridge = bridge
+        self._controller = controller
+        self._resource = resource
+        self._pending_on: bool | None = None
+        self._pending_points: dict[int, tuple[float, float]] = {}
+        self._pending_brightness: float | None = None
+        self._pending_transition: float | None = None
+        self._written_points: list[tuple[float, float]] | None = None
+        self._flush_task: asyncio.Task[None] | None = None
+        self._lock = asyncio.Lock()
+
+    async def async_set_state(
+        self,
+        on: bool,
+        brightness: float | None,
+        transition: float | None,
+        point: tuple[int, tuple[float, float]] | None = None,
+    ) -> None:
+        """Set the light state, optionally with the color of one gradient point.
+
+        The write is sent together with writes of other segments made at the
+        same time.
+        """
+        self._pending_on = on
+        if point is not None:
+            index, xy_color = point
+            self._pending_points[index] = xy_color
+        if brightness is not None:
+            self._pending_brightness = brightness
+        if transition is not None:
+            self._pending_transition = transition
+        if self._flush_task is None:
+            self._flush_task = self._bridge.hass.async_create_task(self._async_flush())
+        # shielded so a cancelled caller does not drop the writes of the others
+        await asyncio.shield(self._flush_task)
+
+    @callback
+    def resource_updated(self) -> None:
+        """Handle a state update of the light reported by the bridge."""
+        self._written_points = None
+
+    async def _async_flush(self) -> None:
+        """Send the pending state to the bridge after the coalescing window."""
+        await asyncio.sleep(GRADIENT_COALESCE_DELAY)
+        # requests go out one at a time so each builds on the result of the last
+        async with self._lock:
+            # take the pending state before the request so writes arriving while
+            # it is in flight start a new flush instead of getting lost
+            on, self._pending_on = self._pending_on, None
+            points, self._pending_points = self._pending_points, {}
+            brightness, self._pending_brightness = self._pending_brightness, None
+            transition, self._pending_transition = self._pending_transition, None
+            self._flush_task = None
+            gradient_points = None
+            gradient_mode = None
+            if points:
+                gradient = self._resource.gradient
+                # the resource only reflects a write once the bridge reports it
+                # back, so until then the last written points are the baseline
+                if (baseline := self._written_points) is None:
+                    baseline = [
+                        gradient_point_color(self._resource, index)
+                        for index in range(gradient.points_capable)
+                    ]
+                gradient_points = [
+                    points.get(index, color) for index, color in enumerate(baseline)
+                ]
+                # the bridge resets the mode to interpolated when it is omitted
+                gradient_mode = gradient.mode
+            await self._bridge.async_request_call(
+                self._controller.set_state,
+                id=self._resource.id,
+                on=on,
+                brightness=brightness,
+                transition_time=transition,
+                gradient_points=gradient_points,
+                gradient_mode=gradient_mode,
+            )
+            if gradient_points is not None:
+                self._written_points = gradient_points

@@ -22,13 +22,11 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
           "api_key": "Met Office DataHub API key for the Site Specific Global Spot API.",
-          "latitude": "The latitude of a location for which to request a weather forecast.",
-          "longitude": "The longitude of a location for which to request a weather forecast."
+          "location": "The location for which to request a weather forecast."
         },
         "title": "Connect to the UK Met Office"
       }

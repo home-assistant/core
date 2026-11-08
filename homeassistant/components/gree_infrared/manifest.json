@@ -4,9 +4,10 @@
   "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@Dr-Blank"],
   "config_flow": true,
+  "connectivity": ["infrared"],
   "dependencies": ["infrared"],
   "documentation": "https://www.home-assistant.io/integrations/gree_infrared",
   "integration_type": "device",
   "iot_class": "assumed_state",
-  "quality_scale": "silver"
+  "quality_scale": "platinum"
 }

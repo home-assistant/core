@@ -178,6 +178,100 @@ async def test_action(
 
 
 @pytest.mark.parametrize(
+    ("mock_device_code", "entity_id", "status_updates", "expected_state"),
+    [
+        pytest.param(
+            "wk_cpmgn2cf",
+            "climate.bathroom_radiator",
+            {"mode": "eco"},
+            HVACMode.HEAT_COOL,
+            id="preset_without_switch",
+        ),
+        pytest.param(
+            "wk_6kijc7nd",
+            "climate.kabinet",
+            {"mode": "program", "switch": True},
+            HVACMode.HEAT_COOL,
+            id="preset_switch_on",
+        ),
+        pytest.param(
+            "wk_6kijc7nd",
+            "climate.kabinet",
+            {"mode": "program", "switch": False},
+            HVACMode.OFF,
+            id="preset_switch_off",
+        ),
+        pytest.param(
+            "wk_t94pit6zjbask9qo",
+            "climate.floor_thermostat_kitchen",
+            {"mode": "off", "switch": True},
+            HVACMode.OFF,
+            id="hvac_mode_value",
+        ),
+    ],
+)
+async def test_hvac_mode_with_preset(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_id: str,
+    status_updates: dict[str, Any],
+    expected_state: HVACMode,
+) -> None:
+    """Test the HVAC mode while the mode DP holds a preset."""
+    mock_device.status.update(status_updates)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("mock_device_code", "entity_id", "status_updates", "expected_commands"),
+    [
+        pytest.param(
+            "wk_t94pit6zjbask9qo",
+            "climate.floor_thermostat_kitchen",
+            {"mode": "off", "switch": True},
+            [{"code": "switch", "value": True}, {"code": "mode", "value": "auto"}],
+            id="from_hvac_mode_value",
+        ),
+        pytest.param(
+            "wk_t94pit6zjbask9qo",
+            "climate.floor_thermostat_kitchen",
+            {"mode": "manual", "switch": False},
+            [{"code": "switch", "value": True}],
+            id="keep_active_preset",
+        ),
+    ],
+)
+async def test_set_switch_only_hvac_mode_with_preset(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_id: str,
+    status_updates: dict[str, Any],
+    expected_commands: list[dict[str, Any]],
+) -> None:
+    """Test setting the switch-only HVAC mode on a device with presets."""
+    mock_device.status.update(status_updates)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, expected_commands
+    )
+
+
+@pytest.mark.parametrize(
     "mock_device_code",
     ["kt_5wnlzekkstwcdsvm"],
 )

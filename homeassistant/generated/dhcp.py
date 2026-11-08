@@ -280,6 +280,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "000463*",
     },
     {
+        "domain": "braviatv",
+        "registered_devices": True,
+    },
+    {
         "domain": "broadlink",
         "registered_devices": True,
     },
@@ -334,6 +338,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "earn_e_p1",
         "registered_devices": True,
+    },
+    {
+        "domain": "electrasmart",
+        "hostname": "elrssid*",
     },
     {
         "domain": "elgato",
@@ -514,23 +522,7 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "imou",
-        "macaddress": "38AF29*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "3CE36B*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "3CEF8C*",
-    },
-    {
-        "domain": "imou",
         "macaddress": "906A94*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "A0BD1D*",
     },
     {
         "domain": "imou",
@@ -539,14 +531,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "imou",
         "macaddress": "AC3DFA*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "B44C3B*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "FCB69D*",
     },
     {
         "domain": "incomfort",

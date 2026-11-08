@@ -18,7 +18,6 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -33,6 +32,7 @@ CONF_TIMEOUT = 15
 # Top level attributes in 'data'
 ATTR_SOUND = "sound"
 ATTR_VIBRATION = "vibration"
+ATTR_ICON = "icon"
 ATTR_ICONCOLOR = "iconcolor"
 ATTR_URL = "url"
 ATTR_URLTITLE = "urltitle"

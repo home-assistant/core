@@ -48,7 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.adax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -100,7 +100,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.adax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -173,7 +173,7 @@ async def test_local_create_entry(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.adax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.adax.config_flow.adax_local.AdaxConfig",
@@ -288,7 +288,7 @@ async def test_local_connection_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.adax.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.adax.config_flow.adax_local.AdaxConfig",

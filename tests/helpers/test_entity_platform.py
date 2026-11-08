@@ -1183,7 +1183,7 @@ async def test_setup_entry_platform_not_ready(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
@@ -1204,7 +1204,7 @@ async def test_setup_entry_platform_not_ready_with_message(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
@@ -1231,7 +1231,7 @@ async def test_setup_entry_platform_not_ready_from_exception(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
@@ -1252,7 +1252,7 @@ async def test_reset_cancels_retry_setup(hass: HomeAssistant) -> None:
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     assert len(mock_call_later.mock_calls) == 1
     assert len(mock_call_later.return_value.mock_calls) == 0
@@ -1276,7 +1276,7 @@ async def test_reset_cancels_retry_setup_when_not_started(hass: HomeAssistant) -
         hass, platform_name=config_entry.domain, platform=platform
     )
 
-    assert not await ent_platform.async_setup_entry(config_entry)
+    assert await ent_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
     assert (
         hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 1
@@ -1301,7 +1301,7 @@ async def test_stop_shutdown_cancels_retry_setup_and_interval_listener(
     )
 
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
-        assert not await ent_platform.async_setup_entry(config_entry)
+        assert await ent_platform.async_setup_entry(config_entry)
 
     assert len(mock_call_later.mock_calls) == 1
     assert len(mock_call_later.return_value.mock_calls) == 0

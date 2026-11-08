@@ -31,7 +31,7 @@ async def test_flow_successful(hass: HomeAssistant) -> None:
         patch("aiosyncthing.system.System.status", return_value={"myID": SERVER_ID}),
         patch(
             "homeassistant.components.syncthing.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -95,7 +95,7 @@ async def test_flow_invalid_auth(hass: HomeAssistant) -> None:
         patch("aiosyncthing.system.System.status", return_value={"myID": SERVER_ID}),
         patch(
             "homeassistant.components.syncthing.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -127,7 +127,7 @@ async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
         patch("aiosyncthing.system.System.status", return_value={"myID": SERVER_ID}),
         patch(
             "homeassistant.components.syncthing.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

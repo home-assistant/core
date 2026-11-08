@@ -39,7 +39,7 @@ def mock_setup_entry(mock_vrm_client) -> Generator[AsyncMock]:
     """Override async_setup_entry while client is patched."""
     with patch(
         "homeassistant.components.victron_remote_monitoring.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

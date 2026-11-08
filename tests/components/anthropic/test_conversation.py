@@ -9,16 +9,15 @@ from typing import Unpack
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from anthropic import APIConnectionError, AsyncStream, RateLimitError
+from anthropic.pagination import AsyncPage
 from anthropic.types import (
     CacheCreation,
     CacheMissPreviousMessageNotFound,
     CacheMissSystemChanged,
     CacheMissUnavailable,
     CitationCharLocation,
-    CitationCharLocationParam,
     CitationsConfig,
     CitationsWebSearchResultLocation,
-    CitationWebSearchResultLocationParam,
     Container,
     Diagnostics,
     DocumentBlock,
@@ -63,9 +62,11 @@ from homeassistant.components import conversation
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
+    CONF_EFFORT,
     CONF_PROMPT_CACHING,
+    CONF_RECOMMENDED,
     CONF_THINKING_BUDGET,
-    CONF_THINKING_EFFORT,
+    CONF_THINKING_TYPE,
     CONF_TOOL_SEARCH,
     CONF_WEB_FETCH,
     CONF_WEB_FETCH_MAX_USES,
@@ -115,6 +116,7 @@ from . import (
     create_tool_use_block,
     create_web_fetch_result_block,
     create_web_search_result_block,
+    model_list,
 )
 
 ENTITY_ID = "conversation.claude_conversation"
@@ -131,7 +133,7 @@ def mock_config_entry_with_server_tools(
         data={
             CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_CODE_EXECUTION: True,
-            CONF_THINKING_EFFORT: "medium",
+            CONF_EFFORT: "medium",
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
         },
     )
@@ -458,6 +460,42 @@ async def test_conversation_agent(
         hass, "conversation.claude_conversation"
     )
     assert agent.supported_languages == "*"
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_unknown_stream_event(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Ignore unknown SSE events decoded by the SDK and continue the response."""
+    mock_create_stream.return_value = [create_content_block(0, ["Hello!"])]
+    create_stream = mock_create_stream.side_effect
+
+    async def sdk_stream(
+        **kwargs: Unpack[MessageCreateParamsStreaming],
+    ) -> AsyncStream[RawMessageStreamEvent]:
+        stream = create_stream(**kwargs)
+        body = 'event: future_event\ndata: {"type":"future_event"}\n\n' + "".join(
+            [
+                f"event: {event.type}\ndata: {event.to_json(indent=None)}\n\n"
+                async for event in stream
+            ]
+        )
+        return AsyncStream(
+            cast_to=RawMessageStreamEvent,
+            response=Response(200, content=body),
+            client=mock_config_entry.runtime_data.client,
+        )
+
+    mock_create_stream.side_effect = sdk_stream
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == "Hello!"
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -1238,6 +1276,7 @@ async def test_function_call(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 
@@ -1315,6 +1354,7 @@ async def test_function_exception(
             language="en",
             assistant="conversation",
             device_id=None,
+            agent_id=agent_id,
         ),
     )
 
@@ -1412,7 +1452,7 @@ async def test_conversation_id(
     )
 
     result = await conversation.async_converse(
-        hass, "hello", None, None, agent_id="conversation.claude_conversation"
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
     )
 
     conversation_id = result.conversation_id
@@ -1421,7 +1461,7 @@ async def test_conversation_id(
         hass,
         "hello",
         conversation_id,
-        None,
+        Context(),
         agent_id="conversation.claude_conversation",
     )
 
@@ -1430,13 +1470,17 @@ async def test_conversation_id(
     unknown_id = ulid_util.ulid()
 
     result = await conversation.async_converse(
-        hass, "hello", unknown_id, None, agent_id="conversation.claude_conversation"
+        hass,
+        "hello",
+        unknown_id,
+        Context(),
+        agent_id="conversation.claude_conversation",
     )
 
     assert result.conversation_id != unknown_id
 
     result = await conversation.async_converse(
-        hass, "hello", "koala", None, agent_id="conversation.claude_conversation"
+        hass, "hello", "koala", Context(), agent_id="conversation.claude_conversation"
     )
 
     assert result.conversation_id == "koala"
@@ -1656,7 +1700,9 @@ async def test_double_system_messages(
     """Test error for two or more system prompts."""
     conversation_id = "conversation_id"
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         chat_log.content = [
@@ -1680,22 +1726,138 @@ async def test_double_system_messages(
     )
 
 
+@pytest.mark.parametrize(
+    "subentry_data",
+    [
+        pytest.param({}, id="defaults"),
+        pytest.param({CONF_RECOMMENDED: True}, id="recommended"),
+    ],
+)
+@pytest.mark.usefixtures("mock_model_list")
+async def test_default_options_not_persisted(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+    subentry_data: dict[str, bool],
+) -> None:
+    """Resolve request defaults without turning them into saved overrides."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data=subentry_data
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert mock_config_entry.subentries[subentry.subentry_id].data == subentry_data
+    mock_create_stream.return_value = [create_content_block(0, ["Hello"])]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    request = mock_create_stream.call_args.kwargs
+    assert request["thinking"] == {"type": "adaptive", "display": "summarized"}
+    assert request["output_config"] == {"effort": "low"}
+    assert mock_config_entry.subentries[subentry.subentry_id].data == subentry_data
+
+
+async def test_missing_capabilities_preserve_saved_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Omit unavailable capabilities from requests without erasing saved settings."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_data = {
+        CONF_CHAT_MODEL: "claude-sonnet-4-6",
+        CONF_EFFORT: "medium",
+        CONF_THINKING_TYPE: "enabled",
+        CONF_THINKING_BUDGET: 1500,
+    }
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data=subentry_data
+    )
+    mock_model_list.side_effect = None
+    mock_model_list.return_value = AsyncPage(data=[], has_more=False)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert mock_config_entry.subentries[subentry.subentry_id].data == subentry_data
+    mock_create_stream.return_value = [create_content_block(0, ["Hello"])]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    request = mock_create_stream.call_args.kwargs
+    assert "thinking" not in request
+    assert "output_config" not in request
+    assert mock_config_entry.subentries[subentry.subentry_id].data == subentry_data
+
+
+async def test_unsupported_server_tools_preserve_saved_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Omit tools no longer advertised without changing their saved settings."""
+    model = model_list[0].model_copy(deep=True)
+    assert model.capabilities is not None
+    model.capabilities.server_tools.code_execution.supported = False
+    model.capabilities.server_tools.web_search.supported = False
+    mock_model_list.side_effect = None
+    mock_model_list.return_value = AsyncPage(data=[model], has_more=False)
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_data = {
+        CONF_CODE_EXECUTION: True,
+        CONF_WEB_SEARCH: True,
+        CONF_WEB_FETCH: True,
+    }
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data=subentry_data
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    mock_create_stream.return_value = [create_content_block(0, ["Hello"])]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=ENTITY_ID
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert mock_create_stream.call_args.kwargs["tools"] == [
+        {"name": "web_fetch", "type": "web_fetch_20250910", "max_uses": 5}
+    ]
+    assert mock_config_entry.subentries[subentry.subentry_id].data == subentry_data
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param("claude-opus-4-5", id="claude-opus-4-5"),
+        pytest.param("claude-sonnet-4-6", id="claude-sonnet-4-6"),
+    ],
+)
 @pytest.mark.usefixtures("mock_init_component")
 async def test_extended_thinking(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
+    model: str,
 ) -> None:
-    """Test extended thinking support."""
+    """Test manual thinking and effort on models with and without adaptive thinking."""
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-5",
+            CONF_CHAT_MODEL: model,
             CONF_THINKING_BUDGET: 1500,
-            CONF_THINKING_EFFORT: "medium",
+            CONF_THINKING_TYPE: "enabled",
+            CONF_EFFORT: "medium",
         },
     )
     await hass.async_block_till_done()
@@ -1740,25 +1902,55 @@ async def test_extended_thinking(
             {
                 CONF_LLM_HASS_API: "assist",
                 CONF_CHAT_MODEL: "claude-haiku-4-5",
-                CONF_THINKING_BUDGET: 0,
+                CONF_THINKING_TYPE: "disabled",
             },
-            id="zero_budget",
+            id="without_effort",
         ),
         pytest.param(
             {
                 CONF_LLM_HASS_API: "assist",
                 CONF_CHAT_MODEL: "claude-opus-4-7",
-                CONF_THINKING_EFFORT: "none",
+                CONF_THINKING_TYPE: "disabled",
+                CONF_EFFORT: "low",
             },
-            id="no_effort",
+            id="low_effort",
         ),
         pytest.param(
             {
                 CONF_LLM_HASS_API: "assist",
                 CONF_CHAT_MODEL: "claude-haiku-5-5",
-                CONF_THINKING_EFFORT: "none",
+                CONF_THINKING_TYPE: "disabled",
+                CONF_EFFORT: "high",
             },
-            id="haiku_5_5",
+            id="high_effort",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-sonnet-5-5",
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_EFFORT: "low",
+            },
+            id="between_tools_low_effort",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-sonnet-5-5",
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_EFFORT: "medium",
+            },
+            id="between_tools_medium_effort",
+        ),
+        pytest.param(
+            {
+                CONF_LLM_HASS_API: "assist",
+                CONF_CHAT_MODEL: "claude-sonnet-5-5",
+                CONF_THINKING_TYPE: "between_tools",
+                CONF_THINKING_BUDGET: 1500,
+                CONF_EFFORT: "high",
+            },
+            id="between_tools_high_effort",
         ),
     ],
 )
@@ -1771,7 +1963,7 @@ async def test_disabled_thinking(
     snapshot: SnapshotAssertion,
     subentry_data: dict[str, str | int],
 ) -> None:
-    """Test conversation with thinking effort disabled."""
+    """Test that effort remains independent of the thinking mode."""
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
@@ -1846,7 +2038,7 @@ async def test_extended_thinking_tool_call(
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
             CONF_CHAT_MODEL: "claude-opus-4-7",
-            CONF_THINKING_EFFORT: "medium",
+            CONF_EFFORT: "medium",
         },
     )
     await hass.async_block_till_done()
@@ -3432,43 +3624,43 @@ async def test_pause_turn_followed_by_local_tool(
                                 index=54,
                                 length=26,
                                 citations=[
-                                    CitationWebSearchResultLocationParam(
-                                        type="web_search_result_location",
-                                        cited_text=(
+                                    {
+                                        "type": "web_search_result_location",
+                                        "cited_text": (
                                             "This release iterates on some of"
                                             " the features we introduced in"
                                             " the last couple of releases,"
                                             " but also..."
                                         ),
-                                        encrypted_index="AAA==",
-                                        title="Home Assistant Release",
-                                        url="https://www.example.com/todays-news",
-                                    ),
+                                        "encrypted_index": "AAA==",
+                                        "title": "Home Assistant Release",
+                                        "url": "https://www.example.com/todays-news",
+                                    },
                                 ],
                             ),
                             CitationDetails(
                                 index=84,
                                 length=29,
                                 citations=[
-                                    CitationWebSearchResultLocationParam(
-                                        type="web_search_result_location",
-                                        cited_text=(
+                                    {
+                                        "type": "web_search_result_location",
+                                        "cited_text": (
                                             "Breaking news from around the"
                                             " world today includes major"
                                             " events in technology, politics,"
                                             " and culture..."
                                         ),
-                                        encrypted_index="AQE=",
-                                        title="Breaking News",
-                                        url="https://www.newssite.com/breaking-news",
-                                    ),
-                                    CitationWebSearchResultLocationParam(
-                                        type="web_search_result_location",
-                                        cited_text="Well, this happened...",
-                                        encrypted_index="AgI=",
-                                        title="Breaking News",
-                                        url="https://www.newssite.com/breaking-news",
-                                    ),
+                                        "encrypted_index": "AQE=",
+                                        "title": "Breaking News",
+                                        "url": "https://www.newssite.com/breaking-news",
+                                    },
+                                    {
+                                        "type": "web_search_result_location",
+                                        "cited_text": "Well, this happened...",
+                                        "encrypted_index": "AgI=",
+                                        "title": "Breaking News",
+                                        "url": "https://www.newssite.com/breaking-news",
+                                    },
                                 ],
                             ),
                         ],
@@ -3531,14 +3723,14 @@ async def test_pause_turn_followed_by_local_tool(
                                 index=70,
                                 length=44,
                                 citations=[
-                                    CitationCharLocationParam(
-                                        type="char_location",
-                                        cited_text="Anthropic integration now supports web fetch tool.",
-                                        document_index=0,
-                                        document_title="Latest Home Assistant Release Notes",
-                                        start_char_index=56,
-                                        end_char_index=105,
-                                    ),
+                                    {
+                                        "type": "char_location",
+                                        "cited_text": "Anthropic integration now supports web fetch tool.",
+                                        "document_index": 0,
+                                        "document_title": "Latest Home Assistant Release Notes",
+                                        "start_char_index": 56,
+                                        "end_char_index": 105,
+                                    },
                                 ],
                             ),
                         ],
@@ -3679,7 +3871,9 @@ async def test_history_conversion(
     conversation_id = "conversation_id"
     mock_create_stream.return_value = [create_content_block(0, ["Yes, I am sure!"])]
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         chat_log.content = content
@@ -3708,7 +3902,9 @@ async def test_history_conversion_skips_whitespace_content(
     conversation_id = "conversation_id"
     mock_create_stream.return_value = [create_content_block(0, ["Yes, I am sure!"])]
     with (
-        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
     ):
         chat_log.content = [
