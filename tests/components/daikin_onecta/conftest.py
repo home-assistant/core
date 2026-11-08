@@ -2,6 +2,7 @@
 
 import time
 
+from daikin_onecta import get_account_id
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -21,6 +22,7 @@ def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     """Return a Daikin Onecta config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id=get_account_id(FAKE_ACCESS_TOKEN),
         data={
             "auth_implementation": "cloud",
             "token": {
