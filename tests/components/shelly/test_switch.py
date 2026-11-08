@@ -29,6 +29,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
@@ -760,6 +761,113 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
 
     assert entity_registry.async_get(entity_id1) is None
     assert entity_registry.async_get(entity_id2) is None
+
+
+async def test_rpc_switch_input_lock(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the input lock switch of a switch component."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+    monkeypatch.setitem(mock_rpc_device.config["switch:0"], "in_locked", False)
+    await init_integration(hass, 3)
+
+    entity_id = "switch.test_name_test_switch_0_input_lock"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-switch:0-switch_in_locked"
+    assert entry.entity_category is EntityCategory.CONFIG
+    assert entry.disabled_by is None
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.switch_setconfig.assert_awaited_once_with(0, {"in_locked": True})
+
+    # the device applies the change and reports it with a config_changed event
+    async def _update_component_config(_key: str) -> set[str]:
+        monkeypatch.setitem(mock_rpc_device.config["switch:0"], "in_locked", True)
+        return {"in_locked"}
+
+    mock_rpc_device.update_component_config.side_effect = _update_component_config
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "switch:0",
+                    "event": "config_changed",
+                    "restart_required": False,
+                    "ts": 1668522399.2,
+                    "cfg_rev": 16,
+                },
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    mock_rpc_device.update_component_config.assert_awaited_once_with("switch:0")
+    assert mock_rpc_device.initialize.call_count == 1
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+
+async def test_rpc_cover_input_lock(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the input lock switch of a cover component."""
+    monkeypatch.setitem(mock_rpc_device.config["cover:0"], "in_locked", True)
+    await init_integration(hass, 3)
+
+    entity_id = "switch.test_name_test_cover_0_input_lock"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-cover:0-cover_in_locked"
+
+    # the switch component of a device in cover profile is not used
+    assert hass.states.get("switch.test_name_test_switch_0_input_lock") is None
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.cover_setconfig.assert_awaited_once_with(0, {"in_locked": False})
+
+
+async def test_rpc_input_lock_not_supported(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test no input lock switch is created when the device does not report it."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+    assert "in_locked" not in mock_rpc_device.config["switch:0"]
+
+    await init_integration(hass, 3)
+
+    assert hass.states.get("switch.test_name_test_switch_0")
+    assert (
+        entity_registry.async_get("switch.test_name_test_switch_0_input_lock") is None
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
