@@ -72,10 +72,11 @@ class _TemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
         """Get the temperature unit of an entity from its state."""
         if state.domain == SENSOR_DOMAIN:
             return state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
-        if state.domain == WEATHER_DOMAIN:
-            return state.attributes.get(WeatherEntityStateAttribute.TEMPERATURE_UNIT)
-        # Climate and water_heater: show_temp converts to system unit
-        return self._hass.config.units.temperature_unit
+        if state.domain == CLIMATE_DOMAIN:
+            return state.attributes.get(ClimateEntityStateAttribute.TEMPERATURE_UNIT)
+        if state.domain == WATER_HEATER_DOMAIN:
+            return state.attributes.get(WaterHeaterStateAttribute.TEMPERATURE_UNIT)
+        return state.attributes.get(WeatherEntityStateAttribute.TEMPERATURE_UNIT)
 
 
 class TemperatureChangedTrigger(

@@ -68,12 +68,15 @@ class TemperatureCondition(EntityNumericalConditionWithUnitBase):
         """Get the temperature unit of an entity from its state."""
         if entity_state.domain == SENSOR_DOMAIN:
             return entity_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
-        if entity_state.domain == WEATHER_DOMAIN:
+        if entity_state.domain == CLIMATE_DOMAIN:
             return entity_state.attributes.get(
-                WeatherEntityStateAttribute.TEMPERATURE_UNIT
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT
             )
-        # Climate and water_heater: show_temp converts to system unit
-        return self._hass.config.units.temperature_unit
+        if entity_state.domain == WATER_HEATER_DOMAIN:
+            return entity_state.attributes.get(
+                WaterHeaterStateAttribute.TEMPERATURE_UNIT
+            )
+        return entity_state.attributes.get(WeatherEntityStateAttribute.TEMPERATURE_UNIT)
 
 
 CONDITIONS: dict[str, type[Condition]] = {
