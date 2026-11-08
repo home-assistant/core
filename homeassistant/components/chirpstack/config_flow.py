@@ -6,14 +6,12 @@ import logging
 from typing import Any, override
 from urllib.parse import urlsplit
 
-import grpc
 from lorawan_connection import ConnectionUnavailable
 from lorawan_connection.backend.chirpstack import (
     AuthenticationError,
     ChirpStackConnection,
     HTTP2Error,
     TLSCertificateError,
-    connection_error,
 )
 import probatio
 
@@ -54,10 +52,7 @@ class ChirpStackConfigFlow(ConfigFlow, domain=DOMAIN):
             network_id="validation",
         )
         try:
-            try:
-                yield connection
-            except grpc.RpcError as error:
-                raise connection_error(error) from error
+            yield connection
         except AuthenticationError:
             errors["base"] = "invalid_auth"
         except HTTP2Error:
