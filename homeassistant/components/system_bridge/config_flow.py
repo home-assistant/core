@@ -89,7 +89,7 @@ async def _validate_input(
 
     _LOGGER.debug("Got modules data: %s", modules_data)
     if modules_data is None or modules_data.system is None:
-        raise CannotConnect("No system data received")
+        raise CannotConnect
 
     _LOGGER.debug("Got System data: %s", modules_data.system)
 

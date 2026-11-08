@@ -13,9 +13,9 @@ from homeassistant.config_entries import (
     OptionsFlowWithReload,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
+    CONF_LATITUDE,
     CONF_LOCATION,
+    CONF_LONGITUDE,
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import callback
@@ -57,15 +57,15 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict = {}
 
         default_location = {
-            ATTR_LATITUDE: self.hass.config.latitude,
-            ATTR_LONGITUDE: self.hass.config.longitude,
+            CONF_LATITUDE: self.hass.config.latitude,
+            CONF_LONGITUDE: self.hass.config.longitude,
         }
 
         if user_input:
             _LOGGER.debug("Provided config user is: %s", user_input)
 
-            lat: float = user_input[CONF_LOCATION][ATTR_LATITUDE]
-            lon: float = user_input[CONF_LOCATION][ATTR_LONGITUDE]
+            lat: float = user_input[CONF_LOCATION][CONF_LATITUDE]
+            lon: float = user_input[CONF_LOCATION][CONF_LONGITUDE]
 
             try:
                 api_data = await IrmKmiApiClient(

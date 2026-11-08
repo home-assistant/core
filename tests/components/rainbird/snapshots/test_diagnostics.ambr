@@ -81,6 +81,7 @@
             }),
           ]),
           'frequency': 0,
+          'numbered': False,
           'period': None,
           'program': 0,
           'starts': list([
@@ -101,6 +102,7 @@
           'durations': list([
           ]),
           'frequency': 0,
+          'numbered': False,
           'period': None,
           'program': 1,
           'starts': list([
@@ -118,6 +120,7 @@
           'durations': list([
           ]),
           'frequency': 0,
+          'numbered': False,
           'period': None,
           'program': 2,
           'starts': list([
