@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, Mock
 
 import pytest
+from pyvesync.const import DeviceStatus
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -51,12 +52,14 @@ async def test_humidifier_set_nightlight_level(
 @pytest.mark.parametrize(
     ("brightness", "nightlight_status", "expected_state"),
     [
-        pytest.param(0, "off", HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF, id="off"),
-        pytest.param(50, "on", HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM, id="dim"),
-        pytest.param(100, "on", HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT, id="bright"),
-        pytest.param(12, "on", STATE_UNKNOWN, id="sprout-brightness"),
-        pytest.param(75, "on", STATE_UNKNOWN, id="intermediate-brightness"),
-        pytest.param(None, "on", STATE_UNKNOWN, id="missing-brightness"),
+        pytest.param(0, DeviceStatus.OFF, HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF, id="off"),
+        pytest.param(50, DeviceStatus.ON, HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM, id="dim"),
+        pytest.param(
+            100, DeviceStatus.ON, HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT, id="bright"
+        ),
+        pytest.param(12, DeviceStatus.ON, STATE_UNKNOWN, id="sprout-brightness"),
+        pytest.param(75, DeviceStatus.ON, STATE_UNKNOWN, id="intermediate-brightness"),
+        pytest.param(None, DeviceStatus.ON, STATE_UNKNOWN, id="missing-brightness"),
     ],
 )
 async def test_humidifier_nightlight_level(
@@ -65,7 +68,7 @@ async def test_humidifier_nightlight_level(
     manager: MagicMock,
     humidifier_300s: Mock,
     brightness: int | None,
-    nightlight_status: str,
+    nightlight_status: DeviceStatus,
     expected_state: str,
 ) -> None:
     """Test the state of humidifier night light level select entity."""
