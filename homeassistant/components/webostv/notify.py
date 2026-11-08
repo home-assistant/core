@@ -5,7 +5,7 @@ from typing import Any, override
 from aiowebostv import WebOsClient
 
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_ICON
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -14,6 +14,7 @@ from .const import DOMAIN, WEBOSTV_EXCEPTIONS
 from .coordinator import WebOsTvConfigEntry
 
 PARALLEL_UPDATES = 0
+ATTR_ICON = "icon"
 
 
 async def async_get_service(
