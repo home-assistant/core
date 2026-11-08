@@ -32,7 +32,10 @@ def default_metrics() -> dict[str, MetricValue]:
 
 @pytest.fixture
 def metrics() -> dict[str, MetricValue]:
-    """Return metrics that override the default metrics."""
+    """Return values that replace single entries of metrics.json.
+
+    Tests override this fixture with @pytest.mark.parametrize("metrics", ...).
+    """
     return {}
 
 
