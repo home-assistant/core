@@ -249,7 +249,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 and (wait := self._reconnect_after - dt_util.utcnow()) > timedelta()
             ):
                 raise UpdateFailed(
-                    f"Waiting for {self.title} to sleep or shut down",
+                    translation_domain=DOMAIN,
+                    translation_key="waiting_for_sleep",
+                    translation_placeholders={"title": self.title},
                     retry_after=wait.total_seconds(),
                 )
             await self.check_websocket_connected()
@@ -295,7 +297,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                     self._reconnect_delay * 2, MAX_UPDATE_INTERVAL
                 )
                 raise UpdateFailed(
-                    f"Connection lost while registering for {self.title}",
+                    translation_domain=DOMAIN,
+                    translation_key="connection_lost",
+                    translation_placeholders={"title": self.title},
                     retry_after=self._reconnect_delay.total_seconds(),
                 )
 
