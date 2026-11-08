@@ -261,6 +261,7 @@ def _get_history(
                 entity_id=entity_id,
                 no_attributes=True,
                 descending=False,
+                # Request limit + 1 records to allow detection of SQL silently truncating the in-window states.
                 limit=MAX_GET_HISTORY_RECORDS_PER_ENTITY + 1,
                 include_start_time_state=True,
             )
