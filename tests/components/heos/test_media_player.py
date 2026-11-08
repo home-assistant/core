@@ -1568,7 +1568,7 @@ async def test_browse_media_invalid_content_id(
     [
         (["media_player.test_player_2"], [1, 2]),
         (["media_player.test_player_2", "media_player.test_player"], [1, 2]),
-        (["media_player.test_player"], [1, 2]),
+        (["media_player.test_player"], [1]),
     ],
 )
 async def test_media_player_join_group(
@@ -1579,6 +1579,7 @@ async def test_media_player_join_group(
     expected: tuple[int, list[int]],
 ) -> None:
     """Test grouping of media players through the join service."""
+    controller.mock_set_groups({})
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.services.async_call(
@@ -1617,10 +1618,29 @@ async def test_media_player_join_group_keeps_existing_members(
     controller.set_group.assert_called_once_with([1, 2, 3])
 
 
+async def test_media_player_join_group_unchanged_does_nothing(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test joining the members of the current group does not call HEOS."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+        },
+        blocking=True,
+    )
+    controller.set_group.assert_not_called()
+
+
 async def test_media_player_join_group_error(
     hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
 ) -> None:
     """Test grouping of media players through the join service raises error."""
+    controller.mock_set_groups({})
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     controller.set_group.side_effect = HeosError("error")
