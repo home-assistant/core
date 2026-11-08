@@ -4,7 +4,12 @@ from typing import Any, override
 
 from modbus_connection import ModbusTcpParams
 import probatio
-from python_qube_heatpump import QubeClient, async_get_device_info, parse_device_info
+from python_qube_heatpump import (
+    QubeClient,
+    QubeDeviceInfo,
+    async_get_device_info,
+    parse_device_info,
+)
 
 from homeassistant.components import zeroconf
 from homeassistant.components.modbus import async_get_temporary_unit
@@ -15,7 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DEFAULT_PORT, DOMAIN, MDNS_LOOKUP_TIMEOUT, UNIT_ID
+from .const import CONF_SW_VERSION, DEFAULT_PORT, DOMAIN, MDNS_LOOKUP_TIMEOUT, UNIT_ID
 
 HOST_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): TextSelector()})
 
@@ -36,12 +41,20 @@ async def _async_validate_device(hass: HomeAssistant, host: str) -> str | None:
         return "cannot_connect"
 
 
+def _sw_version_data(device: QubeDeviceInfo | None) -> dict[str, str]:
+    """Return the entry data for the panel version in the mDNS record."""
+    if device is None or not device.software_version:
+        return {}
+    return {CONF_SW_VERSION: device.software_version}
+
+
 class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Qube Heat Pump."""
 
     VERSION = 1
 
     _host: str
+    _device: QubeDeviceInfo | None = None
 
     @override
     async def async_step_user(
@@ -69,6 +82,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                 ):
                     await self.async_set_unique_id(device.uuid)
                     self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+                    self._device = device
                 return self._async_create_qube_entry(host)
 
         return self.async_show_form(
@@ -87,7 +101,11 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(device.uuid)
         if await self._async_uuid_of_other_qube(device.uuid, host):
             return self.async_abort(reason="already_configured")
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        # The record also carries the panel version, which changes with a
+        # firmware update; a changed version reloads the entry
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: host, **_sw_version_data(device)}
+        )
 
         # Entries created without mDNS have no unique id yet; adopt the one
         # whose host is this controller (any advertised IP or the mDNS hostname)
@@ -102,6 +120,7 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         self._host = host
+        self._device = device
         self.context["title_placeholders"] = {"host": host}
         return await self.async_step_zeroconf_confirm()
 
@@ -185,5 +204,6 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: host,
                 CONF_PORT: DEFAULT_PORT,
+                **_sw_version_data(self._device),
             },
         )

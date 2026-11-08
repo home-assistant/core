@@ -10,7 +10,11 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
 from python_qube_heatpump import QubeDeviceInfo
 
-from homeassistant.components.hr_energy_qube.const import DOMAIN, MDNS_LOOKUP_TIMEOUT
+from homeassistant.components.hr_energy_qube.const import (
+    CONF_SW_VERSION,
+    DOMAIN,
+    MDNS_LOOKUP_TIMEOUT,
+)
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -37,10 +41,18 @@ def patch_answering_hosts(*hosts: str):
 
 
 @pytest.mark.parametrize(
-    ("device_info", "unique_id"),
+    ("device_info", "unique_id", "sw_version"),
     [
-        pytest.param(DEVICE_INFO, DEVICE_INFO.uuid, id="mdns"),
-        pytest.param(None, None, id="no_mdns"),
+        pytest.param(
+            DEVICE_INFO, DEVICE_INFO.uuid, {CONF_SW_VERSION: "4.1.00"}, id="mdns"
+        ),
+        pytest.param(
+            replace(DEVICE_INFO, software_version=None),
+            DEVICE_INFO.uuid,
+            {},
+            id="mdns_without_version",
+        ),
+        pytest.param(None, None, {}, id="no_mdns"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -51,6 +63,7 @@ async def test_full_flow(
     mock_async_zeroconf: MagicMock,
     device_info: QubeDeviceInfo | None,
     unique_id: str | None,
+    sw_version: dict[str, str],
 ) -> None:
     """Test the user flow, with and without the controller's mDNS record."""
     mock_device_info.return_value = device_info
@@ -68,7 +81,7 @@ async def test_full_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Qube heat pump"
-    assert result["data"] == {CONF_HOST: "qube.local", CONF_PORT: 502}
+    assert result["data"] == {CONF_HOST: "qube.local", CONF_PORT: 502, **sw_version}
     assert result["result"].unique_id == unique_id
     mock_device_info.assert_awaited_once_with(
         "qube.local", mock_async_zeroconf, timeout=MDNS_LOOKUP_TIMEOUT
@@ -298,7 +311,11 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_qube_client: MagicMock) -
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Qube heat pump"
-    assert result["data"] == {CONF_HOST: "192.168.5.208", CONF_PORT: 502}
+    assert result["data"] == {
+        CONF_HOST: "192.168.5.208",
+        CONF_PORT: 502,
+        CONF_SW_VERSION: "4.1.00",
+    }
     assert result["result"].unique_id == DEVICE_INFO.uuid
 
 
@@ -352,7 +369,51 @@ async def test_zeroconf_updates_host(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data == {CONF_HOST: "192.168.5.208", CONF_PORT: 502}
+    assert entry.data == {
+        CONF_HOST: "192.168.5.208",
+        CONF_PORT: 502,
+        CONF_SW_VERSION: "4.1.00",
+    }
+
+
+@pytest.mark.parametrize(
+    ("properties", "stored", "expected"),
+    [
+        pytest.param({}, {}, "4.1.00", id="first_seen"),
+        pytest.param({}, {CONF_SW_VERSION: "4.0.00"}, "4.1.00", id="firmware_update"),
+        pytest.param(
+            {"ProjectRelease": ""},
+            {CONF_SW_VERSION: "4.0.00"},
+            "4.0.00",
+            id="no_version",
+        ),
+    ],
+)
+async def test_zeroconf_updates_sw_version(
+    hass: HomeAssistant,
+    properties: dict[str, str],
+    stored: dict[str, str],
+    expected: str,
+) -> None:
+    """Test rediscovery stores the panel version from the mDNS record."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.5.208", CONF_PORT: 502, **stored},
+        unique_id=DEVICE_INFO.uuid,
+    )
+    entry.add_to_hass(hass)
+    discovery = replace(
+        ZEROCONF_DISCOVERY,
+        properties={**ZEROCONF_DISCOVERY.properties, **properties},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_SW_VERSION] == expected
 
 
 @pytest.mark.parametrize(

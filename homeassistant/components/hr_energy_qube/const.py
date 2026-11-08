@@ -12,6 +12,8 @@ PLATFORMS = (
 )
 
 DEFAULT_PORT = 502
+# The panel version from the controller's mDNS record, stored by discovery
+CONF_SW_VERSION = "sw_version"
 # The controller answers on Modbus unit (slave) id 1
 UNIT_ID = 1
 DEFAULT_SCAN_INTERVAL = 15
