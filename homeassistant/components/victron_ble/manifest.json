@@ -11,6 +11,7 @@
   "categories": ["energy.solar_batteries"],
   "codeowners": ["@rajlaud"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/victron_ble",
   "integration_type": "device",

@@ -10,6 +10,7 @@ from jaraco.abode.exceptions import (
 import pytest
 
 from homeassistant.components.abode.const import DOMAIN
+from homeassistant.components.abode.services import AbodeService, AbodeServiceArgument
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME
@@ -26,8 +27,11 @@ async def test_change_settings(hass: HomeAssistant) -> None:
     with patch("jaraco.abode.client.Client.set_setting") as mock_set_setting:
         await hass.services.async_call(
             DOMAIN,
-            "change_setting",
-            {"setting": "confirm_snd", "value": "loud"},
+            AbodeService.CHANGE_SETTING,
+            {
+                AbodeServiceArgument.SETTING: "confirm_snd",
+                AbodeServiceArgument.VALUE: "loud",
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -47,8 +51,11 @@ async def test_change_settings_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            "change_setting",
-            {"setting": "confirm_snd", "value": "loud"},
+            AbodeService.CHANGE_SETTING,
+            {
+                AbodeServiceArgument.SETTING: "confirm_snd",
+                AbodeServiceArgument.VALUE: "loud",
+            },
             blocking=True,
         )
 

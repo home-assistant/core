@@ -39,7 +39,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
@@ -690,7 +690,7 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         # Notification sensors are named after their notification state. A
         # description may set its own name to override that.
         if not hasattr(self, "entity_description") or (
-            self.entity_description.name is UNDEFINED
+            self.entity_description.name is Undefined
         ):
             self._attr_name = self.generate_name(
                 alternate_value_name=self.info.primary_value.metadata.states[

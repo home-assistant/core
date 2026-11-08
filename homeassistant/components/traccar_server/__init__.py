@@ -5,7 +5,6 @@ from datetime import timedelta
 from aiohttp import CookieJar
 from pytraccar import ApiClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_TOKEN,
     CONF_HOST,
@@ -97,7 +96,9 @@ async def async_reload_entry(
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: TraccarServerConfigEntry
+) -> None:
     """Migrate old entry."""
 
     if entry.version < 2:

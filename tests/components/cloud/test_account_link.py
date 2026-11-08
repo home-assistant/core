@@ -202,7 +202,7 @@ async def test_implementation(
     hass.data[DATA_CLOUD] = None
 
     impl = account_link.CloudOAuth2Implementation(hass, "test")
-    assert impl.name == "Home Assistant Cloud"
+    assert impl.name == "Home Assistant Link"
     assert impl.domain == "cloud"
 
     flow_handler.async_register_implementation(hass, impl)

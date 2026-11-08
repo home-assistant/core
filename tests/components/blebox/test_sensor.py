@@ -1,5 +1,6 @@
 """Blebox sensors tests."""
 
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, PropertyMock
@@ -16,7 +17,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -30,7 +31,11 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from .conftest import (
     async_setup_config_entry,
@@ -226,6 +231,7 @@ async def test_probe_not_configured_issue(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
     issue = issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID)
     assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
     assert issue.translation_key == "probe_not_configured"
     assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.translation_placeholders == {
@@ -279,6 +285,153 @@ async def test_probe_not_configured_issue_removed_with_entry(
     await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID) is None
+
+
+async def _async_reload(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def _async_disable_and_enable_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    await hass.config_entries.async_set_disabled_by(
+        config_entry.entry_id, ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "unload_and_load",
+    [
+        pytest.param(_async_reload, id="reload"),
+        pytest.param(_async_disable_and_enable_entry, id="entry_disable_enable"),
+    ],
+)
+async def test_probe_not_configured_issue_ignore_survives_unload(
+    hass: HomeAssistant,
+    tank_fill_level: tuple[Mock, str],
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    unload_and_load: Callable[[HomeAssistant, MockConfigEntry], Awaitable[None]],
+) -> None:
+    """Unloading and loading the config entry keeps the ignored probe issue."""
+
+    feature_mock, _entity_id = tank_fill_level
+    feature_mock.is_error = True
+    feature_mock.needs_configuration = True
+    feature_mock.native_value = None
+    await async_setup_config_entry(hass, config_entry)
+    ir.async_ignore_issue(hass, DOMAIN, PROBE_ISSUE_ID, True)
+
+    await unload_and_load(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    issue = issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+
+
+async def _async_disable_entity(
+    hass: HomeAssistant, config_entry: MockConfigEntry, entity_id: str
+) -> None:
+    er.async_get(hass).async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+
+
+async def _async_disable_device(
+    hass: HomeAssistant, config_entry: MockConfigEntry, entity_id: str
+) -> None:
+    device_id = er.async_get(hass).async_get(entity_id).device_id
+    dr.async_get(hass).async_update_device(
+        device_id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+
+
+async def _async_remove_entity(
+    hass: HomeAssistant, config_entry: MockConfigEntry, entity_id: str
+) -> None:
+    er.async_get(hass).async_remove(entity_id)
+
+
+async def _async_remove_feature(
+    hass: HomeAssistant, config_entry: MockConfigEntry, entity_id: str
+) -> None:
+    type(config_entry.runtime_data.box).features = PropertyMock(
+        return_value={"sensors": []}
+    )
+    await _async_reload(hass, config_entry)
+
+
+@pytest.mark.parametrize(
+    "remove_entity",
+    [
+        pytest.param(_async_disable_entity, id="entity_disabled"),
+        pytest.param(_async_disable_device, id="device_disabled"),
+        pytest.param(_async_remove_entity, id="entity_removed"),
+        pytest.param(_async_remove_feature, id="feature_removed"),
+    ],
+)
+async def test_probe_not_configured_issue_removed_with_entity(
+    hass: HomeAssistant,
+    tank_fill_level: tuple[Mock, str],
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    remove_entity: Callable[[HomeAssistant, MockConfigEntry, str], Awaitable[None]],
+) -> None:
+    """Disabling or removing the entity deletes the probe repair issue."""
+
+    feature_mock, entity_id = tank_fill_level
+    feature_mock.is_error = True
+    feature_mock.needs_configuration = True
+    feature_mock.native_value = None
+    await async_setup_config_entry(hass, config_entry)
+    assert issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID) is not None
+
+    await remove_entity(hass, config_entry, entity_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID) is None
+
+
+@pytest.mark.parametrize(
+    "disable_entity",
+    [
+        pytest.param(_async_disable_entity, id="entity_disabled"),
+        pytest.param(_async_disable_device, id="device_disabled"),
+    ],
+)
+async def test_probe_not_configured_issue_removed_when_disabled_while_unloaded(
+    hass: HomeAssistant,
+    tank_fill_level: tuple[Mock, str],
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    disable_entity: Callable[[HomeAssistant, MockConfigEntry, str], Awaitable[None]],
+) -> None:
+    """Disabling the entity while the config entry is disabled deletes the issue."""
+
+    feature_mock, entity_id = tank_fill_level
+    feature_mock.is_error = True
+    feature_mock.needs_configuration = True
+    feature_mock.native_value = None
+    await async_setup_config_entry(hass, config_entry)
+    await hass.config_entries.async_set_disabled_by(
+        config_entry.entry_id, ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID) is not None
+
+    await disable_entity(hass, config_entry, entity_id)
+    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert entity_registry.async_get(entity_id).disabled
     assert issue_registry.async_get_issue(DOMAIN, PROBE_ISSUE_ID) is None
 
 
