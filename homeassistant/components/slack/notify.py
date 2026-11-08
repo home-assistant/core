@@ -18,7 +18,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     BaseNotificationService,
 )
-from homeassistant.const import ATTR_ICON, CONF_PATH
+from homeassistant.const import CONF_ICON, CONF_PATH
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import aiohttp_client, config_validation as cv, template
@@ -41,6 +41,7 @@ from .const import (
 from .utils import upload_file_to_slack
 
 _LOGGER = logging.getLogger(__name__)
+ATTR_ICON = "icon"
 
 FILE_PATH_SCHEMA = probatio.Schema({probatio.Required(CONF_PATH): cv.isfile})
 
@@ -307,7 +308,7 @@ class SlackNotificationService(BaseNotificationService):
                 message,
                 title,
                 username=data.get(ATTR_USERNAME, self._config.get(ATTR_USERNAME)),
-                icon=data.get(ATTR_ICON, self._config.get(ATTR_ICON)),
+                icon=data.get(ATTR_ICON, self._config.get(CONF_ICON)),
                 thread_ts=data.get(ATTR_THREAD_TS),
                 blocks=blocks,
             )
