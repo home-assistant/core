@@ -211,7 +211,11 @@ async def async_setup_entry(
                 and registered_device.name != name
             ):
                 device_registry.async_update_device(registered_device.id, name=name)
-        new_macs = (coordinator.data.keys() | registered) - tracked
+        new_macs = (
+            coordinator.data.keys()
+            | registered
+            | set(entry.data.get(CONF_TRACKED_DEVICES, []))
+        ) - tracked
         new_macs = {
             mac
             for mac in new_macs

@@ -309,3 +309,47 @@ async def test_shared_mac_keeps_router_ownership(
     assert not device_registry.async_get(original.device_id).disabled
     assert hass.states.get(entity_id).state == STATE_HOME
     assert hass.states.get(other_id).state == STATE_HOME
+
+
+async def test_selected_client_missing_on_first_refresh(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Create an enabled not_home tracker even if a selected client disappears."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
+    mock_client.core.get_network_nsm_device.return_value = []
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_TRACKED_DEVICES: [MAC]}
+    )
+    await hass.async_block_till_done()
+    entry = result["result"]
+    entity_id = entity_registry.async_get_entity_id("device_tracker", DOMAIN, MAC)
+    assert entity_id is not None
+    entity = entity_registry.async_get(entity_id)
+    assert entity.config_entry_id == entry.entry_id
+    assert entity.disabled_by is None
+    device = device_registry.async_get(entity.device_id)
+    assert not device.disabled
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, MAC)}
+    assert hass.states.get(entity_id).state == STATE_NOT_HOME
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_NOT_HOME
+    mock_client.core.get_network_nsm_device.return_value = [CLIENT]
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_HOME
+    assert device_registry.async_get(device.id).name == CLIENT["hostname"]
+    assert (
+        entity_registry.async_get_entity_id("device_tracker", DOMAIN, MAC) == entity_id
+    )
