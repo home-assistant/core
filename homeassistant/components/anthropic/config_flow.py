@@ -65,7 +65,7 @@ from .const import (
     TOOL_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
 )
-from .coordinator import async_create_client, model_alias
+from .coordinator import async_create_client
 from .model_options import (
     get_supported_efforts,
     get_supported_thinking_types,
@@ -573,7 +573,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         return [
             {
                 "label": model_info.display_name,
-                "value": model_alias(model_info.id),
+                "value": model_info.id,
             }
             for model_info in coordinator.data or []
             if model_info.lifecycle != "retired"
