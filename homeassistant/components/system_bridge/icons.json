@@ -237,6 +237,9 @@
     "send_keypress": {
       "service": "mdi:keyboard"
     },
+    "send_message": {
+      "service": "mdi:message-badge"
+    },
     "send_text": {
       "service": "mdi:keyboard"
     }
