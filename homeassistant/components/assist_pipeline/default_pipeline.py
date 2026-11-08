@@ -207,7 +207,7 @@ class _DefaultPipelineProcessor:
 
     @callback
     def cleanup(self) -> None:
-        """Clean up resources after a pipeline error."""
+        """Clean up resources when a run stops early."""
         if self.tts_stream is not None:
             self.tts_stream.delete()
             self.tts_stream = None
