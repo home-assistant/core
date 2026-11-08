@@ -124,11 +124,24 @@ async def test_diagnostics_app_bundle_missing(
     assert diagnostics["app"] == {"bundle": None, "missing_reason": missing_reason}
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(
+            ConnectionClosedException("Connection is closed"), id="connection_closed"
+        ),
+        pytest.param(
+            ConnectionErrorException("Timeout waiting for diagnostics response"),
+            id="response_lost",
+        ),
+    ],
+)
 async def test_diagnostics_connection_lost_during_request(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     listening_integration: MockConfigEntry,
     mock_websocket_client: MagicMock,
+    exception: Exception,
 ) -> None:
     """Test the connection state is read after the app's bundle is requested."""
     listen_task = listening_integration.runtime_data.listen_task
@@ -139,7 +152,7 @@ async def test_diagnostics_connection_lost_during_request(
         listen_task.cancel()
         with suppress(asyncio.CancelledError):
             await listen_task
-        raise ConnectionClosedException("Connection is closed")
+        raise exception
 
     mock_websocket_client.get_diagnostics.side_effect = get_diagnostics
 

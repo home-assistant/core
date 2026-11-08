@@ -90,7 +90,15 @@ async def async_get_config_entry_diagnostics(
         except ConnectionClosedException, ConnectionResetError:
             missing_reason = "not_connected"
         except ConnectionErrorException:
-            missing_reason = "timeout"
+            # A response lost to a disconnect also ends in the connector's timeout
+            listen_task = coordinator.listen_task
+            missing_reason = (
+                "timeout"
+                if coordinator.websocket_client.connected
+                and listen_task is not None
+                and not listen_task.done()
+                else "not_connected"
+            )
         except BadRequestException:
             # Backends from before the request answer it with an error
             missing_reason = "not_supported"
