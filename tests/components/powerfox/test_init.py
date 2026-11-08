@@ -1,15 +1,20 @@
 """Test the Powerfox init module."""
 
+from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from powerfox import (
+    DeviceReport,
     PowerfoxAuthenticationError,
     PowerfoxConnectionError,
     PowerfoxNoDataError,
+    PowerfoxPrivacyError,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.powerfox.const import (
     DEVICE_LIST_SCAN_INTERVAL,
@@ -20,11 +25,13 @@ from homeassistant.components.powerfox.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
 WATER_METER_ID = "9x9x1f12xx4x"
 GAS_METER_ID = "9x9x1f12xx6x"
+GAS_ENTITY_ID = "sensor.gasopti_gas_consumption_today"
 
 
 def _get_device(
@@ -147,7 +154,7 @@ async def test_new_device_is_added(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert _get_device(device_registry, mock_config_entry, GAS_METER_ID)
-    assert hass.states.get("sensor.gasopti_gas_consumption_today")
+    assert hass.states.get(GAS_ENTITY_ID)
 
 
 async def test_stale_device_is_removed(
@@ -223,3 +230,88 @@ async def test_device_list_auth_failed_starts_reauth(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
+
+
+@pytest.mark.parametrize(
+    "unavailable",
+    [
+        pytest.param({"side_effect": PowerfoxNoDataError}, id="no_data"),
+        pytest.param({"side_effect": PowerfoxPrivacyError}, id="privacy"),
+        pytest.param({"return_value": DeviceReport(gas=None)}, id="no_gas_data"),
+    ],
+)
+async def test_device_without_data_joins_later(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    unavailable: dict[str, Any],
+) -> None:
+    """Test a device without data does not block others and joins once it reports."""
+    report = mock_powerfox_client.report.return_value
+    mock_powerfox_client.report.configure_mock(**unavailable)
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.poweropti_energy_usage")
+    assert not hass.states.get(GAS_ENTITY_ID)
+
+    mock_powerfox_client.report.configure_mock(side_effect=None, return_value=report)
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(GAS_ENTITY_ID)
+
+
+async def test_device_connection_error_retries_setup(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a connection error for a single device still retries the setup."""
+    mock_powerfox_client.report.side_effect = PowerfoxConnectionError
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("device_list", "removable"),
+    [
+        pytest.param({}, False, id="still_in_account"),
+        pytest.param({"return_value": []}, True, id="not_in_account"),
+        pytest.param({"side_effect": PowerfoxNoDataError}, True, id="no_devices_left"),
+        pytest.param(
+            {"side_effect": PowerfoxConnectionError}, False, id="unverifiable"
+        ),
+    ],
+)
+async def test_manual_device_removal(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    device_list: dict[str, Any],
+    removable: bool,
+) -> None:
+    """Test a device can only be removed manually when it left the account."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+    device = _get_device(device_registry, mock_config_entry, WATER_METER_ID)
+    assert device
+
+    mock_powerfox_client.all_devices.configure_mock(**device_list)
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device.id)
+
+    assert response["success"] is removable
+    assert (
+        _get_device(device_registry, mock_config_entry, WATER_METER_ID) is None
+    ) is removable

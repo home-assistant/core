@@ -2,18 +2,20 @@
 
 import asyncio
 
-from powerfox import DeviceType, Powerfox
+from powerfox import DeviceType, Powerfox, PowerfoxError, PowerfoxNoDataError
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import (
     PowerfoxConfigEntry,
     PowerfoxCoordinator,
     PowerfoxDataUpdateCoordinator,
+    PowerfoxDeviceDataUnavailable,
     PowerfoxDeviceListCoordinator,
     PowerfoxReportDataUpdateCoordinator,
 )
@@ -23,11 +25,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> None:
     """Set up Powerfox from a config entry."""
-    client = Powerfox(
-        username=entry.data[CONF_EMAIL],
-        password=entry.data[CONF_PASSWORD],
-        session=async_get_clientsession(hass),
-    )
+    client = _create_client(hass, entry)
 
     device_list_coordinator = PowerfoxDeviceListCoordinator(hass, entry, client)
     await device_list_coordinator.async_config_entry_first_refresh()
@@ -45,10 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
         coordinators.append(PowerfoxDataUpdateCoordinator(hass, entry, client, device))
 
     await asyncio.gather(
-        *[
-            coordinator.async_config_entry_first_refresh()
-            for coordinator in coordinators
-        ]
+        *[_async_first_refresh(coordinator) for coordinator in coordinators]
     )
 
     entry.runtime_data = coordinators
@@ -69,6 +64,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: PowerfoxConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Allow removing a device that is no longer part of the Powerfox account."""
+    try:
+        devices = await _create_client(hass, entry).all_devices()
+    except PowerfoxNoDataError:
+        return True
+    except PowerfoxError:
+        return False
+    return device_entry.identifiers.isdisjoint(
+        {(DOMAIN, device.id) for device in devices}
+    )
+
+
+def _create_client(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> Powerfox:
+    """Create a Powerfox client for a config entry."""
+    return Powerfox(
+        username=entry.data[CONF_EMAIL],
+        password=entry.data[CONF_PASSWORD],
+        session=async_get_clientsession(hass),
+    )
+
+
+async def _async_first_refresh(coordinator: PowerfoxCoordinator) -> None:
+    """Fetch the first data of a device, tolerating that it has none yet."""
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        if not isinstance(coordinator.last_exception, PowerfoxDeviceDataUnavailable):
+            raise
+        LOGGER.warning(
+            "Data of Powerfox device %s is not available yet", coordinator.device.name
+        )
 
 
 @callback
