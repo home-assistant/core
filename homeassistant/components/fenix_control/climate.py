@@ -42,6 +42,11 @@ PRESET_MODE_TO_PRESET: dict[int, str] = {
     mode: preset for preset, mode in PRESET_TO_PRESET_MODE.items()
 }
 
+# Modes that regulate to their own setpoint (program, defrost, boost)
+SETPOINT_PRESET_MODES: frozenset[int] = frozenset(
+    {PresetMode.PROGRAM, PresetMode.DEFROST, PresetMode.BOOST}
+)
+
 HVAC_STATE_TO_HVAC_ACTION: dict[HvacState, HVACAction] = {
     HvacState.IDLE: HVACAction.IDLE,
     HvacState.HEATING: HVACAction.HEATING,
@@ -102,7 +107,13 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
     @property
     @override
     def native_target_temperature(self) -> float | None:
-        """Return the target temperature used outside a holiday."""
+        """Return the temperature the thermostat regulates to.
+
+        Manual mode has its own target; program, defrost and boost report the
+        setpoint they currently use.
+        """
+        if self.device.preset_mode in SETPOINT_PRESET_MODES:
+            return self.device.active_target_temperature
         return self.device.target_temperature
 
     @property
@@ -165,7 +176,11 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
-        if self.device.preset_mode == PresetMode.MANUAL:
+        if (
+            self.device.preset_mode == PresetMode.MANUAL
+            or self.device.preset_mode in SETPOINT_PRESET_MODES
+        ):
+            # Setting a temperature switches the thermostat to manual
             return features | ClimateEntityFeature.TARGET_TEMPERATURE
         return features
 

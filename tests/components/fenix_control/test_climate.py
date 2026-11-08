@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
@@ -106,6 +107,64 @@ async def test_set_temperature(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_TEMPERATURE] == 21.5
     assert state.state == HVACMode.HEAT
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("preset_mode", "setpoint"),
+    [
+        (PresetMode.PROGRAM, 20.0),
+        (PresetMode.DEFROST, 7.0),
+        (PresetMode.BOOST, 24.0),
+    ],
+)
+async def test_target_is_active_setpoint(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    preset_mode: PresetMode,
+    setpoint: float,
+) -> None:
+    """Test program, defrost and boost show the setpoint the thermostat uses."""
+    await _set_devices(
+        hass,
+        mock_fenix_client,
+        freezer,
+        dataclasses.replace(
+            DEVICE, preset_mode=int(preset_mode), active_target_temperature=setpoint
+        ),
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TEMPERATURE] == setpoint
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        & ClimateEntityFeature.TARGET_TEMPERATURE
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+        blocking=True,
+    )
+
+    mock_fenix_client.set_target_temperature.assert_called_once_with(DEVICE_ID, 21.5)
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 21.5
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_no_target_when_off(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an off thermostat shows no target temperature."""
+    await _set_devices(hass, mock_fenix_client, freezer, OFF_DEVICE)
+
+    assert hass.states.get(ENTITY_ID).attributes.get(ATTR_TEMPERATURE) is None
 
 
 @pytest.mark.usefixtures("init_integration")
