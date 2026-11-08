@@ -18,8 +18,16 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
+from homeassistant.components.system_bridge.const import DOMAIN
+from homeassistant.components.system_bridge.notify import async_get_service
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -279,3 +287,65 @@ async def test_legacy_notify_service_reload(
 
     old_websocket_client.send_notification.assert_not_awaited()
     mock_websocket_client.send_notification.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client", "legacy_notify")
+async def test_legacy_notify_service_shared_hostname(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading an entry keeps another entry's action with the same name."""
+    other_entry = MockConfigEntry(
+        title="Other",
+        domain=DOMAIN,
+        unique_id="other-uuid",
+        version=mock_config_entry.version,
+        minor_version=mock_config_entry.minor_version,
+        data=dict(mock_config_entry.data),
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    other_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(other_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert other_entry.state is ConfigEntryState.LOADED
+    await hass.config_entries.async_unload(other_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(NOTIFY_DOMAIN, "system_bridge_hostname")
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.services.has_service(NOTIFY_DOMAIN, "system_bridge_hostname")
+
+
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+async def test_legacy_notify_service_unloaded_during_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the legacy action isn't registered once its entry has unloaded."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    service = await async_get_service(
+        hass,
+        {},
+        {
+            CONF_NAME: "system_bridge_hostname",
+            CONF_ENTITY_ID: mock_config_entry.entry_id,
+        },
+    )
+    assert service is not None
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await service.async_setup(hass, "system_bridge_hostname", "system_bridge_hostname")
+    await service.async_register_services()
+
+    assert not hass.services.has_service(NOTIFY_DOMAIN, "system_bridge_hostname")
