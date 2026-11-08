@@ -179,8 +179,17 @@ class LocalTodoListEntity(TodoListEntity):
     ) -> None:
         """Set the sections, renaming or clearing them on the items."""
         async with self._calendar_lock:
+            previous = [todo.categories for todo in self._calendar.todos]
             if change_sections(self._calendar, changes):
-                await self.async_save()
+                try:
+                    await self.async_save()
+                except HomeAssistantError:
+                    # Keep the items consistent with the options, left unchanged
+                    for todo, categories in zip(
+                        self._calendar.todos, previous, strict=True
+                    ):
+                        todo.categories = categories
+                    raise
         self._attr_todo_sections = sections or None
         await self.async_update_ha_state(force_refresh=True)
 
