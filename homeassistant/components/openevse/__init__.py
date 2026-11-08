@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 import logging
+import math
 
 from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.__main__ import OpenEVSE
@@ -84,7 +85,9 @@ def _parse_power_state(state: State | None) -> int | None:
         return None
     try:
         val = float(state.state)
-    except ValueError, TypeError:
+        if not math.isfinite(val):
+            return None
+    except ValueError, TypeError, OverflowError:
         return None
 
     unit = state.attributes.get("unit_of_measurement")
@@ -92,7 +95,13 @@ def _parse_power_state(state: State | None) -> int | None:
         with contextlib.suppress(Exception):
             val = PowerConverter.convert(val, unit, UnitOfPower.WATT)
 
-    return round(val)
+    if not math.isfinite(val):
+        return None
+
+    try:
+        return round(val)
+    except OverflowError:
+        return None
 
 
 def _parse_voltage_state(state: State | None) -> int | None:
@@ -101,7 +110,9 @@ def _parse_voltage_state(state: State | None) -> int | None:
         return None
     try:
         val = float(state.state)
-    except ValueError, TypeError:
+        if not math.isfinite(val):
+            return None
+    except ValueError, TypeError, OverflowError:
         return None
 
     unit = state.attributes.get("unit_of_measurement")
@@ -115,7 +126,13 @@ def _parse_voltage_state(state: State | None) -> int | None:
                 val, unit, UnitOfElectricPotential.VOLT
             )
 
-    return round(val)
+    if not math.isfinite(val):
+        return None
+
+    try:
+        return round(val)
+    except OverflowError:
+        return None
 
 
 def _parse_range_state(state: State | None) -> int | None:
@@ -124,7 +141,9 @@ def _parse_range_state(state: State | None) -> int | None:
         return None
     try:
         val = float(state.state)
-    except ValueError, TypeError:
+        if not math.isfinite(val):
+            return None
+    except ValueError, TypeError, OverflowError:
         return None
 
     unit = state.attributes.get("unit_of_measurement")
@@ -136,7 +155,13 @@ def _parse_range_state(state: State | None) -> int | None:
         with contextlib.suppress(Exception):
             val = DistanceConverter.convert(val, unit, UnitOfLength.KILOMETERS)
 
-    return round(val)
+    if not math.isfinite(val):
+        return None
+
+    try:
+        return round(val)
+    except OverflowError:
+        return None
 
 
 def _parse_int_state(state: State | None) -> int | None:
@@ -144,8 +169,11 @@ def _parse_int_state(state: State | None) -> int | None:
     if not state or state.state in (None, "unavailable", "unknown", ""):
         return None
     try:
-        return round(float(state.state))
-    except ValueError, TypeError:
+        val = float(state.state)
+        if not math.isfinite(val):
+            return None
+        return round(val)
+    except ValueError, TypeError, OverflowError:
         return None
 
 
@@ -155,6 +183,8 @@ def _parse_eta_state(state: State | None) -> int | None:
         return None
     try:
         val = float(state.state)
+        if not math.isfinite(val):
+            return None
         unit = state.attributes.get("unit_of_measurement")
         if (
             unit
@@ -163,8 +193,10 @@ def _parse_eta_state(state: State | None) -> int | None:
         ):
             with contextlib.suppress(Exception):
                 val = DurationConverter.convert(val, unit, UnitOfTime.SECONDS)
+        if not math.isfinite(val):
+            return None
         return round(val)
-    except ValueError, TypeError:
+    except ValueError, TypeError, OverflowError:
         pass
 
     if dt := dt_util.parse_datetime(state.state):
@@ -175,10 +207,10 @@ def _parse_eta_state(state: State | None) -> int | None:
     return None
 
 
-async def _handle_sensor_update(
+async def _handle_sensor_updates(
     hass: HomeAssistant,
     entry: OpenEVSEConfigEntry,
-    changed_entity: str,
+    entities_to_process: set[str],
 ) -> None:
     """Track updates to configured sensor entities and push data to OpenEVSE."""
     coordinator = entry.runtime_data
@@ -186,34 +218,34 @@ async def _handle_sensor_update(
     options = entry.options
 
     try:
-        if changed_entity == options.get(CONF_GRID):
-            grid = _parse_power_state(hass.states.get(changed_entity))
+        grid_sensor = options.get(CONF_GRID)
+        if grid_sensor and grid_sensor in entities_to_process:
+            grid = _parse_power_state(hass.states.get(grid_sensor))
             invert = options.get(CONF_INVERT_GRID, False)
             await charger.self_production(grid=grid, solar=None, invert=invert)
 
-        if changed_entity == options.get(CONF_SOLAR):
-            solar = _parse_power_state(hass.states.get(changed_entity))
+        solar_sensor = options.get(CONF_SOLAR)
+        if solar_sensor and solar_sensor in entities_to_process:
+            solar = _parse_power_state(hass.states.get(solar_sensor))
             await charger.self_production(grid=None, solar=solar, invert=False)
 
-        if changed_entity == options.get(CONF_VOLTAGE):
-            voltage = _parse_voltage_state(hass.states.get(changed_entity))
+        voltage_sensor = options.get(CONF_VOLTAGE)
+        if voltage_sensor and voltage_sensor in entities_to_process:
+            voltage = _parse_voltage_state(hass.states.get(voltage_sensor))
             if voltage is not None:
                 await charger.grid_voltage(voltage=voltage)
 
-        if changed_entity == options.get(CONF_SHAPER):
-            power = _parse_power_state(hass.states.get(changed_entity))
+        shaper_sensor = options.get(CONF_SHAPER)
+        if shaper_sensor and shaper_sensor in entities_to_process:
+            power = _parse_power_state(hass.states.get(shaper_sensor))
             if power is not None:
                 await charger.set_shaper_live_pwr(power=power)
 
-        if changed_entity in (
-            options.get(CONF_VEHICLE_SOC),
-            options.get(CONF_VEHICLE_RANGE),
-            options.get(CONF_VEHICLE_ETA),
-        ):
-            soc_sensor = options.get(CONF_VEHICLE_SOC)
-            range_sensor = options.get(CONF_VEHICLE_RANGE)
-            eta_sensor = options.get(CONF_VEHICLE_ETA)
-
+        soc_sensor = options.get(CONF_VEHICLE_SOC)
+        range_sensor = options.get(CONF_VEHICLE_RANGE)
+        eta_sensor = options.get(CONF_VEHICLE_ETA)
+        vehicle_sensors = {s for s in (soc_sensor, range_sensor, eta_sensor) if s}
+        if vehicle_sensors & entities_to_process:
             soc = _parse_int_state(hass.states.get(soc_sensor)) if soc_sensor else None
             vrange = (
                 _parse_range_state(hass.states.get(range_sensor))
@@ -228,13 +260,10 @@ async def _handle_sensor_update(
                 time_to_full=eta,
             )
 
-        if changed_entity in (
-            options.get(CONF_HOME_BATTERY_SOC),
-            options.get(CONF_HOME_BATTERY_POWER),
-        ):
-            hb_soc_sensor = options.get(CONF_HOME_BATTERY_SOC)
-            hb_power_sensor = options.get(CONF_HOME_BATTERY_POWER)
-
+        hb_soc_sensor = options.get(CONF_HOME_BATTERY_SOC)
+        hb_power_sensor = options.get(CONF_HOME_BATTERY_POWER)
+        hb_sensors = {s for s in (hb_soc_sensor, hb_power_sensor) if s}
+        if hb_sensors & entities_to_process:
             hb_soc = (
                 _parse_int_state(hass.states.get(hb_soc_sensor))
                 if hb_soc_sensor
@@ -249,14 +278,10 @@ async def _handle_sensor_update(
             await charger.home_battery(soc=hb_soc, power=hb_power)
 
     except AuthenticationError as err:
-        _LOGGER.debug(
-            "Authentication failed while pushing %s update: %s", changed_entity, err
-        )
+        _LOGGER.debug("Authentication failed while pushing sensor update: %s", err)
         entry.async_start_reauth(hass)
     except UnsupportedFeature:
-        _LOGGER.debug(
-            "Pushing %s data is unsupported by this OpenEVSE firmware", changed_entity
-        )
+        _LOGGER.debug("Pushing sensor data is unsupported by this OpenEVSE firmware")
     except (
         TimeoutError,
         ServerTimeoutError,
@@ -265,11 +290,10 @@ async def _handle_sensor_update(
         UnknownError,
         RuntimeError,
         ValueError,
+        OverflowError,
         OSError,
     ) as err:
-        _LOGGER.debug(
-            "Failed to push %s update to OpenEVSE charger: %s", changed_entity, err
-        )
+        _LOGGER.debug("Failed to push sensor update to OpenEVSE charger: %s", err)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -330,10 +354,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
             while True:
                 await work_available.wait()
                 work_available.clear()
-                entities_to_process = list(pending_entities)
+                entities_to_process = set(pending_entities)
                 pending_entities.clear()
-                for entity_id in entities_to_process:
-                    await _handle_sensor_update(hass, entry, entity_id)
+                await _handle_sensor_updates(hass, entry, entities_to_process)
 
         entry.async_create_background_task(
             hass,

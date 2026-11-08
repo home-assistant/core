@@ -250,10 +250,21 @@ async def test_sensor_state_change_pushes_data(
     mock_charger.home_battery.assert_called_with(soc=95, power=3200)
 
     mock_charger.grid_voltage.reset_mock()
+    mock_charger.set_shaper_live_pwr.reset_mock()
     hass.states.async_set("sensor.grid_power", "unknown")
+    await _wait_for_push()
+    mock_charger.self_production.assert_called_with(grid=None, solar=None, invert=True)
+
     hass.states.async_set("sensor.grid_voltage", "invalid")
+    hass.states.async_set("sensor.shaper_power", "inf")
     await hass.async_block_till_done()
     mock_charger.grid_voltage.assert_not_called()
+    mock_charger.set_shaper_live_pwr.assert_not_called()
+
+    # Verify push worker remains alive after invalid/overflow state
+    hass.states.async_set("sensor.grid_power", "2800", {"unit_of_measurement": "W"})
+    await _wait_for_push()
+    mock_charger.self_production.assert_called_with(grid=2800, solar=None, invert=True)
 
     mock_charger.soc.side_effect = UnsupportedFeature
     _sync_mock(mock_charger.soc)
@@ -342,6 +353,7 @@ async def test_sensor_startup_replay_and_coalescing(
         await push_event.wait()
     push_event.clear()
 
+    assert mock_charger.soc.call_count == 1
     mock_charger.soc.assert_called_with(
         battery_level=75, battery_range=150, time_to_full=None
     )
