@@ -2343,7 +2343,7 @@ pygatt[GATTTOOL]==4.0.5
 pygbl==1.2.0
 
 # homeassistant.components.geosphere_austria_warnings
-pygeosphere-warnings==0.1.1
+pygeosphere-warnings==0.2.1
 
 # homeassistant.components.gtfs
 pygtfs==0.1.11
