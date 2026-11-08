@@ -4,10 +4,22 @@ import asyncio
 from collections.abc import Mapping
 from pathlib import Path
 
+from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.os_error import os_write_error
+
+
+def change_sections(calendar: Calendar, changes: Mapping[str, str | None]) -> bool:
+    """Rename sections of the items, or clear them when mapped to None."""
+    changed = False
+    for todo in calendar.todos:
+        if todo.categories and todo.categories[0] in changes:
+            new_section = changes[todo.categories[0]]
+            todo.categories = [new_section] if new_section else []
+            changed = True
+    return changed
 
 
 class LocalTodoListStore:
@@ -57,13 +69,7 @@ class LocalTodoListStore:
         if not (ics := self._load()):
             return
         calendar = IcsCalendarStream.calendar_from_ics(ics)
-        changed = False
-        for todo in calendar.todos:
-            if todo.categories and todo.categories[0] in changes:
-                new_section = changes[todo.categories[0]]
-                todo.categories = [new_section] if new_section else []
-                changed = True
-        if changed:
+        if change_sections(calendar, changes):
             try:
                 self._store(IcsCalendarStream.calendar_to_ics(calendar))
             except OSError as err:

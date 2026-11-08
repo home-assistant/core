@@ -1,6 +1,7 @@
 """A Local To-do todo platform."""
 
 import asyncio
+from collections.abc import Mapping
 import datetime as dt
 import logging
 from typing import override
@@ -23,9 +24,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util
 
-from . import LocalTodoConfigEntry
+from . import LocalTodoConfigEntry, LocalTodoData
 from .const import CONF_SECTIONS, CONF_TODO_LIST_NAME, DOMAIN
-from .store import LocalTodoListStore
+from .store import LocalTodoListStore, change_sections
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +83,8 @@ async def async_setup_entry(
     """Set up the local_todo todo platform."""
 
     name = config_entry.data[CONF_TODO_LIST_NAME]
-    store = config_entry.runtime_data
+    data = config_entry.runtime_data
+    store = data.store
     ics = await store.async_load()
 
     migrated = False
@@ -113,7 +115,7 @@ async def async_setup_entry(
     calendar.prodid = PRODID
 
     entity = LocalTodoListEntity(
-        store,
+        data,
         calendar,
         name,
         unique_id=config_entry.entry_id,
@@ -167,19 +169,40 @@ class LocalTodoListEntity(TodoListEntity):
 
     def __init__(
         self,
-        store: LocalTodoListStore,
+        data: LocalTodoData,
         calendar: Calendar,
         name: str,
         unique_id: str,
         sections: list[str],
     ) -> None:
         """Initialize LocalTodoListEntity."""
-        self._store = store
+        self._data = data
+        self._store: LocalTodoListStore = data.store
         self._calendar = calendar
         self._calendar_lock = asyncio.Lock()
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_todo_sections = sections or None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Let the options flow change the sections of the loaded list."""
+        self._data.entity = self
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop receiving section changes."""
+        self._data.entity = None
+
+    async def async_change_sections(
+        self, sections: list[str], changes: Mapping[str, str | None]
+    ) -> None:
+        """Set the sections, renaming or clearing them on the items."""
+        async with self._calendar_lock:
+            if change_sections(self._calendar, changes):
+                await self.async_save()
+        self._attr_todo_sections = sections or None
+        await self.async_update_ha_state(force_refresh=True)
 
     def _new_todo_store(self) -> TodoStore:
         return TodoStore(self._calendar, tzinfo=dt_util.get_default_time_zone())

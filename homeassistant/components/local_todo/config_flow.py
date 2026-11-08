@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithReload,
+    OptionsFlow,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
@@ -80,7 +80,7 @@ class LocalTodoConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class LocalTodoOptionsFlow(OptionsFlowWithReload):
+class LocalTodoOptionsFlow(OptionsFlow):
     """Handle the options of a Local To-do list."""
 
     config_entry: LocalTodoConfigEntry
@@ -111,7 +111,7 @@ class LocalTodoOptionsFlow(OptionsFlowWithReload):
                 errors[CONF_SECTIONS] = "invalid_section"
             else:
                 removed = set(self._sections) - set(sections)
-                await self._async_change_sections(dict.fromkeys(removed))
+                await self._async_change_sections(sections, dict.fromkeys(removed))
                 return self.async_create_entry(data={CONF_SECTIONS: sections})
 
         return self.async_show_form(
@@ -136,8 +136,8 @@ class LocalTodoOptionsFlow(OptionsFlowWithReload):
             elif new_name != section and new_name in sections:
                 errors[CONF_NEW_NAME] = "section_exists"
             else:
-                await self._async_change_sections({section: new_name})
                 sections[sections.index(section)] = new_name
+                await self._async_change_sections(sections, {section: new_name})
                 return self.async_create_entry(data={CONF_SECTIONS: sections})
 
         schema = probatio.Schema(
@@ -154,12 +154,18 @@ class LocalTodoOptionsFlow(OptionsFlowWithReload):
             errors=errors,
         )
 
-    async def _async_change_sections(self, changes: Mapping[str, str | None]) -> None:
-        """Apply section changes to the stored items before the entry reloads."""
-        if not changes:
-            return
+    async def _async_change_sections(
+        self, sections: list[str], changes: Mapping[str, str | None]
+    ) -> None:
+        """Apply section changes to the list before saving the options."""
         if self.config_entry.state is ConfigEntryState.LOADED:
-            store = self.config_entry.runtime_data
+            data = self.config_entry.runtime_data
+            if data.entity is not None:
+                await data.entity.async_change_sections(sections, changes)
+                return
+            # The entity is disabled: enabling it reloads the entry from disk
+            store = data.store
         else:
             store = get_store(self.hass, self.config_entry)
-        await store.async_change_sections(changes)
+        if changes:
+            await store.async_change_sections(changes)

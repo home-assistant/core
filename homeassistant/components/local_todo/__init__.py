@@ -1,6 +1,8 @@
 """The Local To-do integration."""
 
+from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -11,11 +13,23 @@ from homeassistant.util import slugify
 from .const import CONF_STORAGE_KEY, CONF_TODO_LIST_NAME, DOMAIN
 from .store import LocalTodoListStore
 
+if TYPE_CHECKING:
+    from .todo import LocalTodoListEntity
+
 PLATFORMS: list[Platform] = [Platform.TODO]
 
 STORAGE_PATH = ".storage/local_todo.{key}.ics"
 
-type LocalTodoConfigEntry = ConfigEntry[LocalTodoListStore]
+
+@dataclass
+class LocalTodoData:
+    """Runtime data of a Local To-do list."""
+
+    store: LocalTodoListStore
+    entity: LocalTodoListEntity | None = None
+
+
+type LocalTodoConfigEntry = ConfigEntry[LocalTodoData]
 
 
 def get_store(hass: HomeAssistant, entry: LocalTodoConfigEntry) -> LocalTodoListStore:
@@ -36,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalTodoConfigEntry) ->
             translation_placeholders={"path": str(store.path)},
         ) from err
 
-    entry.runtime_data = store
+    entry.runtime_data = LocalTodoData(store)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
