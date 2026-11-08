@@ -33,7 +33,7 @@ from .const import (
     SCAN_INTERVAL_DEFAULT,
     SCAN_INTERVAL_MINIMUM,
 )
-from .coordinator import EvoAccountCoordinator, EvoLocationCoordinator
+from .coordinator import EvoAccountCoordinator, EvoDataUpdateCoordinator
 from .services import async_setup_services
 from .storage import TokenManager
 
@@ -63,7 +63,7 @@ class EvoData:
     """Dataclass for storing evohome data."""
 
     account: EvoAccountCoordinator
-    coordinator: EvoLocationCoordinator
+    coordinator: EvoDataUpdateCoordinator
     loc_idx: int
     tcs: ec2.ControlSystem
 
@@ -86,7 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         config[DOMAIN][CONF_PASSWORD],
         async_get_clientsession(hass),
     )
-    account = EvoAccountCoordinator(
+    user_coord = EvoAccountCoordinator(
         hass,
         _LOGGER,
         ec2.EvohomeClient(token_manager),
@@ -94,27 +94,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         client_v1=ec1.EvohomeClient(token_manager),
     )
-    coordinator = EvoLocationCoordinator(
+    coordinator = EvoDataUpdateCoordinator(
         hass,
         _LOGGER,
-        account,
+        user_coord,
         name=f"{DOMAIN}_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         location_idx=config[DOMAIN][CONF_LOCATION_IDX],
     )
 
-    for coord in (account, coordinator):
-        await coord.async_register_shutdown()
-        await coord.async_first_refresh()
+    for c in (user_coord, coordinator):
+        await c.async_register_shutdown()
+        await c.async_first_refresh()
 
-        if not coord.last_update_success:
-            _LOGGER.error(f"Failed to fetch initial data: {coord.last_exception}")  # noqa: G004
+        if not c.last_update_success:
+            _LOGGER.error(f"Failed to fetch initial data: {c.last_exception}")  # noqa: G004
             return False
 
     assert coordinator.tcs is not None  # mypy
 
     hass.data[EVOHOME_DATA] = EvoData(
-        account=account,
+        account=user_coord,
         coordinator=coordinator,
         loc_idx=coordinator.loc_idx,
         tcs=coordinator.tcs,

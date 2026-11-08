@@ -36,7 +36,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, EVOHOME_DATA, NEXT_SP_FROM, EvoService
-from .coordinator import EvoLocationCoordinator
+from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
 from .helpers import as_snake_case
 
@@ -156,7 +156,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     _evo_state_attr_names = (SZ_SETPOINT_STATUS, SZ_TEMPERATURE_STATUS)
 
     def __init__(
-        self, coordinator: EvoLocationCoordinator, evo_device: evo.Zone
+        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.Zone
     ) -> None:
         """Initialize an evohome-compatible heating zone."""
 
@@ -330,7 +330,7 @@ class EvoController(EvoClimateEntity):
     _evo_state_attr_names = (SZ_SYSTEM_MODE_STATUS,)
 
     def __init__(
-        self, coordinator: EvoLocationCoordinator, evo_device: evo.ControlSystem
+        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.ControlSystem
     ) -> None:
         """Initialize an evohome-compatible controller."""
 
