@@ -1,6 +1,6 @@
 """Music Assistant Number platform."""
 
-from typing import Final, override
+from typing import TYPE_CHECKING, Final, override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.enums import MediaType
@@ -44,7 +44,8 @@ async def async_setup_entry(
         if player is None:
             return
         entities: list[NumberEntity] = []
-        assert mass.server_info  # for type checking
+        if TYPE_CHECKING:
+            assert mass.server_info is not None
         # older servers lack the command, so their players keep only the option numbers;
         # the queue itself may still be missing, the server adds it after the player
         if mass.server_info.schema_version >= PLAYER_SETTINGS_SCHEMA_VERSION:
