@@ -46,7 +46,7 @@ is_mode:
       required: true
       selector:
         state:
-          attribute: available_modes
+          attribute: mode
           multiple: true
 
 is_target_humidity:
