@@ -66,25 +66,37 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("service", "expected"),
+    ("service", "expected", "expected_state"),
     [
-        pytest.param(SERVICE_TURN_ON, True, id="on"),
-        pytest.param(SERVICE_TURN_OFF, False, id="off"),
+        pytest.param(SERVICE_TURN_ON, True, STATE_ON, id="on"),
+        pytest.param(SERVICE_TURN_OFF, False, STATE_OFF, id="off"),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
-async def test_power_commands(
-    hass: HomeAssistant, mock_projector: MagicMock, service: str, expected: bool
+async def test_power_commands_keep_state_until_next_poll(
+    hass: HomeAssistant,
+    mock_projector: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    service: str,
+    expected: bool,
+    expected_state: str,
 ) -> None:
-    """Test turning the projector on and off refreshes its state."""
-    mock_projector.get_power.return_value = expected
+    """Test the requested state holds while the projector reports its old state."""
+    mock_projector.get_power.return_value = not expected
 
     await hass.services.async_call(
         SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_projector.set_power.assert_called_once_with(expected)
-    assert hass.states.get(ENTITY_ID).state == (STATE_ON if expected else STATE_OFF)
+    assert hass.states.get(ENTITY_ID).state == expected_state
+
+    mock_projector.get_power.return_value = expected
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ENTITY_ID).state == expected_state
 
 
 @pytest.mark.parametrize("error", [ConnectionRefusedError, Exception("Failed status")])

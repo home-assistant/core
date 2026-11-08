@@ -51,7 +51,7 @@ class SonyProjectorCoordinator(DataUpdateCoordinator[bool]):
             ) from err
 
     async def async_set_power(self, on: bool) -> None:
-        """Turn the projector on or off and refresh its state."""
+        """Turn the projector on or off."""
         try:
             await self.hass.async_add_executor_job(self._projector.set_power, on)
         # pySDCP raises bare Exception for timeouts and projector error replies.
@@ -61,4 +61,6 @@ class SonyProjectorCoordinator(DataUpdateCoordinator[bool]):
                 translation_key="power_command_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        await self.async_request_refresh()
+        # The projector can still report its old state right after a command,
+        # so keep the requested state until the next scheduled poll.
+        self.async_set_updated_data(on)
