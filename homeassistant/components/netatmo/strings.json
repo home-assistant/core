@@ -75,6 +75,11 @@
         }
       }
     },
+    "number": {
+      "temperature_offset": {
+        "name": "Temperature offset"
+      }
+    },
     "select": {
       "schedule": {
         "name": "Schedule"

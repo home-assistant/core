@@ -18,6 +18,11 @@
         }
       }
     },
+    "number": {
+      "temperature_offset": {
+        "default": "mdi:thermometer-plus"
+      }
+    },
     "sensor": {
       "gust_angle": {
         "default": "mdi:compass-outline"
