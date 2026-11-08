@@ -284,8 +284,13 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                     )
                     # The reload listener is only installed once setup succeeds,
                     # so non-loaded entries need an explicit reload.
+                    # Defer it so the flow manager commits the new subentry
+                    # before the reload builds the coordinator map.
                     if not entry.update_listeners:
-                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                        self.hass.loop.call_soon(
+                            self.hass.config_entries.async_schedule_reload,
+                            entry.entry_id,
+                        )
                     return result
                 if entry.update_listeners:
                     return self.async_update_and_abort(

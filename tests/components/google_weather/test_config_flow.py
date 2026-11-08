@@ -26,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 
 
 def _assert_create_entry_result(
@@ -981,6 +982,7 @@ async def test_subentry_flow_entry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_google_weather_api: AsyncMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test adding a location subentry when the parent entry is not loaded."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -1015,3 +1017,13 @@ async def test_subentry_flow_entry_not_loaded(
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry.state is ConfigEntryState.LOADED
     assert len(entry.subentries) == 2
+
+    work_subentry = next(
+        subentry for subentry in entry.subentries.values() if subentry.title == "Work"
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{work_subentry.subentry_id}_temperature"
+        )
+        is not None
+    )
