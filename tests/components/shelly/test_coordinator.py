@@ -557,11 +557,11 @@ async def test_rpc_reload_without_refresh(
 
 
 @pytest.mark.parametrize(
-    ("exception", "reload_count", "reauth_flows"),
+    ("exception", "reauth_flows"),
     [
-        (DeviceConnectionError, 1, 0),
-        (RpcCallError(999), 1, 0),
-        (InvalidAuthError, 0, 1),
+        (DeviceConnectionError, 0),
+        (RpcCallError(999), 0),
+        (InvalidAuthError, 1),
     ],
 )
 async def test_rpc_cfg_change_refresh_error(
@@ -570,7 +570,6 @@ async def test_rpc_cfg_change_refresh_error(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     exception: Exception,
-    reload_count: int,
     reauth_flows: int,
 ) -> None:
     """Test RPC config change when refreshing the component config fails."""
@@ -584,7 +583,8 @@ async def test_rpc_cfg_change_refresh_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_rpc_device.initialize.call_count == 1 + reload_count
+    # No reload, a reconnect fetches the full config
+    assert mock_rpc_device.initialize.call_count == 1
     assert len(hass.config_entries.flow.async_progress()) == reauth_flows
 
 

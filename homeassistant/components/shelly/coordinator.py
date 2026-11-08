@@ -694,8 +694,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             LOGGER.debug(
                 "Error updating %s config for %s: %s", component, self.name, err
             )
-            # The change is unknown, reload to apply it
-            self._async_schedule_reload()
             return
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
