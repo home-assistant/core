@@ -502,6 +502,14 @@
           "twilight": "Twilight"
         }
       },
+      "illuminance_level_with_channel_name": {
+        "name": "{channel_name} illuminance level",
+        "state": {
+          "bright": "[%key:component::shelly::entity::sensor::illuminance_level::state::bright%]",
+          "dark": "[%key:component::shelly::entity::sensor::illuminance_level::state::dark%]",
+          "twilight": "[%key:component::shelly::entity::sensor::illuminance_level::state::twilight%]"
+        }
+      },
       "lamp_life": {
         "name": "Lamp life"
       },
