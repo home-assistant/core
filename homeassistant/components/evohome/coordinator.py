@@ -131,7 +131,7 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
             self.client_v1 = None
             return self.data
 
-        except ec1.EvohomeError as err:
+        except (ec1.EvohomeError, TimeoutError) as err:
             self.logger.warning(
                 (
                     "Unable to obtain the latest high-precision temperatures. "

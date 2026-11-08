@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+import evohomeasync as ec1
 from evohomeasync2 import ControlSystem, HotWater, Zone, exceptions as evo_exc
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -183,6 +184,45 @@ async def test_high_precision_temps_multiple_locations(
         await hass.async_block_till_done()
 
     assert evo_data.account.data == {"3432521": 19.8, "9999999": 21.3}
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(ec1.ApiCallFailedError("API call failed"), id="api_error"),
+        pytest.param(TimeoutError(), id="timeout"),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_high_precision_temps_failed_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    zone_id: str,
+    exception: Exception,
+) -> None:
+    """Test a failed v1 poll drops the high-precision temps, rather than keep them."""
+
+    evo_data = hass.data[EVOHOME_DATA]
+    update_interval = evo_data.account.update_interval
+    assert update_interval is not None
+
+    evo_data.account.async_set_updated_data({"3432521": 99.9})
+
+    with patch("evohomeasync.EvohomeClient.get_status", side_effect=exception):
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert evo_data.account.last_update_success
+    assert evo_data.account.data == {}
+    assert "They will be ignored this refresh cycle" in caplog.text
+
+    # the zone falls back to its v2 temperature (it has none in this fixture)
+    state = hass.states.get(zone_id)
+    assert state is not None
+    assert state.attributes["current_temperature"] is None
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
