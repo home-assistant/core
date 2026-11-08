@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
 )
-from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_ENTITY_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -28,6 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ACTIONS = "actions"
 ATTR_AUDIO = "audio"
+ATTR_ICON = "icon"
 ATTR_IMAGE = "image"
 ATTR_TIMEOUT = "timeout"
 
