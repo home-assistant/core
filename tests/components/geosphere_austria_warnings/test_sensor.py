@@ -149,3 +149,9 @@ async def test_entities_unavailable_on_error(
     for entity_id in EXPECTED_ENTITY_IDS:
         assert (state := hass.states.get(entity_id))
         assert state.state == STATE_UNAVAILABLE
+
+
+def test_expected_entity_ids_are_current_sensor_model() -> None:
+    """Guard against accidentally reintroducing the old sensor name."""
+    assert "sensor.schwechat_current_warning_level" not in EXPECTED_ENTITY_IDS
+    assert ADVANCE_WARNINGS_ENTITY_ID in EXPECTED_ENTITY_IDS

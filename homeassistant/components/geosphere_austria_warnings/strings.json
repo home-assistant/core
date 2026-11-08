@@ -62,6 +62,21 @@
     },
     "municipality_not_found": {
       "message": "No Austrian municipality was found for the configured location"
+    },
+    "warnings_unavailable": {
+      "message": "Weather warnings are unavailable because the last update failed."
+    }
+  },
+  "services": {
+    "get_warnings": {
+      "description": "Return the cached active and advance weather warnings.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The GeoSphere Austria Warnings configuration entry to query.",
+          "name": "Location"
+        }
+      },
+      "name": "Get warnings"
     }
   }
 }
