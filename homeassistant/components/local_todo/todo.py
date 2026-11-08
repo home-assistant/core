@@ -1,13 +1,13 @@
 """A Local To-do todo platform."""
 
 import asyncio
-from collections.abc import Iterable, Mapping
 import datetime as dt
 import logging
 from typing import override
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
+from ical.exceptions import CalendarParseError
 from ical.store import TodoStore
 from ical.todo import Todo, TodoStatus
 
@@ -17,20 +17,15 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util import dt as dt_util
 
 from . import LocalTodoConfigEntry
-from .const import CONF_CATEGORIES, CONF_TODO_LIST_NAME, DOMAIN
-from .store import (
-    LocalTodoListStore,
-    change_categories,
-    item_categories,
-    parse_calendar,
-)
+from .const import CONF_TODO_LIST_NAME, DOMAIN
+from .store import LocalTodoListStore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +64,16 @@ def _migrate_calendar(calendar: Calendar) -> bool:
     return migrated
 
 
+def _repair_legacy_crlf_newlines(content: str) -> str:
+    r"""Repair ICS content corrupted by CRLF newlines from ical <= 12.1.3.
+
+    In ical <= 12.1.3, TextEncoder escaped \n to \\n but left \r unescaped.
+    When read with Python's universal newlines mode (newline=None), any lone \r
+    before \\n was converted into \n\\n, breaking property line parsing.
+    """
+    return content.replace("\r\\n", "\\n").replace("\n\\n", "\\n").replace("\r", "")
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: LocalTodoConfigEntry,
@@ -77,64 +82,48 @@ async def async_setup_entry(
     """Set up the local_todo todo platform."""
 
     name = config_entry.data[CONF_TODO_LIST_NAME]
-    data = config_entry.runtime_data
-    store = data.store
+    store = config_entry.runtime_data
     ics = await store.async_load()
 
-    with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
-        # calendar_from_ics will dynamically load packages
-        # the first time it is called, so we need to do it
-        # in a separate thread to avoid blocking the event loop
-        calendar, repaired = await hass.async_add_import_executor_job(
-            parse_calendar, ics
+    migrated = False
+    try:
+        with async_pause_setup(hass, SetupPhases.WAIT_IMPORT_PACKAGES):
+            # calendar_from_ics will dynamically load packages
+            # the first time it is called, so we need to do it
+            # in a separate thread to avoid blocking the event loop
+            calendar: Calendar = await hass.async_add_import_executor_job(
+                IcsCalendarStream.calendar_from_ics, ics
+            )
+    except CalendarParseError:
+        # Attempt to repair malformed newlines from ical <= 12.1.3 CRLF bug
+        repaired_ics = _repair_legacy_crlf_newlines(ics)
+        if repaired_ics == ics:
+            raise
+        calendar = await hass.async_add_import_executor_job(
+            IcsCalendarStream.calendar_from_ics, repaired_ics
         )
-    if repaired:
         _LOGGER.warning(
             "Repaired malformed iCalendar file for to-do list %s",
             name,
         )
-    migrated = repaired
+        migrated = True
 
     if _migrate_calendar(calendar):
         migrated = True
     calendar.prodid = PRODID
 
-    # Lists saved before categories were declared may have undeclared ones
-    _async_declare_categories(hass, config_entry, item_categories(calendar))
-    entity = LocalTodoListEntity(config_entry, calendar, name)
+    entity = LocalTodoListEntity(store, calendar, name, unique_id=config_entry.entry_id)
     async_add_entities([entity], True)
 
     if migrated:
         await entity.async_save()
 
 
-@callback
-def _async_declare_categories(
-    hass: HomeAssistant,
-    config_entry: LocalTodoConfigEntry,
-    categories: Iterable[str | None],
-) -> list[str] | None:
-    """Add the categories that aren't declared yet to the options.
-
-    Return the declared categories when they changed.
-    """
-    declared = list(config_entry.options.get(CONF_CATEGORIES, []))
-    new = [
-        category
-        for category in dict.fromkeys(categories)
-        if category and category not in declared
-    ]
-    if not new:
-        return None
-    declared += new
-    hass.config_entries.async_update_entry(
-        config_entry, options={**config_entry.options, CONF_CATEGORIES: declared}
-    )
-    return declared
-
-
 def _convert_item(item: TodoItem) -> Todo:
-    """Convert a HomeAssistant TodoItem to an ical Todo."""
+    """Convert a HomeAssistant TodoItem to an ical Todo.
+
+    The categories are left to the caller.
+    """
     if item.category and "," in item.category:
         # ical splits CATEGORIES on commas when reading, even escaped ones
         raise ServiceValidationError(
@@ -153,7 +142,6 @@ def _convert_item(item: TodoItem) -> Todo:
     if todo.due and not isinstance(todo.due, dt.datetime):
         todo.due += dt.timedelta(days=1)
     todo.description = item.description
-    todo.categories = [item.category] if item.category else []
     return todo
 
 
@@ -174,56 +162,18 @@ class LocalTodoListEntity(TodoListEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, config_entry: LocalTodoConfigEntry, calendar: Calendar, name: str
+        self,
+        store: LocalTodoListStore,
+        calendar: Calendar,
+        name: str,
+        unique_id: str,
     ) -> None:
         """Initialize LocalTodoListEntity."""
-        self._config_entry = config_entry
-        self._data = config_entry.runtime_data
-        self._store: LocalTodoListStore = self._data.store
+        self._store = store
         self._calendar = calendar
         self._calendar_lock = asyncio.Lock()
         self._attr_name = name
-        self._attr_unique_id = config_entry.entry_id
-        self._attr_todo_categories = (
-            list(config_entry.options.get(CONF_CATEGORIES, [])) or None
-        )
-
-    @callback
-    def _async_declare_category(self, category: str | None) -> None:
-        """Declare the category of an item if it's new."""
-        if declared := _async_declare_categories(
-            self.hass, self._config_entry, [category]
-        ):
-            self._attr_todo_categories = declared
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Let the options flow change the categories of the loaded list."""
-        self._data.entity = self
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop receiving category changes."""
-        self._data.entity = None
-
-    async def async_change_categories(
-        self, categories: list[str], changes: Mapping[str, str | None]
-    ) -> None:
-        """Set the categories, renaming or clearing them on the items."""
-        async with self._calendar_lock:
-            previous = [todo.categories for todo in self._calendar.todos]
-            if change_categories(self._calendar, changes):
-                try:
-                    await self.async_save()
-                except HomeAssistantError:
-                    # Keep the items consistent with the options, left unchanged
-                    for todo, previous_categories in zip(
-                        self._calendar.todos, previous, strict=True
-                    ):
-                        todo.categories = previous_categories
-                    raise
-        self._attr_todo_categories = categories or None
-        await self.async_update_ha_state(force_refresh=True)
+        self._attr_unique_id = unique_id
 
     def _new_todo_store(self) -> TodoStore:
         return TodoStore(self._calendar, tzinfo=dt_util.get_default_time_zone())
@@ -254,11 +204,12 @@ class LocalTodoListEntity(TodoListEntity):
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         todo = _convert_item(item)
+        if item.category:
+            todo.categories = [item.category]
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
             await self.hass.async_add_executor_job(todo_store.add, todo)
             await self.async_save()
-            self._async_declare_category(item.category)
         await self.async_update_ha_state(force_refresh=True)
 
     @override
@@ -266,10 +217,31 @@ class LocalTodoListEntity(TodoListEntity):
         """Update an item in the To-do list."""
         todo = _convert_item(item)
         async with self._calendar_lock:
+            current = next(
+                (
+                    existing.categories
+                    for existing in self._calendar.todos
+                    if existing.uid == item.uid
+                ),
+                [],
+            )
+            # The category is the first CATEGORIES value. Other values, set by
+            # other clients, are kept: an unchanged category leaves the list as
+            # is (the store only merges fields that are set), a new one replaces
+            # the first value. Clearing it clears them all, or the next value
+            # would become the category.
+            if next(iter(current), None) != item.category:
+                todo.categories = (
+                    [
+                        item.category,
+                        *(value for value in current[1:] if value != item.category),
+                    ]
+                    if item.category
+                    else []
+                )
             todo_store = self._new_todo_store()
             await self.hass.async_add_executor_job(todo_store.edit, todo.uid, todo)
             await self.async_save()
-            self._async_declare_category(item.category)
         await self.async_update_ha_state(force_refresh=True)
 
     @override

@@ -11,7 +11,7 @@ from propcache.api import cached_property
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.entity import Entity
 
-from .const import ATTR_CATEGORIES, TodoItemStatus
+from .const import TodoItemStatus
 
 
 @dataclasses.dataclass
@@ -58,17 +58,13 @@ def serialize_todo_item(item: TodoItem) -> dict[str, Any]:
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "todo_items",
-    "todo_categories",
 }
 
 
 class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """An entity that represents a To-do list."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_CATEGORIES})
-
     _attr_todo_items: list[TodoItem] | None = None
-    _attr_todo_categories: list[str] | None = None
     _update_listeners: list[Callable[[list[TodoItem] | None], None]] | None = None
     _last_broadcast_items: list[TodoItem] | None = None
 
@@ -81,33 +77,22 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return None
         return sum([item.status == TodoItemStatus.NEEDS_ACTION for item in items])
 
-    @property
-    @override
-    def capability_attributes(self) -> dict[str, list[str]] | None:
-        """Return capability attributes."""
-        if (categories := self.todo_categories) is None:
-            return None
-        return {ATTR_CATEGORIES: categories}
-
     @cached_property
     def todo_items(self) -> list[TodoItem] | None:
         """Return the To-do items in the To-do list."""
         return self._attr_todo_items
-
-    @cached_property
-    def todo_categories(self) -> list[str] | None:
-        """Return the categories offered by the To-do list, in no particular order.
-
-        Items may also have a category that is not in this list.
-        """
-        return self._attr_todo_categories
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         raise NotImplementedError
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item in the To-do list."""
+        """Update an item in the To-do list.
+
+        The item carries all its fields, including the ones left unchanged
+        (such as its category): compare them with the stored item and only act
+        on what changed.
+        """
         raise NotImplementedError
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:

@@ -24,41 +24,5 @@
       "message": "Failed to load file {path}"
     }
   },
-  "options": {
-    "error": {
-      "cannot_save": "The to-do list couldn't be saved, try again.",
-      "category_exists": "A category with this name already exists.",
-      "invalid_category": "Categories can't be empty or contain a comma."
-    },
-    "step": {
-      "categories": {
-        "data": {
-          "categories": "Categories"
-        },
-        "data_description": {
-          "categories": "Categories available for the items of this list. A category set on an item is added automatically. Removing a category leaves its items without a category: to keep its items, use \"Rename a category\" instead."
-        },
-        "description": "Define how the items of this to-do list can be grouped."
-      },
-      "init": {
-        "menu_options": {
-          "categories": "Manage categories",
-          "rename_category": "Rename a category"
-        },
-        "title": "Categories"
-      },
-      "rename_category": {
-        "data": {
-          "category": "Category",
-          "new_name": "New name"
-        },
-        "data_description": {
-          "category": "The category to rename.",
-          "new_name": "Items of this category are moved to the new name."
-        },
-        "description": "Rename a category of this to-do list."
-      }
-    }
-  },
   "title": "Local to-do"
 }
