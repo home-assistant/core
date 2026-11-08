@@ -24,13 +24,13 @@ async def test_homevolt_entity_device_info_with_metadata(
 
     entity = HomevoltLocalModeSwitch(coordinator)
     assert entity.device_info is not None
-    assert entity.device_info["identifiers"] == {
+    assert entity.device_info.identifiers == {
         (DOMAIN, f"40580137858664_{DEVICE_IDENTIFIER}")
     }
-    assert entity.device_info["configuration_url"] == "http://127.0.0.1"
-    assert entity.device_info["manufacturer"] == MANUFACTURER
-    assert entity.device_info["model"] == "EMS-1000"
-    assert entity.device_info["name"] == "Homevolt EMS"
+    assert entity.device_info.configuration_url == "http://127.0.0.1"
+    assert entity.device_info.manufacturer == MANUFACTURER
+    assert entity.device_info.model == "EMS-1000"
+    assert entity.device_info.name == "Homevolt EMS"
 
 
 async def test_homevolt_entity_device_info_without_metadata(
@@ -44,9 +44,9 @@ async def test_homevolt_entity_device_info_without_metadata(
 
     entity = HomevoltLocalModeSwitch(coordinator)
     assert entity.device_info is not None
-    assert entity.device_info["identifiers"] == {
+    assert entity.device_info.identifiers == {
         (DOMAIN, f"40580137858664_{DEVICE_IDENTIFIER}")
     }
-    assert entity.device_info["manufacturer"] == MANUFACTURER
-    assert entity.device_info["model"] is None
-    assert entity.device_info["name"] is None
+    assert entity.device_info.manufacturer == MANUFACTURER
+    assert entity.device_info.model is None
+    assert entity.device_info.name is None
