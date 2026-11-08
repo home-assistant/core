@@ -786,7 +786,10 @@ def async_extract_devices(trigger_conf: dict) -> list[str]:
 
     if options := trigger_conf.get(CONF_OPTIONS):
         if device_ids := options.get(CONF_DEVICE_ID):
-            return [device_ids] if isinstance(device_ids, str) else device_ids
+            return [
+                *([device_ids] if isinstance(device_ids, str) else device_ids),
+                *async_extract_targets(trigger_conf, CONF_DEVICE_ID),
+            ]
 
     if target_devices := async_extract_targets(trigger_conf, CONF_DEVICE_ID):
         return target_devices
@@ -835,7 +838,10 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
 
     if options := trigger_conf.get(CONF_OPTIONS):
         if entity_ids := options.get(CONF_ENTITY_ID):
-            return [entity_ids] if isinstance(entity_ids, str) else entity_ids
+            return [
+                *([entity_ids] if isinstance(entity_ids, str) else entity_ids),
+                *async_extract_targets(trigger_conf, CONF_ENTITY_ID),
+            ]
 
     if trigger_conf[CONF_PLATFORM] == "geo_location":
         return [trigger_conf[CONF_ZONE]]

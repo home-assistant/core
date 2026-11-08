@@ -6282,6 +6282,15 @@ def mock_test_modern_trigger(hass: HomeAssistant) -> None:
             id="modern-options-empty",
         ),
         pytest.param(
+            {
+                "platform": "test.modern",
+                "options": {"entity_id": ["sensor.x", "sensor.y"]},
+                "target": {"entity_id": "sensor.z"},
+            },
+            ["sensor.x", "sensor.y", "sensor.z"],
+            id="modern-options-and-target",
+        ),
+        pytest.param(
             {"platform": "test.modern"},
             [],
             id="no-match",
@@ -6454,6 +6463,15 @@ def _substitute(obj: Any, placeholder: str, value: str) -> Any:
             {"platform": "test.modern", "options": {}},
             [],
             id="modern-options-empty",
+        ),
+        pytest.param(
+            {
+                "platform": "test.modern",
+                "options": {"device_id": ["abc123", "def456"]},
+                "target": {"device_id": "ghi789"},
+            },
+            ["abc123", "def456", "ghi789"],
+            id="modern-options-and-target",
         ),
         pytest.param(
             {"platform": "test.modern"},
