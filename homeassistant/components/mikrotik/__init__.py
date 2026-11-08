@@ -4,9 +4,11 @@ from typing import Any
 
 from librouteros import Api
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import AnyDeviceEntry, format_mac
 from homeassistant.util import slugify
 
 from .const import ATTR_MANUFACTURER, DOMAIN
@@ -59,15 +61,13 @@ async def async_setup_entry(
     config_entry.runtime_data = coordinator
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, coordinator.serial_num)},
-            manufacturer=ATTR_MANUFACTURER,
-            model=coordinator.model,
-            name=coordinator.hostname,
-            sw_version=coordinator.firmware,
-        ),
+        identifiers={(DOMAIN, coordinator.serial_num)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=coordinator.model,
+        name=coordinator.hostname,
+        sw_version=coordinator.firmware,
     )
 
     @callback
@@ -107,3 +107,33 @@ async def async_unload_entry(
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
     await hass.async_add_executor_job(config_entry.runtime_data.api.api.close)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: MikrotikConfigEntry, device_entry: AnyDeviceEntry
+) -> bool:
+    """Allow removing client devices which are not currently connected."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        return False
+    # Hub and interface devices are removed automatically when they go away
+    if any(identifier[0] == DOMAIN for identifier in device_entry.identifiers):
+        return False
+    if config_entry.state is not ConfigEntryState.LOADED:
+        return True
+    coordinator = config_entry.runtime_data
+    device_macs = {
+        mac
+        for connection_type, mac in device_entry.connections
+        if connection_type == dr.CONNECTION_NETWORK_MAC
+    }
+    clients = {
+        mac: client
+        # Copy, a poll in the executor can add clients while iterating
+        for mac, client in list(coordinator.api.devices.items())
+        if format_mac(mac) in device_macs
+    }
+    if any(coordinator.is_client_connected(client) for client in clients.values()):
+        return False
+    for mac in clients:
+        coordinator.async_forget_client(mac)
+    return True

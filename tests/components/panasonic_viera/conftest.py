@@ -19,9 +19,13 @@ from homeassistant.components.panasonic_viera.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-from homeassistant.const import ATTR_MANUFACTURER, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
+
+MOCK_USER_INPUT = {
+    CONF_HOST: "0.0.0.0",
+}
 
 MOCK_BASIC_DATA = {
     CONF_HOST: "0.0.0.0",
@@ -41,9 +45,12 @@ MOCK_ENCRYPTION_DATA = {
 
 MOCK_INPUTS = ["TV", "HDMI1", "HDMI2"]
 
+MOCK_MAC = "d8:af:f1:12:34:56"
+MOCK_UDN = "uuid:4D454930-0100-1000-8001-D8AFF1123456"
+
 MOCK_DEVICE_INFO = {
     ATTR_FRIENDLY_NAME: DEFAULT_NAME,
-    ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
+    "manufacturer": DEFAULT_MANUFACTURER,
     ATTR_MODEL_NUMBER: DEFAULT_MODEL_NUMBER,
     ATTR_UDN: "mock-unique-id",
 }
@@ -55,7 +62,7 @@ def get_mock_remote(
     encrypted=False,
     app_id=None,
     encryption_key=None,
-    device_info: UndefinedType | None = UNDEFINED,
+    device_info: Undefined | None = Undefined,
 ):
     """Return a mock remote."""
     mock_remote = Mock()
@@ -80,11 +87,12 @@ def get_mock_remote(
     mock_remote.authorize_pin_code = authorize_pin_code
 
     mock_remote.get_device_info = Mock(
-        return_value=MOCK_DEVICE_INFO if device_info is UNDEFINED else device_info
+        return_value=MOCK_DEVICE_INFO if device_info is Undefined else device_info
     )
 
     mock_remote.send_key = Mock()
 
+    mock_remote.get_mute = Mock(return_value=False)
     mock_remote.get_volume = Mock(return_value=100)
 
     mock_remote.list_inputs = Mock(return_value=list(MOCK_INPUTS))

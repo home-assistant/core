@@ -7,9 +7,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
-from homeassistant.components.fibaro import DOMAIN
 from homeassistant.components.fibaro.config_flow import _normalize_url
-from homeassistant.components.fibaro.const import CONF_IMPORT_PLUGINS
+from homeassistant.components.fibaro.const import CONF_IMPORT_PLUGINS, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType

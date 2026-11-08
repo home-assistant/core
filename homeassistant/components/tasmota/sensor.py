@@ -94,6 +94,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.ENERGY,
         STATE_CLASS: SensorStateClass.TOTAL,
     },
+    hc.SENSOR_ENERGY_EXPORT_ACTIVE_TOTAL: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL,
+    },
     hc.SENSOR_ENERGY_EXPORT_REACTIVE: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_ENERGY_EXPORT_TARIFF: {
         DEVICE_CLASS: SensorDeviceClass.ENERGY,
@@ -165,6 +169,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_POWER: {
+        DEVICE_CLASS: SensorDeviceClass.POWER,
+        STATE_CLASS: SensorStateClass.MEASUREMENT,
+    },
+    hc.SENSOR_POWER_TOTAL: {
         DEVICE_CLASS: SensorDeviceClass.POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },

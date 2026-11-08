@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> 
     # Register the zone 1 device before forwarding platforms so the other zones'
     # entities can link to it via via_device_id.
     device_registry = dr.async_get(hass)
-    zone1_device = device_registry.async_get_or_create_device(
+    zone1_device = device_registry.async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
         device_info=coordinators[1].device_info,
     )

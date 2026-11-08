@@ -1,12 +1,11 @@
 """Test the Google Maps Travel Time config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-from google.api_core.exceptions import (
-    GatewayTimeout,
-    GoogleAPIError,
-    PermissionDenied,
-    Unauthorized,
+from google_maps_routing_api import (
+    GoogleMapsRoutingApiAuthError,
+    GoogleMapsRoutingApiConnectionTimeoutError,
+    GoogleMapsRoutingApiError,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -23,6 +22,7 @@ from homeassistant.components.google_travel_time.const import (
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_ROUTING_PREFERENCE,
     CONF_UNITS,
     DEFAULT_NAME,
     DEPARTURE_TIME,
@@ -38,32 +38,21 @@ from .const import DEFAULT_OPTIONS, MOCK_CONFIG, RECONFIGURE_CONFIG
 
 
 async def assert_common_reconfigure_steps(
-    hass: HomeAssistant, reconfigure_result: ConfigFlowResult
+    hass: HomeAssistant, reconfigure_result: ConfigFlowResult, routes_mock: AsyncMock
 ) -> None:
     """Step through and assert the happy case reconfigure flow."""
-    client_mock = AsyncMock()
-    with (
-        patch(
-            "homeassistant.components.google_travel_time.helpers.RoutesAsyncClient",
-            return_value=client_mock,
-        ),
-        patch(
-            "homeassistant.components.google_travel_time.sensor.RoutesAsyncClient",
-            return_value=client_mock,
-        ),
-    ):
-        client_mock.compute_routes.return_value = None
-        reconfigure_successful_result = await hass.config_entries.flow.async_configure(
-            reconfigure_result["flow_id"],
-            RECONFIGURE_CONFIG,
-        )
-        assert reconfigure_successful_result["type"] is FlowResultType.ABORT
-        assert reconfigure_successful_result["reason"] == "reconfigure_successful"
-        await hass.async_block_till_done()
+    routes_mock.async_compute_routes.return_value = None
+    reconfigure_successful_result = await hass.config_entries.flow.async_configure(
+        reconfigure_result["flow_id"],
+        RECONFIGURE_CONFIG,
+    )
+    assert reconfigure_successful_result["type"] is FlowResultType.ABORT
+    assert reconfigure_successful_result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
 
-        entry = hass.config_entries.async_entries(DOMAIN)[0]
-        assert entry.title == DEFAULT_NAME
-        assert entry.data == RECONFIGURE_CONFIG
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.title == DEFAULT_NAME
+    assert entry.data == RECONFIGURE_CONFIG
 
 
 async def assert_common_create_steps(
@@ -99,16 +88,53 @@ async def test_minimum_fields(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (GoogleAPIError("test"), "cannot_connect"),
-        (GatewayTimeout("Timeout error."), "timeout_connect"),
-        (Unauthorized("Invalid API key."), "invalid_auth"),
+        (GoogleMapsRoutingApiError("test"), "cannot_connect"),
         (
-            PermissionDenied(
-                "Requests to this API routes.googleapis.com method"
-                " google.maps.routing.v2.Routes.ComputeRoutes"
-                " are blocked."
+            GoogleMapsRoutingApiConnectionTimeoutError("Timeout error."),
+            "timeout_connect",
+        ),
+        (
+            GoogleMapsRoutingApiAuthError(
+                "API key not valid. Please pass a valid API key.",
+                reason="API_KEY_INVALID",
+            ),
+            "invalid_auth",
+        ),
+        (
+            GoogleMapsRoutingApiAuthError(
+                "Routes API is disabled.",
+                status="PERMISSION_DENIED",
+                reason="SERVICE_DISABLED",
             ),
             "permission_denied",
+        ),
+        (
+            GoogleMapsRoutingApiAuthError(
+                "Routes API is disabled.",
+                status="PERMISSION_DENIED",
+                reason="ACCESS_NOT_CONFIGURED",
+            ),
+            "permission_denied",
+        ),
+        (
+            GoogleMapsRoutingApiAuthError(
+                "Requests to this API are blocked.",
+                status="PERMISSION_DENIED",
+                reason="API_KEY_SERVICE_BLOCKED",
+            ),
+            "permission_denied",
+        ),
+        (
+            GoogleMapsRoutingApiAuthError(
+                "Billing is disabled.",
+                status="PERMISSION_DENIED",
+                reason="BILLING_DISABLED",
+            ),
+            "permission_denied",
+        ),
+        (
+            GoogleMapsRoutingApiAuthError("Unauthenticated.", status="UNAUTHENTICATED"),
+            "invalid_auth",
         ),
     ],
 )
@@ -116,7 +142,7 @@ async def test_errors(
     hass: HomeAssistant, routes_mock: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test errors in the flow."""
-    routes_mock.compute_routes.side_effect = exception
+    routes_mock.async_compute_routes.side_effect = exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -131,7 +157,7 @@ async def test_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    routes_mock.compute_routes.side_effect = None
+    routes_mock.async_compute_routes.side_effect = None
     await assert_common_create_steps(hass, result)
 
 
@@ -139,14 +165,16 @@ async def test_errors(
     ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
-@pytest.mark.usefixtures("routes_mock", "mock_setup_entry")
-async def test_reconfigure(hass: HomeAssistant, mock_config: MockConfigEntry) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure(
+    hass: HomeAssistant, mock_config: MockConfigEntry, routes_mock: AsyncMock
+) -> None:
     """Test reconfigure flow."""
     result = await mock_config.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    await assert_common_reconfigure_steps(hass, result)
+    await assert_common_reconfigure_steps(hass, result, routes_mock)
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -157,9 +185,18 @@ async def test_reconfigure(hass: HomeAssistant, mock_config: MockConfigEntry) ->
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (GoogleAPIError("test"), "cannot_connect"),
-        (GatewayTimeout("Timeout error."), "timeout_connect"),
-        (Unauthorized("Invalid API key."), "invalid_auth"),
+        (GoogleMapsRoutingApiError("test"), "cannot_connect"),
+        (
+            GoogleMapsRoutingApiConnectionTimeoutError("Timeout error."),
+            "timeout_connect",
+        ),
+        (
+            GoogleMapsRoutingApiAuthError(
+                "API key not valid. Please pass a valid API key.",
+                reason="API_KEY_INVALID",
+            ),
+            "invalid_auth",
+        ),
     ],
 )
 async def test_reconfigure_invalid_config_entry(
@@ -175,7 +212,7 @@ async def test_reconfigure_invalid_config_entry(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    routes_mock.compute_routes.side_effect = exception
+    routes_mock.async_compute_routes.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -185,9 +222,9 @@ async def test_reconfigure_invalid_config_entry(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    routes_mock.compute_routes.side_effect = None
+    routes_mock.async_compute_routes.side_effect = None
 
-    await assert_common_reconfigure_steps(hass, result)
+    await assert_common_reconfigure_steps(hass, result, routes_mock)
 
 
 @pytest.mark.parametrize(
@@ -212,6 +249,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config: MockConfigEntry) -
             CONF_TIME_TYPE: ARRIVAL_TIME,
             CONF_TIME: "08:00",
             CONF_TRAFFIC_MODEL: "best_guess",
+            CONF_TRAVEL_ROUTING_PREFERENCE: "traffic_aware_optimal",
             CONF_TRANSIT_MODE: "train",
             CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
         },
@@ -227,6 +265,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config: MockConfigEntry) -
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+        CONF_TRAVEL_ROUTING_PREFERENCE: "traffic_aware_optimal",
     }
 
     assert mock_config.options == {
@@ -238,6 +277,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config: MockConfigEntry) -
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+        CONF_TRAVEL_ROUTING_PREFERENCE: "traffic_aware_optimal",
     }
 
 
@@ -291,6 +331,81 @@ async def test_options_flow_departure_time(
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+    }
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+@pytest.mark.parametrize(
+    "travel_routing_preference",
+    ["traffic_aware", "traffic_unaware"],
+)
+@pytest.mark.parametrize(
+    "traffic_model",
+    ["best_guess", "pessimistic", "optimistic"],
+)
+@pytest.mark.usefixtures("routes_mock")
+async def test_options_flow_traffic_model_error(
+    hass: HomeAssistant,
+    mock_config: MockConfigEntry,
+    travel_routing_preference: str,
+    traffic_model: str,
+) -> None:
+    """Test options flow for traffic model error."""
+    result = await hass.config_entries.options.async_init(mock_config.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MODE: "driving",
+            CONF_UNITS: UNITS_IMPERIAL,
+            CONF_TIME_TYPE: ARRIVAL_TIME,
+            CONF_TIME: "08:00",
+            CONF_TRAFFIC_MODEL: traffic_model,
+            CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
+        },
+    )
+
+    # Verify the expected error, and the data schema contains all expected fields.
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "traffic_model_not_allowed"}
+    data_schema = result["data_schema"].schema
+    assert set(data_schema) == {
+        CONF_AVOID,
+        CONF_UNITS,
+        CONF_LANGUAGE,
+        CONF_TRANSIT_MODE,
+        CONF_TRANSIT_ROUTING_PREFERENCE,
+        CONF_MODE,
+        CONF_TIME_TYPE,
+        CONF_TIME,
+        CONF_TRAFFIC_MODEL,
+        CONF_TRAVEL_ROUTING_PREFERENCE,
+    }
+
+    # Removing the traffic model allows the user to finish the flow
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MODE: "driving",
+            CONF_UNITS: UNITS_IMPERIAL,
+            CONF_TIME_TYPE: ARRIVAL_TIME,
+            CONF_TIME: "08:00",
+            CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_MODE: "driving",
+        CONF_UNITS: UNITS_IMPERIAL,
+        CONF_ARRIVAL_TIME: "08:00",
+        CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
     }
 
 
@@ -405,6 +520,7 @@ async def test_reset_arrival_time(
                 CONF_TRAFFIC_MODEL: "best_guess",
                 CONF_TRANSIT_MODE: "train",
                 CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+                CONF_TRAVEL_ROUTING_PREFERENCE: "traffic_aware_optimal",
             },
         )
     ],

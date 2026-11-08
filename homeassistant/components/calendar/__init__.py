@@ -58,6 +58,8 @@ from .const import (
     CalendarEntityFeature,
     CalendarEntityStateAttribute,
     CalendarEventStatus,
+    CalendarService,
+    CalendarServiceArgument,
 )
 from .entity import CalendarEntity, CalendarEntityDescription, CalendarEvent
 from .helper import (
@@ -135,6 +137,8 @@ __all__ = [
     "CalendarEntityStateAttribute",
     "CalendarEvent",
     "CalendarEventStatus",
+    "CalendarService",
+    "CalendarServiceArgument",
     "extract_offset",
     "is_offset_reached",
 ]

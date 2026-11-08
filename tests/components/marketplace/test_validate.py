@@ -367,6 +367,16 @@ def test_common_repo_data_json_schema_bad_data(
             does_not_raise(),
             id="extra-key-is-discarded",
         ),
+        pytest.param(
+            GOOD_INTEGRATION_DATA | {"categories": ["energy.ev_charging"]},
+            does_not_raise(),
+            id="categories",
+        ),
+        pytest.param(
+            GOOD_INTEGRATION_DATA | {"categories": "energy"},
+            does_not_raise(),
+            id="broken-categories-keep-the-repository",
+        ),
     ],
 )
 def test_integration_repo_data_json_schema_bad_data(

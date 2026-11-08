@@ -10,17 +10,19 @@ from myuplink import MyUplinkAPI, get_manufacturer, get_model, get_system_name
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.device_registry import AnyDeviceEntry
+from homeassistant.helpers.typing import ConfigType
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, OAUTH2_SCOPES
 from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +34,15 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(
@@ -98,16 +109,14 @@ def create_devices(
         devices_in_system = [x.id for x in system.devices]
         for device_id, device in coordinator.data.devices.items():
             if device_id in devices_in_system:
-                device_registry.async_get_or_create_device(
+                device_registry.async_get_or_create(
                     config_entry_id=config_entry.entry_id,
-                    device_info=dr.DeviceInfo(
-                        identifiers={(DOMAIN, device_id)},
-                        name=get_system_name(system),
-                        manufacturer=get_manufacturer(device),
-                        model=get_model(device),
-                        sw_version=device.firmwareCurrent,
-                        serial_number=device.product_serial_number,
-                    ),
+                    identifiers={(DOMAIN, device_id)},
+                    name=get_system_name(system),
+                    manufacturer=get_manufacturer(device),
+                    model=get_model(device),
+                    sw_version=device.firmwareCurrent,
+                    serial_number=device.product_serial_number,
                 )
 
 

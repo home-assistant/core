@@ -22,8 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 
-from . import StarlineConfigEntry
-from .account import StarlineAccount
+from .account import StarlineAccount, StarlineConfigEntry
 from .entity import StarlineEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (

@@ -7,9 +7,11 @@ from typing import override
 from aiohttp import ClientError, ClientResponseError
 from data_grand_lyon_ha import (
     DataGrandLyonClient,
+    TclAlert,
     TclParkAndRide,
     TclPassage,
     VelovStation,
+    filter_tcl_alerts_by_line,
     filter_tcl_passages_by_lines_stops,
     find_tcl_park_and_ride_by_id,
     find_velov_stations_by_ids,
@@ -28,6 +30,7 @@ from .const import (
     CONF_STOP_ID,
     DOMAIN,
     LOGGER,
+    SUBENTRY_TYPE_LINE,
     SUBENTRY_TYPE_PARK_AND_RIDE,
     SUBENTRY_TYPE_STOP,
     SUBENTRY_TYPE_VELOV_STATION,
@@ -41,6 +44,7 @@ class DataGrandLyonData:
     tcl_coordinator: DataGrandLyonTclCoordinator
     velov_coordinator: DataGrandLyonVelovCoordinator
     park_and_ride_coordinator: DataGrandLyonParkAndRideCoordinator
+    alerts_coordinator: DataGrandLyonAlertsCoordinator
 
 
 type DataGrandLyonConfigEntry = ConfigEntry[DataGrandLyonData]
@@ -238,3 +242,60 @@ class DataGrandLyonParkAndRideCoordinator(
                     subentry.subentry_id,
                 )
         return parks
+
+
+class DataGrandLyonAlertsCoordinator(DataUpdateCoordinator[dict[str, list[TclAlert]]]):
+    """Coordinator for TCL traffic alerts."""
+
+    config_entry: DataGrandLyonConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: DataGrandLyonConfigEntry,
+        client: DataGrandLyonClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        self.client = client
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN}_alerts",
+            update_interval=timedelta(minutes=5),
+        )
+
+    @override
+    async def _async_update_data(self) -> dict[str, list[TclAlert]]:
+        """Fetch alerts for all monitored lines."""
+        line_subentries = list(
+            self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_LINE)
+        )
+        if not line_subentries:
+            return {}
+
+        try:
+            all_alerts = await self.client.get_tcl_alerts()
+        except ClientResponseError as err:
+            if err.status in (401, 403):
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed",
+                ) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_alerts",
+            ) from err
+        except (ClientError, TimeoutError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_alerts",
+            ) from err
+
+        # A line with no alert must stay available, so its key is always set.
+        return {
+            subentry.subentry_id: filter_tcl_alerts_by_line(
+                all_alerts, subentry.data[CONF_LINE]
+            )
+            for subentry in line_subentries
+        }

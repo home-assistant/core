@@ -72,28 +72,17 @@ from .const import (
     ATTR_FROM_FIRST,
     ATTR_FROM_LAST,
     ATTR_INLINE_MESSAGE_ID,
-    ATTR_KEYBOARD,
-    ATTR_KEYBOARD_INLINE,
-    ATTR_MEDIA,
     ATTR_MEDIA_TYPE,
-    ATTR_MESSAGE,
     ATTR_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
     ATTR_MSG,
     ATTR_MSGID,
-    ATTR_ONE_TIME_KEYBOARD,
-    ATTR_OPEN_PERIOD,
     ATTR_PARSER,
     ATTR_PASSWORD,
-    ATTR_PROTECT_CONTENT,
     ATTR_REPLY_TO_MSGID,
     ATTR_REPLYMARKUP,
-    ATTR_RESIZE_KEYBOARD,
-    ATTR_STICKER_ID,
     ATTR_TEXT,
-    ATTR_TIMEOUT,
-    ATTR_TITLE,
     ATTR_URL,
     ATTR_USER_ID,
     ATTR_USERNAME,
@@ -112,13 +101,8 @@ from .const import (
     PARSER_MD,
     PARSER_MD2,
     PARSER_PLAIN_TEXT,
-    SERVICE_EDIT_CAPTION,
-    SERVICE_EDIT_MESSAGE,
-    SERVICE_SEND_DOCUMENT,
-    SERVICE_SEND_PHOTO,
-    SERVICE_SEND_STICKER,
-    SERVICE_SEND_VIDEO,
-    SERVICE_SEND_VOICE,
+    TelegramBotService,
+    TelegramBotServiceArgument,
 )
 from .helpers import signal
 
@@ -144,7 +128,7 @@ type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 _RETRY_DELAY = 1  # 1 second delay between retries
 
 
-def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
+def _get_bot_info(bot: Bot, config_entry: TelegramBotConfigEntry) -> dict[str, Any]:
     return {
         "config_entry_id": config_entry.entry_id,
         "id": bot.id,
@@ -350,8 +334,8 @@ class TelegramNotificationService:
         """
         message_id: Any | None = None
         inline_message_id: int | None = None
-        if ATTR_MESSAGE_ID in msg_data:
-            message_id = msg_data[ATTR_MESSAGE_ID]
+        if TelegramBotServiceArgument.MESSAGE_ID in msg_data:
+            message_id = msg_data[TelegramBotServiceArgument.MESSAGE_ID]
             if (
                 isinstance(message_id, str)
                 and (message_id == "last")
@@ -419,40 +403,49 @@ class TelegramNotificationService:
             ATTR_DISABLE_WEB_PREV: None,
             ATTR_REPLY_TO_MSGID: None,
             ATTR_REPLYMARKUP: None,
-            ATTR_TIMEOUT: None,
             ATTR_MESSAGE_TAG: None,
             ATTR_MESSAGE_THREAD_ID: None,
         }
         if data is not None:
-            if ATTR_PARSER in data:
-                params[ATTR_PARSER] = data[ATTR_PARSER]
-            if ATTR_TIMEOUT in data:
-                params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
-            if ATTR_DISABLE_NOTIF in data:
-                params[ATTR_DISABLE_NOTIF] = data[ATTR_DISABLE_NOTIF]
-            if ATTR_DISABLE_WEB_PREV in data:
-                params[ATTR_DISABLE_WEB_PREV] = data[ATTR_DISABLE_WEB_PREV]
-            if ATTR_REPLY_TO_MSGID in data:
-                params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
-            if ATTR_MESSAGE_TAG in data:
-                params[ATTR_MESSAGE_TAG] = data[ATTR_MESSAGE_TAG]
-            if ATTR_MESSAGE_THREAD_ID in data:
-                params[ATTR_MESSAGE_THREAD_ID] = data[ATTR_MESSAGE_THREAD_ID]
+            if TelegramBotServiceArgument.PARSE_MODE in data:
+                params[ATTR_PARSER] = data[TelegramBotServiceArgument.PARSE_MODE]
+            if TelegramBotServiceArgument.DISABLE_NOTIFICATION in data:
+                params[ATTR_DISABLE_NOTIF] = data[
+                    TelegramBotServiceArgument.DISABLE_NOTIFICATION
+                ]
+            if TelegramBotServiceArgument.DISABLE_WEB_PAGE_PREVIEW in data:
+                params[ATTR_DISABLE_WEB_PREV] = data[
+                    TelegramBotServiceArgument.DISABLE_WEB_PAGE_PREVIEW
+                ]
+            if TelegramBotServiceArgument.REPLY_TO_MESSAGE_ID in data:
+                params[ATTR_REPLY_TO_MSGID] = data[
+                    TelegramBotServiceArgument.REPLY_TO_MESSAGE_ID
+                ]
+            if TelegramBotServiceArgument.MESSAGE_TAG in data:
+                params[ATTR_MESSAGE_TAG] = data[TelegramBotServiceArgument.MESSAGE_TAG]
+            if TelegramBotServiceArgument.MESSAGE_THREAD_ID in data:
+                params[ATTR_MESSAGE_THREAD_ID] = data[
+                    TelegramBotServiceArgument.MESSAGE_THREAD_ID
+                ]
             # Keyboards:
-            if ATTR_KEYBOARD in data:
-                keys = data[ATTR_KEYBOARD]
+            if TelegramBotServiceArgument.KEYBOARD in data:
+                keys = data[TelegramBotServiceArgument.KEYBOARD]
                 keys = keys if isinstance(keys, list) else [keys]
                 if keys:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
                         [[key.strip() for key in row.split(",")] for row in keys],
-                        resize_keyboard=data.get(ATTR_RESIZE_KEYBOARD, False),
-                        one_time_keyboard=data.get(ATTR_ONE_TIME_KEYBOARD, False),
+                        resize_keyboard=data.get(
+                            TelegramBotServiceArgument.RESIZE_KEYBOARD, False
+                        ),
+                        one_time_keyboard=data.get(
+                            TelegramBotServiceArgument.ONE_TIME_KEYBOARD, False
+                        ),
                     )
                 else:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
 
-            elif ATTR_KEYBOARD_INLINE in data:
-                keys = data.get(ATTR_KEYBOARD_INLINE)
+            elif TelegramBotServiceArgument.INLINE_KEYBOARD in data:
+                keys = data.get(TelegramBotServiceArgument.INLINE_KEYBOARD)
                 keys = keys if isinstance(keys, list) else [keys]
                 params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
                     [_make_row_inline_keyboard(row) for row in keys]
@@ -541,7 +534,7 @@ class TelegramNotificationService:
         **kwargs: dict[str, Any],
     ) -> dict[str, JsonValueType]:
         """Send a message to one or multiple pre-allowed chat IDs."""
-        title = kwargs.get(ATTR_TITLE)
+        title = kwargs.get(TelegramBotServiceArgument.TITLE)
         text = f"{title}\n{message}" if title else message
         params = self._get_msg_kwargs(kwargs)
         return await self._send_msg_formatted(
@@ -554,7 +547,6 @@ class TelegramNotificationService:
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
         )
@@ -574,7 +566,7 @@ class TelegramNotificationService:
         media: list[
             InputMediaAudio | InputMediaDocument | InputMediaPhoto | InputMediaVideo
         ] = []
-        input_media: list[dict[str, Any]] = kwargs[ATTR_MEDIA]
+        input_media: list[dict[str, Any]] = kwargs[TelegramBotServiceArgument.MEDIA]
         for entry in input_media:
             file_content = await load_data(
                 self.hass,
@@ -608,7 +600,9 @@ class TelegramNotificationService:
             chat_id=chat_id,
             media=media,
             disable_notification=params[ATTR_DISABLE_NOTIF],
-            protect_content=kwargs.get(ATTR_PROTECT_CONTENT, False),
+            protect_content=kwargs.get(
+                TelegramBotServiceArgument.PROTECT_CONTENT, False
+            ),
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             context=context,
@@ -655,43 +649,43 @@ class TelegramNotificationService:
 
         file_content = await load_data(
             self.hass,
-            url=kwargs.get(ATTR_URL),
-            filepath=kwargs.get(ATTR_FILE),
-            username=kwargs.get(ATTR_USERNAME, ""),
-            password=kwargs.get(ATTR_PASSWORD, ""),
-            authentication=kwargs.get(ATTR_AUTHENTICATION),
-            verify_ssl=kwargs.get(ATTR_VERIFY_SSL, False),
+            url=kwargs.get(TelegramBotServiceArgument.URL),
+            filepath=kwargs.get(TelegramBotServiceArgument.FILE),
+            username=kwargs.get(TelegramBotServiceArgument.USERNAME, ""),
+            password=kwargs.get(TelegramBotServiceArgument.PASSWORD, ""),
+            authentication=kwargs.get(TelegramBotServiceArgument.AUTHENTICATION),
+            verify_ssl=kwargs.get(TelegramBotServiceArgument.VERIFY_SSL, False),
         )
 
         media: InputMedia
         if media_type == InputMediaType.ANIMATION:
             media = InputMediaAnimation(
                 file_content,
-                caption=kwargs.get(ATTR_CAPTION),
+                caption=kwargs.get(TelegramBotServiceArgument.CAPTION),
                 parse_mode=params[ATTR_PARSER],
             )
         elif media_type == InputMediaType.AUDIO:
             media = InputMediaAudio(
                 file_content,
-                caption=kwargs.get(ATTR_CAPTION),
+                caption=kwargs.get(TelegramBotServiceArgument.CAPTION),
                 parse_mode=params[ATTR_PARSER],
             )
         elif media_type == InputMediaType.DOCUMENT:
             media = InputMediaDocument(
                 file_content,
-                caption=kwargs.get(ATTR_CAPTION),
+                caption=kwargs.get(TelegramBotServiceArgument.CAPTION),
                 parse_mode=params[ATTR_PARSER],
             )
         elif media_type == InputMediaType.PHOTO:
             media = InputMediaPhoto(
                 file_content,
-                caption=kwargs.get(ATTR_CAPTION),
+                caption=kwargs.get(TelegramBotServiceArgument.CAPTION),
                 parse_mode=params[ATTR_PARSER],
             )
         else:
             media = InputMediaVideo(
                 file_content,
-                caption=kwargs.get(ATTR_CAPTION),
+                caption=kwargs.get(TelegramBotServiceArgument.CAPTION),
                 parse_mode=params[ATTR_PARSER],
             )
 
@@ -703,7 +697,6 @@ class TelegramNotificationService:
             message_id=message_id,
             inline_message_id=inline_message_id,
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -723,9 +716,9 @@ class TelegramNotificationService:
             chat_id,
             params,
         )
-        if type_edit == SERVICE_EDIT_MESSAGE:
-            message = kwargs.get(ATTR_MESSAGE)
-            title = kwargs.get(ATTR_TITLE)
+        if type_edit == TelegramBotService.EDIT_MESSAGE:
+            message = kwargs.get(TelegramBotServiceArgument.MESSAGE)
+            title = kwargs.get(TelegramBotServiceArgument.TITLE)
             text = f"{title}\n{message}" if title else message
             _LOGGER.debug("Editing message with ID %s", message_id or inline_message_id)
             return await self._send_msg(
@@ -738,19 +731,17 @@ class TelegramNotificationService:
                 parse_mode=params[ATTR_PARSER],
                 disable_web_page_preview=params[ATTR_DISABLE_WEB_PREV],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 context=context,
             )
-        if type_edit == SERVICE_EDIT_CAPTION:
+        if type_edit == TelegramBotService.EDIT_CAPTION:
             return await self._send_msg(
                 self.bot.edit_message_caption,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=chat_id,
                 message_id=message_id,
                 inline_message_id=inline_message_id,
-                caption=kwargs.get(ATTR_CAPTION),
+                caption=kwargs.get(TelegramBotServiceArgument.CAPTION),
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 context=context,
             )
@@ -762,7 +753,6 @@ class TelegramNotificationService:
             message_id=message_id,
             inline_message_id=inline_message_id,
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -788,7 +778,6 @@ class TelegramNotificationService:
             callback_query_id,
             text=message,
             show_alert=show_alert,
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -807,7 +796,7 @@ class TelegramNotificationService:
             None,
             chat_id=chat_id,
             action=chat_action,
-            message_thread_id=kwargs.get(ATTR_MESSAGE_THREAD_ID),
+            message_thread_id=kwargs.get(TelegramBotServiceArgument.MESSAGE_THREAD_ID),
             context=context,
         )
         result[str(chat_id)] = is_successful
@@ -823,102 +812,96 @@ class TelegramNotificationService:
         params = self._get_msg_kwargs(kwargs)
         file_content = await load_data(
             self.hass,
-            url=kwargs.get(ATTR_URL),
-            filepath=kwargs.get(ATTR_FILE),
-            username=kwargs.get(ATTR_USERNAME, ""),
-            password=kwargs.get(ATTR_PASSWORD, ""),
-            authentication=kwargs.get(ATTR_AUTHENTICATION),
-            verify_ssl=kwargs.get(ATTR_VERIFY_SSL, False),
+            url=kwargs.get(TelegramBotServiceArgument.URL),
+            filepath=kwargs.get(TelegramBotServiceArgument.FILE),
+            username=kwargs.get(TelegramBotServiceArgument.USERNAME, ""),
+            password=kwargs.get(TelegramBotServiceArgument.PASSWORD, ""),
+            authentication=kwargs.get(TelegramBotServiceArgument.AUTHENTICATION),
+            verify_ssl=kwargs.get(TelegramBotServiceArgument.VERIFY_SSL, False),
         )
 
-        if file_type == SERVICE_SEND_PHOTO:
+        if file_type == TelegramBotService.SEND_PHOTO:
             return await self._send_msg_formatted(
                 self.bot.send_photo,
                 params[ATTR_MESSAGE_TAG],
-                chat_id=kwargs[ATTR_CHAT_ID],
+                chat_id=kwargs[TelegramBotServiceArgument.CHAT_ID],
                 photo=file_content,
-                caption=kwargs.get(ATTR_CAPTION),
+                caption=kwargs.get(TelegramBotServiceArgument.CAPTION),
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
 
-        if file_type == SERVICE_SEND_STICKER:
+        if file_type == TelegramBotService.SEND_STICKER:
             return await self._send_msg_formatted(
                 self.bot.send_sticker,
                 params[ATTR_MESSAGE_TAG],
-                chat_id=kwargs[ATTR_CHAT_ID],
+                chat_id=kwargs[TelegramBotServiceArgument.CHAT_ID],
                 sticker=file_content,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
 
-        if file_type == SERVICE_SEND_VIDEO:
+        if file_type == TelegramBotService.SEND_VIDEO:
             return await self._send_msg_formatted(
                 self.bot.send_video,
                 params[ATTR_MESSAGE_TAG],
-                chat_id=kwargs[ATTR_CHAT_ID],
+                chat_id=kwargs[TelegramBotServiceArgument.CHAT_ID],
                 video=file_content,
-                caption=kwargs.get(ATTR_CAPTION),
+                caption=kwargs.get(TelegramBotServiceArgument.CAPTION),
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
 
-        if file_type == SERVICE_SEND_DOCUMENT:
+        if file_type == TelegramBotService.SEND_DOCUMENT:
             return await self._send_msg_formatted(
                 self.bot.send_document,
                 params[ATTR_MESSAGE_TAG],
-                chat_id=kwargs[ATTR_CHAT_ID],
+                chat_id=kwargs[TelegramBotServiceArgument.CHAT_ID],
                 document=file_content,
-                caption=kwargs.get(ATTR_CAPTION),
+                caption=kwargs.get(TelegramBotServiceArgument.CAPTION),
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
 
-        if file_type == SERVICE_SEND_VOICE:
+        if file_type == TelegramBotService.SEND_VOICE:
             return await self._send_msg_formatted(
                 self.bot.send_voice,
                 params[ATTR_MESSAGE_TAG],
-                chat_id=kwargs[ATTR_CHAT_ID],
+                chat_id=kwargs[TelegramBotServiceArgument.CHAT_ID],
                 voice=file_content,
-                caption=kwargs.get(ATTR_CAPTION),
+                caption=kwargs.get(TelegramBotServiceArgument.CAPTION),
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
 
-        # SERVICE_SEND_ANIMATION
+        # TelegramBotService.SEND_ANIMATION
         return await self._send_msg_formatted(
             self.bot.send_animation,
             params[ATTR_MESSAGE_TAG],
-            chat_id=kwargs[ATTR_CHAT_ID],
+            chat_id=kwargs[TelegramBotServiceArgument.CHAT_ID],
             animation=file_content,
-            caption=kwargs.get(ATTR_CAPTION),
+            caption=kwargs.get(TelegramBotServiceArgument.CAPTION),
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             reply_markup=params[ATTR_REPLYMARKUP],
-            read_timeout=params[ATTR_TIMEOUT],
             parse_mode=params[ATTR_PARSER],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
@@ -931,22 +914,21 @@ class TelegramNotificationService:
     ) -> dict[str, JsonValueType]:
         """Send a sticker from a telegram sticker pack."""
         params = self._get_msg_kwargs(kwargs)
-        stickerid = kwargs.get(ATTR_STICKER_ID)
+        stickerid = kwargs.get(TelegramBotServiceArgument.STICKER_ID)
 
         if stickerid:
             return await self._send_msg_formatted(
                 self.bot.send_sticker,
                 params[ATTR_MESSAGE_TAG],
-                chat_id=kwargs[ATTR_CHAT_ID],
+                chat_id=kwargs[TelegramBotServiceArgument.CHAT_ID],
                 sticker=stickerid,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
-        return await self.send_file(SERVICE_SEND_STICKER, context, **kwargs)
+        return await self.send_file(TelegramBotService.SEND_STICKER, context, **kwargs)
 
     async def send_location(
         self,
@@ -962,12 +944,11 @@ class TelegramNotificationService:
         return await self._send_msg_formatted(
             self.bot.send_location,
             params[ATTR_MESSAGE_TAG],
-            chat_id=kwargs[ATTR_CHAT_ID],
+            chat_id=kwargs[TelegramBotServiceArgument.CHAT_ID],
             latitude=latitude,
             longitude=longitude,
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-            read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
         )
@@ -983,11 +964,11 @@ class TelegramNotificationService:
     ) -> dict[str, JsonValueType]:
         """Send a poll."""
         params = self._get_msg_kwargs(kwargs)
-        openperiod = kwargs.get(ATTR_OPEN_PERIOD)
+        openperiod = kwargs.get(TelegramBotServiceArgument.OPEN_PERIOD)
         return await self._send_msg_formatted(
             self.bot.send_poll,
             params[ATTR_MESSAGE_TAG],
-            chat_id=kwargs[ATTR_CHAT_ID],
+            chat_id=kwargs[TelegramBotServiceArgument.CHAT_ID],
             question=question,
             options=options,
             is_anonymous=is_anonymous,
@@ -995,7 +976,6 @@ class TelegramNotificationService:
             open_period=openperiod,
             disable_notification=params[ATTR_DISABLE_NOTIF],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-            read_timeout=params[ATTR_TIMEOUT],
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             context=context,
         )
@@ -1037,7 +1017,6 @@ class TelegramNotificationService:
             message_id,
             reaction=reaction,
             is_big=is_big,
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 
@@ -1067,7 +1046,6 @@ class TelegramNotificationService:
             text=message,
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             parse_mode=params[ATTR_PARSER],
-            read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
 

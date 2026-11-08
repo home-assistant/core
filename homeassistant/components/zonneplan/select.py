@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ZonneplanBatteryControlCoordinator, ZonneplanConfigEntry
-from .entity import ZonneplanBatteryDeviceEntity
+from .entity import ZonneplanContractEntity
 
 PARALLEL_UPDATES = 1
 
@@ -43,7 +43,7 @@ async def async_setup_entry(
 
 
 class ZonneplanBatteryControlModeSelect(
-    ZonneplanBatteryDeviceEntity[ZonneplanBatteryControlCoordinator], SelectEntity
+    ZonneplanContractEntity[ZonneplanBatteryControlCoordinator], SelectEntity
 ):
     """Representation of the control mode of a Zonneplan home battery."""
 
