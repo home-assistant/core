@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, NETATMO_CREATE_CLIMATE
-from .coordinator import NetatmoConfigEntry, NetatmoRoom
+from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
 from .entity import NetatmoRoomEntity
 
 PARALLEL_UPDATES = 0
@@ -65,6 +65,17 @@ class NetatmoRoomTrueTemperatureNumber(NetatmoRoomEntity, RestoreNumber):
         """Initialize the number entity."""
         super().__init__(room)
         self._attr_unique_id = f"{self.device.entity_id}-true_temperature"
+
+        signal_name = f"{HOME}-{self.home.entity_id}"
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: signal_name,
+                },
+            ]
+        )
 
     @override
     async def async_added_to_hass(self) -> None:

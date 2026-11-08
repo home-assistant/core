@@ -85,8 +85,11 @@ async def test_true_temperature_tracks_measured_until_calibrated(
 ) -> None:
     """Test the entity keeps following the measured temperature until calibrated."""
     new_measured_temperature = 23.4
+    apply_new_temperature = False
 
     def set_measured_temperature(payload: dict[str, Any]) -> None:
+        if not apply_new_temperature:
+            return
         body = payload.get("body")
         if not isinstance(body, dict):
             return
@@ -114,6 +117,11 @@ async def test_true_temperature_tracks_measured_until_calibrated(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+    assert hass.states.get(TRUE_TEMPERATURE_ENTITY).state == str(
+        LIVINGROOM_MEASURED_TEMPERATURE
+    )
+
+    apply_new_temperature = True
     data_handler = config_entry.runtime_data
     await data_handler.async_fetch_data(f"{HOME}-{HOME_ID}")
 
