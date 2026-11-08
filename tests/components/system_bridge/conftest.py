@@ -175,6 +175,12 @@ def mock_websocket_client(
             message="Audio controlled",
             data={},
         )
+        websocket_client.send_notification.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.NOTIFICATION_SENT,
+            message="Notification sent",
+            data={"id": 1},
+        )
         # Trigger callback when listener is registered
         websocket_client.listen.side_effect = mock_data_listener
 

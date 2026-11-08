@@ -3,8 +3,10 @@
 import logging
 from typing import Any, override
 
+from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
 from systembridgeconnector.models.notification import Notification
+from systembridgeconnector.models.response import Response
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -14,6 +16,7 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ENTITY_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -49,6 +52,30 @@ async def async_setup_entry(
     )
 
 
+async def _async_send_notification(
+    coordinator: SystemBridgeDataUpdateCoordinator, notification: Notification
+) -> Response:
+    """Send a notification, raising if it isn't sent."""
+    try:
+        response = await coordinator.websocket_client.send_notification(notification)
+    except (ConnectionClosedException, ConnectionResetError) as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="send_message_failed",
+            translation_placeholders={
+                "title": coordinator.config_entry.title,
+                "host": coordinator.config_entry.data[CONF_HOST],
+            },
+        ) from e
+    if response.type == EventType.ERROR:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="notification_failed",
+            translation_placeholders={"error": response.message or ""},
+        )
+    return response
+
+
 class SystemBridgeNotifyEntity(SystemBridgeEntity, NotifyEntity):
     """Representation of a notification entity."""
 
@@ -58,20 +85,12 @@ class SystemBridgeNotifyEntity(SystemBridgeEntity, NotifyEntity):
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
-        notification = Notification(
-            message=message, title=ATTR_TITLE_DEFAULT if title is None else title
+        await _async_send_notification(
+            self.coordinator,
+            Notification(
+                message=message, title=ATTR_TITLE_DEFAULT if title is None else title
+            ),
         )
-        try:
-            await self.coordinator.websocket_client.send_notification(notification)
-        except ConnectionClosedException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="send_message_failed",
-                translation_placeholders={
-                    "title": self.coordinator.config_entry.title,
-                    "host": self.coordinator.config_entry.data[CONF_HOST],
-                },
-            ) from e
 
 
 async def async_get_service(
@@ -83,24 +102,15 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    entry: SystemBridgeConfigEntry | None = hass.config_entries.async_get_entry(
-        discovery_info[CONF_ENTITY_ID]
-    )
-    if entry is None:
-        return None
-
-    return SystemBridgeNotificationService(entry.runtime_data)
+    return SystemBridgeNotificationService(discovery_info[CONF_ENTITY_ID])
 
 
 class SystemBridgeNotificationService(BaseNotificationService):
     """Implement the notification service for System Bridge."""
 
-    def __init__(
-        self,
-        coordinator: SystemBridgeDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, entry_id: str) -> None:
         """Initialize the service."""
-        self._coordinator: SystemBridgeDataUpdateCoordinator = coordinator
+        self._entry_id = entry_id
 
     @override
     async def async_send_message(
@@ -109,6 +119,17 @@ class SystemBridgeNotificationService(BaseNotificationService):
         **kwargs: Any,
     ) -> None:
         """Send a message."""
+        # The service outlives reloads, so use the entry's current connection
+        entry: SystemBridgeConfigEntry | None = (
+            self.hass.config_entries.async_get_entry(self._entry_id)
+        )
+        if entry is None or entry.state is not ConfigEntryState.LOADED:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="entry_not_loaded",
+                translation_placeholders={"entry_id": self._entry_id},
+            )
+
         data = kwargs.get(ATTR_DATA, {}) or {}
 
         notification = Notification(
@@ -123,4 +144,4 @@ class SystemBridgeNotificationService(BaseNotificationService):
 
         _LOGGER.debug("Sending notification: %s", notification)
 
-        await self._coordinator.websocket_client.send_notification(notification)
+        await _async_send_notification(entry.runtime_data, notification)
