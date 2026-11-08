@@ -1,0 +1,23 @@
+{
+  "domain": "e3dc",
+  "name": "E3/DC",
+  "categories": ["energy.solar_batteries"],
+  "codeowners": ["@AlCalzone"],
+  "config_flow": true,
+  "dependencies": ["modbus", "network"],
+  "documentation": "https://www.home-assistant.io/integrations/e3dc",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["e3dc_ess_modbus", "modbus_connection", "tmodbus"],
+  "quality_scale": "bronze",
+  "requirements": ["e3dc-ess-modbus==0.1.0"],
+  "zeroconf": [
+    {
+      "properties": {
+        "brand": "hager energy",
+        "id": "*"
+      },
+      "type": "_ship._tcp.local."
+    }
+  ]
+}

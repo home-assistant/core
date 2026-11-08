@@ -18,6 +18,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, LOGGER, PLATFORMS
+from .adoption import UnifiDeviceAdoption
 from .config import UnifiConfig
 from .connection import UnifiConnectionManager
 from .entity_helper import UnifiEntityHelper
@@ -55,6 +56,7 @@ class UnifiHub:
         config_entry.async_on_unload(self.connection.stop)
         self.websocket = UnifiWebsocket(self.connection)
         self.entity_loader = UnifiEntityLoader(self)
+        self.adoption = UnifiDeviceAdoption(self)
         self._entity_helper = UnifiEntityHelper(hass, api)
 
         self.site = config_entry.data[CONF_SITE_ID]

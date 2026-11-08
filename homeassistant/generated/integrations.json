@@ -3320,6 +3320,15 @@
       "config_flow": true,
       "iot_class": "assumed_state"
     },
+    "e3dc": {
+      "name": "E3/DC",
+      "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "eafm": {
       "name": "Environment Agency Flood Gauges",
       "integration_type": "service",
