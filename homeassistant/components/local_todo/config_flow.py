@@ -86,6 +86,8 @@ class LocalTodoOptionsFlow(OptionsFlow):
 
     config_entry: LocalTodoConfigEntry
 
+    _shown_categories: list[str] | None = None
+
     @property
     def _categories(self) -> list[str]:
         return list(self.config_entry.options.get(CONF_CATEGORIES, []))
@@ -94,7 +96,7 @@ class LocalTodoOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose how to manage the categories."""
-        if not await self._async_known_categories():
+        if not self._categories:
             return await self.async_step_categories()
         return self.async_show_menu(
             step_id="init", menu_options=["categories", "rename_category"]
@@ -105,14 +107,20 @@ class LocalTodoOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Add and remove the categories of the To-do list."""
         errors: dict[str, str] = {}
-        known = await self._async_known_categories()
         if user_input is not None:
             stripped = (category.strip() for category in user_input[CONF_CATEGORIES])
             categories = list(dict.fromkeys(filter(None, stripped)))
             if any("," in category for category in categories):
                 errors[CONF_CATEGORIES] = "invalid_category"
             else:
-                removed = set(known) - set(categories)
+                shown = self._shown_categories or []
+                removed = set(shown) - set(categories)
+                # Keep the categories added by items while the form was open
+                categories += [
+                    category
+                    for category in self._categories
+                    if category not in shown and category not in categories
+                ]
                 try:
                     await self._async_change_categories(
                         categories, dict.fromkeys(removed)
@@ -122,10 +130,11 @@ class LocalTodoOptionsFlow(OptionsFlow):
                 else:
                     return self.async_create_entry(data={CONF_CATEGORIES: categories})
 
+        self._shown_categories = self._categories
         return self.async_show_form(
             step_id="categories",
             data_schema=self.add_suggested_values_to_schema(
-                CATEGORIES_SCHEMA, user_input or {CONF_CATEGORIES: known}
+                CATEGORIES_SCHEMA, user_input or self.config_entry.options
             ),
             errors=errors,
         )
@@ -134,19 +143,19 @@ class LocalTodoOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Rename a category, keeping its items in it."""
-        known = await self._async_known_categories()
+        categories = self._categories
         errors: dict[str, str] = {}
         if user_input is not None:
             category = user_input[CONF_CATEGORY]
             new_name = user_input[CONF_NEW_NAME].strip()
             if not new_name or "," in new_name:
                 errors[CONF_NEW_NAME] = "invalid_category"
-            elif new_name != category and new_name in known:
+            elif new_name != category and new_name in categories:
                 errors[CONF_NEW_NAME] = "category_exists"
             else:
                 categories = [
                     new_name if declared == category else declared
-                    for declared in self._categories
+                    for declared in categories
                 ]
                 try:
                     await self._async_change_categories(
@@ -160,7 +169,7 @@ class LocalTodoOptionsFlow(OptionsFlow):
         schema = probatio.Schema(
             {
                 probatio.Required(CONF_CATEGORY): SelectSelector(
-                    SelectSelectorConfig(options=known)
+                    SelectSelectorConfig(options=categories)
                 ),
                 probatio.Required(CONF_NEW_NAME): TextSelector(),
             }
@@ -170,18 +179,6 @@ class LocalTodoOptionsFlow(OptionsFlow):
             data_schema=self.add_suggested_values_to_schema(schema, user_input),
             errors=errors,
         )
-
-    async def _async_known_categories(self) -> list[str]:
-        """Return the declared categories, then the other ones used by items."""
-        if self.config_entry.state is ConfigEntryState.LOADED and (
-            entity := self.config_entry.runtime_data.entity
-        ):
-            used = [item.category for item in entity.todo_items or () if item.category]
-        else:
-            used = await get_store(
-                self.hass, self.config_entry
-            ).async_get_item_categories()
-        return list(dict.fromkeys([*self._categories, *used]))
 
     async def _async_change_categories(
         self, categories: list[str], changes: Mapping[str, str | None]

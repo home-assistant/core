@@ -88,18 +88,6 @@ class LocalTodoListStore:
         """Persist the calendar to storage."""
         self._path.write_text(ics_content, encoding="utf-8")
 
-    async def async_get_item_categories(self) -> list[str]:
-        """Return the categories of the stored items."""
-        async with self._lock:
-            return await self._hass.async_add_executor_job(self._get_item_categories)
-
-    def _get_item_categories(self) -> list[str]:
-        """Return the categories of the stored items."""
-        if not (ics := self._load()):
-            return []
-        calendar, _ = parse_calendar(ics)
-        return item_categories(calendar)
-
     async def async_change_categories(self, changes: Mapping[str, str | None]) -> None:
         """Rename categories of the items, or clear them when mapped to None."""
         async with self._lock:

@@ -1412,72 +1412,91 @@ async def _keep_entry_loaded(
     """Leave the entry loaded."""
 
 
-@pytest.mark.parametrize(
-    "prepare_entry",
-    [
-        pytest.param(_keep_entry_loaded, id="loaded"),
-        pytest.param(_unload_entry, id="not_loaded"),
-    ],
-)
 @pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
 @pytest.mark.usefixtures("setup_integration")
-async def test_options_offer_item_categories(
+async def test_setup_declares_item_categories(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test categories already used by items are declared when the list loads."""
+    assert config_entry.options == {"categories": ["Fresh produce", "Grocery"]}
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.attributes["categories"] == ["Fresh produce", "Grocery"]
+
+
+@pytest.mark.parametrize(
+    ("service", "item_data"),
+    [
+        pytest.param(TodoServices.ADD_ITEM, {ATTR_ITEM: "Croquettes"}, id="add"),
+        pytest.param(TodoServices.UPDATE_ITEM, {ATTR_ITEM: "Soap"}, id="update"),
+    ],
+)
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery"]])
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_new_item_category_is_declared(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    prepare_entry: Callable[
-        [HomeAssistant, MockConfigEntry], Coroutine[Any, Any, None]
-    ],
+    service: TodoServices,
+    item_data: dict[str, str],
 ) -> None:
-    """Test categories used by items are offered even when they aren't declared."""
-    await prepare_entry(hass, config_entry)
+    """Test a category set on an item is added to the declared ones."""
+    for category in ("Pets", "Grocery"):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            service,
+            {**item_data, ATTR_CATEGORY: category},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
 
+    assert config_entry.options == {"categories": ["Fresh produce", "Grocery", "Pets"]}
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.attributes["categories"] == ["Fresh produce", "Grocery", "Pets"]
+
+
+@pytest.mark.parametrize("categories", [["Fresh produce", "Grocery"]])
+@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
+@pytest.mark.usefixtures("setup_integration")
+async def test_category_added_while_options_open(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test a category added by an item while the options are open is kept."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] is FlowResultType.MENU
-
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "categories"}
     )
-    schema = result["data_schema"].schema
-    suggested = next(iter(schema)).description["suggested_value"]
-    assert suggested == ["Fresh produce", "Grocery"]
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "Soap", ATTR_CATEGORY: "Household"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"categories": ["Grocery", "Fresh produce"]}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "categories": ["Grocery", "Fresh produce", "Household"]
+    }
+    assert await _stored_categories(hass, config_entry) == [
+        ["Fresh produce", "Organic"],
+        ["Grocery"],
+        ["Household"],
+    ]
 
 
 @pytest.mark.parametrize(
-    ("change_categories", "expected_options", "expected_categories"),
+    "change_categories",
     [
-        pytest.param(
-            _remove_fresh_produce,
-            ["Grocery", "Household"],
-            [[], ["Grocery"], []],
-            id="remove",
-        ),
-        pytest.param(
-            _rename_fresh_produce,
-            [],
-            [["Produce"], ["Grocery"], []],
-            id="rename",
-        ),
+        pytest.param(_remove_fresh_produce, id="remove"),
+        pytest.param(_rename_fresh_produce, id="rename"),
     ],
 )
-@pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
-@pytest.mark.usefixtures("setup_integration")
-async def test_change_undeclared_category(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    ws_get_items: WsGetItemsType,
-    change_categories: Callable[
-        [HomeAssistant, str], Coroutine[Any, Any, ConfigFlowResult]
-    ],
-    expected_options: list[str],
-    expected_categories: list[list[str]],
-) -> None:
-    """Test a category only used by items can be renamed or removed."""
-    await change_categories(hass, config_entry.entry_id)
-
-    assert config_entry.options == {"categories": expected_options}
-    assert await _stored_categories(hass, config_entry) == expected_categories
-
-
 @pytest.mark.parametrize(
     "prepare_entry",
     [
@@ -1488,11 +1507,14 @@ async def test_change_undeclared_category(
 @pytest.mark.parametrize("categories", [["Fresh produce", "Grocery", "Household"]])
 @pytest.mark.parametrize("ics_content", [CATEGORIES_ICS])
 @pytest.mark.usefixtures("setup_integration")
-async def test_remove_category_write_error(
+async def test_category_change_write_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     prepare_entry: Callable[
         [HomeAssistant, MockConfigEntry], Coroutine[Any, Any, None]
+    ],
+    change_categories: Callable[
+        [HomeAssistant, str], Coroutine[Any, Any, ConfigFlowResult]
     ],
 ) -> None:
     """Test the options are kept when the items can't be updated."""
@@ -1501,7 +1523,7 @@ async def test_remove_category_write_error(
     with patch.object(
         LocalTodoListStore, "_store", side_effect=OSError(errno.EIO, "Error")
     ):
-        result = await _remove_fresh_produce(hass, config_entry.entry_id)
+        result = await change_categories(hass, config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_save"}
