@@ -1717,6 +1717,15 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "bluetti_bluetooth": {
+      "name": "Bluetti Bluetooth",
+      "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "bluetti_modbus": {
       "name": "BLUETTI Modbus",
       "integration_type": "device",
@@ -1725,11 +1734,7 @@
       ],
       "connectivity": [
         "modbus"
-      ]
-    },
-    "bluetti_bt": {
-      "name": "Bluetti BT",
-      "integration_type": "device",
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },

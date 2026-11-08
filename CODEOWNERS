@@ -265,10 +265,10 @@ AGENTS.md @home-assistant/core
 /tests/components/bluetooth/ @bdraco
 /homeassistant/components/bluetooth_adapters/ @bdraco
 /tests/components/bluetooth_adapters/ @bdraco
+/homeassistant/components/bluetti_bluetooth/ @Patrick762
+/tests/components/bluetti_bluetooth/ @Patrick762
 /homeassistant/components/bluetti_modbus/ @chpego
 /tests/components/bluetti_modbus/ @chpego
-/homeassistant/components/bluetti_bt/ @Patrick762
-/tests/components/bluetti_bt/ @Patrick762
 /homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
 /tests/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
 /homeassistant/components/bosch_alarm/ @mag1024 @sanjay900

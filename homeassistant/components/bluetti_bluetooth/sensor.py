@@ -1,4 +1,4 @@
-"""Sensor for Bluetti BT integration."""
+"""Sensor for Bluetti Bluetooth integration."""
 
 from decimal import Decimal
 from enum import Enum

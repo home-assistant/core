@@ -1,4 +1,4 @@
-"""Constants for the Bluetti BT integration."""
+"""Constants for the Bluetti Bluetooth integration."""
 
 from dataclasses import dataclass
 
@@ -7,7 +7,7 @@ from bluetti_bt_lib import FieldName
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
 
-DOMAIN = "bluetti_bt"
+DOMAIN = "bluetti_bluetooth"
 
 CONF_ENCRYPTION = "encryption"
 CONF_SERIAL = "serial"

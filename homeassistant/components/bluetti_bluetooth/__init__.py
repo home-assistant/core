@@ -1,4 +1,4 @@
-"""The Bluetti BT integration."""
+"""The Bluetti Bluetooth integration."""
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -10,8 +10,8 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BluettiBtConfigEntry) -> bool:
-    """Set up Bluetti BT from a config entry."""
+async def async_setup_entry(hass: HomeAssistant, entry: BluettiBtConfigEntry) -> None:
+    """Set up Bluetti Bluetooth from a config entry."""
 
     coordinator = PollingCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -19,9 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluettiBtConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BluettiBtConfigEntry) -> bool:
-    """Unload Bluetti BT config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+async def async_unload_entry(hass: HomeAssistant, entry: BluettiBtConfigEntry) -> None:
+    """Unload Bluetti Bluetooth config entry."""
+    return await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

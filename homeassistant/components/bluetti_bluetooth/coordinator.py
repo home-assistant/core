@@ -73,7 +73,6 @@ class PollingCoordinator(DataUpdateCoordinator):
             bluetooth.async_address_present(self.hass, str(self.mac), connectable=True)
             is False
         ):
-            self.last_update_success = False
             raise UpdateFailed("Device not connected")
 
         data: (
@@ -81,7 +80,6 @@ class PollingCoordinator(DataUpdateCoordinator):
         ) = await self.reader.read()
 
         if not data:
-            self.last_update_success = False
             raise UpdateFailed("Device returned no data")
 
         self.logger.debug("Device data: %s", data)

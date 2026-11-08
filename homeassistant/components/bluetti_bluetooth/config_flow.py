@@ -1,4 +1,4 @@
-"""Config flow for Bluetti BT integration."""
+"""Config flow for Bluetti Bluetooth integration."""
 
 import logging
 from typing import Any, override
@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle config flow for Bluetti BT devices."""
+    """Handle config flow for Bluetti Bluetooth devices."""
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -118,7 +118,6 @@ class BluettiConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Device detection complete")
 
         if result is None:
-            _LOGGER.error("Unknown or unsupported device")
             return "unsupported_device"
 
         data = {
