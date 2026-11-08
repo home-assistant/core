@@ -1,6 +1,7 @@
 """Test wake word audio from satellites in Assist pipelines."""
 
 from collections.abc import AsyncGenerator, AsyncIterable
+from unittest.mock import patch
 
 import pytest
 
@@ -28,6 +29,7 @@ async def _async_run_pipeline(
     end_stage: assist_pipeline.PipelineStage = assist_pipeline.PipelineStage.STT,
     start_stage: assist_pipeline.PipelineStage = assist_pipeline.PipelineStage.STT,
     wake_word_phrase: str | None = "okay nabu",
+    is_vad_enabled: bool = False,
 ) -> list[PipelineEvent]:
     events: list[PipelineEvent] = []
     await assist_pipeline.async_pipeline_from_audio_stream(
@@ -45,7 +47,7 @@ async def _async_run_pipeline(
         stt_stream=audio_stream,
         wake_word_phrase=wake_word_phrase,
         wake_word_audio_ms=wake_word_audio_ms,
-        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=is_vad_enabled),
         start_stage=start_stage,
         end_stage=end_stage,
     )
@@ -165,3 +167,32 @@ async def test_wake_word_audio_requires_phrase(
         "message": "wake_word_phrase is required with wake_word_audio_ms",
     }
     assert not mock_stt_provider_entity.received
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_wake_word_audio_timestamps(
+    hass: HomeAssistant,
+    mock_stt_provider_entity: MockSTTProviderEntity,
+) -> None:
+    """Test audio timestamps count from the start of the stream."""
+    with patch.object(
+        mock_stt_provider_entity,
+        "async_get_audio_processing",
+        return_value=stt.SpeechAudioProcessing(
+            requires_external_vad=False,
+            prefers_auto_gain_enabled=True,
+            prefers_noise_reduction_enabled=True,
+        ),
+    ):
+        events = await _async_run_pipeline(
+            hass,
+            _audio_stream(WAKE, WORD, COMMAND),
+            2 * MS_PER_CHUNK,
+            is_vad_enabled=True,
+        )
+
+    # The provider ends the command after the last chunk, which starts 20 ms
+    # into the stream, as when the pipeline detects the wake word itself
+    assert [
+        event.data for event in events if event.type is PipelineEventType.STT_VAD_END
+    ] == [{"timestamp": 2 * MS_PER_CHUNK}]

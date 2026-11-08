@@ -1082,13 +1082,13 @@ class _DefaultPipelineProcessor:
         )
 
     async def process_volume_only(
-        self, audio_stream: AsyncIterable[bytes]
+        self, audio_stream: AsyncIterable[bytes], start_ms: int = 0
     ) -> AsyncGenerator[EnhancedAudioChunk]:
         """Apply volume transformation only with optional chunking.
 
         No VAD/audio enhancements are applied.
         """
-        timestamp_ms = 0
+        timestamp_ms = start_ms
         async for chunk in audio_stream:
             if self.host.audio_settings.volume_multiplier != 1.0:
                 chunk = audioop.mul(
@@ -1106,7 +1106,7 @@ class _DefaultPipelineProcessor:
                 timestamp_ms += MS_PER_CHUNK
 
     async def process_enhance_audio(
-        self, audio_stream: AsyncIterable[bytes]
+        self, audio_stream: AsyncIterable[bytes], start_ms: int = 0
     ) -> AsyncGenerator[EnhancedAudioChunk]:
         """Split audio into chunks and apply audio enhancements.
 
@@ -1115,7 +1115,7 @@ class _DefaultPipelineProcessor:
         """
         assert self.audio_enhancer is not None
 
-        timestamp_ms = 0
+        timestamp_ms = start_ms
         async for dirty_samples in audio_stream:
             if self.host.audio_settings.volume_multiplier != 1.0:
                 # Static gain
@@ -1138,6 +1138,7 @@ class _DefaultPipelineProcessor:
         stt_audio_buffer: list[EnhancedAudioChunk] = []
         stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
         stt_stream = request.stt_stream
+        skipped_ms = 0
 
         if (
             (stt_stream is not None)
@@ -1145,18 +1146,22 @@ class _DefaultPipelineProcessor:
             and (current_stage == PipelineStage.STT)
         ):
             # Whole chunks only, since the partial chunk at the end is dropped
+            skipped_ms = (request.wake_word_audio_ms // MS_PER_CHUNK) * MS_PER_CHUNK
             stt_stream = _skip_audio(
-                stt_stream,
-                (request.wake_word_audio_ms // MS_PER_CHUNK) * BYTES_PER_CHUNK,
+                stt_stream, skipped_ms * BYTES_PER_CHUNK // MS_PER_CHUNK
             )
 
         if stt_stream is not None:
+            # Timestamps count from the start of the stream, as when the
+            # pipeline detects the wake word itself
             if self.host.audio_settings.needs_processor:
                 # VAD/noise suppression/auto gain/volume
-                stt_processed_stream = self.process_enhance_audio(stt_stream)
+                stt_processed_stream = self.process_enhance_audio(
+                    stt_stream, skipped_ms
+                )
             else:
                 # Volume multiplier only
-                stt_processed_stream = self.process_volume_only(stt_stream)
+                stt_processed_stream = self.process_volume_only(stt_stream, skipped_ms)
 
         if current_stage == PipelineStage.WAKE_WORD:
             # wake-word-detection
