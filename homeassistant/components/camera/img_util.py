@@ -27,6 +27,10 @@ def _find_exif_segment(jpeg: bytes) -> bytes | None:
         return None
     pos = 2
     while pos + 4 <= len(jpeg) and jpeg[pos] == 0xFF:
+        # A marker may be preceded by any number of 0xFF fill bytes
+        if jpeg[pos + 1] == 0xFF:
+            pos += 1
+            continue
         marker = jpeg[pos + 1]
         if marker == _JPEG_SOS:
             return None
