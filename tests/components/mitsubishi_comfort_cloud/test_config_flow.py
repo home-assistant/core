@@ -136,23 +136,40 @@ async def test_local_account_does_not_block_cloud(
     assert result["result"].unique_id == mock_cloud_account.user_id
 
 
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        pytest.param(AuthenticationError("expired"), "invalid_auth", id="auth"),
+        pytest.param(
+            DeviceConnectionError("offline"), "cannot_connect", id="connection"
+        ),
+        pytest.param(RuntimeError("unexpected"), "unknown", id="unexpected"),
+    ],
+)
+@pytest.mark.parametrize("method", ["login", "discover_cloud_devices"])
 async def test_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_cloud_account: AsyncMock,
     mock_setup_entry: AsyncMock,
+    error: Exception,
+    expected: str,
+    method: str,
 ) -> None:
     """Reauthentication updates and reloads the original entry."""
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
-    mock_cloud_account.login.side_effect = AuthenticationError("expired")
+    getattr(mock_cloud_account, method).side_effect = error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected}
+    assert mock_config_entry.data == USER_INPUT
+    mock_setup_entry.assert_not_awaited()
     assert result["step_id"] == "reauth_confirm"
-    mock_cloud_account.login.side_effect = None
+    getattr(mock_cloud_account, method).side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {**USER_INPUT, CONF_PASSWORD: "new-password"}
     )

@@ -90,6 +90,9 @@
     "set_temperature_failed": {
       "message": "{device_name} did not accept the requested temperature"
     },
+    "single_temperature_not_supported": {
+      "message": "A single target temperature is not valid in the current or requested HVAC mode. Select Heat or Cool, or set high and low temperatures for Heat/Cool."
+    },
     "update_failed": {
       "message": "{device_name} returned no data"
     }

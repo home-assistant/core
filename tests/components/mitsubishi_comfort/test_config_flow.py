@@ -1,6 +1,7 @@
 """Tests for the Mitsubishi Comfort config flow."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 from mitsubishi_comfort import DeviceInfo
@@ -621,3 +622,70 @@ async def test_dhcp_no_account_aborts(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        pytest.param(AuthenticationError("expired"), "invalid_auth", id="auth"),
+        pytest.param(
+            DeviceConnectionError("offline"), "cannot_connect", id="connection"
+        ),
+        pytest.param(RuntimeError("unexpected"), "unknown", id="unexpected"),
+    ],
+)
+@pytest.mark.parametrize("method", ["login", "discover_devices"])
+async def test_reauth_failure_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    mock_device_info: DeviceInfo,
+    mock_setup_entry: AsyncMock,
+    error: Exception,
+    expected: str,
+    method: str,
+) -> None:
+    """Failed sign-ins preserve local data, and retries merge recovered fields."""
+    credentials = {
+        MOCK_SERIAL: {"password": "saved", "crypto_serial": "saved", "mac": MOCK_MAC},
+        "OTHER_SERIAL": {"password": "other", "crypto_serial": "", "mac": ""},
+    }
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_CREDENTIALS: credentials},
+    )
+    original = deepcopy(dict(mock_config_entry.data))
+    mock_device_info.password = "recovered"
+    mock_device_info.crypto_serial = ""
+    mock_device_info.mac = ""
+    getattr(mock_cloud_account, method).side_effect = error
+    result = await mock_config_entry.start_reauth_flow(hass)
+    user_input = {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: "new-password"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected}
+    assert mock_config_entry.data == original
+    mock_setup_entry.assert_not_awaited()
+
+    getattr(mock_cloud_account, method).side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        **original,
+        **user_input,
+        CONF_CREDENTIALS: {
+            **credentials,
+            MOCK_SERIAL: {**credentials[MOCK_SERIAL], "password": "recovered"},
+        },
+    }
+    mock_setup_entry.assert_awaited_once()

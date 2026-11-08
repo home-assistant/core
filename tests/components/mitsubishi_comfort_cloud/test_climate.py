@@ -878,3 +878,135 @@ async def test_fan_mode_round_trip(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).attributes["fan_mode"] == fan_mode
+
+
+@pytest.mark.parametrize(
+    (
+        "initial_units",
+        "units",
+        "initial_min",
+        "initial_max",
+        "minimum",
+        "maximum",
+        "requested",
+        "celsius",
+    ),
+    [
+        pytest.param(
+            METRIC_SYSTEM,
+            US_CUSTOMARY_SYSTEM,
+            7,
+            35,
+            45,
+            95,
+            72,
+            22.5,
+            id="celsius-to-fahrenheit",
+        ),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            METRIC_SYSTEM,
+            45,
+            95,
+            7,
+            35,
+            22.5,
+            22.5,
+            id="fahrenheit-to-celsius",
+        ),
+    ],
+)
+async def test_default_bounds_follow_unit_changes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    initial_units: UnitSystem,
+    units: UnitSystem,
+    initial_min: float,
+    initial_max: float,
+    minimum: float,
+    maximum: float,
+    requested: float,
+    celsius: float,
+) -> None:
+    """Previously accessed default bounds follow changed temperature units."""
+    hass.config.units = initial_units
+    profile = mock_cloud_account.get_device_profile.return_value
+    profile["minimumSetPoints"] = {}
+    profile["maximumSetPoints"] = {}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MIN_TEMP] == initial_min
+    assert state.attributes[ATTR_MAX_TEMP] == initial_max
+
+    hass.config.units = units
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        "set_temperature",
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: requested},
+        blocking=True,
+    )
+    mock_cloud_account.send_command.assert_awaited_once_with(
+        MOCK_SERIAL, {"spCool": celsius}
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MIN_TEMP] == minimum
+    assert state.attributes[ATTR_MAX_TEMP] == maximum
+    assert state.attributes[ATTR_TEMPERATURE] == requested
+
+
+@pytest.mark.parametrize("mode", ["off", "auto", "autoCool", "autoHeat", "dry", "vent"])
+async def test_reject_single_temperature_without_applicable_target(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    mode: str,
+) -> None:
+    """A single temperature cannot silently succeed when no target is exposed."""
+    mock_cloud_account.get_device_details.return_value["operationMode"] = mode
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    before = hass.states.get(ENTITY_ID)
+
+    with pytest.raises(
+        ServiceValidationError, match="single target temperature"
+    ) as exc:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            "set_temperature",
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22},
+            blocking=True,
+        )
+    assert exc.value.translation_key == "single_temperature_not_supported"
+    mock_cloud_account.send_command.assert_not_awaited()
+    assert hass.states.get(ENTITY_ID) == before
+
+
+@pytest.mark.parametrize("mode", ["off", "heat_cool", "dry", "fan_only"])
+async def test_reject_inapplicable_temperature_before_mode_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    mode: str,
+) -> None:
+    """Invalid combined requests leave the operating mode and targets unchanged."""
+    mock_cloud_account.get_device_profile.return_value.update(
+        {"hasModeDry": True, "hasModeVent": True}
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    before = hass.states.get(ENTITY_ID)
+
+    with pytest.raises(ServiceValidationError, match="single target temperature"):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            "set_temperature",
+            {ATTR_ENTITY_ID: ENTITY_ID, "hvac_mode": mode, ATTR_TEMPERATURE: 22},
+            blocking=True,
+        )
+    mock_cloud_account.send_command.assert_not_awaited()
+    assert hass.states.get(ENTITY_ID) == before

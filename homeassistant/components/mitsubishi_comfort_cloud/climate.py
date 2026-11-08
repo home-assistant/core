@@ -15,6 +15,8 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -22,8 +24,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DOMAIN
 from .coordinator import (
@@ -266,7 +269,11 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
                 )
                 if bound is not None
             ),
-            default=super().min_temp,
+            default=TemperatureConverter.convert(
+                DEFAULT_MIN_TEMP,
+                UnitOfTemperature.CELSIUS,
+                self.native_temperature_unit,
+            ),
         )
 
     @property
@@ -285,7 +292,11 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
                 )
                 if bound is not None
             ),
-            default=super().max_temp,
+            default=TemperatureConverter.convert(
+                DEFAULT_MAX_TEMP,
+                UnitOfTemperature.CELSIUS,
+                self.native_temperature_unit,
+            ),
         )
 
     @property
@@ -327,6 +338,13 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
+        if ATTR_TEMPERATURE in kwargs and kwargs.get(
+            ATTR_HVAC_MODE, self.hvac_mode
+        ) not in (HVACMode.COOL, HVACMode.HEAT):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="single_temperature_not_supported",
+            )
         for key in (ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW):
             if key in kwargs:
                 kwargs[key] = self._celsius_setpoint(kwargs[key])
@@ -358,7 +376,7 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
 
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            if mode in ("cool", "autoCool"):
+            if mode == "cool":
                 result = await self.coordinator.async_command(
                     self._device.set_cool_setpoint(temp)
                 )
@@ -367,7 +385,7 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
                     self.async_write_ha_state()
                 else:
                     failed = True
-            elif mode in ("heat", "autoHeat"):
+            elif mode == "heat":
                 result = await self.coordinator.async_command(
                     self._device.set_heat_setpoint(temp)
                 )
@@ -376,12 +394,6 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
                     self.async_write_ha_state()
                 else:
                     failed = True
-            else:
-                _LOGGER.debug(
-                    "Ignoring temperature for %s: no setpoint applies in mode %s",
-                    self._device.name,
-                    mode,
-                )
 
         if failed:
             self._command_failed("set_temperature_failed")
