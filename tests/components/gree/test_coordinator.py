@@ -14,7 +14,7 @@ from homeassistant.components.gree.const import UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .common import async_setup_gree, build_device_mock, dispatch_device_response
+from .common import async_setup_gree, build_device_mock
 
 ENTITY_ID = "climate.fake_device_1"
 
@@ -56,7 +56,7 @@ async def test_responses_sustain_and_restore_availability(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         device().power = False
-        dispatch_device_response(device(), response, {"Pow": 0})
+        device().callbacks[response]({"Pow": 0})
         await hass.async_block_till_done()
 
         state = hass.states.get(ENTITY_ID)
@@ -73,7 +73,7 @@ async def test_responses_sustain_and_restore_availability(
         assert state.state == expected_state
 
     device().power = False
-    dispatch_device_response(device(), response, {"Pow": 0})
+    device().callbacks[response]({"Pow": 0})
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -99,7 +99,7 @@ async def test_one_lost_response_is_tolerated(
         assert state.state == HVACMode.OFF
 
     device().power = False
-    dispatch_device_response(device(), Response.RESULT, {"Pow": 0})
+    device().callbacks[Response.RESULT]({"Pow": 0})
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -139,7 +139,7 @@ async def test_response_publishes_immediately(
     await async_setup_gree(hass)
 
     device().power = True
-    dispatch_device_response(device(), response, {"Pow": 1})
+    device().callbacks[response]({"Pow": 1})
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -165,7 +165,7 @@ async def test_device_availability_is_independent(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         responding.power = False
-        dispatch_device_response(responding, Response.DATA, {"Pow": 0})
+        responding.callbacks[Response.DATA]({"Pow": 0})
         await hass.async_block_till_done()
 
     silent_state = hass.states.get(ENTITY_ID)

@@ -80,7 +80,7 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from .common import async_setup_gree, build_device_mock, dispatch_device_response
+from .common import async_setup_gree, build_device_mock
 
 ENTITY_ID = f"{CLIMATE_DOMAIN}.fake_device_1"
 
@@ -303,7 +303,7 @@ async def test_update_connection_send_failure_recovery(
     assert state.name == "fake-device-1"
     assert state.state == STATE_UNAVAILABLE
 
-    dispatch_device_response(fake_device, Response.RESULT, {})
+    fake_device.callbacks[Response.RESULT]({})
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
@@ -388,7 +388,7 @@ async def test_unresponsive_device(
     assert state.name == "fake-device-1"
     assert state.state == STATE_UNAVAILABLE
 
-    dispatch_device_response(fake_device, Response.RESULT, {})
+    fake_device.callbacks[Response.RESULT]({})
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
@@ -1065,7 +1065,7 @@ async def test_fahrenheit_temperature_unit_sync(
     fake_device.temperature_units = TemperatureUnits.F
     fake_device.current_temperature = 69
     fake_device.target_temperature = 68
-    dispatch_device_response(fake_device, response, {"TemUn": 1})
+    fake_device.callbacks[response]({"TemUn": 1})
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
