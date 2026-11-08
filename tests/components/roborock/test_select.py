@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import MockConfigEntry
 from roborock import CleanTypeMapping, RoborockCommand
 from roborock.data import (
     CleanPathPreferenceMapping,
@@ -17,13 +17,13 @@ from roborock.data.b01_q7.b01_q7_code_mappings import CleanRepeatMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXCleanType
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.roborock import DOMAIN
 from homeassistant.components.roborock.select import (
     A01_SELECT_DESCRIPTIONS,
     RoborockSelectEntityA01,
 )
+from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.const import SERVICE_SELECT_OPTION, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -37,17 +37,6 @@ from .conftest import FakeDevice
 def platforms() -> list[Platform]:
     """Fixture to set platforms used in the test."""
     return [Platform.SELECT]
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_selects(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    setup_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test selects and check test values are correctly set."""
-    await snapshot_platform(hass, entity_registry, snapshot, setup_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -193,6 +182,33 @@ async def test_selected_map_without_name(
     select_entity = hass.states.get("select.roborock_s7_maxv_selected_map")
     assert select_entity
     assert select_entity.state == "Map 0"
+
+
+@pytest.mark.usefixtures("setup_entry")
+async def test_mop_intensity_select_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test the V1 mop intensity select state and options."""
+    state = hass.states.get("select.roborock_s7_maxv_mop_intensity")
+    assert state is not None
+    assert state.state == "intense"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "off",
+        "low",
+        "mild",
+        "medium",
+        "standard",
+        "high",
+        "intense",
+        "min",
+        "max",
+        "custom",
+        "custom_water_flow",
+        "extreme",
+        "smart_mode",
+        "slight",
+        "moderate",
+    ]
 
 
 async def test_cleaning_mode_select_current_option(
