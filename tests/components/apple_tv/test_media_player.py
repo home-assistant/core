@@ -27,6 +27,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     BrowseMedia,
     MediaClass,
+    MediaPlayerState,
     MediaType,
 )
 from homeassistant.components.media_source import PlayMedia
@@ -437,3 +438,33 @@ async def test_connected_power_off_remains_immediate(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("device_state", "expected_state"),
+    [
+        (DeviceState.Playing, MediaPlayerState.PLAYING),
+        (DeviceState.Paused, MediaPlayerState.OFF),
+        (DeviceState.Idle, MediaPlayerState.OFF),
+    ],
+)
+async def test_state_while_power_off(
+    hass: HomeAssistant,
+    mock_atv: AsyncMock,
+    device_state: DeviceState,
+    expected_state: MediaPlayerState,
+) -> None:
+    """A device that reports power off but is playing (AirPlay audio) is playing."""
+    mock_atv.power.power_state = PowerState.Off
+    mock_atv.push_updater.listener.playstatus_update(
+        mock_atv.push_updater,
+        Playing(device_state=device_state, title="Song", artist="Artist"),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
+    if expected_state is MediaPlayerState.PLAYING:
+        assert state.attributes["media_title"] == "Song"
+        assert state.attributes["media_artist"] == "Artist"
