@@ -4,6 +4,7 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock
+from zoneinfo import ZoneInfo
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -57,7 +58,7 @@ async def utc_entry(
 async def _async_get_forecast(
     hass: HomeAssistant,
     entry_id: str,
-    **extra: datetime,
+    **extra: datetime | str,
 ) -> dict[str, Any]:
     """Call get_forecast and return its response."""
     response = await hass.services.async_call(
@@ -155,6 +156,223 @@ async def test_get_forecast_filters_series(
     assert list(response["solar_wh"]) == expected_keys
     assert response["solar_wh"] == {key: _SOLAR_WH[key] for key in expected_keys}
     assert response["consumption_wh"] == response["solar_wh"]
+
+
+_BERLIN = ZoneInfo("Europe/Berlin")
+_FALL_BACK_SAMPLES = (
+    ("2026-10-24T12:00:00+00:00", 1),
+    ("2026-10-25T00:00:00+00:00", 10),
+    ("2026-10-25T01:00:00+00:00", 20),
+    ("2026-10-25T02:00:00+00:00", 30),
+    ("2026-10-26T12:00:00+00:00", 4),
+)
+_FALL_BACK_WH = {
+    "2026-10-24T14:00:00+02:00": 1.0,
+    "2026-10-25T02:00:00+02:00": 10.0,
+    "2026-10-25T02:00:00+01:00": 20.0,
+    "2026-10-25T03:00:00+01:00": 30.0,
+    "2026-10-26T13:00:00+01:00": 4.0,
+}
+_SPRING_SAMPLES = (
+    ("2026-03-28T12:00:00+00:00", 1),
+    ("2026-03-29T00:00:00+00:00", 10),
+    ("2026-03-29T01:00:00+00:00", 20),
+    ("2026-03-30T12:00:00+00:00", 4),
+)
+_SPRING_WH = {
+    "2026-03-28T13:00:00+01:00": 1.0,
+    "2026-03-29T01:00:00+01:00": 10.0,
+    "2026-03-29T03:00:00+02:00": 20.0,
+    "2026-03-30T14:00:00+02:00": 4.0,
+}
+
+
+async def _async_setup_hourly_samples(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    client: AsyncMock,
+    time_zone: str,
+    samples: tuple[tuple[str, int], ...],
+    now: str,
+) -> None:
+    """Load an entry whose cached forecast is the given UTC hourly samples."""
+    await hass.config.async_set_time_zone(time_zone)
+    records = [
+        (int(datetime.fromisoformat(timestamp).timestamp()), value)
+        for timestamp, value in samples
+    ]
+    moment = datetime.fromisoformat(now)
+
+    def _frozen_now() -> datetime:
+        return moment
+
+    stats = client.installations.stats.return_value
+    for series in (stats["solar_yield"], stats["consumption"]):
+        series.records = records
+        series.custom_dt_now = _frozen_now
+        series.time_zone = ZoneInfo(time_zone)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("samples", "now", "expected"),
+    [
+        pytest.param(
+            _FALL_BACK_SAMPLES,
+            "2026-10-25T12:00:00+00:00",
+            _FALL_BACK_WH,
+            id="fall-back",
+        ),
+        pytest.param(
+            _SPRING_SAMPLES,
+            "2026-03-29T12:00:00+00:00",
+            _SPRING_WH,
+            id="spring-forward",
+        ),
+    ],
+)
+async def test_get_forecast_keeps_dst_transition_hours(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vrm_client: AsyncMock,
+    samples: tuple[tuple[str, int], ...],
+    now: str,
+    expected: dict[str, float],
+) -> None:
+    """Keep every UTC sample, including both occurrences of a repeated local hour."""
+    await _async_setup_hourly_samples(
+        hass, mock_config_entry, mock_vrm_client, "Europe/Berlin", samples, now
+    )
+
+    response = await _async_get_forecast(hass, mock_config_entry.entry_id)
+
+    assert response["solar_wh"] == expected
+    assert response["consumption_wh"] == expected
+
+
+@pytest.mark.parametrize(
+    ("start", "end", "expected_keys"),
+    [
+        pytest.param(
+            datetime(2026, 10, 25, 2, 30, tzinfo=_BERLIN, fold=0),
+            datetime(2026, 10, 25, 2, 15, tzinfo=_BERLIN, fold=1),
+            ["2026-10-25T02:00:00+01:00"],
+            id="fold-end-before-wall-start",
+        ),
+        pytest.param(
+            datetime(2026, 10, 25, 2, 0, tzinfo=_BERLIN, fold=0),
+            datetime(2026, 10, 25, 2, 0, tzinfo=_BERLIN, fold=1),
+            ["2026-10-25T02:00:00+02:00"],
+            id="same-wall-time",
+        ),
+    ],
+)
+async def test_get_forecast_repeated_hour_bounds_use_instants(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vrm_client: AsyncMock,
+    start: datetime,
+    end: datetime,
+    expected_keys: list[str],
+) -> None:
+    """Compare a folded local window as instants and return the matching hour."""
+    await _async_setup_hourly_samples(
+        hass,
+        mock_config_entry,
+        mock_vrm_client,
+        "Europe/Berlin",
+        _FALL_BACK_SAMPLES,
+        "2026-10-25T12:00:00+00:00",
+    )
+
+    response = await _async_get_forecast(
+        hass,
+        mock_config_entry.entry_id,
+        **{
+            VictronRemoteMonitoringServiceArgument.START: start,
+            VictronRemoteMonitoringServiceArgument.END: end,
+        },
+    )
+
+    assert list(response["solar_wh"]) == expected_keys
+    assert response["solar_wh"] == {key: _FALL_BACK_WH[key] for key in expected_keys}
+    assert response["consumption_wh"] == response["solar_wh"]
+
+
+@pytest.mark.parametrize(
+    ("samples", "now", "extra", "expected"),
+    [
+        pytest.param(
+            _FALL_BACK_SAMPLES,
+            "2026-10-25T12:00:00+00:00",
+            {
+                VictronRemoteMonitoringServiceArgument.START: "2026-10-25T02:30:00+02:00",
+                VictronRemoteMonitoringServiceArgument.END: "2026-10-25T02:15:00+01:00",
+            },
+            {"2026-10-25T02:00:00+01:00": 20.0},
+            id="offset-strings",
+        ),
+        pytest.param(
+            _FALL_BACK_SAMPLES,
+            "2026-10-25T12:00:00+00:00",
+            {
+                VictronRemoteMonitoringServiceArgument.START: "2026-10-25T02:30:00",
+                VictronRemoteMonitoringServiceArgument.END: "2026-10-25T03:00:00",
+            },
+            {"2026-10-25T02:00:00+01:00": 20.0},
+            id="naive-ambiguous-hour",
+        ),
+        pytest.param(
+            _SPRING_SAMPLES,
+            "2026-03-29T12:00:00+00:00",
+            {VictronRemoteMonitoringServiceArgument.START: "2026-03-29T02:30:00"},
+            {"2026-03-30T14:00:00+02:00": 4.0},
+            id="naive-missing-hour",
+        ),
+        pytest.param(
+            _FALL_BACK_SAMPLES,
+            "2026-10-25T12:00:00+00:00",
+            {VictronRemoteMonitoringServiceArgument.START: "2026-10-25T02:30:00+02:00"},
+            {
+                "2026-10-25T02:00:00+01:00": 20.0,
+                "2026-10-25T03:00:00+01:00": 30.0,
+                "2026-10-26T13:00:00+01:00": 4.0,
+            },
+            id="start-between-repeated-hours",
+        ),
+        pytest.param(
+            _FALL_BACK_SAMPLES,
+            "2026-10-25T12:00:00+00:00",
+            {VictronRemoteMonitoringServiceArgument.END: "2026-10-25T02:30:00+02:00"},
+            {
+                "2026-10-24T14:00:00+02:00": 1.0,
+                "2026-10-25T02:00:00+02:00": 10.0,
+            },
+            id="end-between-repeated-hours",
+        ),
+    ],
+)
+async def test_get_forecast_transition_bound_forms(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vrm_client: AsyncMock,
+    samples: tuple[tuple[str, int], ...],
+    now: str,
+    extra: dict[str, str],
+    expected: dict[str, float],
+) -> None:
+    """Resolve text bounds around a DST transition to the matching local hours."""
+    await _async_setup_hourly_samples(
+        hass, mock_config_entry, mock_vrm_client, "Europe/Berlin", samples, now
+    )
+
+    response = await _async_get_forecast(hass, mock_config_entry.entry_id, **extra)
+
+    assert list(response["solar_wh"]) == list(expected)
+    assert response["solar_wh"] == expected
+    assert response["consumption_wh"] == expected
 
 
 async def test_get_forecast_naive_bounds_use_default_timezone(

@@ -47,19 +47,15 @@ GET_FORECAST_SCHEMA = probatio.Schema(
 )
 
 
-def _in_default_timezone(value: datetime) -> datetime:
-    """Interpret a naive datetime in the Home Assistant default timezone."""
-    if value.tzinfo is None:
-        return value.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
-    return value
-
-
 def _series_response(
     points: dict[datetime, float],
     start: datetime | None,
     end: datetime | None,
 ) -> dict[str, JsonValueType]:
-    """Return watt-hours keyed by ISO timestamps in the default timezone."""
+    """Return watt-hours keyed by local ISO timestamps.
+
+    Points and bounds are UTC instants.
+    """
     time_zone = dt_util.DEFAULT_TIME_ZONE
     response: dict[str, JsonValueType] = {}
     for timestamp in sorted(points):
@@ -88,9 +84,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         end: datetime | None = call.data.get(VictronRemoteMonitoringServiceArgument.END)
         if start is not None:
-            start = _in_default_timezone(start)
+            start = dt_util.as_utc(start)
         if end is not None:
-            end = _in_default_timezone(end)
+            end = dt_util.as_utc(end)
         if start is not None and end is not None and end < start:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

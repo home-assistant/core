@@ -94,12 +94,13 @@ async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastSto
     )
     solar = _forecast_aggregation(stats.get("solar_yield"))
     consumption = _forecast_aggregation(stats.get("consumption"))
+    # UTC keys stay distinct when a local hour is repeated.
     return VRMForecastStore(
         site_id=site_id,
         solar=solar,
         consumption=consumption,
-        solar_wh=_hourly_watt_hours(solar, time_zone),
-        consumption_wh=_hourly_watt_hours(consumption, time_zone),
+        solar_wh=_hourly_watt_hours(solar, dt.UTC),
+        consumption_wh=_hourly_watt_hours(consumption, dt.UTC),
     )
 
 
