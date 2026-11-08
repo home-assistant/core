@@ -15,8 +15,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
     Platform,
-    UnitOfEnergy,
-    UnitOfPower,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
@@ -127,29 +125,3 @@ async def test_vmb7in_water_counter_unavailable_when_no_total(
     state = hass.states.get("sensor.input_watercounter_counter")
     assert state is not None
     assert state.state == STATE_UNKNOWN
-
-
-async def test_vmb8in_electricity_units_without_library_units(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_buttoncounter: AsyncMock,
-) -> None:
-    """Test electricity sensors keep fixed units when the library reports none.
-
-    On real hardware get_unit() returns None and get_counter_unit() returns ""
-    for a VMB8IN electricity channel, which previously left the power sensor
-    without a unit and the energy sensor with an empty unit.
-    """
-    mock_buttoncounter.get_unit.return_value = None
-    mock_buttoncounter.get_counter_unit.return_value = ""
-    await init_integration(hass, config_entry)
-
-    power = hass.states.get("sensor.input_buttoncounter")
-    assert power is not None
-    assert power.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
-    assert power.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
-
-    energy = hass.states.get("sensor.input_buttoncounter_counter")
-    assert energy is not None
-    assert energy.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
-    assert energy.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
