@@ -12,5 +12,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["accuweather"],
+  "quality_scale": "silver",
   "requirements": ["accuweather==5.1.0"]
 }
