@@ -159,10 +159,8 @@ class MusicAssistantDspPresetSelect(MusicAssistantEntity, SelectEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Load the presets and the player's DSP config and follow their changes."""
-        self._dsp_presets = await self.mass.config.get_dsp_preset()
-        self._dsp_config = await self.mass.config.get_player_dsp_config(self.player_id)
-        await super().async_added_to_hass()
+        """Follow the presets and the player's DSP config, then load them."""
+        # subscribe first, so a change while loading is not missed
         self.async_on_remove(
             self.mass.subscribe(
                 self._on_dsp_config_updated,
@@ -175,6 +173,9 @@ class MusicAssistantDspPresetSelect(MusicAssistantEntity, SelectEntity):
                 self._on_dsp_presets_updated, EventType.DSP_PRESETS_UPDATED
             )
         )
+        self._dsp_presets = await self.mass.config.get_dsp_preset()
+        self._dsp_config = await self.mass.config.get_player_dsp_config(self.player_id)
+        await super().async_added_to_hass()
 
     @property
     @override
