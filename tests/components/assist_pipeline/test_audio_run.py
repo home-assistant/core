@@ -432,3 +432,28 @@ async def test_a_provider_that_finishes_keeps_its_boundary(
     ]
     assert vad_ends == [{"timestamp": 40}]
     assert b"".join(mock_stt_provider_entity.received) == COMMAND * 3
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_a_boundary_at_the_end_of_the_audio(
+    hass: HomeAssistant, mock_stt_provider_entity: MockSTTProviderEntity
+) -> None:
+    """Test the end of the command is still reported when no audio follows it."""
+    events = await _async_run_pipeline(
+        hass,
+        _audio_stream(WAKE, COMMAND, COMMAND, COMMAND),
+        is_vad_enabled=True,
+        client=MockClient(
+            [
+                (0, accepted(MS_PER_CHUNK)),
+                (2, speech_started(20)),
+                (4, speech_ended(40)),
+            ]
+        ),
+    )
+
+    vad_ends = [
+        event.data for event in events if event.type is PipelineEventType.STT_VAD_END
+    ]
+    assert vad_ends == [{"timestamp": 40}]
+    assert b"".join(mock_stt_provider_entity.received) == COMMAND * 3

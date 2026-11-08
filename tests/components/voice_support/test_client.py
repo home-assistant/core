@@ -397,6 +397,20 @@ async def test_run_close_stops_the_relay(hass: HomeAssistant) -> None:
     assert queue.qsize() == 1
 
 
+async def test_run_error_ends_the_run(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an app that cannot take the run releases whoever waits on it."""
+    websocket = FakeWebsocket(
+        [(0, {"type": "error", "code": "busy", "message": "Try later"})]
+    )
+    run = _run(hass, websocket, _audio(WAKE, COMMAND))
+
+    assert await run.async_wake_word() is None
+    assert not run.listening
+    assert "could not handle the run (busy): Try later" in caplog.text
+
+
 @pytest.mark.parametrize(
     ("answer", "wake_word", "speech_started_ms", "speech_ended_ms", "logged"),
     [
@@ -409,14 +423,6 @@ async def test_run_close_stops_the_relay(hass: HomeAssistant) -> None:
         ),
         pytest.param(speech_started(20), None, 20, None, "", id="speech_started"),
         pytest.param(speech_ended(40), None, None, 40, "", id="speech_ended"),
-        pytest.param(
-            {"type": "error", "code": "busy", "message": "Try later"},
-            None,
-            None,
-            None,
-            "could not handle the run (busy): Try later",
-            id="error",
-        ),
         pytest.param(
             {"type": "stt-vad-end"}, None, None, None, "said something odd", id="odd"
         ),

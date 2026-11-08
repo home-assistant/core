@@ -518,9 +518,13 @@ class _DefaultPipelineProcessor:
         _LOGGER.debug("speech-to-text result %s", result)
 
         # The provider found the end of speech by returning the transcript --
-        # unless something already said where the command ended.
-        if provider_vad and not self._sent_stt_vad_end:
-            self._async_stt_vad_end(self._stt_last_timestamp_ms or 0)
+        # unless something already said where the command ended, or the run
+        # did so at or past the end of the audio.
+        if not self._sent_stt_vad_end:
+            if (run is not None) and (run.speech_ended_ms is not None):
+                self._async_stt_vad_end(run.speech_ended_ms)
+            elif provider_vad:
+                self._async_stt_vad_end(self._stt_last_timestamp_ms or 0)
 
         if result.result != stt.SpeechResultState.SUCCESS:
             raise SpeechToTextError(

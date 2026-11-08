@@ -249,6 +249,7 @@ class AudioRun:
                 event["code"],
                 event["message"],
             )
+            self._async_stop_listening()
         else:
             _LOGGER.debug("Ignoring %s from the app", event_type)
 
