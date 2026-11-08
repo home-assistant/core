@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from pysmlight.const import Events as SmEvents
-from pysmlight.models import Firmware, Info
+from pysmlight.models import Firmware, FirmwareList, Info
 from pysmlight.sse import MessageEvent
 
 from homeassistant.components.update import (
@@ -17,7 +17,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.const import CONF_HOST, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, ZWAVE_TYPES
@@ -27,14 +27,12 @@ from .entity import SmEntity
 PARALLEL_UPDATES = 1
 
 
-def zigbee_latest_version(data: SmFwData, idx: int) -> Firmware | None:
-    """Get the latest Zigbee firmware version."""
+def zigbee_firmware_list(data: SmFwData, idx: int) -> FirmwareList:
+    """Get the Zigbee firmware catalog for a radio."""
 
     if idx < len(data.zb_firmware):
-        firmware_list = data.zb_firmware[idx]
-        if firmware_list:
-            return firmware_list[0]
-    return None
+        return data.zb_firmware[idx]
+    return []
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -42,21 +40,21 @@ class SmUpdateEntityDescription(UpdateEntityDescription):
     """Describes SMLIGHT SLZB-06 update entity."""
 
     installed_version: Callable[[Info, int], str | None]
-    latest_version: Callable[[SmFwData, int], Firmware | None]
+    firmware_list: Callable[[SmFwData, int], FirmwareList]
 
 
 CORE_UPDATE_ENTITY = SmUpdateEntityDescription(
     key="core_update",
     translation_key="core_update",
     installed_version=lambda x, idx: x.sw_version,
-    latest_version=lambda x, idx: x.esp_firmware[0] if x.esp_firmware else None,
+    firmware_list=lambda x, idx: x.esp_firmware,
 )
 
 ZB_UPDATE_ENTITY = SmUpdateEntityDescription(
     key="zigbee_update",
     translation_key="zigbee_update",
     installed_version=lambda x, idx: x.radios[idx].zb_version,
-    latest_version=zigbee_latest_version,
+    firmware_list=zigbee_firmware_list,
 )
 
 
@@ -95,6 +93,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.PROGRESS
         | UpdateEntityFeature.RELEASE_NOTES
+        | UpdateEntityFeature.SPECIFIC_VERSION
     )
 
     def __init__(
@@ -133,10 +132,38 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update callbacks."""
-        self._firmware = self.entity_description.latest_version(
+        firmware_list = self.entity_description.firmware_list(
             self.coordinator.data, self.idx
         )
+        self._firmware = firmware_list[0] if firmware_list else None
         self.async_write_ha_state()
+
+    def _get_firmware(self, version: str) -> Firmware:
+        """Find a firmware version in the catalog of the device channel."""
+        if version == self.installed_version:
+            # The reboot wait in async_install relies on the version changing.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="firmware_version_already_installed",
+                translation_placeholders={
+                    "version": version,
+                    "device_name": str(self.name),
+                },
+            )
+        firmware_list = self.entity_description.firmware_list(
+            self.coordinator.data, self.idx
+        )
+        for firmware in firmware_list:
+            if firmware.ver == version:
+                return firmware
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="firmware_version_not_found",
+            translation_placeholders={
+                "version": version,
+                "device_name": str(self.name),
+            },
+        )
 
     @property
     @override
@@ -244,7 +271,11 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     ) -> None:
         """Install firmware update."""
 
-        if not self.coordinator.in_progress and self._firmware:
+        firmware = (
+            self._get_firmware(version) if version is not None else self._firmware
+        )
+
+        if not self.coordinator.in_progress and firmware:
             self.coordinator.in_progress = True
             self._attr_in_progress = True
             self._attr_update_percentage = None
@@ -252,7 +283,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
 
             try:
                 await self.coordinator.async_execute_command(
-                    self.coordinator.client.fw_update, self._firmware, self.idx
+                    self.coordinator.client.fw_update, firmware, self.idx
                 )
 
                 # block until update finished event received
@@ -263,7 +294,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                     async with asyncio.timeout(180):
                         while (
                             self.coordinator.in_progress
-                            and self.installed_version != self._firmware.ver
+                            and self.installed_version != firmware.ver
                         ):
                             await self.coordinator.async_refresh()
                             await asyncio.sleep(1)
