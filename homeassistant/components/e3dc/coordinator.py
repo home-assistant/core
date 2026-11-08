@@ -23,8 +23,10 @@ POLLED_COMPONENTS = (
     "power",
     "battery_limits",
     "wide_power_meters",
+    "power_meters",
     "inverter_mode_control",
     "grid_control",
+    "inverters",
 )
 # The components that tell which optional hardware is installed, read once
 HARDWARE_COMPONENTS = ("wallboxes", "power_meters")
@@ -36,6 +38,8 @@ class E3dcDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Poll the power station."""
 
     config_entry: E3dcConfigEntry
+    # Set once setup has registered the power station's device
+    station_device_id: str
 
     def __init__(
         self,

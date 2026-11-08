@@ -1,9 +1,10 @@
 """Support for E3/DC sensors."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import override
+from operator import attrgetter
+from typing import TYPE_CHECKING, override
 
 from e3dc_ess_modbus import (
     E3dcPowerStation,
@@ -12,6 +13,7 @@ from e3dc_ess_modbus import (
     PowerMeterType,
     SgReadyStatus,
 )
+from e3dc_ess_modbus.inverter import Inverter
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,18 +24,27 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    UnitOfApparentPower,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import E3dcConfigEntry
-from .entity import E3dcEntity
+from .coordinator import E3dcConfigEntry, E3dcDataUpdateCoordinator
+from .entity import E3dcEntity, E3dcPart
 
 PARALLEL_UPDATES = 0
+
+PHASES = ("l1", "l2", "l3")
+# The manual marks DC tracker 3 as not used, but the E3/DC one reports it
+DC_TRACKERS = (1, 2, 3)
 
 
 def _enum_options(enum_type: type[IntEnum]) -> list[str]:
@@ -256,6 +267,231 @@ SENSORS: tuple[E3dcSensorDescription, ...] = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class E3dcPartSensorDescription(SensorEntityDescription):
+    """Describe a sensor of a power meter or an inverter."""
+
+    value_fn: Callable[[E3dcPowerStation, int], StateType | IntEnum]
+
+
+def _meter_phase_powers(
+    device: E3dcPowerStation, number: int
+) -> tuple[int | None, int | None, int | None]:
+    """The phase powers of power meter slot ``number``."""
+    meter = device.power_meter_readings[number]
+    return meter.power_l1, meter.power_l2, meter.power_l3
+
+
+def _meter_phase_power(phase: str) -> Callable[[E3dcPowerStation, int], StateType]:
+    """Read the power on ``phase`` of a power meter slot."""
+    get = attrgetter(f"power_{phase}")
+    return lambda device, number: get(device.power_meter_readings[number])
+
+
+def _total(values: Iterable[int | None]) -> int | None:
+    """The sum of the phase values, or ``None`` if any is unknown."""
+    values = tuple(values)
+    known = [value for value in values if value is not None]
+    return sum(known) if len(known) == len(values) else None
+
+
+POWER_METER_SENSORS: tuple[E3dcPartSensorDescription, ...] = (
+    E3dcPartSensorDescription(
+        key="type",
+        translation_key="power_meter_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=_enum_options(PowerMeterType),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device, number: device.power_meter_readings[number].meter_type,
+    ),
+    E3dcPartSensorDescription(
+        key="power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device, number: _total(_meter_phase_powers(device, number)),
+    ),
+    *(
+        E3dcPartSensorDescription(
+            key=f"power_{phase}",
+            translation_key="power_phase",
+            translation_placeholders={"phase": phase.upper()},
+            device_class=SensorDeviceClass.POWER,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+            value_fn=_meter_phase_power(phase),
+        )
+        for phase in PHASES
+    ),
+)
+
+
+def _inverter(device: E3dcPowerStation, number: int) -> Inverter:
+    """Inverter slot ``number``, which only exists when the slot answered."""
+    if TYPE_CHECKING:
+        assert device.inverters is not None
+    return device.inverters[number]
+
+
+def _inverter_sensor(
+    key: str,
+    device_class: SensorDeviceClass,
+    unit: str,
+    *,
+    translation_key: str | None = None,
+    translation_placeholders: Mapping[str, str] | None = None,
+    suggested_display_precision: int | None = None,
+    enabled_default: bool = False,
+) -> E3dcPartSensorDescription:
+    """A sensor for the inverter attribute named ``key``."""
+    get = attrgetter(key)
+    return E3dcPartSensorDescription(
+        key=key,
+        translation_key=translation_key,
+        translation_placeholders=translation_placeholders,
+        device_class=device_class,
+        native_unit_of_measurement=unit,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=suggested_display_precision,
+        entity_registry_enabled_default=enabled_default,
+        value_fn=lambda device, number: get(_inverter(device, number)),
+    )
+
+
+INVERTER_SENSORS: tuple[E3dcPartSensorDescription, ...] = (
+    *(
+        _inverter_sensor(
+            f"active_power_{phase}",
+            SensorDeviceClass.POWER,
+            UnitOfPower.WATT,
+            translation_key="active_power_phase",
+            translation_placeholders={"phase": phase.upper()},
+            enabled_default=True,
+        )
+        for phase in PHASES
+    ),
+    *(
+        _inverter_sensor(
+            f"apparent_power_{phase}",
+            SensorDeviceClass.APPARENT_POWER,
+            UnitOfApparentPower.VOLT_AMPERE,
+            translation_key="apparent_power_phase",
+            translation_placeholders={"phase": phase.upper()},
+        )
+        for phase in PHASES
+    ),
+    *(
+        _inverter_sensor(
+            f"reactive_power_{phase}",
+            SensorDeviceClass.REACTIVE_POWER,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+            translation_key="reactive_power_phase",
+            translation_placeholders={"phase": phase.upper()},
+        )
+        for phase in PHASES
+    ),
+    *(
+        _inverter_sensor(
+            f"voltage_{phase}",
+            SensorDeviceClass.VOLTAGE,
+            UnitOfElectricPotential.VOLT,
+            translation_key="voltage_phase",
+            translation_placeholders={"phase": phase.upper()},
+            suggested_display_precision=1,
+        )
+        for phase in PHASES
+    ),
+    *(
+        _inverter_sensor(
+            f"current_{phase}",
+            SensorDeviceClass.CURRENT,
+            UnitOfElectricCurrent.AMPERE,
+            translation_key="current_phase",
+            translation_placeholders={"phase": phase.upper()},
+            suggested_display_precision=2,
+        )
+        for phase in PHASES
+    ),
+    _inverter_sensor(
+        "frequency",
+        SensorDeviceClass.FREQUENCY,
+        UnitOfFrequency.HERTZ,
+        suggested_display_precision=2,
+    ),
+    *(
+        _inverter_sensor(
+            f"dc_power_{tracker}",
+            SensorDeviceClass.POWER,
+            UnitOfPower.WATT,
+            translation_key="dc_power",
+            translation_placeholders={"tracker": str(tracker)},
+            enabled_default=True,
+        )
+        for tracker in DC_TRACKERS
+    ),
+    *(
+        _inverter_sensor(
+            f"dc_voltage_{tracker}",
+            SensorDeviceClass.VOLTAGE,
+            UnitOfElectricPotential.VOLT,
+            translation_key="dc_voltage",
+            translation_placeholders={"tracker": str(tracker)},
+            suggested_display_precision=1,
+        )
+        for tracker in DC_TRACKERS
+    ),
+    *(
+        _inverter_sensor(
+            f"dc_current_{tracker}",
+            SensorDeviceClass.CURRENT,
+            UnitOfElectricCurrent.AMPERE,
+            translation_key="dc_current",
+            translation_placeholders={"tracker": str(tracker)},
+            suggested_display_precision=2,
+        )
+        for tracker in DC_TRACKERS
+    ),
+)
+
+
+def _installed_meters(device: E3dcPowerStation) -> list[int]:
+    """The power meter slots with a meter configured."""
+    return [
+        number
+        for number, meter in device.power_meter_readings.items()
+        if meter.is_installed
+    ]
+
+
+def _connected_inverters(device: E3dcPowerStation) -> list[int]:
+    """The power station's own inverter, and each additional one on the grid."""
+    return [
+        number
+        for number, inverter in (device.inverters or {}).items()
+        if number == 0 or inverter.is_connected
+    ]
+
+
+@dataclass(frozen=True, kw_only=True)
+class _PartKind:
+    """A kind of part that gets a device for each slot the power station reports."""
+
+    kind: str
+    present_fn: Callable[[E3dcPowerStation], Iterable[int]]
+    sensors: tuple[E3dcPartSensorDescription, ...]
+
+
+PARTS = (
+    _PartKind(
+        kind="power_meter", present_fn=_installed_meters, sensors=POWER_METER_SENSORS
+    ),
+    _PartKind(
+        kind="inverter", present_fn=_connected_inverters, sensors=INVERTER_SENSORS
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: E3dcConfigEntry,
@@ -271,6 +507,34 @@ async def async_setup_entry(
         if description.component in served and description.exists_fn(device)
     )
 
+    added: set[E3dcPart] = set()
+
+    @callback
+    def _async_add_parts() -> None:
+        """Add a part's sensors the first time the power station reports it."""
+        entities: list[E3dcPartSensor] = []
+        for part_kind in PARTS:
+            for number in part_kind.present_fn(device):
+                if (part := (part_kind.kind, number)) in added:
+                    continue
+                added.add(part)
+                entities.extend(
+                    E3dcPartSensor(coordinator, description, part)
+                    for description in part_kind.sensors
+                )
+        if entities:
+            async_add_entities(entities)
+
+    _async_add_parts()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_parts))
+
+
+def _state(value: StateType | IntEnum) -> StateType:
+    """The sensor state for a value, with enum members as their option."""
+    if isinstance(value, IntEnum):
+        return value.name.lower()
+    return value
+
 
 class E3dcSensor(E3dcEntity, SensorEntity):
     """Defines an E3/DC sensor."""
@@ -280,7 +544,27 @@ class E3dcSensor(E3dcEntity, SensorEntity):
     @property
     @override
     def native_value(self) -> StateType:
-        value = self.entity_description.value_fn(self.coordinator.device)
-        if isinstance(value, IntEnum):
-            return value.name.lower()
-        return value
+        return _state(self.entity_description.value_fn(self.coordinator.device))
+
+
+class E3dcPartSensor(E3dcEntity, SensorEntity):
+    """Defines a sensor of a power meter or an inverter."""
+
+    entity_description: E3dcPartSensorDescription
+
+    def __init__(
+        self,
+        coordinator: E3dcDataUpdateCoordinator,
+        entity_description: E3dcPartSensorDescription,
+        part: E3dcPart,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, entity_description, part)
+        self._number = part[1]
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        return _state(
+            self.entity_description.value_fn(self.coordinator.device, self._number)
+        )

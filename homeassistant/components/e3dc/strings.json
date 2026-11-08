@@ -44,6 +44,14 @@
       }
     }
   },
+  "device": {
+    "inverter": {
+      "name": "Inverter {number}"
+    },
+    "power_meter": {
+      "name": "Power meter {number}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "charge_lock_time": {
@@ -72,14 +80,32 @@
       "active_power_failsafe_timeout": {
         "name": "Active power failsafe timeout"
       },
+      "active_power_phase": {
+        "name": "Active power {phase}"
+      },
       "additional_power": {
         "name": "Additional feeder power"
+      },
+      "apparent_power_phase": {
+        "name": "Apparent power {phase}"
       },
       "autarky": {
         "name": "Self-sufficiency"
       },
       "battery_power": {
         "name": "Battery power"
+      },
+      "current_phase": {
+        "name": "Current {phase}"
+      },
+      "dc_current": {
+        "name": "DC current {tracker}"
+      },
+      "dc_power": {
+        "name": "DC power {tracker}"
+      },
+      "dc_voltage": {
+        "name": "DC voltage {tracker}"
       },
       "emergency_power_status": {
         "name": "Emergency power",
@@ -113,11 +139,32 @@
       "max_discharge_power": {
         "name": "Maximum discharge power"
       },
+      "power_meter_type": {
+        "name": "Meter type",
+        "state": {
+          "bidirectional": "Bidirectional",
+          "control_bypass": "Control bypass",
+          "data_display": "Data display only",
+          "external_consumption": "External consumption",
+          "external_farm": "External farm",
+          "external_production": "External production",
+          "farm": "Farm",
+          "not_used": "Not used",
+          "root": "Grid connection point",
+          "wallbox": "Wallbox"
+        }
+      },
+      "power_phase": {
+        "name": "Power {phase}"
+      },
       "pv_power": {
         "name": "PV power"
       },
       "reactive_power_failsafe_timeout": {
         "name": "Reactive power failsafe timeout"
+      },
+      "reactive_power_phase": {
+        "name": "Reactive power {phase}"
       },
       "self_consumption": {
         "name": "Self-consumption"
@@ -130,6 +177,9 @@
           "normal": "Normal operation",
           "switch_on_recommended": "Switch-on recommended"
         }
+      },
+      "voltage_phase": {
+        "name": "Voltage {phase}"
       },
       "wallbox_power": {
         "name": "Wallbox power"

@@ -70,8 +70,20 @@ def seed_power_station(unit: MockModbusUnit) -> None:
             40085: 0b0000100,  # EMS status: emergency power ready
             40088: 0b1,  # Wallbox 0 available
             40105: 1,  # Power meter 0 at the grid connection point
+            40106: 0xFED4,  # Power meter 0 power L1, -300 W
+            40107: 0xFF38,  # Power meter 0 power L2, -200 W
+            40108: 0xFF9C,  # Power meter 0 power L3, -100 W
             40109: 2,  # Power meter 1 measures an additional feeder
+            40110: 100,  # Power meter 1 power L1, in W
+            40111: 100,  # Power meter 1 power L2, in W
+            40112: 100,  # Power meter 1 power L3, in W
             40137: 1,  # SG Ready status
+            40138: int32_words(-300),  # Power meter 0 power L1, 32 bit
+            40140: int32_words(-200),  # Power meter 0 power L2, 32 bit
+            40142: int32_words(-100),  # Power meter 0 power L3, 32 bit
+            40144: int32_words(100),  # Power meter 1 power L1, 32 bit
+            40146: int32_words(100),  # Power meter 1 power L2, 32 bit
+            40148: int32_words(100),  # Power meter 1 power L3, 32 bit
             40194: 30,  # Active power failsafe timeout, in s
             40196: 30,  # Reactive power failsafe timeout, in s
             40201: 0,  # Inverter mode: normal
@@ -79,5 +91,12 @@ def seed_power_station(unit: MockModbusUnit) -> None:
             40204: int32_words(-9000),  # Battery max discharge power, in W
             40206: int32_words(9135),  # Battery remaining energy, in Wh
             40208: int32_words(10500),  # Battery full charge energy, in Wh
+            41006: int32_words(1750),  # Inverter 0 active power L1, in W
+            41018: 2301,  # Inverter 0 voltage L1, in 0.1 V
+            41019: 2299,  # Inverter 0 voltage L2, in 0.1 V
+            41020: 2310,  # Inverter 0 voltage L3, in 0.1 V
+            41024: 5001,  # Inverter 0 frequency, in 0.01 Hz
+            41025: 2754,  # Inverter 0 DC power 1, in W
+            41027: 1210,  # Inverter 0 DC power 3, in W
         },
     )

@@ -14,12 +14,12 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.e3dc.const import SCAN_INTERVAL
+from homeassistant.components.e3dc.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import int32_words, seed
+from . import MOCK_SERIAL, int32_words, seed
 
 PV_POWER = "sensor.e3_dc_s10_x_pv_power"
 BATTERY_LIMIT_SENSORS = [
@@ -79,6 +79,18 @@ async def test_all_entities(
             "sensor.e3_dc_s10_x_inverter_mode",
             "idle_off_grid_power_save",
             id="inverter_mode_control",
+        ),
+        pytest.param(
+            {40138: int32_words(-500)},
+            "sensor.power_meter_0_power",
+            "-800",
+            id="power_meters",
+        ),
+        pytest.param(
+            {41006: int32_words(2000)},
+            "sensor.inverter_0_active_power_l1",
+            "2000",
+            id="inverters",
         ),
     ],
 )
@@ -170,6 +182,11 @@ async def test_optional_hardware_missing(
             id="no_inverter_mode_control",
         ),
         pytest.param(40202, BATTERY_LIMIT_SENSORS, id="no_battery_limits"),
+        pytest.param(
+            41000,
+            ["sensor.inverter_0_active_power_l1", "sensor.inverter_0_dc_power_1"],
+            id="no_inverters",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_get_unit")
@@ -190,3 +207,59 @@ async def test_block_missing_from_firmware(
     assert hass.states.get(PV_POWER) is not None
     for entity_id in entity_ids:
         assert entity_registry.async_get(entity_id) is None
+
+
+async def test_part_devices(
+    device_registry: dr.DeviceRegistry, init_integration: MockConfigEntry
+) -> None:
+    """Test each power meter and inverter gets a device under the power station."""
+    station = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), init_integration.entry_id
+    )
+    parts = {
+        device.name: device.identifiers
+        for device in dr.async_entries_for_config_entry(
+            device_registry, init_integration.entry_id
+        )
+        if device.via_device_id == station.id
+    }
+
+    assert parts == {
+        "Power meter 0": {(DOMAIN, f"{MOCK_SERIAL}_power_meter_0")},
+        "Power meter 1": {(DOMAIN, f"{MOCK_SERIAL}_power_meter_1")},
+        "Inverter 0": {(DOMAIN, f"{MOCK_SERIAL}_inverter_0")},
+    }
+
+
+@pytest.mark.parametrize(
+    ("holding", "entity_id"),
+    [
+        pytest.param(
+            {40113: 2, 40150: int32_words(300)},
+            "sensor.power_meter_2_power",
+            id="power_meter",
+        ),
+        pytest.param(
+            {41034 + 18: 2302, 41034 + 6: int32_words(1200)},
+            "sensor.inverter_1_active_power_l1",
+            id="inverter",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_part_added_when_reported(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_unit: MockModbusUnit,
+    holding: dict[int, int | list[int]],
+    entity_id: str,
+) -> None:
+    """Test a meter configured or an inverter connected after setup gets its sensors."""
+    assert hass.states.get(entity_id) is None
+
+    seed(mock_unit, holding)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is not None
