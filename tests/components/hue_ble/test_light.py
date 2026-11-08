@@ -199,7 +199,7 @@ async def test_light_control_effect_xy(
         "turn_on",
         {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_EFFECT: EffectType.CANDLE.name,
+            ATTR_EFFECT: EffectType.CANDLE.name.lower(),
             ATTR_XY_COLOR: (0.3, 0.3),
         },
         blocking=True,
@@ -208,7 +208,7 @@ async def test_light_control_effect_xy(
     state = hass.states.get(entity_id)
     assert state.state == "on"
     attributes = state.attributes
-    assert attributes[ATTR_EFFECT] == EffectType.CANDLE.name
+    assert attributes[ATTR_EFFECT] == EffectType.CANDLE.name.lower()
     assert attributes[ATTR_XY_COLOR] == (0.3, 0.3)
     assert attributes[ATTR_COLOR_MODE] == ColorMode.XY
     assert mock_light.effect == (EffectType.CANDLE, EFFECT_SPEED)
@@ -227,7 +227,7 @@ async def test_light_control_effect_xy(
     state = hass.states.get(entity_id)
     assert state.state == "on"
     attributes = state.attributes
-    assert attributes[ATTR_EFFECT] == EffectType.CANDLE.name
+    assert attributes[ATTR_EFFECT] == EffectType.CANDLE.name.lower()
     assert attributes[ATTR_XY_COLOR] == (0.5, 0.5)
     assert attributes[ATTR_COLOR_MODE] == ColorMode.XY
     assert mock_light.effect == (EffectType.CANDLE, EFFECT_SPEED)
@@ -260,14 +260,14 @@ async def test_light_control_effect_temp(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: EffectType.COSMOS.name},
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: EffectType.COSMOS.name.lower()},
         blocking=True,
     )
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
     attributes = state.attributes
-    assert attributes[ATTR_EFFECT] == EffectType.COSMOS.name
+    assert attributes[ATTR_EFFECT] == EffectType.COSMOS.name.lower()
     assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert mock_light.effect == (EffectType.COSMOS, EFFECT_SPEED)
     assert mock_light.colour_temp_mode
@@ -277,7 +277,7 @@ async def test_light_control_effect_temp(
         "turn_on",
         {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_EFFECT: EffectType.CANDLE.name,
+            ATTR_EFFECT: EffectType.CANDLE.name.lower(),
             ATTR_XY_COLOR: (0.3, 0.3),
         },
         blocking=True,
@@ -292,7 +292,7 @@ async def test_light_control_effect_temp(
     state = hass.states.get(entity_id)
     assert state.state == "on"
     attributes = state.attributes
-    assert attributes[ATTR_EFFECT] == EffectType.CANDLE.name
+    assert attributes[ATTR_EFFECT] == EffectType.CANDLE.name.lower()
     assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
     assert mock_light.effect == (EffectType.CANDLE, EFFECT_SPEED)

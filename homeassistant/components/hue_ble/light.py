@@ -65,7 +65,7 @@ def _get_effect_name(effect: EffectType | None) -> str | None:
     if effect is EffectType.NONE:
         return EFFECT_OFF
 
-    return effect.name
+    return effect.name.lower()
 
 
 def _get_effect_type(effect_name: str) -> EffectType:
@@ -74,7 +74,7 @@ def _get_effect_type(effect_name: str) -> EffectType:
     if effect_name == EFFECT_OFF:
         return EffectType.NONE
 
-    return EffectType[effect_name]
+    return EffectType[effect_name.upper()]
 
 
 class HueBLELight(LightEntity):
