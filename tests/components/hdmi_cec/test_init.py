@@ -475,34 +475,10 @@ async def test_service_volume_mute(
                 raises=probatio.MultipleInvalid,
             ),
         ),
-        pytest.param(
-            {"cmd": "0A", "src": "1", "dst": "0", "att": "1B"},
-            "10:0a:1b",
-            marks=pytest.mark.xfail(
-                reason="The code tries to run `reduce` on this string and fails.",
-                raises=TypeError,
-            ),
-        ),
-        pytest.param(
-            {"cmd": "0A", "src": "1", "dst": "0", "att": "01"},
-            "10:0a:1b",
-            marks=pytest.mark.xfail(
-                reason="The code tries to run `reduce` on this as an `int` and fails.",
-                raises=TypeError,
-            ),
-        ),
-        pytest.param(
-            {"cmd": "0A", "src": "1", "dst": "0", "att": ["1B", "44"]},
-            "10:0a:1b:44",
-            marks=pytest.mark.xfail(
-                reason=(
-                    "While the code shows that it's possible to"
-                    " passthrough a list, the call schema does"
-                    " not allow it."
-                ),
-                raises=(probatio.MultipleInvalid, TypeError),
-            ),
-        ),
+        ({"cmd": "0A", "src": "1", "dst": "0", "att": "1B"}, "10:0a:1b"),
+        ({"cmd": "0A", "src": "1", "dst": "0", "att": "01"}, "10:0a:01"),
+        ({"cmd": "0A", "src": "1", "dst": "0", "att": ["1B", "0x44"]}, "10:0a:1b:44"),
+        ({"cmd": "0A", "src": "1", "dst": "0", "att": [0, 2]}, "10:0a:00:02"),
     ],
 )
 async def test_service_send_command(

@@ -1,7 +1,6 @@
 """Services for the HDMI CEC integration."""
 
 from dataclasses import dataclass
-from functools import reduce
 import logging
 
 import probatio
@@ -48,7 +47,7 @@ SERVICE_SEND_COMMAND_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_CMD): _VOL_HEX,
         probatio.Optional(ATTR_SRC): _VOL_HEX,
         probatio.Optional(ATTR_DST): _VOL_HEX,
-        probatio.Optional(ATTR_ATT): _VOL_HEX,
+        probatio.Optional(ATTR_ATT): probatio.All(probatio.EnsureList(), [_VOL_HEX]),
         probatio.Optional(ATTR_RAW): probatio.Coerce(str),
     },
     extra=probatio.PREVENT_EXTRA,
@@ -137,14 +136,7 @@ def _tx(call: ServiceCall) -> None:
         else:
             _LOGGER.error("Attribute 'cmd' is missing")
             return
-        if ATTR_ATT in data:
-            if isinstance(data[ATTR_ATT], (list,)):
-                att = data[ATTR_ATT]
-            else:
-                att = reduce(lambda x, y: f"{x}:{y:x}", data[ATTR_ATT])
-        else:
-            att = ""
-        command = CecCommand(cmd, dst, src, att)
+        command = CecCommand(cmd, dst, src, data.get(ATTR_ATT, []))
     call.hass.data[DATA_HDMI_CEC].hdmi_network.send_command(command)
 
 
