@@ -976,6 +976,43 @@ async def test_stop_after_update_source_while_stopped(
     assert worker_stub.sources == [STREAM_SOURCE + "-updated-source"]
 
 
+async def test_update_source_after_stop_and_start(hass: HomeAssistant) -> None:
+    """Test an earlier stop does not block a restart for update_source."""
+    runs: list[str] = []
+    running = threading.Semaphore(0)
+
+    def fake_worker(source, options, settings, state, converter, quit_event) -> None:
+        runs.append(source)
+        running.release()
+        quit_event.wait(TIMEOUT)
+
+    stream = Stream(
+        hass,
+        STREAM_SOURCE,
+        {},
+        hass.data[DOMAIN][ATTR_SETTINGS],
+        dynamic_stream_settings(),
+    )
+    stream.add_provider(HLS_PROVIDER)
+
+    with patch("homeassistant.components.stream.worker.stream_worker", fake_worker):
+        await stream.start()
+        assert await hass.async_add_executor_job(running.acquire, True, TIMEOUT)
+        await stream.stop()
+
+        await stream.start()
+        assert await hass.async_add_executor_job(running.acquire, True, TIMEOUT)
+        stream.update_source(STREAM_SOURCE + "-updated-source")
+        assert await hass.async_add_executor_job(running.acquire, True, TIMEOUT)
+        await stream.stop()
+
+    assert runs == [
+        STREAM_SOURCE,
+        STREAM_SOURCE,
+        STREAM_SOURCE + "-updated-source",
+    ]
+
+
 class FailFirstStreamWorker:
     """Stub for stream_worker whose first run fails, then runs until quit."""
 
