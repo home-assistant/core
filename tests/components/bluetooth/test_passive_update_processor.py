@@ -55,6 +55,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 from homeassistant.helpers.typing import Undefined
@@ -2010,9 +2011,7 @@ def test_restore_data_device_info_round_trip() -> None:
 
 
 @pytest.mark.usefixtures("mock_bleak_scanner_start", "mock_bluetooth_adapters")
-async def test_plain_device_info_deprecated(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_plain_device_info_deprecated(hass: HomeAssistant) -> None:
     """Test a plain device info is converted, and reported once."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -2039,18 +2038,23 @@ async def test_plain_device_info_deprecated(
     unregister_processor = coordinator.async_register_processor(processor)
     cancel_coordinator = coordinator.async_start()
 
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
-    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
+    with patch(
+        "homeassistant.components.bluetooth.passive_update_processor.report_usage",
+        wraps=report_usage,
+    ) as mock_report_usage:
+        inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+        inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
 
     assert processor.devices[None] == DeviceInfo(name="Plain")
     assert isinstance(processor.devices[None], DeviceInfo)
-    assert (
-        caplog.text.count(
-            "Detected that integration 'bluetooth' passes a plain dict as a device"
-            " info in a PassiveBluetoothDataUpdate instead of a DeviceInfo. This will"
-            " stop working in Home Assistant 2027.12"
-        )
-        == 1
+    # Reported once by the processor, not only deduplicated by the frame helper
+    mock_report_usage.assert_called_once_with(
+        "passes a plain dict as a device info in a PassiveBluetoothDataUpdate"
+        " instead of a DeviceInfo",
+        breaks_in_ha_version="2027.12",
+        core_behavior=ReportBehavior.LOG,
+        exclude_integrations={DOMAIN},
+        integration_domain=DOMAIN,
     )
 
     unregister_processor()
