@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODES,
     ATTR_HVAC_MODES,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.components.homekit import HomeKit
@@ -25,7 +26,13 @@ from homeassistant.components.homekit.const import (
 from homeassistant.components.homekit.type_heater_coolers import HeaterCooler
 from homeassistant.components.homekit.type_thermostats import Thermostat
 from homeassistant.components.homekit.util import get_aid_storage_filename_for_entry_id
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_TYPE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
@@ -54,6 +61,7 @@ CAPABLE_ATTRS = {
     ),
     ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
     ATTR_FAN_MODES: ["low", "high"],
+    ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
 }
 
 

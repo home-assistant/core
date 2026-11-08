@@ -8,6 +8,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
+from homeassistant.components.climate import ClimateEntityStateAttribute
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
     CONF_FILTER,
@@ -15,7 +16,7 @@ from homeassistant.components.homekit.const import (
     SHORT_BRIDGE_NAME,
 )
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_PORT, EntityCategory
+from homeassistant.const import CONF_NAME, CONF_PORT, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -1801,7 +1802,11 @@ async def test_options_flow_climate_step_shows_current_accessory(
     config_entry.add_to_hass(hass)
 
     # A basic climate entity bridges as a Thermostat
-    hass.states.async_set("climate.new", "off")
+    hass.states.async_set(
+        "climate.new",
+        "off",
+        {ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS},
+    )
     await hass.async_block_till_done()
 
     with (

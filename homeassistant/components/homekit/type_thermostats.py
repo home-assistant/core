@@ -548,11 +548,12 @@ class WaterHeater(HomeAccessory):
                 WaterHeaterCapabilityAttribute.MAX_TEMP,
                 WaterHeaterCapabilityAttribute.MIN_TEMP,
                 WaterHeaterCapabilityAttribute.OPERATION_LIST,
+                WaterHeaterStateAttribute.TEMPERATURE_UNIT,
             )
         )
-        self._unit = self.hass.config.units.temperature_unit
         state = self.hass.states.get(self.entity_id)
         assert state
+        self._unit = state.attributes[WaterHeaterStateAttribute.TEMPERATURE_UNIT]
         min_temp, max_temp = self.get_temperature_range(state)
 
         features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
