@@ -30,7 +30,7 @@ async def async_setup_entry(
 
     device_info = DeviceInfo(
         identifiers={(DOMAIN, entry.data.get(CONF_ADDRESS, ""))},
-        manufacturer="Bluetti",
+        manufacturer="BLUETTI",
         model=entry.data.get(CONF_MODEL),
         serial_number=str(entry.data.get(CONF_SERIAL)),
         connections={(CONNECTION_BLUETOOTH, entry.data.get(CONF_ADDRESS, ""))},

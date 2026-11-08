@@ -1,6 +1,6 @@
 {
   "domain": "bluetti_bluetooth",
-  "name": "Bluetti Bluetooth",
+  "name": "BLUETTI Bluetooth",
   "bluetooth": [
     {
       "service_uuid": "0000ff00-0000-1000-8000-00805f9b34fb"
@@ -9,6 +9,7 @@
   "categories": ["energy.solar_batteries"],
   "codeowners": ["@Patrick762"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/bluetti_bluetooth",
   "integration_type": "device",
