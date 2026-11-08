@@ -86,11 +86,18 @@
           "action": {
             "name": "Action"
           },
+          "buttons": {
+            "name": "Buttons"
+          },
           "event_type": {
             "state": {
               "clicked": "Clicked",
-              "closed": "Closed"
+              "closed": "Closed",
+              "sent": "Sent"
             }
+          },
+          "message": {
+            "name": "Message"
           },
           "notification_id": {
             "name": "Notification ID"
@@ -102,6 +109,9 @@
               "dismissed": "Dismissed",
               "expired": "Expired"
             }
+          },
+          "title": {
+            "name": "Title"
           }
         }
       }

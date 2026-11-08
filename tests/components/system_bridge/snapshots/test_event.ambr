@@ -7,6 +7,7 @@
     'area_id': None,
     'capabilities': dict({
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'sent',
         'clicked',
         'closed',
       ]),
@@ -46,6 +47,7 @@
     'attributes': ReadOnlyDict({
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'sent',
         'clicked',
         'closed',
       ]),

@@ -19,6 +19,7 @@ PARALLEL_UPDATES = 0
 
 EVENT_CLICKED = "clicked"
 EVENT_CLOSED = "closed"
+EVENT_SENT = "sent"
 
 
 async def async_setup_entry(
@@ -50,7 +51,7 @@ async def async_setup_entry(
 class SystemBridgeNotificationEventEntity(SystemBridgeEntity, EventEntity):
     """Representation of a System Bridge notification event entity."""
 
-    _attr_event_types = [EVENT_CLICKED, EVENT_CLOSED]
+    _attr_event_types = [EVENT_SENT, EVENT_CLICKED, EVENT_CLOSED]
     _attr_translation_key = "notification"
 
     @override
@@ -69,16 +70,29 @@ class SystemBridgeNotificationEventEntity(SystemBridgeEntity, EventEntity):
 
     @callback
     def _async_handle_event(self, event: NotificationEvent) -> None:
-        """Handle a click on, or close of, a notification."""
-        # System Bridge leaves the action out when the notification closed
-        if event.action is None:
+        """Handle a notification being sent, clicked or closed."""
+        if event.action is not None:
+            self._trigger_event(
+                EVENT_CLICKED,
+                {"notification_id": event.id, "action": event.action},
+            )
+        elif event.reason is not None:
             self._trigger_event(
                 EVENT_CLOSED,
                 {"notification_id": event.id, "reason": event.reason},
             )
         else:
+            # A sent notification has neither, and has what was sent instead
             self._trigger_event(
-                EVENT_CLICKED,
-                {"notification_id": event.id, "action": event.action},
+                EVENT_SENT,
+                {
+                    "notification_id": event.id,
+                    "title": event.title,
+                    "message": event.message,
+                    "buttons": [
+                        {"id": button.id, "label": button.label}
+                        for button in event.buttons or []
+                    ],
+                },
             )
         self.async_write_ha_state()

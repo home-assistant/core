@@ -2,13 +2,17 @@
 
 from collections.abc import Generator
 from dataclasses import replace
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
-from systembridgeconnector.models.notification import NotificationEvent
+from systembridgeconnector.models.notification import (
+    NotificationButton,
+    NotificationEvent,
+)
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.const import Platform
@@ -95,6 +99,22 @@ async def test_no_event_entity_before_5_20(
             {"notification_id": 12, "reason": "expired"},
             id="closed",
         ),
+        pytest.param(
+            NotificationEvent(
+                id=12,
+                title="Backup finished",
+                message="All files were copied",
+                buttons=[NotificationButton(id="open", label="Open")],
+            ),
+            "sent",
+            {
+                "notification_id": 12,
+                "title": "Backup finished",
+                "message": "All files were copied",
+                "buttons": [{"id": "open", "label": "Open"}],
+            },
+            id="sent",
+        ),
     ],
 )
 async def test_notification_event(
@@ -103,7 +123,7 @@ async def test_notification_event(
     mock_websocket_client: AsyncMock,
     event: NotificationEvent,
     event_type: str,
-    attributes: dict[str, str | int],
+    attributes: dict[str, Any],
 ) -> None:
     """Test a notification event from the WebSocket fires the event entity."""
     await _setup(hass, mock_config_entry, mock_websocket_client, "5.20.0")
