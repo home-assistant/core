@@ -124,6 +124,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         },
         func="system_bridge_send_message",
         supports_response=SupportsResponse.OPTIONAL,
+        # A url or path opens on the host, as open_url and open_path do
+        admin_only=True,
     )
 
     hass.services.async_register(

@@ -17,7 +17,6 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ENTITY_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
@@ -142,15 +141,25 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    return SystemBridgeNotificationService(discovery_info[CONF_ENTITY_ID])
+    entry: SystemBridgeConfigEntry | None = hass.config_entries.async_get_entry(
+        discovery_info[CONF_ENTITY_ID]
+    )
+    if entry is None:
+        return None
+
+    notification_service = SystemBridgeNotificationService(entry.runtime_data)
+    # The notify platform skips an action that already exists, so remove it
+    # with the entry and let the next setup register its own
+    entry.async_on_unload(notification_service.async_unregister_services)
+    return notification_service
 
 
 class SystemBridgeNotificationService(BaseNotificationService):
     """Implement the notification service for System Bridge."""
 
-    def __init__(self, entry_id: str) -> None:
+    def __init__(self, coordinator: SystemBridgeDataUpdateCoordinator) -> None:
         """Initialize the service."""
-        self._entry_id = entry_id
+        self._coordinator = coordinator
 
     @override
     async def async_send_message(
@@ -160,17 +169,6 @@ class SystemBridgeNotificationService(BaseNotificationService):
     ) -> None:
         """Send a message."""
         async_deprecated_notify_action_call(self.hass, self._service_name)
-
-        # The service outlives reloads, so use the entry's current connection
-        entry: SystemBridgeConfigEntry | None = (
-            self.hass.config_entries.async_get_entry(self._entry_id)
-        )
-        if entry is None or entry.state is not ConfigEntryState.LOADED:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="entry_not_loaded",
-                translation_placeholders={"entry_id": self._entry_id},
-            )
 
         data = kwargs.get(ATTR_DATA, {}) or {}
 
@@ -186,4 +184,4 @@ class SystemBridgeNotificationService(BaseNotificationService):
 
         _LOGGER.debug("Sending notification: %s", notification)
 
-        await _async_send_notification(entry.runtime_data, notification)
+        await _async_send_notification(self._coordinator, notification)

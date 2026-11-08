@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import MockConfigEntry, MockUser, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
@@ -24,8 +24,8 @@ from homeassistant.components.notify import (
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.discovery import async_load_platform
 
@@ -319,6 +319,30 @@ async def test_system_bridge_send_message_invalid(
 
 
 @pytest.mark.usefixtures("mock_version")
+async def test_system_bridge_send_message_requires_admin(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: AsyncMock,
+) -> None:
+    """Test the system_bridge.send_message action needs an admin user."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_message",
+            {ATTR_ENTITY_ID: "notify.hostname", ATTR_MESSAGE: "World"},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+    mock_websocket_client.send_notification.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_version")
 @pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
 @pytest.mark.parametrize(
     ("side_effect", "translation_key", "placeholders"),
@@ -401,26 +425,49 @@ async def test_legacy_notify_service_error(
     assert e.value.translation_placeholders == {"error": "Title is required"}
 
 
+@pytest.mark.usefixtures("mock_version", "mock_websocket_client", "legacy_notify")
+async def test_legacy_notify_service_removed_on_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the legacy notify service is removed when the entry unloads."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(NOTIFY_DOMAIN, "system_bridge_hostname")
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.services.has_service(NOTIFY_DOMAIN, "system_bridge_hostname")
+
+
 @pytest.mark.usefixtures("mock_version", "legacy_notify")
-async def test_legacy_notify_service_unloaded(
+async def test_legacy_notify_service_reload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_websocket_client: AsyncMock,
 ) -> None:
-    """Test the legacy notify service doesn't use the connection after unload."""
+    """Test the legacy notify service uses the new connection after a reload."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
-    with pytest.raises(HomeAssistantError) as e:
-        await hass.services.async_call(
-            NOTIFY_DOMAIN,
-            "system_bridge_hostname",
-            {ATTR_MESSAGE: "World"},
-            blocking=True,
-        )
+    old_coordinator = mock_config_entry.runtime_data
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert e.value.translation_key == "entry_not_loaded"
-    assert e.value.translation_placeholders == {"entry_id": mock_config_entry.entry_id}
-    mock_websocket_client.send_notification.assert_not_awaited()
+    assert mock_config_entry.runtime_data is not old_coordinator
+    old_websocket_client = AsyncMock()
+    old_coordinator.websocket_client = old_websocket_client
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        "system_bridge_hostname",
+        {ATTR_MESSAGE: "World"},
+        blocking=True,
+    )
+
+    old_websocket_client.send_notification.assert_not_awaited()
+    mock_websocket_client.send_notification.assert_awaited_once()
