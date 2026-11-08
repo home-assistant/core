@@ -54,7 +54,6 @@ class PlaybackProxyView(HomeAssistantView):
             verify_ssl=False,
             ssl_cipher=SSLCipherList.INSECURE,
         )
-        self._vod_type: str | None = None
 
     async def get(
         self,
@@ -71,8 +70,6 @@ class PlaybackProxyView(HomeAssistantView):
 
         filename_decoded = urlsafe_b64decode(filename.encode("utf-8")).decode("utf-8")
         ch = int(channel)
-        if self._vod_type is not None:
-            vod_type = self._vod_type
         try:
             host = get_host(self.hass, config_entry_id)
         except Unresolvable:
@@ -82,6 +79,12 @@ class PlaybackProxyView(HomeAssistantView):
             )
             _LOGGER.warning(err_str)
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
+
+        if (
+            vod_type == VodRequestType.PLAYBACK.value
+            and ch in host.playback_download_channels
+        ):
+            vod_type = VodRequestType.DOWNLOAD.value
 
         try:
             _mime_type, reolink_url = await host.api.get_vod_source(
@@ -142,17 +145,18 @@ class PlaybackProxyView(HomeAssistantView):
                 reolink_response.content_type == "video/x-flv"
                 and vod_type == VodRequestType.PLAYBACK.value
             ):
-                # next time use DOWNLOAD immediately
-                self._vod_type = VodRequestType.DOWNLOAD.value
+                host.playback_download_channels.add(ch)
                 _LOGGER.debug(
-                    "%s, retrying using download instead of playback cmd", err_str
+                    "%s from %s, retrying using download instead of playback cmd",
+                    err_str,
+                    host.api.camera_name(ch),
                 )
                 return await self.get(
                     request,
                     config_entry_id,
                     channel,
                     stream_res,
-                    self._vod_type,
+                    VodRequestType.DOWNLOAD.value,
                     filename,
                     retry,
                 )

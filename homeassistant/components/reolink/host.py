@@ -118,6 +118,7 @@ class ReolinkHost:
             lambda: defaultdict(int)
         )
         self.firmware_ch_list: list[int | None] = []
+        self.playback_download_channels: set[int] = set()
 
         self.starting: bool = True
         self.privacy_mode: bool | None = None

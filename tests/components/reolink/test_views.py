@@ -12,8 +12,30 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from reolink_aio.enums import VodRequestType
 from reolink_aio.exceptions import ReolinkError
 
+from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
+from homeassistant.components.reolink.const import CONF_BC_PORT, CONF_USE_HTTPS, DOMAIN
 from homeassistant.components.reolink.views import async_generate_playback_proxy_url
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
+
+from .conftest import (
+    TEST_BC_PORT,
+    TEST_HOST2,
+    TEST_MAC2,
+    TEST_NVR_NAME2,
+    TEST_PASSWORD2,
+    TEST_PORT,
+    TEST_USE_HTTPS,
+    TEST_USERNAME2,
+)
 
 TEST_YEAR = 2023
 TEST_MONTH = 11
@@ -221,6 +243,87 @@ async def test_playback_wrong_content(
     response = cast(ClientResponse, await http_client.get(proxy_url))
 
     assert response.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_playback_download_fallback_per_channel(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the download fallback only applies to the channel that needed it."""
+    reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
+
+    mock_session = Mock()
+    mock_session.get = AsyncMock(
+        side_effect=[
+            get_mock_session(content_type="video/x-flv").get.return_value,
+            *(get_mock_session().get.return_value for _ in range(6)),
+        ]
+    )
+
+    config_entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC2),
+        data={
+            CONF_HOST: TEST_HOST2,
+            CONF_USERNAME: TEST_USERNAME2,
+            CONF_PASSWORD: TEST_PASSWORD2,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_BC_PORT: TEST_BC_PORT,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME2,
+    )
+    config_entry2.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.reolink.PLATFORMS", []),
+        patch(
+            "homeassistant.components.reolink.views.async_get_clientsession",
+            return_value=mock_session,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry2.state is ConfigEntryState.LOADED
+
+    http_client = await hass_client()
+
+    async def request(entry_id: str, channel: int, vod_type: VodRequestType) -> None:
+        proxy_url = async_generate_playback_proxy_url(
+            entry_id, channel, TEST_FILE_NAME_MP4, TEST_STREAM, vod_type.value
+        )
+        response = await http_client.get(proxy_url)
+        assert response.status == 200
+
+    await request(config_entry.entry_id, 0, VodRequestType.PLAYBACK)
+    await request(config_entry.entry_id, 0, VodRequestType.PLAYBACK)
+    await request(config_entry.entry_id, 1, VodRequestType.PLAYBACK)
+    await request(config_entry2.entry_id, 0, VodRequestType.PLAYBACK)
+    await request(config_entry.entry_id, 0, VodRequestType.NVR_DOWNLOAD)
+
+    with patch("homeassistant.components.reolink.PLATFORMS", []):
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await request(config_entry.entry_id, 0, VodRequestType.PLAYBACK)
+
+    assert [
+        (call.args[0], call.args[3])
+        for call in reolink_host.get_vod_source.call_args_list
+    ] == [
+        (0, VodRequestType.PLAYBACK),
+        (0, VodRequestType.DOWNLOAD),
+        (0, VodRequestType.DOWNLOAD),
+        (1, VodRequestType.PLAYBACK),
+        (0, VodRequestType.PLAYBACK),
+        (0, VodRequestType.NVR_DOWNLOAD),
+        (0, VodRequestType.PLAYBACK),
+    ]
 
 
 async def test_playback_connect_error(
