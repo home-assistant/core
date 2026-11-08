@@ -62,6 +62,9 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PROTOCOL = "rtsp"
 DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
 API_STARTUP_TIME = 5
+# Wait up to 3 minutes for a camera to answer at a new IP reported by DHCP.
+DHCP_NEW_IP_ATTEMPTS = 18
+DHCP_NEW_IP_RETRY_INTERVAL = 10
 
 
 class ReolinkOptionsFlowHandler(OptionsFlowWithReload):
@@ -179,30 +182,58 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
             and existing_entry.data[CONF_HOST] != discovery_info.ip
         ):
             if is_connected(self.hass, existing_entry):
-                _LOGGER.debug(
-                    "Reolink DHCP reported new IP '%s', "
-                    "but connection to camera seems to be okay, so sticking to IP '%s'",
-                    discovery_info.ip,
-                    existing_entry.data[CONF_HOST],
-                )
-                raise AbortFlow("already_configured")
+                # The last poll may predate a move to the new IP (e.g. a
+                # reboot onto a new DHCP lease), so check the old IP live.
+                try:
+                    await existing_entry.runtime_data.host.api.get_state("GetLocalLink")
+                except ReolinkError as err:
+                    _LOGGER.debug(
+                        "Reolink DHCP reported new IP '%s' and old IP '%s' "
+                        "does not respond: '%s', checking the new IP",
+                        discovery_info.ip,
+                        existing_entry.data[CONF_HOST],
+                        err,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Reolink DHCP reported new IP '%s', "
+                        "but connection to camera seems to be okay, "
+                        "so sticking to IP '%s'",
+                        discovery_info.ip,
+                        existing_entry.data[CONF_HOST],
+                    )
+                    raise AbortFlow("already_configured")
 
             # check if the camera is reachable at the new IP
             new_config = dict(existing_entry.data)
             new_config[CONF_HOST] = discovery_info.ip
             host = ReolinkHost(self.hass, new_config, existing_entry.options)
-            try:
-                await host.api.get_state("GetLocalLink")
-                await host.api.logout()
-            except ReolinkError as err:
-                _LOGGER.debug(
-                    "Reolink DHCP reported new IP '%s', "
-                    "but got error '%s' trying to connect, so sticking to IP '%s'",
-                    discovery_info.ip,
-                    err,
-                    existing_entry.data[CONF_HOST],
-                )
-                raise AbortFlow("already_configured") from err
+            # A rebooting camera requests its lease before its API is up, and
+            # DHCP discovery does not report the same address again, so retry.
+            for attempt in range(DHCP_NEW_IP_ATTEMPTS):
+                try:
+                    await host.api.get_state("GetLocalLink")
+                    await host.api.logout()
+                except ReolinkError as err:
+                    if attempt + 1 < DHCP_NEW_IP_ATTEMPTS:
+                        _LOGGER.debug(
+                            "Reolink DHCP reported new IP '%s', "
+                            "but got error '%s' trying to connect, retrying",
+                            discovery_info.ip,
+                            err,
+                        )
+                        await asyncio.sleep(DHCP_NEW_IP_RETRY_INTERVAL)
+                        continue
+                    _LOGGER.debug(
+                        "Reolink DHCP reported new IP '%s', "
+                        "but got error '%s' trying to connect, "
+                        "so sticking to IP '%s'",
+                        discovery_info.ip,
+                        err,
+                        existing_entry.data[CONF_HOST],
+                    )
+                    raise AbortFlow("already_configured") from err
+                break
             if format_mac(host.api.mac_address) != mac_address:
                 _LOGGER.debug(
                     "Reolink mac address '%s' at new IP '%s' from DHCP, "
