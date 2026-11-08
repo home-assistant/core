@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from roborock import CleanTypeMapping, RoborockCommand
 from roborock.data import (
     CleanPathPreferenceMapping,
@@ -17,6 +17,7 @@ from roborock.data.b01_q7.b01_q7_code_mappings import CleanRepeatMapping
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXCleanType
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.roborock import DOMAIN
 from homeassistant.components.roborock.select import (
@@ -36,6 +37,17 @@ from .conftest import FakeDevice
 def platforms() -> list[Platform]:
     """Fixture to set platforms used in the test."""
     return [Platform.SELECT]
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_selects(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test selects and check test values are correctly set."""
+    await snapshot_platform(hass, entity_registry, snapshot, setup_entry.entry_id)
 
 
 @pytest.mark.parametrize(
