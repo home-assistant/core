@@ -174,11 +174,9 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
 
             data.inverter_data = inverter_data
             data.battery_data = battery_data
-            self.config_entry.runtime_data.basic_data_coordinator.async_set_updated_data(
-                data
-            )
+            self.config_entry.runtime_data.basic_data_coordinator.async_update_listeners()
 
-        self.data = inverter_data  # already set self.data, as it is needed in _async_add_remove_devices
+        self.data = inverter_data  # Set self.data before calling _async_add_remove_devices, as it relies on self.data.
         self._async_add_remove_devices(inverter_data)
 
         return inverter_data
